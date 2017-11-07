@@ -2,7 +2,7 @@ android:
   components:
     - tools
     - platform-tools
-    
+
     # Tools appears twice, as it's required to get the latest version
     # See: https://docs.travis-ci.com/user/languages/android/
     - tools
