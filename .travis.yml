@@ -14,3 +14,29 @@ android:
 
     # The SDK version used to compile the project
     - android-25
+
+    ## Emulator config ##
+    # The SDK version used for the emulator
+    - android-21
+    # The system image
+    - sys-img-armeabi-v7a-android-21
+
+# Disable Gradle cache uploads
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.android/build-cache
+
+before_script:
+  - android list targets
+  - echo no | android create avd --force -n test -t android-21 --abi armeabi-v7a
+  - emulator -avd test -no-audio -no-window &
+  - android-wait-for-emulator
+  - adb shell input keyevent 82 &
+
+script:
+  - ./gradlew clean build connectedCheck
