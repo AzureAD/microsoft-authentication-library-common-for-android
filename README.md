@@ -1,11 +1,12 @@
-
 # Microsoft Authentication Library Common for Android
+[![Build Status](https://travis-ci.com/AzureAD/microsoft-authentication-library-common-for-android.svg?token=h2nbumGCE3DdxpFdJZ6S&branch=dev)](https://travis-ci.com/AzureAD/microsoft-authentication-library-common-for-android)
+
 This library contains code shared between the [Active Directory Authentication Library (ADAL) for Android](https://github.com/AzureAD/azure-activedirectory-library-for-android) and the [Microsoft Authentication Library (MSAL) for Android](https://github.com/AzureAD/microsoft-authentication-library-for-android).  This library includes only internal classes and is **NOT** part of the public API.  The contents of this library are subject to change without notice.
 
-# Issues
+### Issues
 We encourage users of ADAL and MSAL to file issues against the library that they are using rather than against common.  This helps us understand the version of the common library in use based on the version of ADAL or MSAL against which you report the issue.  With that said, if you determine that the issue is indeed with common please go ahead and create it within this repo.  Likewise if you have a suggestion, request and/or other feedback relative to common please file it here.
 
-# Contributing
+### Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
