@@ -58,7 +58,7 @@ public final class StringExtensions {
      * @return the decoded
      * @throws UnsupportedEncodingException
      */
-    static String urlFormEncode(String source) throws UnsupportedEncodingException {
+    public static String urlFormEncode(String source) throws UnsupportedEncodingException {
         return URLEncoder.encode(source, ENCODING_UTF8);
     }
 
@@ -69,13 +69,13 @@ public final class StringExtensions {
      * @return the encoded string
      * @throws UnsupportedEncodingException
      */
-    static String urlFormDecode(String source) throws UnsupportedEncodingException {
+    public static String urlFormDecode(String source) throws UnsupportedEncodingException {
 
         // Decode everything else
         return URLDecoder.decode(source, ENCODING_UTF8);
     }
 
-    static String encodeBase64URLSafeString(final byte[] bytes)
+    public static String encodeBase64URLSafeString(final byte[] bytes)
             throws UnsupportedEncodingException {
         return new String(
                 Base64.encode(bytes, Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE),
@@ -88,7 +88,7 @@ public final class StringExtensions {
      * @param endpoint url as a string
      * @return URL object for this string
      */
-    static URL getUrl(String endpoint) {
+    public static URL getUrl(String endpoint) {
         URL authority = null;
         try {
             authority = new URL(endpoint);
@@ -100,7 +100,7 @@ public final class StringExtensions {
         return authority;
     }
 
-    static HashMap<String, String> getUrlParameters(String finalUrl) {
+    public static HashMap<String, String> getUrlParameters(String finalUrl) {
         Uri response = Uri.parse(finalUrl);
         String fragment = response.getFragment();
         HashMap<String, String> parameters = HashMapExtensions.urlFormDecode(fragment);
@@ -112,7 +112,7 @@ public final class StringExtensions {
         return parameters;
     }
 
-    static List<String> getStringTokens(final String items, final String delimiter) {
+    public static List<String> getStringTokens(final String items, final String delimiter) {
         final StringTokenizer st = new StringTokenizer(items, delimiter);
         final List<String> itemList = new ArrayList<>();
         while (st.hasMoreTokens()) {
@@ -125,7 +125,7 @@ public final class StringExtensions {
         return itemList;
     }
 
-    static ArrayList<String> splitWithQuotes(String input, char delimiter) {
+    public static ArrayList<String> splitWithQuotes(String input, char delimiter) {
         final ArrayList<String> items = new ArrayList<>();
 
         int startIndex = 0;
@@ -152,7 +152,7 @@ public final class StringExtensions {
         return items;
     }
 
-    static String removeQuoteInHeaderValue(String value) {
+    public static String removeQuoteInHeaderValue(String value) {
         if (!isNullOrBlank(value)) {
             return value.replace("\"", "");
         }
@@ -167,7 +167,7 @@ public final class StringExtensions {
      * @param prefix prefix to check the above string
      * @return boolean true if the string starts with prefix and has some body after it.
      */
-    static boolean hasPrefixInHeader(final String value, final String prefix) {
+    public static boolean hasPrefixInHeader(final String value, final String prefix) {
         return value.startsWith(prefix) && value.length() > prefix.length() + 2
                 && Character.isWhitespace(value.charAt(prefix.length()));
     }

@@ -280,7 +280,7 @@ public class StorageHelper {
      * @throws GeneralSecurityException
      * @throws IOException
      */
-    synchronized SecretKey loadSecretKeyForEncryption() throws IOException,
+    public synchronized SecretKey loadSecretKeyForEncryption() throws IOException,
             GeneralSecurityException {
         final byte[] secretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
         return loadSecretKeyForEncryption(secretKeyData == null ? VERSION_ANDROID_KEY_STORE : VERSION_USER_DEFINED);
@@ -295,7 +295,7 @@ public class StorageHelper {
      * @throws GeneralSecurityException
      * @throws IOException
      */
-    synchronized SecretKey loadSecretKeyForEncryption(String defaultBlobVersion) throws IOException,
+    public synchronized SecretKey loadSecretKeyForEncryption(String defaultBlobVersion) throws IOException,
             GeneralSecurityException {
         // Loading key only once for performance. If API is upgraded, it will
         // restart the device anyway. It will load the correct key for new API.
