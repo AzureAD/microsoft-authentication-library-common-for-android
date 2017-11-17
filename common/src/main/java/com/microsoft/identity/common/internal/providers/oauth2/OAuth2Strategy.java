@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.adal.internal.providers.oauth2;
+package com.microsoft.identity.common.internal.providers.oauth2;
 
 import com.microsoft.identity.common.Account;
 import android.net.Uri;

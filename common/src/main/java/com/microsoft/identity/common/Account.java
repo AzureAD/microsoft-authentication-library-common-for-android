@@ -5,4 +5,7 @@ package com.microsoft.identity.common;
  */
 
 public abstract class Account {
+
+    public abstract String getUniqueIdentifier();
+
 }
