@@ -1,9 +1,9 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-/**
- * Created by shoatman on 11/17/2017.
- */
 
+/**
+ * A class for pulling the OpenIDConfiguratino document from the OpenID Provider server
+ */
 public class OpenIDProviderConfigurationClient {
 
     public OpenIDProviderConfiguration getOpenIDProviderConfiguration(){

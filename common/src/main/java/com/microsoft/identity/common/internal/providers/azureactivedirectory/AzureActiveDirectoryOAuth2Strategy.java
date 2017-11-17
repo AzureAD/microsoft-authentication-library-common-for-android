@@ -5,20 +5,36 @@ import android.support.annotation.Nullable;
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 
 import java.net.URL;
 import java.util.UUID;
 
 
-
+/**
+ * The Azure Active Directory oAuth2 Strategy
+ */
 public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
 
     protected void validateAuthoriztionRequest(AuthorizationRequest request){
 
     }
-    protected void validateTokenRequest(AuthorizationRequest request){
+
+    /**
+     * validate the contents of the token request... all the base class is currently abstract
+     * some of the validation for requried parameters for the protocol could be there...
+     *
+     * @param request
+     */
+    protected void validateTokenRequest(TokenRequest request){
 
     }
+
+    /**
+     * Stubbed out for now, but should create a new AzureActiveDirectory account
+     * Should accept a parameter (TokenResponse) for producing that user
+     * @return
+     */
     protected Account createAccount(){
         Account a = new AzureActiveDirectoryAccount();
         return a;
