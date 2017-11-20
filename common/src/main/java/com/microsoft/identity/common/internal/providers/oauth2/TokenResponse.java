@@ -17,7 +17,7 @@ public class TokenResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
-    protected int mExpiresIn;
+    protected String mExpiresIn;
 
     /**
      * REQUIRED.  The access token issued by the authorization server.
@@ -67,7 +67,7 @@ public class TokenResponse {
      *
      * @return The expires_in to get.
      */
-    public int getExpiresIn() {
+    public String getExpiresIn() {
         return mExpiresIn;
     }
 
@@ -76,7 +76,7 @@ public class TokenResponse {
      *
      * @param expiresIn The expires_in to set.
      */
-    public void setExpiresIn(int expiresIn) {
+    public void setExpiresIn(String expiresIn) {
         this.mExpiresIn = expiresIn;
     }
 
