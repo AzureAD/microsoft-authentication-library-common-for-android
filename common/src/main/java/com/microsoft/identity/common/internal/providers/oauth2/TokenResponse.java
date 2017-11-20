@@ -74,10 +74,10 @@ public class TokenResponse {
     /**
      * Sets the response expires_in.
      *
-     * @param mExpiresIn The expires_in to set.
+     * @param expiresIn The expires_in to set.
      */
-    public void setExpiresIn(int mExpiresIn) {
-        this.mExpiresIn = mExpiresIn;
+    public void setExpiresIn(int expiresIn) {
+        this.mExpiresIn = expiresIn;
     }
 
     /**
@@ -92,10 +92,10 @@ public class TokenResponse {
     /**
      * Sets the response access_token.
      *
-     * @param mAccessToken The access_token to set.
+     * @param accessToken The access_token to set.
      */
-    public void setAccessToken(String mAccessToken) {
-        this.mAccessToken = mAccessToken;
+    public void setAccessToken(String accessToken) {
+        this.mAccessToken = accessToken;
     }
 
     /**
@@ -110,10 +110,10 @@ public class TokenResponse {
     /**
      * Sets the response token_type.
      *
-     * @param mTokenType The token_type to set.
+     * @param tokenType The token_type to set.
      */
-    public void setTokenType(String mTokenType) {
-        this.mTokenType = mTokenType;
+    public void setTokenType(String tokenType) {
+        this.mTokenType = tokenType;
     }
 
     /**
@@ -128,10 +128,10 @@ public class TokenResponse {
     /**
      * Sets the response refresh_token.
      *
-     * @param mRefreshToken The refresh_token to set.
+     * @param refreshToken The refresh_token to set.
      */
-    public void setRefreshToken(String mRefreshToken) {
-        this.mRefreshToken = mRefreshToken;
+    public void setRefreshToken(String refreshToken) {
+        this.mRefreshToken = refreshToken;
     }
 
     /**
@@ -146,10 +146,10 @@ public class TokenResponse {
     /**
      * Sets the response scope.
      *
-     * @param mScope The scope to set.
+     * @param scope The scope to set.
      */
-    public void setScope(String mScope) {
-        this.mScope = mScope;
+    public void setScope(String scope) {
+        this.mScope = scope;
     }
 
     /**
@@ -164,9 +164,9 @@ public class TokenResponse {
     /**
      * Sets the response state.
      *
-     * @param mState The state to set.
+     * @param state The state to set.
      */
-    public void setState(String mState) {
-        this.mState = mState;
+    public void setState(String state) {
+        this.mState = state;
     }
 }
