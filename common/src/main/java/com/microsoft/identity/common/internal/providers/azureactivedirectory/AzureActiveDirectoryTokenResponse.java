@@ -33,6 +33,22 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
     protected String mIdToken;
 
     /**
+     * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
+     * extend the valid lifetime of an access_token.
+     */
+    protected String mExtExpiresIn;
+
+    /**
+     * The time after which the issued access_token may be used.
+     */
+    protected String mNotBefore;
+
+    /**
+     * Information to uniquely identify the tenant and the user _within_ that tenant.
+     */
+    protected String mClientInfo;
+
+    /**
      * Gets the response expires_on.
      *
      * @return The expires_on to get.
@@ -84,5 +100,59 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
      */
     public void setIdToken(String idToken) {
         this.mIdToken = idToken;
+    }
+
+    /**
+     * Gets the response ext_expires_in.
+     *
+     * @return The ext_expires_in to get.
+     */
+    public String getExtExpiresIn() {
+        return mExtExpiresIn;
+    }
+
+    /**
+     * Sets the response ext_expires_in.
+     *
+     * @param extExpiresIn The ext_expires_in to set.
+     */
+    public void setExtExpiresIn(String extExpiresIn) {
+        this.mExtExpiresIn = extExpiresIn;
+    }
+
+    /**
+     * Gets the response not_before.
+     *
+     * @return The not_before to get.
+     */
+    public String getNotBefore() {
+        return mNotBefore;
+    }
+
+    /**
+     * Set the response not_before.
+     *
+     * @param notBefore The not_before to set.
+     */
+    public void setNotBefore(String notBefore) {
+        this.mNotBefore = notBefore;
+    }
+
+    /**
+     * Gets the response client_info.
+     *
+     * @return The client_info to get.
+     */
+    public String getClientInfo() {
+        return mClientInfo;
+    }
+
+    /**
+     * Sets the response client_info.
+     *
+     * @param clientInfo The client_info to set.
+     */
+    public void setClientInfo(String clientInfo) {
+        this.mClientInfo = clientInfo;
     }
 }
