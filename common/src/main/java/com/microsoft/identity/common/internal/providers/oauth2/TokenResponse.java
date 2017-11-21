@@ -63,6 +63,15 @@ public class TokenResponse {
     protected String mState;
 
     /**
+     * An unsigned JSON Web Token (JWT). The app can base64Url decode the segments of this token
+     * to request information about the user who signed in. The app can cache the values and
+     * display them, but it should not rely on them for any authorization or security boundaries.
+     *
+     * @See <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code">Authorize access to web applications using OAuth 2.0 and Azure Active Directory</a>
+     */
+    protected String mIdToken;
+
+    /**
      * Gets the response expires_in.
      *
      * @return The expires_in to get.
@@ -168,5 +177,23 @@ public class TokenResponse {
      */
     public void setState(String state) {
         this.mState = state;
+    }
+
+    /**
+     * Gets the response id_token.
+     *
+     * @return The id_token to get.
+     */
+    public String getIdToken() {
+        return mIdToken;
+    }
+
+    /**
+     * Sets the response id_token.
+     *
+     * @param idToken The id_token to set.
+     */
+    public void setIdToken(String idToken) {
+        this.mIdToken = idToken;
     }
 }
