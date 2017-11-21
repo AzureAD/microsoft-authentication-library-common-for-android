@@ -1,6 +1,8 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import com.microsoft.identity.common.Account;
+
+import android.media.session.MediaSession;
 import android.net.Uri;
 
 
@@ -48,7 +50,7 @@ public abstract class OAuth2Strategy {
      * This method should take the TokenResponse as a parameter
      * @return
      */
-    protected abstract Account createAccount();
+    protected abstract Account createAccount(TokenResponse response);
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method
