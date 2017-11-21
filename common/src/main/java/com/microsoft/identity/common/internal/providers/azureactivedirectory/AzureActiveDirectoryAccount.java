@@ -22,10 +22,12 @@ public class AzureActiveDirectoryAccount extends Account {
     private IDToken mIDToken;
 
     /**
-     * Internal constructor to create {@link User} from the {@link IdToken}.
-     * User will be created with both {@link IdToken} and {@link ClientInfo}.
+     * Private constructor for AzureActiveDirectoryAccount object
+     * @param idToken Returned as part of the TokenResponse
+     * @param uid Returned via clientInfo of TokenResponse
+     * @param uTid Returned via ClientInfo of Token Response
      */
-    User(IDToken idToken, String uid, final String uTid) {
+    AzureActiveDirectoryAccount(IDToken idToken, String uid, final String uTid) {
         Map<String, String> claims = idToken.getTokenClaims();
         mDisplayableId = claims.get(StandardIdTokenClaims.PREFERRED_USERNAME);
         mName = claims.get(StandardIdTokenClaims.NAME);
@@ -40,23 +42,18 @@ public class AzureActiveDirectoryAccount extends Account {
      * @param idToken
      * @return
      */
-    public static AzureActiveDirectoryAccount create(final IDToken idToken) {
+    public static AzureActiveDirectoryAccount create(final IDToken idToken, ClientInfo clientInfo) {
 
         final String uid;
         final String uTid;
-        /*
+
         if (clientInfo == null) {
             uid = "";
             uTid = "";
         } else {
-            uid = clientInfo.getUniqueIdentifier();
-            uTid = clientInfo.getUniqueTenantIdentifier();
+            uid = clientInfo.getUid();
+            uTid = clientInfo.getUtid();
         }
-
-        */
-
-        uid = "";
-        uTid = "";
 
         return new AzureActiveDirectoryAccount(idToken, uid, uTid);
     }

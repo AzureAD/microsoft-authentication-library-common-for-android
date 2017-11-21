@@ -7,7 +7,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 public class AzureActiveDirectoryOAuth2TokenCache extends OAuth2TokenCache {
 
-    public void saveTokens(AzureActiveDirectoryOAuth2Strategy oAuth2Strategy, TokenRequest request, TokenResponse response) {
+    public void saveTokens(OAuth2Strategy oAuth2Strategy, TokenRequest request, TokenResponse response) {
 
     }
 }

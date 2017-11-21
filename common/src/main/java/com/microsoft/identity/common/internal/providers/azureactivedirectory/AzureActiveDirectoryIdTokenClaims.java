@@ -1,15 +1,18 @@
 package com.microsoft.identity.common.internal.providers.azureactivedirectory;
 
-/**
- * Created by shoatman on 11/21/2017.
- */
 
+/**
+ * Represents additional id token claims issued by AAD (V1 Endpoint)
+ * https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims
+ */
 public class AzureActiveDirectoryIdTokenClaims {
     public static final String ISSUER = "iss";
     public static final String OJBECT_ID = "oid";
     public static final String TENANT_ID = "tid";
-
-    static final String OBJECT_ID = "oid";
-    //static final String HOME_OBJECT_ID = "home_oid"; Leaving this out for now... not sure if AAD or B2C returns this....
-    //static final String VERSION = "ver"; ... again not sure who is returning this.... are we versioning id tokens in either B2C or AAD?
+    public static final String UPN = "upn";
+    public static final String AUDIENCE = "aud";
+    public static final String ISSUED_AT = "iat";
+    public static final String NOT_BEFORE = "nbf";
+    public static final String VERSION = "ver";
+    public static final String UNIQUE_NAME = "unique_name";
 }

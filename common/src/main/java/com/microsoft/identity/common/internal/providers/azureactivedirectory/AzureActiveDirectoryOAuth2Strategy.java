@@ -40,7 +40,8 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
      */
     protected Account createAccount(TokenResponse response){
         IDToken idToken = new IDToken(response.getIdToken());
-        return AzureActiveDirectoryAccount.create(idToken);
+        ClientInfo clientInfo = new ClientInfo(((AzureActiveDirectoryTokenResponse)response).getClientInfo());
+        return AzureActiveDirectoryAccount.create(idToken, clientInfo);
     }
 
     /*
