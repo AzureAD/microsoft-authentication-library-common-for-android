@@ -22,7 +22,7 @@ public abstract class OAuth2Strategy {
      * @param authorizationStrategy
      * @return
      */
-    protected AuthorizationResponse requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy){
+    public AuthorizationResponse requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy){
         validateAuthoriztionRequest(request);
         Uri authorizationUri = createAuthorizationUri();
         AuthorizationResult result = authorizationStrategy.requestAuthorization(request);
@@ -50,7 +50,7 @@ public abstract class OAuth2Strategy {
      * This method should take the TokenResponse as a parameter
      * @return
      */
-    protected abstract Account createAccount(TokenResponse response);
+    public abstract Account createAccount(TokenResponse response);
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method
