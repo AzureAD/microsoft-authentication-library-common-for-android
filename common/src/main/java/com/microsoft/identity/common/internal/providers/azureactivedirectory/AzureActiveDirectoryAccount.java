@@ -13,7 +13,6 @@ import java.util.Map;
  */
 public class AzureActiveDirectoryAccount extends Account {
 
-
     private String mDisplayableId;
     private String mName;
     private String mIdentityProvider;
@@ -21,11 +20,16 @@ public class AzureActiveDirectoryAccount extends Account {
     private String mUtid;
     private IDToken mIDToken;
 
+    public AzureActiveDirectoryAccount() {
+        // Default constructor.
+    }
+
     /**
      * Private constructor for AzureActiveDirectoryAccount object
+     *
      * @param idToken Returned as part of the TokenResponse
-     * @param uid Returned via clientInfo of TokenResponse
-     * @param uTid Returned via ClientInfo of Token Response
+     * @param uid     Returned via clientInfo of TokenResponse
+     * @param uTid    Returned via ClientInfo of Token Response
      */
     AzureActiveDirectoryAccount(IDToken idToken, String uid, final String uTid) {
         Map<String, String> claims = idToken.getTokenClaims();
@@ -39,6 +43,7 @@ public class AzureActiveDirectoryAccount extends Account {
     /**
      * Creates an AzureActiveDirectoryAccount based on the contents of the IDToken and based on the contents of the ClientInfo JSON
      * returned as part of the TokenResponse
+     *
      * @param idToken
      * @return
      */
@@ -93,31 +98,70 @@ public class AzureActiveDirectoryAccount extends Account {
      *
      * @param displayableId
      */
-    void setDisplayableId(final String displayableId) {
+    public void setDisplayableId(final String displayableId) {
         mDisplayableId = displayableId;
     }
 
+    /**
+     * Gets the uid.
+     *
+     * @return The uid to get.
+     */
     String getUid() {
         return mUid;
     }
 
-    void setUid(final String uid) {
+    /**
+     * Sets the uid.
+     *
+     * @param uid The uid to set.
+     */
+    public void setUid(final String uid) {
         mUid = uid;
     }
 
-    void setUtid(final String uTid) {
+    /**
+     * Sets the utid.
+     *
+     * @param uTid The utid to set.
+     */
+    public void setUtid(final String uTid) {
         mUtid = uTid;
     }
 
+    /**
+     * Sets the name.
+     *
+     * @param name The name to set.
+     */
+    public void setName(final String name) {
+        mName = name;
+    }
+
+    /**
+     * Sets the identity provider.
+     *
+     * @param idp The identity provider to set.
+     */
+    public void setIdentityProvider(final String idp) {
+        mIdentityProvider = idp;
+    }
+
+    /**
+     * Gets the utid.
+     *
+     * @return The utid to get.
+     */
     String getUtid() {
         return mUtid;
     }
 
     /**
      * Return the unique identifier for the account...
+     *
      * @return
      */
-    public String getUniqueIdentifier(){
+    public String getUniqueIdentifier() {
         return StringExtensions.base64UrlEncodeToString(mUid) + "." + StringExtensions.base64UrlEncodeToString(mUtid);
     }
 }
