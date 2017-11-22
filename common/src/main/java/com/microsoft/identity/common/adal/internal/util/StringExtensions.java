@@ -12,6 +12,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -170,5 +171,9 @@ public final class StringExtensions {
     public static boolean hasPrefixInHeader(final String value, final String prefix) {
         return value.startsWith(prefix) && value.length() > prefix.length() + 2
                 && Character.isWhitespace(value.charAt(prefix.length()));
+    }
+
+    public static String base64UrlEncodeToString(final String message) {
+        return Base64.encodeToString(message.getBytes(Charset.forName(ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
     }
 }

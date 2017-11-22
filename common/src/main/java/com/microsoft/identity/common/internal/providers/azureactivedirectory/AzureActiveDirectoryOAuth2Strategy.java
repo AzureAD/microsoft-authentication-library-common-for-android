@@ -1,11 +1,14 @@
 package com.microsoft.identity.common.internal.providers.azureactivedirectory;
 
 import android.support.annotation.Nullable;
+import android.support.v4.media.session.MediaSessionCompat;
 
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.net.URL;
 import java.util.UUID;
@@ -35,9 +38,10 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
      * Should accept a parameter (TokenResponse) for producing that user
      * @return
      */
-    protected Account createAccount(){
-        Account a = new AzureActiveDirectoryAccount();
-        return a;
+    protected Account createAccount(TokenResponse response){
+        IDToken idToken = new IDToken(response.getIdToken());
+        ClientInfo clientInfo = new ClientInfo(((AzureActiveDirectoryTokenResponse)response).getClientInfo());
+        return AzureActiveDirectoryAccount.create(idToken, clientInfo);
     }
 
     /*
