@@ -142,6 +142,7 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
 
     /**
      * Gets the response foci.
+     *
      * @return The foci to get.
      */
     public String getFoci() {
@@ -150,6 +151,7 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
 
     /**
      * Sets the response foci.
+     *
      * @param foci The foci to set.
      */
     public void setFoci(String foci) {
@@ -158,6 +160,7 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
 
     /**
      * Gets the response spe ring (x-ms-clitelem)
+     *
      * @return The spe ring.
      */
     public String getSpeRing() {
@@ -166,7 +169,8 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
 
     /**
      * Sets the response spe ring (x-ms-clitelem)
-     * @param speRing
+     *
+     * @param speRing The spe ring to set.
      */
     public void setSpeRing(String speRing) {
         this.mSpeRing = speRing;
