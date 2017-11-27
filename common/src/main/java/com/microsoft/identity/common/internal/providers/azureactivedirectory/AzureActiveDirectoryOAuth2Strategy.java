@@ -38,7 +38,7 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
      * Should accept a parameter (TokenResponse) for producing that user
      * @return
      */
-    protected Account createAccount(TokenResponse response){
+    public Account createAccount(TokenResponse response){
         IDToken idToken = new IDToken(response.getIdToken());
         ClientInfo clientInfo = new ClientInfo(((AzureActiveDirectoryTokenResponse)response).getClientInfo());
         return AzureActiveDirectoryAccount.create(idToken, clientInfo);
