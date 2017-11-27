@@ -5,6 +5,8 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.StandardIdTokenClaims;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -14,7 +16,8 @@ import java.util.Map;
 public class AzureActiveDirectoryAccount extends Account {
 
 
-    private String mDisplayableId;
+    private String mDisplayableId; // Legacy Identifier -  UPN (preferred) or Email
+    private String mUniqueId; // Legacy Identifier - Object Id (preferred) or Subject
     private String mName;
     private String mIdentityProvider;
     private String mUid;
@@ -29,7 +32,8 @@ public class AzureActiveDirectoryAccount extends Account {
      */
     AzureActiveDirectoryAccount(IDToken idToken, String uid, final String uTid) {
         Map<String, String> claims = idToken.getTokenClaims();
-        mDisplayableId = claims.get(StandardIdTokenClaims.PREFERRED_USERNAME);
+        mUniqueId = getUniqueId(claims);
+        mDisplayableId = getDisplayableId(claims);
         mName = claims.get(StandardIdTokenClaims.NAME);
         mIdentityProvider = claims.get(AzureActiveDirectoryIdTokenClaims.ISSUER);
         mUid = uid;
@@ -58,6 +62,30 @@ public class AzureActiveDirectoryAccount extends Account {
         return new AzureActiveDirectoryAccount(idToken, uid, uTid);
     }
 
+    private String getDisplayableId(Map<String, String> claims){
+
+        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.UPN))) {
+            return claims.get(AzureActiveDirectoryIdTokenClaims.UPN);
+        } else if (!StringExtensions.isNullOrBlank(claims.get(StandardIdTokenClaims.EMAIL))) {
+            return claims.get(StandardIdTokenClaims.EMAIL);
+        }
+
+        return null;
+    }
+
+    private String getUniqueId(Map<String, String> claims){
+
+        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.OJBECT_ID))) {
+            return claims.get(AzureActiveDirectoryIdTokenClaims.OJBECT_ID);
+        } else if (!StringExtensions.isNullOrBlank(claims.get(StandardIdTokenClaims.SUBJECT))) {
+            return claims.get(StandardIdTokenClaims.SUBJECT);
+        }
+
+        return null;
+    }
+
+
+
     /**
      * @return The displayable value in the UserPrincipleName(UPN) format. Can be null if not returned from the service.
      */
@@ -82,8 +110,8 @@ public class AzureActiveDirectoryAccount extends Account {
     /**
      * @return The unique identifier of the user, which is across tenant.
      */
-    public String getUserIdentifier() {
-        return getUniqueIdentifier();
+    public String getUserId() {
+        return mUniqueId;
     }
 
     // internal methods provided
@@ -113,11 +141,31 @@ public class AzureActiveDirectoryAccount extends Account {
         return mUtid;
     }
 
+    void setUserId(String userid) {
+        mUniqueId = userid;
+    }
+
     /**
      * Return the unique identifier for the account...
      * @return
      */
     public String getUniqueIdentifier(){
         return StringExtensions.base64UrlEncodeToString(mUid) + "." + StringExtensions.base64UrlEncodeToString(mUtid);
+    }
+
+    @Override
+    public List<String> getCacheIdentifiers() {
+        List<String> cacheIdentifiers = new ArrayList<String>();
+
+        if(mDisplayableId != null)
+            cacheIdentifiers.add(mDisplayableId);
+
+        if(mUniqueId != null)
+            cacheIdentifiers.add(mUniqueId);
+
+        if(getUniqueIdentifier() !=null)
+            cacheIdentifiers.add(getUniqueIdentifier());
+
+        return cacheIdentifiers;
     }
 }

@@ -1,5 +1,7 @@
 package com.microsoft.identity.common;
 
+import java.util.List;
+
 /**
  * In MSAL we have user... in ADAL we have userinfo
  * Users are human or software agents.... humans and software agents have accounts
@@ -17,5 +19,7 @@ public abstract class Account {
      * @return
      */
     public abstract String getUniqueIdentifier();
+
+    public abstract List<String> getCacheIdentifiers();
 
 }

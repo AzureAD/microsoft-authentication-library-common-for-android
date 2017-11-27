@@ -12,15 +12,10 @@ import com.microsoft.identity.common.Account;
  */
 public abstract class OAuth2TokenCache {
 
-    Context mContext;
-    SharedPreferencesFileManager mSharedPreferencesFileManager;
+    protected Context mContext;
 
     public OAuth2TokenCache(Context context){
         mContext = context;
-    }
-
-    protected void InitializeSharedPreferencesFileManager(String fileName){
-        mSharedPreferencesFileManager = new SharedPreferencesFileManager(mContext, fileName);
     }
 
     /**

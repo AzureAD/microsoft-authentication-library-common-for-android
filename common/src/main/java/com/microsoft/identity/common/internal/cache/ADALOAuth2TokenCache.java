@@ -7,6 +7,7 @@ import android.util.Log;
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryAccount;
+import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -15,9 +16,16 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.net.MalformedURLException;
+import java.util.List;
+import java.util.ListIterator;
 
+/**
+ * Class responsible for saving oAuth2 Tokens for use in future requests.  Ideally this class would
+ * work with any IDP; however ADAL only currently supports ADFS and AAD hence this class reflects that
+ */
 public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSingleSignOnState {
 
+    SharedPreferencesFileManager mSharedPreferencesFileManager;
     final static String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
 
     public ADALOAuth2TokenCache(Context context, SharedPreferencesFileManager mSharedPreferencesFileManager) {
@@ -25,42 +33,36 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
         InitializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
     }
 
+    protected void InitializeSharedPreferencesFileManager(String fileName){
+        mSharedPreferencesFileManager = new SharedPreferencesFileManager(super.mContext, fileName);
+    }
+
+    /**
+     * Method responsible for saving tokens contained in the TokenResponse to storage.
+     * @param oAuth2Strategy
+     * @param request
+     * @param response
+     */
     @Override
     public void saveTokens(OAuth2Strategy oAuth2Strategy, AuthorizationRequest request, TokenResponse response) {
 
-        AzureActiveDirectoryAccount aadAccount;
-        AzureActiveDirectoryTokenResponse aadTokenResponse;
         Account account = oAuth2Strategy.createAccount(response);
 
-        if(account instanceof  AzureActiveDirectoryAccount){
-            aadAccount = (AzureActiveDirectoryAccount)account;
-        }else{
-            throw new IllegalArgumentException("ADALOAuth2TokenCache expects an AAD Account Object");
+        ListIterator<String> cacheIds = account.getCacheIdentifiers().listIterator();
+
+        while(cacheIds.hasNext()){
+            //Azure AD Uses Resource and Not Scope... but we didn't override... heads up
+            setItemToCacheForUser(request.getScope(), request.getClientId(), response, cacheIds.next());
         }
 
-        if(response instanceof AzureActiveDirectoryTokenResponse ){
-            aadTokenResponse = (AzureActiveDirectoryTokenResponse)response;
-        }else{
-            throw new IllegalArgumentException("ADALOAuthTokenCache expects an AAD Token Response Object");
-        }
-
-        if (aadAccount != null) {
-            // update cache entry with displayableId
-            if (!StringExtensions.isNullOrBlank(aadAccount.getDisplayableId())) {
-                setItemToCacheForUser(request.getScope(), request.getClientId(), aadTokenResponse, aadAccount.getDisplayableId());
-            }
-
-            // TODO: I changes the behavior of this method... to return the new user id based on utid, uid... can't do that....
-            if (!StringExtensions.isNullOrBlank(aadAccount.getUserIdentifier())) {
-                setItemToCacheForUser(request.getScope(), request.getClientId(), aadTokenResponse, aadAccount.getUserIdentifier());
-            }
-        }
-
-        // TODO: Since this is AAD and not ADFS... I think we can remove this....
+        // TODO: I'd like to know exactly why this is here before I put this back in.... i'm assuming for ADFS v3.
         //setItemToCacheForUser(resource, clientId, result, null);
     }
 
-    private void setItemToCacheForUser(final String resource, final String clientId, final AzureActiveDirectoryTokenResponse result, final String userId)  {
+
+
+
+    private void setItemToCacheForUser(final String resource, final String clientId, final TokenResponse result, final String userId)  {
 
 
         // new tokens will only be saved into preferred cache location
