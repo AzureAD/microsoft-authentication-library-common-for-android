@@ -2,6 +2,8 @@ package com.microsoft.identity.common.internal.providers.azureactivedirectory;
 
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
+import java.util.Date;
+
 /**
  * {@link TokenResponse} subclass for Azure AD.
  */
@@ -14,7 +16,7 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
      *
      * @See <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code">Authorize access to web applications using OAuth 2.0 and Azure Active Directory</a>
      */
-    protected String mExpiresOn;
+    protected Date mExpiresOn;
 
     /**
      * The App ID URI of the web API (secured resource).
@@ -27,7 +29,7 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
      * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
      * extend the valid lifetime of an access_token.
      */
-    protected String mExtExpiresOn;
+    protected Date mExtExpiresOn;
 
     /**
      * The time after which the issued access_token may be used.
@@ -79,7 +81,7 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
      *
      * @return The expires_on to get.
      */
-    public String getExpiresOn() {
+    public Date getExpiresOn() {
         return mExpiresOn;
     }
 
@@ -88,7 +90,7 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
      *
      * @param expiresOn The expires_on to set.
      */
-    public void setExpiresOn(String expiresOn) {
+    public void setExpiresOn(Date expiresOn) {
         this.mExpiresOn = expiresOn;
     }
 
@@ -115,7 +117,7 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
      *
      * @return The ext_expires_in to get.
      */
-    public String getExtExpiresOn() {
+    public Date getExtExpiresOn() {
         return mExtExpiresOn;
     }
 
@@ -124,7 +126,7 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
      *
      * @param extExpiresOn The ext_expires_in to set.
      */
-    public void setExtExpiresOn(String extExpiresOn) {
+    public void setExtExpiresOn(Date extExpiresOn) {
         this.mExtExpiresOn = extExpiresOn;
     }
 

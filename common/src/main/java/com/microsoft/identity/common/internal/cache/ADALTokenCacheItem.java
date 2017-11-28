@@ -1,7 +1,10 @@
 package com.microsoft.identity.common.internal.cache;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryAccessToken;
 import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryAccount;
+import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryRefreshToken;
+import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -58,7 +61,7 @@ public class ADALTokenCacheItem {
         mSpeRing = tokenCacheItem.getSpeRing();
     }
 
-    ADALTokenCacheItem(OAuth2Strategy strategy, TokenResponse response, AuthorizationRequest request) {
+    ADALTokenCacheItem(OAuth2Strategy strategy, AuthorizationRequest request, TokenResponse response) {
 
         Account account = strategy.createAccount(response);
         String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
@@ -73,19 +76,22 @@ public class ADALTokenCacheItem {
         mRawIdToken = response.getIdToken();
         if (account instanceof AzureActiveDirectoryAccount) {
             mUserInfo = new ADALUserInfo((AzureActiveDirectoryAccount) account);
+            mTenantId = ((AzureActiveDirectoryAccount) account).getTenantId();
         }
 
-        /*
         if(accessToken instanceof AzureActiveDirectoryAccessToken){
-            mExpiresOn = ((AzureActiveDirectoryAccessToken)accessToken).getExpiresOn()
+            mExpiresOn = ((AzureActiveDirectoryAccessToken)accessToken).getExpiresOn();
+            mExtendedExpiresOn = ((AzureActiveDirectoryAccessToken)accessToken).getExtendedExpiresOn();
         }
 
         if(refreshToken instanceof AzureActiveDirectoryRefreshToken){
-            mExpiresOn = ((AzureActiveDirectoryTokenResponse)response).getExpiresOn();
+            mIsMultiResourceRefreshToken = ((AzureActiveDirectoryRefreshToken)refreshToken).getIsFamilyRefreshToken();
+            mFamilyClientId = ((AzureActiveDirectoryRefreshToken)refreshToken).getFamilyId();
         }
 
-        */
-
+        if(response instanceof AzureActiveDirectoryTokenResponse){
+            mSpeRing = ((AzureActiveDirectoryTokenResponse)response).getSpeRing();
+        }
 
     }
 
