@@ -1,6 +1,5 @@
 package com.microsoft.identity.common.adal.internal;
 
-
 /**
  * {@link AuthenticationConstants} contains all the constant value the SDK is using.
  */
@@ -151,50 +150,50 @@ public final class AuthenticationConstants {
         public static final String TOKEN_TYPE = "token_type";
 
         /** String of id token. */
-        static final String ID_TOKEN = "id_token";
+        public static final String ID_TOKEN = "id_token";
 
         /** String of sub in the id token. */
-        static final String ID_TOKEN_SUBJECT = "sub";
+        public static final String ID_TOKEN_SUBJECT = "sub";
 
         /** String of tenant id in the id token. */
-        static final String ID_TOKEN_TENANTID = "tid";
+        public static final String ID_TOKEN_TENANTID = "tid";
 
         /** String of UPN in the id token claim. */
-        static final String ID_TOKEN_UPN = "upn";
+        public static final String ID_TOKEN_UPN = "upn";
 
         /** String of given name in the id token claim. */
-        static final String ID_TOKEN_GIVEN_NAME = "given_name";
+        public static final String ID_TOKEN_GIVEN_NAME = "given_name";
 
         /** String of family name in the id token claim. */
-        static final String ID_TOKEN_FAMILY_NAME = "family_name";
+        public static final String ID_TOKEN_FAMILY_NAME = "family_name";
 
         /** String of unique name. */
-        static final String ID_TOKEN_UNIQUE_NAME = "unique_name";
+        public static final String ID_TOKEN_UNIQUE_NAME = "unique_name";
 
         /** String of email in the id token. */
-        static final String ID_TOKEN_EMAIL = "email";
+        public static final String ID_TOKEN_EMAIL = "email";
 
         /** String of identity provider in the id token claim. */
-        static final String ID_TOKEN_IDENTITY_PROVIDER = "idp";
+        public static final String ID_TOKEN_IDENTITY_PROVIDER = "idp";
 
         /** String of oid in the id token claim. */
-        static final String ID_TOKEN_OBJECT_ID = "oid";
+        public static final String ID_TOKEN_OBJECT_ID = "oid";
 
         /** String of password expiration in the id token claim. */
-        static final String ID_TOKEN_PASSWORD_EXPIRATION = "pwd_exp";
+        public static final String ID_TOKEN_PASSWORD_EXPIRATION = "pwd_exp";
 
         /** String of password change url in the id token claim. */
-        static final String ID_TOKEN_PASSWORD_CHANGE_URL = "pwd_url";
+        public static final String ID_TOKEN_PASSWORD_CHANGE_URL = "pwd_url";
 
         /** String of FoCI field returned in the JSON response from token endpoint. */
-        static final String ADAL_CLIENT_FAMILY_ID = "foci";
+        public static final String ADAL_CLIENT_FAMILY_ID = "foci";
 
         /** String of has_chrome sent as extra query param to hide back button in the webview. */
-        static final String HAS_CHROME = "haschrome";
+        public static final String HAS_CHROME = "haschrome";
 
-        static final String EXT_EXPIRES_IN = "ext_expires_in";
+        public static final String EXT_EXPIRES_IN = "ext_expires_in";
 
-        static final String CLAIMS = "claims";
+        public static final String CLAIMS = "claims";
     }
 
     /**
@@ -504,37 +503,37 @@ public final class AuthenticationConstants {
     /**
      * Represents the oauth2 error code.
      */
-    protected static final class OAuth2ErrorCode {
+    public static final class OAuth2ErrorCode {
         /**
          * Oauth2 error code invalid_grant.
          */
-        static final String INVALID_GRANT = "invalid_grant";
+        public static final String INVALID_GRANT = "invalid_grant";
     }
 
     /**
      * HTTP header fields.
      */
-    static final class HeaderField {
+    public static final class HeaderField {
 
         /**
          * @see <a href="https://tools.ietf.org/html/rfc1945#appendix-D.2.1">RFC-1945</a>
          */
-        static final String ACCEPT = "Accept";
+        public static final String ACCEPT = "Accept";
 
         /**
          * Header used to track SPE Ring for telemetry.
          */
-        static final String X_MS_CLITELEM = "x-ms-clitelem";
+        public static final String X_MS_CLITELEM = "x-ms-clitelem";
     }
 
     /**
      * Identifiers for file formats and format contents.
      */
-    static final class MediaType {
+    public static final class MediaType {
 
         /**
          * @see <a href="https://tools.ietf.org/html/rfc7159">RFC-7159</a>
          */
-        static final String APPLICATION_JSON = "application/json";
+        public static final String APPLICATION_JSON = "application/json";
     }
 }
