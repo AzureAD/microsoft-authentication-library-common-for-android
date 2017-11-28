@@ -6,10 +6,9 @@ package com.microsoft.identity.common.internal.providers.oauth2;
  */
 public class OpenIDProviderConfigurationClient {
 
-    public OpenIDProviderConfiguration getOpenIDProviderConfiguration(){
+    public OpenIDProviderConfiguration getOpenIDProviderConfiguration() {
         OpenIDProviderConfiguration config = new OpenIDProviderConfiguration();
         return config;
     }
-
-
+    
 }

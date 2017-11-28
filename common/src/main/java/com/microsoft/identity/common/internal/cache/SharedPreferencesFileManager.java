@@ -1,4 +1,4 @@
-package com.microsoft.identity.common;
+package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 import android.content.SharedPreferences;

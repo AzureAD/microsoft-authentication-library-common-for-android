@@ -8,4 +8,50 @@ package com.microsoft.identity.common.internal.providers.oauth2;
  */
 public class AuthorizationRequest {
 
+    private String mResponseType;
+    private String mClientId;
+    private String mRedirectUri;
+    private String mScope;
+    private String mState;
+
+    public String getResponseType() {
+        return mResponseType;
+    }
+
+    public void setResponseType(String mResponseType) {
+        this.mResponseType = mResponseType;
+    }
+
+    public String getClientId() {
+        return mClientId;
+    }
+
+    public void setClientId(String mClientId) {
+        this.mClientId = mClientId;
+    }
+
+    public String getRedirectUri() {
+        return mRedirectUri;
+    }
+
+    public void setRedirectUri(String mRedirectUri) {
+        this.mRedirectUri = mRedirectUri;
+    }
+
+    public String getScope() {
+        return mScope;
+    }
+
+    public void setScope(String mScope) {
+        this.mScope = mScope;
+    }
+
+    public String getState() {
+        return mState;
+    }
+
+    public void setState(String mState) {
+        this.mState = mState;
+    }
+
 }

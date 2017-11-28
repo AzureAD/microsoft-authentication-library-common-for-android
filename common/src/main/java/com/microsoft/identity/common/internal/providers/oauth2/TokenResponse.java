@@ -17,7 +17,7 @@ public class TokenResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
-    protected String mExpiresIn;
+    protected Long mExpiresIn;
 
     /**
      * REQUIRED.  The access token issued by the authorization server.
@@ -71,12 +71,18 @@ public class TokenResponse {
      */
     protected String mIdToken;
 
+
+    /**
+     * A long representing the time at which the response was received in milliseconds since the Unix Epoch
+     */
+    protected long mResponseReceivedTime;
+
     /**
      * Gets the response expires_in.
      *
      * @return The expires_in to get.
      */
-    public String getExpiresIn() {
+    public Long getExpiresIn() {
         return mExpiresIn;
     }
 
@@ -85,7 +91,7 @@ public class TokenResponse {
      *
      * @param expiresIn The expires_in to set.
      */
-    public void setExpiresIn(String expiresIn) {
+    public void setExpiresIn(Long expiresIn) {
         this.mExpiresIn = expiresIn;
     }
 
@@ -196,4 +202,23 @@ public class TokenResponse {
     public void setIdToken(String idToken) {
         this.mIdToken = idToken;
     }
+
+    /**
+     * Sets the time at which the response was received.  Expressed as milliseconds from the unix epoch
+     *
+     * @param responseReceivedTime
+     */
+    public void setResponseReceivedTime(Long responseReceivedTime) {
+        this.mResponseReceivedTime = responseReceivedTime;
+    }
+
+    /**
+     * Gets the time at which the response was received.  Expressed as milliseconds from the unix epoch
+     *
+     * @return
+     */
+    public long getResponseReceivedTime() {
+        return this.mResponseReceivedTime;
+    }
+
 }

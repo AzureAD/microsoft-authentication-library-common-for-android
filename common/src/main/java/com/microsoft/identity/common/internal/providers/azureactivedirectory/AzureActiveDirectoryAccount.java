@@ -1,10 +1,18 @@
 package com.microsoft.identity.common.internal.providers.azureactivedirectory;
 
+import android.net.Uri;
+
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.adal.internal.util.DateExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.StandardIdTokenClaims;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -13,12 +21,20 @@ import java.util.Map;
  */
 public class AzureActiveDirectoryAccount extends Account {
 
-    private String mDisplayableId;
+    private String mDisplayableId; // Legacy Identifier -  UPN (preferred) or Email
+    private String mUniqueId; // Legacy Identifier - Object Id (preferred) or Subject
+
+
     private String mName;
     private String mIdentityProvider;
     private String mUid;
     private String mUtid;
     private IDToken mIDToken;
+    private Uri mPasswordChangeUrl;
+    private Date mPasswordExpiresOn;
+
+    private String mGivenName;
+    private String mFamilyName;
 
     public AzureActiveDirectoryAccount() {
         // Default constructor.
@@ -33,11 +49,33 @@ public class AzureActiveDirectoryAccount extends Account {
      */
     AzureActiveDirectoryAccount(IDToken idToken, String uid, final String uTid) {
         Map<String, String> claims = idToken.getTokenClaims();
-        mDisplayableId = claims.get(StandardIdTokenClaims.PREFERRED_USERNAME);
+        mUniqueId = getUniqueId(claims);
+        mDisplayableId = getDisplayableId(claims);
         mName = claims.get(StandardIdTokenClaims.NAME);
         mIdentityProvider = claims.get(AzureActiveDirectoryIdTokenClaims.ISSUER);
+        mGivenName = claims.get(StandardIdTokenClaims.GIVEN_NAME);
+        mFamilyName = claims.get(StandardIdTokenClaims.FAMILY_NAME);
         mUid = uid;
         mUtid = uTid;
+
+        long mPasswordExpiration = 0;
+
+        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.PASSWORD_EXPIRATION))) {
+            mPasswordExpiration = Long.parseLong(claims.get(AzureActiveDirectoryIdTokenClaims.PASSWORD_EXPIRATION));
+        }
+
+        if (mPasswordExpiration > 0) {
+            // pwd_exp returns seconds to expiration time
+            // it returns in seconds. Date accepts milliseconds.
+            Calendar expires = new GregorianCalendar();
+            expires.add(Calendar.SECOND, (int) mPasswordExpiration);
+            mPasswordExpiresOn = expires.getTime();
+        }
+
+        mPasswordChangeUrl = null;
+        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.PASSWORD_CHANGE_URL))) {
+            mPasswordChangeUrl = Uri.parse(claims.get(AzureActiveDirectoryIdTokenClaims.PASSWORD_CHANGE_URL));
+        }
     }
 
     /**
@@ -52,6 +90,7 @@ public class AzureActiveDirectoryAccount extends Account {
         final String uid;
         final String uTid;
 
+        //TODO: objC code throws an exception when uid/utid is null.... something for us to consider
         if (clientInfo == null) {
             uid = "";
             uTid = "";
@@ -61,6 +100,45 @@ public class AzureActiveDirectoryAccount extends Account {
         }
 
         return new AzureActiveDirectoryAccount(idToken, uid, uTid);
+    }
+
+    private String getDisplayableId(Map<String, String> claims) {
+
+        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.UPN))) {
+            return claims.get(AzureActiveDirectoryIdTokenClaims.UPN);
+        } else if (!StringExtensions.isNullOrBlank(claims.get(StandardIdTokenClaims.EMAIL))) {
+            return claims.get(StandardIdTokenClaims.EMAIL);
+        }
+
+        return null;
+    }
+
+    private String getUniqueId(Map<String, String> claims) {
+
+        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.OJBECT_ID))) {
+            return claims.get(AzureActiveDirectoryIdTokenClaims.OJBECT_ID);
+        } else if (!StringExtensions.isNullOrBlank(claims.get(StandardIdTokenClaims.SUBJECT))) {
+            return claims.get(StandardIdTokenClaims.SUBJECT);
+        }
+
+        return null;
+    }
+
+
+    public String getGivenName() {
+        return mGivenName;
+    }
+
+    public void setGivenName(String mGivenName) {
+        this.mGivenName = mGivenName;
+    }
+
+    public String getFamilyName() {
+        return mFamilyName;
+    }
+
+    public void setFamilyName(String mFamilyName) {
+        this.mFamilyName = mFamilyName;
     }
 
     /**
@@ -87,8 +165,8 @@ public class AzureActiveDirectoryAccount extends Account {
     /**
      * @return The unique identifier of the user, which is across tenant.
      */
-    public String getUserIdentifier() {
-        return getUniqueIdentifier();
+    public String getUserId() {
+        return mUniqueId;
     }
 
     // internal methods provided
@@ -156,6 +234,10 @@ public class AzureActiveDirectoryAccount extends Account {
         return mUtid;
     }
 
+    void setUserId(String userid) {
+        mUniqueId = userid;
+    }
+
     /**
      * Return the unique identifier for the account...
      *
@@ -163,5 +245,42 @@ public class AzureActiveDirectoryAccount extends Account {
      */
     public String getUniqueIdentifier() {
         return StringExtensions.base64UrlEncodeToString(mUid) + "." + StringExtensions.base64UrlEncodeToString(mUtid);
+    }
+
+    @Override
+    public List<String> getCacheIdentifiers() {
+        List<String> cacheIdentifiers = new ArrayList<String>();
+
+        if (mDisplayableId != null) {
+            cacheIdentifiers.add(mDisplayableId);
+        }
+
+        if (mUniqueId != null) {
+            cacheIdentifiers.add(mUniqueId);
+        }
+
+        if (getUniqueIdentifier() != null) {
+            cacheIdentifiers.add(getUniqueIdentifier());
+        }
+
+        return cacheIdentifiers;
+    }
+
+    /**
+     * Gets password change url.
+     *
+     * @return the password change uri
+     */
+    public Uri getPasswordChangeUrl() {
+        return mPasswordChangeUrl;
+    }
+
+    /**
+     * Gets password expires on.
+     *
+     * @return the time when the password will expire
+     */
+    public Date getPasswordExpiresOn() {
+        return DateExtensions.createCopy(mPasswordExpiresOn);
     }
 }

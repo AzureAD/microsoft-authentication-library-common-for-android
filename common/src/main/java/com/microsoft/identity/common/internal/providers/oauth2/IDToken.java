@@ -2,20 +2,19 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.util.Base64;
 
+import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+
 import org.json.JSONException;
 
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Map;
 
-import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-
 /**
  * Represents the ID Token returned from the oAuth Authorization Server / OpenID Connect Provider
  */
 public class IDToken {
-
 
     private final Map<String, String> mTokenClaims = null;
     private final String mRawIdToken;
@@ -33,7 +32,7 @@ public class IDToken {
     }
 
 
-    public Map<String, String> getTokenClaims(){
+    public Map<String, String> getTokenClaims() {
         return Collections.unmodifiableMap(mTokenClaims);
     }
 
