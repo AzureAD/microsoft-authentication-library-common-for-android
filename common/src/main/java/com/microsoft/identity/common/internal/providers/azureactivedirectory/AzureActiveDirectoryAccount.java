@@ -21,7 +21,6 @@ import java.util.Map;
  */
 public class AzureActiveDirectoryAccount extends Account {
 
-
     private String mDisplayableId; // Legacy Identifier -  UPN (preferred) or Email
     private String mUniqueId; // Legacy Identifier - Object Id (preferred) or Subject
     private String mName;
@@ -32,16 +31,15 @@ public class AzureActiveDirectoryAccount extends Account {
     private Uri mPasswordChangeUrl;
     private Date mPasswordExpiresOn;
 
-
-
     private String mGivenName;
     private String mFamilyName;
 
     /**
      * Private constructor for AzureActiveDirectoryAccount object
+     *
      * @param idToken Returned as part of the TokenResponse
-     * @param uid Returned via clientInfo of TokenResponse
-     * @param uTid Returned via ClientInfo of Token Response
+     * @param uid     Returned via clientInfo of TokenResponse
+     * @param uTid    Returned via ClientInfo of Token Response
      */
     AzureActiveDirectoryAccount(IDToken idToken, String uid, final String uTid) {
         Map<String, String> claims = idToken.getTokenClaims();
@@ -72,13 +70,12 @@ public class AzureActiveDirectoryAccount extends Account {
         if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.PASSWORD_CHANGE_URL))) {
             mPasswordChangeUrl = Uri.parse(claims.get(AzureActiveDirectoryIdTokenClaims.PASSWORD_CHANGE_URL));
         }
-
-
     }
 
     /**
      * Creates an AzureActiveDirectoryAccount based on the contents of the IDToken and based on the contents of the ClientInfo JSON
      * returned as part of the TokenResponse
+     *
      * @param idToken
      * @return
      */
@@ -99,7 +96,7 @@ public class AzureActiveDirectoryAccount extends Account {
         return new AzureActiveDirectoryAccount(idToken, uid, uTid);
     }
 
-    private String getDisplayableId(Map<String, String> claims){
+    private String getDisplayableId(Map<String, String> claims) {
 
         if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.UPN))) {
             return claims.get(AzureActiveDirectoryIdTokenClaims.UPN);
@@ -110,7 +107,7 @@ public class AzureActiveDirectoryAccount extends Account {
         return null;
     }
 
-    private String getUniqueId(Map<String, String> claims){
+    private String getUniqueId(Map<String, String> claims) {
 
         if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.OJBECT_ID))) {
             return claims.get(AzureActiveDirectoryIdTokenClaims.OJBECT_ID);
@@ -199,9 +196,10 @@ public class AzureActiveDirectoryAccount extends Account {
 
     /**
      * Return the unique identifier for the account...
+     *
      * @return
      */
-    public String getUniqueIdentifier(){
+    public String getUniqueIdentifier() {
         return StringExtensions.base64UrlEncodeToString(mUid) + "." + StringExtensions.base64UrlEncodeToString(mUtid);
     }
 
@@ -209,14 +207,17 @@ public class AzureActiveDirectoryAccount extends Account {
     public List<String> getCacheIdentifiers() {
         List<String> cacheIdentifiers = new ArrayList<String>();
 
-        if(mDisplayableId != null)
+        if (mDisplayableId != null) {
             cacheIdentifiers.add(mDisplayableId);
+        }
 
-        if(mUniqueId != null)
+        if (mUniqueId != null) {
             cacheIdentifiers.add(mUniqueId);
+        }
 
-        if(getUniqueIdentifier() !=null)
+        if (getUniqueIdentifier() != null) {
             cacheIdentifiers.add(getUniqueIdentifier());
+        }
 
         return cacheIdentifiers;
     }

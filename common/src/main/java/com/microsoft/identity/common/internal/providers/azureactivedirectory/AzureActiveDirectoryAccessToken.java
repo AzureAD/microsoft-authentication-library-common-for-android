@@ -6,7 +6,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 public class AzureActiveDirectoryAccessToken extends AccessToken {
 
-
     String mExpiresOn;
     String mExtendedExpiresOn;
 
@@ -14,11 +13,11 @@ public class AzureActiveDirectoryAccessToken extends AccessToken {
         super(response);
 
         AzureActiveDirectoryTokenResponse aadResponse;
-        if(response instanceof  AzureActiveDirectoryTokenResponse) {
-            aadResponse = (AzureActiveDirectoryTokenResponse)response;
+        if (response instanceof AzureActiveDirectoryTokenResponse) {
+            aadResponse = (AzureActiveDirectoryTokenResponse) response;
             this.mExpiresOn = aadResponse.getExpiresOn();
             this.mExtendedExpiresOn = aadResponse.getExtExpiresOn();
-        }else{
+        } else {
             throw new RuntimeException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryAccessToken constructor");
         }
     }
@@ -28,8 +27,5 @@ public class AzureActiveDirectoryAccessToken extends AccessToken {
     }
 
     //TODO: Need to add override for IsExpired() to address extended token expires on
-
-
-
 
 }

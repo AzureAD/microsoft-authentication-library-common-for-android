@@ -17,5 +17,4 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
         this.mAuthority = mAuthority;
     }
 
-
 }

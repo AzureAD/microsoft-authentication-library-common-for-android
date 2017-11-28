@@ -22,5 +22,4 @@ public class OpenIDProviderConfiguration {
     private List<String> mIDTokenSigningAlgValuesSupported;
     private List<String> mClaimsSupported;
 
-
 }

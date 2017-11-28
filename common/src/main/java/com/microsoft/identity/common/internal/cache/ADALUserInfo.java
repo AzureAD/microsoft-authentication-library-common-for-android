@@ -24,7 +24,7 @@ public class ADALUserInfo {
     private transient Date mPasswordExpiresOn;
 
 
-    public ADALUserInfo(AzureActiveDirectoryAccount account){
+    public ADALUserInfo(AzureActiveDirectoryAccount account) {
         this.mUniqueId = account.getUserId();
         this.mDisplayableId = account.getDisplayableId();
         this.mGivenName = account.getGivenName();
@@ -33,7 +33,6 @@ public class ADALUserInfo {
         this.mPasswordChangeUrl = account.getPasswordChangeUrl();
         this.mPasswordExpiresOn = account.getPasswordExpiresOn();
     }
-
 
     /**
      * Gets unique user id.

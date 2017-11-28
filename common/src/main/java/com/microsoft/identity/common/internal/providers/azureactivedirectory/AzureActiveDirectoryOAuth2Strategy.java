@@ -1,7 +1,5 @@
 package com.microsoft.identity.common.internal.providers.azureactivedirectory;
 
-import android.media.session.MediaSession;
-
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -17,7 +15,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
  */
 public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
 
-    protected void validateAuthoriztionRequest(AuthorizationRequest request){
+    protected void validateAuthoriztionRequest(AuthorizationRequest request) {
 
     }
 
@@ -27,28 +25,29 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
      *
      * @param request
      */
-    protected void validateTokenRequest(TokenRequest request){
+    protected void validateTokenRequest(TokenRequest request) {
 
     }
 
     /**
      * Stubbed out for now, but should create a new AzureActiveDirectory account
      * Should accept a parameter (TokenResponse) for producing that user
+     *
      * @return
      */
-    public Account createAccount(TokenResponse response){
+    public Account createAccount(TokenResponse response) {
         IDToken idToken = new IDToken(response.getIdToken());
-        ClientInfo clientInfo = new ClientInfo(((AzureActiveDirectoryTokenResponse)response).getClientInfo());
+        ClientInfo clientInfo = new ClientInfo(((AzureActiveDirectoryTokenResponse) response).getClientInfo());
         return AzureActiveDirectoryAccount.create(idToken, clientInfo);
     }
 
-    public String getIssuerCacheIdentifier(AuthorizationRequest request){
+    public String getIssuerCacheIdentifier(AuthorizationRequest request) {
 
         AzureActiveDirectoryAuthorizationRequest authRequest;
 
-        if(request instanceof AzureActiveDirectoryAuthorizationRequest) {
-            authRequest = (AzureActiveDirectoryAuthorizationRequest)request;
-        }else{
+        if (request instanceof AzureActiveDirectoryAuthorizationRequest) {
+            authRequest = (AzureActiveDirectoryAuthorizationRequest) request;
+        } else {
             //TODO: Move this string somewhere else
             throw new RuntimeException("Request provided is not of type AzureActiveDirectoryAuthorizationRequest");
         }
@@ -57,27 +56,26 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
 
     }
 
-    public AccessToken getAccessTokenFromResponse(TokenResponse response){
+    public AccessToken getAccessTokenFromResponse(TokenResponse response) {
         AzureActiveDirectoryAccessToken accessToken = null;
 
-        if(response instanceof AzureActiveDirectoryTokenResponse){
+        if (response instanceof AzureActiveDirectoryTokenResponse) {
             accessToken = new AzureActiveDirectoryAccessToken(response);
-        }else{
+        } else {
             throw new RuntimeException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryOAuth2Strategy.getAccessTokenFromResponse");
         }
         return accessToken;
     }
 
-    public RefreshToken getRefreshTokenFromResponse(TokenResponse response){
+    public RefreshToken getRefreshTokenFromResponse(TokenResponse response) {
         AzureActiveDirectoryRefreshToken refreshToken = null;
 
-        if(response instanceof AzureActiveDirectoryTokenResponse){
+        if (response instanceof AzureActiveDirectoryTokenResponse) {
             refreshToken = new AzureActiveDirectoryRefreshToken(response);
-        }else{
+        } else {
             throw new RuntimeException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryOAuth2Strategy.getRefreshTokenFromResponse");
         }
         return refreshToken;
     }
-
 
 }
