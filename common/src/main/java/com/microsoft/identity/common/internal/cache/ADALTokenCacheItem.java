@@ -82,6 +82,7 @@ public class ADALTokenCacheItem {
             mUserInfo = new ADALUserInfo((AzureActiveDirectoryAccount)account);
         }
 
+        /*
         if(accessToken instanceof AzureActiveDirectoryAccessToken){
             mExpiresOn = ((AzureActiveDirectoryAccessToken)accessToken).getExpiresOn()
         }
@@ -89,6 +90,8 @@ public class ADALTokenCacheItem {
         if(refreshToken instanceof AzureActiveDirectoryRefreshToken){
             mExpiresOn = ((AzureActiveDirectoryTokenResponse)response).getExpiresOn();
         }
+
+        */
 
 
 

@@ -72,6 +72,7 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
 
 
 
+/*
         // new tokens will only be saved into preferred cache location
         mTokenCacheStore.setItem(CacheKey.createCacheKeyForRTEntry(issuer, resource, clientId, userId),
                 TokenCacheItem.createRegularTokenCacheItem(issuer, resource, clientId, result));
@@ -89,6 +90,7 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
             final TokenCacheItem familyTokenCacheItem = TokenCacheItem.createFRRTTokenCacheItem(issuer, result);
             mTokenCacheStore.setItem(CacheKey.createCacheKeyForFRT(issuer, result.getFamilyClientId(), userId), familyTokenCacheItem);
         }
+        */
 
     }
 
