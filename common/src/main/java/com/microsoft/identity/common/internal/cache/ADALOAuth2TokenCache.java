@@ -23,10 +23,10 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
 
     public ADALOAuth2TokenCache(Context context, SharedPreferencesFileManager mSharedPreferencesFileManager) {
         super(context);
-        InitializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
+        initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
     }
 
-    protected void InitializeSharedPreferencesFileManager(String fileName) {
+    protected void initializeSharedPreferencesFileManager(String fileName) {
         mSharedPreferencesFileManager = new SharedPreferencesFileManager(super.mContext, fileName);
     }
 
