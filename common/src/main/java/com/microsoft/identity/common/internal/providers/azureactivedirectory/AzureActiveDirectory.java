@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class AzureActiveDirectory extends IdentityProvider {
 
+    // Constants used to parse cloud discovery document metadata
     private static final String TENANT_DISCOVERY_ENDPOINT = "tenant_discovery_endpoint";
     private static final String METADATA = "metadata";
     private static final String PREFERRED_NETWORK = "preferred_network";
@@ -45,6 +46,13 @@ public class AzureActiveDirectory extends IdentityProvider {
         return sAadClouds.get(authorityUrl.getHost().toLowerCase(Locale.US));
     }
 
+    /**
+     * Initialize the in-memory cache of validated AAD cloud instances.
+     *
+     * @param authorityHost     Host of the Authority used to obtain the metadata.
+     * @param discoveryResponse The response JSON serialized into a Map.
+     * @throws JSONException If a parsing error is encountered.
+     */
     public static void initializeCloudMetadata(final String authorityHost, final Map<String, String> discoveryResponse) throws JSONException {
         final boolean tenantDiscoveryEndpointReturned = discoveryResponse.containsKey(TENANT_DISCOVERY_ENDPOINT);
         final String metadata = discoveryResponse.get(METADATA);
@@ -68,6 +76,13 @@ public class AzureActiveDirectory extends IdentityProvider {
         }
     }
 
+    /**
+     * Deserializes the supplied JSONArray of cloud instances into a native List.
+     *
+     * @param jsonCloudArray The cloud array.
+     * @return Native List of clouds.
+     * @throws JSONException If a parsing error is encountered.
+     */
     private static List<AzureActiveDirectoryCloud> deserializeClouds(final JSONArray jsonCloudArray) throws JSONException {
         return new ArrayList<AzureActiveDirectoryCloud>() {{
             for (int ii = 0; ii < jsonCloudArray.length(); ii++) {
@@ -76,6 +91,13 @@ public class AzureActiveDirectory extends IdentityProvider {
         }};
     }
 
+    /**
+     * Deserializes the supplied JSONObject into a native representation of a cloud.
+     *
+     * @param jsonCloud The cloud instance, as JSON.
+     * @return The native object representing this cloud instance.
+     * @throws JSONException If a parsing error is encountered.
+     */
     private static AzureActiveDirectoryCloud deserializeCloud(final JSONObject jsonCloud) throws JSONException {
         return new AzureActiveDirectoryCloud(
                 jsonCloud.getString(PREFERRED_NETWORK),
@@ -84,6 +106,13 @@ public class AzureActiveDirectory extends IdentityProvider {
         );
     }
 
+    /**
+     * Deserializes the aliases associated with a cloud.
+     *
+     * @param aliases The array of aliases, as JSON.
+     * @return List of Strings containing the aliases.
+     * @throws JSONException If a parsing error is encountered.
+     */
     private static List<String> deserializeAliases(final JSONArray aliases) throws JSONException {
         return new ArrayList<String>() {{
             for (int ii = 0; ii < aliases.length(); ii++) {
