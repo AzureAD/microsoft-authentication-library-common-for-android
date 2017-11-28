@@ -43,6 +43,16 @@ public abstract class OAuth2Strategy {
     }
 
     /**
+     * An abstract method for returning the issuer identifier to be used when caching a token response
+     * @return
+     */
+    public abstract String getIssuerCacheIdentifier(AuthorizationRequest request);
+
+    public abstract AccessToken getAccessTokenFromResponse(TokenResponse response);
+
+    public abstract RefreshToken getRefreshTokenFromResponse(TokenResponse response);
+
+    /**
      * An abstract method for returning the user associated with a request;  This
      * could be based on the contents of the ID Token or it could be returned based on making a call
      * to the user_info or profile endpoint associated with a userr: For example: graph.microsoft.com/me

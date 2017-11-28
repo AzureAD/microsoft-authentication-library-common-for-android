@@ -27,7 +27,7 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
      * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
      * extend the valid lifetime of an access_token.
      */
-    protected String mExtExpiresIn;
+    protected String mExtExpiresOn;
 
     /**
      * The time after which the issued access_token may be used.
@@ -38,6 +38,28 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
      * Information to uniquely identify the tenant and the user _within_ that tenant.
      */
     protected String mClientInfo;
+
+
+    /**
+     * Information to uniquely identify the family that the client application belongs to.
+     */
+    protected String mFamilyId;
+
+    /**
+     * Returns the family client id
+     * @return
+     */
+    public String getFamilyId() {
+        return mFamilyId;
+    }
+
+    /**
+     * Sets the family id
+     * @param familyId
+     */
+    public void setFamilyId(String familyId) {
+        this.mFamilyId = familyId;
+    }
 
     /**
      * Gets the response expires_on.
@@ -80,17 +102,17 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
      *
      * @return The ext_expires_in to get.
      */
-    public String getExtExpiresIn() {
-        return mExtExpiresIn;
+    public String getExtExpiresOn() {
+        return mExtExpiresOn;
     }
 
     /**
      * Sets the response ext_expires_in.
      *
-     * @param extExpiresIn The ext_expires_in to set.
+     * @param extExpiresOn The ext_expires_in to set.
      */
-    public void setExtExpiresIn(String extExpiresIn) {
-        this.mExtExpiresIn = extExpiresIn;
+    public void setExtExpiresOn(String extExpiresOn) {
+        this.mExtExpiresOn = extExpiresOn;
     }
 
     /**

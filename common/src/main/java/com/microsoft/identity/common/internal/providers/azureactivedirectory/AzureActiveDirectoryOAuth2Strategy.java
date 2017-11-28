@@ -1,17 +1,15 @@
 package com.microsoft.identity.common.internal.providers.azureactivedirectory;
 
-import android.support.annotation.Nullable;
-import android.support.v4.media.session.MediaSessionCompat;
+import android.media.session.MediaSession;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
-
-import java.net.URL;
-import java.util.UUID;
 
 
 /**
@@ -44,34 +42,42 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
         return AzureActiveDirectoryAccount.create(idToken, clientInfo);
     }
 
-    /*
-    private void validateAuthority(final URL authorityUrl,
-                                   @Nullable final String domain,
-                                   boolean isSilent,
-                                   final UUID correlationId) throws AuthenticationException {
-        boolean isAdfsAuthority = UrlExtensions.isADFSAuthority(authorityUrl);
-        final boolean isAuthorityValidated = AuthorityValidationMetadataCache.isAuthorityValidated(authorityUrl);
-        if (isAuthorityValidated || isAdfsAuthority && mAuthContext.getIsAuthorityValidated()) {
-            return;
+    public String getIssuerCacheIdentifier(AuthorizationRequest request){
+
+        AzureActiveDirectoryAuthorizationRequest authRequest;
+
+        if(request instanceof AzureActiveDirectoryAuthorizationRequest) {
+            authRequest = (AzureActiveDirectoryAuthorizationRequest)request;
+        }else{
+            //TODO: Move this string somewhere else
+            throw new RuntimeException("Request provided is not of type AzureActiveDirectoryAuthorizationRequest");
         }
 
-        Logger.v(TAG, "Start validating authority");
-        mDiscovery.setCorrelationId(correlationId);
+        return AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority()).getPreferredCacheHostName();
 
-        Discovery.verifyAuthorityValidInstance(authorityUrl);
-
-        if (!isSilent && isAdfsAuthority && domain != null) {
-            mDiscovery.validateAuthorityADFS(authorityUrl, domain);
-        } else {
-            if (isSilent && UrlExtensions.isADFSAuthority(authorityUrl)) {
-                Logger.v(TAG, "Silent request. Skipping AD FS authority validation");
-            }
-
-            mDiscovery.validateAuthority(authorityUrl);
-        }
-
-        Logger.v(TAG, "The passed in authority is valid.");
-        mAuthContext.setIsAuthorityValidated(true);
     }
-    */
+
+    public AccessToken getAccessTokenFromResponse(TokenResponse response){
+        AzureActiveDirectoryAccessToken accessToken = null;
+
+        if(response instanceof AzureActiveDirectoryTokenResponse){
+            accessToken = new AzureActiveDirectoryAccessToken(response);
+        }else{
+            throw new RuntimeException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryOAuth2Strategy.getAccessTokenFromResponse");
+        }
+        return accessToken;
+    }
+
+    public RefreshToken getRefreshTokenFromResponse(TokenResponse response){
+        AzureActiveDirectoryRefreshToken refreshToken = null;
+
+        if(response instanceof AzureActiveDirectoryTokenResponse){
+            refreshToken = new AzureActiveDirectoryRefreshToken(response);
+        }else{
+            throw new RuntimeException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryOAuth2Strategy.getRefreshTokenFromResponse");
+        }
+        return refreshToken;
+    }
+
+
 }

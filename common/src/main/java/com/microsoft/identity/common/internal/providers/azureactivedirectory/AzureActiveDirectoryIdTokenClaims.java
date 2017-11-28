@@ -15,4 +15,6 @@ public class AzureActiveDirectoryIdTokenClaims {
     public static final String NOT_BEFORE = "nbf";
     public static final String VERSION = "ver";
     public static final String UNIQUE_NAME = "unique_name";
+    public static final String PASSWORD_EXPIRATION = "pwd_exp";
+    public static final String PASSWORD_CHANGE_URL = "pwd_url";
 }
