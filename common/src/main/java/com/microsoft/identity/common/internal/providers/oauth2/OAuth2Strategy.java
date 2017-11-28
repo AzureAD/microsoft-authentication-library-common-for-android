@@ -1,9 +1,8 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import com.microsoft.identity.common.Account;
-
-import android.media.session.MediaSession;
 import android.net.Uri;
+
+import com.microsoft.identity.common.Account;
 
 
 /**
@@ -18,11 +17,12 @@ public abstract class OAuth2Strategy {
 
     /**
      * Template method for executing an OAuth2 authorization request
+     *
      * @param request
      * @param authorizationStrategy
      * @return
      */
-    public AuthorizationResponse requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy){
+    public AuthorizationResponse requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy) {
         validateAuthoriztionRequest(request);
         Uri authorizationUri = createAuthorizationUri();
         AuthorizationResult result = authorizationStrategy.requestAuthorization(request);
@@ -34,9 +34,10 @@ public abstract class OAuth2Strategy {
     /**
      * Construct the authorization endpoint URI based on issue and path to the authorization endpoint
      * NOTE: We could look at basing this on the contennts returned from the OpenID Configuration document
+     *
      * @return
      */
-    protected Uri createAuthorizationUri(){
+    protected Uri createAuthorizationUri() {
         //final Uri.Builder builder = new Uri.Builder().scheme(originalAuthority.getProtocol()).authority(host).appendPath(path);
         Uri authorizationUri = Uri.withAppendedPath(mIssuer, mAuthorizationEndpoint);
         return authorizationUri;
@@ -44,6 +45,7 @@ public abstract class OAuth2Strategy {
 
     /**
      * An abstract method for returning the issuer identifier to be used when caching a token response
+     *
      * @return
      */
     public abstract String getIssuerCacheIdentifier(AuthorizationRequest request);
@@ -58,6 +60,7 @@ public abstract class OAuth2Strategy {
      * to the user_info or profile endpoint associated with a userr: For example: graph.microsoft.com/me
      * This allows IDPs that do not support OIDC to still be able to return a user to us
      * This method should take the TokenResponse as a parameter
+     *
      * @return
      */
     public abstract Account createAccount(TokenResponse response);
@@ -73,6 +76,7 @@ public abstract class OAuth2Strategy {
     /**
      * Abstract method for validating the token request.  Generally speaking I expect this just to be validating
      * that all of the information was provided in the Token Request in order to successfully complete it.
+     *
      * @param request
      */
     protected abstract void validateTokenRequest(TokenRequest request);

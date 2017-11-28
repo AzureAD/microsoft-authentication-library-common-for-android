@@ -20,9 +20,10 @@ public class ClientInfo {
 
     /**
      * Constructor for ClientInfo object
+     *
      * @param rawClientInfo
      */
-    public ClientInfo(String rawClientInfo){
+    public ClientInfo(String rawClientInfo) {
 
         /*
         NOTE: Server team would like us to emit telemetry when client Info is null...

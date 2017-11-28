@@ -6,9 +6,7 @@ import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
-
 
 
 public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSingleSignOnState {

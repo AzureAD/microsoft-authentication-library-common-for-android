@@ -47,6 +47,7 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
 
     /**
      * Returns the family client id
+     *
      * @return
      */
     public String getFamilyId() {
@@ -55,6 +56,7 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
 
     /**
      * Sets the family id
+     *
      * @param familyId
      */
     public void setFamilyId(String familyId) {

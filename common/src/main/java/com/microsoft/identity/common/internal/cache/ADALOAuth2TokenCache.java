@@ -1,25 +1,15 @@
 package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
-import android.media.session.MediaSession;
-import android.util.Log;
 
 import com.microsoft.identity.common.Account;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryAccount;
-import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
-import java.net.MalformedURLException;
-import java.util.Date;
-import java.util.List;
 import java.util.ListIterator;
 
 /**
@@ -33,15 +23,16 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
 
     public ADALOAuth2TokenCache(Context context, SharedPreferencesFileManager mSharedPreferencesFileManager) {
         super(context);
-        InitializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
+        initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
     }
 
-    protected void InitializeSharedPreferencesFileManager(String fileName){
+    protected void initializeSharedPreferencesFileManager(String fileName) {
         mSharedPreferencesFileManager = new SharedPreferencesFileManager(super.mContext, fileName);
     }
 
     /**
      * Method responsible for saving tokens contained in the TokenResponse to storage.
+     *
      * @param oAuth2Strategy
      * @param request
      * @param response
@@ -57,9 +48,9 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
         //There is more than one valid user identifier for some accounts... AAD Accounts as of this writing have 3
         ListIterator<String> cacheIds = account.getCacheIdentifiers().listIterator();
 
-        while(cacheIds.hasNext()){
+        while (cacheIds.hasNext()) {
             //Azure AD Uses Resource and Not Scope... but we didn't override... heads up
-            setItemToCacheForUser(issuerCacheIdentifier, request.getScope(), request.getClientId(), accessToken, refreshToken , cacheIds.next());
+            setItemToCacheForUser(issuerCacheIdentifier, request.getScope(), request.getClientId(), accessToken, refreshToken, cacheIds.next());
         }
 
         // TODO: I'd like to know exactly why this is here before I put this back in.... i'm assuming for ADFS v3.
@@ -67,8 +58,7 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
     }
 
 
-
-    private void setItemToCacheForUser(final String issuer, final String resource, final String clientId, final AccessToken accessToken, final RefreshToken refreshToken, final String userId)  {
+    private void setItemToCacheForUser(final String issuer, final String resource, final String clientId, final AccessToken accessToken, final RefreshToken refreshToken, final String userId) {
 
 
 
@@ -93,7 +83,6 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
         */
 
     }
-
 
 
     @Override

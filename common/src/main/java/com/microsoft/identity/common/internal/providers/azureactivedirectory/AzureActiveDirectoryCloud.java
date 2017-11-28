@@ -7,7 +7,6 @@ import java.util.List;
  * This class contains information about a specific Azure Active Directory Cloud.  Azure Active Directory
  * as a service is available in multiple clouds.  World wide is the default; however their are sovereign clouds
  * available for Germany, China, etc....
- *
  */
 public class AzureActiveDirectoryCloud {
 

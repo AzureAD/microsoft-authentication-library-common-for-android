@@ -21,7 +21,6 @@ import java.util.Map;
  */
 public class AzureActiveDirectoryAccount extends Account {
 
-
     private String mDisplayableId; // Legacy Identifier -  UPN (preferred) or Email
     private String mUniqueId; // Legacy Identifier - Object Id (preferred) or Subject
 
@@ -33,8 +32,6 @@ public class AzureActiveDirectoryAccount extends Account {
     private IDToken mIDToken;
     private Uri mPasswordChangeUrl;
     private Date mPasswordExpiresOn;
-
-
 
     private String mGivenName;
     private String mFamilyName;
@@ -79,8 +76,6 @@ public class AzureActiveDirectoryAccount extends Account {
         if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.PASSWORD_CHANGE_URL))) {
             mPasswordChangeUrl = Uri.parse(claims.get(AzureActiveDirectoryIdTokenClaims.PASSWORD_CHANGE_URL));
         }
-
-
     }
 
     /**
@@ -107,7 +102,7 @@ public class AzureActiveDirectoryAccount extends Account {
         return new AzureActiveDirectoryAccount(idToken, uid, uTid);
     }
 
-    private String getDisplayableId(Map<String, String> claims){
+    private String getDisplayableId(Map<String, String> claims) {
 
         if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.UPN))) {
             return claims.get(AzureActiveDirectoryIdTokenClaims.UPN);
@@ -118,7 +113,7 @@ public class AzureActiveDirectoryAccount extends Account {
         return null;
     }
 
-    private String getUniqueId(Map<String, String> claims){
+    private String getUniqueId(Map<String, String> claims) {
 
         if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.OJBECT_ID))) {
             return claims.get(AzureActiveDirectoryIdTokenClaims.OJBECT_ID);
@@ -256,14 +251,17 @@ public class AzureActiveDirectoryAccount extends Account {
     public List<String> getCacheIdentifiers() {
         List<String> cacheIdentifiers = new ArrayList<String>();
 
-        if(mDisplayableId != null)
+        if (mDisplayableId != null) {
             cacheIdentifiers.add(mDisplayableId);
+        }
 
-        if(mUniqueId != null)
+        if (mUniqueId != null) {
             cacheIdentifiers.add(mUniqueId);
+        }
 
-        if(getUniqueIdentifier() !=null)
+        if (getUniqueIdentifier() != null) {
             cacheIdentifiers.add(getUniqueIdentifier());
+        }
 
         return cacheIdentifiers;
     }

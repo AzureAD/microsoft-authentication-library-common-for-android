@@ -15,7 +15,7 @@ public class AzureActiveDirectory extends IdentityProvider {
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
 
-    public OAuth2Strategy createOAuth2Strategy(){
+    public OAuth2Strategy createOAuth2Strategy() {
         return new AzureActiveDirectoryOAuth2Strategy();
     }
 

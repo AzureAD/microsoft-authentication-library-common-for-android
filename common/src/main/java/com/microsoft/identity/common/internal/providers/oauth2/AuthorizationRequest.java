@@ -54,7 +54,4 @@ public class AuthorizationRequest {
         this.mState = mState;
     }
 
-
-
-
 }
