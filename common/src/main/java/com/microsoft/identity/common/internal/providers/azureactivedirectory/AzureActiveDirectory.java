@@ -1,10 +1,18 @@
 package com.microsoft.identity.common.internal.providers.azureactivedirectory;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -12,6 +20,12 @@ import java.util.concurrent.ConcurrentMap;
  * Implements the IdentityProvider base class...
  */
 public class AzureActiveDirectory extends IdentityProvider {
+
+    private static final String TENANT_DISCOVERY_ENDPOINT = "tenant_discovery_endpoint";
+    private static final String METADATA = "metadata";
+    private static final String PREFERRED_NETWORK = "preferred_network";
+    private static final String PREFERRED_CACHE = "preferred_cache";
+    private static final String ALIASES = "aliases";
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
 
@@ -31,4 +45,50 @@ public class AzureActiveDirectory extends IdentityProvider {
         return sAadClouds.get(authorityUrl.getHost().toLowerCase(Locale.US));
     }
 
+    public static void initializeCloudMetadata(final String authorityHost, final Map<String, String> discoveryResponse) throws JSONException {
+        final boolean tenantDiscoveryEndpointReturned = discoveryResponse.containsKey(TENANT_DISCOVERY_ENDPOINT);
+        final String metadata = discoveryResponse.get(METADATA);
+
+        if (!tenantDiscoveryEndpointReturned) {
+            sAadClouds.put(authorityHost, new AzureActiveDirectoryCloud(false));
+            return;
+        }
+
+        if (StringExtensions.isNullOrBlank(metadata)) {
+            sAadClouds.put(authorityHost, new AzureActiveDirectoryCloud(authorityHost, authorityHost));
+            return;
+        }
+
+        final List<AzureActiveDirectoryCloud> clouds = deserializeClouds(new JSONArray(metadata));
+
+        for (final AzureActiveDirectoryCloud cloud : clouds) {
+            for (final String alias : cloud.getHostAliases()) {
+                sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
+            }
+        }
+    }
+
+    private static List<AzureActiveDirectoryCloud> deserializeClouds(final JSONArray jsonCloudArray) throws JSONException {
+        return new ArrayList<AzureActiveDirectoryCloud>() {{
+            for (int ii = 0; ii < jsonCloudArray.length(); ii++) {
+                add(deserializeCloud(jsonCloudArray.getJSONObject(ii)));
+            }
+        }};
+    }
+
+    private static AzureActiveDirectoryCloud deserializeCloud(final JSONObject jsonCloud) throws JSONException {
+        return new AzureActiveDirectoryCloud(
+                jsonCloud.getString(PREFERRED_NETWORK),
+                jsonCloud.getString(PREFERRED_CACHE),
+                deserializeAliases(jsonCloud.getJSONArray(ALIASES))
+        );
+    }
+
+    private static List<String> deserializeAliases(final JSONArray aliases) throws JSONException {
+        return new ArrayList<String>() {{
+            for (int ii = 0; ii < aliases.length(); ii++) {
+                add(aliases.getString(ii));
+            }
+        }};
+    }
 }
