@@ -3,11 +3,13 @@ package com.microsoft.identity.common.internal.providers.azureactivedirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
+import java.util.Date;
+
 
 public class AzureActiveDirectoryAccessToken extends AccessToken {
 
-    String mExpiresOn;
-    String mExtendedExpiresOn;
+    Date mExpiresOn;
+    Date mExtendedExpiresOn;
 
     public AzureActiveDirectoryAccessToken(TokenResponse response) {
         super(response);
@@ -22,8 +24,12 @@ public class AzureActiveDirectoryAccessToken extends AccessToken {
         }
     }
 
-    public String getExpiresOn() {
+    public Date getExpiresOn() {
         return mExpiresOn;
+    }
+
+    public Date getExtendedExpiresOn() {
+        return mExtendedExpiresOn;
     }
 
     //TODO: Need to add override for IsExpired() to address extended token expires on

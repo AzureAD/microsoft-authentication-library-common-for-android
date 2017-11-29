@@ -1,15 +1,29 @@
 package com.microsoft.identity.common.internal.cache;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Build;
+import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.microsoft.identity.common.Account;
-import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
+import com.microsoft.identity.common.adal.error.ADALError;
+import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
+import com.microsoft.identity.common.adal.internal.cache.CacheKey;
+import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
+import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.Date;
+import java.util.List;
 import java.util.ListIterator;
 
 /**
@@ -20,10 +34,22 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
 
     SharedPreferencesFileManager mSharedPreferencesFileManager;
     final static String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
+    private static final String TAG = "ADALOAuth2TokenCache";
+    @SuppressLint("StaticFieldLeak")
+    private static StorageHelper sHelper;
+    private static final Object LOCK = new Object();
+    private Gson mGson = new GsonBuilder()
+            .registerTypeAdapter(Date.class, new DateTimeAdapter())
+            .create();
 
-    public ADALOAuth2TokenCache(Context context, SharedPreferencesFileManager mSharedPreferencesFileManager) {
+    private List<IShareSingleSignOnState> mSharedSSOCaches;
+
+
+    public ADALOAuth2TokenCache(Context context, SharedPreferencesFileManager mSharedPreferencesFileManager, List<IShareSingleSignOnState> sharedSSOCaches) {
         super(context);
+        validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
+        mSharedSSOCaches = sharedSSOCaches;
     }
 
     protected void initializeSharedPreferencesFileManager(String fileName) {
@@ -33,24 +59,31 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
     /**
      * Method responsible for saving tokens contained in the TokenResponse to storage.
      *
-     * @param oAuth2Strategy
+     * @param strategy
      * @param request
      * @param response
      */
     @Override
-    public void saveTokens(OAuth2Strategy oAuth2Strategy, AuthorizationRequest request, TokenResponse response) {
+    public void saveTokens(OAuth2Strategy strategy, AuthorizationRequest request, TokenResponse response) {
 
-        Account account = oAuth2Strategy.createAccount(response);
-        String issuerCacheIdentifier = oAuth2Strategy.getIssuerCacheIdentifier(request);
-        AccessToken accessToken = oAuth2Strategy.getAccessTokenFromResponse(response);
-        RefreshToken refreshToken = oAuth2Strategy.getRefreshTokenFromResponse(response);
+        Account account = strategy.createAccount(response);
+        String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
+        RefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
+
+        ADALTokenCacheItem cacheItem = new ADALTokenCacheItem(strategy, request, response);
 
         //There is more than one valid user identifier for some accounts... AAD Accounts as of this writing have 3
-        ListIterator<String> cacheIds = account.getCacheIdentifiers().listIterator();
+        ListIterator<String> accountCacheIds = account.getCacheIdentifiers().listIterator();
 
-        while (cacheIds.hasNext()) {
+        while (accountCacheIds.hasNext()) {
             //Azure AD Uses Resource and Not Scope... but we didn't override... heads up
-            setItemToCacheForUser(issuerCacheIdentifier, request.getScope(), request.getClientId(), accessToken, refreshToken, cacheIds.next());
+            setItemToCacheForUser(issuerCacheIdentifier, request.getScope(), request.getClientId(), cacheItem, accountCacheIds.next());
+        }
+
+        ListIterator<IShareSingleSignOnState> otherCaches = mSharedSSOCaches.listIterator();
+
+        while (otherCaches.hasNext()) {
+            otherCaches.next().setSingleSignOnState(account, refreshToken);
         }
 
         // TODO: I'd like to know exactly why this is here before I put this back in.... i'm assuming for ADFS v3.
@@ -58,40 +91,88 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
     }
 
 
-    private void setItemToCacheForUser(final String issuer, final String resource, final String clientId, final AccessToken accessToken, final RefreshToken refreshToken, final String userId) {
+    private void setItemToCacheForUser(final String issuer, final String resource, final String clientId, final ADALTokenCacheItem cacheItem, final String userId) {
 
+        setItem(CacheKey.createCacheKeyForRTEntry(issuer, resource, clientId, userId), cacheItem);
 
-
-/*
-        // new tokens will only be saved into preferred cache location
-        mTokenCacheStore.setItem(CacheKey.createCacheKeyForRTEntry(issuer, resource, clientId, userId),
-                TokenCacheItem.createRegularTokenCacheItem(issuer, resource, clientId, result));
-
-
-        if (result.getIsMultiResourceRefreshToken()) {
-            Log.v(TAG, "Save Multi Resource Refresh token to cache");
-            mTokenCacheStore.setItem(CacheKey.createCacheKeyForMRRT(issuer, clientId, userId),
-                    TokenCacheItem.createMRRTTokenCacheItem(issuer, clientId, result));
+        if (cacheItem.getIsMultiResourceRefreshToken()) {
+            setItem(CacheKey.createCacheKeyForMRRT(issuer, clientId, userId), cacheItem);
         }
 
-        // Store separate entries for FRT.
-        if (!StringExtensions.isNullOrBlank(result.getFamilyClientId()) && !StringExtensions.isNullOrBlank(userId)) {
-            Log.v(TAG, "Save Family Refresh token into cache");
-            final TokenCacheItem familyTokenCacheItem = TokenCacheItem.createFRRTTokenCacheItem(issuer, result);
-            mTokenCacheStore.setItem(CacheKey.createCacheKeyForFRT(issuer, result.getFamilyClientId(), userId), familyTokenCacheItem);
+        if (!StringExtensions.isNullOrBlank(cacheItem.getFamilyClientId())) {
+            setItem(CacheKey.createCacheKeyForFRT(issuer, clientId, userId), cacheItem);
         }
-        */
+
+    }
+
+    private void setItem(String key, ADALTokenCacheItem cacheItem) {
+
+        String json = mGson.toJson(cacheItem);
+        String encrypted = encrypt(json);
+        if (encrypted != null) {
+            mSharedPreferencesFileManager.putString(key, encrypted);
+        } else {
+            Log.e(TAG, "Encrypted output is null");
+        }
 
     }
 
 
+    /**
+     * Method that allows to mock StorageHelper class and use custom encryption in UTs.
+     */
+    protected StorageHelper getStorageHelper() {
+        synchronized (LOCK) {
+            if (sHelper == null) {
+                Log.v(TAG, "Started to initialize storage helper");
+                sHelper = new StorageHelper(mContext);
+                Log.v(TAG, "Finished to initialize storage helper");
+            }
+        }
+        return sHelper;
+    }
+
+    private String encrypt(String value) {
+        try {
+            return getStorageHelper().encrypt(value);
+        } catch (GeneralSecurityException | IOException e) {
+            Log.e(TAG, ADALError.ENCRYPTION_ERROR.toString(), e);
+        }
+
+        return null;
+    }
+
+    private String decrypt(final String key, final String value) {
+        if (StringExtensions.isNullOrBlank(key)) {
+            throw new IllegalArgumentException("encryption key is null or blank");
+        }
+
+        try {
+            return getStorageHelper().decrypt(value);
+        } catch (GeneralSecurityException | IOException e) {
+            Log.e(TAG, ADALError.DECRYPTION_FAILED.toString(), e);
+            //TODO: Implement remove item in this case... not sure I actually want to do this
+            //removeItem(key);
+        }
+
+        return null;
+    }
+
+    private void validateSecretKeySetting() {
+        final byte[] secretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
+        if (secretKeyData == null && Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            throw new IllegalArgumentException("Secret key must be provided for API < 18. "
+                    + "Use AuthenticationSettings.INSTANCE.setSecretKey()");
+        }
+    }
+
     @Override
-    public void setSingleSignOnState(Account account, String refreshToken) {
+    public void setSingleSignOnState(Account account, RefreshToken refreshToken) {
 
     }
 
     @Override
-    public String getSingleSignOnState(Account account) {
+    public RefreshToken getSingleSignOnState(Account account) {
         return null;
     }
 }

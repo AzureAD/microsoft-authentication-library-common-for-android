@@ -32,6 +32,7 @@ public class AzureActiveDirectoryAccount extends Account {
     private IDToken mIDToken;
     private Uri mPasswordChangeUrl;
     private Date mPasswordExpiresOn;
+    private String mTenantId; // Tenant Id of the authority that issued the idToken... not necessarily the home tenant of the account
 
     private String mGivenName;
     private String mFamilyName;
@@ -55,6 +56,7 @@ public class AzureActiveDirectoryAccount extends Account {
         mIdentityProvider = claims.get(AzureActiveDirectoryIdTokenClaims.ISSUER);
         mGivenName = claims.get(StandardIdTokenClaims.GIVEN_NAME);
         mFamilyName = claims.get(StandardIdTokenClaims.FAMILY_NAME);
+        mTenantId = claims.get(AzureActiveDirectoryIdTokenClaims.TENANT_ID);
         mUid = uid;
         mUtid = uTid;
 
@@ -124,6 +126,10 @@ public class AzureActiveDirectoryAccount extends Account {
         return null;
     }
 
+
+    public String getTenantId() {
+        return mTenantId;
+    }
 
     public String getGivenName() {
         return mGivenName;

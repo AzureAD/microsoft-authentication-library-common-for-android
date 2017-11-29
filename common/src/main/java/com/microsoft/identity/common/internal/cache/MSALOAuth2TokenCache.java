@@ -6,6 +6,7 @@ import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 
@@ -16,12 +17,12 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
     }
 
     @Override
-    public void setSingleSignOnState(Account account, String refreshToken) {
+    public void setSingleSignOnState(Account account, RefreshToken refreshToken) {
 
     }
 
     @Override
-    public String getSingleSignOnState(Account account) {
+    public RefreshToken getSingleSignOnState(Account account) {
         return null;
     }
 
