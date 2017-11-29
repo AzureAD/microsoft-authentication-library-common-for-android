@@ -1,5 +1,7 @@
 package com.microsoft.identity.common.internal.providers.azureactivedirectory;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,10 +12,16 @@ import java.util.List;
  */
 public class AzureActiveDirectoryCloud {
 
+    @SerializedName("preferred_network")
     private final String mPreferredNetworkHostName;
+
+    @SerializedName("preferred_cache")
     private final String mPreferredCacheHostName;
-    private final List<String> mCloudHostAliases = new ArrayList();
-    private final boolean mIsValidated;
+
+    @SerializedName("aliases")
+    private List<String> mCloudHostAliases;
+
+    private boolean mIsValidated;
 
     AzureActiveDirectoryCloud(boolean isValidated) {
         mIsValidated = isValidated;
@@ -25,6 +33,7 @@ public class AzureActiveDirectoryCloud {
     AzureActiveDirectoryCloud(final String preferredNetwork, final String preferredCache, final List<String> aliases) {
         mPreferredNetworkHostName = preferredNetwork;
         mPreferredCacheHostName = preferredCache;
+        mCloudHostAliases = new ArrayList<>();
         mCloudHostAliases.addAll(aliases);
         mIsValidated = true;
     }
@@ -51,6 +60,15 @@ public class AzureActiveDirectoryCloud {
     //TODO: Should we really be loading it at all if we were not able to find it?
     boolean isValidated() {
         return mIsValidated;
+    }
+
+    /**
+     * Sets the validation status.
+     *
+     * @param isValidated The validation status to set.
+     */
+    void setIsValidated(final boolean isValidated) {
+        mIsValidated = isValidated;
     }
 
 }
