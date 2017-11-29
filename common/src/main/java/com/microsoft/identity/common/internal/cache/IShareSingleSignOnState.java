@@ -10,6 +10,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 public interface IShareSingleSignOnState {
 
     void setSingleSignOnState(Account account, RefreshToken refreshToken);
+
     RefreshToken getSingleSignOnState(Account account);
 
 }

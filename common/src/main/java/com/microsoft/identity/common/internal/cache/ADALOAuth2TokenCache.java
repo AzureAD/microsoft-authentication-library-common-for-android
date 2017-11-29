@@ -7,22 +7,18 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.adal.error.ADALError;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.CacheKey;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
+import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
-
-
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -86,7 +82,7 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
 
         ListIterator<IShareSingleSignOnState> otherCaches = mSharedSSOCaches.listIterator();
 
-        while(otherCaches.hasNext()){
+        while (otherCaches.hasNext()) {
             otherCaches.next().setSingleSignOnState(account, refreshToken);
         }
 
@@ -99,17 +95,17 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
 
         setItem(CacheKey.createCacheKeyForRTEntry(issuer, resource, clientId, userId), cacheItem);
 
-        if(cacheItem.getIsMultiResourceRefreshToken()){
+        if (cacheItem.getIsMultiResourceRefreshToken()) {
             setItem(CacheKey.createCacheKeyForMRRT(issuer, clientId, userId), cacheItem);
         }
 
-        if(!StringExtensions.isNullOrBlank(cacheItem.getFamilyClientId())){
+        if (!StringExtensions.isNullOrBlank(cacheItem.getFamilyClientId())) {
             setItem(CacheKey.createCacheKeyForFRT(issuer, clientId, userId), cacheItem);
         }
 
     }
 
-    private void setItem(String key, ADALTokenCacheItem cacheItem){
+    private void setItem(String key, ADALTokenCacheItem cacheItem) {
 
         String json = mGson.toJson(cacheItem);
         String encrypted = encrypt(json);

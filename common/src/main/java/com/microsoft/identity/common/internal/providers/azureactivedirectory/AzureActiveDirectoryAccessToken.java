@@ -27,7 +27,10 @@ public class AzureActiveDirectoryAccessToken extends AccessToken {
     public Date getExpiresOn() {
         return mExpiresOn;
     }
-    public Date getExtendedExpiresOn() { return mExtendedExpiresOn;}
+
+    public Date getExtendedExpiresOn() {
+        return mExtendedExpiresOn;
+    }
 
     //TODO: Need to add override for IsExpired() to address extended token expires on
 

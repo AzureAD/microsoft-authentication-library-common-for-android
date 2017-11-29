@@ -127,7 +127,9 @@ public class AzureActiveDirectoryAccount extends Account {
     }
 
 
-    public String getTenantId() { return mTenantId; }
+    public String getTenantId() {
+        return mTenantId;
+    }
 
     public String getGivenName() {
         return mGivenName;

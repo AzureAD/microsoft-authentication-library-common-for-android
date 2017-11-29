@@ -79,18 +79,18 @@ public class ADALTokenCacheItem {
             mTenantId = ((AzureActiveDirectoryAccount) account).getTenantId();
         }
 
-        if(accessToken instanceof AzureActiveDirectoryAccessToken){
-            mExpiresOn = ((AzureActiveDirectoryAccessToken)accessToken).getExpiresOn();
-            mExtendedExpiresOn = ((AzureActiveDirectoryAccessToken)accessToken).getExtendedExpiresOn();
+        if (accessToken instanceof AzureActiveDirectoryAccessToken) {
+            mExpiresOn = ((AzureActiveDirectoryAccessToken) accessToken).getExpiresOn();
+            mExtendedExpiresOn = ((AzureActiveDirectoryAccessToken) accessToken).getExtendedExpiresOn();
         }
 
-        if(refreshToken instanceof AzureActiveDirectoryRefreshToken){
-            mIsMultiResourceRefreshToken = ((AzureActiveDirectoryRefreshToken)refreshToken).getIsFamilyRefreshToken();
-            mFamilyClientId = ((AzureActiveDirectoryRefreshToken)refreshToken).getFamilyId();
+        if (refreshToken instanceof AzureActiveDirectoryRefreshToken) {
+            mIsMultiResourceRefreshToken = ((AzureActiveDirectoryRefreshToken) refreshToken).getIsFamilyRefreshToken();
+            mFamilyClientId = ((AzureActiveDirectoryRefreshToken) refreshToken).getFamilyId();
         }
 
-        if(response instanceof AzureActiveDirectoryTokenResponse){
-            mSpeRing = ((AzureActiveDirectoryTokenResponse)response).getSpeRing();
+        if (response instanceof AzureActiveDirectoryTokenResponse) {
+            mSpeRing = ((AzureActiveDirectoryTokenResponse) response).getSpeRing();
         }
 
     }
