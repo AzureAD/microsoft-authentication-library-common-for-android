@@ -10,7 +10,7 @@ public abstract class OAuth2TokenCache {
     protected Context mContext;
 
     public OAuth2TokenCache(Context context) {
-        mContext = context;
+        mContext = context.getApplicationContext();
     }
 
     /**

@@ -132,7 +132,7 @@ public class StorageHelper {
      * @param context The {@link Context} to create {@link StorageHelper}.
      */
     public StorageHelper(Context context) {
-        mContext = context;
+        mContext = context.getApplicationContext();
         mRandom = new SecureRandom();
     }
 
