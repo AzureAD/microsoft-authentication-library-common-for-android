@@ -7,6 +7,9 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
+/**
+ * Abstract base class for MsalTokenCacheItems.
+ */
 public abstract class BaseMsalTokenCacheItem {
 
     @SerializedName("client_id")
