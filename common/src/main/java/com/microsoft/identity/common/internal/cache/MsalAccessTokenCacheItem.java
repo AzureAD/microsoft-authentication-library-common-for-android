@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryAccount;
+import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -51,8 +52,10 @@ class MsalAccessTokenCacheItem extends BaseMsalTokenCacheItem implements ISelfSe
             AuthorizationRequest request,
             TokenResponse response) {
         super(oAuth2Strategy, request, response);
-        mAuthority = ""; // TODO where can I get this?
-        mScope = request.getScope();
+        if (request instanceof AzureActiveDirectoryAuthorizationRequest) {
+            mAuthority = ((AzureActiveDirectoryAuthorizationRequest) request).getAuthority().toString();
+        }
+        mScope = request.getScope(); // TODO does this need to be some special v2 scope?
         mAccessToken = response.getAccessToken();
         if (response instanceof AzureActiveDirectoryTokenResponse) {
             mExpiresOn = ((AzureActiveDirectoryTokenResponse) response).getExpiresOn().getTime();
@@ -62,7 +65,7 @@ class MsalAccessTokenCacheItem extends BaseMsalTokenCacheItem implements ISelfSe
         final Account account = oAuth2Strategy.createAccount(response);
         if (account instanceof AzureActiveDirectoryAccount) {
             final AzureActiveDirectoryAccount aadAcct = (AzureActiveDirectoryAccount) account;
-            mUserIdentifier = ""; // TODO which unique identifier should I use?
+            mUserIdentifier = aadAcct.getUniqueIdentifier();
         }
     }
 
