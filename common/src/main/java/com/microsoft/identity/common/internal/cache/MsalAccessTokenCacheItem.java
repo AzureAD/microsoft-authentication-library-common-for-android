@@ -10,7 +10,14 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.util.EncodingUtil;
 
-class MsalAccessTokenCacheItem extends BaseMsalTokenCacheItem {
+/**
+ * A lightweight representation of MSAL's cache item for access tokens.
+ * <p>
+ * This object knows how to create a cache key for itself.
+ * <p>
+ * If you call getCacheValue() on this object you get it as JSON.
+ */
+class MsalAccessTokenCacheItem extends BaseMsalTokenCacheItem implements ISelfSerializingCacheItem {
 
     @SerializedName("authority")
     String mAuthority;
@@ -32,7 +39,17 @@ class MsalAccessTokenCacheItem extends BaseMsalTokenCacheItem {
 
     transient String mUserIdentifier;
 
-    public MsalAccessTokenCacheItem(OAuth2Strategy oAuth2Strategy, AuthorizationRequest request, TokenResponse response) {
+    /**
+     * Constructs a new MsalAccessTokenCacheItem.
+     *
+     * @param oAuth2Strategy The Strategy of this IdP.
+     * @param request        The {@link AuthorizationRequest} placed.
+     * @param response       The {@link TokenResponse} of this request.
+     */
+    public MsalAccessTokenCacheItem(
+            OAuth2Strategy oAuth2Strategy,
+            AuthorizationRequest request,
+            TokenResponse response) {
         super(oAuth2Strategy, request, response);
         mAuthority = ""; // TODO where can I get this?
         mScope = request.getScope();
@@ -49,6 +66,7 @@ class MsalAccessTokenCacheItem extends BaseMsalTokenCacheItem {
         }
     }
 
+    @Override
     public String getCacheKey() {
         final String tokenCacheDelimiter = "$";
 
@@ -64,6 +82,7 @@ class MsalAccessTokenCacheItem extends BaseMsalTokenCacheItem {
         return stringBuilder.toString();
     }
 
+    @Override
     public String getCacheValue() {
         return new Gson().toJson(this);
     }
