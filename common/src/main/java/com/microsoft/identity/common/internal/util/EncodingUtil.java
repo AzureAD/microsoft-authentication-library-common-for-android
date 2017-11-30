@@ -1,6 +1,5 @@
 package com.microsoft.identity.common.internal.util;
 
-
 import android.util.Base64;
 
 import java.nio.charset.Charset;
