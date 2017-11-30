@@ -22,6 +22,13 @@ public abstract class BaseMsalTokenCacheItem {
     String mVersion = "1";
 
 
+    /**
+     * Constructs a new BaseMsalTokenCacheItem.
+     *
+     * @param oAuth2Strategy The Strategy of this IdP.
+     * @param request        The {@link AuthorizationRequest} placed.
+     * @param response       The {@link TokenResponse} of this request.
+     */
     public BaseMsalTokenCacheItem(
             OAuth2Strategy oAuth2Strategy,
             AuthorizationRequest request,
