@@ -57,7 +57,6 @@ class MsalAccessTokenCacheItem extends BaseMsalTokenCacheItem {
         stringBuilder.append(tokenCacheDelimiter);
         stringBuilder.append(EncodingUtil.base64UrlEncodeToString(mClientId));
         stringBuilder.append(tokenCacheDelimiter);
-        // scope is treeSet to guarantee the order of the scopes when converting to string.
         stringBuilder.append(EncodingUtil.base64UrlEncodeToString(mScope));
         stringBuilder.append(tokenCacheDelimiter);
         stringBuilder.append(mUserIdentifier);
