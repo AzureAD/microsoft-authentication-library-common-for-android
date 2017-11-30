@@ -84,7 +84,7 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
             OAuth2Strategy oAuth2Strategy,
             AuthorizationRequest request,
             TokenResponse response) {
-        final MsalRefreshTokenCacheItem cacheItem = new MsalRefreshTokenCacheItem(oAuth2Strategy, request, response);
+        final ISelfSerializingCacheItem cacheItem = new MsalRefreshTokenCacheItem(oAuth2Strategy, request, response);
         if (!StringExtensions.isNullOrBlank(response.getRefreshToken())) {
             mRefreshTokenSharedPreferences.putString(
                     cacheItem.getCacheKey(),

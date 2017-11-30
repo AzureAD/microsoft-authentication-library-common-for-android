@@ -52,16 +52,19 @@ class MsalAccessTokenCacheItem extends BaseMsalTokenCacheItem implements ISelfSe
             AuthorizationRequest request,
             TokenResponse response) {
         super(oAuth2Strategy, request, response);
+        mScope = request.getScope(); // TODO does this need to be some special v2 scope?
+        mAccessToken = response.getAccessToken();
+        mTokenType = response.getTokenType();
+        mRawIdToken = response.getIdToken();
+
         if (request instanceof AzureActiveDirectoryAuthorizationRequest) {
             mAuthority = ((AzureActiveDirectoryAuthorizationRequest) request).getAuthority().toString();
         }
-        mScope = request.getScope(); // TODO does this need to be some special v2 scope?
-        mAccessToken = response.getAccessToken();
+
         if (response instanceof AzureActiveDirectoryTokenResponse) {
             mExpiresOn = ((AzureActiveDirectoryTokenResponse) response).getExpiresOn().getTime();
         }
-        mTokenType = response.getTokenType();
-        mRawIdToken = response.getIdToken();
+
         final Account account = oAuth2Strategy.createAccount(response);
         if (account instanceof AzureActiveDirectoryAccount) {
             final AzureActiveDirectoryAccount aadAcct = (AzureActiveDirectoryAccount) account;

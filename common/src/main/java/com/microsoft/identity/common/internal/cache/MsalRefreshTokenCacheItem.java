@@ -3,11 +3,16 @@ package com.microsoft.identity.common.internal.cache;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryAccount;
+import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.util.EncodingUtil;
+
+import java.net.URL;
 
 /**
  * A lightweight representation of MSAL's cache item for refresh tokens.
@@ -50,13 +55,19 @@ class MsalRefreshTokenCacheItem extends BaseMsalTokenCacheItem implements ISelfS
         super(oAuth2Strategy, request, response);
         final Account account = oAuth2Strategy.createAccount(response);
         mRefreshToken = response.getRefreshToken();
-        mEnvironment = ""; // TODO where can I get this?
+
+        if (request instanceof AzureActiveDirectoryAuthorizationRequest) {
+            final URL authority = ((AzureActiveDirectoryAuthorizationRequest) request).getAuthority();
+            final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
+            mEnvironment = cloudEnv.getPreferredNetworkHostName();
+        }
+
         if (account instanceof AzureActiveDirectoryAccount) {
             final AzureActiveDirectoryAccount aadAcct = (AzureActiveDirectoryAccount) account;
             mDisplayableId = aadAcct.getDisplayableId();
             mName = aadAcct.getName();
             mIdentityProvider = aadAcct.getIdentityProvider();
-            mUserIdentifier = ""; // TODO which one of these do I use?
+            mUserIdentifier = account.getUniqueIdentifier();
         }
     }
 

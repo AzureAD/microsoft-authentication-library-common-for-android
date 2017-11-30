@@ -34,6 +34,7 @@ public abstract class BaseMsalTokenCacheItem {
             AuthorizationRequest request,
             TokenResponse response) {
         mClientId = request.getClientId();
+
         if (response instanceof AzureActiveDirectoryTokenResponse) {
             mRawClientInfo = ((AzureActiveDirectoryTokenResponse) response).getClientInfo();
         }

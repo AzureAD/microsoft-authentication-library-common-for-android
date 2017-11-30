@@ -39,7 +39,7 @@ public class AzureActiveDirectory extends IdentityProvider {
         return hasCloudHost(authorityUrl) && getAzureActiveDirectoryCloud(authorityUrl).isValidated();
     }
 
-    static AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(final URL authorityUrl) {
+    public static AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(final URL authorityUrl) {
         return sAadClouds.get(authorityUrl.getHost().toLowerCase(Locale.US));
     }
 

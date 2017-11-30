@@ -44,15 +44,15 @@ public class AzureActiveDirectoryCloud {
         mIsValidated = true;
     }
 
-    String getPreferredNetworkHostName() {
+    public String getPreferredNetworkHostName() {
         return mPreferredNetworkHostName;
     }
 
-    String getPreferredCacheHostName() {
+    public String getPreferredCacheHostName() {
         return mPreferredCacheHostName;
     }
 
-    List<String> getHostAliases() {
+    public List<String> getHostAliases() {
         return mCloudHostAliases;
     }
 
