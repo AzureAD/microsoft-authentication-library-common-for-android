@@ -45,7 +45,7 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
     private List<IShareSingleSignOnState> mSharedSSOCaches;
 
 
-    public ADALOAuth2TokenCache(Context context, SharedPreferencesFileManager mSharedPreferencesFileManager, List<IShareSingleSignOnState> sharedSSOCaches) {
+    public ADALOAuth2TokenCache(Context context, List<IShareSingleSignOnState> sharedSSOCaches) {
         super(context);
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
@@ -100,7 +100,7 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
         }
 
         if (!StringExtensions.isNullOrBlank(cacheItem.getFamilyClientId())) {
-            setItem(CacheKey.createCacheKeyForFRT(issuer, clientId, userId), cacheItem);
+            setItem(CacheKey.createCacheKeyForFRT(issuer, cacheItem.getFamilyClientId(), userId), cacheItem);
         }
 
     }

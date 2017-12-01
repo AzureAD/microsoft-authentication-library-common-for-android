@@ -15,6 +15,10 @@ public abstract class OAuth2Strategy {
     protected String mAuthorizationEndpoint;
     protected Uri mIssuer;
 
+    public OAuth2Strategy(OAuth2Configuration config){
+
+    }
+
     /**
      * Template method for executing an OAuth2 authorization request
      *
