@@ -31,7 +31,11 @@ public class AzureActiveDirectory extends IdentityProvider {
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
 
     public OAuth2Strategy createOAuth2Strategy(OAuth2Configuration config) {
-        return new AzureActiveDirectoryOAuth2Strategy(config);
+        if(config instanceof AzureActiveDirectoryOAuth2Configuration){
+            return new AzureActiveDirectoryOAuth2Strategy((AzureActiveDirectoryOAuth2Configuration) config);
+        }else {
+            throw new RuntimeException("Expected instance of AzureActiveDirectoryOAuth2Configuration in AzureActiveDirectory.CreateOAuth2Strategy");
+        }
     }
 
     static boolean hasCloudHost(final URL authorityUrl) {

@@ -22,15 +22,10 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
 
     private AzureActiveDirectoryOAuth2Configuration mConfig = null;
 
-    public AzureActiveDirectoryOAuth2Strategy(OAuth2Configuration config) {
+    public AzureActiveDirectoryOAuth2Strategy(AzureActiveDirectoryOAuth2Configuration config) {
         super(config);
 
-        if(config instanceof AzureActiveDirectoryOAuth2Configuration){
-            this.mConfig = (AzureActiveDirectoryOAuth2Configuration)config;
-        }else{
-            throw new RuntimeException(("Expected OAuth2 Configuration object of type AzureActiveDirectoryOAuth2Configuration."));
-        }
-
+        mConfig = config;
     }
 
     protected void validateAuthoriztionRequest(AuthorizationRequest request) {
