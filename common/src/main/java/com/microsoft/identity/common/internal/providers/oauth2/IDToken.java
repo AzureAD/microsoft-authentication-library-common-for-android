@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public class IDToken {
 
-    private final Map<String, String> mTokenClaims = null;
+    private Map<String, String> mTokenClaims = null;
     private final String mRawIdToken;
 
     public IDToken(final String rawIdToken) {
@@ -28,7 +28,7 @@ public class IDToken {
         mRawIdToken = rawIdToken;
 
         // set all the instance variables.
-        final Map<String, String> mTokenClaims = parseJWT(rawIdToken);
+        mTokenClaims = parseJWT(rawIdToken);
     }
 
 

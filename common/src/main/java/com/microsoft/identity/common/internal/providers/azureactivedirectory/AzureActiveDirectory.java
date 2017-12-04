@@ -1,9 +1,12 @@
 package com.microsoft.identity.common.internal.providers.azureactivedirectory;
 
+import android.support.annotation.VisibleForTesting;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 
 import org.json.JSONException;
@@ -27,8 +30,12 @@ public class AzureActiveDirectory extends IdentityProvider {
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
 
-    public OAuth2Strategy createOAuth2Strategy() {
-        return new AzureActiveDirectoryOAuth2Strategy();
+    public OAuth2Strategy createOAuth2Strategy(OAuth2Configuration config) {
+        if(config instanceof AzureActiveDirectoryOAuth2Configuration){
+            return new AzureActiveDirectoryOAuth2Strategy((AzureActiveDirectoryOAuth2Configuration) config);
+        }else {
+            throw new RuntimeException("Expected instance of AzureActiveDirectoryOAuth2Configuration in AzureActiveDirectory.CreateOAuth2Strategy");
+        }
     }
 
     static boolean hasCloudHost(final URL authorityUrl) {
@@ -41,6 +48,11 @@ public class AzureActiveDirectory extends IdentityProvider {
 
     public static AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(final URL authorityUrl) {
         return sAadClouds.get(authorityUrl.getHost().toLowerCase(Locale.US));
+    }
+
+    @VisibleForTesting
+    public static void putCloud(final String host, final AzureActiveDirectoryCloud cloud) {
+        sAadClouds.put(host.toLowerCase(Locale.US), cloud);
     }
 
     /**
