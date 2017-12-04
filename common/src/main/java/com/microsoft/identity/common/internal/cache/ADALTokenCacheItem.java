@@ -85,7 +85,7 @@ public class ADALTokenCacheItem {
         }
 
         if (refreshToken instanceof AzureActiveDirectoryRefreshToken) {
-            mIsMultiResourceRefreshToken = ((AzureActiveDirectoryRefreshToken) refreshToken).getIsFamilyRefreshToken();
+            mIsMultiResourceRefreshToken = true;
             mFamilyClientId = ((AzureActiveDirectoryRefreshToken) refreshToken).getFamilyId();
         }
 
