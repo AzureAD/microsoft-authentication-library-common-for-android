@@ -67,10 +67,9 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
             TokenResponse response) {
         // TODO delete old tokens? Does this really make sense to do here?
         final ISelfSerializingCacheItem cacheItem = new MsalAccessTokenCacheItem(oAuth2Strategy, request, response);
-        mAccessTokenSharedPreferences.putString(
-                cacheItem.getCacheKey(),
-                cacheItem.getCacheValue()
-        );
+        final String atCacheKey = cacheItem.getCacheKey();
+        final String atCacheValue = cacheItem.getCacheValue();
+        mAccessTokenSharedPreferences.putString(atCacheKey, atCacheValue);
     }
 
     /**
@@ -85,11 +84,10 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
             AuthorizationRequest request,
             TokenResponse response) {
         final ISelfSerializingCacheItem cacheItem = new MsalRefreshTokenCacheItem(oAuth2Strategy, request, response);
+        final String rtCacheKey = cacheItem.getCacheKey();
+        final String rtCacheValue = cacheItem.getCacheValue();
         if (!StringExtensions.isNullOrBlank(response.getRefreshToken())) {
-            mRefreshTokenSharedPreferences.putString(
-                    cacheItem.getCacheKey(),
-                    cacheItem.getCacheValue()
-            );
+            mRefreshTokenSharedPreferences.putString(rtCacheKey, rtCacheValue);
         }
     }
 }

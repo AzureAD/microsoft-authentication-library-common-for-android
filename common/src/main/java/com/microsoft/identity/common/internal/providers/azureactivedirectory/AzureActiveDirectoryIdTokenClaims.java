@@ -17,4 +17,7 @@ public class AzureActiveDirectoryIdTokenClaims {
     public static final String UNIQUE_NAME = "unique_name";
     public static final String PASSWORD_EXPIRATION = "pwd_exp";
     public static final String PASSWORD_CHANGE_URL = "pwd_url";
+
+    // TODO Put this into its own class? This is for the v2 endpoint...
+    public static final String PREFERRED_USERNAME = "preferred_username";
 }
