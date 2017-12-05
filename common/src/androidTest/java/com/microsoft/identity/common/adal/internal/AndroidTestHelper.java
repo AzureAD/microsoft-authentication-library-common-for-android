@@ -71,7 +71,8 @@ public class AndroidTestHelper {
 
             if (hasMessage != null && !hasMessage.isEmpty()) {
                 assertTrue("Message has the text " + result.getMessage(),
-                        (result.getMessage().toLowerCase(Locale.US).contains(hasMessage.toLowerCase())));
+                        (result.getMessage().toLowerCase(Locale.US)
+                                .contains(hasMessage.toLowerCase(Locale.US))));
             }
         }
     }
