@@ -92,4 +92,10 @@ class MsalAccessTokenCacheItem extends BaseMsalTokenCacheItem implements ISelfSe
     public String getCacheValue() {
         return new Gson().toJson(this);
     }
+
+    public boolean matches(MsalAccessTokenCacheItem atCacheItem) {
+        return mAuthority.equalsIgnoreCase(atCacheItem.mAuthority)
+                && mClientId.equalsIgnoreCase(atCacheItem.mClientId)
+                && mUserIdentifier.equals(atCacheItem.mUserIdentifier);
+    }
 }
