@@ -59,7 +59,13 @@ class MsalRefreshTokenCacheItem extends BaseMsalTokenCacheItem implements ISelfS
         if (request instanceof AzureActiveDirectoryAuthorizationRequest) {
             final URL authority = ((AzureActiveDirectoryAuthorizationRequest) request).getAuthority();
             final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
-            mEnvironment = cloudEnv.getPreferredNetworkHostName();
+            // This map can only be consulted if authority validation is on.
+            // If the host has a hardcoded trust, we can just use the hostname.
+            if (null != cloudEnv) {
+                mEnvironment = cloudEnv.getPreferredNetworkHostName();
+            } else {
+                mEnvironment = authority.getHost();
+            }
         }
 
         if (account instanceof AzureActiveDirectoryAccount) {
