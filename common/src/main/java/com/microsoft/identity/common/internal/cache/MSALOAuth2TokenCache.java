@@ -31,6 +31,10 @@ import java.util.Set;
  */
 public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSingleSignOnState {
 
+    // TODO where's an appropriate place for these as constants?
+    public static final String UID = "uid";
+    public static final String UTID = "utid";
+
     // SharedPreferences used to store tokens
     private final SharedPreferencesFileManager mAccessTokenSharedPreferences;
     private final SharedPreferencesFileManager mRefreshTokenSharedPreferences;
@@ -140,28 +144,32 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
 
         for (final String atString : accessTokensAsStrings) {
             final MsalAccessTokenCacheItem atCacheItem = new Gson().fromJson(atString, MsalAccessTokenCacheItem.class);
-            // TODO clean up this slop...
-            // set up the uniqueIdentifier here...
-            final String rawClientInfo = atCacheItem.mRawClientInfo;
-            String uid = "";
-            String utid = "";
-            final String decodedClientInfo = new String(Base64.decode(rawClientInfo, Base64.URL_SAFE), Charset.forName(StringExtensions.ENCODING_UTF8));
-            final Map<String, String> clientInfoItems;
-            try {
-                clientInfoItems = JsonExtensions.extractJsonObjectIntoMap(decodedClientInfo);
-                uid = clientInfoItems.get("uid"); // TODO where's an appropriate place for these as constants?
-                utid = clientInfoItems.get("utid");
-                atCacheItem.mUserIdentifier =
-                        EncodingUtil.base64UrlEncodeToString(uid)
-                                + "."
-                                + EncodingUtil.base64UrlEncodeToString(utid);
-            } catch (final JSONException e) {
-                // TODO can this happen? I don't think so...
-            }
+            initUserIdentifier(atCacheItem);
             atCacheItems.add(atCacheItem);
         }
 
         return atCacheItems;
+    }
+
+    private void initUserIdentifier(MsalAccessTokenCacheItem atCacheItem) {
+        // set up the uniqueIdentifier here...
+        final String rawClientInfo = atCacheItem.mRawClientInfo;
+        try {
+            final Map<String, String> clientInfoItems = parseRawClientInfo(rawClientInfo);
+            String uid = clientInfoItems.get(UID);
+            String utid = clientInfoItems.get(UTID);
+            atCacheItem.mUserIdentifier =
+                    EncodingUtil.base64UrlEncodeToString(uid)
+                            + "."
+                            + EncodingUtil.base64UrlEncodeToString(utid);
+        } catch (final JSONException e) {
+            throw new RuntimeException("Failed to deserialize user identifier from cache.");
+        }
+    }
+
+    private Map<String, String> parseRawClientInfo(final String rawClientInfo) throws JSONException {
+        final String decodedClientInfo = new String(Base64.decode(rawClientInfo, Base64.URL_SAFE), Charset.forName(StringExtensions.ENCODING_UTF8));
+        return JsonExtensions.extractJsonObjectIntoMap(decodedClientInfo);
     }
 
     /**
