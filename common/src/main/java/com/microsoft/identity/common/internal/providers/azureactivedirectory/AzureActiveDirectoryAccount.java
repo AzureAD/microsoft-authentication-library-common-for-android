@@ -112,7 +112,7 @@ public class AzureActiveDirectoryAccount extends Account {
             return claims.get(StandardIdTokenClaims.EMAIL);
         } else if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.PREFERRED_USERNAME))) {
             // TODO this is for the v2 app model -- does this need to go somewhere separate?
-            return claims.get(AzureActiveDirectoryIdTokenClaims.PREFERRED_USERNAME);
+            return claims.get(StandardIdTokenClaims.PREFERRED_USERNAME);
         }
 
         return null;
