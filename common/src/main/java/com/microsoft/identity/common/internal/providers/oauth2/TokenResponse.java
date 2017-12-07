@@ -1,5 +1,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * This is the class encapsulating the details of the TokenResponse (oAuth2/OIDC)
  * https://tools.ietf.org/html/rfc6749#section-4.1.4
@@ -17,6 +19,7 @@ public class TokenResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
+    @SerializedName("expires_in")
     protected Long mExpiresIn;
 
     /**
@@ -24,6 +27,7 @@ public class TokenResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
+    @SerializedName("access_token")
     protected String mAccessToken;
 
     /**
@@ -33,6 +37,7 @@ public class TokenResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
+    @SerializedName("token_type")
     protected String mTokenType;
 
     /**
@@ -42,6 +47,7 @@ public class TokenResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
+    @SerializedName("refresh_token")
     protected String mRefreshToken;
 
     /**
@@ -51,6 +57,7 @@ public class TokenResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
+    @SerializedName("scope")
     protected String mScope;
 
     /**
@@ -69,6 +76,7 @@ public class TokenResponse {
      *
      * @See <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code">Authorize access to web applications using OAuth 2.0 and Azure Active Directory</a>
      */
+    @SerializedName("id_token")
     protected String mIdToken;
 
 

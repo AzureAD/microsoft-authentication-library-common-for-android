@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.providers.azureactivedirectory;
+package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import android.net.Uri;
 
@@ -48,7 +48,7 @@ public class AzureActiveDirectoryAccount extends Account {
      * @param uid     Returned via clientInfo of TokenResponse
      * @param uTid    Returned via ClientInfo of Token Response
      */
-    AzureActiveDirectoryAccount(IDToken idToken, String uid, final String uTid) {
+    public AzureActiveDirectoryAccount(IDToken idToken, String uid, final String uTid) {
         Map<String, String> claims = idToken.getTokenClaims();
         mUniqueId = getUniqueId(claims);
         mDisplayableId = getDisplayableId(claims);
@@ -104,8 +104,7 @@ public class AzureActiveDirectoryAccount extends Account {
         return new AzureActiveDirectoryAccount(idToken, uid, uTid);
     }
 
-    private String getDisplayableId(Map<String, String> claims) {
-
+    protected String getDisplayableId(Map<String, String> claims) {
         if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.UPN))) {
             return claims.get(AzureActiveDirectoryIdTokenClaims.UPN);
         } else if (!StringExtensions.isNullOrBlank(claims.get(StandardIdTokenClaims.EMAIL))) {

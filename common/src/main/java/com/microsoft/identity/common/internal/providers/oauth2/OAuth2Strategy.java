@@ -27,7 +27,7 @@ public abstract class OAuth2Strategy {
      * @return
      */
     public AuthorizationResponse requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy) {
-        validateAuthoriztionRequest(request);
+        validateAuthorizationRequest(request);
         Uri authorizationUri = createAuthorizationUri();
         AuthorizationResult result = authorizationStrategy.requestAuthorization(request);
         //TODO: Reconcile authorization result and response
@@ -75,7 +75,7 @@ public abstract class OAuth2Strategy {
      *
      * @param request
      */
-    protected abstract void validateAuthoriztionRequest(AuthorizationRequest request);
+    protected abstract void validateAuthorizationRequest(AuthorizationRequest request);
 
     /**
      * Abstract method for validating the token request.  Generally speaking I expect this just to be validating
