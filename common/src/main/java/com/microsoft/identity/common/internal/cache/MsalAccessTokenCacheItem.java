@@ -52,7 +52,7 @@ class MsalAccessTokenCacheItem extends BaseMsalTokenCacheItem implements ISelfSe
             AuthorizationRequest request,
             TokenResponse response) {
         super(oAuth2Strategy, request, response);
-        mScope = request.getScope(); // TODO does this need to be some special v2 scope?
+        mScope = request.getScope();
         mAccessToken = response.getAccessToken();
         mTokenType = response.getTokenType();
         mRawIdToken = response.getIdToken();
