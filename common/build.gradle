@@ -1,3 +1,9 @@
+
+
+plugins {
+    id "org.sonarqube" version "2.5"
+}
+
 apply plugin: 'com.android.library'
 
 android {
