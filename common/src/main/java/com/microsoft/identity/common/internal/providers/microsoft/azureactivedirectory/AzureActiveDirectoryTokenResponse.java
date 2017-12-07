@@ -41,7 +41,6 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
      */
     protected String mClientInfo;
 
-
     /**
      * Information to uniquely identify the family that the client application belongs to.
      */

@@ -3,16 +3,11 @@ package com.microsoft.identity.common.internal.cache;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.Account;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.util.EncodingUtil;
-
-import java.net.URL;
 
 /**
  * A lightweight representation of MSAL's cache item for refresh tokens.
@@ -55,18 +50,7 @@ class MsalRefreshTokenCacheItem extends BaseMsalTokenCacheItem implements ISelfS
         super(oAuth2Strategy, request, response);
         final Account account = oAuth2Strategy.createAccount(response);
         mRefreshToken = response.getRefreshToken();
-
-        if (request instanceof AzureActiveDirectoryAuthorizationRequest) {
-            final URL authority = ((AzureActiveDirectoryAuthorizationRequest) request).getAuthority();
-            final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
-            // This map can only be consulted if authority validation is on.
-            // If the host has a hardcoded trust, we can just use the hostname.
-            if (null != cloudEnv) {
-                mEnvironment = cloudEnv.getPreferredNetworkHostName();
-            } else {
-                mEnvironment = authority.getHost();
-            }
-        }
+        mEnvironment = oAuth2Strategy.getIssuerCacheIdentifier(request);
 
         if (account instanceof AzureActiveDirectoryAccount) {
             final AzureActiveDirectoryAccount aadAcct = (AzureActiveDirectoryAccount) account;
