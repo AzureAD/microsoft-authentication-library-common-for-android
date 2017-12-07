@@ -22,8 +22,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     lintOptions {
-        abortOnError false
+        abortOnError true
+        disable 'MissingPermission'
+        disable 'LongLogTag'
+        disable 'DefaultLocale'
+        disable 'UnusedResources'
+        disable 'GradleDependency'
+        disable 'GradleOverrides'
+        disable 'OldTargetApi'
     }
 }
 

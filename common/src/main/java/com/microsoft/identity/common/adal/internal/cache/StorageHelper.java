@@ -130,7 +130,9 @@ public class StorageHelper {
     /**
      * Constructor for {@link StorageHelper}.
      * @param context The {@link Context} to create {@link StorageHelper}.
+     * TODO: Remove this suppression: https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html
      */
+    @SuppressLint("TrulyRandom")
     public StorageHelper(Context context) {
         mContext = context.getApplicationContext();
         mRandom = new SecureRandom();
