@@ -23,6 +23,7 @@ android {
         }
     }
 
+
     lintOptions {
         abortOnError true
         disable 'MissingPermission'

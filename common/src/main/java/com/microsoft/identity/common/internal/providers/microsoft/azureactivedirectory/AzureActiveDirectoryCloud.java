@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.providers.azureactivedirectory;
+package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -44,15 +44,15 @@ public class AzureActiveDirectoryCloud {
         mIsValidated = true;
     }
 
-    String getPreferredNetworkHostName() {
+    public String getPreferredNetworkHostName() {
         return mPreferredNetworkHostName;
     }
 
-    String getPreferredCacheHostName() {
+    public String getPreferredCacheHostName() {
         return mPreferredCacheHostName;
     }
 
-    List<String> getHostAliases() {
+    public List<String> getHostAliases() {
         return mCloudHostAliases;
     }
 

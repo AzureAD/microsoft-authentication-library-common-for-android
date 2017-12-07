@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.providers.azureactivedirectory;
+package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
@@ -40,7 +40,6 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
      * Information to uniquely identify the tenant and the user _within_ that tenant.
      */
     protected String mClientInfo;
-
 
     /**
      * Information to uniquely identify the family that the client application belongs to.

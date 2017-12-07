@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.providers.azureactivedirectory;
+package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import android.net.Uri;
 
@@ -6,13 +6,10 @@ import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
-
-import java.net.URL;
 
 
 /**
@@ -28,7 +25,8 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
         mConfig = config;
     }
 
-    protected void validateAuthoriztionRequest(AuthorizationRequest request) {
+    @Override
+    protected void validateAuthorizationRequest(AuthorizationRequest request) {
 
     }
 
@@ -38,6 +36,7 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
      *
      * @param request
      */
+    @Override
     protected void validateTokenRequest(TokenRequest request) {
 
     }
@@ -48,12 +47,14 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
      *
      * @return
      */
+    @Override
     public Account createAccount(TokenResponse response) {
         IDToken idToken = new IDToken(response.getIdToken());
         ClientInfo clientInfo = new ClientInfo(((AzureActiveDirectoryTokenResponse) response).getClientInfo());
         return AzureActiveDirectoryAccount.create(idToken, clientInfo);
     }
 
+    @Override
     public String getIssuerCacheIdentifier(AuthorizationRequest request) {
 
         AzureActiveDirectoryAuthorizationRequest authRequest;
@@ -67,12 +68,12 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
 
         AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
 
-        if(!cloud.isValidated() && this.mConfig.isAuthorityHostValdiationEnabled()){
+        if (!cloud.isValidated() && this.mConfig.isAuthorityHostValdiationEnabled()) {
             //We have invalid cloud data... and authority host validation is enabled....
             //TODO: Throw an exception in this case... need to see what ADAL does in this case.
         }
 
-        if(!cloud.isValidated() && !this.mConfig.isAuthorityHostValdiationEnabled()){
+        if (!cloud.isValidated() && !this.mConfig.isAuthorityHostValdiationEnabled()) {
             //Authority host validation not specified... but there is no cloud....
             //Hence just return the passed in Authority
             return authRequest.getAuthority().toString();
@@ -87,8 +88,9 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
 
     }
 
+    @Override
     public AccessToken getAccessTokenFromResponse(TokenResponse response) {
-        AzureActiveDirectoryAccessToken accessToken = null;
+        AzureActiveDirectoryAccessToken accessToken;
 
         if (response instanceof AzureActiveDirectoryTokenResponse) {
             accessToken = new AzureActiveDirectoryAccessToken(response);
@@ -98,11 +100,12 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
         return accessToken;
     }
 
+    @Override
     public RefreshToken getRefreshTokenFromResponse(TokenResponse response) {
         AzureActiveDirectoryRefreshToken refreshToken = null;
 
         if (response instanceof AzureActiveDirectoryTokenResponse) {
-            refreshToken = new AzureActiveDirectoryRefreshToken(response);
+            refreshToken = new AzureActiveDirectoryRefreshToken((AzureActiveDirectoryTokenResponse) response);
         } else {
             throw new RuntimeException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryOAuth2Strategy.getRefreshTokenFromResponse");
         }

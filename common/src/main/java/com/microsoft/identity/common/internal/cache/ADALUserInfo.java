@@ -3,7 +3,7 @@ package com.microsoft.identity.common.internal.cache;
 import android.net.Uri;
 
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
-import com.microsoft.identity.common.internal.providers.azureactivedirectory.AzureActiveDirectoryAccount;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
 
 import java.util.Date;
 
