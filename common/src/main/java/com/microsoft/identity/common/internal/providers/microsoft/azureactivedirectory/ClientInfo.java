@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.providers.azureactivedirectory;
+package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import android.util.Base64;
 
@@ -15,8 +15,8 @@ import java.util.Map;
  */
 public class ClientInfo {
 
-    final static String UNIQUE_IDENTIFIER = "uid";
-    final static String UNIQUE_TENANT_IDENTIFIER = "utid";
+    public static final String UNIQUE_IDENTIFIER = "uid";
+    public static final String UNIQUE_TENANT_IDENTIFIER = "utid";
 
     /**
      * Constructor for ClientInfo object

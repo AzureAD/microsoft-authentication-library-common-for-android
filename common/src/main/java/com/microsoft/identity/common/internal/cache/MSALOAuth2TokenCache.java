@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
@@ -31,10 +32,6 @@ import java.util.Set;
  */
 public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSingleSignOnState {
 
-    // TODO where's an appropriate place for these as constants?
-    public static final String UID = "uid";
-    public static final String UTID = "utid";
-
     // SharedPreferences used to store tokens
     private final SharedPreferencesFileManager mAccessTokenSharedPreferences;
     private final SharedPreferencesFileManager mRefreshTokenSharedPreferences;
@@ -43,15 +40,18 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
     private static final String sAccessTokenSharedPreferences = "com.microsoft.identity.client.token";
     private static final String sRefreshTokenSharedPreferences = "com.microsoft.identity.client.refreshToken";
 
+    private List<IShareSingleSignOnState> mSharedSSOCaches;
+
     /**
      * Constructs a new MSALOAuth2TokenCache.
      *
      * @param context The Application consuming this library.
      */
-    public MSALOAuth2TokenCache(Context context) {
+    public MSALOAuth2TokenCache(Context context, List<IShareSingleSignOnState> sharedSSOCaches) {
         super(context);
         mAccessTokenSharedPreferences = new SharedPreferencesFileManager(mContext, sAccessTokenSharedPreferences);
         mRefreshTokenSharedPreferences = new SharedPreferencesFileManager(mContext, sRefreshTokenSharedPreferences);
+        mSharedSSOCaches = sharedSSOCaches;
     }
 
     @Override
@@ -156,8 +156,8 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
         final String rawClientInfo = atCacheItem.mRawClientInfo;
         try {
             final Map<String, String> clientInfoItems = parseRawClientInfo(rawClientInfo);
-            String uid = clientInfoItems.get(UID);
-            String utid = clientInfoItems.get(UTID);
+            String uid = clientInfoItems.get(ClientInfo.UNIQUE_IDENTIFIER);
+            String utid = clientInfoItems.get(ClientInfo.UNIQUE_TENANT_IDENTIFIER);
             atCacheItem.mUserIdentifier =
                     EncodingUtil.base64UrlEncodeToString(uid)
                             + "."
