@@ -23,6 +23,10 @@ android {
         }
     }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8465fb7a58a47eb48a1860c30d748666903779b8
     lintOptions {
         abortOnError true
         disable 'MissingPermission'

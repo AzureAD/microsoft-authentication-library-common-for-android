@@ -58,11 +58,9 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
 
     @Override
     protected void validateAuthorizationRequest(AuthorizationRequest request) {
-
     }
 
     @Override
     protected void validateTokenRequest(TokenRequest request) {
-
     }
 }
