@@ -55,7 +55,7 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
     }
 
     @Override
-    protected void validateAuthoriztionRequest(AuthorizationRequest request) {
+    protected void validateAuthorizationRequest(AuthorizationRequest request) {
 
     }
 

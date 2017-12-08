@@ -56,7 +56,7 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    protected void validateAuthoriztionRequest(AuthorizationRequest request) {
+    protected void validateAuthorizationRequest(AuthorizationRequest request) {
 
     }
 
