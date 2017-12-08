@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.providers.activedirectoryfederationservices;
+package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
 import android.net.Uri;
 

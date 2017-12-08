@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.providers.activedirectoryfederationservices;
+package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;

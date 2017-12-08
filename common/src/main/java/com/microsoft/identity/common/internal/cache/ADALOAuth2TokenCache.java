@@ -22,6 +22,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.ListIterator;
@@ -50,6 +51,13 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
         mSharedSSOCaches = sharedSSOCaches;
+    }
+
+    public ADALOAuth2TokenCache(Context context) {
+        super(context);
+        validateSecretKeySetting();
+        initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
+        mSharedSSOCaches = new ArrayList<>();
     }
 
     protected void initializeSharedPreferencesFileManager(String fileName) {

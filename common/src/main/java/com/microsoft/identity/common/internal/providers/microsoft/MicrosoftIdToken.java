@@ -1,8 +1,8 @@
 package com.microsoft.identity.common.internal.providers.microsoft;
 
-import com.microsoft.identity.common.internal.providers.oauth2.StandardIdTokenClaims;
+import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
-public class MicrosoftIdTokenClaims extends StandardIdTokenClaims {
+public class MicrosoftIdToken extends IDToken {
 
     /**
      * Identifies the intended recipient of the token. In ID tokens, the audience is your app's
@@ -59,4 +59,8 @@ public class MicrosoftIdTokenClaims extends StandardIdTokenClaims {
      * The version of the ID token, as defined by Azure AD. For the v2.0 endpoint, the value is 2.0.
      */
     public static final String VERSION = "ver";
+
+    public MicrosoftIdToken(String rawIdToken) {
+        super(rawIdToken);
+    }
 }
