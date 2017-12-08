@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.providers.azureactivedirectoryb2c;
+package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;

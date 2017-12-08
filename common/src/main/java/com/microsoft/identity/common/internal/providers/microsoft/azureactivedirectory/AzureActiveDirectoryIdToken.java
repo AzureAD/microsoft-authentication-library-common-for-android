@@ -1,13 +1,13 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdTokenClaims;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 
 /**
  * Represents additional id token claims issued by AAD (V1 Endpoint)
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims
  */
-public class AzureActiveDirectoryIdTokenClaims extends MicrosoftIdTokenClaims {
+public class AzureActiveDirectoryIdToken extends MicrosoftIdToken {
 
     /**
      * Stores the user name of the user principal.
@@ -21,4 +21,8 @@ public class AzureActiveDirectoryIdTokenClaims extends MicrosoftIdTokenClaims {
     public static final String UNIQUE_NAME = "unique_name";
     public static final String PASSWORD_EXPIRATION = "pwd_exp";
     public static final String PASSWORD_CHANGE_URL = "pwd_url";
+
+    public AzureActiveDirectoryIdToken(String rawIdToken) {
+        super(rawIdToken);
+    }
 }

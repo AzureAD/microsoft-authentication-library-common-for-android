@@ -54,6 +54,18 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
         mSharedSSOCaches = sharedSSOCaches;
     }
 
+    /**
+     * Constructs a new MSALOAuth2TokenCache.
+     *
+     * @param context The Application consuming this library.
+     */
+    public MSALOAuth2TokenCache(Context context) {
+        super(context);
+        mAccessTokenSharedPreferences = new SharedPreferencesFileManager(mContext, sAccessTokenSharedPreferences);
+        mRefreshTokenSharedPreferences = new SharedPreferencesFileManager(mContext, sRefreshTokenSharedPreferences);
+        mSharedSSOCaches = new ArrayList<>();
+    }
+
     @Override
     public void setSingleSignOnState(Account account, RefreshToken refreshToken) {
         // TODO implement

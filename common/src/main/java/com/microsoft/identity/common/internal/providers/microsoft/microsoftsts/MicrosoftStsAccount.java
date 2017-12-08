@@ -4,7 +4,6 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
-import com.microsoft.identity.common.internal.providers.oauth2.StandardIdTokenClaims;
 
 import java.util.Map;
 
@@ -16,10 +15,10 @@ public class MicrosoftStsAccount extends AzureActiveDirectoryAccount {
 
     @Override
     protected String getDisplayableId(Map<String, String> claims) {
-        if (!StringExtensions.isNullOrBlank(claims.get(StandardIdTokenClaims.PREFERRED_USERNAME))) {
-            return claims.get(StandardIdTokenClaims.PREFERRED_USERNAME);
-        } else if (!StringExtensions.isNullOrBlank(claims.get(StandardIdTokenClaims.EMAIL))) {
-            return claims.get(StandardIdTokenClaims.EMAIL);
+        if (!StringExtensions.isNullOrBlank(claims.get(MicrosoftStsIdToken.PREFERRED_USERNAME))) {
+            return claims.get(MicrosoftStsIdToken.PREFERRED_USERNAME);
+        } else if (!StringExtensions.isNullOrBlank(claims.get(MicrosoftStsIdToken.EMAIL))) {
+            return claims.get(MicrosoftStsIdToken.EMAIL);
         }
 
         return null;

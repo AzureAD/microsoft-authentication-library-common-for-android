@@ -6,7 +6,6 @@ import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
-import com.microsoft.identity.common.internal.providers.oauth2.StandardIdTokenClaims;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -52,18 +51,18 @@ public class AzureActiveDirectoryAccount extends Account {
         Map<String, String> claims = idToken.getTokenClaims();
         mUniqueId = getUniqueId(claims);
         mDisplayableId = getDisplayableId(claims);
-        mName = claims.get(StandardIdTokenClaims.NAME);
-        mIdentityProvider = claims.get(AzureActiveDirectoryIdTokenClaims.ISSUER);
-        mGivenName = claims.get(StandardIdTokenClaims.GIVEN_NAME);
-        mFamilyName = claims.get(StandardIdTokenClaims.FAMILY_NAME);
-        mTenantId = claims.get(AzureActiveDirectoryIdTokenClaims.TENANT_ID);
+        mName = claims.get(AzureActiveDirectoryIdToken.NAME);
+        mIdentityProvider = claims.get(AzureActiveDirectoryIdToken.ISSUER);
+        mGivenName = claims.get(AzureActiveDirectoryIdToken.GIVEN_NAME);
+        mFamilyName = claims.get(AzureActiveDirectoryIdToken.FAMILY_NAME);
+        mTenantId = claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
         mUid = uid;
         mUtid = uTid;
 
         long mPasswordExpiration = 0;
 
-        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.PASSWORD_EXPIRATION))) {
-            mPasswordExpiration = Long.parseLong(claims.get(AzureActiveDirectoryIdTokenClaims.PASSWORD_EXPIRATION));
+        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.PASSWORD_EXPIRATION))) {
+            mPasswordExpiration = Long.parseLong(claims.get(AzureActiveDirectoryIdToken.PASSWORD_EXPIRATION));
         }
 
         if (mPasswordExpiration > 0) {
@@ -75,8 +74,8 @@ public class AzureActiveDirectoryAccount extends Account {
         }
 
         mPasswordChangeUrl = null;
-        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.PASSWORD_CHANGE_URL))) {
-            mPasswordChangeUrl = Uri.parse(claims.get(AzureActiveDirectoryIdTokenClaims.PASSWORD_CHANGE_URL));
+        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.PASSWORD_CHANGE_URL))) {
+            mPasswordChangeUrl = Uri.parse(claims.get(AzureActiveDirectoryIdToken.PASSWORD_CHANGE_URL));
         }
     }
 
@@ -105,10 +104,10 @@ public class AzureActiveDirectoryAccount extends Account {
     }
 
     protected String getDisplayableId(Map<String, String> claims) {
-        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.UPN))) {
-            return claims.get(AzureActiveDirectoryIdTokenClaims.UPN);
-        } else if (!StringExtensions.isNullOrBlank(claims.get(StandardIdTokenClaims.EMAIL))) {
-            return claims.get(StandardIdTokenClaims.EMAIL);
+        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.UPN))) {
+            return claims.get(AzureActiveDirectoryIdToken.UPN);
+        } else if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.EMAIL))) {
+            return claims.get(AzureActiveDirectoryIdToken.EMAIL);
         }
 
         return null;
@@ -116,10 +115,10 @@ public class AzureActiveDirectoryAccount extends Account {
 
     private String getUniqueId(Map<String, String> claims) {
 
-        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdTokenClaims.OJBECT_ID))) {
-            return claims.get(AzureActiveDirectoryIdTokenClaims.OJBECT_ID);
-        } else if (!StringExtensions.isNullOrBlank(claims.get(StandardIdTokenClaims.SUBJECT))) {
-            return claims.get(StandardIdTokenClaims.SUBJECT);
+        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.OJBECT_ID))) {
+            return claims.get(AzureActiveDirectoryIdToken.OJBECT_ID);
+        } else if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.SUBJECT))) {
+            return claims.get(AzureActiveDirectoryIdToken.SUBJECT);
         }
 
         return null;
