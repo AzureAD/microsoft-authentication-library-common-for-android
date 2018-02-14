@@ -38,13 +38,13 @@ import com.microsoft.identity.common.adal.internal.UsageStatsManagerWrapper;
  * be removed in the next major version update. 
  * https://github.com/AzureAD/azure-activedirectory-library-for-android/issues/626
  */
-class DefaultConnectionService implements IConnectionService {
+public class DefaultConnectionService implements IConnectionService {
 
     private final Context mConnectionContext;
 
     private static final String TAG = "DefaultConnectionService";
 
-    DefaultConnectionService(Context ctx) {
+    public DefaultConnectionService(Context ctx) {
         mConnectionContext = ctx;
     }
 
