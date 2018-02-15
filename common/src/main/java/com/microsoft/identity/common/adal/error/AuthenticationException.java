@@ -183,18 +183,6 @@ public class AuthenticationException extends Exception {
         }
     }
 
-    public void setHttpResponse(int statusCode, HashMap<String, List<String>> headers, HashMap<String, String> body) {
-
-        if(body != null)
-            mHttpResponseBody = body;
-
-        if(headers != null)
-            mHttpResponseHeaders = headers;
-
-        mServiceStatusCode = statusCode;
-
-    }
-
     /**
      * Gets localized {@link ADALError} code if provided by context.
      *

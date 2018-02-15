@@ -151,10 +151,10 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
 
     private List<MsalAccessTokenCacheItem> getAllAccessTokens() {
         final Map<String, ?> atMap = mAccessTokenSharedPreferences.getAll();
-        final Collection<?> accessTokensAsStrings = atMap.values();
+        final Collection<?> accessTokensAsUnknowns = atMap.values();
         final List<MsalAccessTokenCacheItem> atCacheItems = new ArrayList<>();
 
-        for (final Object atUnknown : accessTokensAsStrings) {
+        for (final Object atUnknown : accessTokensAsUnknowns) {
             if(atUnknown instanceof String) {
                 final MsalAccessTokenCacheItem atCacheItem = new Gson().fromJson((String)atUnknown, MsalAccessTokenCacheItem.class);
                 initUserIdentifier(atCacheItem);
