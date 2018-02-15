@@ -149,6 +149,15 @@ public final class AuthenticationConstants {
         /** String of token type. */
         public static final String TOKEN_TYPE = "token_type";
 
+        /** String of http web response body. */
+        public static final String HTTP_RESPONSE_BODY = "response_body";
+
+        /** String of http web response headers. */
+        public static final String HTTP_RESPONSE_HEADER = "response_headers";
+
+        /** String of http web response status code. */
+        public static final String HTTP_STATUS_CODE = "status_code";
+
         /** String of id token. */
         public static final String ID_TOKEN = "id_token";
 
@@ -194,6 +203,8 @@ public final class AuthenticationConstants {
         public static final String EXT_EXPIRES_IN = "ext_expires_in";
 
         public static final String CLAIMS = "claims";
+
+        public static final String CLOUD_INSTANCE_HOST_NAME = "cloud_instance_host_name";
     }
 
     /**
