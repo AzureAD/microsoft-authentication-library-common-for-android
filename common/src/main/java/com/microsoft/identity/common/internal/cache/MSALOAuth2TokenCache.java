@@ -4,7 +4,7 @@ import android.content.Context;
 import android.util.Base64;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.model_old.Account;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;

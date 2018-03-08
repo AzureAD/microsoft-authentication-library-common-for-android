@@ -1,4 +1,4 @@
-package com.microsoft.identity.common;
+package com.microsoft.identity.common.model_old;
 
 import java.util.List;
 

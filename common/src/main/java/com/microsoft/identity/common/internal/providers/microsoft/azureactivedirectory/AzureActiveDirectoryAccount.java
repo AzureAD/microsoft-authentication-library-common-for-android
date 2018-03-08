@@ -2,7 +2,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import android.net.Uri;
 
-import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.model_old.Account;
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;

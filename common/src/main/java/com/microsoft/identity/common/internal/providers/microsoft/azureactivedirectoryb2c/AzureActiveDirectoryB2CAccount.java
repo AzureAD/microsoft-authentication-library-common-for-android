@@ -1,6 +1,6 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
-import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.model_old.Account;
 
 import java.util.List;
 
