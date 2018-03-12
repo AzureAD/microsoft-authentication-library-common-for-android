@@ -3,10 +3,9 @@
 
 package com.microsoft.identity.common.generated;
 
-public enum CredentialType {
-    OAUTH2_ACCESS_TOKEN,
-    OAUTH2_REFRESH_TOKEN,
-    OIDC_ID_TOKEN_UNSIGNED,
-    OIDC_ID_TOKEN_SIGNED,
+public enum StatusType {
+    SUCCESS,
+    FAILURE,
+    RETRIABLE_ERROR,
     ;
 }
