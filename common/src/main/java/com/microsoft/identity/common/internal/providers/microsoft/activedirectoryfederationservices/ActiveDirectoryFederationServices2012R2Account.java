@@ -1,6 +1,6 @@
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
-import com.microsoft.identity.common.model_old.Account;
+import com.microsoft.identity.common.Account;
 
 import java.util.List;
 

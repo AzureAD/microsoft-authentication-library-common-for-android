@@ -2,7 +2,7 @@ package com.microsoft.identity.common.internal.cache;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.model_old.Account;
+import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;

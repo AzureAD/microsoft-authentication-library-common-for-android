@@ -1,6 +1,6 @@
 package com.microsoft.identity.common.internal.cache;
 
-import com.microsoft.identity.common.model_old.Account;
+import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccessToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryRefreshToken;
