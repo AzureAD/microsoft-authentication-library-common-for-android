@@ -135,7 +135,7 @@ public class Credential {
      *
      * @param uniqueId The unique_id to set.
      */
-    public void setmUniqueId(final String uniqueId) {
+    public void setUniqueId(final String uniqueId) {
         mUniqueId = uniqueId;
     }
 
@@ -153,7 +153,7 @@ public class Credential {
      *
      * @param environment The environment to set.
      */
-    public void setmEnvironment(final String environment) {
+    public void setEnvironment(final String environment) {
         mEnvironment = environment;
     }
 
@@ -171,7 +171,7 @@ public class Credential {
      *
      * @param credentialType The credential_type to set.
      */
-    public void setmCredentialType(final String credentialType) {
+    public void setCredentialType(final String credentialType) {
         mCredentialType = credentialType;
     }
 
@@ -189,7 +189,7 @@ public class Credential {
      *
      * @param clientId The client_id to set.
      */
-    public void setmClientId(final String clientId) {
+    public void setClientId(final String clientId) {
         mClientId = clientId;
     }
 
@@ -207,7 +207,7 @@ public class Credential {
      *
      * @param secret The secret to set.
      */
-    public void setmSecret(final String secret) {
+    public void setSecret(final String secret) {
         mSecret = secret;
     }
 
@@ -225,7 +225,7 @@ public class Credential {
      *
      * @param target The target to set.
      */
-    public void setmTarget(final String target) {
+    public void setTarget(final String target) {
         mTarget = target;
     }
 
@@ -243,7 +243,7 @@ public class Credential {
      *
      * @param realm The realm to set.
      */
-    public void setmRealm(final String realm) {
+    public void setRealm(final String realm) {
         mRealm = realm;
     }
 
@@ -261,7 +261,7 @@ public class Credential {
      *
      * @param cachedAt The cached_at to set.
      */
-    public void setmCachedAt(final String cachedAt) {
+    public void setCachedAt(final String cachedAt) {
         mCachedAt = cachedAt;
     }
 
@@ -279,7 +279,7 @@ public class Credential {
      *
      * @param expiresOn The expires_on to set.
      */
-    public void setmExpiresOn(final String expiresOn) {
+    public void setExpiresOn(final String expiresOn) {
         mExpiresOn = expiresOn;
     }
 
@@ -297,7 +297,7 @@ public class Credential {
      *
      * @param clientInfo The clent_info to set.
      */
-    public void setmClientInfo(final String clientInfo) {
+    public void setClientInfo(final String clientInfo) {
         mClientInfo = clientInfo;
     }
 }
