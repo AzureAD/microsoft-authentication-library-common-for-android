@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package com.microsoft.identity.common.dto;
+package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
 
