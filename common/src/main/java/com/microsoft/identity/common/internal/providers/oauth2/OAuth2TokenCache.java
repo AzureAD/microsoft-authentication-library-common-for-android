@@ -18,5 +18,5 @@ public abstract class OAuth2TokenCache {
      * @param request
      * @param response
      */
-    public abstract void saveTokens(OAuth2Strategy oAuth2Strategy, AuthorizationRequest request, TokenResponse response);
+    public abstract void saveTokenResponse(OAuth2Strategy oAuth2Strategy, AuthorizationRequest request, TokenResponse response);
 }

@@ -72,7 +72,7 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
      * @param response
      */
     @Override
-    public void saveTokens(OAuth2Strategy strategy, AuthorizationRequest request, TokenResponse response) {
+    public void saveTokenResponse(OAuth2Strategy strategy, AuthorizationRequest request, TokenResponse response) {
 
         Account account = strategy.createAccount(response);
         String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
