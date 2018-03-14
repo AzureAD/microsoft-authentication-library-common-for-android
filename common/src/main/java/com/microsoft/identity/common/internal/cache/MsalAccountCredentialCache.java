@@ -9,7 +9,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
-public class MsalOAuth2AccountCredentialCache
+public class MsalAccountCredentialCache
         extends OAuth2TokenCache
         implements IShareSingleSignOnState {
 
@@ -20,7 +20,7 @@ public class MsalOAuth2AccountCredentialCache
     private static final String sAccountCredentialSharedPreferences =
             "com.microsoft.identity.client.account_credential_cache";
 
-    public MsalOAuth2AccountCredentialCache(Context context) {
+    public MsalAccountCredentialCache(Context context) {
         super(context);
         mAccountCredentialSharedPreferences =
                 new SharedPreferencesFileManager(mContext, sAccountCredentialSharedPreferences);
