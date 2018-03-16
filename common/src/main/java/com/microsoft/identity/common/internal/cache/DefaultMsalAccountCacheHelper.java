@@ -5,17 +5,12 @@ import com.microsoft.identity.common.internal.dto.Account;
 /**
  * Default class for creating cache keys and values for {@link Account} objects.
  */
-public class DefaultAccountCacheHelper implements ICacheHelper<Account> {
+public class DefaultMsalAccountCacheHelper extends AbstractCacheHelper<Account> {
 
     @Override
     public String createCacheKey(Account account) {
         // TODO
         return null;
     }
-
-    @Override
-    public String getCacheValue(Account account) {
-        // TODO
-        return null;
-    }
+    
 }

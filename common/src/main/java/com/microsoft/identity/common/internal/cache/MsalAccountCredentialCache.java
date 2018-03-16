@@ -2,8 +2,8 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 
+import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
-import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
@@ -20,8 +20,7 @@ public class MsalAccountCredentialCache
     private final SharedPreferencesFileManager mAccountCredentialSharedPreferences;
 
     private List<IShareSingleSignOnState> mSharedSsoCaches;
-    private ICacheHelper<Account> mAccountCacheHelper;
-    private ICacheHelper<Credential> mCredentialCacheHelper;
+    private IMsalCacheConfiguration mCacheConfiguration;
 
     // The names of the SharedPreferences file on disk.
     private static final String sAccountCredentialSharedPreferences =
@@ -29,14 +28,12 @@ public class MsalAccountCredentialCache
 
     public MsalAccountCredentialCache(final Context context,
                                       final List<IShareSingleSignOnState> sharedSsoCaches,
-                                      final ICacheHelper<Account> accountCacheHelper,
-                                      final ICacheHelper<Credential> credentialCacheHelper) {
+                                      final IMsalCacheConfiguration cacheConfiguration) {
         super(context);
         mAccountCredentialSharedPreferences =
                 new SharedPreferencesFileManager(mContext, sAccountCredentialSharedPreferences);
         mSharedSsoCaches = sharedSsoCaches;
-        mAccountCacheHelper = accountCacheHelper;
-        mCredentialCacheHelper = credentialCacheHelper;
+        mCacheConfiguration = cacheConfiguration;
     }
 
     @Override
@@ -44,35 +41,52 @@ public class MsalAccountCredentialCache
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
             final TokenResponse response) {
-        saveAccount(createAccount(oAuth2Strategy, request, response));
-        saveCredential(createCredential(oAuth2Strategy, request, response));
+        saveAccount(oAuth2Strategy, request, response);
+        saveCredentials(oAuth2Strategy, request, response);
     }
 
-    private void saveAccount(final Account account) {
-        final String accountCacheKey = mAccountCacheHelper.createCacheKey(account);
-        final String accountCacheValue = mAccountCacheHelper.getCacheValue(account);
-        mAccountCredentialSharedPreferences.putString(accountCacheKey, accountCacheValue);
-    }
-
-    private void saveCredential(final Credential credential) {
-        final String credentialCacheKey = mCredentialCacheHelper.createCacheKey(credential);
-        final String credentialCacheValue = mCredentialCacheHelper.getCacheValue(credential);
-        mAccountCredentialSharedPreferences.putString(credentialCacheKey, credentialCacheValue);
-    }
-
-    private Account createAccount(
+    private void saveCredentials(
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
             final TokenResponse response) {
-        // TODO
-        return null;
+        saveAccessToken(oAuth2Strategy, request, response);
+        saveRefreshToken(oAuth2Strategy, request, response);
     }
 
-    private Credential createCredential(final OAuth2Strategy oAuth2Strategy,
-                                        final AuthorizationRequest request,
-                                        final TokenResponse response) {
-        // TODO
-        return null;
+    private void saveRefreshToken(
+            final OAuth2Strategy oAuth2Strategy,
+            final AuthorizationRequest request,
+            final TokenResponse response) {
+        final IMsalCredentialFactory credentialFactory = mCacheConfiguration.getCredentialFactory();
+        final ICacheHelper<com.microsoft.identity.common.internal.dto.RefreshToken> rtCacheHelper = mCacheConfiguration.getRefreshTokenCacheHelper();
+        final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken = credentialFactory.createRefreshToken(oAuth2Strategy, request, response);
+        final String rtCacheKey = rtCacheHelper.createCacheKey(refreshToken);
+        final String rtCacheValue = rtCacheHelper.createCacheKey(refreshToken);
+        mAccountCredentialSharedPreferences.putString(rtCacheKey, rtCacheValue);
+    }
+
+    private void saveAccessToken(
+            final OAuth2Strategy oAuth2Strategy,
+            final AuthorizationRequest request,
+            final TokenResponse response) {
+        final IMsalCredentialFactory credentialFactory = mCacheConfiguration.getCredentialFactory();
+        final ICacheHelper<AccessToken> atCacheHelper = mCacheConfiguration.getAccessTokenCacheHelper();
+        final AccessToken accessToken = credentialFactory.createAccessToken(oAuth2Strategy, request, response);
+        final String atCacheKey = atCacheHelper.createCacheKey(accessToken);
+        final String atCacheValue = atCacheHelper.createCacheKey(accessToken);
+        mAccountCredentialSharedPreferences.putString(atCacheKey, atCacheValue);
+    }
+
+    private void saveAccount(
+            final OAuth2Strategy oAuth2Strategy,
+            final AuthorizationRequest request,
+            final TokenResponse response) {
+        final IMsalAccountFactory accountFactory = mCacheConfiguration.getAccountFactory();
+        final ICacheHelper<Account> accountCacheHelper = mCacheConfiguration.getAccountCacheHelper();
+        final Account accountToSave = accountFactory.createAccount(oAuth2Strategy, request, response);
+        final String accountCacheKey = accountCacheHelper.createCacheKey(accountToSave);
+        final String accountCacheValue = accountCacheHelper.createCacheKey(accountToSave);
+        mAccountCredentialSharedPreferences.putString(accountCacheKey, accountCacheValue);
     }
 
     @Override
