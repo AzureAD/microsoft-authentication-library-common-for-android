@@ -15,12 +15,13 @@ import static org.junit.Assert.assertEquals;
 
 public class DefaultMsalAccessTokenCacheHelperTest {
 
-    private static final String UNIQUE_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
-    private static final String ENVIRONMENT = "login.microsoftonline.com";
+    static final String UNIQUE_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
+    static final String ENVIRONMENT = "login.microsoftonline.com";
+    static final String CLIENT_ID = "0287f963-2d72-4363-9e3a-5705c5b0f031";
+    static final String TARGET = "user.read user.write https://graph.windows.net";
+
     private static final String CREDENTIAL_TYPE = CredentialType.AccessToken.name().toLowerCase(Locale.US);
-    private static final String CLIENT_ID = "0287f963-2d72-4363-9e3a-5705c5b0f031";
     private static final String REALM = "3c62ac97-29eb-4aed-a3c8-add0298508d";
-    private static final String TARGET = "user.read user.write https://graph.windows.net";
 
     private DefaultMsalAccessTokenCacheHelper mDefaultMsalAccessTokenCacheHelper;
 
