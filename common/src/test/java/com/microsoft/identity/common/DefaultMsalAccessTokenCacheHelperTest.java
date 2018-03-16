@@ -4,6 +4,7 @@ import com.microsoft.identity.common.internal.cache.DefaultMsalAccessTokenCacheH
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -133,6 +134,28 @@ public class DefaultMsalAccessTokenCacheHelperTest {
                 + CLIENT_ID;
 
         assertEquals(expectedKey, mDefaultMsalAccessTokenCacheHelper.createCacheKey(accessToken));
+    }
+
+    @Test
+    public void getCacheValue() throws Exception {
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name().toLowerCase(Locale.US));
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setTarget(TARGET);
+
+        final String serializedValue = mDefaultMsalAccessTokenCacheHelper.getCacheValue(accessToken);
+
+        // Turn the serialized value into a JSONObject and start testing field equality.
+        final JSONObject jsonObject = new JSONObject(serializedValue);
+        assertEquals(UNIQUE_ID, jsonObject.getString("unique_id"));
+        assertEquals(ENVIRONMENT, jsonObject.getString("environment"));
+        assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
+        assertEquals(CLIENT_ID, jsonObject.getString("client_id"));
+        assertEquals(REALM, jsonObject.getString("realm"));
+        assertEquals(TARGET, jsonObject.getString("target"));
     }
 
 }
