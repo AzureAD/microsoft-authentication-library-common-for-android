@@ -14,6 +14,13 @@ import static org.junit.Assert.assertEquals;
 
 public class DefaultMsalAccessTokenCacheHelperTest {
 
+    private static final String UNIQUE_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
+    private static final String ENVIRONMENT = "login.microsoftonline.com";
+    private static final String CREDENTIAL_TYPE = CredentialType.AccessToken.name().toLowerCase(Locale.US);
+    private static final String CLIENT_ID = "0287f963-2d72-4363-9e3a-5705c5b0f031";
+    private static final String REALM = "3c62ac97-29eb-4aed-a3c8-add0298508d";
+    private static final String TARGET = "user.read user.write https://graph.windows.net";
+
     private DefaultMsalAccessTokenCacheHelper mDefaultMsalAccessTokenCacheHelper;
 
     @Before
@@ -23,141 +30,107 @@ public class DefaultMsalAccessTokenCacheHelperTest {
 
     @Test
     public void createCacheKeyComplete() throws Exception {
-        final String uniqueId = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
-        final String environment = "login.microsoftonline.com";
-        final String credentialType = CredentialType.AccessToken.name().toLowerCase(Locale.US);
-        final String clientId = "0287f963-2d72-4363-9e3a-5705c5b0f031";
-        final String realm = "3c62ac97-29eb-4aed-a3c8-add0298508d";
-        final String target = "user.read user.write https://graph.windows.net";
-
         final AccessToken accessToken = new AccessToken();
-        accessToken.setUniqueId(uniqueId);
-        accessToken.setEnvironment(environment);
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
-        accessToken.setClientId(clientId);
-        accessToken.setRealm(realm);
-        accessToken.setTarget(target);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setTarget(TARGET);
 
         final String expectedKey = "" // just for formatting
-                + uniqueId + CACHE_VALUE_SEPARATOR
-                + environment + CACHE_VALUE_SEPARATOR
-                + credentialType + CACHE_VALUE_SEPARATOR
-                + clientId + CACHE_VALUE_SEPARATOR
-                + realm + CACHE_VALUE_SEPARATOR
-                + target;
+                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE + CACHE_VALUE_SEPARATOR
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + REALM + CACHE_VALUE_SEPARATOR
+                + TARGET;
         assertEquals(expectedKey, mDefaultMsalAccessTokenCacheHelper.createCacheKey(accessToken));
     }
 
     @Test
     public void createCacheKeyNoUniqueId() throws Exception {
-        final String environment = "login.microsoftonline.com";
-        final String credentialType = CredentialType.AccessToken.name().toLowerCase(Locale.US);
-        final String clientId = "0287f963-2d72-4363-9e3a-5705c5b0f031";
-        final String realm = "3c62ac97-29eb-4aed-a3c8-add0298508d";
-        final String target = "user.read user.write https://graph.windows.net";
-
         final AccessToken accessToken = new AccessToken();
-        accessToken.setEnvironment(environment);
+        accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
-        accessToken.setClientId(clientId);
-        accessToken.setRealm(realm);
-        accessToken.setTarget(target);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setTarget(TARGET);
 
         final String expectedKey = "" // just for formatting
-                + environment + CACHE_VALUE_SEPARATOR
-                + credentialType + CACHE_VALUE_SEPARATOR
-                + clientId + CACHE_VALUE_SEPARATOR
-                + realm + CACHE_VALUE_SEPARATOR
-                + target;
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE + CACHE_VALUE_SEPARATOR
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + REALM + CACHE_VALUE_SEPARATOR
+                + TARGET;
         assertEquals(expectedKey, mDefaultMsalAccessTokenCacheHelper.createCacheKey(accessToken));
     }
 
     @Test
     public void createCacheKeyNoRealm() throws Exception {
-        final String uniqueId = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
-        final String environment = "login.microsoftonline.com";
-        final String credentialType = CredentialType.AccessToken.name().toLowerCase(Locale.US);
-        final String clientId = "0287f963-2d72-4363-9e3a-5705c5b0f031";
-        final String target = "user.read user.write https://graph.windows.net";
-
         final AccessToken accessToken = new AccessToken();
-        accessToken.setUniqueId(uniqueId);
-        accessToken.setEnvironment(environment);
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
-        accessToken.setClientId(clientId);
-        accessToken.setTarget(target);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
 
         final String expectedKey = "" // just for formatting
-                + uniqueId + CACHE_VALUE_SEPARATOR
-                + environment + CACHE_VALUE_SEPARATOR
-                + credentialType + CACHE_VALUE_SEPARATOR
-                + clientId + CACHE_VALUE_SEPARATOR
-                + target;
+                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE + CACHE_VALUE_SEPARATOR
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + TARGET;
         assertEquals(expectedKey, mDefaultMsalAccessTokenCacheHelper.createCacheKey(accessToken));
     }
 
     @Test
     public void createCacheKeyNoTarget() throws Exception {
-        final String uniqueId = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
-        final String environment = "login.microsoftonline.com";
-        final String credentialType = CredentialType.AccessToken.name().toLowerCase(Locale.US);
-        final String clientId = "0287f963-2d72-4363-9e3a-5705c5b0f031";
-        final String realm = "3c62ac97-29eb-4aed-a3c8-add0298508d";
-
         final AccessToken accessToken = new AccessToken();
-        accessToken.setUniqueId(uniqueId);
-        accessToken.setEnvironment(environment);
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
-        accessToken.setClientId(clientId);
-        accessToken.setRealm(realm);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setRealm(REALM);
 
         final String expectedKey = "" // just for formatting
-                + uniqueId + CACHE_VALUE_SEPARATOR
-                + environment + CACHE_VALUE_SEPARATOR
-                + credentialType + CACHE_VALUE_SEPARATOR
-                + clientId + CACHE_VALUE_SEPARATOR
-                + realm;
+                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE + CACHE_VALUE_SEPARATOR
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + REALM;
 
         assertEquals(expectedKey, mDefaultMsalAccessTokenCacheHelper.createCacheKey(accessToken));
     }
 
     @Test
     public void createCacheKeyNoUniqueIdNoRealmNoTarget() throws Exception {
-        final String environment = "login.microsoftonline.com";
-        final String credentialType = CredentialType.AccessToken.name().toLowerCase(Locale.US);
-        final String clientId = "0287f963-2d72-4363-9e3a-5705c5b0f031";
-
         final AccessToken accessToken = new AccessToken();
-        accessToken.setEnvironment(environment);
+        accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
-        accessToken.setClientId(clientId);
+        accessToken.setClientId(CLIENT_ID);
 
         final String expectedKey = "" // just for formatting
-                + environment + CACHE_VALUE_SEPARATOR
-                + credentialType + CACHE_VALUE_SEPARATOR
-                + clientId;
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE + CACHE_VALUE_SEPARATOR
+                + CLIENT_ID;
 
         assertEquals(expectedKey, mDefaultMsalAccessTokenCacheHelper.createCacheKey(accessToken));
     }
 
     @Test
     public void createCacheKeyNoRealmNoTarget() throws Exception {
-        final String uniqueId = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
-        final String environment = "login.microsoftonline.com";
-        final String credentialType = CredentialType.AccessToken.name().toLowerCase(Locale.US);
-        final String clientId = "0287f963-2d72-4363-9e3a-5705c5b0f031";
-
         final AccessToken accessToken = new AccessToken();
-        accessToken.setUniqueId(uniqueId);
-        accessToken.setEnvironment(environment);
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
-        accessToken.setClientId(clientId);
+        accessToken.setClientId(CLIENT_ID);
 
         final String expectedKey = "" // just for formatting
-                + uniqueId + CACHE_VALUE_SEPARATOR
-                + environment + CACHE_VALUE_SEPARATOR
-                + credentialType + CACHE_VALUE_SEPARATOR
-                + clientId;
+                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE + CACHE_VALUE_SEPARATOR
+                + CLIENT_ID;
 
         assertEquals(expectedKey, mDefaultMsalAccessTokenCacheHelper.createCacheKey(accessToken));
     }
