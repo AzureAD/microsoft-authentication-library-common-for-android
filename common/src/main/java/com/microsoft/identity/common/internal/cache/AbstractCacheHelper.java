@@ -8,9 +8,9 @@ import com.google.gson.Gson;
  * @param <T> The type to serialize.
  */
 abstract class AbstractCacheHelper<T> implements ICacheHelper<T> {
-
-    private final Gson mGson;
     
+    private final Gson mGson;
+
     AbstractCacheHelper() {
         mGson = new Gson();
     }
