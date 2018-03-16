@@ -29,9 +29,7 @@ public class DefaultMsalAccessTokenCacheHelper extends AbstractCacheHelper<Acces
 
         for (String keyComponent : keyComponents) {
             if (!StringExtensions.isNullOrBlank(keyComponent)) {
-                // TODO are cache keys supposed to be lowercased?
                 keyComponent = keyComponent.toLowerCase(Locale.US);
-                // Append the CACHE_VALUE_SEPARATOR unless this is the last element
                 cacheKey += keyComponent + CACHE_VALUE_SEPARATOR;
             }
         }
