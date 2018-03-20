@@ -4,16 +4,16 @@ import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
-public class DefaultMsalCacheConfiguration implements IMsalCacheConfiguration {
+public class DefaultCacheConfiguration implements ICacheConfiguration {
 
     @Override
     public ICacheHelper<Account> getAccountCacheHelper() {
-        return new DefaultMsalAccountCacheHelper();
+        return new DefaultAccountCacheHelper();
     }
 
     @Override
     public ICacheHelper<AccessToken> getAccessTokenCacheHelper() {
-        return new DefaultMsalAccessTokenCacheHelper();
+        return new DefaultAccessTokenCacheHelper();
     }
 
     @Override
@@ -22,12 +22,12 @@ public class DefaultMsalCacheConfiguration implements IMsalCacheConfiguration {
     }
 
     @Override
-    public IMsalAccountFactory getAccountFactory() {
-        return new DefaultMsalAccountFactory();
+    public IAccountFactory getAccountFactory() {
+        return new DefaultAccountFactory();
     }
 
     @Override
-    public IMsalCredentialFactory getCredentialFactory() {
-        return new DefaultMsalCredentialFactory();
+    public ICredentialFactory getCredentialFactory() {
+        return new DefaultCredentialFactory();
     }
 }

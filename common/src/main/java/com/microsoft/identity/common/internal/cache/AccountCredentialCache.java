@@ -12,7 +12,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.List;
 
-public class MsalAccountCredentialCache
+public class AccountCredentialCache
         extends OAuth2TokenCache
         implements IShareSingleSignOnState {
 
@@ -20,15 +20,15 @@ public class MsalAccountCredentialCache
     private final SharedPreferencesFileManager mAccountCredentialSharedPreferences;
 
     private List<IShareSingleSignOnState> mSharedSsoCaches;
-    private IMsalCacheConfiguration mCacheConfiguration;
+    private ICacheConfiguration mCacheConfiguration;
 
     // The names of the SharedPreferences file on disk.
     private static final String sAccountCredentialSharedPreferences =
             "com.microsoft.identity.client.account_credential_cache";
 
-    public MsalAccountCredentialCache(final Context context,
-                                      final List<IShareSingleSignOnState> sharedSsoCaches,
-                                      final IMsalCacheConfiguration cacheConfiguration) {
+    public AccountCredentialCache(final Context context,
+                                  final List<IShareSingleSignOnState> sharedSsoCaches,
+                                  final ICacheConfiguration cacheConfiguration) {
         super(context);
         mAccountCredentialSharedPreferences =
                 new SharedPreferencesFileManager(mContext, sAccountCredentialSharedPreferences);
@@ -57,7 +57,7 @@ public class MsalAccountCredentialCache
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
             final TokenResponse response) {
-        final IMsalCredentialFactory credentialFactory = mCacheConfiguration.getCredentialFactory();
+        final ICredentialFactory credentialFactory = mCacheConfiguration.getCredentialFactory();
         final ICacheHelper<com.microsoft.identity.common.internal.dto.RefreshToken> rtCacheHelper = mCacheConfiguration.getRefreshTokenCacheHelper();
         final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken = credentialFactory.createRefreshToken(oAuth2Strategy, request, response);
         final String rtCacheKey = rtCacheHelper.createCacheKey(refreshToken);
@@ -69,7 +69,7 @@ public class MsalAccountCredentialCache
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
             final TokenResponse response) {
-        final IMsalCredentialFactory credentialFactory = mCacheConfiguration.getCredentialFactory();
+        final ICredentialFactory credentialFactory = mCacheConfiguration.getCredentialFactory();
         final ICacheHelper<AccessToken> atCacheHelper = mCacheConfiguration.getAccessTokenCacheHelper();
         final AccessToken accessToken = credentialFactory.createAccessToken(oAuth2Strategy, request, response);
         final String atCacheKey = atCacheHelper.createCacheKey(accessToken);
@@ -81,7 +81,7 @@ public class MsalAccountCredentialCache
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
             final TokenResponse response) {
-        final IMsalAccountFactory accountFactory = mCacheConfiguration.getAccountFactory();
+        final IAccountFactory accountFactory = mCacheConfiguration.getAccountFactory();
         final ICacheHelper<Account> accountCacheHelper = mCacheConfiguration.getAccountCacheHelper();
         final Account accountToSave = accountFactory.createAccount(oAuth2Strategy, request, response);
         final String accountCacheKey = accountCacheHelper.createCacheKey(accountToSave);

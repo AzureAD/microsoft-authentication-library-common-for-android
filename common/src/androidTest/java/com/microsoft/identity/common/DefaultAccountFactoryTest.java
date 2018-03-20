@@ -3,7 +3,7 @@ package com.microsoft.identity.common;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Base64;
 
-import com.microsoft.identity.common.internal.cache.DefaultMsalAccountFactory;
+import com.microsoft.identity.common.internal.cache.DefaultAccountFactory;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -26,7 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
-public class DefaultMsalAccountFactoryTest {
+public class DefaultAccountFactoryTest {
 
     private static final String MOCK_TID = "7744ecc5-e130-4af1-ba81-749c395efc8c";
     private static final String MOCK_AUTHORITY = "https://login.microsoftonline.com";
@@ -45,7 +45,7 @@ public class DefaultMsalAccountFactoryTest {
     @Mock
     MicrosoftStsAccount mockAccount;
 
-    private DefaultMsalAccountFactory mAccountFactory;
+    private DefaultAccountFactory mAccountFactory;
 
     @Before
     public void setUp() throws MalformedURLException {
@@ -55,7 +55,7 @@ public class DefaultMsalAccountFactoryTest {
         when(mockResponse.getIdToken()).thenReturn(MOCK_ID_TOKEN_WITH_CLAIMS);
         when(mockResponse.getClientInfo()).thenReturn(MOCK_CLIENT_INFO);
         when(mockAccount.getTenantId()).thenReturn(MOCK_TID);
-        mAccountFactory = new DefaultMsalAccountFactory();
+        mAccountFactory = new DefaultAccountFactory();
     }
 
     @Test

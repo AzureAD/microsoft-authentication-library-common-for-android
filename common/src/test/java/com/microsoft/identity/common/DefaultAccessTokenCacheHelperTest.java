@@ -1,6 +1,6 @@
 package com.microsoft.identity.common;
 
-import com.microsoft.identity.common.internal.cache.DefaultMsalAccessTokenCacheHelper;
+import com.microsoft.identity.common.internal.cache.DefaultAccessTokenCacheHelper;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 
@@ -10,10 +10,10 @@ import org.junit.Test;
 
 import java.util.Locale;
 
-import static com.microsoft.identity.common.internal.cache.DefaultMsalAccessTokenCacheHelper.CACHE_VALUE_SEPARATOR;
+import static com.microsoft.identity.common.internal.cache.DefaultAccessTokenCacheHelper.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
 
-public class DefaultMsalAccessTokenCacheHelperTest {
+public class DefaultAccessTokenCacheHelperTest {
 
     static final String UNIQUE_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
     static final String ENVIRONMENT = "login.microsoftonline.com";
@@ -23,11 +23,11 @@ public class DefaultMsalAccessTokenCacheHelperTest {
 
     private static final String CREDENTIAL_TYPE = CredentialType.AccessToken.name().toLowerCase(Locale.US);
 
-    private DefaultMsalAccessTokenCacheHelper mDefaultMsalAccessTokenCacheHelper;
+    private DefaultAccessTokenCacheHelper mDefaultAccessTokenCacheHelper;
 
     @Before
     public void setUp() {
-        mDefaultMsalAccessTokenCacheHelper = new DefaultMsalAccessTokenCacheHelper();
+        mDefaultAccessTokenCacheHelper = new DefaultAccessTokenCacheHelper();
     }
 
     @Test
@@ -47,7 +47,7 @@ public class DefaultMsalAccessTokenCacheHelperTest {
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
                 + REALM + CACHE_VALUE_SEPARATOR
                 + TARGET;
-        assertEquals(expectedKey, mDefaultMsalAccessTokenCacheHelper.createCacheKey(accessToken));
+        assertEquals(expectedKey, mDefaultAccessTokenCacheHelper.createCacheKey(accessToken));
     }
 
     @Test
@@ -65,7 +65,7 @@ public class DefaultMsalAccessTokenCacheHelperTest {
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
                 + REALM + CACHE_VALUE_SEPARATOR
                 + TARGET;
-        assertEquals(expectedKey, mDefaultMsalAccessTokenCacheHelper.createCacheKey(accessToken));
+        assertEquals(expectedKey, mDefaultAccessTokenCacheHelper.createCacheKey(accessToken));
     }
 
     @Test
@@ -83,7 +83,7 @@ public class DefaultMsalAccessTokenCacheHelperTest {
                 + CREDENTIAL_TYPE + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
                 + TARGET;
-        assertEquals(expectedKey, mDefaultMsalAccessTokenCacheHelper.createCacheKey(accessToken));
+        assertEquals(expectedKey, mDefaultAccessTokenCacheHelper.createCacheKey(accessToken));
     }
 
     @Test
@@ -102,7 +102,7 @@ public class DefaultMsalAccessTokenCacheHelperTest {
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
                 + REALM;
 
-        assertEquals(expectedKey, mDefaultMsalAccessTokenCacheHelper.createCacheKey(accessToken));
+        assertEquals(expectedKey, mDefaultAccessTokenCacheHelper.createCacheKey(accessToken));
     }
 
     @Test
@@ -117,7 +117,7 @@ public class DefaultMsalAccessTokenCacheHelperTest {
                 + CREDENTIAL_TYPE + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID;
 
-        assertEquals(expectedKey, mDefaultMsalAccessTokenCacheHelper.createCacheKey(accessToken));
+        assertEquals(expectedKey, mDefaultAccessTokenCacheHelper.createCacheKey(accessToken));
     }
 
     @Test
@@ -134,7 +134,7 @@ public class DefaultMsalAccessTokenCacheHelperTest {
                 + CREDENTIAL_TYPE + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID;
 
-        assertEquals(expectedKey, mDefaultMsalAccessTokenCacheHelper.createCacheKey(accessToken));
+        assertEquals(expectedKey, mDefaultAccessTokenCacheHelper.createCacheKey(accessToken));
     }
 
     @Test
@@ -147,7 +147,7 @@ public class DefaultMsalAccessTokenCacheHelperTest {
         accessToken.setRealm(REALM);
         accessToken.setTarget(TARGET);
 
-        final String serializedValue = mDefaultMsalAccessTokenCacheHelper.getCacheValue(accessToken);
+        final String serializedValue = mDefaultAccessTokenCacheHelper.getCacheValue(accessToken);
 
         // Turn the serialized value into a JSONObject and start testing field equality.
         final JSONObject jsonObject = new JSONObject(serializedValue);

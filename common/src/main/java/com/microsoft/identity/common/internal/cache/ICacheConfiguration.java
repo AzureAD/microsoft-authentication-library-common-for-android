@@ -6,9 +6,9 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
 /**
- * Provides helpers and factories to the MsalAccountCredentialCache.
+ * Provides helpers and factories to the AccountCredentialCache.
  */
-public interface IMsalCacheConfiguration {
+public interface ICacheConfiguration {
 
     /**
      * Gets the {@link Account} cache helper;
@@ -36,13 +36,13 @@ public interface IMsalCacheConfiguration {
      *
      * @return The Account factory to get.
      */
-    IMsalAccountFactory getAccountFactory();
+    IAccountFactory getAccountFactory();
 
     /**
      * Gets the {@link Credential} factory.
      *
      * @return The Credential factory to get.
      */
-    IMsalCredentialFactory getCredentialFactory();
+    ICredentialFactory getCredentialFactory();
 
 }

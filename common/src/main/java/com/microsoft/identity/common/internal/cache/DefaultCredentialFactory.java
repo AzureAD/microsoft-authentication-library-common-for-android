@@ -6,7 +6,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
-class DefaultMsalCredentialFactory implements IMsalCredentialFactory {
+class DefaultCredentialFactory implements ICredentialFactory {
 
     @Override
     public AccessToken createAccessToken(OAuth2Strategy strategy, AuthorizationRequest request, TokenResponse response) {

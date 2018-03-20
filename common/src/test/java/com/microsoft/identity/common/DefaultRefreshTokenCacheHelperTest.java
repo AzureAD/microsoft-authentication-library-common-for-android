@@ -10,14 +10,14 @@ import org.junit.Test;
 
 import java.util.Locale;
 
-import static com.microsoft.identity.common.DefaultMsalAccessTokenCacheHelperTest.CLIENT_ID;
-import static com.microsoft.identity.common.DefaultMsalAccessTokenCacheHelperTest.ENVIRONMENT;
-import static com.microsoft.identity.common.DefaultMsalAccessTokenCacheHelperTest.TARGET;
-import static com.microsoft.identity.common.DefaultMsalAccessTokenCacheHelperTest.UNIQUE_ID;
+import static com.microsoft.identity.common.DefaultAccessTokenCacheHelperTest.CLIENT_ID;
+import static com.microsoft.identity.common.DefaultAccessTokenCacheHelperTest.ENVIRONMENT;
+import static com.microsoft.identity.common.DefaultAccessTokenCacheHelperTest.TARGET;
+import static com.microsoft.identity.common.DefaultAccessTokenCacheHelperTest.UNIQUE_ID;
 import static com.microsoft.identity.common.internal.cache.AbstractCacheHelper.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
 
-public class DefaultMsalRefreshTokenCacheHelperTest {
+public class DefaultRefreshTokenCacheHelperTest {
 
     private static final String CREDENTIAL_TYPE = CredentialType.RefreshToken.name().toLowerCase(Locale.US);
 

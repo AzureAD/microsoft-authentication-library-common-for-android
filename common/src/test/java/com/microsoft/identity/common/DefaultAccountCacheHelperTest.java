@@ -1,25 +1,25 @@
 package com.microsoft.identity.common;
 
-import com.microsoft.identity.common.internal.cache.DefaultMsalAccountCacheHelper;
+import com.microsoft.identity.common.internal.cache.DefaultAccountCacheHelper;
 import com.microsoft.identity.common.internal.dto.Account;
 
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.microsoft.identity.common.DefaultMsalAccessTokenCacheHelperTest.ENVIRONMENT;
-import static com.microsoft.identity.common.DefaultMsalAccessTokenCacheHelperTest.REALM;
-import static com.microsoft.identity.common.DefaultMsalAccessTokenCacheHelperTest.UNIQUE_ID;
+import static com.microsoft.identity.common.DefaultAccessTokenCacheHelperTest.ENVIRONMENT;
+import static com.microsoft.identity.common.DefaultAccessTokenCacheHelperTest.REALM;
+import static com.microsoft.identity.common.DefaultAccessTokenCacheHelperTest.UNIQUE_ID;
 import static com.microsoft.identity.common.internal.cache.AbstractCacheHelper.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
 
-public class DefaultMsalAccountCacheHelperTest {
+public class DefaultAccountCacheHelperTest {
 
-    private DefaultMsalAccountCacheHelper mMsalAccountCacheHelper;
+    private DefaultAccountCacheHelper mMsalAccountCacheHelper;
 
     @Before
     public void setUp() {
-        mMsalAccountCacheHelper = new DefaultMsalAccountCacheHelper();
+        mMsalAccountCacheHelper = new DefaultAccountCacheHelper();
     }
 
     @Test

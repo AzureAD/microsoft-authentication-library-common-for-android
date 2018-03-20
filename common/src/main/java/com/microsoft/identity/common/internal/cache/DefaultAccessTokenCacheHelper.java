@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Default class for creating cache keys and values for {@link Credential} objects.
  */
-public class DefaultMsalAccessTokenCacheHelper extends AbstractCacheHelper<AccessToken> {
+public class DefaultAccessTokenCacheHelper extends AbstractCacheHelper<AccessToken> {
 
     @Override
     public String createCacheKey(final AccessToken accessToken) {

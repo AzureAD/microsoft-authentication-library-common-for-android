@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Default class for creating cache keys and values for {@link Account} objects.
  */
-public class DefaultMsalAccountCacheHelper extends AbstractCacheHelper<Account> {
+public class DefaultAccountCacheHelper extends AbstractCacheHelper<Account> {
 
     @Override
     public String createCacheKey(final Account account) {
