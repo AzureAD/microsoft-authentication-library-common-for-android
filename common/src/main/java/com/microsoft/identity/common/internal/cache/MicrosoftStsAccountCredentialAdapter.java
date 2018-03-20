@@ -1,5 +1,7 @@
 package com.microsoft.identity.common.internal.cache;
 
+import android.support.annotation.NonNull;
+
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
@@ -32,33 +34,11 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
             final TokenResponse response) {
         final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
         final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
-        final MicrosoftStsOAuth2Strategy msStrategy;
-        final MicrosoftStsAuthorizationRequest msRequest;
-        final MicrosoftStsTokenResponse msTokenResponse;
-        final MicrosoftStsAccount msAccount;
-        final ClientInfo clientInfo;
-
-        // Check types...
-        if (strategy instanceof MicrosoftStsOAuth2Strategy) {
-            msStrategy = (MicrosoftStsOAuth2Strategy) strategy;
-        } else {
-            throw new IllegalArgumentException("Invalid strategy type.");
-        }
-
-        if (request instanceof MicrosoftStsAuthorizationRequest) {
-            msRequest = (MicrosoftStsAuthorizationRequest) request;
-        } else {
-            throw new IllegalArgumentException("Invalid AuthorizationRequest type.");
-        }
-
-        if (response instanceof MicrosoftStsTokenResponse) {
-            msTokenResponse = (MicrosoftStsTokenResponse) response;
-        } else {
-            throw new IllegalArgumentException("Invalid TokenResponse type.");
-        }
-
-        msAccount = (MicrosoftStsAccount) msStrategy.createAccount(msTokenResponse);
-        clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
+        final MicrosoftStsOAuth2Strategy msStrategy = asMicrosoftStsOAuth2Strategy(strategy);
+        final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
+        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
+        final MicrosoftStsAccount msAccount = (MicrosoftStsAccount) msStrategy.createAccount(msTokenResponse);
+        final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
 
         final Account account = new Account();
         account.setUniqueId(formatUniqueId(clientInfo));
@@ -69,7 +49,41 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         account.setAuthorityType(AUTHORITY_TYPE);
         account.setFirstName(tokenClaims.get(GIVEN_NAME));
         account.setLastName(tokenClaims.get(FAMILY_NAME));
+
         return account;
+    }
+
+    @NonNull
+    private static MicrosoftStsTokenResponse asMicrosoftStsTokenResponse(TokenResponse response) {
+        MicrosoftStsTokenResponse msTokenResponse;
+        if (response instanceof MicrosoftStsTokenResponse) {
+            msTokenResponse = (MicrosoftStsTokenResponse) response;
+        } else {
+            throw new IllegalArgumentException("Invalid TokenResponse type.");
+        }
+        return msTokenResponse;
+    }
+
+    @NonNull
+    private static MicrosoftStsAuthorizationRequest asMicrosoftStsAuthorizationRequest(AuthorizationRequest request) {
+        MicrosoftStsAuthorizationRequest msRequest;
+        if (request instanceof MicrosoftStsAuthorizationRequest) {
+            msRequest = (MicrosoftStsAuthorizationRequest) request;
+        } else {
+            throw new IllegalArgumentException("Invalid AuthorizationRequest type.");
+        }
+        return msRequest;
+    }
+
+    @NonNull
+    private static MicrosoftStsOAuth2Strategy asMicrosoftStsOAuth2Strategy(OAuth2Strategy strategy) {
+        MicrosoftStsOAuth2Strategy msStrategy;
+        if (strategy instanceof MicrosoftStsOAuth2Strategy) {
+            msStrategy = (MicrosoftStsOAuth2Strategy) strategy;
+        } else {
+            throw new IllegalArgumentException("Invalid strategy type.");
+        }
+        return msStrategy;
     }
 
     @Override
