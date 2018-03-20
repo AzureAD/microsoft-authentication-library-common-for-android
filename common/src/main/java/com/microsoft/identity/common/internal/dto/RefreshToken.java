@@ -85,6 +85,6 @@ public class RefreshToken extends Credential {
      * @param familyId The family_id to set.
      */
     public void setFamilyId(String familyId) {
-        this.mFamilyId = mFamilyId;
+        this.mFamilyId = familyId;
     }
 }
