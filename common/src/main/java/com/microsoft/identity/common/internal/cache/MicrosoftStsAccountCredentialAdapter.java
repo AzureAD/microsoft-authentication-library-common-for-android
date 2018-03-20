@@ -20,7 +20,7 @@ import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.FA
 import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.GIVEN_NAME;
 import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.PREFERRED_USERNAME;
 
-public class AccountCredentialAdapter implements IAccountCredentialAdapter {
+public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialAdapter {
 
     // TODO move me!
     public static final String AUTHORITY_TYPE = "MSSTS";
