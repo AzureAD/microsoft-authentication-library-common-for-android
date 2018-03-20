@@ -44,4 +44,5 @@ dependencies {
     // Test dependency is needed to resolve JSONObject inside of non-instrumented tests
     testImplementation 'org.json:json:20160810'
     testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'org.mockito:mockito-android:2.16.0'
 }
