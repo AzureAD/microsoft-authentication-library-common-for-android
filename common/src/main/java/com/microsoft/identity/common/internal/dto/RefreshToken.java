@@ -69,4 +69,22 @@ public class RefreshToken extends Credential {
     public void setClientInfo(final String clientInfo) {
         mClientInfo = clientInfo;
     }
+
+    /**
+     * Gets the family_id.
+     *
+     * @return The family_id to get.
+     */
+    public String getFamilyId() {
+        return mFamilyId;
+    }
+
+    /**
+     * Sets the family_id.
+     *
+     * @param familyId The family_id to set.
+     */
+    public void setFamilyId(String familyId) {
+        this.mFamilyId = mFamilyId;
+    }
 }
