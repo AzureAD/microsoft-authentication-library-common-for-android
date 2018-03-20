@@ -95,12 +95,8 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
 
     @Override
     public RefreshToken createRefreshToken(OAuth2Strategy strategy, AuthorizationRequest request, TokenResponse response) {
-        final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
-        final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
-        final MicrosoftStsOAuth2Strategy msStrategy = asMicrosoftStsOAuth2Strategy(strategy);
         final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
         final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
-        final MicrosoftStsAccount msAccount = (MicrosoftStsAccount) msStrategy.createAccount(msTokenResponse);
         final long currentTimeMillis = System.currentTimeMillis();
         final String currentTimeMillisStr = String.valueOf(currentTimeMillis);
         final long expiresInSeconds = msTokenResponse.getExpiresIn();
