@@ -14,49 +14,41 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             "com.microsoft.identity.client.account_credential_cache";
 
     // SharedPreferences used to store Accounts and Credentials
-    private final SharedPreferencesFileManager mAccountCredentialSharedPreferences;
+    private final SharedPreferencesFileManager mSharedPreferencesFileManager;
 
     private final Context mContext;
-    private final ICacheValueDelegate<Account> mAccountCacheValueDelegate;
-    private final ICacheValueDelegate<Credential> mCredentialCacheValueDelegate;
+    private final IAccountCredentialCacheKeyValueDelegate mCacheValueDelegate;
 
     public AccountCredentialCache(
             final Context context,
-            final ICacheValueDelegate<Account> accountCacheValueGenerator,
-            final ICacheValueDelegate<Credential> credentialCacheValueGenerator) {
+            final IAccountCredentialCacheKeyValueDelegate accountCacheValueDelegate) {
         mContext = context;
-        mAccountCredentialSharedPreferences =
-                new SharedPreferencesFileManager(mContext, sAccountCredentialSharedPreferences);
-        mAccountCacheValueDelegate = accountCacheValueGenerator;
-        mCredentialCacheValueDelegate = credentialCacheValueGenerator;
+        mSharedPreferencesFileManager = new SharedPreferencesFileManager(mContext, sAccountCredentialSharedPreferences);
+        mCacheValueDelegate = accountCacheValueDelegate;
     }
 
     @Override
     public void saveAccount(final Account account) {
-        final String cacheKey = mAccountCacheValueDelegate.generateCacheKey(account);
-        final String cacheValue = mAccountCacheValueDelegate.generateCacheValue(account);
-        mAccountCredentialSharedPreferences.putString(cacheKey, cacheValue);
+        final String cacheKey = mCacheValueDelegate.generateCacheKey(account);
+        final String cacheValue = mCacheValueDelegate.generateCacheValue(account);
+        mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
     }
 
     @Override
     public void saveCredential(Credential credential) {
-        final String cacheKey = mCredentialCacheValueDelegate.generateCacheKey(credential);
-        final String cacheValue = mCredentialCacheValueDelegate.generateCacheValue(credential);
-        mAccountCredentialSharedPreferences.putString(cacheKey, cacheValue);
+        final String cacheKey = mCacheValueDelegate.generateCacheKey(credential);
+        final String cacheValue = mCacheValueDelegate.generateCacheValue(credential);
+        mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
     }
 
     @Override
     public Account getAccount(final String cacheKey) {
-        return mAccountCacheValueDelegate.fromCacheValue(
-                mAccountCredentialSharedPreferences.getString(cacheKey)
-        );
+        return mCacheValueDelegate.fromCacheValue(mSharedPreferencesFileManager.getString(cacheKey), Account.class);
     }
 
     @Override
     public Credential getCredential(final String cacheKey) {
-        return mCredentialCacheValueDelegate.fromCacheValue(
-                mAccountCredentialSharedPreferences.getString(cacheKey)
-        );
+        return mCacheValueDelegate.fromCacheValue(mSharedPreferencesFileManager.getString(cacheKey), Credential.class);
     }
 
     @Override

@@ -12,25 +12,22 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.List;
 
-public class UnnamedClassThatDelegatesToTheActualCache
+public class MsalOAuth2TokenCache
         extends OAuth2TokenCache
         implements IShareSingleSignOnState {
 
     private List<IShareSingleSignOnState> mSharedSsoCaches;
     private IAccountCredentialCache mAccountCredentialCache;
-    private IAccountAdapter mAccountAdapter;
-    private ICredentialAdapter mCredentialAdapter;
+    private IAccountCredentialAdapter mAccountCredentialAdapter;
 
-    // TODO Name me!
-    public UnnamedClassThatDelegatesToTheActualCache(final Context context,
-                                                     final IAccountCredentialCache accountCredentialCache,
-                                                     final IAccountCredentialAdapterProvider accountCredentialAdapterProvider,
-                                                     final List<IShareSingleSignOnState> sharedSsoCaches) {
+    public MsalOAuth2TokenCache(final Context context,
+                                final IAccountCredentialCache accountCredentialCache,
+                                final IAccountCredentialAdapter accountCredentialAdapter,
+                                final List<IShareSingleSignOnState> sharedSsoCaches) {
         super(context);
         mAccountCredentialCache = accountCredentialCache;
         mSharedSsoCaches = sharedSsoCaches;
-        mAccountAdapter = accountCredentialAdapterProvider.getAccountAdapter();
-        mCredentialAdapter = accountCredentialAdapterProvider.getCredentialAdapter();
+        mAccountCredentialAdapter = accountCredentialAdapter;
     }
 
     @Override
@@ -54,7 +51,7 @@ public class UnnamedClassThatDelegatesToTheActualCache
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
             final TokenResponse response) {
-        final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken = mCredentialAdapter.createRefreshToken(oAuth2Strategy, request, response);
+        final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken = mAccountCredentialAdapter.createRefreshToken(oAuth2Strategy, request, response);
         mAccountCredentialCache.saveCredential(refreshToken);
     }
 
@@ -62,7 +59,7 @@ public class UnnamedClassThatDelegatesToTheActualCache
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
             final TokenResponse response) {
-        final AccessToken accessToken = mCredentialAdapter.createAccessToken(oAuth2Strategy, request, response);
+        final AccessToken accessToken = mAccountCredentialAdapter.createAccessToken(oAuth2Strategy, request, response);
         mAccountCredentialCache.saveCredential(accessToken);
     }
 
@@ -70,7 +67,7 @@ public class UnnamedClassThatDelegatesToTheActualCache
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
             final TokenResponse response) {
-        final Account accountToSave = mAccountAdapter.createAccount(oAuth2Strategy, request, response);
+        final Account accountToSave = mAccountCredentialAdapter.createAccount(oAuth2Strategy, request, response);
         mAccountCredentialCache.saveAccount(accountToSave);
     }
 

@@ -1,6 +1,8 @@
 package com.microsoft.identity.common.internal.cache;
 
+import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
@@ -18,8 +20,9 @@ import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.FA
 import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.GIVEN_NAME;
 import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.PREFERRED_USERNAME;
 
-public class DefaultAccountAdapter implements IAccountAdapter {
+public class AccountCredentialAdapter implements IAccountCredentialAdapter {
 
+    // TODO move me!
     public static final String AUTHORITY_TYPE = "MSSTS";
 
     @Override
@@ -67,6 +70,20 @@ public class DefaultAccountAdapter implements IAccountAdapter {
         account.setFirstName(tokenClaims.get(GIVEN_NAME));
         account.setLastName(tokenClaims.get(FAMILY_NAME));
         return account;
+    }
+
+    @Override
+    public AccessToken createAccessToken(OAuth2Strategy strategy, AuthorizationRequest request, TokenResponse response) {
+        final AccessToken accessToken = new AccessToken();
+        // TODO initialize
+        return accessToken;
+    }
+
+    @Override
+    public RefreshToken createRefreshToken(OAuth2Strategy strategy, AuthorizationRequest request, TokenResponse response) {
+        final RefreshToken refreshToken = new RefreshToken();
+        // TODO intialize
+        return refreshToken;
     }
 
     private String formatUniqueId(final ClientInfo clientInfo) {
