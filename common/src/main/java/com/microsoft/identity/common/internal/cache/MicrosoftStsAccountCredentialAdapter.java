@@ -54,7 +54,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     }
 
     @NonNull
-    private static MicrosoftStsTokenResponse asMicrosoftStsTokenResponse(TokenResponse response) {
+    private static MicrosoftStsTokenResponse asMicrosoftStsTokenResponse(final TokenResponse response) {
         MicrosoftStsTokenResponse msTokenResponse;
         if (response instanceof MicrosoftStsTokenResponse) {
             msTokenResponse = (MicrosoftStsTokenResponse) response;
@@ -65,7 +65,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     }
 
     @NonNull
-    private static MicrosoftStsAuthorizationRequest asMicrosoftStsAuthorizationRequest(AuthorizationRequest request) {
+    private static MicrosoftStsAuthorizationRequest asMicrosoftStsAuthorizationRequest(final AuthorizationRequest request) {
         MicrosoftStsAuthorizationRequest msRequest;
         if (request instanceof MicrosoftStsAuthorizationRequest) {
             msRequest = (MicrosoftStsAuthorizationRequest) request;
@@ -76,7 +76,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     }
 
     @NonNull
-    private static MicrosoftStsOAuth2Strategy asMicrosoftStsOAuth2Strategy(OAuth2Strategy strategy) {
+    private static MicrosoftStsOAuth2Strategy asMicrosoftStsOAuth2Strategy(final OAuth2Strategy strategy) {
         MicrosoftStsOAuth2Strategy msStrategy;
         if (strategy instanceof MicrosoftStsOAuth2Strategy) {
             msStrategy = (MicrosoftStsOAuth2Strategy) strategy;
@@ -95,8 +95,30 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
 
     @Override
     public RefreshToken createRefreshToken(OAuth2Strategy strategy, AuthorizationRequest request, TokenResponse response) {
+        final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
+        final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
+        final MicrosoftStsOAuth2Strategy msStrategy = asMicrosoftStsOAuth2Strategy(strategy);
+        final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
+        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
+        final MicrosoftStsAccount msAccount = (MicrosoftStsAccount) msStrategy.createAccount(msTokenResponse);
+        final long currentTimeMillis = System.currentTimeMillis();
+        final String currentTimeMillisStr = String.valueOf(currentTimeMillis);
+        final long expiresInSeconds = msTokenResponse.getExpiresIn();
+        final long expiresInMillis = expiresInSeconds * 1000;
+        // The cached value uses millis, the service return value users seconds
+        final long expiresOnCacheValue = currentTimeMillis + expiresInMillis;
+        final String expiresOnCacheValueStr = String.valueOf(expiresOnCacheValue);
+
         final RefreshToken refreshToken = new RefreshToken();
-        // TODO intialize
+        refreshToken.setTarget(msRequest.getScope());
+        refreshToken.setCachedAt(currentTimeMillisStr); // generated @ client side
+        /*
+        Per this document: https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code
+        expires_on is expressed as SECONDS since Jan 1 1970 - our schema caches this value as millis derived from expires_in
+         */
+        refreshToken.setExpiresOn(expiresOnCacheValueStr); // derived from expires_in
+        refreshToken.setClientInfo(msTokenResponse.getClientInfo());
+        refreshToken.setFamilyId(msTokenResponse.getFamilyId());
         return refreshToken;
     }
 
