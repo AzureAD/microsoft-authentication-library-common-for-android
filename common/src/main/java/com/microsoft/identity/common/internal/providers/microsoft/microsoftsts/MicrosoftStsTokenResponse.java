@@ -39,6 +39,11 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
     protected String mClientInfo;
 
     /**
+     * Information to uniquely identify the family that the client application belongs to.
+     */
+    protected String mFamilyId;
+
+    /**
      * Gets the ext_expires_in.
      *
      * @return The ext_expires_in to get.
@@ -108,5 +113,23 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      */
     public void setExtExpiresOn(Date extExpiresOn) {
         this.mExtExpiresOn = extExpiresOn;
+    }
+
+    /**
+     * Returns the family client id
+     *
+     * @return
+     */
+    public String getFamilyId() {
+        return mFamilyId;
+    }
+
+    /**
+     * Sets the family id
+     *
+     * @param familyId
+     */
+    public void setFamilyId(String familyId) {
+        this.mFamilyId = familyId;
     }
 }
