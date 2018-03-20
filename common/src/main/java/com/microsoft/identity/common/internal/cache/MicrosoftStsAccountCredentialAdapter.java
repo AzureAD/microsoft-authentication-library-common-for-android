@@ -25,7 +25,7 @@ import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.PR
 public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialAdapter {
 
     // TODO move me!
-    public static final String AUTHORITY_TYPE = "MSSTS";
+    private static final String AUTHORITY_TYPE = "MSSTS";
 
     @Override
     public Account createAccount(
@@ -87,35 +87,67 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     }
 
     @Override
-    public AccessToken createAccessToken(OAuth2Strategy strategy, AuthorizationRequest request, TokenResponse response) {
+    public AccessToken createAccessToken(
+            final OAuth2Strategy strategy,
+            final AuthorizationRequest request,
+            final TokenResponse response) {
         final AccessToken accessToken = new AccessToken();
-        // TODO initialize
+        accessToken.setTarget(getTarget(request));
+        accessToken.setCachedAt(getCachedAt()); // generated @ client side
+        accessToken.setExpiresOn(getExpiresOn(response)); // derived from expires_in
+        accessToken.setClientInfo(getClientInfo(response));
+        // TODO Do AccessTokens track a family id?
+        //accessToken.setFamilyId(msTokenResponse.getFamilyId());
+
         return accessToken;
     }
 
     @Override
-    public RefreshToken createRefreshToken(OAuth2Strategy strategy, AuthorizationRequest request, TokenResponse response) {
-        final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
-        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
-        final long currentTimeMillis = System.currentTimeMillis();
-        final String currentTimeMillisStr = String.valueOf(currentTimeMillis);
-        final long expiresInSeconds = msTokenResponse.getExpiresIn();
-        final long expiresInMillis = expiresInSeconds * 1000;
-        // The cached value uses millis, the service return value users seconds
-        final long expiresOnCacheValue = currentTimeMillis + expiresInMillis;
-        final String expiresOnCacheValueStr = String.valueOf(expiresOnCacheValue);
-
+    public RefreshToken createRefreshToken(
+            final OAuth2Strategy strategy,
+            final AuthorizationRequest request,
+            final TokenResponse response) {
         final RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setTarget(msRequest.getScope());
-        refreshToken.setCachedAt(currentTimeMillisStr); // generated @ client side
+        refreshToken.setTarget(getTarget(request));
+        refreshToken.setCachedAt(getCachedAt()); // generated @ client side
         /*
         Per this document: https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code
         expires_on is expressed as SECONDS since Jan 1 1970 - our schema caches this value as millis derived from expires_in
          */
-        refreshToken.setExpiresOn(expiresOnCacheValueStr); // derived from expires_in
-        refreshToken.setClientInfo(msTokenResponse.getClientInfo());
-        refreshToken.setFamilyId(msTokenResponse.getFamilyId());
+        refreshToken.setExpiresOn(getExpiresOn(response)); // derived from expires_in
+        refreshToken.setClientInfo(getClientInfo(response));
+        refreshToken.setFamilyId(getFamilyId(response));
         return refreshToken;
+    }
+
+    private String getTarget(final AuthorizationRequest request) {
+        final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
+        return msRequest.getScope();
+    }
+
+    private String getCachedAt() {
+        final long currentTimeMillis = System.currentTimeMillis();
+        return String.valueOf(currentTimeMillis);
+    }
+
+    private String getExpiresOn(final TokenResponse response) {
+        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
+        final long currentTimeMillis = System.currentTimeMillis();
+        final long expiresInSeconds = msTokenResponse.getExpiresIn();
+        final long expiresInMillis = expiresInSeconds * 1000;
+        // The cached value uses millis, the service return value users seconds
+        final long expiresOnCacheValue = currentTimeMillis + expiresInMillis;
+        return String.valueOf(expiresOnCacheValue);
+    }
+
+    private String getClientInfo(final TokenResponse response) {
+        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
+        return msTokenResponse.getClientInfo();
+    }
+
+    private String getFamilyId(final TokenResponse response) {
+        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
+        return msTokenResponse.getFamilyId();
     }
 
     private String formatUniqueId(final ClientInfo clientInfo) {
