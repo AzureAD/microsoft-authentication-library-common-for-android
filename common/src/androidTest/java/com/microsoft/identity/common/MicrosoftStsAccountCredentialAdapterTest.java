@@ -103,7 +103,6 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     @Test
     public void createRefreshToken() throws Exception {
         final RefreshToken refreshToken = mAccountFactory.createRefreshToken(mockStrategy, mockRequest, mockResponse);
-        // TODO verify RefreshToken contents...
         assertNotNull(refreshToken);
         assertNotNull(refreshToken);
         assertEquals(MOCK_SCOPE, refreshToken.getTarget());
