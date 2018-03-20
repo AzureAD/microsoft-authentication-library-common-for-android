@@ -74,6 +74,20 @@ public abstract class Credential {
     private String mUniqueId;
 
     /**
+     * Absolute device time when entry was created in cache in milliseconds from epoch (1970).
+     */
+    @SerializedName("cached_at")
+    private String mCachedAt;
+
+    /**
+     * Token expiry time. This value should be calculated based on the current UTC time measured
+     * locally and the value expires_in returned from the service. Measured in milliseconds from
+     * epoch (1970).
+     */
+    @SerializedName("expires_on")
+    private String mExpiresOn;
+
+    /**
      * Gets the unique_id.
      *
      * @return The unique_id to get.
@@ -163,4 +177,39 @@ public abstract class Credential {
         mSecret = secret;
     }
 
+    /**
+     * Gets the cached_at.
+     *
+     * @return The cached_at to get.
+     */
+    public String getCachedAt() {
+        return mCachedAt;
+    }
+
+    /**
+     * Sets the cached_at.
+     *
+     * @param cachedAt The cached_at to set.
+     */
+    public void setCachedAt(final String cachedAt) {
+        mCachedAt = cachedAt;
+    }
+
+    /**
+     * Gets the expires_on.
+     *
+     * @return The expires_on to get.
+     */
+    public String getExpiresOn() {
+        return mExpiresOn;
+    }
+
+    /**
+     * Sets the expires_on.
+     *
+     * @param expiresOn The expires_on to set.
+     */
+    public void setExpiresOn(final String expiresOn) {
+        mExpiresOn = expiresOn;
+    }
 }
