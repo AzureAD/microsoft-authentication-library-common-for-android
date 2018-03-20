@@ -10,7 +10,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 /**
  * Create {@link Credential} instances.
  */
-public interface ICredentialFactory {
+public interface ICredentialAdapter {
 
     AccessToken createAccessToken(OAuth2Strategy strategy,
                                   AuthorizationRequest request,

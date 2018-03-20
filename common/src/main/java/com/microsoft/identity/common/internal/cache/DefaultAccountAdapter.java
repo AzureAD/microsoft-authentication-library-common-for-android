@@ -18,7 +18,7 @@ import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.FA
 import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.GIVEN_NAME;
 import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.PREFERRED_USERNAME;
 
-public class DefaultAccountFactory implements IAccountFactory {
+public class DefaultAccountAdapter implements IAccountAdapter {
 
     public static final String AUTHORITY_TYPE = "MSSTS";
 

@@ -8,7 +8,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 /**
  * Creates {@link Account} instances.
  */
-public interface IAccountFactory {
+public interface IAccountAdapter {
 
     Account createAccount(OAuth2Strategy strategy,
                           AuthorizationRequest request,
