@@ -78,7 +78,7 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
     }
 
     @Override
-    public void saveTokenResponse(
+    public void saveTokens(
             OAuth2Strategy oAuth2Strategy,
             AuthorizationRequest request,
             TokenResponse response) {

@@ -37,7 +37,7 @@ public class MsalAccountCredentialCache
     }
 
     @Override
-    public void saveTokenResponse(
+    public void saveTokens(
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
             final TokenResponse response) {
