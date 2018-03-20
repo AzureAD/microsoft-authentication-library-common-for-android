@@ -35,9 +35,18 @@ public abstract class OAuth2Strategy {
         return response;
     }
 
+
+    public TokenResponse requestToken(TokenRequest request){
+
+        TokenResponse tr = new TokenResponse();
+
+        return tr;
+
+    }
+
     /**
-     * Construct the authorization endpoint URI based on issue and path to the authorization endpoint
-     * NOTE: We could look at basing this on the contennts returned from the OpenID Configuration document
+     * Construct the authorization endpoint URI based on issuer and path to the authorization endpoint
+     * NOTE: We could look at basing this on the contents returned from the OpenID Configuration document
      *
      * @return
      */

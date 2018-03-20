@@ -6,7 +6,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.List;
 
 /**
- * Work place join related certificate is required to respond device challenge.
+ * Work place join related ClientCertificateConfiguration is required to respond device challenge.
  */
 public interface IDeviceCertificate {
 
@@ -19,7 +19,7 @@ public interface IDeviceCertificate {
     boolean isValidIssuer(final List<String> certAuthorities);
 
     /**
-     * Gets certificate.
+     * Gets ClientCertificateConfiguration.
      *
      * @return {@link X509Certificate}
      */
@@ -33,9 +33,9 @@ public interface IDeviceCertificate {
     RSAPrivateKey getRSAPrivateKey();
 
     /**
-     * Gets thumbPrint for certificate.
+     * Gets thumbPrint for ClientCertificateConfiguration.
      *
-     * @return thumbPrint for certificate.
+     * @return thumbPrint for ClientCertificateConfiguration.
      */
     String getThumbPrint();
 
