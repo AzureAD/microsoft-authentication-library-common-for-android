@@ -13,18 +13,7 @@ import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class CommonCoreLogger {
-    /*
-    Use synchronized block inside the if loop and volatile variable.
-    Pros:
-        + Thread safety is guaranteed
-        + Lazy initialization achieved
-        + Synchronization overhead is minimal and applicable only for first few threads when the variable is null.
-    Cons:
-        - Extra if condition
-    */
-    private static volatile CommonCoreLogger INSTANCE;
-    private static Object mutex = new Object();
-
+    private static final CommonCoreLogger INSTANCE = new CommonCoreLogger();
     static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     // Turn on the VERBOSE level logging by default.
@@ -65,17 +54,7 @@ public final class CommonCoreLogger {
      * @return The single instance of {@link CommonCoreLogger}
      */
     public static CommonCoreLogger getInstance() {
-        CommonCoreLogger result = INSTANCE;
-        if (result == null) {
-            synchronized (mutex) {
-                result = INSTANCE;
-                if (result == null) {
-                    INSTANCE = result = new CommonCoreLogger();
-                }
-            }
-        }
-
-        return result;
+        return INSTANCE;
     }
 
     /**
