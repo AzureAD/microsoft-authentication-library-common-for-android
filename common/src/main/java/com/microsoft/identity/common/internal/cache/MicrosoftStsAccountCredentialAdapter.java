@@ -134,7 +134,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
         final long currentTimeMillis = System.currentTimeMillis();
         final long expiresInSeconds = msTokenResponse.getExpiresIn();
-        final long expiresInMillis = expiresInSeconds * 1000;
+        final long expiresInMillis = expiresInSeconds * 1000L;
         // The cached value uses millis, the service return value uses seconds
         final long expiresOnCacheValue = currentTimeMillis + expiresInMillis;
         return String.valueOf(expiresOnCacheValue);
