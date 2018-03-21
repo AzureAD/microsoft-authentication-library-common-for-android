@@ -93,8 +93,10 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
             final TokenResponse response) {
         final AccessToken accessToken = new AccessToken();
         accessToken.setTarget(getTarget(request));
-        accessToken.setCachedAt(getCachedAt()); // generated @ client side
-        accessToken.setExpiresOn(getExpiresOn(response)); // derived from expires_in
+        final long cachedAt = getCachedAt();
+        accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
+        final long expiresOn = getExpiresOn(cachedAt, response);
+        accessToken.setExpiresOn(String.valueOf(expiresOn)); // derived from expires_in
         accessToken.setClientInfo(getClientInfo(response));
         // TODO Do AccessTokens track a family id?
         //accessToken.setFamilyId(msTokenResponse.getFamilyId());
@@ -109,12 +111,14 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
             final TokenResponse response) {
         final RefreshToken refreshToken = new RefreshToken();
         refreshToken.setTarget(getTarget(request));
-        refreshToken.setCachedAt(getCachedAt()); // generated @ client side
+        final long cachedAt = getCachedAt();
+        refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
         /*
         Per this document: https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code
         expires_on is expressed as SECONDS since Jan 1 1970 - our schema caches this value as millis derived from expires_in
          */
-        refreshToken.setExpiresOn(getExpiresOn(response)); // derived from expires_in
+        final long expiresOn = getExpiresOn(cachedAt, response);
+        refreshToken.setExpiresOn(String.valueOf(expiresOn)); // derived from expires_in
         refreshToken.setClientInfo(getClientInfo(response));
         refreshToken.setFamilyId(getFamilyId(response));
         return refreshToken;
@@ -125,19 +129,16 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         return msRequest.getScope();
     }
 
-    private String getCachedAt() {
-        final long currentTimeMillis = System.currentTimeMillis();
-        return String.valueOf(currentTimeMillis);
+    private long getCachedAt() {
+        return System.currentTimeMillis();
     }
 
-    private String getExpiresOn(final TokenResponse response) {
+    private long getExpiresOn(final long cachedAt, final TokenResponse response) {
         final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
-        final long currentTimeMillis = System.currentTimeMillis();
         final long expiresInSeconds = msTokenResponse.getExpiresIn();
         final long expiresInMillis = expiresInSeconds * 1000L;
         // The cached value uses millis, the service return value uses seconds
-        final long expiresOnCacheValue = currentTimeMillis + expiresInMillis;
-        return String.valueOf(expiresOnCacheValue);
+        return cachedAt + expiresInMillis;
     }
 
     private String getClientInfo(final TokenResponse response) {
