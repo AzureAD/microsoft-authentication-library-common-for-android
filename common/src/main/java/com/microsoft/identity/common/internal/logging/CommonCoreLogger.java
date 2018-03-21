@@ -106,7 +106,7 @@ public final class CommonCoreLogger {
     /**
      * Send a {@link LogLevel#ERROR} log message without PII.
      */
-    static void error(final String tag, final String correlationID, final String errorMessage,
+    public static void error(final String tag, final String correlationID, final String errorMessage,
                       @Nullable ADALError errorCode, final Throwable exception) {
         getInstance().log(tag, LogLevel.ERROR, correlationID, errorMessage, errorCode, exception, false);
     }
@@ -114,7 +114,7 @@ public final class CommonCoreLogger {
     /**
      * Send a {@link LogLevel#ERROR} log message with PII.
      */
-    static void errorPII(final String tag, final String correlationID, final String errorMessage,
+    public static void errorPII(final String tag, final String correlationID, final String errorMessage,
                          @Nullable ADALError errorCode, final Throwable exception) {
         getInstance().log(tag, LogLevel.ERROR, correlationID, errorMessage, errorCode, exception, true);
     }
@@ -122,42 +122,42 @@ public final class CommonCoreLogger {
     /**
      * Send a {@link LogLevel#WARN} log message without PII.
      */
-    static void warn(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
+    public static void warn(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
         getInstance().log(tag, LogLevel.WARN, correlationID, message, errorCode, null, false);
     }
 
     /**
      * Send a {@link LogLevel#WARN} log message with PII.
      */
-    static void warnPII(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
+    public static void warnPII(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
         getInstance().log(tag, LogLevel.WARN, correlationID, message, errorCode, null, true);
     }
 
     /**
      * Send a {@link LogLevel#INFO} log message without PII.
      */
-    static void info(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
+    public static void info(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
         getInstance().log(tag, LogLevel.INFO, correlationID, message, errorCode, null, false);
     }
 
     /**
      * Send a {@link LogLevel#INFO} log message with PII.
      */
-    static void infoPII(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
+    public static void infoPII(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
         getInstance().log(tag, LogLevel.INFO, correlationID, message, errorCode, null, true);
     }
 
     /**
      * Send a {@link LogLevel#VERBOSE} log message without PII.
      */
-    static void verbose(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
+    public static void verbose(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
         getInstance().log(tag, LogLevel.VERBOSE, correlationID, message, errorCode, null, false);
     }
 
     /**
      * Send a {@link LogLevel#VERBOSE} log message with PII.
      */
-    static void verbosePII(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
+    public static void verbosePII(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
         getInstance().log(tag, LogLevel.VERBOSE, correlationID, message, errorCode, null, true);
     }
 
