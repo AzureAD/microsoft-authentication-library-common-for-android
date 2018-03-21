@@ -13,7 +13,18 @@ import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class CommonCoreLogger {
-    private static final CommonCoreLogger INSTANCE = new CommonCoreLogger();
+    /*
+    Use synchronized block inside the if loop and volatile variable.
+    Pros:
+        + Thread safety is guaranteed
+        + Lazy initialization achieved
+        + Synchronization overhead is minimal and applicable only for first few threads when the variable is null.
+    Cons:
+        - Extra if condition
+    */
+    private static volatile CommonCoreLogger INSTANCE;
+    private static Object mutex = new Object();
+
     static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     // Turn on the VERBOSE level logging by default.
@@ -54,7 +65,17 @@ public final class CommonCoreLogger {
      * @return The single instance of {@link CommonCoreLogger}
      */
     public static CommonCoreLogger getInstance() {
-        return INSTANCE;
+        CommonCoreLogger result = INSTANCE;
+        if (result == null) {
+            synchronized (mutex) {
+                result = INSTANCE;
+                if (result == null) {
+                    INSTANCE = result = new CommonCoreLogger();
+                }
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -107,7 +128,7 @@ public final class CommonCoreLogger {
      * Send a {@link LogLevel#ERROR} log message without PII.
      */
     public static void error(final String tag, final String correlationID, final String errorMessage,
-                      @Nullable ADALError errorCode, final Throwable exception) {
+                             @Nullable ADALError errorCode, final Throwable exception) {
         getInstance().log(tag, LogLevel.ERROR, correlationID, errorMessage, errorCode, exception, false);
     }
 
@@ -115,7 +136,7 @@ public final class CommonCoreLogger {
      * Send a {@link LogLevel#ERROR} log message with PII.
      */
     public static void errorPII(final String tag, final String correlationID, final String errorMessage,
-                         @Nullable ADALError errorCode, final Throwable exception) {
+                                @Nullable ADALError errorCode, final Throwable exception) {
         getInstance().log(tag, LogLevel.ERROR, correlationID, errorMessage, errorCode, exception, true);
     }
 
