@@ -2,10 +2,20 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 
+import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.RefreshToken;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 
 public class AccountCredentialCache implements IAccountCredentialCache {
 
@@ -48,7 +58,12 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
     @Override
     public Credential getCredential(final String cacheKey) {
-        return mCacheValueDelegate.fromCacheValue(mSharedPreferencesFileManager.getString(cacheKey), Credential.class);
+        // TODO add support for more Credential types...
+        return mCacheValueDelegate.fromCacheValue(
+                mSharedPreferencesFileManager.getString(cacheKey),
+                getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.AccessToken
+                        ? AccessToken.class : RefreshToken.class
+        );
     }
 
     @Override
@@ -59,7 +74,77 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
     @Override
     public List<Credential> getCredentials() {
+        final Map<String, ?> cacheValues = mSharedPreferencesFileManager.getAll();
+        final Set<String> credentialTypesLowerCase = new HashSet<>();
+        final List<Credential> credentials = new ArrayList<>();
+
+        for (final String credentialTypeStr : CredentialType.valueSet()) {
+            credentialTypesLowerCase.add(credentialTypeStr.toLowerCase(Locale.US));
+        }
+
+
+        // TODO clean this code up for better reuse
+        for (final Map.Entry<String, ?> entry : cacheValues.entrySet()) {
+            final String key = entry.getKey();
+            for (final String credentialTypeStr : credentialTypesLowerCase) {
+                if (key.contains(CACHE_VALUE_SEPARATOR + credentialTypeStr + CACHE_VALUE_SEPARATOR)) {
+                    // it's a Credential
+                    // now chooese whether to serialize an AT or RT...
+                    if (credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken.name())) {
+                        final AccessToken accessToken = mCacheValueDelegate.fromCacheValue(entry.getValue().toString(), AccessToken.class);
+                        credentials.add(accessToken);
+                    } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.RefreshToken.name())) {
+                        final RefreshToken refreshToken = mCacheValueDelegate.fromCacheValue(entry.getValue().toString(), RefreshToken.class);
+                        credentials.add(refreshToken);
+                    } else {
+                        // TODO Log a warning and skip this value?
+                    }
+                } else {
+                    // It's an Account
+                }
+            }
+        }
+
+        return credentials;
+    }
+
+    @Override
+    public void clearAccounts() {
         // TODO
-        return null;
+    }
+
+    @Override
+    public void clearCredentials() {
+        // TODO
+    }
+
+    @Override
+    public void clearAll() {
+        mSharedPreferencesFileManager.clear();
+    }
+
+    private CredentialType getCredentialTypeForCredentialCacheKey(final String cacheKey) {
+        final Set<String> credentialTypesLowerCase = new HashSet<>();
+
+        for (final String credentialTypeStr : CredentialType.valueSet()) {
+            credentialTypesLowerCase.add(credentialTypeStr.toLowerCase(Locale.US));
+        }
+
+        CredentialType type = null;
+        for (final String credentialTypeStr : credentialTypesLowerCase) {
+            if (cacheKey.contains(CACHE_VALUE_SEPARATOR + credentialTypeStr + CACHE_VALUE_SEPARATOR)) {
+                // it's a Credential
+                // now chooese whether to serialize an AT or RT...
+                if (credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken.name())) {
+                    type = CredentialType.AccessToken;
+                } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.RefreshToken.name())) {
+                    type = CredentialType.RefreshToken;
+                } else {
+                    // TODO Log a warning and skip this value?
+                }
+            }
+        }
+
+        return type;
     }
 }

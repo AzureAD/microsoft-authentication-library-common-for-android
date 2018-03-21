@@ -78,7 +78,10 @@ public class SharedPreferencesFileManager {
     }
 
     /**
-     * Retuns all entries in the {@link SharedPreferences} file.
+     * Returns all entries in the {@link SharedPreferences} file.
+     * <p>
+     * Note that you must not modify the collection returned by this method, or alter any of its
+     * contents. The consistency of your stored data is not guaranteed if you do.
      *
      * @return A Map of all entries.
      */

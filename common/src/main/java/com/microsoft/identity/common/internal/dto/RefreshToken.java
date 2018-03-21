@@ -87,4 +87,28 @@ public class RefreshToken extends Credential {
     public void setFamilyId(String familyId) {
         this.mFamilyId = familyId;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        RefreshToken that = (RefreshToken) o;
+
+        if (mClientInfo != null ? !mClientInfo.equals(that.mClientInfo) : that.mClientInfo != null)
+            return false;
+        if (mFamilyId != null ? !mFamilyId.equals(that.mFamilyId) : that.mFamilyId != null)
+            return false;
+        if (mTarget != null ? !mTarget.equals(that.mTarget) : that.mTarget != null) return false;
+        return mUsername != null ? mUsername.equals(that.mUsername) : that.mUsername == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = mClientInfo != null ? mClientInfo.hashCode() : 0;
+        result = 31 * result + (mFamilyId != null ? mFamilyId.hashCode() : 0);
+        result = 31 * result + (mTarget != null ? mTarget.hashCode() : 0);
+        result = 31 * result + (mUsername != null ? mUsername.hashCode() : 0);
+        return result;
+    }
 }

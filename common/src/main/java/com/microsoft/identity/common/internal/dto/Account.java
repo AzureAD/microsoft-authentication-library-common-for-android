@@ -293,4 +293,46 @@ public class Account {
     public void setAvatarUrl(final String avatarUrl) {
         mAvatarUrl = avatarUrl;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Account account = (Account) o;
+
+        if (mUniqueId != null ? !mUniqueId.equals(account.mUniqueId) : account.mUniqueId != null)
+            return false;
+        if (mEnvironment != null ? !mEnvironment.equals(account.mEnvironment) : account.mEnvironment != null)
+            return false;
+        if (mRealm != null ? !mRealm.equals(account.mRealm) : account.mRealm != null) return false;
+        if (mAuthorityAccountId != null ? !mAuthorityAccountId.equals(account.mAuthorityAccountId) : account.mAuthorityAccountId != null)
+            return false;
+        if (mUsername != null ? !mUsername.equals(account.mUsername) : account.mUsername != null)
+            return false;
+        if (mAuthorityType != null ? !mAuthorityType.equals(account.mAuthorityType) : account.mAuthorityType != null)
+            return false;
+        if (mGuestId != null ? !mGuestId.equals(account.mGuestId) : account.mGuestId != null)
+            return false;
+        if (mFirstName != null ? !mFirstName.equals(account.mFirstName) : account.mFirstName != null)
+            return false;
+        if (mLastName != null ? !mLastName.equals(account.mLastName) : account.mLastName != null)
+            return false;
+        return mAvatarUrl != null ? mAvatarUrl.equals(account.mAvatarUrl) : account.mAvatarUrl == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = mUniqueId != null ? mUniqueId.hashCode() : 0;
+        result = 31 * result + (mEnvironment != null ? mEnvironment.hashCode() : 0);
+        result = 31 * result + (mRealm != null ? mRealm.hashCode() : 0);
+        result = 31 * result + (mAuthorityAccountId != null ? mAuthorityAccountId.hashCode() : 0);
+        result = 31 * result + (mUsername != null ? mUsername.hashCode() : 0);
+        result = 31 * result + (mAuthorityType != null ? mAuthorityType.hashCode() : 0);
+        result = 31 * result + (mGuestId != null ? mGuestId.hashCode() : 0);
+        result = 31 * result + (mFirstName != null ? mFirstName.hashCode() : 0);
+        result = 31 * result + (mLastName != null ? mLastName.hashCode() : 0);
+        result = 31 * result + (mAvatarUrl != null ? mAvatarUrl.hashCode() : 0);
+        return result;
+    }
 }

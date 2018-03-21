@@ -23,11 +23,25 @@
 
 package com.microsoft.identity.common.internal.dto;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 public enum CredentialType {
     RefreshToken,
     AccessToken,
     IdToken,
     Password,
     Cookie,
-    Certificate
+    Certificate;
+
+    public static Set<String> valueSet() {
+        final Set<String> strTypes = new HashSet<>();
+
+        for (final CredentialType type : values()) {
+            strTypes.add(type.name());
+        }
+
+        return Collections.unmodifiableSet(strTypes);
+    }
 }

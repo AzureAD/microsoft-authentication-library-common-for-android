@@ -19,4 +19,10 @@ public interface IAccountCredentialCache {
 
     List<Credential> getCredentials();
 
+    void clearAccounts();
+
+    void clearCredentials();
+
+    void clearAll();
+
 }
