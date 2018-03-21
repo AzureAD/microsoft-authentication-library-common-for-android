@@ -7,32 +7,27 @@ package com.microsoft.identity.common.internal.providers.keys;
  */
 public class KeyStoreConfiguration {
 
-    private String mKeyStoreType;
-    private String mKeyStoreProvider;
-    private String mKeyStorePassword;
+    private final String mKeyStoreType;
+    private final String mKeyStoreProvider;
+    private final char[] mKeyStorePassword;
 
+    public KeyStoreConfiguration(String keyStoreType, String keyStoreProvider, char[] keyStorePassword){
+        this.mKeyStoreType = keyStoreType;
+        this.mKeyStoreProvider = keyStoreProvider;
+        this.mKeyStorePassword = keyStorePassword;
+    }
 
     public String getKeyStoreType() {
         return mKeyStoreType;
-    }
-
-    public void setKeyStoreType(String keyStoreType) {
-        this.mKeyStoreType = keyStoreType;
     }
 
     public String getKeyStoreProvider() {
         return mKeyStoreProvider;
     }
 
-    public void setKeyStoreProvider(String keyStoreProvider) {
-        this.mKeyStoreProvider = keyStoreProvider;
-    }
-
-    public String getKeyStorePassword() {
+    public char[] getKeyStorePassword() {
         return mKeyStorePassword;
     }
 
-    public void setKeyStorePassword(String keyStorePassword) {
-        this.mKeyStorePassword = keyStorePassword;
-    }
+
 }
