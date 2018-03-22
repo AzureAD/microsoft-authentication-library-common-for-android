@@ -65,12 +65,6 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
     }
 
     /**
-     * Field use to indicate if the issued token is valid for the Microsoft 1st party
-     * 'family' of client ids.
-     */
-    protected String mFoci;
-
-    /**
      * The SPE Ring from which this token was issued.
      */
     protected String mSpeRing;
@@ -163,24 +157,6 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
      */
     public void setClientInfo(String clientInfo) {
         this.mClientInfo = clientInfo;
-    }
-
-    /**
-     * Gets the response foci.
-     *
-     * @return The foci to get.
-     */
-    public String getFoci() {
-        return mFoci;
-    }
-
-    /**
-     * Sets the response foci.
-     *
-     * @param foci The foci to set.
-     */
-    public void setFoci(String foci) {
-        this.mFoci = foci;
     }
 
     /**

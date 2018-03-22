@@ -30,7 +30,8 @@ import java.util.Set;
 /**
  * Cache representation for MSAL.
  */
-public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSingleSignOnState {
+// TODO delete!
+public class DeleteMeOldClass extends OAuth2TokenCache implements IShareSingleSignOnState {
 
     // SharedPreferences used to store tokens
     private final SharedPreferencesFileManager mAccessTokenSharedPreferences;
@@ -43,11 +44,11 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
     private List<IShareSingleSignOnState> mSharedSSOCaches;
 
     /**
-     * Constructs a new MSALOAuth2TokenCache.
+     * Constructs a new DeleteMeOldClass.
      *
      * @param context The Application consuming this library.
      */
-    public MSALOAuth2TokenCache(Context context, List<IShareSingleSignOnState> sharedSSOCaches) {
+    public DeleteMeOldClass(Context context, List<IShareSingleSignOnState> sharedSSOCaches) {
         super(context);
         mAccessTokenSharedPreferences = new SharedPreferencesFileManager(mContext, sAccessTokenSharedPreferences);
         mRefreshTokenSharedPreferences = new SharedPreferencesFileManager(mContext, sRefreshTokenSharedPreferences);
@@ -55,11 +56,11 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
     }
 
     /**
-     * Constructs a new MSALOAuth2TokenCache.
+     * Constructs a new DeleteMeOldClass.
      *
      * @param context The Application consuming this library.
      */
-    public MSALOAuth2TokenCache(Context context) {
+    public DeleteMeOldClass(Context context) {
         super(context);
         mAccessTokenSharedPreferences = new SharedPreferencesFileManager(mContext, sAccessTokenSharedPreferences);
         mRefreshTokenSharedPreferences = new SharedPreferencesFileManager(mContext, sRefreshTokenSharedPreferences);
@@ -78,7 +79,7 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
     }
 
     @Override
-    public void saveTokenResponse(
+    public void saveTokens(
             OAuth2Strategy oAuth2Strategy,
             AuthorizationRequest request,
             TokenResponse response) {
@@ -155,8 +156,8 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
         final List<MsalAccessTokenCacheItem> atCacheItems = new ArrayList<>();
 
         for (final Object atUnknown : accessTokensAsUnknowns) {
-            if(atUnknown instanceof String) {
-                final MsalAccessTokenCacheItem atCacheItem = new Gson().fromJson((String)atUnknown, MsalAccessTokenCacheItem.class);
+            if (atUnknown instanceof String) {
+                final MsalAccessTokenCacheItem atCacheItem = new Gson().fromJson((String) atUnknown, MsalAccessTokenCacheItem.class);
                 initUserIdentifier(atCacheItem);
                 atCacheItems.add(atCacheItem);
             }

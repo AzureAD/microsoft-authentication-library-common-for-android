@@ -74,6 +74,20 @@ public abstract class Credential {
     private String mUniqueId;
 
     /**
+     * Absolute device time when entry was created in cache in milliseconds from epoch (1970).
+     */
+    @SerializedName("cached_at")
+    private String mCachedAt;
+
+    /**
+     * Token expiry time. This value should be calculated based on the current UTC time measured
+     * locally and the value expires_in returned from the service. Measured in milliseconds from
+     * epoch (1970).
+     */
+    @SerializedName("expires_on")
+    private String mExpiresOn;
+
+    /**
      * Gets the unique_id.
      *
      * @return The unique_id to get.
@@ -163,4 +177,72 @@ public abstract class Credential {
         mSecret = secret;
     }
 
+    /**
+     * Gets the cached_at.
+     *
+     * @return The cached_at to get.
+     */
+    public String getCachedAt() {
+        return mCachedAt;
+    }
+
+    /**
+     * Sets the cached_at.
+     *
+     * @param cachedAt The cached_at to set.
+     */
+    public void setCachedAt(final String cachedAt) {
+        mCachedAt = cachedAt;
+    }
+
+    /**
+     * Gets the expires_on.
+     *
+     * @return The expires_on to get.
+     */
+    public String getExpiresOn() {
+        return mExpiresOn;
+    }
+
+    /**
+     * Sets the expires_on.
+     *
+     * @param expiresOn The expires_on to set.
+     */
+    public void setExpiresOn(final String expiresOn) {
+        mExpiresOn = expiresOn;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Credential that = (Credential) o;
+
+        if (mClientId != null ? !mClientId.equals(that.mClientId) : that.mClientId != null)
+            return false;
+        if (mCredentialType != null ? !mCredentialType.equals(that.mCredentialType) : that.mCredentialType != null)
+            return false;
+        if (mEnvironment != null ? !mEnvironment.equals(that.mEnvironment) : that.mEnvironment != null)
+            return false;
+        if (mSecret != null ? !mSecret.equals(that.mSecret) : that.mSecret != null) return false;
+        if (mUniqueId != null ? !mUniqueId.equals(that.mUniqueId) : that.mUniqueId != null)
+            return false;
+        if (mCachedAt != null ? !mCachedAt.equals(that.mCachedAt) : that.mCachedAt != null)
+            return false;
+        return mExpiresOn != null ? mExpiresOn.equals(that.mExpiresOn) : that.mExpiresOn == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = mClientId != null ? mClientId.hashCode() : 0;
+        result = 31 * result + (mCredentialType != null ? mCredentialType.hashCode() : 0);
+        result = 31 * result + (mEnvironment != null ? mEnvironment.hashCode() : 0);
+        result = 31 * result + (mSecret != null ? mSecret.hashCode() : 0);
+        result = 31 * result + (mUniqueId != null ? mUniqueId.hashCode() : 0);
+        result = 31 * result + (mCachedAt != null ? mCachedAt.hashCode() : 0);
+        result = 31 * result + (mExpiresOn != null ? mExpiresOn.hashCode() : 0);
+        return result;
+    }
 }
