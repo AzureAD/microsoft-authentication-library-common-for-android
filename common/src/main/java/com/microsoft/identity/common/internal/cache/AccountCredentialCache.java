@@ -38,26 +38,26 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     }
 
     @Override
-    public void saveAccount(final Account account) {
+    public synchronized void saveAccount(final Account account) {
         final String cacheKey = mCacheValueDelegate.generateCacheKey(account);
         final String cacheValue = mCacheValueDelegate.generateCacheValue(account);
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
     }
 
     @Override
-    public void saveCredential(Credential credential) {
+    public synchronized void saveCredential(Credential credential) {
         final String cacheKey = mCacheValueDelegate.generateCacheKey(credential);
         final String cacheValue = mCacheValueDelegate.generateCacheValue(credential);
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
     }
 
     @Override
-    public Account getAccount(final String cacheKey) {
+    public synchronized Account getAccount(final String cacheKey) {
         return mCacheValueDelegate.fromCacheValue(mSharedPreferencesFileManager.getString(cacheKey), Account.class);
     }
 
     @Override
-    public Credential getCredential(final String cacheKey) {
+    public synchronized Credential getCredential(final String cacheKey) {
         // TODO add support for more Credential types...
         return mCacheValueDelegate.fromCacheValue(
                 mSharedPreferencesFileManager.getString(cacheKey),
@@ -67,59 +67,106 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     }
 
     @Override
-    public List<Account> getAccounts() {
-        // TODO
-        return null;
+    public synchronized List<Account> getAccounts() {
+        final Map<String, ?> cacheValues = mSharedPreferencesFileManager.getAll();
+        final List<Account> accounts = new ArrayList<>();
+
+        for (Map.Entry<String, ?> cacheValue : cacheValues.entrySet()) {
+            final String cacheKey = cacheValue.getKey();
+            if (isAccount(cacheKey)) {
+                final Account account = mCacheValueDelegate.fromCacheValue(
+                        cacheValue.getValue().toString(),
+                        Account.class
+                );
+                accounts.add(account);
+            }
+        }
+
+        return accounts;
+    }
+
+    private boolean isAccount(final String cacheKey) {
+        return null == getCredentialTypeForCredentialCacheKey(cacheKey);
+    }
+
+    private boolean isCredential(String cacheKey) {
+        return null != getCredentialTypeForCredentialCacheKey(cacheKey);
     }
 
     @Override
-    public List<Credential> getCredentials() {
+    public synchronized List<Credential> getCredentials() {
         final Map<String, ?> cacheValues = mSharedPreferencesFileManager.getAll();
-        final Set<String> credentialTypesLowerCase = new HashSet<>();
         final List<Credential> credentials = new ArrayList<>();
 
-        for (final String credentialTypeStr : CredentialType.valueSet()) {
-            credentialTypesLowerCase.add(credentialTypeStr.toLowerCase(Locale.US));
-        }
-
-
-        // TODO clean this code up for better reuse
-        for (final Map.Entry<String, ?> entry : cacheValues.entrySet()) {
-            final String key = entry.getKey();
-            for (final String credentialTypeStr : credentialTypesLowerCase) {
-                if (key.contains(CACHE_VALUE_SEPARATOR + credentialTypeStr + CACHE_VALUE_SEPARATOR)) {
-                    // it's a Credential
-                    // now chooese whether to serialize an AT or RT...
-                    if (credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken.name())) {
-                        final AccessToken accessToken = mCacheValueDelegate.fromCacheValue(entry.getValue().toString(), AccessToken.class);
-                        credentials.add(accessToken);
-                    } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.RefreshToken.name())) {
-                        final RefreshToken refreshToken = mCacheValueDelegate.fromCacheValue(entry.getValue().toString(), RefreshToken.class);
-                        credentials.add(refreshToken);
-                    } else {
-                        // TODO Log a warning and skip this value?
-                    }
-                } else {
-                    // It's an Account
-                }
+        for (Map.Entry<String, ?> cacheValue : cacheValues.entrySet()) {
+            final String cacheKey = cacheValue.getKey();
+            if (isCredential(cacheKey)) {
+                final Credential credential = mCacheValueDelegate.fromCacheValue(
+                        cacheValue.getValue().toString(),
+                        credentialClassForType(cacheKey)
+                );
+                credentials.add(credential);
             }
         }
 
         return credentials;
     }
 
-    @Override
-    public void clearAccounts() {
-        // TODO
+    private Class<? extends Credential> credentialClassForType(final String cacheKey) {
+        final CredentialType targetType = getCredentialTypeForCredentialCacheKey(cacheKey);
+        Class<? extends Credential> credentialClass = null;
+
+        switch (targetType) {
+            case AccessToken:
+                credentialClass = AccessToken.class;
+                break;
+            case RefreshToken:
+                credentialClass = RefreshToken.class;
+                break;
+            default:
+                // TODO Log a warning? Throw an Exception?
+        }
+
+        return credentialClass;
+    }
+
+    interface Evaluator<T> {
+        boolean evaluate(final T t);
+    }
+
+    private void clearCacheValuesOfType(final Evaluator<String> evaluator) {
+        final Map<String, ?> cacheEntries = mSharedPreferencesFileManager.getAll();
+
+        for (Map.Entry<String, ?> cacheEntry : cacheEntries.entrySet()) {
+            final String cacheKey = cacheEntry.getKey();
+            if (evaluator.evaluate(cacheKey)) {
+                mSharedPreferencesFileManager.remove(cacheKey);
+            }
+        }
     }
 
     @Override
-    public void clearCredentials() {
-        // TODO
+    public synchronized void clearAccounts() {
+        clearCacheValuesOfType(new Evaluator<String>() {
+            @Override
+            public boolean evaluate(final String cacheKey) {
+                return isAccount(cacheKey);
+            }
+        });
     }
 
     @Override
-    public void clearAll() {
+    public synchronized void clearCredentials() {
+        clearCacheValuesOfType(new Evaluator<String>() {
+            @Override
+            public boolean evaluate(String cacheKey) {
+                return isCredential(cacheKey);
+            }
+        });
+    }
+
+    @Override
+    public synchronized void clearAll() {
         mSharedPreferencesFileManager.clear();
     }
 
@@ -134,7 +181,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         for (final String credentialTypeStr : credentialTypesLowerCase) {
             if (cacheKey.contains(CACHE_VALUE_SEPARATOR + credentialTypeStr + CACHE_VALUE_SEPARATOR)) {
                 // it's a Credential
-                // now chooese whether to serialize an AT or RT...
+                // now choose whether to serialize an AT or RT...
                 if (credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken.name())) {
                     type = CredentialType.AccessToken;
                 } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.RefreshToken.name())) {

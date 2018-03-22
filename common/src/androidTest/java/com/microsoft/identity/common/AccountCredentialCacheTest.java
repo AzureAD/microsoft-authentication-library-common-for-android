@@ -14,6 +14,7 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,6 +50,7 @@ public class AccountCredentialCacheTest {
         mDelegate = new AccountCredentialCacheKeyValueDelegate();
     }
 
+    @After
     public void tearDown() {
         // Wipe the SharedPreferences between tests...
         mAccountCredentialCache.clearAll();
@@ -345,7 +347,6 @@ public class AccountCredentialCacheTest {
         // Verify getCredentials() returns two matching elements
         final List<Credential> credentials = mAccountCredentialCache.getCredentials();
         assertTrue(credentials.size() == 2);
-        // TODO compare the items
     }
 
     @Test
@@ -384,7 +385,6 @@ public class AccountCredentialCacheTest {
         // Verify getCredentials() returns two items
         final List<Credential> credentials = mAccountCredentialCache.getCredentials();
         assertTrue(credentials.size() == 2);
-        // TODO compare contents
     }
 
     @Test
@@ -418,10 +418,10 @@ public class AccountCredentialCacheTest {
         mAccountCredentialCache.clearCredentials();
 
         // Verify getAccounts() returns 1 item
-        assertTrue(mAccountCredentialCache.getAccounts().size() == 1);
+        assertEquals(1, mAccountCredentialCache.getAccounts().size());
 
         // Verify getCredentials() returns zero items
-        assertTrue(mAccountCredentialCache.getCredentials().isEmpty());
+        assertEquals(0, mAccountCredentialCache.getCredentials().size());
     }
 
     @Test
