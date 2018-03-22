@@ -100,4 +100,57 @@ public class AccessToken extends Credential {
         mClientInfo = clientInfo;
     }
 
+    /**
+     * Gets the access_token_type.
+     *
+     * @return The access_token_type to get.
+     */
+    public String getAccessTokenType() {
+        return mAccessTokenType;
+    }
+
+    /**
+     * Sets the access_token_type.
+     *
+     * @param accessTokenType The access_token_type to set.
+     */
+    public void setAccessTokenType(String accessTokenType) {
+        this.mAccessTokenType = accessTokenType;
+    }
+
+    /**
+     * Gets the authority.
+     *
+     * @return The authority to get.
+     */
+    public String getAuthority() {
+        return mAuthority;
+    }
+
+    /**
+     * Sets the authority.
+     *
+     * @param authority The authority to set.
+     */
+    public void setAuthority(String authority) {
+        this.mAuthority = authority;
+    }
+
+    /**
+     * Gets the extended_expires_on.
+     *
+     * @return The extended_expires_on to get.
+     */
+    public String getExtendedExpiresOn() {
+        return mExtendedExpiresOn;
+    }
+
+    /**
+     * Sets the extended_expires_on.
+     *
+     * @param extendedExpiresOn The extended_expires_on to set.
+     */
+    public void setExtendedExpiresOn(String extendedExpiresOn) {
+        this.mExtendedExpiresOn = extendedExpiresOn;
+    }
 }

@@ -96,8 +96,10 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertNotNull(accessToken.getExpiresOn());
         final long cachedAt = Long.valueOf(accessToken.getCachedAt());
         final long expiresOn = Long.valueOf(accessToken.getExpiresOn());
-        assertEquals(cachedAt + (1000L * MOCK_EXPIRES_IN), expiresOn);
+        assertEquals(cachedAt + MOCK_EXPIRES_IN, expiresOn);
         assertEquals(MOCK_CLIENT_INFO, accessToken.getClientInfo());
+        assertEquals(MOCK_TID, accessToken.getRealm());
+        assertEquals(MOCK_AUTHORITY, accessToken.getAuthority());
     }
 
     @Test
@@ -110,9 +112,10 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertNotNull(refreshToken.getExpiresOn());
         final long cachedAt = Long.valueOf(refreshToken.getCachedAt());
         final long expiresOn = Long.valueOf(refreshToken.getExpiresOn());
-        assertEquals(cachedAt + (1000L * MOCK_EXPIRES_IN), expiresOn);
+        assertEquals(cachedAt + MOCK_EXPIRES_IN, expiresOn);
         assertEquals(MOCK_CLIENT_INFO, refreshToken.getClientInfo());
         assertEquals(MOCK_FAMILY_ID, refreshToken.getFamilyId());
+        assertEquals(MOCK_PREFERRED_USERNAME, refreshToken.getUsername());
     }
 
     static String createRawClientInfo(final String uid, final String utid) {

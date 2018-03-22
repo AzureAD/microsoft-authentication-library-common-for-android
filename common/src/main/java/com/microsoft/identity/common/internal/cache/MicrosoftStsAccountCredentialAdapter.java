@@ -16,6 +16,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken.OJBECT_ID;
 import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.FAMILY_NAME;
@@ -26,6 +27,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
 
     // TODO move me!
     private static final String AUTHORITY_TYPE = "MSSTS";
+    private static final String BEARER = "Bearer";
 
     @Override
     public Account createAccount(
@@ -34,16 +36,14 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
             final TokenResponse response) {
         final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
         final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
-        final MicrosoftStsOAuth2Strategy msStrategy = asMicrosoftStsOAuth2Strategy(strategy);
         final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
         final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
-        final MicrosoftStsAccount msAccount = (MicrosoftStsAccount) msStrategy.createAccount(msTokenResponse);
         final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
 
         final Account account = new Account();
         account.setUniqueId(formatUniqueId(clientInfo));
         account.setEnvironment(msRequest.getAuthority().toString()); // host of authority with optional port
-        account.setRealm(msAccount.getTenantId()); //tid
+        account.setRealm(getRealm(strategy, response)); //tid
         account.setAuthorityAccountId(tokenClaims.get(OJBECT_ID)); // oid claim from id token
         account.setUsername(tokenClaims.get(PREFERRED_USERNAME));
         account.setAuthorityType(AUTHORITY_TYPE);
@@ -78,11 +78,13 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     @NonNull
     private static MicrosoftStsOAuth2Strategy asMicrosoftStsOAuth2Strategy(final OAuth2Strategy strategy) {
         MicrosoftStsOAuth2Strategy msStrategy;
+
         if (strategy instanceof MicrosoftStsOAuth2Strategy) {
             msStrategy = (MicrosoftStsOAuth2Strategy) strategy;
         } else {
             throw new IllegalArgumentException("Invalid strategy type.");
         }
+
         return msStrategy;
     }
 
@@ -91,17 +93,41 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
             final OAuth2Strategy strategy,
             final AuthorizationRequest request,
             final TokenResponse response) {
+        final long cachedAt = getCachedAt();
+        final long expiresOn = getExpiresOn(cachedAt, response);
+
         final AccessToken accessToken = new AccessToken();
         accessToken.setTarget(getTarget(request));
-        final long cachedAt = getCachedAt();
         accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
-        final long expiresOn = getExpiresOn(cachedAt, response);
         accessToken.setExpiresOn(String.valueOf(expiresOn)); // derived from expires_in
         accessToken.setClientInfo(getClientInfo(response));
         // TODO Do AccessTokens track a family id?
         //accessToken.setFamilyId(msTokenResponse.getFamilyId());
+        accessToken.setAccessTokenType(BEARER); // TODO does this value come from somewhere in the auth response?
+        accessToken.setExtendedExpiresOn(getExtendedExpiresOn(strategy, response));
+        accessToken.setAuthority(getAuthority(request));
+        accessToken.setRealm(getRealm(strategy, response));
 
         return accessToken;
+    }
+
+    private String getExtendedExpiresOn(final OAuth2Strategy strategy, final TokenResponse response) {
+        // TODO It doesn't look like the v2 endpoint supports extended_expires_on claims
+        // Is this true?
+        return null;
+    }
+
+    private String getAuthority(final AuthorizationRequest request) {
+        final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
+        final String authorityUrl = msRequest.getAuthority().toString();
+        return authorityUrl;
+    }
+
+    private String getRealm(final OAuth2Strategy strategy, final TokenResponse response) {
+        final MicrosoftStsOAuth2Strategy msStrategy = asMicrosoftStsOAuth2Strategy(strategy);
+        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
+        final MicrosoftStsAccount msAccount = (MicrosoftStsAccount) msStrategy.createAccount(msTokenResponse);
+        return msAccount.getTenantId();
     }
 
     @Override
@@ -109,19 +135,24 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
             final OAuth2Strategy strategy,
             final AuthorizationRequest request,
             final TokenResponse response) {
+        final long cachedAt = getCachedAt();
+        final long expiresOn = getExpiresOn(cachedAt, response);
+
         final RefreshToken refreshToken = new RefreshToken();
         refreshToken.setTarget(getTarget(request));
-        final long cachedAt = getCachedAt();
         refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
-        /*
-        Per this document: https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code
-        expires_on is expressed as SECONDS since Jan 1 1970 - our schema caches this value as millis derived from expires_in
-         */
-        final long expiresOn = getExpiresOn(cachedAt, response);
         refreshToken.setExpiresOn(String.valueOf(expiresOn)); // derived from expires_in
         refreshToken.setClientInfo(getClientInfo(response));
         refreshToken.setFamilyId(getFamilyId(response));
+        refreshToken.setUsername(getUsername(response));
+
         return refreshToken;
+    }
+
+    private String getUsername(final TokenResponse response) {
+        final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
+        final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
+        return tokenClaims.get(PREFERRED_USERNAME);
     }
 
     private String getTarget(final AuthorizationRequest request) {
@@ -130,15 +161,14 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     }
 
     private long getCachedAt() {
-        return System.currentTimeMillis();
+        final long currentTimeMillis = System.currentTimeMillis();
+        return TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
     }
 
     private long getExpiresOn(final long cachedAt, final TokenResponse response) {
         final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
         final long expiresInSeconds = msTokenResponse.getExpiresIn();
-        final long expiresInMillis = expiresInSeconds * 1000L;
-        // The cached value uses millis, the service return value uses seconds
-        return cachedAt + expiresInMillis;
+        return cachedAt + expiresInSeconds;
     }
 
     private String getClientInfo(final TokenResponse response) {

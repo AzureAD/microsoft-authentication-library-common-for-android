@@ -88,6 +88,24 @@ public class RefreshToken extends Credential {
         this.mFamilyId = familyId;
     }
 
+    /**
+     * Gets the username.
+     *
+     * @return The username to get.
+     */
+    public String getUsername() {
+        return mUsername;
+    }
+
+    /**
+     * Sets the username.
+     *
+     * @param username The username to set.
+     */
+    public void setUsername(String username) {
+        this.mUsername = username;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
