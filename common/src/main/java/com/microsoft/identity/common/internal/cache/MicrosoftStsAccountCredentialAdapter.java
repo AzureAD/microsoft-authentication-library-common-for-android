@@ -56,22 +56,26 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     @NonNull
     private static MicrosoftStsTokenResponse asMicrosoftStsTokenResponse(final TokenResponse response) {
         MicrosoftStsTokenResponse msTokenResponse;
+
         if (response instanceof MicrosoftStsTokenResponse) {
             msTokenResponse = (MicrosoftStsTokenResponse) response;
         } else {
             throw new IllegalArgumentException("Invalid TokenResponse type.");
         }
+
         return msTokenResponse;
     }
 
     @NonNull
     private static MicrosoftStsAuthorizationRequest asMicrosoftStsAuthorizationRequest(final AuthorizationRequest request) {
         MicrosoftStsAuthorizationRequest msRequest;
+
         if (request instanceof MicrosoftStsAuthorizationRequest) {
             msRequest = (MicrosoftStsAuthorizationRequest) request;
         } else {
             throw new IllegalArgumentException("Invalid AuthorizationRequest type.");
         }
+
         return msRequest;
     }
 
