@@ -10,8 +10,8 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicReference;
 
-public final class Logger {
-    private static final Logger INSTANCE = new Logger();
+public final class CommonCoreLogger {
+    private static final CommonCoreLogger INSTANCE = new CommonCoreLogger();
     static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     // Turn on the VERBOSE level logging by default.
@@ -42,9 +42,9 @@ public final class Logger {
     }
 
     /**
-     * @return The single instance of {@link Logger}
+     * @return The single instance of {@link CommonCoreLogger}
      */
-    public static Logger getInstance() {
+    public static CommonCoreLogger getInstance() {
         return INSTANCE;
     }
 
