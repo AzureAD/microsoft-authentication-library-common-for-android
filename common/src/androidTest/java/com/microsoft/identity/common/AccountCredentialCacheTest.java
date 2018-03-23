@@ -377,7 +377,7 @@ public class AccountCredentialCacheTest {
         mAccountCredentialCache.saveCredential(refreshToken);
 
         // Call clearAccounts()
-        mAccountCredentialCache.clearAccounts();
+        mAccountCredentialCache.removeAccount(account.getUniqueId(), account.getEnvironment());
 
         // Verify getAccounts() returns zero items
         assertTrue(mAccountCredentialCache.getAccounts().isEmpty());
@@ -415,7 +415,8 @@ public class AccountCredentialCacheTest {
         mAccountCredentialCache.saveCredential(refreshToken);
 
         // Call clearCredentials()
-        mAccountCredentialCache.clearCredentials();
+        mAccountCredentialCache.removeCredential(accessToken);
+        mAccountCredentialCache.removeCredential(refreshToken);
 
         // Verify getAccounts() returns 1 item
         assertEquals(1, mAccountCredentialCache.getAccounts().size());

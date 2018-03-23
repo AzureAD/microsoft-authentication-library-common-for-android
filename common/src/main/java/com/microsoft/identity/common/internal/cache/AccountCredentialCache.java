@@ -1,7 +1,9 @@
 package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -9,6 +11,7 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -66,10 +69,9 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         );
     }
 
-    @Override
-    public synchronized List<Account> getAccounts() {
+    private Map<String, Account> getAccountsWithKeys() {
         final Map<String, ?> cacheValues = mSharedPreferencesFileManager.getAll();
-        final List<Account> accounts = new ArrayList<>();
+        final Map<String, Account> accounts = new HashMap<>();
 
         for (Map.Entry<String, ?> cacheValue : cacheValues.entrySet()) {
             final String cacheKey = cacheValue.getKey();
@@ -78,25 +80,54 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                         cacheValue.getValue().toString(),
                         Account.class
                 );
-                accounts.add(account);
+                accounts.put(cacheKey, account);
             }
         }
 
         return accounts;
     }
 
-    private boolean isAccount(final String cacheKey) {
-        return null == getCredentialTypeForCredentialCacheKey(cacheKey);
-    }
-
-    private boolean isCredential(String cacheKey) {
-        return null != getCredentialTypeForCredentialCacheKey(cacheKey);
+    @Override
+    public synchronized List<Account> getAccounts() {
+        final Map<String, Account> allAccounts = getAccountsWithKeys();
+        return new ArrayList<>(allAccounts.values());
     }
 
     @Override
-    public synchronized List<Credential> getCredentials() {
+    public List<Account> getAccounts(
+            final @Nullable String uniqueId,
+            final String environment,
+            final @Nullable String realm) {
+        final boolean mustMatchOnUniqueId = !StringExtensions.isNullOrBlank(uniqueId);
+        final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
+        final List<Account> allAccounts = getAccounts();
+        final List<Account> matchingAccounts = new ArrayList<>();
+
+        for (final Account account : allAccounts) {
+            boolean matches = true;
+
+            if (mustMatchOnUniqueId) {
+                matches = uniqueId.equalsIgnoreCase(account.getUniqueId());
+            }
+
+            // test environment
+            matches = matches && environment.equalsIgnoreCase(account.getEnvironment());
+
+            if (mustMatchOnRealm) {
+                matches = matches && realm.equalsIgnoreCase(account.getRealm());
+            }
+
+            if (matches) {
+                matchingAccounts.add(account);
+            }
+        }
+
+        return matchingAccounts;
+    }
+
+    private Map<String, Credential> getCredentialsWithKeys() {
         final Map<String, ?> cacheValues = mSharedPreferencesFileManager.getAll();
-        final List<Credential> credentials = new ArrayList<>();
+        final Map<String, Credential> credentials = new HashMap<>();
 
         for (Map.Entry<String, ?> cacheValue : cacheValues.entrySet()) {
             final String cacheKey = cacheValue.getKey();
@@ -105,11 +136,141 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                         cacheValue.getValue().toString(),
                         credentialClassForType(cacheKey)
                 );
-                credentials.add(credential);
+                credentials.put(cacheKey, credential);
             }
         }
 
         return credentials;
+    }
+
+    @Override
+    public synchronized List<Credential> getCredentials() {
+        final Map<String, Credential> allCredentials = getCredentialsWithKeys();
+        return new ArrayList<>(allCredentials.values());
+    }
+
+    @Override
+    public List<Credential> getCredentials(
+            final @Nullable String uniqueId,
+            final String environment,
+            final CredentialType credentialType,
+            final String clientId,
+            final @Nullable String realm,
+            final @Nullable String target) {
+        final boolean mustMatchOnUniqueId = !StringExtensions.isNullOrBlank(uniqueId);
+        final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
+        final boolean mustMatchOnTarget = !StringExtensions.isNullOrBlank(target);
+        final List<Credential> allCredentials = getCredentials();
+        final List<Credential> matchingCredentials = new ArrayList<>();
+
+        for (final Credential credential : allCredentials) {
+            boolean matches = true;
+
+            if (mustMatchOnUniqueId) {
+                matches = uniqueId.equalsIgnoreCase(credential.getUniqueId());
+            }
+
+            matches = matches && environment.equalsIgnoreCase(credential.getEnvironment());
+            matches = matches && credentialType.name().equalsIgnoreCase(credential.getCredentialType());
+            matches = matches && clientId.equalsIgnoreCase(credential.getClientId());
+
+            if (mustMatchOnRealm && credential instanceof AccessToken) {
+                final AccessToken accessToken = (AccessToken) credential;
+                matches = matches && realm.equalsIgnoreCase(accessToken.getRealm());
+            }
+
+            if (mustMatchOnTarget) {
+                if (credential instanceof AccessToken) {
+                    final AccessToken accessToken = (AccessToken) credential;
+                    matches = matches && target.equalsIgnoreCase(accessToken.getTarget());
+                } else if (credential instanceof RefreshToken) {
+                    final RefreshToken refreshToken = (RefreshToken) credential;
+                    matches = matches && target.equalsIgnoreCase(refreshToken.getTarget());
+                }
+            }
+
+            if (matches) {
+                matchingCredentials.add(credential);
+            }
+        }
+
+        return matchingCredentials;
+    }
+
+    @Override
+    public boolean removeAccount(final String uniqueId, final String environment) {
+        final Map<String, Account> accounts = getAccountsWithKeys();
+
+        for (final Map.Entry<String, Account> entry : accounts.entrySet()) {
+            final Account currentAccount = entry.getValue();
+
+            if (uniqueId.equalsIgnoreCase(currentAccount.getUniqueId())
+                    && environment.equalsIgnoreCase(currentAccount.getEnvironment())) {
+                mSharedPreferencesFileManager.remove(entry.getKey());
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean removeCredential(final Credential credentialToClear) {
+        final Map<String, Credential> credentials = getCredentialsWithKeys();
+
+        for (final Map.Entry<String, Credential> entry : credentials.entrySet()) {
+            final Credential currentCredential = entry.getValue();
+
+            if (currentCredential.equals(credentialToClear)) {
+                mSharedPreferencesFileManager.remove(entry.getKey());
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public int removeAll(final String uniqueId, final String environment) {
+        int entriesRemoved = removeAccount(uniqueId, environment) ? 1 : 0;
+
+        final List<Credential> credentialsToRemove = getCredentials(
+                uniqueId,
+                environment,
+                CredentialType.AccessToken,
+                null,
+                null,
+                null
+        );
+
+        credentialsToRemove.addAll(
+                getCredentials(
+                        uniqueId,
+                        environment,
+                        CredentialType.RefreshToken,
+                        null,
+                        null,
+                        null
+                )
+        );
+
+        final Map<String, Credential> allCredentialsAndKeys = getCredentialsWithKeys();
+
+        for (final Map.Entry<String, Credential> entry : allCredentialsAndKeys.entrySet()) {
+            final Credential credential = entry.getValue();
+
+            if (credentialsToRemove.contains(credential)) {
+                entriesRemoved++;
+                mSharedPreferencesFileManager.remove(entry.getKey());
+            }
+        }
+
+        return entriesRemoved;
+    }
+
+    @Override
+    public void clearAll() {
+        mSharedPreferencesFileManager.clear();
     }
 
     private Class<? extends Credential> credentialClassForType(final String cacheKey) {
@@ -145,31 +306,6 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         }
     }
 
-    @Override
-    public synchronized void clearAccounts() {
-        clearCacheValuesOfType(new Evaluator<String>() {
-            @Override
-            public boolean evaluate(final String cacheKey) {
-                return isAccount(cacheKey);
-            }
-        });
-    }
-
-    @Override
-    public synchronized void clearCredentials() {
-        clearCacheValuesOfType(new Evaluator<String>() {
-            @Override
-            public boolean evaluate(String cacheKey) {
-                return isCredential(cacheKey);
-            }
-        });
-    }
-
-    @Override
-    public synchronized void clearAll() {
-        mSharedPreferencesFileManager.clear();
-    }
-
     private CredentialType getCredentialTypeForCredentialCacheKey(final String cacheKey) {
         final Set<String> credentialTypesLowerCase = new HashSet<>();
 
@@ -193,5 +329,13 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         }
 
         return type;
+    }
+
+    private boolean isAccount(final String cacheKey) {
+        return null == getCredentialTypeForCredentialCacheKey(cacheKey);
+    }
+
+    private boolean isCredential(String cacheKey) {
+        return null != getCredentialTypeForCredentialCacheKey(cacheKey);
     }
 }
