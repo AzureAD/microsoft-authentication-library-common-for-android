@@ -110,7 +110,6 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                 matches = uniqueId.equalsIgnoreCase(account.getUniqueId());
             }
 
-            // test environment
             matches = matches && environment.equalsIgnoreCase(account.getEnvironment());
 
             if (mustMatchOnRealm) {
