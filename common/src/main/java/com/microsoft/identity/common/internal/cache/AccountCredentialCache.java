@@ -237,9 +237,9 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                 uniqueId,
                 environment,
                 CredentialType.AccessToken,
-                null,
-                null,
-                null
+                null, // clientId
+                null, // realm
+                null // target
         );
 
         credentialsToRemove.addAll(
@@ -247,9 +247,9 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                         uniqueId,
                         environment,
                         CredentialType.RefreshToken,
-                        null,
-                        null,
-                        null
+                        null, // clientId
+                        null, // realm
+                        null // target
                 )
         );
 
