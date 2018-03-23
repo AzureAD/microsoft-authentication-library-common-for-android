@@ -291,21 +291,6 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         return credentialClass;
     }
 
-    interface Evaluator<T> {
-        boolean evaluate(final T t);
-    }
-
-    private void clearCacheValuesOfType(final Evaluator<String> evaluator) {
-        final Map<String, ?> cacheEntries = mSharedPreferencesFileManager.getAll();
-
-        for (Map.Entry<String, ?> cacheEntry : cacheEntries.entrySet()) {
-            final String cacheKey = cacheEntry.getKey();
-            if (evaluator.evaluate(cacheKey)) {
-                mSharedPreferencesFileManager.remove(cacheKey);
-            }
-        }
-    }
-
     private CredentialType getCredentialTypeForCredentialCacheKey(final String cacheKey) {
         final Set<String> credentialTypesLowerCase = new HashSet<>();
 
