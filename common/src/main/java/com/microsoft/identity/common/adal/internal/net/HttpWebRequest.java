@@ -27,9 +27,8 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Debug;
 
-import com.microsoft.identity.common.adal.error.ADALError;
-import com.microsoft.identity.common.adal.error.AuthenticationException;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
+import com.microsoft.identity.common.exception.CommonCoreException;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -163,21 +162,20 @@ public class HttpWebRequest {
         return response;
     }
 
-    public static void throwIfNetworkNotAvailable(final Context context) throws AuthenticationException {
+    public static void throwIfNetworkNotAvailable(final Context context) throws CommonCoreException {
         final DefaultConnectionService connectionService = new DefaultConnectionService(context);
         if (!connectionService.isConnectionAvailable()) {
             if (connectionService.isNetworkDisabledFromOptimizations()) {
-                final AuthenticationException authenticationException = new AuthenticationException(
-                        ADALError.NO_NETWORK_CONNECTION_POWER_OPTIMIZATION,
+                final CommonCoreException dozeModeException = new CommonCoreException(
+                        CommonCoreException.DEVICE_NETWORK_NOT_AVAILABLE,
                         "Connection is not available to refresh token because power optimization is "
-                                + "enabled. And the device is in doze mode or the app is standby"
-                                + ADALError.NO_NETWORK_CONNECTION_POWER_OPTIMIZATION.getDescription());
-                throw authenticationException;
+                                + "enabled. And the device is in doze mode or the app is standby");
+                throw dozeModeException;
             } else {
-                final AuthenticationException authenticationException = new AuthenticationException(
-                        ADALError.DEVICE_CONNECTION_IS_NOT_AVAILABLE,
+                final CommonCoreException generalNetworkException = new CommonCoreException(
+                        CommonCoreException.DEVICE_NETWORK_NOT_AVAILABLE,
                         "Connection is not available to refresh token");
-                throw authenticationException;
+                throw generalNetworkException;
             }
         }
     }
