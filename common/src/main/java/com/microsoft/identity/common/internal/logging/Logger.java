@@ -1,10 +1,8 @@
 package com.microsoft.identity.common.internal.logging;
 
 import android.os.Build;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.microsoft.identity.common.adal.error.ADALError;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
 import java.text.SimpleDateFormat;
@@ -12,18 +10,12 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicReference;
 
-public final class CommonCoreLogger {
-    private static final CommonCoreLogger INSTANCE = new CommonCoreLogger();
+public final class Logger {
+    private static final Logger INSTANCE = new Logger();
     static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     // Turn on the VERBOSE level logging by default.
     private LogLevel mLogLevel  = LogLevel.VERBOSE;
-
-    // Disable to Logcat logging by default.
-    private boolean mLogcatLogEnabled = false;
-
-    // Disable to log PII by default.
-    private boolean mPIIEnabled = false;
 
     private AtomicReference<ILoggerCallback> mExternalLogger = new AtomicReference<>(null);
 
@@ -47,13 +39,12 @@ public final class CommonCoreLogger {
          * Verbose level logging.
          */
         VERBOSE
-        // TODO: 3/19/2018 Do we need debug level?
     }
 
     /**
-     * @return The single instance of {@link CommonCoreLogger}
+     * @return The single instance of {@link Logger}
      */
-    public static CommonCoreLogger getInstance() {
+    public static Logger getInstance() {
         return INSTANCE;
     }
 
@@ -64,23 +55,6 @@ public final class CommonCoreLogger {
      */
     public void setLogLevel(final LogLevel logLevel) {
         mLogLevel = logLevel;
-    }
-
-    /**
-     * Enable/Disable the Android logcat logging. By default, the sdk enables it.
-     *
-     * @param enableLogcat True if enabling the logcat logging, false otherwise.
-     */
-    public void setLogcatLogEnabled(final boolean enableLogcat) {
-        mLogcatLogEnabled = enableLogcat;
-    }
-
-    /**
-     * Enable/Disable log message with PII (personal identifiable information) info. By default, ADAL/MSAL doesn't log any PII.
-     * @param enablePII True if enabling PII info to be logged, false otherwise.
-     */
-    public void setPIIEnabled(final boolean enablePII) {
-        mPIIEnabled = enablePII;
     }
 
     /**
@@ -106,90 +80,82 @@ public final class CommonCoreLogger {
     /**
      * Send a {@link LogLevel#ERROR} log message without PII.
      */
-    public static void error(final String tag, final String correlationID, final String errorMessage,
-                             @Nullable ADALError errorCode, final Throwable exception) {
-        getInstance().log(tag, LogLevel.ERROR, correlationID, errorMessage, errorCode, exception, false);
+    public static void error(final String tag, final String correlationID, final String errorMessage, final Throwable exception) {
+        getInstance().log(tag, LogLevel.ERROR, correlationID, errorMessage, exception, false);
     }
 
     /**
      * Send a {@link LogLevel#ERROR} log message with PII.
      */
-    public static void errorPII(final String tag, final String correlationID, final String errorMessage,
-                                @Nullable ADALError errorCode, final Throwable exception) {
-        getInstance().log(tag, LogLevel.ERROR, correlationID, errorMessage, errorCode, exception, true);
+    public static void errorPII(final String tag, final String correlationID, final String errorMessage, final Throwable exception) {
+        getInstance().log(tag, LogLevel.ERROR, correlationID, errorMessage, exception, true);
     }
 
     /**
      * Send a {@link LogLevel#WARN} log message without PII.
      */
-    public static void warn(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
-        getInstance().log(tag, LogLevel.WARN, correlationID, message, errorCode, null, false);
+    public static void warn(final String tag, final String correlationID, final String message) {
+        getInstance().log(tag, LogLevel.WARN, correlationID, message, null, false);
     }
 
     /**
      * Send a {@link LogLevel#WARN} log message with PII.
      */
-    public static void warnPII(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
-        getInstance().log(tag, LogLevel.WARN, correlationID, message, errorCode, null, true);
+    public static void warnPII(final String tag, final String correlationID, final String message) {
+        getInstance().log(tag, LogLevel.WARN, correlationID, message, null, true);
     }
 
     /**
      * Send a {@link LogLevel#INFO} log message without PII.
      */
-    public static void info(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
-        getInstance().log(tag, LogLevel.INFO, correlationID, message, errorCode, null, false);
+    public static void info(final String tag, final String correlationID, final String message) {
+        getInstance().log(tag, LogLevel.INFO, correlationID, message, null, false);
     }
 
     /**
      * Send a {@link LogLevel#INFO} log message with PII.
      */
-    public static void infoPII(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
-        getInstance().log(tag, LogLevel.INFO, correlationID, message, errorCode, null, true);
+    public static void infoPII(final String tag, final String correlationID, final String message) {
+        getInstance().log(tag, LogLevel.INFO, correlationID, message, null, true);
     }
 
     /**
      * Send a {@link LogLevel#VERBOSE} log message without PII.
      */
-    public static void verbose(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
-        getInstance().log(tag, LogLevel.VERBOSE, correlationID, message, errorCode, null, false);
+    public static void verbose(final String tag, final String correlationID, final String message) {
+        getInstance().log(tag, LogLevel.VERBOSE, correlationID, message, null, false);
     }
 
     /**
      * Send a {@link LogLevel#VERBOSE} log message with PII.
      */
-    public static void verbosePII(final String tag, final String correlationID, final String message, @Nullable ADALError errorCode) {
-        getInstance().log(tag, LogLevel.VERBOSE, correlationID, message, errorCode, null, true);
+    public static void verbosePII(final String tag, final String correlationID, final String message) {
+        getInstance().log(tag, LogLevel.VERBOSE, correlationID, message, null, true);
     }
 
     /**
-     * TODO 1. Need to discuss on how to keep the correlationID. CorrelationID should be per request => need to sync with Telemetry implementation
-     * TODO 2. Need to use new ERROR class in common core to replace ADALError
+     * TODO. Need to discuss on how to keep the correlationID. CorrelationID should be per request => need to sync with Telemetry implementation
      *
      * @param tag
      * @param logLevel
      * @param correlationID
      * @param message
-     * @param errorCode
      * @param throwable
      * @param containsPII
      */
     private void log(final String tag, final LogLevel logLevel, final String correlationID,
-                     final String message, final ADALError errorCode, final Throwable throwable, final boolean containsPII) {
+                     final String message, final Throwable throwable, final boolean containsPII) {
         if (logLevel.compareTo(mLogLevel) > 0) {
             return;
         }
 
         // Developer turns off PII logging, if the log message contains any PII, we should not send it.
-        if (!mPIIEnabled && containsPII) {
+        if (!LoggerSettings.getInstance().getAllowPii() && containsPII) {
             return;
         }
 
         //Format the log message.
         final StringBuilder logMessage = new StringBuilder();
-        if (errorCode != null) {
-            logMessage.append(getCodeName(errorCode)).append(':');
-        }
-
         logMessage.append(formatMessage(correlationID, message));
 
         // Adding stacktrace to message
@@ -197,7 +163,7 @@ public final class CommonCoreLogger {
             logMessage.append('\n').append(Log.getStackTraceString(throwable));
         }
 
-        if (mLogcatLogEnabled) {
+        if (LoggerSettings.getInstance().getAllowLogcat()) {
             sendLogcatLogs(tag, logLevel, logMessage.toString());
         }
 
@@ -205,14 +171,6 @@ public final class CommonCoreLogger {
             mExternalLogger.get().log(tag, logLevel, logMessage.toString(), containsPII);
         }
 
-    }
-
-    private static String getCodeName(ADALError code) {
-        if (code != null) {
-            return code.name();
-        }
-
-        return "";
     }
 
     /**
