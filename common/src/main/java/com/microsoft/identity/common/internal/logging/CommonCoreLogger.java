@@ -158,15 +158,17 @@ public final class CommonCoreLogger {
         final StringBuilder logMessage = new StringBuilder();
         logMessage.append(formatMessage(correlationID, message));
 
-        // Adding stacktrace to message
+        // Add stacktrace to message.
         if (throwable != null) {
             logMessage.append('\n').append(Log.getStackTraceString(throwable));
         }
 
+        // Send logs into Logcat.
         if (LoggerSettings.getInstance().getAllowLogcat()) {
             sendLogcatLogs(tag, logLevel, logMessage.toString());
         }
 
+        // Send logs into external logger callback.
         if (mExternalLogger.get() != null) {
             mExternalLogger.get().log(tag, logLevel, logMessage.toString(), containsPII);
         }

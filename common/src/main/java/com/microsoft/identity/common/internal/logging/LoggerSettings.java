@@ -22,11 +22,11 @@ public class LoggerSettings {
         mAllowLogcat = allowLogcat;
     }
 
-    boolean getAllowPii() {
+    public boolean getAllowPii() {
         return mAllowPii;
     }
 
-    boolean getAllowLogcat() {
+    public boolean getAllowLogcat() {
         return mAllowLogcat;
     }
 }
