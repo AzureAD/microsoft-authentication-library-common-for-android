@@ -98,6 +98,10 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             final @Nullable String uniqueId,
             final String environment,
             final @Nullable String realm) {
+        if (StringExtensions.isNullOrBlank(environment)) {
+            throw new IllegalArgumentException("Param [environment] cannot be null.");
+        }
+
         final boolean mustMatchOnUniqueId = !StringExtensions.isNullOrBlank(uniqueId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
         final List<Account> allAccounts = getAccounts();
@@ -156,6 +160,18 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             final String clientId,
             final @Nullable String realm,
             final @Nullable String target) {
+        if (StringExtensions.isNullOrBlank(environment)) {
+            throw new IllegalArgumentException("Param [environment] cannot be null.");
+        }
+
+        if (null == credentialType) {
+            throw new IllegalArgumentException("Param [credentialType] cannot be null.");
+        }
+
+        if (StringExtensions.isNullOrBlank(clientId)) {
+            throw new IllegalArgumentException("Param [clientId] cannot be null.");
+        }
+
         final boolean mustMatchOnUniqueId = !StringExtensions.isNullOrBlank(uniqueId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
         final boolean mustMatchOnTarget = !StringExtensions.isNullOrBlank(target);
