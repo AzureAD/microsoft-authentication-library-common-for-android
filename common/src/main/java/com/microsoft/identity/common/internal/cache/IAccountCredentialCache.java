@@ -92,21 +92,20 @@ public interface IAccountCredentialCache {
     );
 
     /**
-     * Removes the Account matching the supplied criteria.
+     * Removes the supplied Account from the cache.
      *
-     * @param uniqueId    The uniqueId used to match Account cache keys.
-     * @param environment The environment used to match Account cache keys.
+     * @param accountToRemove The Account to delete.
      * @return True if the Account was deleted. False otherwise.
      */
-    boolean removeAccount(final String uniqueId, final String environment);
+    boolean removeAccount(final Account accountToRemove);
 
     /**
-     * REmoves the supplied Credential from the cache.
+     * Removes the supplied Credential from the cache.
      *
-     * @param credentialToClear The Credential to delete.
+     * @param credentialToRemove The Credential to delete.
      * @return True if the Credential was deleted. False otherwise.
      */
-    boolean removeCredential(final Credential credentialToClear);
+    boolean removeCredential(final Credential credentialToRemove);
 
     /**
      * Clear the contents of the cache.

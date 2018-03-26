@@ -213,13 +213,9 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     }
 
     @Override
-    public boolean removeAccount(final String uniqueId, final String environment) {
-        if (StringExtensions.isNullOrBlank(uniqueId)) {
-            throw new IllegalArgumentException("Param [uniqueId] cannot be null.");
-        }
-
-        if (StringExtensions.isNullOrBlank(environment)) {
-            throw new IllegalArgumentException("Param [environment] cannot be null.");
+    public boolean removeAccount(final Account accountToRemove) {
+        if (null == accountToRemove) {
+            throw new IllegalArgumentException("Param [accountToRemove] cannot be null.");
         }
 
         final Map<String, Account> accounts = getAccountsWithKeys();
@@ -227,8 +223,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         for (final Map.Entry<String, Account> entry : accounts.entrySet()) {
             final Account currentAccount = entry.getValue();
 
-            if (uniqueId.equalsIgnoreCase(currentAccount.getUniqueId())
-                    && environment.equalsIgnoreCase(currentAccount.getEnvironment())) {
+            if (currentAccount.equals(accountToRemove)) {
                 mSharedPreferencesFileManager.remove(entry.getKey());
                 return true;
             }
@@ -238,9 +233,9 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     }
 
     @Override
-    public boolean removeCredential(final Credential credentialToClear) {
-        if (null == credentialToClear) {
-            throw new IllegalArgumentException("Param [credentialToClear] cannot be null.");
+    public boolean removeCredential(final Credential credentialToRemove) {
+        if (null == credentialToRemove) {
+            throw new IllegalArgumentException("Param [credentialToRemove] cannot be null.");
         }
 
         final Map<String, Credential> credentials = getCredentialsWithKeys();
@@ -248,7 +243,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         for (final Map.Entry<String, Credential> entry : credentials.entrySet()) {
             final Credential currentCredential = entry.getValue();
 
-            if (currentCredential.equals(credentialToClear)) {
+            if (currentCredential.equals(credentialToRemove)) {
                 mSharedPreferencesFileManager.remove(entry.getKey());
                 return true;
             }

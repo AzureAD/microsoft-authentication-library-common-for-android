@@ -909,7 +909,7 @@ public class AccountCredentialCacheTest {
         mAccountCredentialCache.saveCredential(refreshToken);
 
         // Call clearAccounts()
-        mAccountCredentialCache.removeAccount(account.getUniqueId(), account.getEnvironment());
+        mAccountCredentialCache.removeAccount(account);
 
         // Verify getAccounts() returns zero items
         assertTrue(mAccountCredentialCache.getAccounts().isEmpty());
