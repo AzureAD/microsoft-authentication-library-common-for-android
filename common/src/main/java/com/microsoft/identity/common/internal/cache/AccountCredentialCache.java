@@ -214,6 +214,14 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
     @Override
     public boolean removeAccount(final String uniqueId, final String environment) {
+        if (StringExtensions.isNullOrBlank(uniqueId)) {
+            throw new IllegalArgumentException("Param [uniqueId] cannot be null.");
+        }
+
+        if (StringExtensions.isNullOrBlank(environment)) {
+            throw new IllegalArgumentException("Param [environment] cannot be null.");
+        }
+
         final Map<String, Account> accounts = getAccountsWithKeys();
 
         for (final Map.Entry<String, Account> entry : accounts.entrySet()) {
@@ -231,6 +239,10 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
     @Override
     public boolean removeCredential(final Credential credentialToClear) {
+        if (null == credentialToClear) {
+            throw new IllegalArgumentException("Param [credentialToClear] cannot be null.");
+        }
+
         final Map<String, Credential> credentials = getCredentialsWithKeys();
 
         for (final Map.Entry<String, Credential> entry : credentials.entrySet()) {
