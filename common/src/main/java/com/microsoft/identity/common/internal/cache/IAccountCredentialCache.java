@@ -41,8 +41,6 @@ public interface IAccountCredentialCache {
 
     boolean removeCredential(final Credential credentialToClear);
 
-    int removeAll(final String uniqueId, final String environment);
-
     void clearAll();
 
 }

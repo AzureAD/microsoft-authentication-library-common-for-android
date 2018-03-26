@@ -258,44 +258,6 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     }
 
     @Override
-    public int removeAll(final String uniqueId, final String environment) {
-        int entriesRemoved = removeAccount(uniqueId, environment) ? 1 : 0;
-
-        final List<Credential> credentialsToRemove = getCredentials(
-                uniqueId,
-                environment,
-                CredentialType.AccessToken,
-                null, // clientId
-                null, // realm
-                null // target
-        );
-
-        credentialsToRemove.addAll(
-                getCredentials(
-                        uniqueId,
-                        environment,
-                        CredentialType.RefreshToken,
-                        null, // clientId
-                        null, // realm
-                        null // target
-                )
-        );
-
-        final Map<String, Credential> allCredentialsAndKeys = getCredentialsWithKeys();
-
-        for (final Map.Entry<String, Credential> entry : allCredentialsAndKeys.entrySet()) {
-            final Credential credential = entry.getValue();
-
-            if (credentialsToRemove.contains(credential)) {
-                entriesRemoved++;
-                mSharedPreferencesFileManager.remove(entry.getKey());
-            }
-        }
-
-        return entriesRemoved;
-    }
-
-    @Override
     public void clearAll() {
         mSharedPreferencesFileManager.clear();
     }
