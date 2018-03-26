@@ -185,8 +185,7 @@ public final class CommonCoreLogger {
     private String formatMessage(final String correlationID, final String message) {
         final String logMessage = StringExtensions.isNullOrBlank(message) ? "N/A" : message;
 
-        return "Common Core " + "SDK version is not set yet."
-                + " Android " + Build.VERSION.SDK_INT
+        return "Android " + Build.VERSION.SDK_INT
                 + " [" + getUTCDateTimeAsString()
                 + (StringExtensions.isNullOrBlank(correlationID) ? "] " : " - " + correlationID + "] ")
                 + logMessage;
