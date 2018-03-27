@@ -1,32 +1,43 @@
 package com.microsoft.identity.common.internal.logging;
 
 public class LoggerSettings {
-    private static final LoggerSettings sINSTANCE = new LoggerSettings();
     // Disable to log PII by default.
-    private boolean mAllowPii = false;
+    private static boolean mAllowPii = false;
     // Disable to Logcat logging by default.
-    private boolean mAllowLogcat = false;
+    private static boolean mAllowLogcat = false;
+
+    private LoggerSettings() { }
 
     /**
-     * @return The single instance of {@link LoggerSettings}.
+     *  Enable/Disable log message with PII (personal identifiable information) info.
+     *  By default, the SDK doesn't log any PII.
+     *
+     * @param allowPii True if enabling PII info to be logged, false otherwise.
      */
-    public static LoggerSettings getInstance() {
-        return sINSTANCE;
-    }
-
-    public void setAllowPii(final boolean allowPii) {
+    public static void setAllowPii(final boolean allowPii) {
         mAllowPii = allowPii;
     }
 
-    public void setAllowLogcat(final boolean allowLogcat) {
+    /**
+     * Enable/Disable the Android logcat logging. By default, the sdk disables it.
+     *
+     * @param allowLogcat True if enabling the logcat logging, false otherwise.
+     */
+    public static void setAllowLogcat(final boolean allowLogcat) {
         mAllowLogcat = allowLogcat;
     }
 
-    public boolean getAllowPii() {
+    /**
+     * Get if log PII is enabled.
+     */
+    public static boolean getAllowPii() {
         return mAllowPii;
     }
 
-    public boolean getAllowLogcat() {
+    /**
+     * Get if logcat is enabled.
+     */
+    public static boolean getAllowLogcat() {
         return mAllowLogcat;
     }
 }
