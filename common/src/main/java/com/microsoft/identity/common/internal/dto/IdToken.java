@@ -27,4 +27,22 @@ public class IdToken extends Credential {
     public void setRealm(final String realm) {
         mRealm = realm;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        IdToken idToken = (IdToken) o;
+
+        return mRealm != null ? mRealm.equals(idToken.mRealm) : idToken.mRealm == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (mRealm != null ? mRealm.hashCode() : 0);
+        return result;
+    }
 }
