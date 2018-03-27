@@ -5,6 +5,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
 import java.util.ArrayList;
@@ -70,6 +71,8 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
             keyComponents.add(((AccessToken) credential).getTarget());
         } else if (credential instanceof RefreshToken) {
             keyComponents.add(((RefreshToken) credential).getTarget());
+        } else if (credential instanceof IdToken) {
+            keyComponents.add(((IdToken) credential).getRealm());
         }
 
         return collapseKeyComponents(keyComponents);

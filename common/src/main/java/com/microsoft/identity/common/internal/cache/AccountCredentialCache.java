@@ -8,6 +8,7 @@ import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
 import java.util.ArrayList;
@@ -62,10 +63,22 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     @Override
     public synchronized Credential getCredential(final String cacheKey) {
         // TODO add support for more Credential types...
+        final CredentialType type = getCredentialTypeForCredentialCacheKey(cacheKey);
+        final Class<? extends Credential> clazz;
+        if (CredentialType.AccessToken == type) {
+            clazz = AccessToken.class;
+        } else if (CredentialType.RefreshToken == type) {
+            clazz = RefreshToken.class;
+        } else if (CredentialType.IdToken == type) {
+            clazz = IdToken.class;
+        } else {
+            // TODO Log a warning, throw an Exception?
+            throw new RuntimeException("Credential type could not be resolved.");
+        }
+
         return mCacheValueDelegate.fromCacheValue(
                 mSharedPreferencesFileManager.getString(cacheKey),
-                getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.AccessToken
-                        ? AccessToken.class : RefreshToken.class
+                clazz
         );
     }
 
@@ -291,6 +304,8 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                     type = CredentialType.AccessToken;
                 } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.RefreshToken.name())) {
                     type = CredentialType.RefreshToken;
+                } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.IdToken.name())) {
+                    type = CredentialType.IdToken;
                 } else {
                     // TODO Log a warning and skip this value?
                 }
