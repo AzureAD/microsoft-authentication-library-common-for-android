@@ -12,6 +12,7 @@ import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
 import org.junit.After;
@@ -134,6 +135,29 @@ public class AccountCredentialCacheTest {
         final com.microsoft.identity.common.internal.dto.Account restoredAccount
                 = mAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
+    }
+
+    @Test
+    public void saveIdToken() throws Exception {
+        final IdToken idToken = new IdToken();
+        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setCredentialType(CredentialType.IdToken.name());
+        idToken.setClientId(CLIENT_ID);
+
+        // Save the Credential
+        mAccountCredentialCache.saveCredential(idToken);
+
+        // Synthesize a cache key for it
+        final String credentialCacheKey = mDelegate.generateCacheKey(idToken);
+
+        // Resurrect the Credential
+        final Credential restoredIdToken = mAccountCredentialCache.getCredential(credentialCacheKey);
+        assertEquals(idToken.getUniqueId(), restoredIdToken.getUniqueId());
+        assertEquals(idToken.getEnvironment(), restoredIdToken.getEnvironment());
+        assertEquals(idToken.getCredentialType(), restoredIdToken.getCredentialType());
+        assertEquals(idToken.getClientId(), restoredIdToken.getClientId());
+        assertTrue(idToken.equals(restoredIdToken));
     }
 
     @Test
