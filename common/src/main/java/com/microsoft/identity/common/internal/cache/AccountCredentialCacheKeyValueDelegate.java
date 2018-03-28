@@ -110,25 +110,27 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
         try {
             final T resultObject = (T) mGson.fromJson(string, t);
 
-            // Turn the incoming String into a JSONObject
-            final JsonObject incomingJson = new JsonParser().parse(string).getAsJsonObject();
+            if (!StringExtensions.isNullOrBlank(string)) {
+                // Turn the incoming String into a JSONObject
+                final JsonObject incomingJson = new JsonParser().parse(string).getAsJsonObject();
 
-            // Get all of the fields we were expecting to get
-            final Set<String> expectedFields = getExpectedJsonFields(t);
+                // Get all of the fields we were expecting to get
+                final Set<String> expectedFields = getExpectedJsonFields(t);
 
-            // Remove the expected fields from the initial JSONObject
-            for (final String expectedField : expectedFields) {
-                incomingJson.remove(expectedField);
+                // Remove the expected fields from the initial JSONObject
+                for (final String expectedField : expectedFields) {
+                    incomingJson.remove(expectedField);
+                }
+
+                // Add whatever is leftover to the additionalFields Map
+                final Map<String, JsonElement> additionalFields = new HashMap<>();
+
+                for (final String key : incomingJson.keySet()) {
+                    additionalFields.put(key, incomingJson.get(key));
+                }
+
+                resultObject.setAdditionalFields(additionalFields);
             }
-
-            // Add whatever is leftover to the additionalFields Map
-            final Map<String, JsonElement> additionalFields = new HashMap<>();
-
-            for (final String key : incomingJson.keySet()) {
-                additionalFields.put(key, incomingJson.get(key));
-            }
-
-            resultObject.setAdditionalFields(additionalFields);
 
             // return the fully-formed object
             return resultObject;
