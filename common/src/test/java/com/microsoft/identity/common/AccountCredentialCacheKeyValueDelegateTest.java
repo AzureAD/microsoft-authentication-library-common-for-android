@@ -8,6 +8,7 @@ import com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyVal
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
 import org.json.JSONArray;
@@ -33,6 +34,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     private static final String REALM = "3c62ac97-29eb-4aed-a3c8-add0298508d";
     private static final String CREDENTIAL_TYPE_ACCESS_TOKEN = CredentialType.AccessToken.name().toLowerCase(Locale.US);
     private static final String CREDENTIAL_TYPE_REFRESH_TOKEN = CredentialType.RefreshToken.name().toLowerCase(Locale.US);
+    private static final String CREDENTIAL_TYPE_ID_TOKEN = CredentialType.IdToken.name().toLowerCase(Locale.US);
 
     private IAccountCredentialCacheKeyValueDelegate mDelegate;
 
@@ -439,7 +441,6 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     // End Accounts
 
     // RefreshTokens
-
     @Test
     public void refreshTokenCreateCacheKeyComplete() throws Exception {
         final RefreshToken refreshToken = new RefreshToken();
@@ -591,11 +592,162 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         final RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUniqueId(UNIQUE_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
-        refreshToken.setCredentialType(CredentialType.AccessToken.name().toLowerCase(Locale.US));
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name().toLowerCase(Locale.US));
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setTarget(TARGET);
 
         String serializedValue = mDelegate.generateCacheValue(refreshToken);
+
+        // Turn the serialized value into a JSONObject and start testing field equality.
+        final JSONObject jsonObject = new JSONObject(serializedValue);
+
+        // Add more non-standard data to this object...
+        final JSONArray numbers = new JSONArray("[1, 2, 3]");
+        final JSONArray objects = new JSONArray("[{\"hello\" : \"hallo\"}, {\"goodbye\" : \"auf wiedersehen\"}]");
+
+        jsonObject.put("foo", "bar");
+        jsonObject.put("numbers", numbers);
+        jsonObject.put("objects", objects);
+
+        serializedValue = jsonObject.toString();
+
+        final RefreshToken deserializedValue = mDelegate.fromCacheValue(serializedValue, RefreshToken.class);
+        assertNotNull(deserializedValue);
+        assertNull(deserializedValue.getAdditionalFields().get("environment"));
+        assertEquals(UNIQUE_ID, deserializedValue.getUniqueId());
+        assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
+        assertEquals(CredentialType.RefreshToken.name().toLowerCase(Locale.US), deserializedValue.getCredentialType());
+        assertEquals(CLIENT_ID, deserializedValue.getClientId());
+        assertEquals(TARGET, deserializedValue.getTarget());
+        assertEquals(3, deserializedValue.getAdditionalFields().size());
+        assertEquals("bar", deserializedValue.getAdditionalFields().get("foo").getAsString());
+        assertEquals(numbers.toString(), deserializedValue.getAdditionalFields().get("numbers").toString());
+    }
+    // End RefreshTokens
+
+    // IdTokens
+    @Test
+    public void idTokenCreateCacheKeyComplete() throws Exception {
+        final IdToken idToken = new IdToken();
+        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setCredentialType(CredentialType.IdToken.name());
+        idToken.setClientId(CLIENT_ID);
+        idToken.setRealm(REALM);
+
+        final String expectedKey = "" // just for formatting
+                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE_ID_TOKEN + CACHE_VALUE_SEPARATOR
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + REALM;
+        assertEquals(expectedKey, mDelegate.generateCacheKey(idToken));
+    }
+
+    @Test
+    public void idTokenCreateCacheKeyNoUniqueId() throws Exception {
+        final IdToken idToken = new IdToken();
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setCredentialType(CredentialType.IdToken.name());
+        idToken.setClientId(CLIENT_ID);
+        idToken.setRealm(REALM);
+
+        final String expectedKey = "" // just for formatting
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE_ID_TOKEN + CACHE_VALUE_SEPARATOR
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + REALM;
+        assertEquals(expectedKey, mDelegate.generateCacheKey(idToken));
+    }
+
+    @Test
+    public void idTokenCreateCacheKeyNoRealm() throws Exception {
+        final IdToken idToken = new IdToken();
+        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setCredentialType(CredentialType.IdToken.name());
+        idToken.setClientId(CLIENT_ID);
+
+        final String expectedKey = "" // just for formatting
+                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE_ID_TOKEN + CACHE_VALUE_SEPARATOR
+                + CLIENT_ID;
+        assertEquals(expectedKey, mDelegate.generateCacheKey(idToken));
+    }
+
+    @Test
+    public void idTokenCreateCacheValue() throws Exception {
+        final IdToken idToken = new IdToken();
+        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setCredentialType(CredentialType.IdToken.name().toLowerCase(Locale.US));
+        idToken.setClientId(CLIENT_ID);
+        idToken.setRealm(REALM);
+
+        final String serializedValue = mDelegate.generateCacheValue(idToken);
+
+        // Turn the serialized value into a JSONObject and start testing field equality.
+        final JSONObject jsonObject = new JSONObject(serializedValue);
+        assertEquals(UNIQUE_ID, jsonObject.getString("unique_id"));
+        assertEquals(ENVIRONMENT, jsonObject.getString("environment"));
+        assertEquals(CredentialType.IdToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
+        assertEquals(CLIENT_ID, jsonObject.getString("client_id"));
+        assertEquals(REALM, jsonObject.getString("realm"));
+    }
+
+    @Test
+    public void idTokenExtraValueSerialization() throws Exception {
+        final IdToken idToken = new IdToken();
+        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setCredentialType(CredentialType.IdToken.name().toLowerCase(Locale.US));
+        idToken.setClientId(CLIENT_ID);
+        idToken.setRealm(REALM);
+
+        final Map<String, JsonElement> additionalFields = new HashMap<>();
+
+        // Add some random Json to this object
+        JsonElement jsonStr = new JsonPrimitive("bar");
+        JsonArray jsonNumberArr = new JsonArray();
+        jsonNumberArr.add(1);
+        jsonNumberArr.add(2);
+        jsonNumberArr.add(3);
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.add("object_key", new JsonPrimitive("object_value"));
+
+        additionalFields.put("foo", jsonStr);
+        additionalFields.put("numbers", jsonNumberArr);
+        additionalFields.put("object", jsonObject);
+
+        idToken.setAdditionalFields(additionalFields);
+
+        String serializedValue = mDelegate.generateCacheValue(idToken);
+        JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
+        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString("unique_id"));
+        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString("environment"));
+        assertEquals(CredentialType.IdToken.name().toLowerCase(Locale.US), derivedCacheValueJsonObject.getString("credential_type"));
+        assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString("client_id"));
+        assertEquals(REALM, derivedCacheValueJsonObject.getString("realm"));
+        assertEquals("bar", derivedCacheValueJsonObject.getString("foo"));
+
+        final JSONArray jsonArr = derivedCacheValueJsonObject.getJSONArray("numbers");
+        assertEquals(3, jsonArr.length());
+
+        final JSONObject jsonObj = derivedCacheValueJsonObject.getJSONObject("object");
+        assertEquals("object_value", jsonObj.getString("object_key"));
+    }
+
+    @Test
+    public void idTokenExtraValueDeserialization() throws Exception {
+        final IdToken idToken = new IdToken();
+        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setCredentialType(CredentialType.IdToken.name().toLowerCase(Locale.US));
+        idToken.setClientId(CLIENT_ID);
+        idToken.setRealm(REALM);
+
+        String serializedValue = mDelegate.generateCacheValue(idToken);
 
         // Turn the serialized value into a JSONObject and start testing field equality.
         final JSONObject jsonObject = new JSONObject(serializedValue);
@@ -615,12 +767,12 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         assertNull(deserializedValue.getAdditionalFields().get("environment"));
         assertEquals(UNIQUE_ID, deserializedValue.getUniqueId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
-        assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), deserializedValue.getCredentialType());
+        assertEquals(CredentialType.IdToken.name().toLowerCase(Locale.US), deserializedValue.getCredentialType());
         assertEquals(CLIENT_ID, deserializedValue.getClientId());
-        assertEquals(TARGET, deserializedValue.getTarget());
+        assertEquals(REALM, deserializedValue.getRealm());
         assertEquals(3, deserializedValue.getAdditionalFields().size());
         assertEquals("bar", deserializedValue.getAdditionalFields().get("foo").getAsString());
         assertEquals(numbers.toString(), deserializedValue.getAdditionalFields().get("numbers").toString());
     }
-    // End RefreshTokens
+    // End IdTokens
 }
