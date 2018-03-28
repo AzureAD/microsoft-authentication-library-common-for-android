@@ -1,6 +1,5 @@
 package com.microsoft.identity.common.adal.internal.cache;
 
-import com.microsoft.identity.common.adal.error.AuthenticationException;
 import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 
@@ -54,7 +53,7 @@ public class StorageHelperTests extends AndroidTestHelper {
     }
 
     @Test
-    public void testEncryptDecrypt() throws GeneralSecurityException, IOException, AuthenticationException {
+    public void testEncryptDecrypt() throws GeneralSecurityException, IOException {
         String clearText = "SomeValue1234";
         encryptDecrypt(clearText);
     }
@@ -88,7 +87,7 @@ public class StorageHelperTests extends AndroidTestHelper {
                 "Input is empty or null",
                 new AndroidTestHelper.ThrowableRunnable() {
                     @Override
-                    public void run() throws GeneralSecurityException, IOException, AuthenticationException {
+                    public void run() throws GeneralSecurityException, IOException {
                         storageHelper.decrypt(null);
                     }
                 });
@@ -98,7 +97,7 @@ public class StorageHelperTests extends AndroidTestHelper {
                 "Input is empty or null",
                 new AndroidTestHelper.ThrowableRunnable() {
                     @Override
-                    public void run() throws GeneralSecurityException, IOException, AuthenticationException {
+                    public void run() throws GeneralSecurityException, IOException {
                         storageHelper.decrypt("");
                     }
                 });
@@ -114,7 +113,7 @@ public class StorageHelperTests extends AndroidTestHelper {
                 "is not valid, it must be greater of equal to 0",
                 new AndroidTestHelper.ThrowableRunnable() {
                     @Override
-                    public void run() throws GeneralSecurityException, IOException, AuthenticationException {
+                    public void run() throws GeneralSecurityException, IOException {
                         storageHelper.decrypt("E1bad64");
                     }
                 });
@@ -124,7 +123,7 @@ public class StorageHelperTests extends AndroidTestHelper {
                 "bad base-64",
                 new AndroidTestHelper.ThrowableRunnable() {
                     @Override
-                    public void run() throws GeneralSecurityException, IOException, AuthenticationException {
+                    public void run() throws GeneralSecurityException, IOException {
                         storageHelper.decrypt("cE1bad64");
                     }
                 });
@@ -136,7 +135,7 @@ public class StorageHelperTests extends AndroidTestHelper {
                 null,
                 new AndroidTestHelper.ThrowableRunnable() {
                     @Override
-                    public void run() throws GeneralSecurityException, IOException, AuthenticationException {
+                    public void run() throws GeneralSecurityException, IOException {
                         storageHelper.decrypt("cE1" + new String(Base64.encode(
                                 "U001thatShouldFail1234567890123456789012345678901234567890"
                                         .getBytes("UTF-8"), Base64.NO_WRAP), "UTF-8"));
@@ -148,7 +147,7 @@ public class StorageHelperTests extends AndroidTestHelper {
      * test different size messages
      */
     @Test
-    public void testEncryptDecryptDifferentSizes() throws GeneralSecurityException, IOException, AuthenticationException {
+    public void testEncryptDecryptDifferentSizes() throws GeneralSecurityException, IOException {
         Log.d(TAG, "Starting testEncryptDecrypt_differentSizes");
         // try different block sizes
         final int sizeRange = 1000;
@@ -159,7 +158,7 @@ public class StorageHelperTests extends AndroidTestHelper {
         Log.d(TAG, "Finished testEncryptDecrypt_differentSizes");
     }
 
-    private void encryptDecrypt(String clearText) throws GeneralSecurityException, IOException, AuthenticationException {
+    private void encryptDecrypt(String clearText) throws GeneralSecurityException, IOException {
         Context context = getInstrumentation().getTargetContext();
         final StorageHelper storageHelper = new StorageHelper(context);
         String encrypted = storageHelper.encrypt(clearText);
@@ -170,7 +169,7 @@ public class StorageHelperTests extends AndroidTestHelper {
     }
 
     @Test
-    public void testEncryptSameText() throws GeneralSecurityException, IOException, AuthenticationException {
+    public void testEncryptSameText() throws GeneralSecurityException, IOException {
         // access code
         Context context = getInstrumentation().getTargetContext();
         final StorageHelper storageHelper = new StorageHelper(context);
@@ -197,7 +196,7 @@ public class StorageHelperTests extends AndroidTestHelper {
     }
 
     @Test
-    public void testTampering() throws GeneralSecurityException, IOException, AuthenticationException {
+    public void testTampering() throws GeneralSecurityException, IOException {
         final Context context = getInstrumentation().getTargetContext();
         final StorageHelper storageHelper = new StorageHelper(context);
         String clearText = "AAAAAAAA2pILN0mn3wlYIlWk7lqOZ5qjRWXH";
@@ -292,7 +291,7 @@ public class StorageHelperTests extends AndroidTestHelper {
     @TargetApi(MIN_SDK_VERSION)
     @Test
     public void testMigration() throws
-            GeneralSecurityException, IOException, AuthenticationException {
+            GeneralSecurityException, IOException {
         if (Build.VERSION.SDK_INT < MIN_SDK_VERSION) {
             return;
         }
