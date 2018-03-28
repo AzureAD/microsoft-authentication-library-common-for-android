@@ -8,10 +8,12 @@ import com.microsoft.identity.common.internal.cache.AccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
 import org.junit.After;
@@ -22,8 +24,12 @@ import org.junit.runner.RunWith;
 import java.util.List;
 import java.util.Locale;
 
+import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @RunWith(AndroidJUnit4.class)
 public class AccountCredentialCacheTest {
@@ -33,12 +39,18 @@ public class AccountCredentialCacheTest {
     private static final String CLIENT_ID = "0287f963-2d72-4363-9e3a-5705c5b0f031";
     private static final String TARGET = "user.read user.write https://graph.windows.net";
     private static final String REALM = "3c62ac97-29eb-4aed-a3c8-add0298508d";
+    private static final String REALM2 = "20d3e9fa-982a-40bc-bea4-26bbe3fd332e";
+    private static final String REALM3 = "fc5171ec-2889-4ba6-bd1f-216fe87a8613";
     private static final String CREDENTIAL_TYPE_ACCESS_TOKEN = CredentialType.AccessToken.name().toLowerCase(Locale.US);
     private static final String CREDENTIAL_TYPE_REFRESH_TOKEN = CredentialType.RefreshToken.name().toLowerCase(Locale.US);
 
+    // The names of the SharedPreferences file on disk - must match AccountCredentialCache declaration to test impl
+    private static final String sAccountCredentialSharedPreferences =
+            "com.microsoft.identity.client.account_credential_cache";
+
     private IAccountCredentialCache mAccountCredentialCache;
     private IAccountCredentialCacheKeyValueDelegate mDelegate;
-
+    private SharedPreferencesFileManager mSharedPreferencesFileManager;
 
     @Before
     public void setUp() {
@@ -48,6 +60,7 @@ public class AccountCredentialCacheTest {
                 new AccountCredentialCacheKeyValueDelegate()
         );
         mDelegate = new AccountCredentialCacheKeyValueDelegate();
+        mSharedPreferencesFileManager = new SharedPreferencesFileManager(testContext, sAccountCredentialSharedPreferences);
     }
 
     @After
@@ -130,6 +143,29 @@ public class AccountCredentialCacheTest {
         final com.microsoft.identity.common.internal.dto.Account restoredAccount
                 = mAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
+    }
+
+    @Test
+    public void saveIdToken() throws Exception {
+        final IdToken idToken = new IdToken();
+        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setCredentialType(CredentialType.IdToken.name());
+        idToken.setClientId(CLIENT_ID);
+
+        // Save the Credential
+        mAccountCredentialCache.saveCredential(idToken);
+
+        // Synthesize a cache key for it
+        final String credentialCacheKey = mDelegate.generateCacheKey(idToken);
+
+        // Resurrect the Credential
+        final Credential restoredIdToken = mAccountCredentialCache.getCredential(credentialCacheKey);
+        assertEquals(idToken.getUniqueId(), restoredIdToken.getUniqueId());
+        assertEquals(idToken.getEnvironment(), restoredIdToken.getEnvironment());
+        assertEquals(idToken.getCredentialType(), restoredIdToken.getCredentialType());
+        assertEquals(idToken.getClientId(), restoredIdToken.getClientId());
+        assertTrue(idToken.equals(restoredIdToken));
     }
 
     @Test
@@ -261,7 +297,7 @@ public class AccountCredentialCacheTest {
 
         // Resurrect the Credential
         final Credential restoredRefreshToken = mAccountCredentialCache.getCredential(credentialCacheKey);
-        assertTrue(refreshToken.equals(restoredRefreshToken));
+        assertEquals(refreshToken, restoredRefreshToken);
     }
 
     @Test
@@ -318,6 +354,168 @@ public class AccountCredentialCacheTest {
     }
 
     @Test
+    public void getAccountsNullEnvironment() throws Exception {
+        try {
+            mAccountCredentialCache.getAccounts(UNIQUE_ID, null, REALM);
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertNotNull(e);
+        }
+    }
+
+    @Test
+    public void getAccountsComplete() throws Exception {
+        final com.microsoft.identity.common.internal.dto.Account account
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account.setUniqueId(UNIQUE_ID);
+        account.setEnvironment(ENVIRONMENT);
+        account.setRealm(REALM);
+
+        // Save the Account
+        mAccountCredentialCache.saveAccount(account);
+
+        // Test retrieval
+        final List<Account> accounts = mAccountCredentialCache.getAccounts(UNIQUE_ID, ENVIRONMENT, REALM);
+        assertEquals(1, accounts.size());
+        final Account retrievedAccount = accounts.get(0);
+        assertEquals(UNIQUE_ID, retrievedAccount.getUniqueId());
+        assertEquals(ENVIRONMENT, retrievedAccount.getEnvironment());
+        assertEquals(REALM, retrievedAccount.getRealm());
+    }
+
+    @Test
+    public void getAccountsNoUniqueId() throws Exception {
+        final com.microsoft.identity.common.internal.dto.Account account
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account.setUniqueId(UNIQUE_ID);
+        account.setEnvironment(ENVIRONMENT);
+        account.setRealm(REALM);
+
+        // Save the Account
+        mAccountCredentialCache.saveAccount(account);
+
+        // Test retrieval
+        final List<Account> accounts = mAccountCredentialCache.getAccounts(null, ENVIRONMENT, REALM);
+        assertEquals(1, accounts.size());
+        final Account retrievedAccount = accounts.get(0);
+        assertEquals(UNIQUE_ID, retrievedAccount.getUniqueId());
+        assertEquals(ENVIRONMENT, retrievedAccount.getEnvironment());
+        assertEquals(REALM, retrievedAccount.getRealm());
+    }
+
+    @Test
+    public void getAccountsNoUniqueIdNoRealm() throws Exception {
+        final com.microsoft.identity.common.internal.dto.Account account
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account.setUniqueId(UNIQUE_ID);
+        account.setEnvironment(ENVIRONMENT);
+        account.setRealm(REALM);
+
+        // Save the Account
+        mAccountCredentialCache.saveAccount(account);
+
+        // Test retrieval
+        final List<Account> accounts = mAccountCredentialCache.getAccounts(null, ENVIRONMENT, null);
+        assertEquals(1, accounts.size());
+        final Account retrievedAccount = accounts.get(0);
+        assertEquals(UNIQUE_ID, retrievedAccount.getUniqueId());
+        assertEquals(ENVIRONMENT, retrievedAccount.getEnvironment());
+        assertEquals(REALM, retrievedAccount.getRealm());
+    }
+
+    @Test
+    public void getAccountsNoRealm() throws Exception {
+        final com.microsoft.identity.common.internal.dto.Account account
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account.setUniqueId(UNIQUE_ID);
+        account.setEnvironment(ENVIRONMENT);
+        account.setRealm(REALM);
+
+        // Save the Account
+        mAccountCredentialCache.saveAccount(account);
+
+        // Test retrieval
+        final List<Account> accounts = mAccountCredentialCache.getAccounts(UNIQUE_ID, ENVIRONMENT, null);
+        assertEquals(1, accounts.size());
+        final Account retrievedAccount = accounts.get(0);
+        assertEquals(UNIQUE_ID, retrievedAccount.getUniqueId());
+        assertEquals(ENVIRONMENT, retrievedAccount.getEnvironment());
+        assertEquals(REALM, retrievedAccount.getRealm());
+    }
+
+    @Test
+    public void getAccountsWithMatchingUniqueIdEnvironment() throws Exception {
+        final com.microsoft.identity.common.internal.dto.Account account1
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account1.setUniqueId(UNIQUE_ID);
+        account1.setEnvironment(ENVIRONMENT);
+        account1.setRealm(REALM);
+
+        final com.microsoft.identity.common.internal.dto.Account account2
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account2.setUniqueId(UNIQUE_ID);
+        account2.setEnvironment(ENVIRONMENT);
+        account2.setRealm(REALM2);
+
+        final com.microsoft.identity.common.internal.dto.Account account3
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account3.setUniqueId(UNIQUE_ID);
+        account3.setEnvironment(ENVIRONMENT);
+        account3.setRealm(REALM3);
+
+        final com.microsoft.identity.common.internal.dto.Account account4
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account4.setUniqueId(UNIQUE_ID);
+        account4.setEnvironment("Foo");
+        account4.setRealm(REALM);
+
+        // Save the Accounts
+        mAccountCredentialCache.saveAccount(account1);
+        mAccountCredentialCache.saveAccount(account2);
+        mAccountCredentialCache.saveAccount(account3);
+        mAccountCredentialCache.saveAccount(account4);
+
+        final List<Account> accounts = mAccountCredentialCache.getAccounts(UNIQUE_ID, ENVIRONMENT, null);
+        assertEquals(3, accounts.size());
+    }
+
+    @Test
+    public void getAccountsWithMatchingEnvironmentRealm() throws Exception {
+        final com.microsoft.identity.common.internal.dto.Account account1
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account1.setUniqueId("Foo");
+        account1.setEnvironment(ENVIRONMENT);
+        account1.setRealm(REALM);
+
+        final com.microsoft.identity.common.internal.dto.Account account2
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account2.setUniqueId("Bar");
+        account2.setEnvironment(ENVIRONMENT);
+        account2.setRealm(REALM);
+
+        final com.microsoft.identity.common.internal.dto.Account account3
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account3.setUniqueId("Baz");
+        account3.setEnvironment(ENVIRONMENT);
+        account3.setRealm(REALM);
+
+        final com.microsoft.identity.common.internal.dto.Account account4
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account4.setUniqueId("qux");
+        account4.setEnvironment(ENVIRONMENT);
+        account4.setRealm("quz");
+
+        // Save the Accounts
+        mAccountCredentialCache.saveAccount(account1);
+        mAccountCredentialCache.saveAccount(account2);
+        mAccountCredentialCache.saveAccount(account3);
+        mAccountCredentialCache.saveAccount(account4);
+
+        final List<Account> accounts = mAccountCredentialCache.getAccounts(null, ENVIRONMENT, REALM);
+        assertEquals(3, accounts.size());
+    }
+
+    @Test
     public void getCredentials() throws Exception {
         // Save an Account into the cache
         final com.microsoft.identity.common.internal.dto.Account account
@@ -350,6 +548,372 @@ public class AccountCredentialCacheTest {
     }
 
     @Test
+    public void getCredentialsNoEnvironment() throws Exception {
+        try {
+            mAccountCredentialCache.getCredentials(
+                    UNIQUE_ID,
+                    null,
+                    CredentialType.RefreshToken,
+                    CLIENT_ID,
+                    REALM,
+                    TARGET
+            );
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertNotNull(e);
+        }
+    }
+
+    @Test
+    public void getCredentialsNoCredentialType() throws Exception {
+        try {
+            mAccountCredentialCache.getCredentials(
+                    UNIQUE_ID,
+                    ENVIRONMENT,
+                    null,
+                    CLIENT_ID,
+                    REALM,
+                    TARGET
+            );
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertNotNull(e);
+        }
+    }
+
+    @Test
+    public void getCredentialsNoClientId() throws Exception {
+        try {
+            mAccountCredentialCache.getCredentials(
+                    UNIQUE_ID,
+                    ENVIRONMENT,
+                    CredentialType.RefreshToken,
+                    null,
+                    REALM,
+                    TARGET
+            );
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertNotNull(e);
+        }
+    }
+
+    @Test
+    public void getCredentialsComplete() throws Exception {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setTarget(TARGET);
+
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+
+        // Save the Credentials
+        mAccountCredentialCache.saveCredential(refreshToken);
+        mAccountCredentialCache.saveCredential(accessToken);
+
+        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+                UNIQUE_ID,
+                ENVIRONMENT,
+                CredentialType.RefreshToken,
+                CLIENT_ID,
+                REALM,
+                TARGET
+        );
+        assertEquals(1, credentials.size());
+        final Credential retrievedCredential = credentials.get(0);
+        assertEquals(
+                CredentialType.RefreshToken.name(),
+                retrievedCredential.getCredentialType()
+        );
+    }
+
+    @Test
+    public void getCredentialsNoUniqueId() throws Exception {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUniqueId("Foo");
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setTarget(TARGET);
+
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId("Bar");
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+
+        // Save the Credentials
+        mAccountCredentialCache.saveCredential(refreshToken);
+        mAccountCredentialCache.saveCredential(accessToken);
+
+        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+                null,
+                ENVIRONMENT,
+                CredentialType.RefreshToken,
+                CLIENT_ID,
+                REALM,
+                TARGET
+        );
+        assertEquals(1, credentials.size());
+    }
+
+    @Test
+    public void getCredentialsNoUniqueIdNoRealm() throws Exception {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUniqueId("Foo");
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setTarget(TARGET);
+
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId("Bar");
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+
+        final AccessToken accessToken2 = new AccessToken();
+        accessToken2.setUniqueId("Baz");
+        accessToken2.setRealm(REALM);
+        accessToken2.setEnvironment(ENVIRONMENT);
+        accessToken2.setCredentialType(CredentialType.AccessToken.name());
+        accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setTarget(TARGET);
+
+        // Save the Credentials
+        mAccountCredentialCache.saveCredential(refreshToken);
+        mAccountCredentialCache.saveCredential(accessToken);
+        mAccountCredentialCache.saveCredential(accessToken2);
+
+        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+                null,
+                ENVIRONMENT,
+                CredentialType.AccessToken,
+                CLIENT_ID,
+                null,
+                TARGET
+        );
+        assertEquals(2, credentials.size());
+    }
+
+    @Test
+    public void getCredentialsNoUniqueIdNoRealmNoTarget() throws Exception {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUniqueId("Foo");
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setTarget(TARGET);
+
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId("Bar");
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+
+        final AccessToken accessToken2 = new AccessToken();
+        accessToken2.setUniqueId("Baz");
+        accessToken2.setRealm(REALM);
+        accessToken2.setEnvironment(ENVIRONMENT);
+        accessToken2.setCredentialType(CredentialType.AccessToken.name());
+        accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setTarget("qux");
+
+        // Save the Credentials
+        mAccountCredentialCache.saveCredential(refreshToken);
+        mAccountCredentialCache.saveCredential(accessToken);
+        mAccountCredentialCache.saveCredential(accessToken2);
+
+        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+                null,
+                ENVIRONMENT,
+                CredentialType.AccessToken,
+                CLIENT_ID,
+                null,
+                null
+        );
+        assertEquals(2, credentials.size());
+    }
+
+    @Test
+    public void getCredentialsNoTarget() throws Exception {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setTarget(TARGET);
+
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+
+        final AccessToken accessToken2 = new AccessToken();
+        accessToken2.setUniqueId(UNIQUE_ID);
+        accessToken2.setRealm(REALM);
+        accessToken2.setEnvironment(ENVIRONMENT);
+        accessToken2.setCredentialType(CredentialType.AccessToken.name());
+        accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setTarget("qux");
+
+        // Save the Credentials
+        mAccountCredentialCache.saveCredential(refreshToken);
+        mAccountCredentialCache.saveCredential(accessToken);
+        mAccountCredentialCache.saveCredential(accessToken2);
+
+        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+                UNIQUE_ID,
+                ENVIRONMENT,
+                CredentialType.AccessToken,
+                CLIENT_ID,
+                REALM,
+                null
+        );
+        assertEquals(2, credentials.size());
+    }
+
+    @Test
+    public void getCredentialsNoRealm() throws Exception {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setTarget(TARGET);
+
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setRealm("Foo");
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+
+        final AccessToken accessToken2 = new AccessToken();
+        accessToken2.setUniqueId(UNIQUE_ID);
+        accessToken2.setRealm("Bar");
+        accessToken2.setEnvironment(ENVIRONMENT);
+        accessToken2.setCredentialType(CredentialType.AccessToken.name());
+        accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setTarget(TARGET);
+
+        // Save the Credentials
+        mAccountCredentialCache.saveCredential(refreshToken);
+        mAccountCredentialCache.saveCredential(accessToken);
+        mAccountCredentialCache.saveCredential(accessToken2);
+
+        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+                UNIQUE_ID,
+                ENVIRONMENT,
+                CredentialType.AccessToken,
+                CLIENT_ID,
+                null,
+                TARGET
+        );
+        assertEquals(2, credentials.size());
+    }
+
+    @Test
+    public void getCredentialsNoRealmNoTarget() throws Exception {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setTarget(TARGET);
+
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setRealm("Foo");
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+
+        final AccessToken accessToken2 = new AccessToken();
+        accessToken2.setUniqueId(UNIQUE_ID);
+        accessToken2.setRealm("Bar");
+        accessToken2.setEnvironment(ENVIRONMENT);
+        accessToken2.setCredentialType(CredentialType.AccessToken.name());
+        accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setTarget("qux");
+
+        // Save the Credentials
+        mAccountCredentialCache.saveCredential(refreshToken);
+        mAccountCredentialCache.saveCredential(accessToken);
+        mAccountCredentialCache.saveCredential(accessToken2);
+
+        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+                UNIQUE_ID,
+                ENVIRONMENT,
+                CredentialType.AccessToken,
+                CLIENT_ID,
+                null,
+                null
+        );
+        assertEquals(2, credentials.size());
+    }
+
+    @Test
+    public void getCredentialsNoUniqueIdNoTarget() throws Exception {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setTarget(TARGET);
+
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId("Quz");
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+
+        final AccessToken accessToken2 = new AccessToken();
+        accessToken2.setUniqueId(UNIQUE_ID);
+        accessToken2.setRealm(REALM);
+        accessToken2.setEnvironment(ENVIRONMENT);
+        accessToken2.setCredentialType(CredentialType.AccessToken.name());
+        accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setTarget(TARGET);
+
+        // Save the Credentials
+        mAccountCredentialCache.saveCredential(refreshToken);
+        mAccountCredentialCache.saveCredential(accessToken);
+        mAccountCredentialCache.saveCredential(accessToken2);
+
+        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+                null,
+                ENVIRONMENT,
+                CredentialType.AccessToken,
+                CLIENT_ID,
+                REALM,
+                null
+        );
+        assertEquals(2, credentials.size());
+    }
+
+    @Test
     public void clearAccounts() throws Exception {
         // Save an Account into the cache
         final com.microsoft.identity.common.internal.dto.Account account
@@ -377,7 +941,7 @@ public class AccountCredentialCacheTest {
         mAccountCredentialCache.saveCredential(refreshToken);
 
         // Call clearAccounts()
-        mAccountCredentialCache.clearAccounts();
+        mAccountCredentialCache.removeAccount(account);
 
         // Verify getAccounts() returns zero items
         assertTrue(mAccountCredentialCache.getAccounts().isEmpty());
@@ -415,7 +979,8 @@ public class AccountCredentialCacheTest {
         mAccountCredentialCache.saveCredential(refreshToken);
 
         // Call clearCredentials()
-        mAccountCredentialCache.clearCredentials();
+        mAccountCredentialCache.removeCredential(accessToken);
+        mAccountCredentialCache.removeCredential(refreshToken);
 
         // Verify getAccounts() returns 1 item
         assertEquals(1, mAccountCredentialCache.getAccounts().size());
@@ -459,6 +1024,195 @@ public class AccountCredentialCacheTest {
 
         // Verify getCredentials() returns zero items
         assertTrue(mAccountCredentialCache.getCredentials().isEmpty());
+    }
+
+    @Test(expected = RuntimeException.class) // TODO Should this *really* throw a RuntimeException
+    public void testThrowsExceptionForMalformedCredentialCacheKey() throws Exception {
+        mAccountCredentialCache.getCredential("Malformed cache key");
+    }
+
+    @Test
+    public void noValueForCacheKeyAccount() throws Exception {
+        assertEquals(0, mAccountCredentialCache.getAccounts().size());
+        final Account account = (Account) mAccountCredentialCache.getAccount("No account");
+        assertNull(account);
+    }
+
+    @Test
+    public void noValueForCacheKeyAccessToken() throws Exception {
+        assertEquals(0, mAccountCredentialCache.getCredentials().size());
+        final AccessToken accessToken = (AccessToken) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.AccessToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        assertNull(accessToken);
+    }
+
+    @Test
+    public void noValueForCacheKeyRefreshToken() throws Exception {
+        assertEquals(0, mAccountCredentialCache.getCredentials().size());
+        final RefreshToken refreshToken = (RefreshToken) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.RefreshToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        assertNull(refreshToken);
+    }
+
+    @Test
+    public void noValueForCacheKeyIdToken() throws Exception {
+        assertEquals(0, mAccountCredentialCache.getCredentials().size());
+        final IdToken idToken = (IdToken) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.IdToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        assertNull(idToken);
+    }
+
+    @Test
+    public void malformedJsonCacheValueForAccount() throws Exception {
+        final com.microsoft.identity.common.internal.dto.Account account
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account.setUniqueId(UNIQUE_ID);
+        account.setEnvironment(ENVIRONMENT);
+        account.setRealm(REALM);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(account);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not an account\"}");
+
+        final Account malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
+        assertNull(malformedAccount);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedCacheValueForAccount() throws Exception {
+        final com.microsoft.identity.common.internal.dto.Account account
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account.setUniqueId(UNIQUE_ID);
+        account.setEnvironment(ENVIRONMENT);
+        account.setRealm(REALM);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(account);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an account\"}");
+
+        final Account malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
+        assertNull(malformedAccount);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedJsonCacheValueForAccessToken() throws Exception {
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(accessToken);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not an accessToken\"}");
+
+        final AccessToken malformedAccessToken = (AccessToken) mAccountCredentialCache.getCredential(cacheKey);
+        assertNull(malformedAccessToken);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedCacheValueForAccessToken() throws Exception {
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(accessToken);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an accessToken\"}");
+
+        final AccessToken malformedAccessToken = (AccessToken) mAccountCredentialCache.getCredential(cacheKey);
+        assertNull(malformedAccessToken);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedJsonCacheValueForRefreshToken() throws Exception {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.AccessToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(refreshToken);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not a refreshToken\"}");
+
+        final RefreshToken malformedRefreshToken = (RefreshToken) mAccountCredentialCache.getCredential(cacheKey);
+        assertNull(malformedRefreshToken);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedCacheValueForRefreshToken() throws Exception {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.AccessToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(refreshToken);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not a refreshToken\"}");
+
+        final RefreshToken malformedRefreshToken = (RefreshToken) mAccountCredentialCache.getCredential(cacheKey);
+        assertNull(malformedRefreshToken);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedJsonCacheValueForIdToken() throws Exception {
+        final IdToken idToken = new IdToken();
+        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setCredentialType(CredentialType.IdToken.name());
+        idToken.setClientId(CLIENT_ID);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(idToken);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\"  \"not an idToken\"}");
+
+        final IdToken restoredIdToken = (IdToken) mAccountCredentialCache.getCredential(cacheKey);
+        assertNull(restoredIdToken);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedCacheValueForIdToken() throws Exception {
+        final IdToken idToken = new IdToken();
+        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setCredentialType(CredentialType.IdToken.name());
+        idToken.setClientId(CLIENT_ID);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(idToken);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an idToken\"}");
+
+        final IdToken restoredIdToken = (IdToken) mAccountCredentialCache.getCredential(cacheKey);
+        assertNull(restoredIdToken);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    public void persistAndRestoreExtraClaimsAccessToken() throws Exception {
+        // TODO
+    }
+
+    public void persistAndRestoreExtraClaimsRefreshToken() throws Exception {
+        // TODO
+    }
+
+    public void persistAndRestoreExtraClaimsIdToken() throws Exception {
+        // TODO
     }
 
 }

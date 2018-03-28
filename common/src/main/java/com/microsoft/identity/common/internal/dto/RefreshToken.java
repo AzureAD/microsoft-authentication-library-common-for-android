@@ -110,6 +110,7 @@ public class RefreshToken extends Credential {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
 
         RefreshToken that = (RefreshToken) o;
 
@@ -123,7 +124,8 @@ public class RefreshToken extends Credential {
 
     @Override
     public int hashCode() {
-        int result = mClientInfo != null ? mClientInfo.hashCode() : 0;
+        int result = super.hashCode();
+        result = 31 * result + (mClientInfo != null ? mClientInfo.hashCode() : 0);
         result = 31 * result + (mFamilyId != null ? mFamilyId.hashCode() : 0);
         result = 31 * result + (mTarget != null ? mTarget.hashCode() : 0);
         result = 31 * result + (mUsername != null ? mUsername.hashCode() : 0);

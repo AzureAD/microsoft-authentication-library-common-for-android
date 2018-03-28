@@ -13,6 +13,6 @@ public interface IAccountCredentialCacheKeyValueDelegate {
 
     String generateCacheValue(final Credential credential);
 
-    <T> T fromCacheValue(final String string, Class<T> t);
+    <T> T fromCacheValue(final String string, Class<T> t); // TODO consider throwing an Exception if parsing fails
 
 }
