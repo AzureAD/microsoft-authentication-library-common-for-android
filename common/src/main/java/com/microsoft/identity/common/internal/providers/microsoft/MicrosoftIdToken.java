@@ -1,5 +1,6 @@
 package com.microsoft.identity.common.internal.providers.microsoft;
 
+import com.microsoft.identity.common.exception.CommonCoreServiceException;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
 public class MicrosoftIdToken extends IDToken {
@@ -60,7 +61,7 @@ public class MicrosoftIdToken extends IDToken {
      */
     public static final String VERSION = "ver";
 
-    public MicrosoftIdToken(String rawIdToken) {
+    public MicrosoftIdToken(String rawIdToken) throws CommonCoreServiceException {
         super(rawIdToken);
     }
 }

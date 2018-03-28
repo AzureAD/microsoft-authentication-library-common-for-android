@@ -3,6 +3,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.exception.CommonCoreServiceException;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
@@ -10,7 +11,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
-
 
 /**
  * The Azure Active Directory oAuth2 Strategy
@@ -49,23 +49,26 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
      */
     @Override
     public Account createAccount(TokenResponse response) {
-        IDToken idToken = new IDToken(response.getIdToken());
-        ClientInfo clientInfo = new ClientInfo(((AzureActiveDirectoryTokenResponse) response).getClientInfo());
+        IDToken idToken = null;
+        ClientInfo clientInfo = null;
+        try {
+            idToken = new IDToken(response.getIdToken());
+            clientInfo = new ClientInfo(((AzureActiveDirectoryTokenResponse) response).getClientInfo());
+        } catch (CommonCoreServiceException ccse) {
+            // TODO: Add a log here
+            // TODO: Should we bail?
+        }
         return AzureActiveDirectoryAccount.create(idToken, clientInfo);
     }
 
     @Override
     public String getIssuerCacheIdentifier(AuthorizationRequest request) {
-
-        AzureActiveDirectoryAuthorizationRequest authRequest;
-
-        if (request instanceof AzureActiveDirectoryAuthorizationRequest) {
-            authRequest = (AzureActiveDirectoryAuthorizationRequest) request;
-        } else {
-            //TODO: Move this string somewhere else
-            throw new RuntimeException("Request provided is not of type AzureActiveDirectoryAuthorizationRequest");
+        if (!(request instanceof AzureActiveDirectoryAuthorizationRequest)) {
+            throw new IllegalArgumentException("Request provided is not of type AzureActiveDirectoryAuthorizationRequest");
         }
 
+        AzureActiveDirectoryAuthorizationRequest authRequest;
+        authRequest = (AzureActiveDirectoryAuthorizationRequest) request;
         AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
 
         if (!cloud.isValidated() && this.mConfig.isAuthorityHostValdiationEnabled()) {
@@ -90,26 +93,20 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
 
     @Override
     public AccessToken getAccessTokenFromResponse(TokenResponse response) {
-        AzureActiveDirectoryAccessToken accessToken;
-
-        if (response instanceof AzureActiveDirectoryTokenResponse) {
-            accessToken = new AzureActiveDirectoryAccessToken(response);
-        } else {
-            throw new RuntimeException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryOAuth2Strategy.getAccessTokenFromResponse");
+        if (!(response instanceof AzureActiveDirectoryTokenResponse)) {
+            throw new IllegalArgumentException(
+                    "Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryOAuth2Strategy.getAccessTokenFromResponse");
         }
-        return accessToken;
+        return new AzureActiveDirectoryAccessToken(response);
     }
 
     @Override
     public RefreshToken getRefreshTokenFromResponse(TokenResponse response) {
-        AzureActiveDirectoryRefreshToken refreshToken = null;
-
-        if (response instanceof AzureActiveDirectoryTokenResponse) {
-            refreshToken = new AzureActiveDirectoryRefreshToken((AzureActiveDirectoryTokenResponse) response);
-        } else {
-            throw new RuntimeException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryOAuth2Strategy.getRefreshTokenFromResponse");
+        if (!(response instanceof AzureActiveDirectoryTokenResponse)) {
+            throw new IllegalArgumentException(
+                    "Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryOAuth2Strategy.getRefreshTokenFromResponse");
         }
-        return refreshToken;
+        return new AzureActiveDirectoryRefreshToken((AzureActiveDirectoryTokenResponse) response);
     }
 
 }

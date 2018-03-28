@@ -7,6 +7,8 @@ import com.google.gson.Gson;
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.CommonCoreExceptionMessage;
+import com.microsoft.identity.common.exception.CommonCoreServiceException;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -157,15 +159,19 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
         for (final Object atUnknown : accessTokensAsUnknowns) {
             if(atUnknown instanceof String) {
                 final MsalAccessTokenCacheItem atCacheItem = new Gson().fromJson((String)atUnknown, MsalAccessTokenCacheItem.class);
-                initUserIdentifier(atCacheItem);
-                atCacheItems.add(atCacheItem);
+                try {
+                    initUserIdentifier(atCacheItem);
+                    atCacheItems.add(atCacheItem);
+                } catch(CommonCoreServiceException ccse) {
+                    // Add a log
+                }
             }
         }
 
         return atCacheItems;
     }
 
-    private void initUserIdentifier(MsalAccessTokenCacheItem atCacheItem) {
+    private void initUserIdentifier(MsalAccessTokenCacheItem atCacheItem) throws CommonCoreServiceException{
         // set up the uniqueIdentifier here...
         final String rawClientInfo = atCacheItem.mRawClientInfo;
         try {
@@ -177,7 +183,7 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
                             + "."
                             + EncodingUtil.base64UrlEncodeToString(utid);
         } catch (final JSONException e) {
-            throw new RuntimeException("Failed to deserialize user identifier from cache.");
+            throw new CommonCoreServiceException("", CommonCoreExceptionMessage.INVALID_JWT, e);
         }
     }
 

@@ -4,6 +4,8 @@ import android.util.Base64;
 
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.CommonCoreExceptionMessage;
+import com.microsoft.identity.common.exception.CommonCoreServiceException;
 
 import org.json.JSONException;
 
@@ -163,7 +165,7 @@ public class IDToken {
     private Map<String, String> mTokenClaims = null;
     private final String mRawIdToken;
 
-    public IDToken(final String rawIdToken) {
+    public IDToken(final String rawIdToken) throws CommonCoreServiceException{
 
         if (StringExtensions.isNullOrBlank(rawIdToken)) {
             throw new IllegalArgumentException("null or empty raw idtoken");
@@ -180,7 +182,7 @@ public class IDToken {
         return Collections.unmodifiableMap(mTokenClaims);
     }
 
-    private Map<String, String> parseJWT(final String idToken) {
+    private Map<String, String> parseJWT(final String idToken) throws CommonCoreServiceException{
         final String idTokenBody = extractJWTBody(idToken);
         final byte[] data = Base64.decode(idTokenBody, Base64.URL_SAFE);
 
@@ -188,7 +190,7 @@ public class IDToken {
             final String decodedBody = new String(data, Charset.forName(StringExtensions.ENCODING_UTF8));
             return JsonExtensions.extractJsonObjectIntoMap(decodedBody);
         } catch (final JSONException e) {
-            throw new RuntimeException(e);
+            throw new CommonCoreServiceException("", CommonCoreExceptionMessage.INVALID_JWT, e);
         }
     }
 

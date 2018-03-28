@@ -91,7 +91,7 @@ public class CommonCoreBaseException extends Exception {
             return super.getMessage();
         }
 
-        return "";
+        return null;
     }
 
     protected int mHttpStatusCode;

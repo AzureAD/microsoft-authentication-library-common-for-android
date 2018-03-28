@@ -4,6 +4,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.CommonCoreException;
+import com.microsoft.identity.common.exception.CommonCoreExceptionMessage;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -545,7 +546,7 @@ public class StorageHelper {
             // Reset KeyPair info so that new request will generate correct KeyPairs.
             // All tokens with previous SecretKey are not possible to decrypt.
             //Log.e(TAG, "Unwrap failed for AndroidKeyStore", "",ADALError.ANDROIDKEYSTORE_FAILED, ex);
-            Log.e(TAG, CommonCoreException.ANDROIDKEYSTORE_FAILED);
+            Log.e(TAG, CommonCoreExceptionMessage.ANDROIDKEYSTORE_FAILED);
             mKeyPair = null;
             deleteKeyFile();
             resetKeyPairFromAndroidKeyStore();

@@ -29,6 +29,7 @@ import android.os.Debug;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.exception.CommonCoreException;
+import com.microsoft.identity.common.exception.CommonCoreExceptionMessage;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -167,13 +168,13 @@ public class HttpWebRequest {
         if (!connectionService.isConnectionAvailable()) {
             if (connectionService.isNetworkDisabledFromOptimizations()) {
                 final CommonCoreException dozeModeException = new CommonCoreException(
-                        CommonCoreException.DEVICE_NETWORK_NOT_AVAILABLE,
+                        CommonCoreExceptionMessage.DEVICE_NETWORK_NOT_AVAILABLE,
                         "Connection is not available to refresh token because power optimization is "
                                 + "enabled. And the device is in doze mode or the app is standby");
                 throw dozeModeException;
             } else {
                 final CommonCoreException generalNetworkException = new CommonCoreException(
-                        CommonCoreException.DEVICE_NETWORK_NOT_AVAILABLE,
+                        CommonCoreExceptionMessage.DEVICE_NETWORK_NOT_AVAILABLE,
                         "Connection is not available to refresh token");
                 throw generalNetworkException;
             }

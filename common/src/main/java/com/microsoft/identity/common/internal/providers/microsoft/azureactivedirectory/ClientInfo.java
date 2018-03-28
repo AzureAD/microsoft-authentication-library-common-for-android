@@ -4,6 +4,8 @@ import android.util.Base64;
 
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.CommonCoreExceptionMessage;
+import com.microsoft.identity.common.exception.CommonCoreServiceException;
 
 import org.json.JSONException;
 
@@ -23,7 +25,7 @@ public class ClientInfo {
      *
      * @param rawClientInfo
      */
-    public ClientInfo(String rawClientInfo) {
+    public ClientInfo(String rawClientInfo) throws CommonCoreServiceException{
 
         /*
         NOTE: Server team would like us to emit telemetry when client Info is null...
@@ -40,7 +42,7 @@ public class ClientInfo {
         try {
             clientInfoItems = JsonExtensions.extractJsonObjectIntoMap(decodedClientInfo);
         } catch (final JSONException e) {
-            throw new RuntimeException(e);
+            throw new CommonCoreServiceException("", CommonCoreExceptionMessage.INVALID_JWT, e);
         }
 
         mUid = clientInfoItems.get(ClientInfo.UNIQUE_IDENTIFIER);
