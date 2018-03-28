@@ -67,10 +67,20 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
         return collapseKeyComponents(keyComponents);
     }
 
+    private String generateCacheValueInternal(final AccountCredentialBase baseObject) {
+        JsonElement outboundElement = mGson.toJsonTree(baseObject);
+        JsonObject outboundObject = outboundElement.getAsJsonObject();
+
+        for (final String key : baseObject.getAdditionalFields().keySet()) {
+            outboundObject.add(key, baseObject.getAdditionalFields().get(key));
+        }
+
+        return mGson.toJson(outboundObject);
+    }
+
     @Override
     public String generateCacheValue(Account account) {
-        // TODO serialize extra fields
-        return mGson.toJson(account);
+        return generateCacheValueInternal(account);
     }
 
     @Override
@@ -95,14 +105,7 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
 
     @Override
     public String generateCacheValue(Credential credential) {
-        JsonElement outboundElement = mGson.toJsonTree(credential);
-        JsonObject outboundObject = outboundElement.getAsJsonObject();
-
-        for (final String key : credential.getAdditionalFields().keySet()) {
-            outboundObject.add(key, credential.getAdditionalFields().get(key));
-        }
-
-        return mGson.toJson(outboundObject);
+        return generateCacheValueInternal(credential);
     }
 
     @Override
