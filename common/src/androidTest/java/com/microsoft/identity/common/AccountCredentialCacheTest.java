@@ -8,6 +8,7 @@ import com.microsoft.identity.common.internal.cache.AccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -23,8 +24,10 @@ import org.junit.runner.RunWith;
 import java.util.List;
 import java.util.Locale;
 
+import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -41,9 +44,13 @@ public class AccountCredentialCacheTest {
     private static final String CREDENTIAL_TYPE_ACCESS_TOKEN = CredentialType.AccessToken.name().toLowerCase(Locale.US);
     private static final String CREDENTIAL_TYPE_REFRESH_TOKEN = CredentialType.RefreshToken.name().toLowerCase(Locale.US);
 
+    // The names of the SharedPreferences file on disk - must match AccountCredentialCache declaration to test impl
+    private static final String sAccountCredentialSharedPreferences =
+            "com.microsoft.identity.client.account_credential_cache";
+
     private IAccountCredentialCache mAccountCredentialCache;
     private IAccountCredentialCacheKeyValueDelegate mDelegate;
-
+    private SharedPreferencesFileManager mSharedPreferencesFileManager;
 
     @Before
     public void setUp() {
@@ -53,6 +60,7 @@ public class AccountCredentialCacheTest {
                 new AccountCredentialCacheKeyValueDelegate()
         );
         mDelegate = new AccountCredentialCacheKeyValueDelegate();
+        mSharedPreferencesFileManager = new SharedPreferencesFileManager(testContext, sAccountCredentialSharedPreferences);
     }
 
     @After
@@ -289,7 +297,7 @@ public class AccountCredentialCacheTest {
 
         // Resurrect the Credential
         final Credential restoredRefreshToken = mAccountCredentialCache.getCredential(credentialCacheKey);
-        assertTrue(refreshToken.equals(restoredRefreshToken));
+        assertEquals(refreshToken, restoredRefreshToken);
     }
 
     @Test
@@ -1016,6 +1024,195 @@ public class AccountCredentialCacheTest {
 
         // Verify getCredentials() returns zero items
         assertTrue(mAccountCredentialCache.getCredentials().isEmpty());
+    }
+
+    @Test(expected = RuntimeException.class) // TODO Should this *really* throw a RuntimeException
+    public void testThrowsExceptionForMalformedCredentialCacheKey() throws Exception {
+        mAccountCredentialCache.getCredential("Malformed cache key");
+    }
+
+    @Test
+    public void noValueForCacheKeyAccount() throws Exception {
+        assertEquals(0, mAccountCredentialCache.getAccounts().size());
+        final Account account = (Account) mAccountCredentialCache.getAccount("No account");
+        assertNull(account);
+    }
+
+    @Test
+    public void noValueForCacheKeyAccessToken() throws Exception {
+        assertEquals(0, mAccountCredentialCache.getCredentials().size());
+        final AccessToken accessToken = (AccessToken) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.AccessToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        assertNull(accessToken);
+    }
+
+    @Test
+    public void noValueForCacheKeyRefreshToken() throws Exception {
+        assertEquals(0, mAccountCredentialCache.getCredentials().size());
+        final RefreshToken refreshToken = (RefreshToken) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.RefreshToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        assertNull(refreshToken);
+    }
+
+    @Test
+    public void noValueForCacheKeyIdToken() throws Exception {
+        assertEquals(0, mAccountCredentialCache.getCredentials().size());
+        final IdToken idToken = (IdToken) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.IdToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        assertNull(idToken);
+    }
+
+    @Test
+    public void malformedJsonCacheValueForAccount() throws Exception {
+        final com.microsoft.identity.common.internal.dto.Account account
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account.setUniqueId(UNIQUE_ID);
+        account.setEnvironment(ENVIRONMENT);
+        account.setRealm(REALM);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(account);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not an account\"}");
+
+        final Account malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
+        assertNull(malformedAccount);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedCacheValueForAccount() throws Exception {
+        final com.microsoft.identity.common.internal.dto.Account account
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account.setUniqueId(UNIQUE_ID);
+        account.setEnvironment(ENVIRONMENT);
+        account.setRealm(REALM);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(account);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an account\"}");
+
+        final Account malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
+        assertNull(malformedAccount);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedJsonCacheValueForAccessToken() throws Exception {
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(accessToken);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not an accessToken\"}");
+
+        final AccessToken malformedAccessToken = (AccessToken) mAccountCredentialCache.getCredential(cacheKey);
+        assertNull(malformedAccessToken);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedCacheValueForAccessToken() throws Exception {
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(accessToken);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an accessToken\"}");
+
+        final AccessToken malformedAccessToken = (AccessToken) mAccountCredentialCache.getCredential(cacheKey);
+        assertNull(malformedAccessToken);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedJsonCacheValueForRefreshToken() throws Exception {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.AccessToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(refreshToken);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not a refreshToken\"}");
+
+        final RefreshToken malformedRefreshToken = (RefreshToken) mAccountCredentialCache.getCredential(cacheKey);
+        assertNull(malformedRefreshToken);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedCacheValueForRefreshToken() throws Exception {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.AccessToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(refreshToken);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not a refreshToken\"}");
+
+        final RefreshToken malformedRefreshToken = (RefreshToken) mAccountCredentialCache.getCredential(cacheKey);
+        assertNull(malformedRefreshToken);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedJsonCacheValueForIdToken() throws Exception {
+        final IdToken idToken = new IdToken();
+        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setCredentialType(CredentialType.IdToken.name());
+        idToken.setClientId(CLIENT_ID);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(idToken);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\"  \"not an idToken\"}");
+
+        final IdToken restoredIdToken = (IdToken) mAccountCredentialCache.getCredential(cacheKey);
+        assertNull(restoredIdToken);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    @Test
+    public void malformedCacheValueForIdToken() throws Exception {
+        final IdToken idToken = new IdToken();
+        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setCredentialType(CredentialType.IdToken.name());
+        idToken.setClientId(CLIENT_ID);
+
+        // Generate a cache key
+        final String cacheKey = mDelegate.generateCacheKey(idToken);
+
+        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an idToken\"}");
+
+        final IdToken restoredIdToken = (IdToken) mAccountCredentialCache.getCredential(cacheKey);
+        assertNull(restoredIdToken);
+        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+    }
+
+    public void persistAndRestoreExtraClaimsAccessToken() throws Exception {
+        // TODO
+    }
+
+    public void persistAndRestoreExtraClaimsRefreshToken() throws Exception {
+        // TODO
+    }
+
+    public void persistAndRestoreExtraClaimsIdToken() throws Exception {
+        // TODO
     }
 
 }

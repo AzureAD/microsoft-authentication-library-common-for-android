@@ -1,6 +1,7 @@
 package com.microsoft.identity.common.internal.cache;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
@@ -87,6 +88,10 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
     @Override
     public <T> T fromCacheValue(String string, Class<T> t) {
         // TODO serialize extra fields?
-        return mGson.fromJson(string, t);
+        try {
+            return mGson.fromJson(string, t);
+        } catch (JsonSyntaxException e) {
+            return null;
+        }
     }
 }

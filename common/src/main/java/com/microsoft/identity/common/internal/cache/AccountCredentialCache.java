@@ -27,6 +27,11 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     private static final String sAccountCredentialSharedPreferences =
             "com.microsoft.identity.client.account_credential_cache";
 
+    private static final Account EMPTY_ACCOUNT = new Account();
+    private static final AccessToken EMPTY_AT = new AccessToken();
+    private static final RefreshToken EMPTY_RT = new RefreshToken();
+    private static final IdToken EMPTY_ID = new IdToken();
+
     // SharedPreferences used to store Accounts and Credentials
     private final SharedPreferencesFileManager mSharedPreferencesFileManager;
 
@@ -57,7 +62,19 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
     @Override
     public synchronized Account getAccount(final String cacheKey) {
-        return mCacheValueDelegate.fromCacheValue(mSharedPreferencesFileManager.getString(cacheKey), Account.class);
+        Account account = mCacheValueDelegate.fromCacheValue(
+                mSharedPreferencesFileManager.getString(cacheKey),
+                Account.class
+        );
+
+        if (null == account || EMPTY_ACCOUNT.equals(account)) { // Either we found nothing or it wasn't an Account
+            // The returned account came back uninitialized...
+            // Remove the entry and return null...
+            mSharedPreferencesFileManager.remove(cacheKey);
+            account = null;
+        }
+
+        return account;
     }
 
     @Override
@@ -76,10 +93,22 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             throw new RuntimeException("Credential type could not be resolved.");
         }
 
-        return mCacheValueDelegate.fromCacheValue(
+        Credential credential = mCacheValueDelegate.fromCacheValue(
                 mSharedPreferencesFileManager.getString(cacheKey),
                 clazz
         );
+
+        if (null == credential
+                || (AccessToken.class == clazz && EMPTY_AT.equals(credential))
+                || (RefreshToken.class == clazz && EMPTY_RT.equals(credential))
+                || (IdToken.class == clazz) && EMPTY_ID.equals(credential)) {
+            // The returned credential came back uninitialized...
+            // Remove the entry and return null...
+            mSharedPreferencesFileManager.remove(cacheKey);
+            credential = null;
+        }
+
+        return credential;
     }
 
     private Map<String, Account> getAccountsWithKeys() {
@@ -288,7 +317,17 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         return credentialClass;
     }
 
+    /**
+     * Inspects the supplied cache key to determine the target CredentialType.
+     *
+     * @param cacheKey The cache key to inspect.
+     * @return The CredentialType or null if a proper type cannot be resolved.
+     */
     private CredentialType getCredentialTypeForCredentialCacheKey(final String cacheKey) {
+        if (StringExtensions.isNullOrBlank(cacheKey)) {
+            throw new IllegalArgumentException("Param [cacheKey] cannot be null.");
+        }
+
         final Set<String> credentialTypesLowerCase = new HashSet<>();
 
         for (final String credentialTypeStr : CredentialType.valueSet()) {
