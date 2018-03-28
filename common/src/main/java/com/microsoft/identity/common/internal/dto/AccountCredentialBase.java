@@ -2,6 +2,7 @@ package com.microsoft.identity.common.internal.dto;
 
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -9,7 +10,7 @@ import java.util.Map;
  */
 public abstract class AccountCredentialBase {
 
-    private transient Map<String, JSONObject> mAdditionalFields;
+    private transient Map<String, JSONObject> mAdditionalFields = new HashMap<>();
 
     public Map<String, JSONObject> getAdditionalFields() {
         return mAdditionalFields;
