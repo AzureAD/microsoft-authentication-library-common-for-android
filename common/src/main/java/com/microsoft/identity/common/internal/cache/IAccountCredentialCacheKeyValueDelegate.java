@@ -1,6 +1,7 @@
 package com.microsoft.identity.common.internal.cache;
 
 import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
 import com.microsoft.identity.common.internal.dto.Credential;
 
 public interface IAccountCredentialCacheKeyValueDelegate {
@@ -13,6 +14,6 @@ public interface IAccountCredentialCacheKeyValueDelegate {
 
     String generateCacheValue(final Credential credential);
 
-    <T> T fromCacheValue(final String string, Class<T> t); // TODO consider throwing an Exception if parsing fails
+    <T extends AccountCredentialBase> T fromCacheValue(final String string, Class<? extends AccountCredentialBase> t); // TODO consider throwing an Exception if parsing fails
 
 }

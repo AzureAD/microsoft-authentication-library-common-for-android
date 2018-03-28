@@ -29,7 +29,7 @@ import com.google.gson.annotations.SerializedName;
  * This is a generic credential schema that should be used as a reference to define schemas for
  * specific credential types.
  */
-public abstract class Credential {
+public abstract class Credential extends AccountCredentialBase {
 
     /**
      * The client id of application, as defined in the app developer portal.

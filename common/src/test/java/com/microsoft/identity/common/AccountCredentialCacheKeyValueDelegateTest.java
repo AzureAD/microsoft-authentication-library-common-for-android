@@ -1,19 +1,28 @@
 package com.microsoft.identity.common;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class AccountCredentialCacheKeyValueDelegateTest {
 
@@ -160,6 +169,89 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         assertEquals(CLIENT_ID, jsonObject.getString("client_id"));
         assertEquals(REALM, jsonObject.getString("realm"));
         assertEquals(TARGET, jsonObject.getString("target"));
+    }
+
+    @Test
+    public void accessTokenExtraValueSerialization() throws Exception {
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name().toLowerCase(Locale.US));
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setTarget(TARGET);
+
+        final Map<String, JsonElement> additionalFields = new HashMap<>();
+
+        // Add some random Json to this object
+        JsonElement jsonStr = new JsonPrimitive("bar");
+        JsonArray jsonNumberArr = new JsonArray();
+        jsonNumberArr.add(1);
+        jsonNumberArr.add(2);
+        jsonNumberArr.add(3);
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.add("object_key", new JsonPrimitive("object_value"));
+
+        additionalFields.put("foo", jsonStr);
+        additionalFields.put("numbers", jsonNumberArr);
+        additionalFields.put("object", jsonObject);
+
+        accessToken.setAdditionalFields(additionalFields);
+
+        String serializedValue = mDelegate.generateCacheValue(accessToken);
+        JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
+        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString("unique_id"));
+        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString("environment"));
+        assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), derivedCacheValueJsonObject.getString("credential_type"));
+        assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString("client_id"));
+        assertEquals(REALM, derivedCacheValueJsonObject.getString("realm"));
+        assertEquals(TARGET, derivedCacheValueJsonObject.getString("target"));
+        assertEquals("bar", derivedCacheValueJsonObject.getString("foo"));
+
+        final JSONArray jsonArr = derivedCacheValueJsonObject.getJSONArray("numbers");
+        assertEquals(3, jsonArr.length());
+
+        final JSONObject jsonObj = derivedCacheValueJsonObject.getJSONObject("object");
+        assertEquals("object_value", jsonObj.getString("object_key"));
+    }
+
+    @Test
+    public void accessTokenExtraValueDeserialization() throws Exception {
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name().toLowerCase(Locale.US));
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setTarget(TARGET);
+
+        String serializedValue = mDelegate.generateCacheValue(accessToken);
+
+        // Turn the serialized value into a JSONObject and start testing field equality.
+        final JSONObject jsonObject = new JSONObject(serializedValue);
+
+        // Add more non-standard data to this object...
+        final JSONArray numbers = new JSONArray("[1, 2, 3]");
+        final JSONArray objects = new JSONArray("[{\"hello\" : \"hallo\"}, {\"goodbye\" : \"auf wiedersehen\"}]");
+
+        jsonObject.put("foo", "bar");
+        jsonObject.put("numbers", numbers);
+        jsonObject.put("objects", objects);
+
+        serializedValue = jsonObject.toString();
+
+        final AccessToken deserializedValue = mDelegate.fromCacheValue(serializedValue, AccessToken.class);
+        assertNotNull(deserializedValue);
+        assertNull(deserializedValue.getAdditionalFields().get("environment"));
+        assertEquals(UNIQUE_ID, deserializedValue.getUniqueId());
+        assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
+        assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), deserializedValue.getCredentialType());
+        assertEquals(CLIENT_ID, deserializedValue.getClientId());
+        assertEquals(REALM, deserializedValue.getRealm());
+        assertEquals(TARGET, deserializedValue.getTarget());
+        assertEquals(3, deserializedValue.getAdditionalFields().size());
+        assertEquals("bar", deserializedValue.getAdditionalFields().get("foo").getAsString());
+        assertEquals(numbers.toString(), deserializedValue.getAdditionalFields().get("numbers").toString());
     }
     // End AccessTokens
 

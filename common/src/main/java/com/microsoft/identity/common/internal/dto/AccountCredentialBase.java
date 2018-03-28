@@ -1,6 +1,6 @@
 package com.microsoft.identity.common.internal.dto;
 
-import org.json.JSONObject;
+import com.google.gson.JsonElement;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,13 +10,13 @@ import java.util.Map;
  */
 public abstract class AccountCredentialBase {
 
-    private transient Map<String, JSONObject> mAdditionalFields = new HashMap<>();
+    private transient Map<String, JsonElement> mAdditionalFields = new HashMap<>();
 
-    public Map<String, JSONObject> getAdditionalFields() {
+    public Map<String, JsonElement> getAdditionalFields() {
         return mAdditionalFields;
     }
 
-    public void setAdditionalFields(Map<String, JSONObject> additionalFields) {
+    public void setAdditionalFields(Map<String, JsonElement> additionalFields) {
         this.mAdditionalFields = additionalFields;
     }
 
