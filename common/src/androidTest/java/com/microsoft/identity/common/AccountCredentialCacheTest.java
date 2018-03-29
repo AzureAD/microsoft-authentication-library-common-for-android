@@ -4,6 +4,8 @@ import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
+import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
+import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.AccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
@@ -22,7 +24,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.List;
-import java.util.Locale;
 
 import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
@@ -32,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @RunWith(AndroidJUnit4.class)
-public class AccountCredentialCacheTest {
+public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     private static final String UNIQUE_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
     private static final String ENVIRONMENT = "login.microsoftonline.com";
@@ -41,8 +42,6 @@ public class AccountCredentialCacheTest {
     private static final String REALM = "3c62ac97-29eb-4aed-a3c8-add0298508d";
     private static final String REALM2 = "20d3e9fa-982a-40bc-bea4-26bbe3fd332e";
     private static final String REALM3 = "fc5171ec-2889-4ba6-bd1f-216fe87a8613";
-    private static final String CREDENTIAL_TYPE_ACCESS_TOKEN = CredentialType.AccessToken.name().toLowerCase(Locale.US);
-    private static final String CREDENTIAL_TYPE_REFRESH_TOKEN = CredentialType.RefreshToken.name().toLowerCase(Locale.US);
 
     // The names of the SharedPreferences file on disk - must match AccountCredentialCache declaration to test impl
     private static final String sAccountCredentialSharedPreferences =
@@ -53,14 +52,19 @@ public class AccountCredentialCacheTest {
     private SharedPreferencesFileManager mSharedPreferencesFileManager;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
         final Context testContext = InstrumentationRegistry.getTargetContext();
         mAccountCredentialCache = new AccountCredentialCache(
                 testContext,
                 new AccountCredentialCacheKeyValueDelegate()
         );
         mDelegate = new AccountCredentialCacheKeyValueDelegate();
-        mSharedPreferencesFileManager = new SharedPreferencesFileManager(testContext, sAccountCredentialSharedPreferences);
+        mSharedPreferencesFileManager = new SharedPreferencesFileManager(
+                testContext,
+                sAccountCredentialSharedPreferences,
+                new StorageHelper(testContext) // Use encrypted storage for tests...
+        );
     }
 
     @After

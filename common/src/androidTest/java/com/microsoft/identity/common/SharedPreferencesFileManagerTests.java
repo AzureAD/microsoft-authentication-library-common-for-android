@@ -1,10 +1,8 @@
 package com.microsoft.identity.common;
 
-import android.os.Build;
 import android.support.test.InstrumentationRegistry;
 
-import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
-import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
+import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
@@ -15,27 +13,18 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.UnsupportedEncodingException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
-
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
-public class SharedPreferencesFileManagerTests extends AndroidTestHelper {
+public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHelper {
 
     private static final String sTEST_SHARED_PREFS_NAME = "com.microsoft.test.preferences";
     private static final String sTEST_KEY = "test_key";
     private static final String sTEST_VALUE = "test_value";
-    private static final int MIN_SDK_VERSION = 18;
 
     private ISharedPreferencesFileManager mSharedPreferencesFileManager;
 
@@ -61,22 +50,6 @@ public class SharedPreferencesFileManagerTests extends AndroidTestHelper {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-
-        if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null && Build.VERSION.SDK_INT < MIN_SDK_VERSION) {
-            setSecretKeyData();
-        }
-    }
-
-    private void setSecretKeyData() throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
-        // use same key for tests
-        SecretKeyFactory keyFactory = SecretKeyFactory
-                .getInstance("PBEWithSHA256And256BitAES-CBC-BC");
-        final int iterations = 100;
-        final int keySize = 256;
-        SecretKey tempkey = keyFactory.generateSecret(new PBEKeySpec("test".toCharArray(),
-                "abcdedfdfd".getBytes("UTF-8"), iterations, keySize));
-        SecretKey secretKey = new SecretKeySpec(tempkey.getEncoded(), "AES");
-        AuthenticationSettings.INSTANCE.setSecretKey(secretKey.getEncoded());
     }
 
     @After
