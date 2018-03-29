@@ -762,7 +762,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         serializedValue = jsonObject.toString();
 
-        final AccessToken deserializedValue = mDelegate.fromCacheValue(serializedValue, AccessToken.class);
+        final IdToken deserializedValue = mDelegate.fromCacheValue(serializedValue, IdToken.class);
         assertNotNull(deserializedValue);
         assertNull(deserializedValue.getAdditionalFields().get("environment"));
         assertEquals(UNIQUE_ID, deserializedValue.getUniqueId());
