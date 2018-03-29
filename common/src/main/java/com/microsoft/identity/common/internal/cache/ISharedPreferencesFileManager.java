@@ -37,7 +37,7 @@ public interface ISharedPreferencesFileManager {
      *
      * @return A Map of all entries.
      */
-    Map<String, ?> getAll();
+    Map<String, String> getAll();
 
     /**
      * Tests if the {@link SharedPreferences} file contains an entry for the supplied key.
