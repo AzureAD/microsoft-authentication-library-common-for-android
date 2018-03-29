@@ -25,7 +25,7 @@ public abstract class AndroidSecretKeyEnabledHelper extends AndroidTestHelper {
         }
     }
 
-    private void setSecretKeyData() throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
+    protected void setSecretKeyData() throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
         // use same key for tests
         SecretKeyFactory keyFactory = SecretKeyFactory
                 .getInstance("PBEWithSHA256And256BitAES-CBC-BC");
