@@ -71,6 +71,8 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
         JsonElement outboundElement = mGson.toJsonTree(baseObject);
         JsonObject outboundObject = outboundElement.getAsJsonObject();
 
+        // This basically acts as a custom serializer for AccountCredentialBase objects
+        // by iterating over the additionalFields Map and JSON-ifying them
         for (final String key : baseObject.getAdditionalFields().keySet()) {
             outboundObject.add(key, baseObject.getAdditionalFields().get(key));
         }
