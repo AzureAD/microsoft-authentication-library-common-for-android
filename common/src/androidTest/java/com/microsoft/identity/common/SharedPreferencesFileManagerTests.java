@@ -1,37 +1,82 @@
 package com.microsoft.identity.common;
 
-import android.content.Context;
+import android.os.Build;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
 
+import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
+import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
+import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
+
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
-@RunWith(AndroidJUnit4.class)
-public class SharedPreferencesFileManagerTests {
+@RunWith(Parameterized.class)
+public class SharedPreferencesFileManagerTests extends AndroidTestHelper {
 
     private static final String sTEST_SHARED_PREFS_NAME = "com.microsoft.test.preferences";
     private static final String sTEST_KEY = "test_key";
     private static final String sTEST_VALUE = "test_value";
+    private static final int MIN_SDK_VERSION = 18;
 
-    private SharedPreferencesFileManager mSharedPreferencesFileManager;
+    private ISharedPreferencesFileManager mSharedPreferencesFileManager;
+
+    @Parameterized.Parameters
+    public static Iterable<ISharedPreferencesFileManager> testParams() {
+        return Arrays.asList(new ISharedPreferencesFileManager[]{
+                new SharedPreferencesFileManager(
+                        InstrumentationRegistry.getTargetContext(),
+                        sTEST_SHARED_PREFS_NAME
+                ),
+                new SharedPreferencesFileManager(
+                        InstrumentationRegistry.getTargetContext(),
+                        sTEST_SHARED_PREFS_NAME,
+                        new StorageHelper(InstrumentationRegistry.getTargetContext())
+                )
+        });
+    }
+
+    public SharedPreferencesFileManagerTests(final ISharedPreferencesFileManager sharedPreferencesFileManager) {
+        mSharedPreferencesFileManager = sharedPreferencesFileManager;
+    }
 
     @Before
-    public void setUp() {
-        // Set up a fresh instance for each test.
-        final Context testContext = InstrumentationRegistry.getTargetContext();
-        mSharedPreferencesFileManager = new SharedPreferencesFileManager(
-                testContext,
-                sTEST_SHARED_PREFS_NAME
-        );
+    public void setUp() throws Exception {
+        super.setUp();
+
+        if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null && Build.VERSION.SDK_INT < MIN_SDK_VERSION) {
+            setSecretKeyData();
+        }
+    }
+
+    private void setSecretKeyData() throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
+        // use same key for tests
+        SecretKeyFactory keyFactory = SecretKeyFactory
+                .getInstance("PBEWithSHA256And256BitAES-CBC-BC");
+        final int iterations = 100;
+        final int keySize = 256;
+        SecretKey tempkey = keyFactory.generateSecret(new PBEKeySpec("test".toCharArray(),
+                "abcdedfdfd".getBytes("UTF-8"), iterations, keySize));
+        SecretKey secretKey = new SecretKeySpec(tempkey.getEncoded(), "AES");
+        AuthenticationSettings.INSTANCE.setSecretKey(secretKey.getEncoded());
     }
 
     @After

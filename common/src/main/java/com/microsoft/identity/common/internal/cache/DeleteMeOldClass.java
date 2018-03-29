@@ -151,8 +151,8 @@ public class DeleteMeOldClass extends OAuth2TokenCache implements IShareSingleSi
     }
 
     private List<MsalAccessTokenCacheItem> getAllAccessTokens() {
-        final Map<String, ?> atMap = mAccessTokenSharedPreferences.getAll();
-        final Collection<?> accessTokensAsUnknowns = atMap.values();
+        final Map<String, String> atMap = mAccessTokenSharedPreferences.getAll();
+        final Collection<String> accessTokensAsUnknowns = atMap.values();
         final List<MsalAccessTokenCacheItem> atCacheItems = new ArrayList<>();
 
         for (final Object atUnknown : accessTokensAsUnknowns) {

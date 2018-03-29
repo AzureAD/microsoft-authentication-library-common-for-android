@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import java.util.Map;
 
 
-interface ISharedPreferencesFileManager {
+public interface ISharedPreferencesFileManager {
     /**
      * Saves a Token (as a {@link String} to the {@link SharedPreferences} file.
      *
