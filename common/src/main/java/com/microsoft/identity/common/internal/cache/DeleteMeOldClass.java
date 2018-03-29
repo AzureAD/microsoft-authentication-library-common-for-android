@@ -35,7 +35,7 @@ public class DeleteMeOldClass extends OAuth2TokenCache implements IShareSingleSi
 
     // SharedPreferences used to store tokens
     private final SharedPreferencesFileManager mAccessTokenSharedPreferences;
-    private final SharedPreferencesFileManager mRefreshTokenSharedPreferences;
+    private final ISharedPreferencesFileManager mRefreshTokenSharedPreferences;
 
     // The names of the SharedPreferences files on disk
     private static final String sAccessTokenSharedPreferences = "com.microsoft.identity.client.token";

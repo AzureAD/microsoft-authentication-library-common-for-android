@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Convenience class for accessing {@link SharedPreferences}.
  */
-public class SharedPreferencesFileManager {
+public class SharedPreferencesFileManager implements ISharedPreferencesFileManager {
 
     private final String mSharedPreferencesFileName;
     private final SharedPreferences mSharedPreferences;
@@ -44,12 +44,7 @@ public class SharedPreferencesFileManager {
         mSharedPreferences = context.getSharedPreferences(name, operatingMode);
     }
 
-    /**
-     * Saves a Token (as a {@link String} to the {@link SharedPreferences} file.
-     *
-     * @param key   The name (key) of the Token to save.
-     * @param value The Token's value (as a {@link String}).
-     */
+    @Override
     public final void putString(
             final String key,
             final String value) {
@@ -58,61 +53,34 @@ public class SharedPreferencesFileManager {
         editor.apply();
     }
 
-    /**
-     * Retrieves a Token from the {@link SharedPreferences} file.
-     *
-     * @param key The name (key) of the Token.
-     * @return The Token's value or null if no value could be found.
-     */
+    @Override
     public final String getString(final String key) {
         return mSharedPreferences.getString(key, null);
     }
 
-    /**
-     * Returns the name of {@link SharedPreferences} file in use.
-     *
-     * @return The name of the file.
-     */
+    @Override
     public final String getSharedPreferencesFileName() {
         return mSharedPreferencesFileName;
     }
 
-    /**
-     * Returns all entries in the {@link SharedPreferences} file.
-     * <p>
-     * Note that you must not modify the collection returned by this method, or alter any of its
-     * contents. The consistency of your stored data is not guaranteed if you do.
-     *
-     * @return A Map of all entries.
-     */
+    @Override
     public final Map<String, ?> getAll() {
         return mSharedPreferences.getAll();
     }
 
-    /**
-     * Tests if the {@link SharedPreferences} file contains an entry for the supplied key.
-     *
-     * @param key The key to consult.
-     * @return True, if the key has an associate entry.
-     */
+    @Override
     public final boolean contains(final String key) {
         return mSharedPreferences.contains(key);
     }
 
-    /**
-     * Clears the contents of the {@link SharedPreferences} file.
-     */
+    @Override
     public final void clear() {
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.clear();
         editor.apply();
     }
 
-    /**
-     * Removes any associated entry for the supplied key.
-     *
-     * @param key The key whose value should be cleared.
-     */
+    @Override
     public void remove(final String key) {
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.remove(key);

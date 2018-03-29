@@ -33,7 +33,7 @@ import java.util.ListIterator;
  */
 public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSingleSignOnState {
 
-    SharedPreferencesFileManager mSharedPreferencesFileManager;
+    ISharedPreferencesFileManager mISharedPreferencesFileManager;
     final static String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
     private static final String TAG = "ADALOAuth2TokenCache";
     @SuppressLint("StaticFieldLeak")
@@ -61,7 +61,7 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
     }
 
     protected void initializeSharedPreferencesFileManager(String fileName) {
-        mSharedPreferencesFileManager = new SharedPreferencesFileManager(super.mContext, fileName);
+        mISharedPreferencesFileManager = new SharedPreferencesFileManager(super.mContext, fileName);
     }
 
     /**
@@ -118,7 +118,7 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
         String json = mGson.toJson(cacheItem);
         String encrypted = encrypt(json);
         if (encrypted != null) {
-            mSharedPreferencesFileManager.putString(key, encrypted);
+            mISharedPreferencesFileManager.putString(key, encrypted);
         } else {
             Log.e(TAG, "Encrypted output is null");
         }
