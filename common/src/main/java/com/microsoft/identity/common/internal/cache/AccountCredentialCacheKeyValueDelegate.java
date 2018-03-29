@@ -144,7 +144,14 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
         }
     }
 
-    private static Set<String> getExpectedJsonFields(final Class<?> clazz) {
+    /**
+     * For the supplied Class, return a Set of expected JSON values as dictated by @SerializedName
+     * declared on its Fields.
+     *
+     * @param clazz The Class to inspect.
+     * @return A Set of expected JSON values, as Strings.
+     */
+    private static Set<String> getExpectedJsonFields(final Class<? extends AccountCredentialBase> clazz) {
         final Set<String> serializedNames = new HashSet<>();
         final List<Field> fieldsToInspect = getFieldsUpTo(clazz, AccountCredentialBase.class);
         final List<Field> annotatedFields = getSerializedNameAnnotatedFields(fieldsToInspect);
@@ -157,6 +164,12 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
         return serializedNames;
     }
 
+    /**
+     * For the supplied List of Fields, return those which are annotated with @SerializedName.
+     *
+     * @param fieldsToInspect The Fields to inspect.
+     * @return Those Fields which are annotated with @SerializedName.
+     */
     private static List<Field> getSerializedNameAnnotatedFields(final List<Field> fieldsToInspect) {
         final List<Field> annotatedFields = new ArrayList<>();
 
@@ -170,14 +183,22 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
         return annotatedFields;
     }
 
+    /**
+     * Recursively inspect the supplied Class to obtain its Fields up the inheritance hierarchy
+     * to supplied upper-bound Class.
+     *
+     * @param startClass The base Class to inspect.
+     * @param upperBound The Class' upper-bounded inheritor or null, if Object should be used.
+     * @return A List of Fields on the supplied object and its superclasses.
+     */
     private static List<Field> getFieldsUpTo(
             final Class<?> startClass,
-            @Nullable Class<?> exclusiveParent) {
+            @Nullable Class<?> upperBound) {
         List<Field> currentClassFields = new ArrayList<>(Arrays.asList(startClass.getDeclaredFields()));
         Class<?> parentClass = startClass.getSuperclass();
 
-        if (parentClass != null && (exclusiveParent == null || !(parentClass.equals(exclusiveParent)))) {
-            List<Field> parentClassFields = getFieldsUpTo(parentClass, exclusiveParent);
+        if (parentClass != null && (upperBound == null || !(parentClass.equals(upperBound)))) {
+            List<Field> parentClassFields = getFieldsUpTo(parentClass, upperBound);
             currentClassFields.addAll(parentClassFields);
         }
 
