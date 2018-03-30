@@ -159,7 +159,6 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
     private String encrypt(final String clearText) {
         return encryptDecryptInternal(clearText, true);
-
     }
 
     private String decrypt(final String encryptedBlob) {
