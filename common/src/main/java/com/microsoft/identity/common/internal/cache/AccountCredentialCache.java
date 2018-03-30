@@ -3,6 +3,7 @@ package com.microsoft.identity.common.internal.cache;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
@@ -33,7 +34,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     private static final IdToken EMPTY_ID = new IdToken();
 
     // SharedPreferences used to store Accounts and Credentials
-    private final SharedPreferencesFileManager mSharedPreferencesFileManager;
+    private final ISharedPreferencesFileManager mSharedPreferencesFileManager;
 
     private final Context mContext;
     private final IAccountCredentialCacheKeyValueDelegate mCacheValueDelegate;
@@ -42,7 +43,20 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             final Context context,
             final IAccountCredentialCacheKeyValueDelegate accountCacheValueDelegate) {
         mContext = context;
-        mSharedPreferencesFileManager = new SharedPreferencesFileManager(mContext, sAccountCredentialSharedPreferences);
+        mSharedPreferencesFileManager = new SharedPreferencesFileManager(
+                mContext,
+                sAccountCredentialSharedPreferences,
+                new StorageHelper(mContext)
+        );
+        mCacheValueDelegate = accountCacheValueDelegate;
+    }
+
+    public AccountCredentialCache(
+            final Context context,
+            final IAccountCredentialCacheKeyValueDelegate accountCacheValueDelegate,
+            final ISharedPreferencesFileManager sharedPreferencesFileManager) {
+        mContext = context;
+        mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;
     }
 

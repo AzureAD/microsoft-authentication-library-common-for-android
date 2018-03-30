@@ -1,37 +1,55 @@
 package com.microsoft.identity.common;
 
-import android.content.Context;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
 
+import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
+import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import java.util.Arrays;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
-@RunWith(AndroidJUnit4.class)
-public class SharedPreferencesFileManagerTests {
+@RunWith(Parameterized.class)
+public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHelper {
 
     private static final String sTEST_SHARED_PREFS_NAME = "com.microsoft.test.preferences";
     private static final String sTEST_KEY = "test_key";
     private static final String sTEST_VALUE = "test_value";
 
-    private SharedPreferencesFileManager mSharedPreferencesFileManager;
+    private ISharedPreferencesFileManager mSharedPreferencesFileManager;
+
+    @Parameterized.Parameters
+    public static Iterable<ISharedPreferencesFileManager> testParams() {
+        return Arrays.asList(new ISharedPreferencesFileManager[]{
+                new SharedPreferencesFileManager(
+                        InstrumentationRegistry.getTargetContext(),
+                        sTEST_SHARED_PREFS_NAME
+                ),
+                new SharedPreferencesFileManager(
+                        InstrumentationRegistry.getTargetContext(),
+                        sTEST_SHARED_PREFS_NAME,
+                        new StorageHelper(InstrumentationRegistry.getTargetContext())
+                )
+        });
+    }
+
+    public SharedPreferencesFileManagerTests(final ISharedPreferencesFileManager sharedPreferencesFileManager) {
+        mSharedPreferencesFileManager = sharedPreferencesFileManager;
+    }
 
     @Before
-    public void setUp() {
-        // Set up a fresh instance for each test.
-        final Context testContext = InstrumentationRegistry.getTargetContext();
-        mSharedPreferencesFileManager = new SharedPreferencesFileManager(
-                testContext,
-                sTEST_SHARED_PREFS_NAME
-        );
+    public void setUp() throws Exception {
+        super.setUp();
     }
 
     @After
