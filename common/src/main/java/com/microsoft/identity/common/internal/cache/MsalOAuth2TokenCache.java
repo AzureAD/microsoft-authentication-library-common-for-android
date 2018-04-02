@@ -2,6 +2,7 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -102,8 +103,12 @@ public class MsalOAuth2TokenCache
     private Set<String> scopesAsSet(final AccessToken token) {
         final Set<String> scopeSet = new HashSet<>();
         final String scopeString = token.getTarget();
-        final String[] scopeArray = scopeString.split("\\s+");
-        scopeSet.addAll(Arrays.asList(scopeArray));
+
+        if (!StringExtensions.isNullOrBlank(scopeString)) {
+            final String[] scopeArray = scopeString.split("\\s+");
+            scopeSet.addAll(Arrays.asList(scopeArray));
+        }
+        
         return scopeSet;
     }
 
