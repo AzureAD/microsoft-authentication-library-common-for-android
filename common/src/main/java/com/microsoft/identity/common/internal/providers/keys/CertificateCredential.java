@@ -1,12 +1,14 @@
 package com.microsoft.identity.common.internal.providers.keys;
 
 
+import java.io.IOException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 /**
@@ -70,7 +72,8 @@ public class CertificateCredential {
         }
 
         public CertificateCredential build()
-                throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException{
+                throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException,
+                 IOException, CertificateException{
 
             CertificateCredential cred = null;
 
@@ -92,16 +95,19 @@ public class CertificateCredential {
         }
 
         private void validateCertificateCredential(CertificateCredential cred) {
-            //TODO: Add Logic for validating certificate crendential
+            //TODO: Add Logic for validating certificate credential - Verify not Null... which would be an invalid argument scenario
         }
 
         private void getCertificateInfoFromStore(KeyStoreConfiguration keyStoreConfiguration, ClientCertificateMetadata clientCertificateMetadata)
-                throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
+                throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException,
+                IOException, CertificateException{
 
             final KeyStore keystore = KeyStore.getInstance(keyStoreConfiguration.getKeyStoreType(), keyStoreConfiguration.getKeyStoreProvider());
+            keystore.load(null, null);
 
             PrivateKey key;
 
+            //TODO: Adding logging for the two different cases.  The Microsoft Certificate Store does not require a password
             if(clientCertificateMetadata.getPassword() == null){
                 key = (PrivateKey) keystore.getKey(clientCertificateMetadata.getAlias(), null);
             }else {
@@ -121,8 +127,8 @@ public class CertificateCredential {
     }
 
 
-    }
-
-
-
 }
+
+
+
+

@@ -2,6 +2,7 @@ package com.microsoft.identity.common.internal.providers.microsoft;
 
 import android.os.Message;
 
+import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.oauth2.ClientAssertion;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -29,21 +30,21 @@ public class MicrosoftClientAssertion extends ClientAssertion {
     public static String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
     public static String THUMBPRINT_ALGORITHM = "SHA-1";
 
-    public MicrosoftClientAssertion(String audience, String clientId, X509Certificate clientCertificate)
+    public MicrosoftClientAssertion(String audience, String clientId, CertificateCredential credential)
         throws NoSuchAlgorithmException, CertificateEncodingException {
 
-        if(clientCertificate == null){
-            throw new IllegalArgumentException("clientCertificate is null");
+        if(credential == null){
+            throw new IllegalArgumentException("certificate credential is null");
         }
 
-        SignedJWT assertion = createSignedJwt(clientId, audience, clientCertificate);
+        SignedJWT assertion = createSignedJwt(clientId, audience, credential);
         this.mClientAssertion = assertion.serialize();
         this.mClientAssertionType = MicrosoftClientAssertion.CLIENT_ASSERTION_TYPE;
 
     }
 
 
-    private SignedJWT createSignedJwt(String clientId, String audience, X509Certificate clientCertificate)
+    private SignedJWT createSignedJwt(String clientId, String audience, CertificateCredential credential)
         throws NoSuchAlgorithmException, CertificateEncodingException {
 
         final long time = System.currentTimeMillis();
@@ -62,19 +63,20 @@ public class MicrosoftClientAssertion extends ClientAssertion {
         try {
             JWSHeader.Builder builder = new JWSHeader.Builder(JWSAlgorithm.RS256);
             List<Base64> certs = new ArrayList<Base64>();
-            certs.add(Base64.encode(clientCertificate.getEncoded()));
+            certs.add(Base64.encode(credential.getPublicCertificate().getEncoded()));
             builder.x509CertChain(certs);
-            builder.x509CertThumbprint(createSHA1ThumbPrint(clientCertificate));
+            builder.x509CertThumbprint(createSHA1ThumbPrint(credential.getPublicCertificate()));
 
             jwt = new SignedJWT(builder.build(), claimsSet);
-            final RSASSASigner signer = new RSASSASigner(credential.getKey());
+            final RSASSASigner signer = new RSASSASigner(credential.getPrivateKey());
 
             jwt.sign(signer);
         }
         catch (final Exception e) {
-            throw new AuthenticationException(e);
+            throw new RuntimeException("exception in createSignedJwt", e);
         }
 
+        return jwt;
     }
 
     private Base64URL createSHA1ThumbPrint(X509Certificate clientCertificate)

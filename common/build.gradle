@@ -44,4 +44,10 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     implementation "com.google.code.gson:gson:2.8.1"
     implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '5.7'
+    testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
+    testImplementation "com.google.dexmaker:dexmaker-mockito:$rootProject.ext.dexmakerMockitoVersion"
+    testImplementation "org.powermock:powermock-module-junit4:1.6.6"
+    testImplementation "org.powermock:powermock-module-junit4-rule:1.6.6"
+    testImplementation "org.powermock:powermock-api-mockito:1.6.6"
+    testImplementation "org.powermock:powermock-classloading-xstream:1.6.6"
 }
