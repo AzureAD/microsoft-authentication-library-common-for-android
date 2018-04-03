@@ -96,13 +96,17 @@ public class CertificateCredential {
 
         private void validateCertificateCredential(CertificateCredential cred) {
             //TODO: Add Logic for validating certificate credential - Verify not Null... which would be an invalid argument scenario
+            if(cred == null){
+                throw new IllegalArgumentException("Client ID, Certificate and PrivateKey OR KeyStoreConfiguration and Certificate Metadata are required");
+            }
+
         }
 
         private void getCertificateInfoFromStore(KeyStoreConfiguration keyStoreConfiguration, ClientCertificateMetadata clientCertificateMetadata)
                 throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException,
                 IOException, CertificateException{
 
-            final KeyStore keystore = KeyStore.getInstance(keyStoreConfiguration.getKeyStoreType(), keyStoreConfiguration.getKeyStoreProvider());
+            KeyStore keystore = KeyStore.getInstance(keyStoreConfiguration.getKeyStoreType(), keyStoreConfiguration.getKeyStoreProvider());
             keystore.load(null, null);
 
             PrivateKey key;
