@@ -53,7 +53,7 @@ public class Account extends AccountCredentialBase {
     private String mEnvironment;
 
     /**
-     * Full tenant or organizational identifier that account belongs to. Can be null.
+     * Full tenant or organizational identifier that the Account belongs to. Can be null.
      */
     @SerializedName("realm")
     private String mRealm;

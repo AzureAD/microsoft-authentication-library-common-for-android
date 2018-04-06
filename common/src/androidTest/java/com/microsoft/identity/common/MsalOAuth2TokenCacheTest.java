@@ -34,20 +34,17 @@ import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.microsoft.identity.common.AccountCredentialCacheTest.CLIENT_ID;
+import static com.microsoft.identity.common.AccountCredentialCacheTest.ENVIRONMENT;
+import static com.microsoft.identity.common.AccountCredentialCacheTest.REALM;
+import static com.microsoft.identity.common.AccountCredentialCacheTest.TARGET;
+import static com.microsoft.identity.common.AccountCredentialCacheTest.UNIQUE_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
 public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
-
-    private static final String UNIQUE_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
-    private static final String ENVIRONMENT = "login.microsoftonline.com";
-    private static final String CLIENT_ID = "0287f963-2d72-4363-9e3a-5705c5b0f031";
-    private static final String TARGET = "user.read user.write https://graph.windows.net";
-    private static final String REALM = "3c62ac97-29eb-4aed-a3c8-add0298508d";
-    private static final String REALM2 = "20d3e9fa-982a-40bc-bea4-26bbe3fd332e";
-    private static final String REALM3 = "fc5171ec-2889-4ba6-bd1f-216fe87a8613";
 
     private MsalOAuth2TokenCache mOauth2TokenCache;
     private ISharedPreferencesFileManager mSharedPreferencesFileManager;
