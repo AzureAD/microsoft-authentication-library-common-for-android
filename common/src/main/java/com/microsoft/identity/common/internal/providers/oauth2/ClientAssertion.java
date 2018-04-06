@@ -10,8 +10,10 @@ import com.nimbusds.jwt.SignedJWT;
  *  */
 public abstract class ClientAssertion {
 
+    public final static String DEFAULT_CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+
     protected String mClientAssertion;
-    protected String mClientAssertionType;
+    protected String mClientAssertionType = DEFAULT_CLIENT_ASSERTION_TYPE;
 
 
     public String getClientAssertion() {

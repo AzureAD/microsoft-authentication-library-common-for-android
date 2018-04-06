@@ -1,6 +1,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -18,9 +19,11 @@ public class MicrosoftStsOAuth2Strategy extends OAuth2Strategy {
 
     private MicrosoftStsOAuth2Configuration mConfig;
 
+
     public MicrosoftStsOAuth2Strategy(MicrosoftStsOAuth2Configuration config) {
         super(config);
         mConfig = config;
+        mTokenEndpoint = "https://login.microsoftonline.com/microsoft.com/oAuth2/v2.0/token";
     }
 
     @Override
@@ -81,5 +84,10 @@ public class MicrosoftStsOAuth2Strategy extends OAuth2Strategy {
     @Override
     protected void validateTokenRequest(TokenRequest request) {
         // TODO implement
+    }
+
+    @Override
+    protected TokenResponse getTokenResponseFromHttpResponse(HttpResponse response){
+        return null;
     }
 }

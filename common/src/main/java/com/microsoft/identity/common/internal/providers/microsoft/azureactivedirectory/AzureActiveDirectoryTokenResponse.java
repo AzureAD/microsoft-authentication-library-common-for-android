@@ -1,13 +1,14 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
+
 
 import java.util.Date;
 
 /**
  * {@link TokenResponse} subclass for Azure AD.
  */
-public class AzureActiveDirectoryTokenResponse extends TokenResponse {
+public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
 
     /**
      * The time when the access token expires. The date is represented as the number of seconds

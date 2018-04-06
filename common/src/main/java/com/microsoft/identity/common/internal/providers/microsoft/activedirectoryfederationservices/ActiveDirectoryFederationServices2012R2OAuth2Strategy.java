@@ -1,8 +1,10 @@
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
+import android.media.session.MediaSession;
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
@@ -62,5 +64,10 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
 
     @Override
     protected void validateTokenRequest(TokenRequest request) {
+    }
+
+    @Override
+    protected TokenResponse getTokenResponseFromHttpResponse(HttpResponse response){
+        return null;
     }
 }

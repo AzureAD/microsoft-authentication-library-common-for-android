@@ -30,14 +30,14 @@ public class MicrosoftClientAssertion extends ClientAssertion {
     public static String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
     public static String THUMBPRINT_ALGORITHM = "SHA-1";
 
-    public MicrosoftClientAssertion(String audience, String clientId, CertificateCredential credential)
+    public MicrosoftClientAssertion(String audience, CertificateCredential credential)
         throws NoSuchAlgorithmException, CertificateEncodingException {
 
         if(credential == null){
             throw new IllegalArgumentException("certificate credential is null");
         }
 
-        SignedJWT assertion = createSignedJwt(clientId, audience, credential);
+        SignedJWT assertion = createSignedJwt(credential.getClientId(), audience , credential);
         this.mClientAssertion = assertion.serialize();
         this.mClientAssertionType = MicrosoftClientAssertion.CLIENT_ASSERTION_TYPE;
 

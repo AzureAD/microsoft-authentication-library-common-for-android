@@ -3,6 +3,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
@@ -63,5 +64,10 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     @Override
     protected void validateTokenRequest(TokenRequest request) {
 
+    }
+
+    @Override
+    protected TokenResponse getTokenResponseFromHttpResponse(HttpResponse response){
+        return null;
     }
 }

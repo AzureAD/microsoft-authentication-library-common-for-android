@@ -3,6 +3,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
@@ -21,7 +22,7 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
 
     public AzureActiveDirectoryOAuth2Strategy(AzureActiveDirectoryOAuth2Configuration config) {
         super(config);
-
+        mTokenEndpoint = "https://login.microsoftonline.com/microsoft.com/oauth2/token";
         mConfig = config;
     }
 
@@ -110,6 +111,11 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
             throw new RuntimeException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryOAuth2Strategy.getRefreshTokenFromResponse");
         }
         return refreshToken;
+    }
+
+    @Override
+    protected TokenResponse getTokenResponseFromHttpResponse(HttpResponse response){
+        return null;
     }
 
 }
