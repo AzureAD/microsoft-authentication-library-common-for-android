@@ -33,7 +33,16 @@ android {
         disable 'GradleOverrides'
         disable 'OldTargetApi'
     }
+
+    testOptions{
+        unitTests.all{
+            exclude 'com/microsoft/identity/common/integration'
+        }
+    }
+
 }
+
+
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])

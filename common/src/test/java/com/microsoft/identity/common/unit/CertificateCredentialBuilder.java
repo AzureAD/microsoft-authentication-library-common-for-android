@@ -1,4 +1,4 @@
-package com.microsoft.identity.common;
+package com.microsoft.identity.common.unit;
 
 import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
