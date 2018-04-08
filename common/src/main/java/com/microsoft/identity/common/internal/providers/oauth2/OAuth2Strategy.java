@@ -48,10 +48,10 @@ public abstract class OAuth2Strategy {
     }
 
 
-    public TokenResponse requestToken(TokenRequest request) throws IOException {
+    public TokenResult requestToken(TokenRequest request) throws IOException {
         validateTokenRequest(request);
         HttpResponse response = performTokenRequest(request);
-        return getTokenResponseFromHttpResponse(response);
+        return getTokenResultFromHttpResponse(response);
     }
 
 
@@ -65,6 +65,8 @@ public abstract class OAuth2Strategy {
         headers.put("client-request-id", correlationId);
 
         return HttpRequest.sendPost(new URL(mTokenEndpoint), headers, requestBody.getBytes(ObjectMapper.ENCODING_SCHEME), TOKEN_REQUEST_CONTENT_TYPE );
+
+
 
     }
 
@@ -125,5 +127,5 @@ public abstract class OAuth2Strategy {
      *
      * @param response
      */
-    protected abstract TokenResponse getTokenResponseFromHttpResponse(HttpResponse response);
+    protected abstract TokenResult getTokenResultFromHttpResponse(HttpResponse response);
 }

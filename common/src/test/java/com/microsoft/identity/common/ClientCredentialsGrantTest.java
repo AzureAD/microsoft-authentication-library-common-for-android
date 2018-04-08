@@ -1,6 +1,7 @@
 package com.microsoft.identity.common;
 
 import android.media.session.MediaSession;
+import android.util.Log;
 
 import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
@@ -15,6 +16,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,8 +72,15 @@ public class ClientCredentialsGrantTest {
         OAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(new MicrosoftStsOAuth2Configuration());
         //OAuth2Strategy strategy = new AzureActiveDirectoryOAuth2Strategy(new AzureActiveDirectoryOAuth2Configuration());
 
-        TokenResponse tokenResponse = strategy.requestToken(tr);
+        TokenResult tokenResult = strategy.requestToken(tr);
 
+        if(tokenResult.getSuccess()){
+            //Success
+            tokenResult.getTokenResponse().getAccessToken();
+        }else{
+            //Error
+            tokenResult.getErrorResponse().getErrorDescription();
+        }
 
     }
 
