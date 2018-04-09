@@ -1,6 +1,5 @@
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
-import android.media.session.MediaSession;
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
@@ -24,7 +23,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
  * see <a href='https://msdn.microsoft.com/en-us/library/dn633593.aspx'>https://msdn.microsoft.com/en-us/library/dn633593.aspx</a>
  * see <a href='https://blogs.technet.microsoft.com/maheshu/2015/04/28/oauth-2-0-support-in-adfs-on-windows-server-2012-r2/'>https://blogs.technet.microsoft.com/maheshu/2015/04/28/oauth-2-0-support-in-adfs-on-windows-server-2012-r2/</a>
  */
-public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth2Strategy{
+public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth2Strategy {
     public ActiveDirectoryFederationServices2012R2OAuth2Strategy(OAuth2Configuration config) {
         super(config);
     }
@@ -68,7 +67,7 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
     }
 
     @Override
-    protected TokenResult getTokenResultFromHttpResponse(HttpResponse response){
+    protected TokenResult getTokenResultFromHttpResponse(HttpResponse response) {
         return null;
     }
 }

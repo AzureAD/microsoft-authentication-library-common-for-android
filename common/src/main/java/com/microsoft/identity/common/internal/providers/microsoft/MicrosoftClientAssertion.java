@@ -1,7 +1,5 @@
 package com.microsoft.identity.common.internal.providers.microsoft;
 
-import android.os.Message;
-
 import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.oauth2.ClientAssertion;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -31,13 +29,13 @@ public class MicrosoftClientAssertion extends ClientAssertion {
     public static String THUMBPRINT_ALGORITHM = "SHA-1";
 
     public MicrosoftClientAssertion(String audience, CertificateCredential credential)
-        throws NoSuchAlgorithmException, CertificateEncodingException {
+            throws NoSuchAlgorithmException, CertificateEncodingException {
 
-        if(credential == null){
+        if (credential == null) {
             throw new IllegalArgumentException("certificate credential is null");
         }
 
-        SignedJWT assertion = createSignedJwt(credential.getClientId(), audience , credential);
+        SignedJWT assertion = createSignedJwt(credential.getClientId(), audience, credential);
         this.mClientAssertion = assertion.serialize();
         this.mClientAssertionType = MicrosoftClientAssertion.CLIENT_ASSERTION_TYPE;
 
@@ -45,7 +43,7 @@ public class MicrosoftClientAssertion extends ClientAssertion {
 
 
     private SignedJWT createSignedJwt(String clientId, String audience, CertificateCredential credential)
-        throws NoSuchAlgorithmException, CertificateEncodingException {
+            throws NoSuchAlgorithmException, CertificateEncodingException {
 
         final long time = System.currentTimeMillis();
 
@@ -71,8 +69,7 @@ public class MicrosoftClientAssertion extends ClientAssertion {
             final RSASSASigner signer = new RSASSASigner(credential.getPrivateKey());
 
             jwt.sign(signer);
-        }
-        catch (final Exception e) {
+        } catch (final Exception e) {
             throw new RuntimeException("exception in createSignedJwt", e);
         }
 
@@ -80,7 +77,7 @@ public class MicrosoftClientAssertion extends ClientAssertion {
     }
 
     private Base64URL createSHA1ThumbPrint(X509Certificate clientCertificate)
-        throws CertificateEncodingException, NoSuchAlgorithmException {
+            throws CertificateEncodingException, NoSuchAlgorithmException {
 
         Base64URL thumbprint;
 
@@ -91,7 +88,6 @@ public class MicrosoftClientAssertion extends ClientAssertion {
 
         return thumbprint;
     }
-
 
 
 }

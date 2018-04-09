@@ -23,11 +23,11 @@
 
 package com.microsoft.identity.common.internal.net;
 
-        import java.io.IOException;
-        import java.net.HttpURLConnection;
-        import java.net.URL;
-        import java.util.LinkedList;
-        import java.util.Queue;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Internal class for create {@link java.net.HttpURLConnection}.

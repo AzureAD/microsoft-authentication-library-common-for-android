@@ -5,10 +5,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorRespons
 
 import java.util.ArrayList;
 
-/**
- * Created by shoatman on 4/6/2018.
- */
-
 public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
 
     @SerializedName("error_codes")

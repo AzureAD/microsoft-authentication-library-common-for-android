@@ -92,15 +92,15 @@ public class MicrosoftStsOAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    protected TokenResult getTokenResultFromHttpResponse(HttpResponse response){
+    protected TokenResult getTokenResultFromHttpResponse(HttpResponse response) {
         TokenResponse tokenResponse = null;
         TokenErrorResponse tokenErrorResponse = null;
 
-        if(response.getStatusCode() >= 400){
+        if (response.getStatusCode() >= 400) {
             //An error occurred
-            tokenErrorResponse = (TokenErrorResponse)ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenErrorResponse.class);
-        }else{
-            tokenResponse = (TokenResponse)ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenResponse.class);
+            tokenErrorResponse = (TokenErrorResponse) ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenErrorResponse.class);
+        } else {
+            tokenResponse = (TokenResponse) ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenResponse.class);
         }
 
         return new TokenResult(tokenResponse, tokenErrorResponse);

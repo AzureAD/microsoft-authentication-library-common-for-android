@@ -13,7 +13,6 @@ import java.security.cert.X509Certificate;
 
 /**
  * Represents a certificate credential
- *
  */
 public class CertificateCredential {
 
@@ -22,19 +21,19 @@ public class CertificateCredential {
     private final String mClientId;
     private final X509Certificate mPublicCertificate;
 
-    public PrivateKey getPrivateKey(){
+    public PrivateKey getPrivateKey() {
         return this.mPrivateKey;
     }
 
-    public String getClientId(){
+    public String getClientId() {
         return this.mClientId;
     }
 
-    public X509Certificate getPublicCertificate(){
+    public X509Certificate getPublicCertificate() {
         return this.mPublicCertificate;
     }
 
-    private CertificateCredential(CertificateCredentialBuilder builder){
+    private CertificateCredential(CertificateCredentialBuilder builder) {
         this.mClientId = builder.mClientId;
         this.mPublicCertificate = builder.mCertificate;
         this.mPrivateKey = builder.mPrivateKey;
@@ -47,7 +46,7 @@ public class CertificateCredential {
         private ClientCertificateMetadata mClientCertificateMetdata;
         private X509Certificate mCertificate;
 
-        public CertificateCredentialBuilder(String clientId){
+        public CertificateCredentialBuilder(String clientId) {
             this.mClientId = clientId;
         }
 
@@ -73,15 +72,15 @@ public class CertificateCredential {
 
         public CertificateCredential build()
                 throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException,
-                 IOException, CertificateException{
+                IOException, CertificateException {
 
             CertificateCredential cred = null;
 
-            if(this.mClientId != null) {
+            if (this.mClientId != null) {
                 if (this.mCertificate != null && this.mPrivateKey != null) {
                     cred = new CertificateCredential(this);
-                }else {
-                    if(this.mClientCertificateMetdata != null && this.mKeyStoreConfiguration != null) {
+                } else {
+                    if (this.mClientCertificateMetdata != null && this.mKeyStoreConfiguration != null) {
                         getCertificateInfoFromStore(this.mKeyStoreConfiguration, this.mClientCertificateMetdata);
                         cred = new CertificateCredential(this);
                     }
@@ -96,7 +95,7 @@ public class CertificateCredential {
 
         private void validateCertificateCredential(CertificateCredential cred) {
             //TODO: Add Logic for validating certificate credential - Verify not Null... which would be an invalid argument scenario
-            if(cred == null){
+            if (cred == null) {
                 throw new IllegalArgumentException("Client ID, Certificate and PrivateKey OR KeyStoreConfiguration and Certificate Metadata are required");
             }
 
@@ -104,7 +103,7 @@ public class CertificateCredential {
 
         private void getCertificateInfoFromStore(KeyStoreConfiguration keyStoreConfiguration, ClientCertificateMetadata clientCertificateMetadata)
                 throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException,
-                IOException, CertificateException{
+                IOException, CertificateException {
 
             KeyStore keystore = KeyStore.getInstance(keyStoreConfiguration.getKeyStoreType(), keyStoreConfiguration.getKeyStoreProvider());
             keystore.load(null, null);
@@ -112,9 +111,9 @@ public class CertificateCredential {
             PrivateKey key;
 
             //TODO: Adding logging for the two different cases.  The Microsoft Certificate Store does not require a password
-            if(clientCertificateMetadata.getPassword() == null){
+            if (clientCertificateMetadata.getPassword() == null) {
                 key = (PrivateKey) keystore.getKey(clientCertificateMetadata.getAlias(), null);
-            }else {
+            } else {
                 key = (PrivateKey) keystore.getKey(clientCertificateMetadata.getAlias(),
                         clientCertificateMetadata.getPassword());
             }

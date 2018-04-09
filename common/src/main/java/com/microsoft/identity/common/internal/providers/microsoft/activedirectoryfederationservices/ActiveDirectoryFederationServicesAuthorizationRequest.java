@@ -5,5 +5,5 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 /**
  * Active Directory Federation Services Authorization Request
  */
-public class ActiveDirectoryFederationServicesAuthorizationRequest extends AuthorizationRequest{
+public class ActiveDirectoryFederationServicesAuthorizationRequest extends AuthorizationRequest {
 }

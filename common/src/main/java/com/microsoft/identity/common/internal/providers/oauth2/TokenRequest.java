@@ -8,7 +8,7 @@ import com.google.gson.annotations.SerializedName;
  * OAuth2 Client Authentication: https://tools.ietf.org/html/rfc7521#section-4.2
  * This should include all fo the required parameters of the token request for oAuth2
  * This should provide an extension point for additional parameters to be set
- *
+ * <p>
  * Includes support for client assertions per the specs:
  * https://tools.ietf.org/html/rfc7521
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-v2-protocols-oauth-client-creds
@@ -65,9 +65,13 @@ public class TokenRequest {
         this.mGrantType = mGrantType;
     }
 
-    public void setClientSecret(String clientSecret) { this.mClientSecret = clientSecret; }
+    public void setClientSecret(String clientSecret) {
+        this.mClientSecret = clientSecret;
+    }
 
-    public String getClientSecret() { return mClientSecret;}
+    public String getClientSecret() {
+        return mClientSecret;
+    }
 
 
     public String getClientAssertionType() {

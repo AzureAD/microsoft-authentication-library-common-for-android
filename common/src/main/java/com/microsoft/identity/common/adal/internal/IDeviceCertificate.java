@@ -6,7 +6,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.List;
 
 /**
- * Work place join related ClientCertificateConfiguration is required to respond device challenge.
+ * Work place join related certificate is required to respond device challenge.
  */
 public interface IDeviceCertificate {
 

@@ -6,7 +6,6 @@ import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
@@ -119,15 +118,15 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    protected TokenResult getTokenResultFromHttpResponse(HttpResponse response){
+    protected TokenResult getTokenResultFromHttpResponse(HttpResponse response) {
         TokenResponse tokenResponse = null;
         TokenErrorResponse tokenErrorResponse = null;
 
-        if(response.getStatusCode() >= 400){
+        if (response.getStatusCode() >= 400) {
             //An error occurred
             tokenErrorResponse = (TokenErrorResponse) ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenErrorResponse.class);
-        }else{
-            tokenResponse = (TokenResponse)ObjectMapper.deserializeJsonStringToObject(response.getBody(), AzureActiveDirectoryTokenResponse.class);
+        } else {
+            tokenResponse = (TokenResponse) ObjectMapper.deserializeJsonStringToObject(response.getBody(), AzureActiveDirectoryTokenResponse.class);
         }
 
         return new TokenResult(tokenResponse, tokenErrorResponse);

@@ -11,7 +11,7 @@ public class KeyStoreConfiguration {
     private final String mKeyStoreProvider;
     private final char[] mKeyStorePassword;
 
-    public KeyStoreConfiguration(String keyStoreType, String keyStoreProvider, char[] keyStorePassword){
+    public KeyStoreConfiguration(String keyStoreType, String keyStoreProvider, char[] keyStorePassword) {
         this.mKeyStoreType = keyStoreType;
         this.mKeyStoreProvider = keyStoreProvider;
         this.mKeyStorePassword = keyStorePassword;

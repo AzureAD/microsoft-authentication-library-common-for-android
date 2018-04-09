@@ -2,7 +2,6 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 
-
 import java.util.Date;
 
 /**

@@ -23,8 +23,8 @@
 
 package com.microsoft.identity.common.internal.net;
 
-        import java.util.List;
-        import java.util.Map;
+import java.util.List;
+import java.util.Map;
 
 /**
  * MSAL internal class to wrap the raw server response, headers and status code.

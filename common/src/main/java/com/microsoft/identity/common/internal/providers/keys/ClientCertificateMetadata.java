@@ -8,15 +8,16 @@ public class ClientCertificateMetadata {
     private String mAlias;
     private char[] mPassword;
 
-    public ClientCertificateMetadata(String alias, char[] password){
+    public ClientCertificateMetadata(String alias, char[] password) {
         this.mAlias = alias;
         this.mPassword = password;
     }
 
-    public String getAlias(){
+    public String getAlias() {
         return mAlias;
     }
-    public char[] getPassword(){
+
+    public char[] getPassword() {
         return mPassword;
     }
 

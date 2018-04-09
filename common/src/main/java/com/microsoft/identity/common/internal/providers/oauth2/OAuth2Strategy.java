@@ -1,14 +1,13 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import android.media.session.MediaSession;
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
-import com.microsoft.identity.common.internal.net.*;
+import com.microsoft.identity.common.internal.net.HttpRequest;
+import com.microsoft.identity.common.internal.net.HttpResponse;
+import com.microsoft.identity.common.internal.net.ObjectMapper;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
@@ -27,7 +26,7 @@ public abstract class OAuth2Strategy {
 
     protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
-    public OAuth2Strategy(OAuth2Configuration config){
+    public OAuth2Strategy(OAuth2Configuration config) {
 
     }
 
@@ -55,8 +54,6 @@ public abstract class OAuth2Strategy {
     }
 
 
-
-
     protected HttpResponse performTokenRequest(TokenRequest request) throws IOException {
 
         String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
@@ -64,12 +61,10 @@ public abstract class OAuth2Strategy {
         String correlationId = UUID.randomUUID().toString();
         headers.put("client-request-id", correlationId);
 
-        return HttpRequest.sendPost(new URL(mTokenEndpoint), headers, requestBody.getBytes(ObjectMapper.ENCODING_SCHEME), TOKEN_REQUEST_CONTENT_TYPE );
-
+        return HttpRequest.sendPost(new URL(mTokenEndpoint), headers, requestBody.getBytes(ObjectMapper.ENCODING_SCHEME), TOKEN_REQUEST_CONTENT_TYPE);
 
 
     }
-
 
 
     /**

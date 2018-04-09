@@ -127,7 +127,7 @@ public final class HttpRequest {
      * @param requestHeaders Headers used to send the http request.
      */
     public static HttpResponse sendGet(final URL requestUrl, final Map<String, String> requestHeaders)
-            throws IOException{
+            throws IOException {
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
 
         return httpRequest.send();
