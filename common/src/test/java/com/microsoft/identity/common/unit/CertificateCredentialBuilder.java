@@ -7,17 +7,8 @@ import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfigurati
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import static org.mockito.Mockito.*;
-
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockSettings;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-import org.mockito.listeners.InvocationListener;
-import org.mockito.mock.SerializableMode;
-import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -50,8 +41,8 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Set;
 
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({KeyStore.class, CertificateCredential.class, CertificateCredential.CertificateCredentialBuilder.class})
