@@ -439,9 +439,9 @@ public enum ADALError {
     SIGNATURE_EXCEPTION("Signature exception"),
 
     /**
-     * It is failed to create device ClientCertificateConfiguration response.
+     * It is failed to create device certificate response.
      */
-    DEVICE_CERTIFICATE_RESPONSE_FAILED("It is failed to create device ClientCertificateConfiguration response"),
+    DEVICE_CERTIFICATE_RESPONSE_FAILED("It is failed to create device certificate response"),
 
     /**
      * WebView returned Authentication Exception.
@@ -465,14 +465,14 @@ public enum ADALError {
     WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED("The webview was redirected to an unsafe URL"),
 
     /**
-     * Device ClientCertificateConfiguration API has exception.
+     * Device certificate API has exception.
      */
-    DEVICE_CERTIFICATE_API_EXCEPTION("Device ClientCertificateConfiguration API has exception"),
+    DEVICE_CERTIFICATE_API_EXCEPTION("Device certificate API has exception"),
 
     /**
-     * Device ClientCertificateConfiguration request is valid.
+     * Device certificate request is valid.
      */
-    DEVICE_CERTIFICATE_REQUEST_INVALID("Device ClientCertificateConfiguration request is valid"),
+    DEVICE_CERTIFICATE_REQUEST_INVALID("Device certificate request is valid"),
 
     /**
      * Resource is not found in your project. Please include resource files.

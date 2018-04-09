@@ -70,7 +70,6 @@ public final class HttpRequest {
     private final String mRequestContentType;
     private final String mRequestMethod;
     private final Map<String, String> mRequestHeaders = new HashMap<>();
-    //private final RequestContext mRequestContext;
 
     /**
      * Constructor for {@link HttpRequest} with request {@link URL} and request headers.
@@ -102,8 +101,7 @@ public final class HttpRequest {
         mRequestMethod = requestMethod;
         mRequestContent = requestContent;
         mRequestContentType = requestContentType;
-        //, final RequestContext requestContext
-        //mRequestContext = requestContext;
+
     }
 
     /**
@@ -119,7 +117,6 @@ public final class HttpRequest {
             throws IOException {
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_POST,
                 requestContent, requestContentType);
-        //Logger.verbose(TAG, requestContext, "Sending Http Post request.");
         return httpRequest.send();
     }
 
@@ -145,13 +142,10 @@ public final class HttpRequest {
             response = sendWithRetry();
         } catch (final SocketTimeoutException socketTimeoutException) {
             throw socketTimeoutException;
-            //throw new SocketTimeoutException("Retry failed again with SocketTimeout");
-            //throw new MsalServiceException(MsalServiceException.REQUEST_TIMEOUT, "Retry failed again with SocketTimeout", socketTimeoutException);
         }
 
         if (response != null && isRetryableError(response.getStatusCode())) {
             throw new UnknownServiceException("Retry failed again with 500/503/504");
-            //throw new MsalServiceException(MsalServiceException.SERVICE_NOT_AVAILABLE, "Retry failed again with 500/503/504", response.getStatusCode(), null);
         }
 
         return response;
@@ -168,14 +162,12 @@ public final class HttpRequest {
         } catch (final SocketTimeoutException socketTimeoutException) {
             // In android, network timeout is thrown as the SocketTimeOutException, we need to catch this and perform
             // retry. If retry also fails with timeout, the socketTimeoutException will be bubbled up
-            //Logger.verbose(TAG, mRequestContext, "Request timeout with SocketTimeoutException, will retry one more time.");
             waitBeforeRetry();
             return executeHttpSend();
         }
 
         if (isRetryableError(httpResponse.getStatusCode())) {
             // retry if we get 500/503/504
-            //Logger.verbose(TAG, mRequestContext, "Received retryable status code 500/503/504, will retry one more time.");
             waitBeforeRetry();
             return executeHttpSend();
         }
@@ -184,14 +176,6 @@ public final class HttpRequest {
     }
 
     private HttpResponse executeHttpSend() throws IOException {
-        /*
-        final HttpEvent.Builder httpEventBuilder =
-                new HttpEvent.Builder()
-                        .setHttpPath(mRequestUrl)
-                        .setHttpMethod(mRequestMethod)
-                        .setQueryParameters(mRequestUrl.getQuery());
-        Telemetry.getInstance().startEvent(mRequestContext.getTelemetryRequestId(), httpEventBuilder);
-        */
         final HttpURLConnection urlConnection = setupConnection();
         urlConnection.setRequestMethod(mRequestMethod);
         setRequestBody(urlConnection, mRequestContent, mRequestContentType);
@@ -211,17 +195,14 @@ public final class HttpRequest {
             }
 
             final int statusCode = urlConnection.getResponseCode();
-            //httpEventBuilder.setStatusCode(statusCode);
 
             String responseBody = responseStream == null ? "" : convertStreamToString(responseStream);
 
-            //Logger.verbose(TAG, mRequestContext, "Returned status code is: " + statusCode);
             response = new HttpResponse(statusCode, responseBody, urlConnection.getHeaderFields());
         } finally {
             safeCloseStream(responseStream);
         }
 
-        //Telemetry.getInstance().stopEvent(mRequestContext.getTelemetryRequestId(), httpEventBuilder);
         return response;
     }
 
@@ -303,7 +284,7 @@ public final class HttpRequest {
         try {
             stream.close();
         } catch (final IOException e) {
-            //Logger.errorPII(TAG, null, "Encounter IO exception when trying to close the stream", e);
+            //Encountered IO exception when trying to close the stream"
         }
     }
 
@@ -326,7 +307,7 @@ public final class HttpRequest {
         try {
             Thread.sleep(RETRY_TIME_WAITING_PERIOD_MSEC);
         } catch (final InterruptedException interrupted) {
-            //Logger.info(TAG, mRequestContext, "Fail the have the thread waiting for 1 second before doing the retry");
+            //Fail the have the thread waiting for 1 second before doing the retry
         }
     }
 }

@@ -19,7 +19,7 @@ public interface IDeviceCertificate {
     boolean isValidIssuer(final List<String> certAuthorities);
 
     /**
-     * Gets ClientCertificateConfiguration.
+     * Gets certificate.
      *
      * @return {@link X509Certificate}
      */
@@ -33,9 +33,9 @@ public interface IDeviceCertificate {
     RSAPrivateKey getRSAPrivateKey();
 
     /**
-     * Gets thumbPrint for ClientCertificateConfiguration.
+     * Gets thumbPrint for certificate.
      *
-     * @return thumbPrint for ClientCertificateConfiguration.
+     * @return thumbPrint for certificate.
      */
     String getThumbPrint();
 
