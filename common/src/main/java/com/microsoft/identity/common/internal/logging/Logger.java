@@ -145,8 +145,8 @@ public final class Logger {
     /**
      * Send a {@link LogLevel#INFO} log message without PII.
      */
-    public static void info(final String tag, final String correlationID, final String message) {
-        getInstance().log(tag, LogLevel.INFO, correlationID, message, null, false);
+    public static void info(final String tag, final String message) {
+        getInstance().log(tag, LogLevel.INFO, DiagnosticContext.getRequestContext().toJsonString(), message, null, false);
     }
 
     /**
