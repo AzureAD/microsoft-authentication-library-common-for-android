@@ -2,7 +2,6 @@ package com.microsoft.identity.common.internal.logging;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 
-// TODO Not crazy about this name either
 public class DiagnosticContext {
 
     private static final ThreadLocal<IRequestContext> sREQUEST_CONTEXT_THREAD_LOCAL =
