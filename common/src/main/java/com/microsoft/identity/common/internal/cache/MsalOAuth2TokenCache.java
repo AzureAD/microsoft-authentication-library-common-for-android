@@ -8,7 +8,7 @@ import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.logging.ThreadLocalState;
+import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
@@ -35,7 +35,7 @@ public class MsalOAuth2TokenCache
                                 final IAccountCredentialAdapter accountCredentialAdapter,
                                 final List<IShareSingleSignOnState> sharedSsoCaches) {
         super(context);
-        Logger.info(TAG, ThreadLocalState.getRequestContext().getCorrelationId(), "Init: " + TAG);
+        Logger.info(TAG, DiagnosticContext.getRequestContext().getCorrelationId(), "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
         mSharedSsoCaches = sharedSsoCaches;
         mAccountCredentialAdapter = accountCredentialAdapter;

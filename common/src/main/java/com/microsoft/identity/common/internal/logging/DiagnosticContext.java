@@ -1,7 +1,7 @@
 package com.microsoft.identity.common.internal.logging;
 
 // TODO Not crazy about this name either
-public class ThreadLocalState {
+public class DiagnosticContext {
 
     private static final ThreadLocal<RequestContext> sREQUEST_CONTEXT_THREAD_LOCAL =
             new ThreadLocal<RequestContext>() {
@@ -21,7 +21,7 @@ public class ThreadLocalState {
         return sREQUEST_CONTEXT_THREAD_LOCAL.get();
     }
 
-    public static void unset() {
+    public static void clear() {
         sREQUEST_CONTEXT_THREAD_LOCAL.remove();
     }
 }
