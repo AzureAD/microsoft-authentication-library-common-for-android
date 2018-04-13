@@ -7,6 +7,8 @@ import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.logging.ThreadLocalState;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
@@ -22,6 +24,8 @@ public class MsalOAuth2TokenCache
         extends OAuth2TokenCache
         implements IShareSingleSignOnState {
 
+    private static final String TAG = MsalOAuth2TokenCache.class.getSimpleName();
+
     private List<IShareSingleSignOnState> mSharedSsoCaches;
     private IAccountCredentialCache mAccountCredentialCache;
     private IAccountCredentialAdapter mAccountCredentialAdapter;
@@ -31,6 +35,7 @@ public class MsalOAuth2TokenCache
                                 final IAccountCredentialAdapter accountCredentialAdapter,
                                 final List<IShareSingleSignOnState> sharedSsoCaches) {
         super(context);
+        Logger.info(TAG, ThreadLocalState.getRequestContext().getCorrelationId(), "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
         mSharedSsoCaches = sharedSsoCaches;
         mAccountCredentialAdapter = accountCredentialAdapter;
@@ -108,7 +113,7 @@ public class MsalOAuth2TokenCache
             final String[] scopeArray = scopeString.split("\\s+");
             scopeSet.addAll(Arrays.asList(scopeArray));
         }
-        
+
         return scopeSet;
     }
 
