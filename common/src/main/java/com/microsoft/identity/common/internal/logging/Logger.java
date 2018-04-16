@@ -174,7 +174,7 @@ public final class Logger {
      * Send a {@link LogLevel#INFO} log message without PII.
      */
     public static void info(final String tag, final String message) {
-        info(tag, DiagnosticContext.getRequestContext().toJsonString(), message);
+        getInstance().log(tag, LogLevel.INFO, DiagnosticContext.getRequestContext().toJsonString(), message, null, false);
     }
 
     /**
