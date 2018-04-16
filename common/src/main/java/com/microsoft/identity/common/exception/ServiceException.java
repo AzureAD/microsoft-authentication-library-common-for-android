@@ -22,17 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.exception;
 
-public class CommonCoreException extends CommonCoreBaseException {
+public class ServiceException extends BaseException {
 
-    public CommonCoreException(final String errorCode) {
-        super(errorCode);
-    }
-
-    public CommonCoreException(final String errorCode, final String errorMessage) {
-        super(errorCode, errorMessage);
-    }
-
-    public CommonCoreException(final String errorCode, final String errorMessage, final Throwable throwable) {
+    public ServiceException(final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
+        mHttpStatusCode = DEFAULT_STATUS_CODE;
+    }
+
+    public ServiceException(final String errorCode, final String errorMessage, final int httpStatusCode, final Throwable throwable) {
+        super(errorCode, errorMessage, throwable);
+        mHttpStatusCode = httpStatusCode;
     }
 }

@@ -3,7 +3,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
-import com.microsoft.identity.common.exception.CommonCoreServiceException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
@@ -54,7 +54,7 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
         try {
             idToken = new IDToken(response.getIdToken());
             clientInfo = new ClientInfo(((AzureActiveDirectoryTokenResponse) response).getClientInfo());
-        } catch (CommonCoreServiceException ccse) {
+        } catch (ServiceException ccse) {
             // TODO: Add a log here
             // TODO: Should we bail?
         }

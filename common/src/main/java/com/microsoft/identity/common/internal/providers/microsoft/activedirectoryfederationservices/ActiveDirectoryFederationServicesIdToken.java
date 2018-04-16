@@ -1,6 +1,6 @@
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
-import com.microsoft.identity.common.exception.CommonCoreServiceException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
 import java.util.Map;
@@ -12,7 +12,7 @@ import java.util.Map;
  *
  *  */
 public class ActiveDirectoryFederationServicesIdToken extends IDToken {
-    public ActiveDirectoryFederationServicesIdToken(String rawIdToken) throws CommonCoreServiceException {
+    public ActiveDirectoryFederationServicesIdToken(String rawIdToken) throws ServiceException {
         super(rawIdToken);
     }
 

@@ -1,6 +1,6 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
-import com.microsoft.identity.common.exception.CommonCoreServiceException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 
 /**
@@ -19,7 +19,7 @@ public class MicrosoftStsIdToken extends MicrosoftIdToken {
     public static final String AIO = "aio";
     public static final String UTI = "uti";
 
-    public MicrosoftStsIdToken(String rawIdToken) throws CommonCoreServiceException {
+    public MicrosoftStsIdToken(String rawIdToken) throws ServiceException {
         super(rawIdToken);
     }
 }

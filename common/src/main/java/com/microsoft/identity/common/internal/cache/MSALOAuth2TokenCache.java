@@ -7,8 +7,8 @@ import com.google.gson.Gson;
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.CommonCoreExceptionMessage;
-import com.microsoft.identity.common.exception.CommonCoreServiceException;
+import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -162,7 +162,7 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
                 try {
                     initUserIdentifier(atCacheItem);
                     atCacheItems.add(atCacheItem);
-                } catch(CommonCoreServiceException ccse) {
+                } catch(ServiceException ccse) {
                     // Add a log
                 }
             }
@@ -171,7 +171,7 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
         return atCacheItems;
     }
 
-    private void initUserIdentifier(MsalAccessTokenCacheItem atCacheItem) throws CommonCoreServiceException{
+    private void initUserIdentifier(MsalAccessTokenCacheItem atCacheItem) throws ServiceException {
         // set up the uniqueIdentifier here...
         final String rawClientInfo = atCacheItem.mRawClientInfo;
         try {
@@ -183,7 +183,7 @@ public class MSALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
                             + "."
                             + EncodingUtil.base64UrlEncodeToString(utid);
         } catch (final JSONException e) {
-            throw new CommonCoreServiceException("", CommonCoreExceptionMessage.INVALID_JWT, e);
+            throw new ServiceException("", ErrorStrings.INVALID_JWT, e);
         }
     }
 

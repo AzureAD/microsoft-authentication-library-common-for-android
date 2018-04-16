@@ -1,7 +1,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 
-import com.microsoft.identity.common.exception.CommonCoreServiceException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 
 /**
@@ -23,7 +23,7 @@ public class AzureActiveDirectoryIdToken extends MicrosoftIdToken {
     public static final String PASSWORD_EXPIRATION = "pwd_exp";
     public static final String PASSWORD_CHANGE_URL = "pwd_url";
 
-    public AzureActiveDirectoryIdToken(String rawIdToken) throws CommonCoreServiceException {
+    public AzureActiveDirectoryIdToken(String rawIdToken) throws ServiceException {
         super(rawIdToken);
     }
 }

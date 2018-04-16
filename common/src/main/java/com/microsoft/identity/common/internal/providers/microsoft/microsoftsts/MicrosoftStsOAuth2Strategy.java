@@ -1,7 +1,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.Account;
-import com.microsoft.identity.common.exception.CommonCoreServiceException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -64,7 +64,7 @@ public class MicrosoftStsOAuth2Strategy extends OAuth2Strategy {
         try {
             idToken = new IDToken(response.getIdToken());
             clientInfo = new ClientInfo(((MicrosoftStsTokenResponse) response).getClientInfo());
-        } catch (CommonCoreServiceException ccse) {
+        } catch (ServiceException ccse) {
             // TODO: Add a log here
             // TODO: Should we bail?
         }

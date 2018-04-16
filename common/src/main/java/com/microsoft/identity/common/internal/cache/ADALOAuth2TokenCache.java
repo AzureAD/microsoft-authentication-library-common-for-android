@@ -13,8 +13,7 @@ import com.microsoft.identity.common.adal.internal.cache.CacheKey;
 import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.CommonCoreException;
-import com.microsoft.identity.common.exception.CommonCoreExceptionMessage;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
@@ -145,7 +144,7 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
         try {
             return getStorageHelper().encrypt(value);
         } catch (GeneralSecurityException | IOException e) {
-            Log.e(TAG, CommonCoreExceptionMessage.ENCRYPTION_ERROR, e);
+            Log.e(TAG, ErrorStrings.ENCRYPTION_ERROR, e);
         }
 
         return null;
@@ -159,7 +158,7 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
         try {
             return getStorageHelper().decrypt(value);
         } catch (GeneralSecurityException | IOException e) {
-            Log.e(TAG, CommonCoreExceptionMessage.DECRYPTION_ERROR, e);
+            Log.e(TAG, ErrorStrings.DECRYPTION_ERROR, e);
             //TODO: Implement remove item in this case... not sure I actually want to do this
             //removeItem(key);
         }

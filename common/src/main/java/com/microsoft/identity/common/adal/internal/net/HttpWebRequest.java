@@ -24,12 +24,11 @@
 package com.microsoft.identity.common.adal.internal.net;
 
 import android.content.Context;
-import android.os.Build;
 import android.os.Debug;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
-import com.microsoft.identity.common.exception.CommonCoreException;
-import com.microsoft.identity.common.exception.CommonCoreExceptionMessage;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -163,18 +162,18 @@ public class HttpWebRequest {
         return response;
     }
 
-    public static void throwIfNetworkNotAvailable(final Context context) throws CommonCoreException {
+    public static void throwIfNetworkNotAvailable(final Context context) throws ClientException {
         final DefaultConnectionService connectionService = new DefaultConnectionService(context);
         if (!connectionService.isConnectionAvailable()) {
             if (connectionService.isNetworkDisabledFromOptimizations()) {
-                final CommonCoreException dozeModeException = new CommonCoreException(
-                        CommonCoreExceptionMessage.DEVICE_NETWORK_NOT_AVAILABLE,
+                final ClientException dozeModeException = new ClientException(
+                        ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
                         "Connection is not available to refresh token because power optimization is "
                                 + "enabled. And the device is in doze mode or the app is standby");
                 throw dozeModeException;
             } else {
-                final CommonCoreException generalNetworkException = new CommonCoreException(
-                        CommonCoreExceptionMessage.DEVICE_NETWORK_NOT_AVAILABLE,
+                final ClientException generalNetworkException = new ClientException(
+                        ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
                         "Connection is not available to refresh token");
                 throw generalNetworkException;
             }

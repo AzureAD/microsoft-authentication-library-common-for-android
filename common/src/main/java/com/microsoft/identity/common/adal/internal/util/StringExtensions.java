@@ -1,8 +1,7 @@
 package com.microsoft.identity.common.adal.internal.util;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.CommonCoreException;
-import com.microsoft.identity.common.exception.CommonCoreExceptionMessage;
+import com.microsoft.identity.common.exception.ErrorStrings;
 
 import android.net.Uri;
 import android.util.Base64;
@@ -96,7 +95,7 @@ public final class StringExtensions {
             authority = new URL(endpoint);
         } catch (MalformedURLException e1) {
             //Log.e(TAG, e1.getMessage(), "", ADALError.DEVELOPER_AUTHORITY_IS_NOT_VALID_URL.toString(), e1);
-            Log.e(TAG, CommonCoreExceptionMessage.AUTHORITY_URL_NOT_VALID);
+            Log.e(TAG, ErrorStrings.AUTHORITY_URL_NOT_VALID);
         }
 
         return authority;

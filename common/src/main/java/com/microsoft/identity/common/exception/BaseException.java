@@ -31,13 +31,13 @@ import org.json.JSONException;
 import java.util.HashMap;
 import java.util.List;
 
-public class CommonCoreBaseException extends Exception {
+public class BaseException extends Exception {
     private String mErrorCode;
 
     /**
      * Default constructor.
      */
-    CommonCoreBaseException() {
+    BaseException() {
     }
 
     /**
@@ -45,36 +45,36 @@ public class CommonCoreBaseException extends Exception {
      *
      * @param errorCode The error code contained in the exception.
      */
-    public CommonCoreBaseException(final String errorCode) {
+    public BaseException(final String errorCode) {
         mErrorCode = errorCode;
     }
 
     /**
-     * Initiates the {@link CommonCoreBaseException} with error code and error message.
+     * Initiates the {@link BaseException} with error code and error message.
      *
      * @param errorCode    The error code contained in the exception.
      * @param errorMessage The error message contained in the exception.
      */
-    public CommonCoreBaseException(final String errorCode, final String errorMessage) {
+    public BaseException(final String errorCode, final String errorMessage) {
         super(errorMessage);
         mErrorCode = errorCode;
     }
 
     /**
-     * Initiates the {@link CommonCoreBaseException} with error code, error message and throwable.
+     * Initiates the {@link BaseException} with error code, error message and throwable.
      *
      * @param errorCode    The error code contained in the exception.
      * @param errorMessage The error message contained in the exception.
      * @param throwable    The {@link Throwable} contains the cause for the exception.
      */
-    public CommonCoreBaseException(final String errorCode, final String errorMessage,
+    public BaseException(final String errorCode, final String errorMessage,
                   final Throwable throwable) {
         super(errorMessage, throwable);
         mErrorCode = errorCode;
     }
 
     /**
-     * @return The error code for the exception, could be null. {@link CommonCoreBaseException} is the top level base exception, for the
+     * @return The error code for the exception, could be null. {@link BaseException} is the top level base exception, for the
      * constants value of all the error code.
      */
     public String getErrorCode() {
