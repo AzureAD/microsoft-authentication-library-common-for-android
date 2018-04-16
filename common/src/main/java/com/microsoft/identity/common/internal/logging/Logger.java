@@ -15,7 +15,7 @@ public final class Logger {
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     // Turn on the VERBOSE level logging by default.
-    private LogLevel mLogLevel  = LogLevel.VERBOSE;
+    private LogLevel mLogLevel = LogLevel.VERBOSE;
     private AtomicReference<ILoggerCallback> mExternalLogger = new AtomicReference<>(null);
 
     // Disable to log PII by default.
@@ -53,8 +53,8 @@ public final class Logger {
     }
 
     /**
-     *  Enable/Disable log message with PII (personal identifiable information) info.
-     *  By default, the SDK doesn't log any PII.
+     * Enable/Disable log message with PII (personal identifiable information) info.
+     * By default, the SDK doesn't log any PII.
      *
      * @param allowPii True if enabling PII info to be logged, false otherwise.
      */
@@ -117,8 +117,22 @@ public final class Logger {
     /**
      * Send a {@link LogLevel#ERROR} log message without PII.
      */
+    public static void error(final String tag, final String errorMessage, final Throwable exception) {
+        getInstance().log(tag, LogLevel.ERROR, DiagnosticContext.getRequestContext().toJsonString(), errorMessage, exception, false);
+    }
+
+    /**
+     * Send a {@link LogLevel#ERROR} log message without PII.
+     */
     public static void error(final String tag, final String correlationID, final String errorMessage, final Throwable exception) {
         getInstance().log(tag, LogLevel.ERROR, correlationID, errorMessage, exception, false);
+    }
+
+    /**
+     * Send a {@link LogLevel#ERROR} log message with PII.
+     */
+    public static void errorPII(final String tag, final String errorMessage, final Throwable exception) {
+        getInstance().log(tag, LogLevel.ERROR, DiagnosticContext.getRequestContext().toJsonString(), errorMessage, exception, true);
     }
 
     /**
@@ -131,8 +145,22 @@ public final class Logger {
     /**
      * Send a {@link LogLevel#WARN} log message without PII.
      */
+    public static void warn(final String tag, final String message) {
+        getInstance().log(tag, LogLevel.WARN, DiagnosticContext.getRequestContext().toJsonString(), message, null, false);
+    }
+
+    /**
+     * Send a {@link LogLevel#WARN} log message without PII.
+     */
     public static void warn(final String tag, final String correlationID, final String message) {
         getInstance().log(tag, LogLevel.WARN, correlationID, message, null, false);
+    }
+
+    /**
+     * Send a {@link LogLevel#WARN} log message with PII.
+     */
+    public static void warnPII(final String tag, final String message) {
+        getInstance().log(tag, LogLevel.WARN, DiagnosticContext.getRequestContext().toJsonString(), message, null, true);
     }
 
     /**
@@ -146,7 +174,21 @@ public final class Logger {
      * Send a {@link LogLevel#INFO} log message without PII.
      */
     public static void info(final String tag, final String message) {
-        getInstance().log(tag, LogLevel.INFO, DiagnosticContext.getRequestContext().toJsonString(), message, null, false);
+        info(tag, DiagnosticContext.getRequestContext().toJsonString(), message);
+    }
+
+    /**
+     * Send a {@link LogLevel#INFO} log message without PII.
+     */
+    public static void info(final String tag, final String correlationID, final String message) {
+        getInstance().log(tag, LogLevel.INFO, correlationID, message, null, false);
+    }
+
+    /**
+     * Send a {@link LogLevel#INFO} log message with PII.
+     */
+    public static void infoPII(final String tag, final String message) {
+        getInstance().log(tag, LogLevel.INFO, DiagnosticContext.getRequestContext().toJsonString(), message, null, true);
     }
 
     /**
@@ -159,8 +201,22 @@ public final class Logger {
     /**
      * Send a {@link LogLevel#VERBOSE} log message without PII.
      */
+    public static void verbose(final String tag, final String message) {
+        getInstance().log(tag, LogLevel.VERBOSE, DiagnosticContext.getRequestContext().toJsonString(), message, null, false);
+    }
+
+    /**
+     * Send a {@link LogLevel#VERBOSE} log message without PII.
+     */
     public static void verbose(final String tag, final String correlationID, final String message) {
         getInstance().log(tag, LogLevel.VERBOSE, correlationID, message, null, false);
+    }
+
+    /**
+     * Send a {@link LogLevel#VERBOSE} log message with PII.
+     */
+    public static void verbosePII(final String tag, final String message) {
+        getInstance().log(tag, LogLevel.VERBOSE, DiagnosticContext.getRequestContext().toJsonString(), message, null, true);
     }
 
     /**
@@ -172,7 +228,6 @@ public final class Logger {
 
     /**
      * TODO. Need to discuss on how to keep the correlationID. CorrelationID should be per request => need to sync with Telemetry implementation
-     *
      */
     private void log(final String tag, final LogLevel logLevel, final String correlationID,
                      final String message, final Throwable throwable, final boolean containsPII) {
@@ -209,7 +264,7 @@ public final class Logger {
      */
     private String formatMessage(final String correlationID, final String message, final Throwable throwable) {
         final String logMessage = StringExtensions.isNullOrBlank(message) ? "N/A" : message;
-        return  " [" + getUTCDateTimeAsString()
+        return " [" + getUTCDateTimeAsString()
                 + (StringExtensions.isNullOrBlank(correlationID) ? "] " : " - " + correlationID + "] ")
                 + logMessage
                 + " Android " + Build.VERSION.SDK_INT
