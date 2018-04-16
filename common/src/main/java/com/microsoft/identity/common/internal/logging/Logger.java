@@ -1,6 +1,7 @@
 package com.microsoft.identity.common.internal.logging;
 
 import android.os.Build;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -86,7 +87,8 @@ public final class Logger {
     }
 
     /**
-     * Set the log level for diagnostic purpose. By default, the sdk enables the verbose level logging.
+     * Set the log level for diagnostic purpose. By default, the sdk enables the verbose level
+     * logging.
      *
      * @param logLevel The {@link LogLevel} to be enabled for the diagnostic logging.
      */
@@ -100,7 +102,8 @@ public final class Logger {
      *
      * @param externalLogger The reference to the {@link ILoggerCallback} that can
      *                       output the logs to the designated places.
-     * @throws IllegalStateException if external logger is already set, and the caller is trying to set it again.
+     * @throws IllegalStateException if external logger is already set, and the caller is trying
+     *                               to set it again.
      */
     public void setExternalLogger(final ILoggerCallback externalLogger) {
         if (externalLogger == null) {
@@ -116,126 +119,327 @@ public final class Logger {
 
     /**
      * Send a {@link LogLevel#ERROR} log message without PII.
+     *
+     * @param tag          Used to identify the source of a log message.
+     *                     It usually identifies the class or activity where the log call occurs.
+     * @param errorMessage The error message to log.
+     * @param exception    An exception to log
      */
-    public static void error(final String tag, final String errorMessage, final Throwable exception) {
-        getInstance().log(tag, LogLevel.ERROR, DiagnosticContext.getRequestContext().toJsonString(), errorMessage, exception, false);
+    public static void error(final String tag,
+                             @Nullable final String errorMessage,
+                             @Nullable final Throwable exception) {
+        getInstance().log(
+                tag,
+                LogLevel.ERROR,
+                DiagnosticContext.getRequestContext().toJsonString(),
+                errorMessage,
+                exception,
+                false
+        );
     }
 
     /**
      * Send a {@link LogLevel#ERROR} log message without PII.
+     *
+     * @param tag           Used to identify the source of a log message. It usually identifies the
+     *                      class or activity where the log call occurs.
+     * @param correlationID Unique identifier for a request or flow used to trace program execution.
+     * @param errorMessage  The error message to log.
+     * @param exception     An exception to log.
      */
-    public static void error(final String tag, final String correlationID, final String errorMessage, final Throwable exception) {
-        getInstance().log(tag, LogLevel.ERROR, correlationID, errorMessage, exception, false);
+    public static void error(final String tag,
+                             @Nullable final String correlationID,
+                             @Nullable final String errorMessage,
+                             @Nullable final Throwable exception) {
+        getInstance().log(
+                tag,
+                LogLevel.ERROR,
+                correlationID, errorMessage,
+                exception,
+                false
+        );
     }
 
     /**
      * Send a {@link LogLevel#ERROR} log message with PII.
+     *
+     * @param tag          Used to identify the source of a log message. It usually identifies the
+     *                     class or activity where the log call occurs.
+     * @param errorMessage The error message to log.
+     * @param exception    An exception to log.
      */
-    public static void errorPII(final String tag, final String errorMessage, final Throwable exception) {
-        getInstance().log(tag, LogLevel.ERROR, DiagnosticContext.getRequestContext().toJsonString(), errorMessage, exception, true);
+    public static void errorPII(final String tag,
+                                @Nullable final String errorMessage,
+                                @Nullable final Throwable exception) {
+        getInstance().log(
+                tag,
+                LogLevel.ERROR,
+                DiagnosticContext.getRequestContext().toJsonString(),
+                errorMessage,
+                exception,
+                true
+        );
     }
 
     /**
      * Send a {@link LogLevel#ERROR} log message with PII.
+     *
+     * @param tag           Used to identify the source of a log message. It usually identifies the
+     *                      class or activity where the log call occurs.
+     * @param correlationID Unique identifier for a request or flow used to trace program execution.
+     * @param errorMessage  The error message to log.
+     * @param exception     An exception to log.
      */
-    public static void errorPII(final String tag, final String correlationID, final String errorMessage, final Throwable exception) {
-        getInstance().log(tag, LogLevel.ERROR, correlationID, errorMessage, exception, true);
+    public static void errorPII(final String tag,
+                                @Nullable final String correlationID,
+                                @Nullable final String errorMessage,
+                                @Nullable final Throwable exception) {
+        getInstance().log(
+                tag,
+                LogLevel.ERROR,
+                correlationID,
+                errorMessage,
+                exception,
+                true
+        );
     }
 
     /**
      * Send a {@link LogLevel#WARN} log message without PII.
+     *
+     * @param tag     Used to identify the source of a log message. It usually identifies the class
+     *                or activity where the log call occurs.
+     * @param message The message to log.
      */
-    public static void warn(final String tag, final String message) {
-        getInstance().log(tag, LogLevel.WARN, DiagnosticContext.getRequestContext().toJsonString(), message, null, false);
+    public static void warn(final String tag, @Nullable final String message) {
+        getInstance().log(
+                tag,
+                LogLevel.WARN,
+                DiagnosticContext.getRequestContext().toJsonString(),
+                message,
+                null,
+                false
+        );
     }
 
     /**
      * Send a {@link LogLevel#WARN} log message without PII.
+     *
+     * @param tag           Used to identify the source of a log message. It usually identifies the
+     *                      class or activity where the log call occurs.
+     * @param correlationID Unique identifier for a request or flow used to trace program execution.
+     * @param message       The message to log.
      */
-    public static void warn(final String tag, final String correlationID, final String message) {
-        getInstance().log(tag, LogLevel.WARN, correlationID, message, null, false);
+    public static void warn(final String tag,
+                            @Nullable final String correlationID,
+                            @Nullable final String message) {
+        getInstance().log(
+                tag,
+                LogLevel.WARN,
+                correlationID,
+                message,
+                null,
+                false
+        );
     }
 
     /**
      * Send a {@link LogLevel#WARN} log message with PII.
+     *
+     * @param tag     Used to identify the source of a log message. It usually identifies the class
+     *                or activity where the log call occurs.
+     * @param message The message to log.
      */
-    public static void warnPII(final String tag, final String message) {
-        getInstance().log(tag, LogLevel.WARN, DiagnosticContext.getRequestContext().toJsonString(), message, null, true);
+    public static void warnPII(final String tag, @Nullable final String message) {
+        getInstance().log(
+                tag,
+                LogLevel.WARN,
+                DiagnosticContext.getRequestContext().toJsonString(),
+                message,
+                null,
+                true
+        );
     }
 
     /**
      * Send a {@link LogLevel#WARN} log message with PII.
+     *
+     * @param tag           Used to identify the source of a log message. It usually identifies the
+     *                      class or activity where the log call occurs.
+     * @param correlationID Unique identifier for a request or flow used to trace program execution.
+     * @param message       The message to log.
      */
-    public static void warnPII(final String tag, final String correlationID, final String message) {
-        getInstance().log(tag, LogLevel.WARN, correlationID, message, null, true);
+    public static void warnPII(final String tag,
+                               @Nullable final String correlationID,
+                               @Nullable final String message) {
+        getInstance().log(
+                tag,
+                LogLevel.WARN,
+                correlationID,
+                message,
+                null,
+                true
+        );
     }
 
     /**
      * Send a {@link LogLevel#INFO} log message without PII.
+     *
+     * @param tag     Used to identify the source of a log message. It usually identifies the class
+     *                or activity where the log call occurs.
+     * @param message The message to log.
      */
-    public static void info(final String tag, final String message) {
-        getInstance().log(tag, LogLevel.INFO, DiagnosticContext.getRequestContext().toJsonString(), message, null, false);
+    public static void info(final String tag, @Nullable final String message) {
+        getInstance().log(
+                tag,
+                LogLevel.INFO,
+                DiagnosticContext.getRequestContext().toJsonString(),
+                message,
+                null,
+                false
+        );
     }
 
     /**
-     * Send a {@link LogLevel#INFO} log message without PII.
+     * * Send a {@link LogLevel#INFO} log message without PII.
+     *
+     * @param tag           Used to identify the source of a log message. It usually identifies the
+     *                      class or activity where the log call occurs.
+     * @param correlationID Unique identifier for a request or flow used to trace program execution.
+     * @param message       The message to log.
      */
-    public static void info(final String tag, final String correlationID, final String message) {
+    public static void info(final String tag,
+                            @Nullable final String correlationID,
+                            @Nullable final String message) {
         getInstance().log(tag, LogLevel.INFO, correlationID, message, null, false);
     }
 
     /**
      * Send a {@link LogLevel#INFO} log message with PII.
+     *
+     * @param tag     Used to identify the source of a log message. It usually identifies the class
+     *                or activity where the log call occurs.
+     * @param message The message to log.
      */
-    public static void infoPII(final String tag, final String message) {
-        getInstance().log(tag, LogLevel.INFO, DiagnosticContext.getRequestContext().toJsonString(), message, null, true);
+    public static void infoPII(final String tag, @Nullable final String message) {
+        getInstance().log(
+                tag,
+                LogLevel.INFO,
+                DiagnosticContext.getRequestContext().toJsonString(),
+                message,
+                null,
+                true
+        );
     }
 
     /**
      * Send a {@link LogLevel#INFO} log message with PII.
+     *
+     * @param tag           Used to identify the source of a log message. It usually identifies the
+     *                      class or activity where the log call occurs.
+     * @param correlationID Unique identifier for a request or flow used to trace program execution.
+     * @param message       The message to log.
      */
-    public static void infoPII(final String tag, final String correlationID, final String message) {
+    public static void infoPII(final String tag,
+                               @Nullable final String correlationID,
+                               @Nullable final String message) {
         getInstance().log(tag, LogLevel.INFO, correlationID, message, null, true);
     }
 
     /**
      * Send a {@link LogLevel#VERBOSE} log message without PII.
+     *
+     * @param tag     Used to identify the source of a log message. It usually identifies the class
+     *                or activity where the log call occurs.
+     * @param message The message to log.
      */
-    public static void verbose(final String tag, final String message) {
-        getInstance().log(tag, LogLevel.VERBOSE, DiagnosticContext.getRequestContext().toJsonString(), message, null, false);
+    public static void verbose(final String tag, @Nullable final String message) {
+        getInstance().log(
+                tag,
+                LogLevel.VERBOSE,
+                DiagnosticContext.getRequestContext().toJsonString(),
+                message,
+                null,
+                false
+        );
     }
 
     /**
      * Send a {@link LogLevel#VERBOSE} log message without PII.
+     *
+     * @param tag           Used to identify the source of a log message. It usually identifies the
+     *                      class or activity where the log call occurs.
+     * @param correlationID Unique identifier for a request or flow used to trace program execution.
+     * @param message       The message to log.
      */
-    public static void verbose(final String tag, final String correlationID, final String message) {
-        getInstance().log(tag, LogLevel.VERBOSE, correlationID, message, null, false);
+    public static void verbose(final String tag,
+                               @Nullable final String correlationID,
+                               @Nullable final String message) {
+        getInstance().log(
+                tag,
+                LogLevel.VERBOSE,
+                correlationID,
+                message,
+                null,
+                false
+        );
     }
 
     /**
      * Send a {@link LogLevel#VERBOSE} log message with PII.
+     *
+     * @param tag     Used to identify the source of a log message. It usually identifies the class
+     *                or activity where the log call occurs.
+     * @param message The message to log.
      */
-    public static void verbosePII(final String tag, final String message) {
-        getInstance().log(tag, LogLevel.VERBOSE, DiagnosticContext.getRequestContext().toJsonString(), message, null, true);
+    public static void verbosePII(final String tag, @Nullable final String message) {
+        getInstance().log(
+                tag,
+                LogLevel.VERBOSE,
+                DiagnosticContext.getRequestContext().toJsonString(),
+                message,
+                null,
+                true
+        );
     }
 
     /**
      * Send a {@link LogLevel#VERBOSE} log message with PII.
+     *
+     * @param tag           Used to identify the source of a log message. It usually identifies the
+     *                      class or activity where the log call occurs.
+     * @param correlationID Unique identifier for a request or flow used to trace program execution.
+     * @param message       The message to log.
      */
-    public static void verbosePII(final String tag, final String correlationID, final String message) {
-        getInstance().log(tag, LogLevel.VERBOSE, correlationID, message, null, true);
+    public static void verbosePII(final String tag,
+                                  @Nullable final String correlationID,
+                                  @Nullable final String message) {
+        getInstance().log(
+                tag,
+                LogLevel.VERBOSE,
+                correlationID,
+                message,
+                null,
+                true
+        );
     }
 
     /**
-     * TODO. Need to discuss on how to keep the correlationID. CorrelationID should be per request => need to sync with Telemetry implementation
+     * TODO. Need to discuss on how to keep the correlationID.
+     * CorrelationID should be per request => need to sync with Telemetry implementation
      */
-    private void log(final String tag, final LogLevel logLevel, final String correlationID,
-                     final String message, final Throwable throwable, final boolean containsPII) {
+    private void log(final String tag,
+                     final LogLevel logLevel,
+                     @Nullable final String correlationID,
+                     @Nullable final String message,
+                     @Nullable final Throwable throwable,
+                     final boolean containsPII) {
         if (logLevel.compareTo(mLogLevel) > 0) {
             return;
         }
 
-        // Developer turns off PII logging, if the log meLoggerSettingssage contains any PII, we should not send it.
+        // Developer turns off PII logging, if the log meLoggerSettingssage contains any PII,
+        // we should not send it.
         if (!mAllowPii && containsPII) {
             return;
         }
@@ -245,7 +449,7 @@ public final class Logger {
 
         // Send logs into Logcat.
         if (mAllowLogcat) {
-            sendLogcatLogs(tag, logLevel, logMessage.toString());
+            sendLogcatLogs(tag, logLevel, logMessage);
         }
 
         // Send logs into external logger callback.
@@ -262,7 +466,9 @@ public final class Logger {
      * If correlation id doesn't exist:
      * <library_version> <platform> <platform_version> [<timestamp>] <log_message>
      */
-    private String formatMessage(final String correlationID, final String message, final Throwable throwable) {
+    private String formatMessage(@Nullable final String correlationID,
+                                 @Nullable final String message,
+                                 @Nullable final Throwable throwable) {
         final String logMessage = StringExtensions.isNullOrBlank(message) ? "N/A" : message;
         return " [" + getUTCDateTimeAsString()
                 + (StringExtensions.isNullOrBlank(correlationID) ? "] " : " - " + correlationID + "] ")
