@@ -81,6 +81,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         accessToken.setTarget(TARGET);
 
         final String expectedKey = "" // just for formatting
+                + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
@@ -103,6 +104,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR
                 + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(accessToken));
     }
@@ -121,7 +123,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + REALM;
+                + REALM + CACHE_VALUE_SEPARATOR;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(accessToken));
     }
@@ -134,9 +136,11 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         accessToken.setClientId(CLIENT_ID);
 
         final String expectedKey = "" // just for formatting
+                + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID;
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(accessToken));
     }
@@ -153,7 +157,8 @@ public class AccountCredentialCacheKeyValueDelegateTest {
                 + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID;
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(accessToken));
     }
@@ -460,6 +465,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR
                 + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
@@ -473,9 +479,11 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         refreshToken.setTarget(TARGET);
 
         final String expectedKey = "" // just for formatting
+                + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR
                 + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
@@ -494,6 +502,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR
                 + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
@@ -510,7 +519,8 @@ public class AccountCredentialCacheKeyValueDelegateTest {
                 + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID;
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
@@ -523,9 +533,11 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         refreshToken.setClientId(CLIENT_ID);
 
         final String expectedKey = "" // just for formatting
+                + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID;
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
     }
@@ -645,7 +657,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ID_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + REALM;
+                + REALM + CACHE_VALUE_SEPARATOR;
         assertEquals(expectedKey, mDelegate.generateCacheKey(idToken));
     }
 
@@ -658,10 +670,11 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         idToken.setRealm(REALM);
 
         final String expectedKey = "" // just for formatting
+                + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ID_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
-                + REALM;
+                + REALM + CACHE_VALUE_SEPARATOR;
         assertEquals(expectedKey, mDelegate.generateCacheKey(idToken));
     }
 
@@ -677,7 +690,8 @@ public class AccountCredentialCacheKeyValueDelegateTest {
                 + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ID_TOKEN + CACHE_VALUE_SEPARATOR
-                + CLIENT_ID;
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR;
         assertEquals(expectedKey, mDelegate.generateCacheKey(idToken));
     }
 
