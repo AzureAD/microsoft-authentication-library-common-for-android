@@ -60,7 +60,7 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
     @Override
     public String generateCacheKey(Account account) {
         final List<String> keyComponents = new ArrayList<>();
-        keyComponents.add(account.getUniqueId());
+        keyComponents.add(account.getUniqueUserId());
         keyComponents.add(account.getEnvironment());
         keyComponents.add(account.getRealm());
 
@@ -88,7 +88,7 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
     @Override
     public String generateCacheKey(Credential credential) {
         final List<String> keyComponents = new ArrayList<>();
-        keyComponents.add(credential.getUniqueId());
+        keyComponents.add(credential.getUniqueUserId());
         keyComponents.add(credential.getEnvironment());
         keyComponents.add(credential.getCredentialType());
         keyComponents.add(credential.getClientId());

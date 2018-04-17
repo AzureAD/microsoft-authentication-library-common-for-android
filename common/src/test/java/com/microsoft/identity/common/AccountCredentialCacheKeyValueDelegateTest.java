@@ -28,7 +28,7 @@ import static org.junit.Assert.assertNull;
 
 public class AccountCredentialCacheKeyValueDelegateTest {
 
-    private static final String UNIQUE_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
+    private static final String UNIQUE_USER_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
     private static final String ENVIRONMENT = "login.microsoftonline.com";
     private static final String CLIENT_ID = "0287f963-2d72-4363-9e3a-5705c5b0f031";
     private static final String TARGET = "user.read user.write https://graph.windows.net";
@@ -54,7 +54,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void accessTokenCreateCacheKeyComplete() throws Exception {
         final AccessToken accessToken = new AccessToken();
-        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setUniqueUserId(UNIQUE_USER_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
@@ -62,7 +62,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         accessToken.setTarget(TARGET);
 
         final String expectedKey = "" // just for formatting
-                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
@@ -92,14 +92,14 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void accessTokenCreateCacheKeyNoRealm() throws Exception {
         final AccessToken accessToken = new AccessToken();
-        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setUniqueUserId(UNIQUE_USER_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
         accessToken.setTarget(TARGET);
 
         final String expectedKey = "" // just for formatting
-                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
@@ -110,14 +110,14 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void accessTokenCreateCacheKeyNoTarget() throws Exception {
         final AccessToken accessToken = new AccessToken();
-        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setUniqueUserId(UNIQUE_USER_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
         accessToken.setRealm(REALM);
 
         final String expectedKey = "" // just for formatting
-                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
@@ -144,13 +144,13 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void accessTokenCreateCacheKeyNoRealmNoTarget() throws Exception {
         final AccessToken accessToken = new AccessToken();
-        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setUniqueUserId(UNIQUE_USER_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
 
         final String expectedKey = "" // just for formatting
-                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID;
@@ -161,7 +161,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void accessTokenCreateCacheValue() throws Exception {
         final AccessToken accessToken = new AccessToken();
-        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setUniqueUserId(UNIQUE_USER_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name().toLowerCase(Locale.US));
         accessToken.setClientId(CLIENT_ID);
@@ -172,7 +172,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         // Turn the serialized value into a JSONObject and start testing field equality.
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, jsonObject.getString(Credential.SerializedNames.UNIQUE_ID));
+        assertEquals(UNIQUE_USER_ID, jsonObject.getString(Credential.SerializedNames.UNIQUE_USER_ID));
         assertEquals(ENVIRONMENT, jsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
         assertEquals(CLIENT_ID, jsonObject.getString(Credential.SerializedNames.CLIENT_ID));
@@ -183,7 +183,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void accessTokenExtraValueSerialization() throws Exception {
         final AccessToken accessToken = new AccessToken();
-        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setUniqueUserId(UNIQUE_USER_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name().toLowerCase(Locale.US));
         accessToken.setClientId(CLIENT_ID);
@@ -209,7 +209,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         String serializedValue = mDelegate.generateCacheValue(accessToken);
         JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.UNIQUE_ID));
+        assertEquals(UNIQUE_USER_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.UNIQUE_USER_ID));
         assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), derivedCacheValueJsonObject.getString("credential_type"));
         assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.CLIENT_ID));
@@ -227,7 +227,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void accessTokenExtraValueDeserialization() throws Exception {
         final AccessToken accessToken = new AccessToken();
-        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setUniqueUserId(UNIQUE_USER_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name().toLowerCase(Locale.US));
         accessToken.setClientId(CLIENT_ID);
@@ -252,7 +252,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         final AccessToken deserializedValue = mDelegate.fromCacheValue(serializedValue, AccessToken.class);
         assertNotNull(deserializedValue);
         assertNull(deserializedValue.getAdditionalFields().get(Credential.SerializedNames.ENVIRONMENT));
-        assertEquals(UNIQUE_ID, deserializedValue.getUniqueId());
+        assertEquals(UNIQUE_USER_ID, deserializedValue.getUniqueUserId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
         assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), deserializedValue.getCredentialType());
         assertEquals(CLIENT_ID, deserializedValue.getClientId());
@@ -268,12 +268,12 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void accountCreateCacheKeyComplete() throws Exception {
         final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
-        account.setUniqueId(UNIQUE_ID);
+        account.setUniqueUserId(UNIQUE_USER_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
 
         final String expectedKey = ""
-                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + REALM;
 
@@ -296,11 +296,11 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void accountCreateCacheKeyCompleteNoRealm() throws Exception {
         final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
-        account.setUniqueId(UNIQUE_ID);
+        account.setUniqueUserId(UNIQUE_USER_ID);
         account.setEnvironment(ENVIRONMENT);
 
         final String expectedKey = ""
-                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(account));
@@ -317,7 +317,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void accountCreateCacheValue() throws Exception {
         final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
-        account.setUniqueId(UNIQUE_ID);
+        account.setUniqueUserId(UNIQUE_USER_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
         account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
@@ -330,7 +330,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         final String serializedValue = mDelegate.generateCacheValue(account);
 
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.UNIQUE_ID));
+        assertEquals(UNIQUE_USER_ID, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.UNIQUE_USER_ID));
         assertEquals(ENVIRONMENT, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT));
         assertEquals(REALM, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM));
         assertEquals(AUTHORITY_ACCOUNT_ID, jsonObject.getString("authority_account_id"));
@@ -345,7 +345,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     public void accountExtraValueSerialization() throws Exception {
         final com.microsoft.identity.common.internal.dto.Account account
                 = new com.microsoft.identity.common.internal.dto.Account();
-        account.setUniqueId(UNIQUE_ID);
+        account.setUniqueUserId(UNIQUE_USER_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
         account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
@@ -374,7 +374,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         String serializedValue = mDelegate.generateCacheValue(account);
         JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.UNIQUE_ID));
+        assertEquals(UNIQUE_USER_ID, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.UNIQUE_USER_ID));
         assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT));
         assertEquals(REALM, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM));
         assertEquals(AUTHORITY_ACCOUNT_ID, derivedCacheValueJsonObject.get("authority_account_id"));
@@ -396,7 +396,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     public void accountExtraValueDeserialization() throws Exception {
         final com.microsoft.identity.common.internal.dto.Account account
                 = new com.microsoft.identity.common.internal.dto.Account();
-        account.setUniqueId(UNIQUE_ID);
+        account.setUniqueUserId(UNIQUE_USER_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
         account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
@@ -425,7 +425,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
                 = mDelegate.fromCacheValue(serializedValue, com.microsoft.identity.common.internal.dto.Account.class);
         assertNotNull(deserializedValue);
         assertNull(deserializedValue.getAdditionalFields().get(com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT));
-        assertEquals(UNIQUE_ID, deserializedValue.getUniqueId());
+        assertEquals(UNIQUE_USER_ID, deserializedValue.getUniqueUserId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
         assertEquals(REALM, deserializedValue.getRealm());
         assertEquals(AUTHORITY_ACCOUNT_ID, deserializedValue.getAuthorityAccountId());
@@ -444,14 +444,14 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void refreshTokenCreateCacheKeyComplete() throws Exception {
         final RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setUniqueUserId(UNIQUE_USER_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setTarget(TARGET);
 
         final String expectedKey = "" // just for formatting
-                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
@@ -478,14 +478,14 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void refreshTokenCreateCacheKeyNoRealm() throws Exception {
         final RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setUniqueUserId(UNIQUE_USER_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setTarget(TARGET);
 
         final String expectedKey = "" // just for formatting
-                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
@@ -496,13 +496,13 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void refreshTokenCreateCacheKeyNoTarget() throws Exception {
         final RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setUniqueUserId(UNIQUE_USER_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setClientId(CLIENT_ID);
 
         final String expectedKey = "" // just for formatting
-                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID;
@@ -528,7 +528,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void refreshTokenCreateCacheValue() throws Exception {
         final RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setUniqueUserId(UNIQUE_USER_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.RefreshToken.name().toLowerCase(Locale.US));
         refreshToken.setClientId(CLIENT_ID);
@@ -538,7 +538,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         // Turn the serialized value into a JSONObject and start testing field equality.
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, jsonObject.getString(RefreshToken.SerializedNames.UNIQUE_ID));
+        assertEquals(UNIQUE_USER_ID, jsonObject.getString(RefreshToken.SerializedNames.UNIQUE_USER_ID));
         assertEquals(ENVIRONMENT, jsonObject.getString(RefreshToken.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.RefreshToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
         assertEquals(CLIENT_ID, jsonObject.getString(RefreshToken.SerializedNames.CLIENT_ID));
@@ -548,7 +548,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void refreshTokenExtraValueSerialization() throws Exception {
         final RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setUniqueUserId(UNIQUE_USER_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.RefreshToken.name().toLowerCase(Locale.US));
         refreshToken.setClientId(CLIENT_ID);
@@ -573,7 +573,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         String serializedValue = mDelegate.generateCacheValue(refreshToken);
         JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString(RefreshToken.SerializedNames.UNIQUE_ID));
+        assertEquals(UNIQUE_USER_ID, derivedCacheValueJsonObject.getString(RefreshToken.SerializedNames.UNIQUE_USER_ID));
         assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(RefreshToken.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.RefreshToken.name().toLowerCase(Locale.US), derivedCacheValueJsonObject.getString("credential_type"));
         assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString(RefreshToken.SerializedNames.CLIENT_ID));
@@ -590,7 +590,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void refreshTokenExtraValueDeserialization() throws Exception {
         final RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setUniqueUserId(UNIQUE_USER_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.RefreshToken.name().toLowerCase(Locale.US));
         refreshToken.setClientId(CLIENT_ID);
@@ -614,7 +614,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         final RefreshToken deserializedValue = mDelegate.fromCacheValue(serializedValue, RefreshToken.class);
         assertNotNull(deserializedValue);
         assertNull(deserializedValue.getAdditionalFields().get(Credential.SerializedNames.ENVIRONMENT));
-        assertEquals(UNIQUE_ID, deserializedValue.getUniqueId());
+        assertEquals(UNIQUE_USER_ID, deserializedValue.getUniqueUserId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
         assertEquals(CredentialType.RefreshToken.name().toLowerCase(Locale.US), deserializedValue.getCredentialType());
         assertEquals(CLIENT_ID, deserializedValue.getClientId());
@@ -629,14 +629,14 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void idTokenCreateCacheKeyComplete() throws Exception {
         final IdToken idToken = new IdToken();
-        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setUniqueUserId(UNIQUE_USER_ID);
         idToken.setEnvironment(ENVIRONMENT);
         idToken.setCredentialType(CredentialType.IdToken.name());
         idToken.setClientId(CLIENT_ID);
         idToken.setRealm(REALM);
 
         final String expectedKey = "" // just for formatting
-                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ID_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID + CACHE_VALUE_SEPARATOR
@@ -663,13 +663,13 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void idTokenCreateCacheKeyNoRealm() throws Exception {
         final IdToken idToken = new IdToken();
-        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setUniqueUserId(UNIQUE_USER_ID);
         idToken.setEnvironment(ENVIRONMENT);
         idToken.setCredentialType(CredentialType.IdToken.name());
         idToken.setClientId(CLIENT_ID);
 
         final String expectedKey = "" // just for formatting
-                + UNIQUE_ID + CACHE_VALUE_SEPARATOR
+                + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_ID_TOKEN + CACHE_VALUE_SEPARATOR
                 + CLIENT_ID;
@@ -679,7 +679,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void idTokenCreateCacheValue() throws Exception {
         final IdToken idToken = new IdToken();
-        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setUniqueUserId(UNIQUE_USER_ID);
         idToken.setEnvironment(ENVIRONMENT);
         idToken.setCredentialType(CredentialType.IdToken.name().toLowerCase(Locale.US));
         idToken.setClientId(CLIENT_ID);
@@ -689,7 +689,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         // Turn the serialized value into a JSONObject and start testing field equality.
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, jsonObject.getString(Credential.SerializedNames.UNIQUE_ID));
+        assertEquals(UNIQUE_USER_ID, jsonObject.getString(Credential.SerializedNames.UNIQUE_USER_ID));
         assertEquals(ENVIRONMENT, jsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.IdToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
         assertEquals(CLIENT_ID, jsonObject.getString(Credential.SerializedNames.CLIENT_ID));
@@ -699,7 +699,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void idTokenExtraValueSerialization() throws Exception {
         final IdToken idToken = new IdToken();
-        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setUniqueUserId(UNIQUE_USER_ID);
         idToken.setEnvironment(ENVIRONMENT);
         idToken.setCredentialType(CredentialType.IdToken.name().toLowerCase(Locale.US));
         idToken.setClientId(CLIENT_ID);
@@ -724,7 +724,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         String serializedValue = mDelegate.generateCacheValue(idToken);
         JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.UNIQUE_ID));
+        assertEquals(UNIQUE_USER_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.UNIQUE_USER_ID));
         assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.IdToken.name().toLowerCase(Locale.US), derivedCacheValueJsonObject.getString("credential_type"));
         assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.CLIENT_ID));
@@ -741,7 +741,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     @Test
     public void idTokenExtraValueDeserialization() throws Exception {
         final IdToken idToken = new IdToken();
-        idToken.setUniqueId(UNIQUE_ID);
+        idToken.setUniqueUserId(UNIQUE_USER_ID);
         idToken.setEnvironment(ENVIRONMENT);
         idToken.setCredentialType(CredentialType.IdToken.name().toLowerCase(Locale.US));
         idToken.setClientId(CLIENT_ID);
@@ -765,7 +765,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         final IdToken deserializedValue = mDelegate.fromCacheValue(serializedValue, IdToken.class);
         assertNotNull(deserializedValue);
         assertNull(deserializedValue.getAdditionalFields().get(Credential.SerializedNames.ENVIRONMENT));
-        assertEquals(UNIQUE_ID, deserializedValue.getUniqueId());
+        assertEquals(UNIQUE_USER_ID, deserializedValue.getUniqueUserId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
         assertEquals(CredentialType.IdToken.name().toLowerCase(Locale.US), deserializedValue.getCredentialType());
         assertEquals(CLIENT_ID, deserializedValue.getClientId());

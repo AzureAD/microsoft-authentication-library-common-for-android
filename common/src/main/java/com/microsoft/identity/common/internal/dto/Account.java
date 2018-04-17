@@ -33,7 +33,7 @@ import static com.microsoft.identity.common.internal.dto.Account.SerializedNames
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.GUEST_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.LAST_NAME;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.UNIQUE_ID;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.UNIQUE_USER_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.USERNAME;
 
 /**
@@ -46,7 +46,7 @@ import static com.microsoft.identity.common.internal.dto.Account.SerializedNames
 public class Account extends AccountCredentialBase {
 
     public static class SerializedNames {
-        public static final String UNIQUE_ID = "unique_id";
+        public static final String UNIQUE_USER_ID = "unique_user_id";
         public static final String ENVIRONMENT = "environment";
         public static final String REALM = "realm";
         public static final String AUTHORITY_ACCOUNT_ID = "authority_account_id";
@@ -65,7 +65,7 @@ public class Account extends AccountCredentialBase {
     /**
      * Unique user identifier for a given authentication scheme.
      */
-    @SerializedName(UNIQUE_ID)
+    @SerializedName(UNIQUE_USER_ID)
     private String mUniqueId;
 
     /**
@@ -139,20 +139,20 @@ public class Account extends AccountCredentialBase {
     ///////////////
 
     /**
-     * Gets the unique_id.
+     * Gets the unique_user_id.
      *
-     * @return The unique_id to get.
+     * @return The unique_user_id to get.
      */
-    public String getUniqueId() {
+    public String getUniqueUserId() {
         return mUniqueId;
     }
 
     /**
-     * Sets the unique_id.
+     * Sets the unique_user_id.
      *
-     * @param uniqueId The unique_id to get.
+     * @param uniqueId The unique_user_id to get.
      */
-    public void setUniqueId(final String uniqueId) {
+    public void setUniqueUserId(final String uniqueId) {
         mUniqueId = uniqueId;
     }
 

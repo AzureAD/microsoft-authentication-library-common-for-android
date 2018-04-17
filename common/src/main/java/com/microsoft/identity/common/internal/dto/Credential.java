@@ -31,7 +31,7 @@ import static com.microsoft.identity.common.internal.dto.Credential.SerializedNa
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.ENVIRONMENT;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.SECRET;
-import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.UNIQUE_ID;
+import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.UNIQUE_USER_ID;
 
 /**
  * This is a generic credential schema that should be used as a reference to define schemas for
@@ -44,7 +44,7 @@ public abstract class Credential extends AccountCredentialBase {
         public static final String CREDENTIAL_TYPE = "credential_type";
         public static final String ENVIRONMENT = "environment";
         public static final String SECRET = "secret";
-        public static final String UNIQUE_ID = "unique_id";
+        public static final String UNIQUE_USER_ID = "unique_user_id";
         public static final String CACHED_AT = "cached_at";
         public static final String EXPIRES_ON = "expires_on";
     }
@@ -88,7 +88,7 @@ public abstract class Credential extends AccountCredentialBase {
      * This field is optional if there's no user present for the flow (e.g. client credential
      * grants)
      */
-    @SerializedName(UNIQUE_ID)
+    @SerializedName(UNIQUE_USER_ID)
     private String mUniqueId;
 
     /**
@@ -106,20 +106,20 @@ public abstract class Credential extends AccountCredentialBase {
     private String mExpiresOn;
 
     /**
-     * Gets the unique_id.
+     * Gets the unique_user_id.
      *
-     * @return The unique_id to get.
+     * @return The unique_user_id to get.
      */
-    public String getUniqueId() {
+    public String getUniqueUserId() {
         return mUniqueId;
     }
 
     /**
-     * Sets the unique_id.
+     * Sets the unique_user_id.
      *
-     * @param uniqueId The unique_id to set.
+     * @param uniqueId The unique_user_id to set.
      */
-    public void setUniqueId(final String uniqueId) {
+    public void setUniqueUserId(final String uniqueId) {
         mUniqueId = uniqueId;
     }
 

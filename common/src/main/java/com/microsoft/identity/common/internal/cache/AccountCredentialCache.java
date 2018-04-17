@@ -167,7 +167,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             boolean matches = true;
 
             if (mustMatchOnUniqueId) {
-                matches = uniqueId.equalsIgnoreCase(account.getUniqueId());
+                matches = uniqueId.equalsIgnoreCase(account.getUniqueUserId());
             }
 
             matches = matches && environment.equalsIgnoreCase(account.getEnvironment());
@@ -238,7 +238,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             boolean matches = true;
 
             if (mustMatchOnUniqueId) {
-                matches = uniqueId.equalsIgnoreCase(credential.getUniqueId());
+                matches = uniqueId.equalsIgnoreCase(credential.getUniqueUserId());
             }
 
             matches = matches && environment.equalsIgnoreCase(credential.getEnvironment());
