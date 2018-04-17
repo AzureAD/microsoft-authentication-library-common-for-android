@@ -59,12 +59,20 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
 
     @Override
     public String generateCacheKey(Account account) {
-        final List<String> keyComponents = new ArrayList<>();
-        keyComponents.add(account.getUniqueUserId());
-        keyComponents.add(account.getEnvironment());
-        keyComponents.add(account.getRealm());
+        final String uniqueUserIdReplacement = "<unique_user_id>";
+        final String environmentReplacement = "<environment>";
+        final String realmReplacement = "<realm>";
 
-        return collapseKeyComponents(keyComponents);
+        String cacheKey = uniqueUserIdReplacement
+                + CACHE_VALUE_SEPARATOR
+                + environmentReplacement
+                + CACHE_VALUE_SEPARATOR
+                + realmReplacement;
+        cacheKey = cacheKey.replace(uniqueUserIdReplacement, null == account.getUniqueUserId() ? "" : account.getUniqueUserId());
+        cacheKey = cacheKey.replace(environmentReplacement, null == account.getEnvironment() ? "" : account.getEnvironment());
+        cacheKey = cacheKey.replace(realmReplacement, null == account.getRealm() ? "" : account.getRealm());
+
+        return cacheKey;
     }
 
     private String generateCacheValueInternal(final AccountCredentialBase baseObject) {

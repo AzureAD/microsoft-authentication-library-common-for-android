@@ -287,6 +287,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         account.setRealm(REALM);
 
         final String expectedKey = ""
+                + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + REALM;
 
@@ -301,7 +302,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         final String expectedKey = ""
                 + UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
-                + ENVIRONMENT;
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR;
 
         assertEquals(expectedKey, mDelegate.generateCacheKey(account));
     }
@@ -311,7 +312,11 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
         account.setEnvironment(ENVIRONMENT);
 
-        assertEquals(ENVIRONMENT, mDelegate.generateCacheKey(account));
+        final String expectedKey = ""
+                + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR;
+
+        assertEquals(expectedKey, mDelegate.generateCacheKey(account));
     }
 
     @Test
