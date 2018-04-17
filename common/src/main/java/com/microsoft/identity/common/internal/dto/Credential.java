@@ -25,35 +25,53 @@ package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
 
+import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.CACHED_AT;
+import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.CLIENT_ID;
+import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.CREDENTIAL_TYPE;
+import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.ENVIRONMENT;
+import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
+import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.SECRET;
+import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.UNIQUE_ID;
+
 /**
  * This is a generic credential schema that should be used as a reference to define schemas for
  * specific credential types.
  */
 public abstract class Credential extends AccountCredentialBase {
 
+    public static class SerializedNames {
+        public static final String CLIENT_ID = "client_id";
+        public static final String CREDENTIAL_TYPE = "credential_type";
+        public static final String ENVIRONMENT = "environment";
+        public static final String SECRET = "secret";
+        public static final String UNIQUE_ID = "unique_id";
+        public static final String CACHED_AT = "cached_at";
+        public static final String EXPIRES_ON = "expires_on";
+    }
+
     /**
      * The client id of application, as defined in the app developer portal.
      */
-    @SerializedName("client_id")
+    @SerializedName(CLIENT_ID)
     private String mClientId;
 
     /**
      * A designated {@link CredentialType} represnted as a String.
      */
-    @SerializedName("credential_type")
+    @SerializedName(CREDENTIAL_TYPE)
     private String mCredentialType;
 
     /**
      * Entity who issued the token represented as a full host of it. For AAD it's host part from
      * the authority url with an optional port. For ADFS, it's the host part of the ADFS server URL.
      */
-    @SerializedName("environment")
+    @SerializedName(ENVIRONMENT)
     private String mEnvironment;
 
     /**
      * The credential as a String.
      */
-    @SerializedName("secret")
+    @SerializedName(SECRET)
     private String mSecret;
 
     /**
@@ -70,13 +88,13 @@ public abstract class Credential extends AccountCredentialBase {
      * This field is optional if there's no user present for the flow (e.g. client credential
      * grants)
      */
-    @SerializedName("unique_id")
+    @SerializedName(UNIQUE_ID)
     private String mUniqueId;
 
     /**
      * Absolute device time when entry was created in cache in milliseconds from epoch (1970).
      */
-    @SerializedName("cached_at")
+    @SerializedName(CACHED_AT)
     private String mCachedAt;
 
     /**
@@ -84,7 +102,7 @@ public abstract class Credential extends AccountCredentialBase {
      * locally and the value expires_in returned from the service. Measured in milliseconds from
      * epoch (1970).
      */
-    @SerializedName("expires_on")
+    @SerializedName(EXPIRES_ON)
     private String mExpiresOn;
 
     /**

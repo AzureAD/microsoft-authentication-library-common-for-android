@@ -7,6 +7,7 @@ import com.google.gson.JsonPrimitive;
 import com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
@@ -41,14 +42,6 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     private static final String FIRST_NAME = "Jane";
     private static final String LAST_NAME = "Doe";
     private static final String AVATAR_URL = "https://fake.cdn.microsoft.com/avatars/1";
-
-    private static final class JsonFields {
-        static final String UNIQUE_ID = "unique_id";
-        static final String ENVIRONMENT = "environment";
-        static final String CLIENT_ID = "client_id";
-        static final String REALM = "realm";
-        static final String TARGET = "target";
-    }
 
     private IAccountCredentialCacheKeyValueDelegate mDelegate;
 
@@ -179,12 +172,12 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         // Turn the serialized value into a JSONObject and start testing field equality.
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, jsonObject.getString(JsonFields.UNIQUE_ID));
-        assertEquals(ENVIRONMENT, jsonObject.getString(JsonFields.ENVIRONMENT));
+        assertEquals(UNIQUE_ID, jsonObject.getString(Credential.SerializedNames.UNIQUE_ID));
+        assertEquals(ENVIRONMENT, jsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
-        assertEquals(CLIENT_ID, jsonObject.getString(JsonFields.CLIENT_ID));
-        assertEquals(REALM, jsonObject.getString(JsonFields.REALM));
-        assertEquals(TARGET, jsonObject.getString(JsonFields.TARGET));
+        assertEquals(CLIENT_ID, jsonObject.getString(Credential.SerializedNames.CLIENT_ID));
+        assertEquals(REALM, jsonObject.getString(AccessToken.SerializedNames.REALM));
+        assertEquals(TARGET, jsonObject.getString(AccessToken.SerializedNames.TARGET));
     }
 
     @Test
@@ -216,12 +209,12 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         String serializedValue = mDelegate.generateCacheValue(accessToken);
         JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString(JsonFields.UNIQUE_ID));
-        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(JsonFields.ENVIRONMENT));
+        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.UNIQUE_ID));
+        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), derivedCacheValueJsonObject.getString("credential_type"));
-        assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString(JsonFields.CLIENT_ID));
-        assertEquals(REALM, derivedCacheValueJsonObject.getString(JsonFields.REALM));
-        assertEquals(TARGET, derivedCacheValueJsonObject.getString(JsonFields.TARGET));
+        assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.CLIENT_ID));
+        assertEquals(REALM, derivedCacheValueJsonObject.getString(AccessToken.SerializedNames.REALM));
+        assertEquals(TARGET, derivedCacheValueJsonObject.getString(AccessToken.SerializedNames.TARGET));
         assertEquals("bar", derivedCacheValueJsonObject.getString("foo"));
 
         final JSONArray jsonArr = derivedCacheValueJsonObject.getJSONArray("numbers");
@@ -258,7 +251,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         final AccessToken deserializedValue = mDelegate.fromCacheValue(serializedValue, AccessToken.class);
         assertNotNull(deserializedValue);
-        assertNull(deserializedValue.getAdditionalFields().get(JsonFields.ENVIRONMENT));
+        assertNull(deserializedValue.getAdditionalFields().get(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(UNIQUE_ID, deserializedValue.getUniqueId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
         assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), deserializedValue.getCredentialType());
@@ -337,9 +330,9 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         final String serializedValue = mDelegate.generateCacheValue(account);
 
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, jsonObject.getString(JsonFields.UNIQUE_ID));
-        assertEquals(ENVIRONMENT, jsonObject.getString(JsonFields.ENVIRONMENT));
-        assertEquals(REALM, jsonObject.getString(JsonFields.REALM));
+        assertEquals(UNIQUE_ID, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.UNIQUE_ID));
+        assertEquals(ENVIRONMENT, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT));
+        assertEquals(REALM, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM));
         assertEquals(AUTHORITY_ACCOUNT_ID, jsonObject.getString("authority_account_id"));
         assertEquals(AUTHORITY_TYPE, jsonObject.getString("authority_type"));
         assertEquals(GUEST_ID, jsonObject.getString("guest_id"));
@@ -381,9 +374,9 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         String serializedValue = mDelegate.generateCacheValue(account);
         JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString(JsonFields.UNIQUE_ID));
-        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(JsonFields.ENVIRONMENT));
-        assertEquals(REALM, derivedCacheValueJsonObject.getString(JsonFields.REALM));
+        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.UNIQUE_ID));
+        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT));
+        assertEquals(REALM, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM));
         assertEquals(AUTHORITY_ACCOUNT_ID, derivedCacheValueJsonObject.get("authority_account_id"));
         assertEquals(AUTHORITY_TYPE, derivedCacheValueJsonObject.get("authority_type"));
         assertEquals(GUEST_ID, derivedCacheValueJsonObject.get("guest_id"));
@@ -431,7 +424,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
         final com.microsoft.identity.common.internal.dto.Account deserializedValue
                 = mDelegate.fromCacheValue(serializedValue, com.microsoft.identity.common.internal.dto.Account.class);
         assertNotNull(deserializedValue);
-        assertNull(deserializedValue.getAdditionalFields().get(JsonFields.ENVIRONMENT));
+        assertNull(deserializedValue.getAdditionalFields().get(com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT));
         assertEquals(UNIQUE_ID, deserializedValue.getUniqueId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
         assertEquals(REALM, deserializedValue.getRealm());
@@ -545,11 +538,11 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         // Turn the serialized value into a JSONObject and start testing field equality.
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, jsonObject.getString(JsonFields.UNIQUE_ID));
-        assertEquals(ENVIRONMENT, jsonObject.getString(JsonFields.ENVIRONMENT));
+        assertEquals(UNIQUE_ID, jsonObject.getString(RefreshToken.SerializedNames.UNIQUE_ID));
+        assertEquals(ENVIRONMENT, jsonObject.getString(RefreshToken.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.RefreshToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
-        assertEquals(CLIENT_ID, jsonObject.getString(JsonFields.CLIENT_ID));
-        assertEquals(TARGET, jsonObject.getString(JsonFields.TARGET));
+        assertEquals(CLIENT_ID, jsonObject.getString(RefreshToken.SerializedNames.CLIENT_ID));
+        assertEquals(TARGET, jsonObject.getString(RefreshToken.SerializedNames.TARGET));
     }
 
     @Test
@@ -580,11 +573,11 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         String serializedValue = mDelegate.generateCacheValue(refreshToken);
         JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString(JsonFields.UNIQUE_ID));
-        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(JsonFields.ENVIRONMENT));
+        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString(RefreshToken.SerializedNames.UNIQUE_ID));
+        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(RefreshToken.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.RefreshToken.name().toLowerCase(Locale.US), derivedCacheValueJsonObject.getString("credential_type"));
-        assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString(JsonFields.CLIENT_ID));
-        assertEquals(TARGET, derivedCacheValueJsonObject.getString(JsonFields.TARGET));
+        assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString(RefreshToken.SerializedNames.CLIENT_ID));
+        assertEquals(TARGET, derivedCacheValueJsonObject.getString(RefreshToken.SerializedNames.TARGET));
         assertEquals("bar", derivedCacheValueJsonObject.getString("foo"));
 
         final JSONArray jsonArr = derivedCacheValueJsonObject.getJSONArray("numbers");
@@ -620,7 +613,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         final RefreshToken deserializedValue = mDelegate.fromCacheValue(serializedValue, RefreshToken.class);
         assertNotNull(deserializedValue);
-        assertNull(deserializedValue.getAdditionalFields().get(JsonFields.ENVIRONMENT));
+        assertNull(deserializedValue.getAdditionalFields().get(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(UNIQUE_ID, deserializedValue.getUniqueId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
         assertEquals(CredentialType.RefreshToken.name().toLowerCase(Locale.US), deserializedValue.getCredentialType());
@@ -696,11 +689,11 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         // Turn the serialized value into a JSONObject and start testing field equality.
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, jsonObject.getString(JsonFields.UNIQUE_ID));
-        assertEquals(ENVIRONMENT, jsonObject.getString(JsonFields.ENVIRONMENT));
+        assertEquals(UNIQUE_ID, jsonObject.getString(Credential.SerializedNames.UNIQUE_ID));
+        assertEquals(ENVIRONMENT, jsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.IdToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
-        assertEquals(CLIENT_ID, jsonObject.getString(JsonFields.CLIENT_ID));
-        assertEquals(REALM, jsonObject.getString(JsonFields.REALM));
+        assertEquals(CLIENT_ID, jsonObject.getString(Credential.SerializedNames.CLIENT_ID));
+        assertEquals(REALM, jsonObject.getString(IdToken.SerializedNames.REALM));
     }
 
     @Test
@@ -731,11 +724,11 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         String serializedValue = mDelegate.generateCacheValue(idToken);
         JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
-        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString(JsonFields.UNIQUE_ID));
-        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(JsonFields.ENVIRONMENT));
+        assertEquals(UNIQUE_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.UNIQUE_ID));
+        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.IdToken.name().toLowerCase(Locale.US), derivedCacheValueJsonObject.getString("credential_type"));
-        assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString(JsonFields.CLIENT_ID));
-        assertEquals(REALM, derivedCacheValueJsonObject.getString(JsonFields.REALM));
+        assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.CLIENT_ID));
+        assertEquals(REALM, derivedCacheValueJsonObject.getString(IdToken.SerializedNames.REALM));
         assertEquals("bar", derivedCacheValueJsonObject.getString("foo"));
 
         final JSONArray jsonArr = derivedCacheValueJsonObject.getJSONArray("numbers");
@@ -771,7 +764,7 @@ public class AccountCredentialCacheKeyValueDelegateTest {
 
         final IdToken deserializedValue = mDelegate.fromCacheValue(serializedValue, IdToken.class);
         assertNotNull(deserializedValue);
-        assertNull(deserializedValue.getAdditionalFields().get(JsonFields.ENVIRONMENT));
+        assertNull(deserializedValue.getAdditionalFields().get(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(UNIQUE_ID, deserializedValue.getUniqueId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
         assertEquals(CredentialType.IdToken.name().toLowerCase(Locale.US), deserializedValue.getCredentialType());

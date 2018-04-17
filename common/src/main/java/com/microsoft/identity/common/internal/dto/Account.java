@@ -25,6 +25,17 @@ package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
 
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AUTHORITY_ACCOUNT_ID;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AUTHORITY_TYPE;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AVATAR_URL;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.FIRST_NAME;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.GUEST_ID;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.LAST_NAME;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.UNIQUE_ID;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.USERNAME;
+
 /**
  * Accounts collect user displayable information about the user in each tenant (AAD) or environment
  * (MSA). Accounts also have fields necessary to lookup credentials.
@@ -34,6 +45,19 @@ import com.google.gson.annotations.SerializedName;
  */
 public class Account extends AccountCredentialBase {
 
+    public static class SerializedNames {
+        public static final String UNIQUE_ID = "unique_id";
+        public static final String ENVIRONMENT = "environment";
+        public static final String REALM = "realm";
+        public static final String AUTHORITY_ACCOUNT_ID = "authority_account_id";
+        public static final String USERNAME = "username";
+        public static final String AUTHORITY_TYPE = "authority_type";
+        public static final String GUEST_ID = "guest_id";
+        public static final String FIRST_NAME = "first_name";
+        public static final String LAST_NAME = "last_name";
+        public static final String AVATAR_URL = "avatar_url";
+    }
+
     ///////////////
     // Required fields
     ///////////////
@@ -41,7 +65,7 @@ public class Account extends AccountCredentialBase {
     /**
      * Unique user identifier for a given authentication scheme.
      */
-    @SerializedName("unique_id")
+    @SerializedName(UNIQUE_ID)
     private String mUniqueId;
 
     /**
@@ -49,20 +73,20 @@ public class Account extends AccountCredentialBase {
      * from the authority url with an optional port. For ADFS, it's the host part of the ADFS server
      * URL.
      */
-    @SerializedName("environment")
+    @SerializedName(ENVIRONMENT)
     private String mEnvironment;
 
     /**
      * Full tenant or organizational identifier that the Account belongs to. Can be null.
      */
-    @SerializedName("realm")
+    @SerializedName(REALM)
     private String mRealm;
 
     /**
      * Original authority specific account identifier. Can be needed for legacy purposes. OID for
      * AAD (in some unique cases subject instead of OID) and CID for MSA.
      */
-    @SerializedName("authority_account_id")
+    @SerializedName(AUTHORITY_ACCOUNT_ID)
     private String mAuthorityAccountId;
 
     /**
@@ -71,14 +95,14 @@ public class Account extends AccountCredentialBase {
      * without a specified format. Its value is mutable and might change over time. For MSA it's
      * email. For NTLM, NTLM username.
      */
-    @SerializedName("username")
+    @SerializedName(USERNAME)
     private String mUsername;
 
     /**
      * Account’s authority type as string (ex: AAD, MSA, MSSTS, Other).
      * Set of account types is extensible.
      */
-    @SerializedName("authority_type")
+    @SerializedName(AUTHORITY_TYPE)
     private String mAuthorityType;
 
     ///////////////
@@ -89,25 +113,25 @@ public class Account extends AccountCredentialBase {
      * Internal representation for guest users to the tenants. Corresponds to the “altsecid” claim
      * in the id_token for AAD.
      */
-    @SerializedName("guest_id")
+    @SerializedName(GUEST_ID)
     private String mGuestId;
 
     /**
      * First name for this Account.
      */
-    @SerializedName("first_name")
+    @SerializedName(FIRST_NAME)
     private String mFirstName;
 
     /**
      * Last name for this Account.
      */
-    @SerializedName("last_name")
+    @SerializedName(LAST_NAME)
     private String mLastName;
 
     /**
      * URL corresponding to a picture for this Account.
      */
-    @SerializedName("avatar_url")
+    @SerializedName(AVATAR_URL)
     private String mAvatarUrl;
 
     ///////////////
