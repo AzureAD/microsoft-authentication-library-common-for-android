@@ -102,8 +102,14 @@ public class MsalOAuth2TokenCache
                 null // Wildcard - delete anything that matches...
         );
 
+        Logger.verbose(
+                TAG + ":" + methodName,
+                "Inspecting " + accessTokens.size() + " accessToken[s]."
+        );
+
         for (final Credential accessToken : accessTokens) {
             if (scopesIntersect(referenceToken, (AccessToken) accessToken)) {
+                Logger.infoPII(TAG + ":" + methodName, "Removing credential: " + accessToken);
                 mAccountCredentialCache.removeCredential(accessToken);
             }
         }
@@ -120,6 +126,11 @@ public class MsalOAuth2TokenCache
         boolean result = false;
         for (final String scope : token2Scopes) {
             if (token1Scopes.contains(scope)) {
+                Logger.info(TAG + ":" + methodName, "Scopes intersect.");
+                Logger.infoPII(
+                        TAG + ":" + methodName,
+                        token1Scopes.toString() + " contains [" + scope + "]"
+                );
                 result = true;
                 break;
             }
@@ -154,6 +165,8 @@ public class MsalOAuth2TokenCache
         final String methodName = "saveAccount";
         Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
         final Account accountToSave = mAccountCredentialAdapter.createAccount(oAuth2Strategy, request, response);
+        Logger.info(TAG + ":" + methodName, "Saving Account...");
+        Logger.infoPII(TAG + ":" + methodName, "Account: " + accountToSave);
         mAccountCredentialCache.saveAccount(accountToSave);
         Logger.exiting(TAG, methodName);
     }
