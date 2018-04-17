@@ -22,7 +22,68 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.exception;
 
+import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
+import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
+
+import org.json.JSONException;
+
+import java.util.HashMap;
+import java.util.List;
+
 public class ServiceException extends BaseException {
+
+    protected int mHttpStatusCode;
+
+    protected HashMap<String, String> mHttpResponseBody = null;
+
+    protected HashMap<String, List<String>> mHttpResponseHeaders = null;
+
+    /**
+     * When {@link java.net.SocketTimeoutException} is thrown, no status code will be caught. Will use 0 instead.
+     */
+    static final int DEFAULT_STATUS_CODE = 0;
+    /**
+     * @return The http status code for the request sent to the service.
+     */
+    public int getHttpStatusCode() {
+        return mHttpStatusCode;
+    }
+
+    /**
+     * Gets the response body that may be returned by the service.
+     *
+     * @return response body map, null if not initialized.
+     */
+    public HashMap<String, String> getHttpResponseBody() {
+        return mHttpResponseBody;
+    }
+
+    /**
+     * Get the response headers that indicated an error.
+     *
+     * @return The response headers for the network call, null if not initialized.
+     */
+    public HashMap<String, List<String>> getHttpResponseHeaders() {
+        return mHttpResponseHeaders;
+    }
+
+    public void setHttpResponse(HttpWebResponse response) {
+        if (null != response) {
+            mHttpStatusCode = response.getStatusCode();
+
+            if (null != response.getResponseHeaders()) {
+                mHttpResponseHeaders = new HashMap<>(response.getResponseHeaders());
+            }
+
+            if (null != response.getBody()) {
+                try {
+                    mHttpResponseBody = new HashMap<>(HashMapExtensions.getJsonResponse(response));
+                } catch (final JSONException exception) {
+                    //Log.e(CommonCoreBaseException.class.getSimpleName(), ADALError.SERVER_INVALID_JSON_RESPONSE.toString(), exception);
+                }
+            }
+        }
+    }
 
     public ServiceException(final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
