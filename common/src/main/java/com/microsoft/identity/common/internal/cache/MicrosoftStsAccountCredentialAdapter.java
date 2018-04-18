@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
@@ -205,7 +206,24 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     @Override
     public RefreshToken asRefreshToken(final com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshTokenIn) {
         final RefreshToken refreshTokenOut = new RefreshToken();
-        // TODO
+
+        // TODO populate this object
+
+        // Required fields
+        refreshTokenOut.setUniqueUserId("");
+        refreshTokenOut.setEnvironment("");
+        refreshTokenOut.setCredentialType(CredentialType.RefreshToken.name());
+        refreshTokenOut.setClientId("");
+        refreshTokenOut.setSecret(refreshTokenIn.getRefreshToken());
+
+        // Optional fields
+        refreshTokenOut.setTarget("");
+        refreshTokenOut.setCachedAt("");
+        refreshTokenOut.setExpiresOn("");
+        refreshTokenOut.setClientInfo("");
+        refreshTokenOut.setFamilyId("");
+        refreshTokenOut.setUsername("");
+
         return refreshTokenOut;
     }
 
