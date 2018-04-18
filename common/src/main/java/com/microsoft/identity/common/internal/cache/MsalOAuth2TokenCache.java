@@ -34,9 +34,6 @@ public class MsalOAuth2TokenCache
                                 final IAccountCredentialAdapter accountCredentialAdapter,
                                 final List<IShareSingleSignOnState> sharedSsoCaches) {
         super(context);
-        Logger.getInstance().setLogLevel(Logger.LogLevel.VERBOSE);
-        Logger.setAllowLogcat(true);
-        Logger.setAllowPii(true);
         Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
         mSharedSsoCaches = sharedSsoCaches;
