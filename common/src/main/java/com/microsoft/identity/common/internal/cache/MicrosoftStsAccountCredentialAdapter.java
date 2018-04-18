@@ -2,6 +2,7 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.support.annotation.NonNull;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
@@ -13,9 +14,12 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -160,25 +164,41 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
 
         if (accountIn instanceof AzureActiveDirectoryAccount) {
             final AzureActiveDirectoryAccount aadAccount = (AzureActiveDirectoryAccount) accountIn;
+            final IDToken idToken = aadAccount.getIDToken();
+
+            if (null != idToken && null != idToken.getTokenClaims()) {
+                final Map<String, String> idTokenClaims = idToken.getTokenClaims();
+                final String avatarUrl = idTokenClaims.get(IDToken.PICTURE);
+                accountOut.setAvatarUrl(avatarUrl);
+                final String issuerUrlStr = idTokenClaims.get(MicrosoftIdToken.ISSUER);
+
+                if (!StringExtensions.isNullOrBlank(issuerUrlStr)) {
+                    try {
+                        final URL issuerUrl = new URL(issuerUrlStr);
+                        accountOut.setEnvironment(issuerUrl.getHost());
+                    } catch (MalformedURLException e) {
+                        // TODO log a warning
+                    }
+                }
+
+                final String altSecId = idTokenClaims.get("altsecid");
+                accountOut.setGuestId(altSecId);
+            }
+
             accountOut.setUniqueUserId(aadAccount.getUid() + "." + aadAccount.getUtid());
-            accountOut.setEnvironment(""); // TODO can I use the IDDP?
             accountOut.setRealm(aadAccount.getTenantId());
             accountOut.setAuthorityAccountId(aadAccount.getUserId());
             accountOut.setUsername(aadAccount.getDisplayableId());
             accountOut.setAuthorityType("AAD"); // TODO What about MSA? How does that work?
-            // Optional fields
-            //accountOut.setGuestId(null); // TODO Is this info available?
             accountOut.setFirstName(aadAccount.getGivenName());
             accountOut.setLastName(aadAccount.getFamilyName());
-            //accountOut.setAvatarUrl(null); TODO No avatar URL today, maybe in the future?
         }
 
         if (accountIn instanceof MicrosoftStsAccount) {
-            final MicrosoftStsAccount microsoftStsAccount = (MicrosoftStsAccount) accountIn;
             accountOut.setAuthorityType("MSSTS");
         }
 
-        // TODO
+        // TODO is there a special case needed for ADFS? (authority type)
         return accountOut;
     }
 
