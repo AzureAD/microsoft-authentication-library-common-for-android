@@ -2,12 +2,18 @@ package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
 
+import static com.microsoft.identity.common.internal.dto.IdToken.SerializedNames.REALM;
+
 public class IdToken extends Credential {
+
+    public static class SerializedNames extends Credential.SerializedNames {
+        public static final String REALM = "realm";
+    }
 
     /**
      * Full tenant or organizational identifier that account belongs to. Can be null.
      */
-    @SerializedName("realm")
+    @SerializedName(REALM)
     private String mRealm;
 
     /**

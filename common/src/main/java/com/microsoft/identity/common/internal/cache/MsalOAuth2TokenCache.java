@@ -94,7 +94,7 @@ public class MsalOAuth2TokenCache
         Logger.entering(TAG, methodName, referenceToken);
 
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentials(
-                referenceToken.getUniqueId(),
+                referenceToken.getUniqueUserId(),
                 referenceToken.getEnvironment(),
                 CredentialType.AccessToken,
                 referenceToken.getClientId(),
