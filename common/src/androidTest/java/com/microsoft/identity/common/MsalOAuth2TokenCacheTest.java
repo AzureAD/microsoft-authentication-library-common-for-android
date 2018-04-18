@@ -38,7 +38,7 @@ import static com.microsoft.identity.common.AccountCredentialCacheTest.CLIENT_ID
 import static com.microsoft.identity.common.AccountCredentialCacheTest.ENVIRONMENT;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.REALM;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.TARGET;
-import static com.microsoft.identity.common.AccountCredentialCacheTest.UNIQUE_ID;
+import static com.microsoft.identity.common.AccountCredentialCacheTest.UNIQUE_USER_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
@@ -75,18 +75,18 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         // Used by mocks
         account = new Account();
-        account.setUniqueId(UNIQUE_ID);
+        account.setUniqueUserId(UNIQUE_USER_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
 
         accessToken = new AccessToken();
-        accessToken.setUniqueId(UNIQUE_ID);
+        accessToken.setUniqueUserId(UNIQUE_USER_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
 
         refreshToken = new RefreshToken();
-        refreshToken.setUniqueId(UNIQUE_ID);
+        refreshToken.setUniqueUserId(UNIQUE_USER_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setClientId(CLIENT_ID);
@@ -183,7 +183,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final String extendedScopes = "calendar.modify user.read user.write https://graph.windows.net";
 
         AccessToken accessTokenToClear = new AccessToken();
-        accessTokenToClear.setUniqueId(UNIQUE_ID);
+        accessTokenToClear.setUniqueUserId(UNIQUE_USER_ID);
         accessTokenToClear.setEnvironment(ENVIRONMENT);
         accessTokenToClear.setCredentialType(CredentialType.AccessToken.name().toLowerCase());
         accessTokenToClear.setClientId(CLIENT_ID);

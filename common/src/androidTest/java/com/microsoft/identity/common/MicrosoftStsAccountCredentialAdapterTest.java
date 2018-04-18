@@ -77,7 +77,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     public void createAccount() throws Exception {
         final Account account = mAccountFactory.createAccount(mockStrategy, mockRequest, mockResponse);
         assertNotNull(account);
-        assertEquals(MOCK_UID + "." + MOCK_UTID, account.getUniqueId());
+        assertEquals(MOCK_UID + "." + MOCK_UTID, account.getUniqueUserId());
         assertEquals(MOCK_AUTHORITY, account.getEnvironment());
         assertEquals(MOCK_TID, account.getRealm());
         assertEquals(MOCK_OID, account.getAuthorityAccountId());

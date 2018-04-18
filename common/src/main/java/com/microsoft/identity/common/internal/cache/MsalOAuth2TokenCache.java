@@ -72,7 +72,7 @@ public class MsalOAuth2TokenCache
 
     private void deleteAccessTokensWithIntersectingScopes(final AccessToken referenceToken) {
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentials(
-                referenceToken.getUniqueId(),
+                referenceToken.getUniqueUserId(),
                 referenceToken.getEnvironment(),
                 CredentialType.AccessToken,
                 referenceToken.getClientId(),

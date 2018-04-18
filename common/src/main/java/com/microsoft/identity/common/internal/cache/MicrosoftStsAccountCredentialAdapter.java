@@ -41,7 +41,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
 
         final Account account = new Account();
-        account.setUniqueId(formatUniqueId(clientInfo));
+        account.setUniqueUserId(formatUniqueId(clientInfo));
         account.setEnvironment(msRequest.getAuthority().toString()); // host of authority with optional port
         account.setRealm(getRealm(strategy, response)); //tid
         account.setAuthorityAccountId(tokenClaims.get(OJBECT_ID)); // oid claim from id token

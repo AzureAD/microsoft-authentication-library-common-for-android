@@ -26,6 +26,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CacheKeyReplacements.CLIENT_ID;
+import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CacheKeyReplacements.CREDENTIAL_TYPE;
+import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CacheKeyReplacements.ENVIRONMENT;
+import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CacheKeyReplacements.REALM;
+import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CacheKeyReplacements.TARGET;
+import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CacheKeyReplacements.UNIQUE_USER_ID;
+
 /**
  * Uses Gson to serialize instances of <T> into {@link String}s.
  */
@@ -39,32 +46,31 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
         mGson = new Gson();
     }
 
+    static class CacheKeyReplacements {
+        static final String UNIQUE_USER_ID = "<unique_user_id>";
+        static final String ENVIRONMENT = "<environment>";
+        static final String REALM = "<realm>";
+        static final String CREDENTIAL_TYPE = "<credential_type>";
+        static final String CLIENT_ID = "<client_id>";
+        static final String TARGET = "<target>";
+    }
 
-    protected final String collapseKeyComponents(final List<String> keyComponents) {
-        String cacheKey = "";
-
-        for (String keyComponent : keyComponents) {
-            if (!StringExtensions.isNullOrBlank(keyComponent)) {
-                keyComponent = keyComponent.toLowerCase(Locale.US);
-                cacheKey += keyComponent + CACHE_VALUE_SEPARATOR;
-            }
-        }
-
-        if (cacheKey.endsWith(CACHE_VALUE_SEPARATOR)) {
-            cacheKey = cacheKey.substring(0, cacheKey.length() - 1);
-        }
-
-        return cacheKey;
+    private static String sanitizeNull(final String input) {
+        return null == input ? "" : input.toLowerCase(Locale.US);
     }
 
     @Override
     public String generateCacheKey(Account account) {
-        final List<String> keyComponents = new ArrayList<>();
-        keyComponents.add(account.getUniqueId());
-        keyComponents.add(account.getEnvironment());
-        keyComponents.add(account.getRealm());
+        String cacheKey = UNIQUE_USER_ID
+                + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT
+                + CACHE_VALUE_SEPARATOR
+                + REALM;
+        cacheKey = cacheKey.replace(UNIQUE_USER_ID, sanitizeNull(account.getUniqueUserId()));
+        cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(account.getEnvironment()));
+        cacheKey = cacheKey.replace(REALM, sanitizeNull(account.getRealm()));
 
-        return collapseKeyComponents(keyComponents);
+        return cacheKey;
     }
 
     private String generateCacheValueInternal(final AccountCredentialBase baseObject) {
@@ -87,22 +93,33 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
 
     @Override
     public String generateCacheKey(Credential credential) {
-        final List<String> keyComponents = new ArrayList<>();
-        keyComponents.add(credential.getUniqueId());
-        keyComponents.add(credential.getEnvironment());
-        keyComponents.add(credential.getCredentialType());
-        keyComponents.add(credential.getClientId());
+        String cacheKey =
+                UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
+                        + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                        + CREDENTIAL_TYPE + CACHE_VALUE_SEPARATOR
+                        + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                        + REALM + CACHE_VALUE_SEPARATOR
+                        + TARGET;
+        cacheKey = cacheKey.replace(UNIQUE_USER_ID, sanitizeNull(credential.getUniqueUserId()));
+        cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(credential.getEnvironment()));
+        cacheKey = cacheKey.replace(CREDENTIAL_TYPE, sanitizeNull(credential.getCredentialType()));
+        cacheKey = cacheKey.replace(CLIENT_ID, sanitizeNull(credential.getClientId()));
 
         if (credential instanceof AccessToken) {
-            keyComponents.add(((AccessToken) credential).getRealm());
-            keyComponents.add(((AccessToken) credential).getTarget());
+            final AccessToken accessToken = (AccessToken) credential;
+            cacheKey = cacheKey.replace(REALM, sanitizeNull(accessToken.getRealm()));
+            cacheKey = cacheKey.replace(TARGET, sanitizeNull(accessToken.getTarget()));
         } else if (credential instanceof RefreshToken) {
-            keyComponents.add(((RefreshToken) credential).getTarget());
+            final RefreshToken refreshToken = (RefreshToken) credential;
+            cacheKey = cacheKey.replace(REALM, "");
+            cacheKey = cacheKey.replace(TARGET, sanitizeNull(refreshToken.getTarget()));
         } else if (credential instanceof IdToken) {
-            keyComponents.add(((IdToken) credential).getRealm());
+            final IdToken idToken = (IdToken) credential;
+            cacheKey = cacheKey.replace(REALM, sanitizeNull(idToken.getRealm()));
+            cacheKey = cacheKey.replace(TARGET, "");
         }
 
-        return collapseKeyComponents(keyComponents);
+        return cacheKey;
     }
 
     @Override

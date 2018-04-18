@@ -2,19 +2,32 @@ package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
 
+import static com.microsoft.identity.common.internal.dto.RefreshToken.SerializedNames.CLIENT_INFO;
+import static com.microsoft.identity.common.internal.dto.RefreshToken.SerializedNames.FAMILY_ID;
+import static com.microsoft.identity.common.internal.dto.RefreshToken.SerializedNames.TARGET;
+import static com.microsoft.identity.common.internal.dto.RefreshToken.SerializedNames.USERNAME;
+
+
 public class RefreshToken extends Credential {
+
+    public static class SerializedNames extends Credential.SerializedNames {
+        public static final String CLIENT_INFO = "client_info";
+        public static final String FAMILY_ID = "family_id";
+        public static final String TARGET = "target";
+        public static final String USERNAME = "username";
+    }
 
     /**
      * Full base64 encoded client info received from ESTS, if available. STS returns the clientInfo 
      * on both v1 and v2 for AAD. This field is used for extensibility purposes.
      */
-    @SerializedName("client_info")
+    @SerializedName(CLIENT_INFO)
     private String mClientInfo;
 
     /**
      * 1st Party Application Family ID.
      */
-    @SerializedName("family_id")
+    @SerializedName(FAMILY_ID)
     private String mFamilyId;
 
     /**
@@ -23,7 +36,7 @@ public class RefreshToken extends Credential {
      * Mandatory, if credential is scoped down by some parameters or requirements (e.g. by
      * resource, scopes or permissions).
      */
-    @SerializedName("target")
+    @SerializedName(TARGET)
     private String mTarget;
 
     /**
@@ -31,7 +44,7 @@ public class RefreshToken extends Credential {
      * in the v2.0 endpoint). It could be an email address, phone number, or a generic username
      * without a specified format. Its value is mutable and might change over time.
      */
-    @SerializedName("username")
+    @SerializedName(USERNAME)
     private String mUsername;
 
     /**
