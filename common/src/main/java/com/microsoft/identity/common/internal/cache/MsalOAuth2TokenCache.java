@@ -108,7 +108,7 @@ public class MsalOAuth2TokenCache
             final String[] scopeArray = scopeString.split("\\s+");
             scopeSet.addAll(Arrays.asList(scopeArray));
         }
-        
+
         return scopeSet;
     }
 
@@ -123,7 +123,10 @@ public class MsalOAuth2TokenCache
     @Override
     public void setSingleSignOnState(final com.microsoft.identity.common.Account account,
                                      final RefreshToken refreshToken) {
-        // TODO
+        final Account accountToSave = mAccountCredentialAdapter.asAccount(account);
+        final com.microsoft.identity.common.internal.dto.RefreshToken rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
+        mAccountCredentialCache.saveAccount(accountToSave);
+        mAccountCredentialCache.saveCredential(rt);
     }
 
     @Override
