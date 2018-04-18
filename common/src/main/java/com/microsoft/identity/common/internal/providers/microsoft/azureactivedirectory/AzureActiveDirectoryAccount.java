@@ -48,6 +48,7 @@ public class AzureActiveDirectoryAccount extends Account {
      * @param uTid    Returned via ClientInfo of Token Response
      */
     public AzureActiveDirectoryAccount(IDToken idToken, String uid, final String uTid) {
+        mIDToken = idToken;
         Map<String, String> claims = idToken.getTokenClaims();
         mUniqueId = getUniqueId(claims);
         mDisplayableId = getDisplayableId(claims);
@@ -123,7 +124,6 @@ public class AzureActiveDirectoryAccount extends Account {
 
         return null;
     }
-
 
     public String getTenantId() {
         return mTenantId;
@@ -286,5 +286,9 @@ public class AzureActiveDirectoryAccount extends Account {
      */
     public Date getPasswordExpiresOn() {
         return DateExtensions.createCopy(mPasswordExpiresOn);
+    }
+
+    public IDToken getIDToken() {
+        return mIDToken;
     }
 }
