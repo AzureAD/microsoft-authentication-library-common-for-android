@@ -6,6 +6,7 @@ import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -156,6 +157,27 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     @Override
     public Account asAccount(final com.microsoft.identity.common.Account accountIn) {
         final Account accountOut = new Account();
+
+        if (accountIn instanceof AzureActiveDirectoryAccount) {
+            final AzureActiveDirectoryAccount aadAccount = (AzureActiveDirectoryAccount) accountIn;
+            accountOut.setUniqueUserId(aadAccount.getUid() + "." + aadAccount.getUtid());
+            accountOut.setEnvironment(""); // TODO can I use the IDDP?
+            accountOut.setRealm(aadAccount.getTenantId());
+            accountOut.setAuthorityAccountId(aadAccount.getUserId());
+            accountOut.setUsername(aadAccount.getDisplayableId());
+            accountOut.setAuthorityType("AAD"); // TODO What about MSA? How does that work?
+            // Optional fields
+            //accountOut.setGuestId(null); // TODO Is this info available?
+            accountOut.setFirstName(aadAccount.getGivenName());
+            accountOut.setLastName(aadAccount.getFamilyName());
+            //accountOut.setAvatarUrl(null); TODO No avatar URL today, maybe in the future?
+        }
+
+        if (accountIn instanceof MicrosoftStsAccount) {
+            final MicrosoftStsAccount microsoftStsAccount = (MicrosoftStsAccount) accountIn;
+            accountOut.setAuthorityType("MSSTS");
+        }
+
         // TODO
         return accountOut;
     }

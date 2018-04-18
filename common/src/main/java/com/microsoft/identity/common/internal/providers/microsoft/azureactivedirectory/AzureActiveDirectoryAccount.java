@@ -189,7 +189,7 @@ public class AzureActiveDirectoryAccount extends Account {
      *
      * @return The uid to get.
      */
-    String getUid() {
+    public String getUid() {
         return mUid;
     }
 
@@ -234,7 +234,7 @@ public class AzureActiveDirectoryAccount extends Account {
      *
      * @return The utid to get.
      */
-    String getUtid() {
+    public String getUtid() {
         return mUtid;
     }
 
