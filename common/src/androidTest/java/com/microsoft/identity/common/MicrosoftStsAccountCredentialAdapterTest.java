@@ -66,7 +66,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockRequest.getAuthority()).thenReturn(new URL(MOCK_AUTHORITY));
         when(mockResponse.getIdToken()).thenReturn(MOCK_ID_TOKEN_WITH_CLAIMS);
         when(mockResponse.getClientInfo()).thenReturn(MOCK_CLIENT_INFO);
-        when(mockAccount.getTenantId()).thenReturn(MOCK_TID);
+        when(mockAccount.getRealm()).thenReturn(MOCK_TID);
         when(mockRequest.getScope()).thenReturn(MOCK_SCOPE);
         when(mockResponse.getExpiresIn()).thenReturn(MOCK_EXPIRES_IN);
         when(mockResponse.getFamilyId()).thenReturn(MOCK_FAMILY_ID);

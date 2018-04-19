@@ -49,4 +49,9 @@ public class MicrosoftStsAccount extends AzureActiveDirectoryAccount {
         return new MicrosoftStsAccount(idToken, uid, uTid);
     }
 
+    @Override
+    public String getAuthorityType() {
+        return "MSSTS";
+    }
+
 }

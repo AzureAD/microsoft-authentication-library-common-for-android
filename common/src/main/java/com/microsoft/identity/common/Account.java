@@ -1,5 +1,7 @@
 package com.microsoft.identity.common;
 
+import com.microsoft.identity.common.internal.dto.IAccount;
+
 import java.util.List;
 
 /**
@@ -8,14 +10,15 @@ import java.util.List;
  * UserInfo shouldn't be used in common since it collides with the OIDC spec
  * This class contains information about the user/account associated with the authenticated subject/principal
  */
-public abstract class Account {
+public abstract class Account implements IAccount {
 
     /**
      * Not all IDPs will have the same unique identifier for a user
      * Per the OIDC spec the unique identifier is subject... or the sub claim; however AAD and other
      * IDPs have their own unique identifiers for users
-     *
+     * <p>
      * Let the IDP give us the representation of the user/account based on the token response
+     *
      * @return
      */
     public abstract String getUniqueIdentifier();

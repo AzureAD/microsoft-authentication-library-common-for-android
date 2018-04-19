@@ -2,25 +2,20 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.support.annotation.NonNull;
 
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -137,7 +132,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         final MicrosoftStsOAuth2Strategy msStrategy = asMicrosoftStsOAuth2Strategy(strategy);
         final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
         final MicrosoftStsAccount msAccount = (MicrosoftStsAccount) msStrategy.createAccount(msTokenResponse);
-        return msAccount.getTenantId();
+        return msAccount.getRealm();
     }
 
     @Override
@@ -157,50 +152,6 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         refreshToken.setUsername(getUsername(response));
 
         return refreshToken;
-    }
-
-    @Override
-    public Account asAccount(final com.microsoft.identity.common.Account accountIn) {
-        final Account accountOut = new Account();
-
-        if (accountIn instanceof AzureActiveDirectoryAccount) {
-            final AzureActiveDirectoryAccount aadAccount = (AzureActiveDirectoryAccount) accountIn;
-            final IDToken idToken = aadAccount.getIDToken();
-
-            if (null != idToken && null != idToken.getTokenClaims()) {
-                final Map<String, String> idTokenClaims = idToken.getTokenClaims();
-                final String avatarUrl = idTokenClaims.get(IDToken.PICTURE);
-                accountOut.setAvatarUrl(avatarUrl);
-                final String issuerUrlStr = idTokenClaims.get(MicrosoftIdToken.ISSUER);
-
-                if (!StringExtensions.isNullOrBlank(issuerUrlStr)) {
-                    try {
-                        final URL issuerUrl = new URL(issuerUrlStr);
-                        accountOut.setEnvironment(issuerUrl.getHost());
-                    } catch (MalformedURLException e) {
-                        // TODO log a warning
-                    }
-                }
-
-                final String altSecId = idTokenClaims.get("altsecid");
-                accountOut.setGuestId(altSecId);
-            }
-
-            accountOut.setUniqueUserId(aadAccount.getUid() + "." + aadAccount.getUtid());
-            accountOut.setRealm(aadAccount.getTenantId());
-            accountOut.setAuthorityAccountId(aadAccount.getUserId());
-            accountOut.setUsername(aadAccount.getDisplayableId());
-            accountOut.setAuthorityType("AAD"); // TODO What about MSA? How does that work?
-            accountOut.setFirstName(aadAccount.getGivenName());
-            accountOut.setLastName(aadAccount.getFamilyName());
-        }
-
-        if (accountIn instanceof MicrosoftStsAccount) {
-            accountOut.setAuthorityType("MSSTS");
-        }
-
-        // TODO is there a special case needed for ADFS? (authority type)
-        return accountOut;
     }
 
     @Override

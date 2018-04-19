@@ -19,6 +19,7 @@ import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.IAccount;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
@@ -153,7 +154,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        final List<Account> accounts = accountCredentialCache.getAccounts();
+        final List<IAccount> accounts = accountCredentialCache.getAccounts();
         assertEquals(1, accounts.size());
         assertEquals(account, accounts.get(0));
 
@@ -201,7 +202,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        final List<Account> accounts = accountCredentialCache.getAccounts();
+        final List<IAccount> accounts = accountCredentialCache.getAccounts();
         assertEquals(1, accounts.size());
         assertEquals(account, accounts.get(0));
 

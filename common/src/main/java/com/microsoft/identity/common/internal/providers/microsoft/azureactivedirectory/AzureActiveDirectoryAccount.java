@@ -5,8 +5,11 @@ import android.net.Uri;
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -125,23 +128,11 @@ public class AzureActiveDirectoryAccount extends Account {
         return null;
     }
 
-    public String getTenantId() {
-        return mTenantId;
-    }
-
-    public String getGivenName() {
-        return mGivenName;
-    }
-
-    public void setGivenName(String mGivenName) {
+    public void setFirstName(String mGivenName) {
         this.mGivenName = mGivenName;
     }
 
-    public String getFamilyName() {
-        return mFamilyName;
-    }
-
-    public void setFamilyName(String mFamilyName) {
+    public void setLastName(String mFamilyName) {
         this.mFamilyName = mFamilyName;
     }
 
@@ -290,5 +281,80 @@ public class AzureActiveDirectoryAccount extends Account {
 
     public IDToken getIDToken() {
         return mIDToken;
+    }
+
+    @Override
+    public String getUniqueUserId() {
+        return getUid() + "." + getUtid();
+    }
+
+    @Override
+    public String getEnvironment() {
+        String environment = null;
+
+        if (null != getIDToken() && null != getIDToken().getTokenClaims()) {
+            environment = getIDToken().getTokenClaims().get(MicrosoftIdToken.ISSUER);
+            if (!StringExtensions.isNullOrBlank(environment)) {
+                try {
+                    environment = new URL(environment).getHost();
+                } catch (MalformedURLException e) {
+                    // TODO log an error
+                }
+            }
+        }
+
+        return environment;
+    }
+
+    @Override
+    public String getRealm() {
+        return mTenantId;
+    }
+
+    @Override
+    public String getAuthorityAccountId() {
+        return getUserId();
+    }
+
+    @Override
+    public String getUsername() {
+        return getDisplayableId();
+    }
+
+    @Override
+    public String getAuthorityType() {
+        return "AAD";
+    }
+
+    @Override
+    public String getGuestId() {
+        String guestId = null;
+
+        if (null != getIDToken() && null != getIDToken().getTokenClaims()) {
+            guestId = getIDToken().getTokenClaims().get("altsecid");
+        }
+
+        return guestId;
+    }
+
+    @Override
+    public String getFirstName() {
+        return mGivenName;
+    }
+
+    @Override
+    public String getLastName() {
+        return mFamilyName;
+    }
+
+    @Override
+    public String getAvatarUrl() {
+        String avatarUrl = null;
+
+        if (null != getIDToken() && null != getIDToken().getTokenClaims()) {
+            avatarUrl = getIDToken().getTokenClaims().get(IDToken.PICTURE);
+        }
+
+        return avatarUrl;
     }
 }

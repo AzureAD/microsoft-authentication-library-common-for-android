@@ -123,9 +123,8 @@ public class MsalOAuth2TokenCache
     @Override
     public void setSingleSignOnState(final com.microsoft.identity.common.Account account,
                                      final RefreshToken refreshToken) {
-        final Account accountToSave = mAccountCredentialAdapter.asAccount(account);
         final com.microsoft.identity.common.internal.dto.RefreshToken rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
-        mAccountCredentialCache.saveAccount(accountToSave);
+        mAccountCredentialCache.saveAccount(account);
         mAccountCredentialCache.saveCredential(rt);
     }
 
