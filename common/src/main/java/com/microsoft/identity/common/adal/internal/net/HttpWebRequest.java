@@ -167,7 +167,7 @@ public class HttpWebRequest {
         if (!connectionService.isConnectionAvailable()) {
             if (connectionService.isNetworkDisabledFromOptimizations()) {
                 final ClientException dozeModeException = new ClientException(
-                        ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
+                        ErrorStrings.NO_NETWORK_CONNECTION_POWER_OPTIMIZATION,
                         "Connection is not available to refresh token because power optimization is "
                                 + "enabled. And the device is in doze mode or the app is standby");
                 throw dozeModeException;

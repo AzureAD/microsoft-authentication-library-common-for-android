@@ -36,6 +36,11 @@ public class ErrorStrings {
     public static final String DEVICE_NETWORK_NOT_AVAILABLE = "device_network_not_available";
 
     /**
+     * Network is available but device is in the doze mode.
+     */
+    public static final String  NO_NETWORK_CONNECTION_POWER_OPTIMIZATION = "device_network_not_available_doze_mode";
+
+    /**
      * The sdk failed to parse the Json format.
      */
     public static final String JSON_PARSE_FAILURE = "json_parse_failure";

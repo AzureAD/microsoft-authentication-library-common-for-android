@@ -32,11 +32,11 @@ import java.util.List;
 
 public class ServiceException extends BaseException {
 
-    protected int mHttpStatusCode;
+    private int mHttpStatusCode;
 
-    protected HashMap<String, String> mHttpResponseBody = null;
+    private HashMap<String, String> mHttpResponseBody = null;
 
-    protected HashMap<String, List<String>> mHttpResponseHeaders = null;
+    private HashMap<String, List<String>> mHttpResponseHeaders = null;
 
     /**
      * When {@link java.net.SocketTimeoutException} is thrown, no status code will be caught. Will use 0 instead.
