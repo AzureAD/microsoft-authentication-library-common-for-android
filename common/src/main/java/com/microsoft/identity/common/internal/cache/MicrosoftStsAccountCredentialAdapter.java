@@ -161,19 +161,19 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         // TODO populate this object
 
         // Required fields
-        refreshTokenOut.setUniqueUserId("");
-        refreshTokenOut.setEnvironment("");
+        refreshTokenOut.setUniqueUserId(refreshTokenIn.getUniqueUserId());
+        refreshTokenOut.setEnvironment(refreshTokenIn.getEnvironment());
         refreshTokenOut.setCredentialType(CredentialType.RefreshToken.name());
-        refreshTokenOut.setClientId("");
-        refreshTokenOut.setSecret(refreshTokenIn.getRefreshToken());
+        refreshTokenOut.setClientId(refreshTokenIn.getClientId());
+        refreshTokenOut.setSecret(refreshTokenIn.getSecret());
 
         // Optional fields
-        refreshTokenOut.setTarget("");
-        refreshTokenOut.setCachedAt("");
-        refreshTokenOut.setExpiresOn("");
-        refreshTokenOut.setClientInfo("");
-        refreshTokenOut.setFamilyId("");
-        refreshTokenOut.setUsername("");
+        refreshTokenOut.setTarget(refreshTokenIn.getTarget());
+        refreshTokenOut.setCachedAt(""); // TODO compute
+        refreshTokenOut.setExpiresOn(refreshTokenIn.getExpiresOn());
+        //refreshTokenOut.setClientInfo(""); TODO OK to drop?
+        refreshTokenOut.setFamilyId(refreshTokenIn.getFamilyId());
+        //refreshTokenOut.setUsername(""); TODO OK to drop?
 
         return refreshTokenOut;
     }

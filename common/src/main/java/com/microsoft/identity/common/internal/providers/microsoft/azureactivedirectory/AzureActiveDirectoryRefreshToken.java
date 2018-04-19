@@ -18,9 +18,44 @@ public class AzureActiveDirectoryRefreshToken extends RefreshToken {
         return mIsFamilyRefreshToken;
     }
 
+    @Override
     public String getFamilyId() {
         return mFamilyId;
     }
 
+    @Override
+    public String getUniqueUserId() {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public String getEnvironment() {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public String getClientId() {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public String getSecret() {
+        return getRefreshToken();
+    }
+
+    @Override
+    public String getTarget() {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public String getExpiresOn() {
+        // TODO
+        return null;
+    }
 
 }
