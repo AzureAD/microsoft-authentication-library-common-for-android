@@ -2,6 +2,7 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.support.annotation.NonNull;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.CredentialType;
@@ -29,6 +30,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     // TODO move me!
     private static final String AUTHORITY_TYPE = "MSSTS";
     private static final String BEARER = "Bearer";
+    private static final String FOCI_PREFIX = "foci-";
 
     @Override
     public Account createAccount(
@@ -172,6 +174,16 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         //refreshTokenOut.setClientInfo(""); TODO OK to drop?
         refreshTokenOut.setFamilyId(refreshTokenIn.getFamilyId());
         //refreshTokenOut.setUsername(""); TODO OK to drop?
+
+        if (!StringExtensions.isNullOrBlank(refreshTokenIn.getFamilyId())) {
+            String familyId = refreshTokenIn.getFamilyId();
+            // It is a foci token, replace the client and [possibly] prepend "foci-"
+            if (!familyId.startsWith(FOCI_PREFIX)) {
+                familyId = FOCI_PREFIX + familyId;
+            }
+
+            refreshTokenOut.setClientId(familyId);
+        }
 
         return refreshTokenOut;
     }

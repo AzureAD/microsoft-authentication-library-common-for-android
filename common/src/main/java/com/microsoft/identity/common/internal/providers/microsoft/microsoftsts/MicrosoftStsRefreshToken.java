@@ -1,5 +1,6 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
@@ -10,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MicrosoftStsRefreshToken extends RefreshToken {
 
+    private boolean mIsFamilyRefreshToken;
     private ClientInfo mClientInfo;
     private IDToken mIdToken;
     private String mClientId;
@@ -25,6 +27,11 @@ public class MicrosoftStsRefreshToken extends RefreshToken {
         mScope = response.getScope();
         mExpiresOn = response.getExpiresOn();
         mFamilyId = response.getFamilyId();
+        mIsFamilyRefreshToken = !StringExtensions.isNullOrBlank(mFamilyId);
+    }
+
+    public boolean getIsFamilyRefreshToken() {
+        return mIsFamilyRefreshToken;
     }
 
     @Override
