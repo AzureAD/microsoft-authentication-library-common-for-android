@@ -158,8 +158,6 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     public RefreshToken asRefreshToken(final com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshTokenIn) {
         final RefreshToken refreshTokenOut = new RefreshToken();
 
-        // TODO populate this object
-
         // Required fields
         refreshTokenOut.setUniqueUserId(refreshTokenIn.getUniqueUserId());
         refreshTokenOut.setEnvironment(refreshTokenIn.getEnvironment());
