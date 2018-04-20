@@ -86,4 +86,98 @@ public class SchemaUtil {
 
         return environment;
     }
+
+    /**
+     * Returns the 'avatar url' for the supplied IDToken.
+     *
+     * @param idToken The IDToken to parse.
+     * @return The environment or null if the IDToken cannot be parsed or the picture claim is empty.
+     */
+    public static String getAvatarUrl(final IDToken idToken) {
+        final String methodName = "getAvatarUrl";
+        String avatarUrl = null;
+
+        if (null != idToken) {
+            final Map<String, String> idTokenClaims = idToken.getTokenClaims();
+
+            if (null != idTokenClaims) {
+                avatarUrl = idTokenClaims.get(IDToken.PICTURE);
+
+                Logger.verbosePII(
+                        TAG + ":" + methodName,
+                        null,
+                        "Avatar URL: " + avatarUrl
+                );
+
+                if (null == avatarUrl) {
+                    Logger.warn(
+                            TAG + ":" + methodName,
+                            null,
+                            "Avatar URL was null."
+                    );
+                }
+            } else {
+                Logger.warn(
+                        TAG + ":" + methodName,
+                        null,
+                        "IDToken claims were null."
+                );
+            }
+        } else {
+            Logger.warn(
+                    TAG + ":" + methodName,
+                    null,
+                    "IDToken was null."
+            );
+        }
+
+        return avatarUrl;
+    }
+
+    /**
+     * Returns the 'guest_id' for the supplied IDToken.
+     *
+     * @param idToken The IDToken to parse.
+     * @return The guestId or null if the IDToken cannot be parsed or the altsecid claim is empty.
+     */
+    public static String getGuestId(final IDToken idToken) {
+        final String methodName = "getGuestId";
+        String guestId = null;
+
+        if (null != idToken) {
+            final Map<String, String> idTokenClaims = idToken.getTokenClaims();
+
+            if (null != idTokenClaims) {
+                guestId = idTokenClaims.get("altsecid");
+
+                Logger.verbosePII(
+                        TAG + ":" + methodName,
+                        null,
+                        "Guest Id: " + guestId
+                );
+
+                if (null == guestId) {
+                    Logger.warn(
+                            TAG + ":" + methodName,
+                            null,
+                            "Guest Id was null."
+                    );
+                }
+            } else {
+                Logger.warn(
+                        TAG + ":" + methodName,
+                        null,
+                        "IDToken claims were null."
+                );
+            }
+        } else {
+            Logger.warn(
+                    TAG + ":" + methodName,
+                    null,
+                    "IDToken was null."
+            );
+        }
+
+        return guestId;
+    }
 }

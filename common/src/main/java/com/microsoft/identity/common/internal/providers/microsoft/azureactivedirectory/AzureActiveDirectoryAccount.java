@@ -313,13 +313,7 @@ public class AzureActiveDirectoryAccount extends Account {
 
     @Override
     public String getGuestId() {
-        String guestId = null;
-
-        if (null != getIDToken() && null != getIDToken().getTokenClaims()) {
-            guestId = getIDToken().getTokenClaims().get("altsecid");
-        }
-
-        return guestId;
+        return SchemaUtil.getGuestId(mIDToken);
     }
 
     @Override
@@ -334,12 +328,6 @@ public class AzureActiveDirectoryAccount extends Account {
 
     @Override
     public String getAvatarUrl() {
-        String avatarUrl = null;
-
-        if (null != getIDToken() && null != getIDToken().getTokenClaims()) {
-            avatarUrl = getIDToken().getTokenClaims().get(IDToken.PICTURE);
-        }
-
-        return avatarUrl;
+        return SchemaUtil.getAvatarUrl(mIDToken);
     }
 }
