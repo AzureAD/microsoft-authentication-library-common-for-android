@@ -15,61 +15,61 @@ public class ActiveDirectoryFederationServices2012R2Account extends Account {
 
     @Override
     public String getUniqueIdentifier() {
-        return null;
+        throw new UnsupportedOperationException("Method stub!");
     }
 
     @Override
     public List<String> getCacheIdentifiers() {
-        return null;
+        throw new UnsupportedOperationException("Method stub!");
     }
 
     @Override
     public String getUniqueUserId() {
-        return null;
+        throw new UnsupportedOperationException("Method stub!");
     }
 
     @Override
     public String getEnvironment() {
-        return null;
+        throw new UnsupportedOperationException("Method stub!");
     }
 
     @Override
     public String getRealm() {
-        return null;
+        throw new UnsupportedOperationException("Method stub!");
     }
 
     @Override
     public String getAuthorityAccountId() {
-        return null;
+        throw new UnsupportedOperationException("Method stub!");
     }
 
     @Override
     public String getUsername() {
-        return null;
+        throw new UnsupportedOperationException("Method stub!");
     }
 
     @Override
     public String getAuthorityType() {
-        return null;
+        throw new UnsupportedOperationException("Method stub!");
     }
 
     @Override
     public String getGuestId() {
-        return null;
+        throw new UnsupportedOperationException("Method stub!");
     }
 
     @Override
     public String getFirstName() {
-        return null;
+        throw new UnsupportedOperationException("Method stub!");
     }
 
     @Override
     public String getLastName() {
-        return null;
+        throw new UnsupportedOperationException("Method stub!");
     }
 
     @Override
     public String getAvatarUrl() {
-        return null;
+        throw new UnsupportedOperationException("Method stub!");
     }
 }
