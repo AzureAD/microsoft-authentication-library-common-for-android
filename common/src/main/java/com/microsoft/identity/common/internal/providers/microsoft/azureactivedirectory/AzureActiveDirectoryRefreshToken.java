@@ -2,12 +2,10 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
+import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -49,22 +47,7 @@ public class AzureActiveDirectoryRefreshToken extends RefreshToken {
 
     @Override
     public String getEnvironment() {
-        // TODO see AzureActiveDirectoryAccount#getEnvironment
-        // there's opportunity for code sharing here
-        String environment = null;
-
-        if (null != mIdToken && null != mIdToken.getTokenClaims()) {
-            environment = mIdToken.getTokenClaims().get(MicrosoftIdToken.ISSUER);
-            if (!StringExtensions.isNullOrBlank(environment)) {
-                try {
-                    environment = new URL(environment).getHost();
-                } catch (MalformedURLException e) {
-                    // TODO log an error
-                }
-            }
-        }
-
-        return environment;
+        return SchemaUtil.getEnvironment(mIdToken);
     }
 
     @Override

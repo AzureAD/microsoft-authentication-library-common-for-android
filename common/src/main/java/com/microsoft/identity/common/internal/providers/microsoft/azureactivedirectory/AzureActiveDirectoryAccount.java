@@ -5,11 +5,9 @@ import android.net.Uri;
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
+import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -290,22 +288,7 @@ public class AzureActiveDirectoryAccount extends Account {
 
     @Override
     public String getEnvironment() {
-        // TODO see AzureActiveDirectoryRefreshToken#getEnvironment
-        // there's opportunity for code sharing here
-        String environment = null;
-
-        if (null != getIDToken() && null != getIDToken().getTokenClaims()) {
-            environment = getIDToken().getTokenClaims().get(MicrosoftIdToken.ISSUER);
-            if (!StringExtensions.isNullOrBlank(environment)) {
-                try {
-                    environment = new URL(environment).getHost();
-                } catch (MalformedURLException e) {
-                    // TODO log an error
-                }
-            }
-        }
-
-        return environment;
+        return SchemaUtil.getEnvironment(mIDToken);
     }
 
     @Override
