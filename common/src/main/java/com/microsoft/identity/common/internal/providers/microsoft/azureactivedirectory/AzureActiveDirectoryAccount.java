@@ -290,6 +290,8 @@ public class AzureActiveDirectoryAccount extends Account {
 
     @Override
     public String getEnvironment() {
+        // TODO see AzureActiveDirectoryRefreshToken#getEnvironment
+        // there's opportunity for code sharing here
         String environment = null;
 
         if (null != getIDToken() && null != getIDToken().getTokenClaims()) {

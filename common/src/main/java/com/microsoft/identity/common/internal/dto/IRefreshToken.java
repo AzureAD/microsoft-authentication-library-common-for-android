@@ -1,5 +1,6 @@
 package com.microsoft.identity.common.internal.dto;
 
+// TODO document
 public interface IRefreshToken {
 
     String getUniqueUserId();

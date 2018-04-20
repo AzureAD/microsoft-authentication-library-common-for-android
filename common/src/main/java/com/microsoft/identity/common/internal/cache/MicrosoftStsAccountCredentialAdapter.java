@@ -169,7 +169,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
 
         // Optional fields
         refreshTokenOut.setTarget(refreshTokenIn.getTarget());
-        refreshTokenOut.setCachedAt(""); // TODO compute
+        refreshTokenOut.setCachedAt(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())));
         refreshTokenOut.setExpiresOn(refreshTokenIn.getExpiresOn());
         //refreshTokenOut.setClientInfo(""); TODO OK to drop?
         refreshTokenOut.setFamilyId(refreshTokenIn.getFamilyId());
@@ -210,7 +210,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         return msTokenResponse.getFamilyId();
     }
 
-    private String formatUniqueId(final ClientInfo clientInfo) {
+    public static String formatUniqueId(final ClientInfo clientInfo) {
         final String uid = clientInfo.getUid();
         final String utid = clientInfo.getUtid();
         return uid + "." + utid;

@@ -19,6 +19,18 @@ public class ClientInfo {
     public static final String UNIQUE_TENANT_IDENTIFIER = "utid";
 
     /**
+     * Unique identifier for a user in the current tenant.
+     */
+    protected String mUid;
+
+    /**
+     * Unique identifier for a tenant.
+     */
+    protected String mUtid;
+
+    private String mRawClientInfo;
+
+    /**
      * Constructor for ClientInfo object
      *
      * @param rawClientInfo
@@ -45,18 +57,8 @@ public class ClientInfo {
 
         mUid = clientInfoItems.get(ClientInfo.UNIQUE_IDENTIFIER);
         mUtid = clientInfoItems.get(ClientInfo.UNIQUE_TENANT_IDENTIFIER);
-
+        mRawClientInfo = rawClientInfo;
     }
-
-    /**
-     * Unique identifier for a user in the current tenant.
-     */
-    protected String mUid;
-
-    /**
-     * Unique identifier for a tenant.
-     */
-    protected String mUtid;
 
     /**
      * Gets the user unique id.
@@ -65,15 +67,6 @@ public class ClientInfo {
      */
     public String getUid() {
         return mUid;
-    }
-
-    /**
-     * Sets the user unique id.
-     *
-     * @param uid The user unique id to set.
-     */
-    public void setUid(String uid) {
-        this.mUid = uid;
     }
 
     /**
@@ -86,11 +79,12 @@ public class ClientInfo {
     }
 
     /**
-     * Sets the tenant unique id.
+     * Returns the raw String underlying this object.
      *
-     * @param utid The tenant unique id to set.
+     * @return the raw ClientInfo String.
      */
-    public void setUtid(String utid) {
-        this.mUtid = utid;
+    public String getRawClientInfo() {
+        return mRawClientInfo;
     }
+
 }
