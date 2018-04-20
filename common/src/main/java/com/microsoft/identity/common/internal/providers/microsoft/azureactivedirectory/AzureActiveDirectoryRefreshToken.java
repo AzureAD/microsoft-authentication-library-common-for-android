@@ -1,7 +1,6 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
@@ -41,8 +40,7 @@ public class AzureActiveDirectoryRefreshToken extends RefreshToken {
 
     @Override
     public String getUniqueUserId() {
-        // TODO refactor
-        return MicrosoftStsAccountCredentialAdapter.formatUniqueId(mClientInfo);
+        return SchemaUtil.getUniqueId(mClientInfo);
     }
 
     @Override

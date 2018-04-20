@@ -1,6 +1,5 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
-import com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
@@ -30,8 +29,7 @@ public class MicrosoftStsRefreshToken extends RefreshToken {
 
     @Override
     public String getUniqueUserId() {
-        // TODO refactor
-        return MicrosoftStsAccountCredentialAdapter.formatUniqueId(mClientInfo);
+        return SchemaUtil.getUniqueId(mClientInfo);
     }
 
     @Override

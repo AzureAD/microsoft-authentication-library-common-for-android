@@ -1,9 +1,11 @@
 package com.microsoft.identity.common.internal.cache;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
 import java.net.MalformedURLException;
@@ -179,5 +181,50 @@ public class SchemaUtil {
         }
 
         return guestId;
+    }
+
+    public static String getUniqueId(final ClientInfo clientInfo) {
+        final String methodName = ":getUniqueId";
+        String uniqueId = null;
+
+        if (null != clientInfo) {
+            final String uid = clientInfo.getUid();
+            final String utid = clientInfo.getUtid();
+
+            if (StringExtensions.isNullOrBlank(uid)) {
+                Logger.warn(
+                        TAG + ":" + methodName,
+                        null,
+                        "uid was null/blank"
+                );
+            }
+
+            if (StringExtensions.isNullOrBlank(utid)) {
+                Logger.warn(
+                        TAG + ":" + methodName,
+                        null,
+                        "utid was null/blank"
+                );
+            }
+
+            if (!StringExtensions.isNullOrBlank(uid) && !StringExtensions.isNullOrBlank(utid)) {
+                uniqueId = uid + "." + utid;
+            }
+
+            Logger.verbosePII(
+                    TAG + ":" + methodName,
+                    null,
+                    "unique_user_id: " + uniqueId
+            );
+
+        } else {
+            Logger.warn(
+                    TAG + ":" + methodName,
+                    null,
+                    "ClientInfo was null."
+            );
+        }
+
+        return uniqueId;
     }
 }

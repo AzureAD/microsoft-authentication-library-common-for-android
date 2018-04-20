@@ -42,7 +42,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
 
         final Account account = new Account();
-        account.setUniqueUserId(formatUniqueId(clientInfo));
+        account.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
         account.setEnvironment(msRequest.getAuthority().toString()); // host of authority with optional port
         account.setRealm(getRealm(strategy, response)); //tid
         account.setAuthorityAccountId(tokenClaims.get(OJBECT_ID)); // oid claim from id token
@@ -206,11 +206,5 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     private String getFamilyId(final TokenResponse response) {
         final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
         return msTokenResponse.getFamilyId();
-    }
-
-    public static String formatUniqueId(final ClientInfo clientInfo) {
-        final String uid = clientInfo.getUid();
-        final String utid = clientInfo.getUtid();
-        return uid + "." + utid;
     }
 }
