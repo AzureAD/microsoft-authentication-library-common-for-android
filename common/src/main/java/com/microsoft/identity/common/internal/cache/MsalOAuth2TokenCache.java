@@ -13,6 +13,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +26,15 @@ public class MsalOAuth2TokenCache
     private List<IShareSingleSignOnState> mSharedSsoCaches;
     private IAccountCredentialCache mAccountCredentialCache;
     private IAccountCredentialAdapter mAccountCredentialAdapter;
+
+    public MsalOAuth2TokenCache(final Context context,
+                                final IAccountCredentialCache accountCredentialCache,
+                                final IAccountCredentialAdapter accountCredentialAdapter) {
+        super(context);
+        mAccountCredentialCache = accountCredentialCache;
+        mSharedSsoCaches = new ArrayList<>();
+        mAccountCredentialAdapter = accountCredentialAdapter;
+    }
 
     public MsalOAuth2TokenCache(final Context context,
                                 final IAccountCredentialCache accountCredentialCache,
