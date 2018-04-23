@@ -45,7 +45,7 @@ public class ObjectMapperTest {
 
     @Test
     public void test_JsonToObject(){
-        TokenRequest tr = (TokenRequest) ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST, TokenRequest.class);
+        TokenRequest tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST, TokenRequest.class);
 
         Assert.assertEquals(CLIENT_ID, tr.getClientId());
     }

@@ -98,9 +98,9 @@ public class MicrosoftStsOAuth2Strategy extends OAuth2Strategy {
 
         if (response.getStatusCode() >= 400) {
             //An error occurred
-            tokenErrorResponse = (TokenErrorResponse) ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenErrorResponse.class);
+            tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenErrorResponse.class);
         } else {
-            tokenResponse = (TokenResponse) ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenResponse.class);
+            tokenResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenResponse.class);
         }
 
         return new TokenResult(tokenResponse, tokenErrorResponse);

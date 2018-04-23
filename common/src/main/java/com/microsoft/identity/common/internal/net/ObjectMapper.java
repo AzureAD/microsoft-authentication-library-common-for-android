@@ -17,7 +17,7 @@ public class ObjectMapper {
         return new Gson().toJson(object);
     }
 
-    public static Object deserializeJsonStringToObject(String json, Class objectClass) {
+    public static <T> T deserializeJsonStringToObject(String json, Class<T> objectClass) {
         return new Gson().fromJson(json, objectClass);
     }
 
