@@ -10,8 +10,7 @@ public class MicrosoftSts extends IdentityProvider {
     public OAuth2Strategy createOAuth2Strategy(OAuth2Configuration config) {
         if (config instanceof MicrosoftStsOAuth2Configuration) {
             return new MicrosoftStsOAuth2Strategy((MicrosoftStsOAuth2Configuration) config);
-        } else {
-            throw new RuntimeException("Expected instance of AzureActiveDirectoryOAuth2Configuration in AzureActiveDirectory.CreateOAuth2Strategy");
         }
+        throw new IllegalArgumentException("Expected instance of AzureActiveDirectoryOAuth2Configuration in AzureActiveDirectory.CreateOAuth2Strategy");
     }
 }

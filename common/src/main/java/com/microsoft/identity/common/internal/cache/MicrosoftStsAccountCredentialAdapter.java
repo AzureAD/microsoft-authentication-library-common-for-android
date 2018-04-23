@@ -3,6 +3,7 @@ package com.microsoft.identity.common.internal.cache;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.CredentialType;
@@ -37,23 +38,29 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
             final OAuth2Strategy strategy,
             final AuthorizationRequest request,
             final TokenResponse response) {
-        final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
-        final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
-        final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
-        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
-        final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
+        final MicrosoftIdToken msIdToken;
+        try {
+            msIdToken = new MicrosoftIdToken(response.getIdToken());
+            final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
+            final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
+            final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
+            final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
 
-        final Account account = new Account();
-        account.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
-        account.setEnvironment(msRequest.getAuthority().toString()); // host of authority with optional port
-        account.setRealm(getRealm(strategy, response)); //tid
-        account.setAuthorityAccountId(tokenClaims.get(OJBECT_ID)); // oid claim from id token
-        account.setUsername(tokenClaims.get(PREFERRED_USERNAME));
-        account.setAuthorityType(AUTHORITY_TYPE);
-        account.setFirstName(tokenClaims.get(GIVEN_NAME));
-        account.setLastName(tokenClaims.get(FAMILY_NAME));
+            final Account account = new Account();
+            account.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
+            account.setEnvironment(msRequest.getAuthority().toString()); // host of authority with optional port
+            account.setRealm(getRealm(strategy, response)); //tid
+            account.setAuthorityAccountId(tokenClaims.get(OJBECT_ID)); // oid claim from id token
+            account.setUsername(tokenClaims.get(PREFERRED_USERNAME));
+            account.setAuthorityType(AUTHORITY_TYPE);
+            account.setFirstName(tokenClaims.get(GIVEN_NAME));
+            account.setLastName(tokenClaims.get(FAMILY_NAME));
 
-        return account;
+            return account;
+        } catch (ServiceException e) {
+            // TODO handle this properly
+            throw new RuntimeException(e);
+        }
     }
 
     @NonNull
@@ -189,9 +196,14 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     }
 
     private String getUsername(final TokenResponse response) {
-        final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
-        final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
-        return tokenClaims.get(PREFERRED_USERNAME);
+        try {
+            final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
+            final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
+            return tokenClaims.get(PREFERRED_USERNAME);
+        } catch (ServiceException e) {
+            // TODO handle this properly
+            throw new RuntimeException(e);
+        }
     }
 
     private String getTarget(final AuthorizationRequest request) {

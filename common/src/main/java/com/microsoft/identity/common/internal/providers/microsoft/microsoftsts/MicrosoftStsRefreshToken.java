@@ -1,6 +1,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
@@ -21,13 +22,18 @@ public class MicrosoftStsRefreshToken extends RefreshToken {
 
     public MicrosoftStsRefreshToken(MicrosoftStsTokenResponse response) {
         super(response);
-        mClientInfo = new ClientInfo(response.getClientInfo());
-        mIdToken = new IDToken(response.getIdToken());
-        mClientId = response.getClientId();
-        mScope = response.getScope();
-        mExpiresOn = response.getExpiresOn();
-        mFamilyId = response.getFamilyId();
-        mIsFamilyRefreshToken = !StringExtensions.isNullOrBlank(mFamilyId);
+        try {
+            mClientInfo = new ClientInfo(response.getClientInfo());
+            mIdToken = new IDToken(response.getIdToken());
+            mClientId = response.getClientId();
+            mScope = response.getScope();
+            mExpiresOn = response.getExpiresOn();
+            mFamilyId = response.getFamilyId();
+            mIsFamilyRefreshToken = !StringExtensions.isNullOrBlank(mFamilyId);
+        } catch (ServiceException e) {
+            // TODO handle this properly
+            throw new RuntimeException(e);
+        }
     }
 
     public boolean getIsFamilyRefreshToken() {

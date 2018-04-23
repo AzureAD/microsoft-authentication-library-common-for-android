@@ -8,10 +8,10 @@ import android.security.KeyPairGeneratorSpec;
 import android.util.Base64;
 import android.util.Log;
 
-import com.microsoft.identity.common.adal.error.ADALError;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ErrorStrings;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -129,8 +129,9 @@ public class StorageHelper implements IStorageHelper {
 
     /**
      * Constructor for {@link StorageHelper}.
+     *
      * @param context The {@link Context} to create {@link StorageHelper}.
-     * TODO: Remove this suppression: https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html
+     *                TODO: Remove this suppression: https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html
      */
     @SuppressLint("TrulyRandom")
     public StorageHelper(Context context) {
@@ -280,10 +281,12 @@ public class StorageHelper implements IStorageHelper {
         mBlobVersion = defaultBlobVersion;
         return getKeyOrCreate(mBlobVersion);
     }
+
     /**
      * For API <18 or user provide the key, will return the user supplied key.
      * Supported API >= 18 PrivateKey is stored in AndroidKeyStore. Loads key
      * from the file if it exists. If not exist, it will generate one.
+     *
      * @param keyVersion The key type of the keys used to encrypt data, could be user provided key
      *                   or key persisted in the keystore.
      * @return The {@link SecretKey} used to encrypt data.
@@ -317,6 +320,7 @@ public class StorageHelper implements IStorageHelper {
 
     /**
      * Get the saved key. Will only do read operation.
+     *
      * @param keyVersion whether the key is user defined or in Android key store
      * @return SecretKey
      * @throws GeneralSecurityException
@@ -324,9 +328,9 @@ public class StorageHelper implements IStorageHelper {
      */
     private synchronized SecretKey getKey(final String keyVersion) throws GeneralSecurityException, IOException {
         switch (keyVersion) {
-            case VERSION_USER_DEFINED :
+            case VERSION_USER_DEFINED:
                 return getSecretKey(AuthenticationSettings.INSTANCE.getSecretKeyData());
-            case VERSION_ANDROID_KEY_STORE :
+            case VERSION_ANDROID_KEY_STORE:
 
                 if (mSecretKeyFromAndroidKeyStore != null) {
                     return mSecretKeyFromAndroidKeyStore;
@@ -337,7 +341,7 @@ public class StorageHelper implements IStorageHelper {
                 mKeyPair = readKeyPair();
                 mSecretKeyFromAndroidKeyStore = getUnwrappedSecretKey();
                 return mSecretKeyFromAndroidKeyStore;
-            default :
+            default:
                 throw new IOException("Unknown keyVersion.");
         }
     }
@@ -517,7 +521,7 @@ public class StorageHelper implements IStorageHelper {
             // Reset KeyPair info so that new request will generate correct KeyPairs.
             // All tokens with previous SecretKey are not possible to decrypt.
             //Log.e(TAG, "Unwrap failed for AndroidKeyStore", "",ADALError.ANDROIDKEYSTORE_FAILED, ex);
-            Log.e(TAG, ADALError.ANDROIDKEYSTORE_FAILED.toString());
+            Log.e(TAG, ErrorStrings.ANDROIDKEYSTORE_FAILED);
             mKeyPair = null;
             deleteKeyFile();
             resetKeyPairFromAndroidKeyStore();
