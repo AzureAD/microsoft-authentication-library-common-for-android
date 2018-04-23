@@ -10,8 +10,6 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
-import com.microsoft.identity.common.adal.error.ADALError;
-
 import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.text.ParseException;

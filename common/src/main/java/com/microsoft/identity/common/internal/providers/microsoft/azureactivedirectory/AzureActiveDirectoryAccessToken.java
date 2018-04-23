@@ -13,15 +13,12 @@ public class AzureActiveDirectoryAccessToken extends AccessToken {
 
     public AzureActiveDirectoryAccessToken(TokenResponse response) {
         super(response);
-
-        AzureActiveDirectoryTokenResponse aadResponse;
-        if (response instanceof AzureActiveDirectoryTokenResponse) {
-            aadResponse = (AzureActiveDirectoryTokenResponse) response;
-            this.mExpiresOn = aadResponse.getExpiresOn();
-            this.mExtendedExpiresOn = aadResponse.getExtExpiresOn();
-        } else {
-            throw new RuntimeException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryAccessToken constructor");
+        if (!(response instanceof AzureActiveDirectoryTokenResponse)) {
+            throw new IllegalArgumentException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryAccessToken constructor");
         }
+        AzureActiveDirectoryTokenResponse aadResponse = (AzureActiveDirectoryTokenResponse) response;
+        this.mExpiresOn = aadResponse.getExpiresOn();
+        this.mExtendedExpiresOn = aadResponse.getExtExpiresOn();
     }
 
     public Date getExpiresOn() {

@@ -1,5 +1,6 @@
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
 import java.util.Map;
@@ -10,7 +11,7 @@ import java.util.Map;
  * see <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/development/custom-id-tokens-in-ad-fs'>https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/development/custom-id-tokens-in-ad-fs</a>
  */
 public class ActiveDirectoryFederationServicesIdToken extends IDToken {
-    public ActiveDirectoryFederationServicesIdToken(String rawIdToken) {
+    public ActiveDirectoryFederationServicesIdToken(String rawIdToken) throws ServiceException {
         super(rawIdToken);
     }
 
