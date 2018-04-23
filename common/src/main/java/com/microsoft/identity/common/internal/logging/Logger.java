@@ -139,28 +139,6 @@ public final class Logger {
     }
 
     /**
-     * Send a {@link LogLevel#ERROR} log message without PII.
-     *
-     * @param tag           Used to identify the source of a log message. It usually identifies the
-     *                      class or activity where the log call occurs.
-     * @param correlationID Unique identifier for a request or flow used to trace program execution.
-     * @param errorMessage  The error message to log.
-     * @param exception     An exception to log.
-     */
-    public static void error(final String tag,
-                             @Nullable final String correlationID,
-                             @Nullable final String errorMessage,
-                             @Nullable final Throwable exception) {
-        getInstance().log(
-                tag,
-                LogLevel.ERROR,
-                correlationID, errorMessage,
-                exception,
-                false
-        );
-    }
-
-    /**
      * Send a {@link LogLevel#ERROR} log message with PII.
      *
      * @param tag          Used to identify the source of a log message. It usually identifies the
@@ -175,29 +153,6 @@ public final class Logger {
                 tag,
                 LogLevel.ERROR,
                 DiagnosticContext.getRequestContext().toJsonString(),
-                errorMessage,
-                exception,
-                true
-        );
-    }
-
-    /**
-     * Send a {@link LogLevel#ERROR} log message with PII.
-     *
-     * @param tag           Used to identify the source of a log message. It usually identifies the
-     *                      class or activity where the log call occurs.
-     * @param correlationID Unique identifier for a request or flow used to trace program execution.
-     * @param errorMessage  The error message to log.
-     * @param exception     An exception to log.
-     */
-    public static void errorPII(final String tag,
-                                @Nullable final String correlationID,
-                                @Nullable final String errorMessage,
-                                @Nullable final Throwable exception) {
-        getInstance().log(
-                tag,
-                LogLevel.ERROR,
-                correlationID,
                 errorMessage,
                 exception,
                 true
@@ -223,27 +178,6 @@ public final class Logger {
     }
 
     /**
-     * Send a {@link LogLevel#WARN} log message without PII.
-     *
-     * @param tag           Used to identify the source of a log message. It usually identifies the
-     *                      class or activity where the log call occurs.
-     * @param correlationID Unique identifier for a request or flow used to trace program execution.
-     * @param message       The message to log.
-     */
-    public static void warn(final String tag,
-                            @Nullable final String correlationID,
-                            @Nullable final String message) {
-        getInstance().log(
-                tag,
-                LogLevel.WARN,
-                correlationID,
-                message,
-                null,
-                false
-        );
-    }
-
-    /**
      * Send a {@link LogLevel#WARN} log message with PII.
      *
      * @param tag     Used to identify the source of a log message. It usually identifies the class
@@ -255,27 +189,6 @@ public final class Logger {
                 tag,
                 LogLevel.WARN,
                 DiagnosticContext.getRequestContext().toJsonString(),
-                message,
-                null,
-                true
-        );
-    }
-
-    /**
-     * Send a {@link LogLevel#WARN} log message with PII.
-     *
-     * @param tag           Used to identify the source of a log message. It usually identifies the
-     *                      class or activity where the log call occurs.
-     * @param correlationID Unique identifier for a request or flow used to trace program execution.
-     * @param message       The message to log.
-     */
-    public static void warnPII(final String tag,
-                               @Nullable final String correlationID,
-                               @Nullable final String message) {
-        getInstance().log(
-                tag,
-                LogLevel.WARN,
-                correlationID,
                 message,
                 null,
                 true
@@ -301,20 +214,6 @@ public final class Logger {
     }
 
     /**
-     * * Send a {@link LogLevel#INFO} log message without PII.
-     *
-     * @param tag           Used to identify the source of a log message. It usually identifies the
-     *                      class or activity where the log call occurs.
-     * @param correlationID Unique identifier for a request or flow used to trace program execution.
-     * @param message       The message to log.
-     */
-    public static void info(final String tag,
-                            @Nullable final String correlationID,
-                            @Nullable final String message) {
-        getInstance().log(tag, LogLevel.INFO, correlationID, message, null, false);
-    }
-
-    /**
      * Send a {@link LogLevel#INFO} log message with PII.
      *
      * @param tag     Used to identify the source of a log message. It usually identifies the class
@@ -330,20 +229,6 @@ public final class Logger {
                 null,
                 true
         );
-    }
-
-    /**
-     * Send a {@link LogLevel#INFO} log message with PII.
-     *
-     * @param tag           Used to identify the source of a log message. It usually identifies the
-     *                      class or activity where the log call occurs.
-     * @param correlationID Unique identifier for a request or flow used to trace program execution.
-     * @param message       The message to log.
-     */
-    public static void infoPII(final String tag,
-                               @Nullable final String correlationID,
-                               @Nullable final String message) {
-        getInstance().log(tag, LogLevel.INFO, correlationID, message, null, true);
     }
 
     /**
@@ -365,27 +250,6 @@ public final class Logger {
     }
 
     /**
-     * Send a {@link LogLevel#VERBOSE} log message without PII.
-     *
-     * @param tag           Used to identify the source of a log message. It usually identifies the
-     *                      class or activity where the log call occurs.
-     * @param correlationID Unique identifier for a request or flow used to trace program execution.
-     * @param message       The message to log.
-     */
-    public static void verbose(final String tag,
-                               @Nullable final String correlationID,
-                               @Nullable final String message) {
-        getInstance().log(
-                tag,
-                LogLevel.VERBOSE,
-                correlationID,
-                message,
-                null,
-                false
-        );
-    }
-
-    /**
      * Send a {@link LogLevel#VERBOSE} log message with PII.
      *
      * @param tag     Used to identify the source of a log message. It usually identifies the class
@@ -397,27 +261,6 @@ public final class Logger {
                 tag,
                 LogLevel.VERBOSE,
                 DiagnosticContext.getRequestContext().toJsonString(),
-                message,
-                null,
-                true
-        );
-    }
-
-    /**
-     * Send a {@link LogLevel#VERBOSE} log message with PII.
-     *
-     * @param tag           Used to identify the source of a log message. It usually identifies the
-     *                      class or activity where the log call occurs.
-     * @param correlationID Unique identifier for a request or flow used to trace program execution.
-     * @param message       The message to log.
-     */
-    public static void verbosePII(final String tag,
-                                  @Nullable final String correlationID,
-                                  @Nullable final String message) {
-        getInstance().log(
-                tag,
-                LogLevel.VERBOSE,
-                correlationID,
                 message,
                 null,
                 true
