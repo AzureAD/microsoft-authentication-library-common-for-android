@@ -1,10 +1,13 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.Account;
+
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
+import com.microsoft.identity.common.exception.ServiceException;
+
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -33,51 +36,49 @@ public class MicrosoftStsOAuth2Strategy extends OAuth2Strategy {
 
     @Override
     public String getIssuerCacheIdentifier(AuthorizationRequest request) {
-        if (request instanceof MicrosoftStsAuthorizationRequest) {
-            final URL authority = ((MicrosoftStsAuthorizationRequest) request).getAuthority();
-            // TODO I don't think this is right... This is probably not the correct authority cache to consult...
-            final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
-            // This map can only be consulted if authority validation is on.
-            // If the host has a hardcoded trust, we can just use the hostname.
-            if (null != cloudEnv) {
-                return cloudEnv.getPreferredNetworkHostName();
-            } else {
-                return authority.getHost();
-            }
-        } else {
-            throw new RuntimeException("Request provided is not of type MicrosoftStsAuthorizationRequest");
+        if (!(request instanceof MicrosoftStsAuthorizationRequest)) {
+            throw new IllegalArgumentException("Request provided is not of type MicrosoftStsAuthorizationRequest");
         }
+
+        final URL authority = ((MicrosoftStsAuthorizationRequest) request).getAuthority();
+        // TODO I don't think this is right... This is probably not the correct authority cache to consult...
+        final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
+        // This map can only be consulted if authority validation is on.
+        // If the host has a hardcoded trust, we can just use the hostname.
+        if (null != cloudEnv) {
+            return cloudEnv.getPreferredNetworkHostName();
+        }
+        return authority.getHost();
     }
 
     @Override
     public AccessToken getAccessTokenFromResponse(TokenResponse response) {
-        MicrosoftStsAccessToken accessToken;
-
-        if (response instanceof MicrosoftStsTokenResponse) {
-            accessToken = new MicrosoftStsAccessToken(response);
-        } else {
-            throw new RuntimeException("Expected MicrosoftStsTokenResponse in MicrosoftStsOAuth2Strategy.getAccessTokenFromResponse");
+        if (!(response instanceof MicrosoftStsTokenResponse)) {
+            throw new IllegalArgumentException("Expected MicrosoftStsTokenResponse in MicrosoftStsOAuth2Strategy.getAccessTokenFromResponse");
         }
-
-        return accessToken;
+        return new MicrosoftStsAccessToken(response);
     }
 
     @Override
     public RefreshToken getRefreshTokenFromResponse(TokenResponse response) {
-        MicrosoftStsRefreshToken refreshToken;
-
-        if (response instanceof MicrosoftStsTokenResponse) {
-            refreshToken = new MicrosoftStsRefreshToken((MicrosoftStsTokenResponse) response);
-        } else {
-            throw new RuntimeException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryOAuth2Strategy.getRefreshTokenFromResponse");
+        if (!(response instanceof MicrosoftStsTokenResponse)) {
+            throw new IllegalArgumentException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryOAuth2Strategy.getRefreshTokenFromResponse");
         }
-        return refreshToken;
+        return new MicrosoftStsRefreshToken((MicrosoftStsTokenResponse) response);
     }
 
     @Override
     public Account createAccount(TokenResponse response) {
-        IDToken idToken = new IDToken(response.getIdToken());
-        ClientInfo clientInfo = new ClientInfo(((MicrosoftStsTokenResponse) response).getClientInfo());
+        IDToken idToken = null;
+        ClientInfo clientInfo = null;
+        try {
+            idToken = new IDToken(response.getIdToken());
+            clientInfo = new ClientInfo(((MicrosoftStsTokenResponse) response).getClientInfo());
+        } catch (ServiceException ccse) {
+            // TODO: Add a log here
+            // TODO: Should we bail?
+        }
+
         return MicrosoftStsAccount.create(idToken, clientInfo);
     }
 
