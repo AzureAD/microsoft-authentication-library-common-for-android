@@ -11,7 +11,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 
 @RunWith(JUnit4.class)
 public class ObjectMapperTest {

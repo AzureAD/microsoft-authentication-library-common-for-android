@@ -3,12 +3,12 @@ package com.microsoft.identity.common.internal.providers.microsoft;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
 
     @SerializedName("error_codes")
-    protected ArrayList<Long> mErrorCodes;
+    protected List<Long> mErrorCodes;
 
     @SerializedName("timestamp")
     protected String mTimeStamp;
@@ -20,11 +20,11 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
     protected String mCorrelationId;
 
 
-    public ArrayList<Long> getErrorCodes() {
+    public List<Long> getErrorCodes() {
         return mErrorCodes;
     }
 
-    public void setErrorCodes(ArrayList<Long> errorCodes) {
+    public void setErrorCodes(List<Long> errorCodes) {
         this.mErrorCodes = errorCodes;
     }
 

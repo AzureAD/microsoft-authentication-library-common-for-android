@@ -17,18 +17,25 @@ public class TokenRequest {
 
     @SerializedName("grant_type")
     private String mGrantType;
+
     @SerializedName("code")
     private String mCode;
+
     @SerializedName("redirect_uri")
     private String mRedirectUri;
+
     @SerializedName("client_id")
     private String mClientId;
+
     @SerializedName("client_secret")
     private String mClientSecret;
+
     @SerializedName("client_assertion_type")
     private String mClientAssertionType;
+
     @SerializedName("client_assertion")
     private String mClientAssertion;
+
     @SerializedName("scope")
     private String mScope;
 

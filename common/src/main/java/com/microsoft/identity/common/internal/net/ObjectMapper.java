@@ -21,6 +21,14 @@ public class ObjectMapper {
         return new Gson().fromJson(json, objectClass);
     }
 
+    /**
+     * Method for serializing the contents of an object as a Url Encoded string.  Important to the implementation of
+     * this method is the behavior of GSON which excludes null fields from the resulting JSON.  A TreeMap was used to
+     * simplify testing.... the resulting url encoded string is in alphabetical order (keys).
+     * @param object
+     * @return
+     * @throws UnsupportedEncodingException
+     */
     public static String serializeObjectToFormUrlEncoded(Object object) throws UnsupportedEncodingException {
         String json = ObjectMapper.serializeObjectToJsonString(object);
         Type stringMap = new TypeToken<TreeMap<String, String>>() {

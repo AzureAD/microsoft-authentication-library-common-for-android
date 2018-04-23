@@ -6,8 +6,10 @@ public class TokenErrorResponse {
 
     @SerializedName("error")
     protected String mError;
+
     @SerializedName("error_description")
     protected String mErrorDescription;
+
     @SerializedName("error_uri")
     protected String mErrorUri;
 

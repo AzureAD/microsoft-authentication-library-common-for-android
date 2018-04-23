@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MSAL internal class to wrap the raw server response, headers and status code.
+ * Internal class to wrap the raw server response, headers and status code.
  */
 public final class HttpResponse {
     private final int mStatusCode;
