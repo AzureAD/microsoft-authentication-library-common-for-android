@@ -8,15 +8,15 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.concurrent.atomic.AtomicReference;
 
 public final class Logger {
     private static final Logger INSTANCE = new Logger();
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     // Turn on the VERBOSE level logging by default.
-    private LogLevel mLogLevel  = LogLevel.VERBOSE;
-    private AtomicReference<ILoggerCallback> mExternalLogger = new AtomicReference<>(null);
+    private LogLevel mLogLevel = LogLevel.VERBOSE;
+    private ILoggerCallback mExternalLogger;
+    private final Object mLock = new Object();
 
     // Disable to log PII by default.
     private static boolean mAllowPii = false;
@@ -53,8 +53,8 @@ public final class Logger {
     }
 
     /**
-     *  Enable/Disable log message with PII (personal identifiable information) info.
-     *  By default, the SDK doesn't log any PII.
+     * Enable/Disable log message with PII (personal identifiable information) info.
+     * By default, the SDK doesn't log any PII.
      *
      * @param allowPii True if enabling PII info to be logged, false otherwise.
      */
@@ -100,18 +100,11 @@ public final class Logger {
      *
      * @param externalLogger The reference to the {@link ILoggerCallback} that can
      *                       output the logs to the designated places.
-     * @throws IllegalStateException if external logger is already set, and the caller is trying to set it again.
      */
     public void setExternalLogger(final ILoggerCallback externalLogger) {
-        if (externalLogger == null) {
-            return;
+        synchronized (mLock) {
+            mExternalLogger = externalLogger;
         }
-
-        if (mExternalLogger.get() != null) {
-            throw new IllegalStateException("External logger is already set, cannot be set again.");
-        }
-
-        mExternalLogger.set(externalLogger);
     }
 
     /**
@@ -172,7 +165,6 @@ public final class Logger {
 
     /**
      * TODO. Need to discuss on how to keep the correlationID. CorrelationID should be per request => need to sync with Telemetry implementation
-     *
      */
     private void log(final String tag, final LogLevel logLevel, final String correlationID,
                      final String message, final Throwable throwable, final boolean containsPII) {
@@ -194,8 +186,10 @@ public final class Logger {
         }
 
         // Send logs into external logger callback.
-        if (mExternalLogger.get() != null) {
-            mExternalLogger.get().log(tag, logLevel, logMessage, containsPII);
+        synchronized (mLock) {
+            if (null != mExternalLogger) {
+                mExternalLogger.log(tag, logLevel, logMessage, containsPII);
+            }
         }
 
     }
@@ -209,7 +203,7 @@ public final class Logger {
      */
     private String formatMessage(final String correlationID, final String message, final Throwable throwable) {
         final String logMessage = StringExtensions.isNullOrBlank(message) ? "N/A" : message;
-        return  " [" + getUTCDateTimeAsString()
+        return " [" + getUTCDateTimeAsString()
                 + (StringExtensions.isNullOrBlank(correlationID) ? "] " : " - " + correlationID + "] ")
                 + logMessage
                 + " Android " + Build.VERSION.SDK_INT
