@@ -10,5 +10,5 @@ public class OpenIDProviderConfigurationClient {
         OpenIDProviderConfiguration config = new OpenIDProviderConfiguration();
         return config;
     }
-    
+
 }
