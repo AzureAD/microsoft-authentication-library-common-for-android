@@ -10,6 +10,10 @@ import java.util.Date;
 import java.util.TimeZone;
 
 public final class Logger {
+
+    private static final String TAG = Logger.class.getSimpleName();
+    private static final String CUSTOM_LOG_ERROR = "Custom log failed to log message:%s";
+
     private static final Logger INSTANCE = new Logger();
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
@@ -188,7 +192,14 @@ public final class Logger {
         // Send logs into external logger callback.
         synchronized (mLock) {
             if (null != mExternalLogger) {
-                mExternalLogger.log(tag, logLevel, logMessage, containsPII);
+                try {
+                    mExternalLogger.log(tag, logLevel, logMessage, containsPII);
+                } catch (final Exception e) {
+                    // log message as warning to report callback error issue
+                    if (!containsPII || mAllowPii) {
+                        Log.w(tag, String.format(CUSTOM_LOG_ERROR, logMessage));
+                    }
+                }
             }
         }
 
