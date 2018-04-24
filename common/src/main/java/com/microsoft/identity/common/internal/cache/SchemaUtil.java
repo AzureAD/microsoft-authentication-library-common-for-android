@@ -38,7 +38,7 @@ public class SchemaUtil {
 
             if (null != idTokenClaims) {
                 environment = idTokenClaims.get(MicrosoftIdToken.ISSUER);
-                Logger.verbosePII(TAG + ":" + methodName, null, "Issuer: " + environment);
+                Logger.verbosePII(TAG + ":" + methodName, "Issuer: " + environment);
 
                 try {
                     environment = new URL(environment).getHost();
@@ -46,44 +46,22 @@ public class SchemaUtil {
                     environment = null;
                     Logger.error(
                             TAG + ":" + methodName,
-                            null,
                             "Failed to construct URL from issuer claim",
                             null // Do not supply the Exception, as it contains PII
                     );
-                    Logger.errorPII(
-                            TAG + ":" + methodName,
-                            null,
-                            "Failed with Exception",
-                            e
-                    );
+                    Logger.errorPII(TAG + ":" + methodName, "Failed with Exception", e);
                 }
 
-                Logger.verbosePII(
-                        TAG + ":" + methodName,
-                        null,
-                        "Environment: " + environment
-                );
+                Logger.verbosePII(TAG + ":" + methodName, "Environment: " + environment);
 
                 if (null == environment) {
-                    Logger.warn(
-                            TAG + ":" + methodName,
-                            null,
-                            "Environment was null or could not be parsed."
-                    );
+                    Logger.warn(TAG + ":" + methodName, "Environment was null or could not be parsed.");
                 }
             } else {
-                Logger.warn(
-                        TAG + ":" + methodName,
-                        null,
-                        "IDToken claims were null"
-                );
+                Logger.warn(TAG + ":" + methodName, "IDToken claims were null");
             }
         } else {
-            Logger.warn(
-                    TAG + ":" + methodName,
-                    null,
-                    "IDToken was null"
-            );
+            Logger.warn(TAG + ":" + methodName, "IDToken was null");
         }
 
         return environment;
@@ -105,32 +83,16 @@ public class SchemaUtil {
             if (null != idTokenClaims) {
                 avatarUrl = idTokenClaims.get(IDToken.PICTURE);
 
-                Logger.verbosePII(
-                        TAG + ":" + methodName,
-                        null,
-                        "Avatar URL: " + avatarUrl
-                );
+                Logger.verbosePII(TAG + ":" + methodName, "Avatar URL: " + avatarUrl);
 
                 if (null == avatarUrl) {
-                    Logger.warn(
-                            TAG + ":" + methodName,
-                            null,
-                            "Avatar URL was null."
-                    );
+                    Logger.warn(TAG + ":" + methodName, "Avatar URL was null.");
                 }
             } else {
-                Logger.warn(
-                        TAG + ":" + methodName,
-                        null,
-                        "IDToken claims were null."
-                );
+                Logger.warn(TAG + ":" + methodName, "IDToken claims were null.");
             }
         } else {
-            Logger.warn(
-                    TAG + ":" + methodName,
-                    null,
-                    "IDToken was null."
-            );
+            Logger.warn(TAG + ":" + methodName, "IDToken was null.");
         }
 
         return avatarUrl;
@@ -152,32 +114,16 @@ public class SchemaUtil {
             if (null != idTokenClaims) {
                 guestId = idTokenClaims.get("altsecid");
 
-                Logger.verbosePII(
-                        TAG + ":" + methodName,
-                        null,
-                        "Guest Id: " + guestId
-                );
+                Logger.verbosePII(TAG + ":" + methodName, "Guest Id: " + guestId);
 
                 if (null == guestId) {
-                    Logger.warn(
-                            TAG + ":" + methodName,
-                            null,
-                            "Guest Id was null."
-                    );
+                    Logger.warn(TAG + ":" + methodName, "Guest Id was null.");
                 }
             } else {
-                Logger.warn(
-                        TAG + ":" + methodName,
-                        null,
-                        "IDToken claims were null."
-                );
+                Logger.warn(TAG + ":" + methodName, "IDToken claims were null.");
             }
         } else {
-            Logger.warn(
-                    TAG + ":" + methodName,
-                    null,
-                    "IDToken was null."
-            );
+            Logger.warn(TAG + ":" + methodName, "IDToken was null.");
         }
 
         return guestId;
@@ -192,37 +138,21 @@ public class SchemaUtil {
             final String utid = clientInfo.getUtid();
 
             if (StringExtensions.isNullOrBlank(uid)) {
-                Logger.warn(
-                        TAG + ":" + methodName,
-                        null,
-                        "uid was null/blank"
-                );
+                Logger.warn(TAG + ":" + methodName, "uid was null/blank");
             }
 
             if (StringExtensions.isNullOrBlank(utid)) {
-                Logger.warn(
-                        TAG + ":" + methodName,
-                        null,
-                        "utid was null/blank"
-                );
+                Logger.warn(TAG + ":" + methodName, "utid was null/blank");
             }
 
             if (!StringExtensions.isNullOrBlank(uid) && !StringExtensions.isNullOrBlank(utid)) {
                 uniqueId = uid + "." + utid;
             }
 
-            Logger.verbosePII(
-                    TAG + ":" + methodName,
-                    null,
-                    "unique_user_id: " + uniqueId
-            );
+            Logger.verbosePII(TAG + ":" + methodName, "unique_user_id: " + uniqueId);
 
         } else {
-            Logger.warn(
-                    TAG + ":" + methodName,
-                    null,
-                    "ClientInfo was null."
-            );
+            Logger.warn(TAG + ":" + methodName, "ClientInfo was null.");
         }
 
         return uniqueId;
