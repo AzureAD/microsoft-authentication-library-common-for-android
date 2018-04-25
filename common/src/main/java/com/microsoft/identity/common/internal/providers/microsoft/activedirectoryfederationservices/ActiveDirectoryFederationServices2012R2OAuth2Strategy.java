@@ -3,6 +3,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.activedirecto
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
@@ -12,6 +13,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 /**
  * Azure Active Directory Federation Services 2012 R2 OAuth Strategy
@@ -21,7 +23,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
  * see <a href='https://msdn.microsoft.com/en-us/library/dn633593.aspx'>https://msdn.microsoft.com/en-us/library/dn633593.aspx</a>
  * see <a href='https://blogs.technet.microsoft.com/maheshu/2015/04/28/oauth-2-0-support-in-adfs-on-windows-server-2012-r2/'>https://blogs.technet.microsoft.com/maheshu/2015/04/28/oauth-2-0-support-in-adfs-on-windows-server-2012-r2/</a>
  */
-public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth2Strategy{
+public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth2Strategy {
     public ActiveDirectoryFederationServices2012R2OAuth2Strategy(OAuth2Configuration config) {
         super(config);
     }
@@ -62,5 +64,10 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
 
     @Override
     protected void validateTokenRequest(TokenRequest request) {
+    }
+
+    @Override
+    protected TokenResult getTokenResultFromHttpResponse(HttpResponse response) {
+        return null;
     }
 }

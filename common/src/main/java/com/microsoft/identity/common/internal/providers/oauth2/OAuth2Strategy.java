@@ -3,6 +3,15 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.internal.net.HttpRequest;
+import com.microsoft.identity.common.internal.net.HttpResponse;
+import com.microsoft.identity.common.internal.net.ObjectMapper;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
 
 
 /**
@@ -15,7 +24,9 @@ public abstract class OAuth2Strategy {
     protected String mAuthorizationEndpoint;
     protected Uri mIssuer;
 
-    public OAuth2Strategy(OAuth2Configuration config){
+    protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
+
+    public OAuth2Strategy(OAuth2Configuration config) {
 
     }
 
@@ -35,9 +46,30 @@ public abstract class OAuth2Strategy {
         return response;
     }
 
+
+    public TokenResult requestToken(TokenRequest request) throws IOException {
+        validateTokenRequest(request);
+        HttpResponse response = performTokenRequest(request);
+        return getTokenResultFromHttpResponse(response);
+    }
+
+
+    protected HttpResponse performTokenRequest(TokenRequest request) throws IOException {
+
+        String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
+        Map<String, String> headers = new TreeMap<String, String>();
+        String correlationId = UUID.randomUUID().toString();
+        headers.put("client-request-id", correlationId);
+
+        return HttpRequest.sendPost(new URL(mTokenEndpoint), headers, requestBody.getBytes(ObjectMapper.ENCODING_SCHEME), TOKEN_REQUEST_CONTENT_TYPE);
+
+
+    }
+
+
     /**
-     * Construct the authorization endpoint URI based on issue and path to the authorization endpoint
-     * NOTE: We could look at basing this on the contennts returned from the OpenID Configuration document
+     * Construct the authorization endpoint URI based on issuer and path to the authorization endpoint
+     * NOTE: We could look at basing this on the contents returned from the OpenID Configuration document
      *
      * @return
      */
@@ -84,4 +116,11 @@ public abstract class OAuth2Strategy {
      * @param request
      */
     protected abstract void validateTokenRequest(TokenRequest request);
+
+    /**
+     * Abstract method for translating the HttpResponse to a TokenResponse.
+     *
+     * @param response
+     */
+    protected abstract TokenResult getTokenResultFromHttpResponse(HttpResponse response);
 }

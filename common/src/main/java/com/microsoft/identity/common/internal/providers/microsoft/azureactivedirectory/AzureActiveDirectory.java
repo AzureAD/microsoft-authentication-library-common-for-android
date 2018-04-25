@@ -31,10 +31,12 @@ public class AzureActiveDirectory extends IdentityProvider {
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
 
     public OAuth2Strategy createOAuth2Strategy(OAuth2Configuration config) {
-        if(config instanceof AzureActiveDirectoryOAuth2Configuration){
+        if (config instanceof AzureActiveDirectoryOAuth2Configuration) {
             return new AzureActiveDirectoryOAuth2Strategy((AzureActiveDirectoryOAuth2Configuration) config);
+        } else {
+            throw new IllegalArgumentException("Expected instance of AzureActiveDirectoryOAuth2Configuration in AzureActiveDirectory.CreateOAuth2Strategy");  
         }
-        throw new IllegalArgumentException("Expected instance of AzureActiveDirectoryOAuth2Configuration in AzureActiveDirectory.CreateOAuth2Strategy");
+
     }
 
     static boolean hasCloudHost(final URL authorityUrl) {
@@ -93,7 +95,8 @@ public class AzureActiveDirectory extends IdentityProvider {
      * @throws JSONException If a parsing error is encountered.
      */
     private static List<AzureActiveDirectoryCloud> deserializeClouds(final String jsonCloudArray) throws JSONException {
-        Type listType = new TypeToken<List<AzureActiveDirectoryCloud>>() {}.getType();
+        Type listType = new TypeToken<List<AzureActiveDirectoryCloud>>() {
+        }.getType();
         return new Gson().fromJson(jsonCloudArray, listType);
     }
 }

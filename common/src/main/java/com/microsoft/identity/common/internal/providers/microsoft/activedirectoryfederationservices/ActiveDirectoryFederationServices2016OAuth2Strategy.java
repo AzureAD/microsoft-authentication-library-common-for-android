@@ -3,6 +3,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.activedirecto
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
@@ -12,12 +13,12 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 /**
  * Azure Active Directory Federation Services 2016 oAuth2 Strategy
  * For information on ADFS 2016 oAuth and OIDC support
  * see <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-scenarios-for-developers'>https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-scenarios-for-developers</a>
- *
  */
 public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2Strategy {
     public ActiveDirectoryFederationServices2016OAuth2Strategy(OAuth2Configuration config) {
@@ -61,5 +62,10 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
     @Override
     protected void validateTokenRequest(TokenRequest request) {
 
+    }
+
+    @Override
+    protected TokenResult getTokenResultFromHttpResponse(HttpResponse response) {
+        return null;
     }
 }

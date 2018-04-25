@@ -9,15 +9,19 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.concurrent.atomic.AtomicReference;
 
 public final class Logger {
+
+    private static final String TAG = Logger.class.getSimpleName();
+    private static final String CUSTOM_LOG_ERROR = "Custom log failed to log message:%s";
+
     private static final Logger INSTANCE = new Logger();
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     // Turn on the VERBOSE level logging by default.
     private LogLevel mLogLevel = LogLevel.VERBOSE;
-    private AtomicReference<ILoggerCallback> mExternalLogger = new AtomicReference<>(null);
+    private ILoggerCallback mExternalLogger;
+    private final Object mLock = new Object();
 
     // Disable to log PII by default.
     private static boolean mAllowPii = false;
@@ -102,19 +106,11 @@ public final class Logger {
      *
      * @param externalLogger The reference to the {@link ILoggerCallback} that can
      *                       output the logs to the designated places.
-     * @throws IllegalStateException if external logger is already set, and the caller is trying
-     *                               to set it again.
      */
     public void setExternalLogger(final ILoggerCallback externalLogger) {
-        if (externalLogger == null) {
-            return;
+        synchronized (mLock) {
+            mExternalLogger = externalLogger;
         }
-
-        if (mExternalLogger.get() != null) {
-            throw new IllegalStateException("External logger is already set, cannot be set again.");
-        }
-
-        mExternalLogger.set(externalLogger);
     }
 
     /**
@@ -425,6 +421,7 @@ public final class Logger {
     }
 
     /**
+     * <<<<<<< HEAD
      * Log a method entry, with optional parameters. This method only writes output if the
      * {@link LogLevel} is {@link LogLevel#VERBOSE} and PII logging is enabled.
      *
@@ -495,6 +492,9 @@ public final class Logger {
     /**
      * TODO. Need to discuss on how to keep the correlationID.
      * CorrelationID should be per request => need to sync with Telemetry implementation
+     * =======
+     * TODO. Need to discuss on how to keep the correlationID. CorrelationID should be per request => need to sync with Telemetry implementation
+     * >>>>>>> dev
      */
     private void log(final String tag,
                      final LogLevel logLevel,
@@ -521,8 +521,17 @@ public final class Logger {
         }
 
         // Send logs into external logger callback.
-        if (mExternalLogger.get() != null) {
-            mExternalLogger.get().log(tag, logLevel, logMessage, containsPII);
+        synchronized (mLock) {
+            if (null != mExternalLogger) {
+                try {
+                    mExternalLogger.log(tag, logLevel, logMessage, containsPII);
+                } catch (final Exception e) {
+                    // log message as warning to report callback error issue
+                    if (!containsPII || mAllowPii) {
+                        Log.w(tag, String.format(CUSTOM_LOG_ERROR, logMessage));
+                    }
+                }
+            }
         }
 
     }
