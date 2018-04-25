@@ -10,9 +10,9 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.IAccount;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
@@ -60,7 +60,7 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
     }
 
     @Override
-    public String generateCacheKey(Account account) {
+    public String generateCacheKey(IAccount account) {
         String cacheKey = UNIQUE_USER_ID
                 + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT
@@ -73,21 +73,24 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
         return cacheKey;
     }
 
-    private String generateCacheValueInternal(final AccountCredentialBase baseObject) {
+    private String generateCacheValueInternal(final Object baseObject) {
         JsonElement outboundElement = mGson.toJsonTree(baseObject);
         JsonObject outboundObject = outboundElement.getAsJsonObject();
 
-        // This basically acts as a custom serializer for AccountCredentialBase objects
-        // by iterating over the additionalFields Map and JSON-ifying them
-        for (final String key : baseObject.getAdditionalFields().keySet()) {
-            outboundObject.add(key, baseObject.getAdditionalFields().get(key));
+        if (baseObject instanceof AccountCredentialBase) {
+            final AccountCredentialBase accountCredentialBase = (AccountCredentialBase) baseObject;
+            // This basically acts as a custom serializer for AccountCredentialBase objects
+            // by iterating over the additionalFields Map and JSON-ifying them
+            for (final String key : accountCredentialBase.getAdditionalFields().keySet()) {
+                outboundObject.add(key, accountCredentialBase.getAdditionalFields().get(key));
+            }
         }
 
         return mGson.toJson(outboundObject);
     }
 
     @Override
-    public String generateCacheValue(Account account) {
+    public String generateCacheValue(IAccount account) {
         return generateCacheValueInternal(account);
     }
 

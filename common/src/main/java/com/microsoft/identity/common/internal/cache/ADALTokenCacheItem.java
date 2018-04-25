@@ -74,9 +74,10 @@ public class ADALTokenCacheItem {
         mAccessToken = accessToken.getAccessToken();
         mRefreshtoken = refreshToken.getRefreshToken();
         mRawIdToken = response.getIdToken();
+
         if (account instanceof AzureActiveDirectoryAccount) {
             mUserInfo = new ADALUserInfo((AzureActiveDirectoryAccount) account);
-            mTenantId = ((AzureActiveDirectoryAccount) account).getTenantId();
+            mTenantId = account.getRealm();
         }
 
         if (accessToken instanceof AzureActiveDirectoryAccessToken) {

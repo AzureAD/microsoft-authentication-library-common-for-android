@@ -47,6 +47,11 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
     protected String mFamilyId;
 
     /**
+     * The client_id of the application requesting a token.
+     */
+    protected transient String mClientId;
+
+    /**
      * Returns the family client id
      *
      * @return
@@ -160,7 +165,7 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
     }
 
     /**
-     * Gets the response spe ring (x-ms-clitelem)
+     * Gets the response spe ring (x-ms-clitelem).
      *
      * @return The spe ring.
      */
@@ -169,11 +174,29 @@ public class AzureActiveDirectoryTokenResponse extends TokenResponse {
     }
 
     /**
-     * Sets the response spe ring (x-ms-clitelem)
+     * Sets the response spe ring (x-ms-clitelem).
      *
      * @param speRing The spe ring to set.
      */
     public void setSpeRing(String speRing) {
         this.mSpeRing = speRing;
+    }
+
+    /**
+     * Gets the client_id.
+     *
+     * @return The client_id to get.
+     */
+    public String getClientId() {
+        return mClientId;
+    }
+
+    /**
+     * Sets the client_id.
+     *
+     * @param clientId The client_id to set.
+     */
+    public void setClientId(final String clientId) {
+        mClientId = clientId;
     }
 }

@@ -43,7 +43,7 @@ import static com.microsoft.identity.common.internal.dto.Account.SerializedNames
  * Account schema only needs to be present, if there's a user available. For scenarios, where
  * there's no user present (e.g. client credential grant), only credential schema is necessary.
  */
-public class Account extends AccountCredentialBase {
+public class Account extends AccountCredentialBase implements IAccount {
 
     public static class SerializedNames {
         public static final String UNIQUE_USER_ID = "unique_user_id";
@@ -56,6 +56,23 @@ public class Account extends AccountCredentialBase {
         public static final String FIRST_NAME = "first_name";
         public static final String LAST_NAME = "last_name";
         public static final String AVATAR_URL = "avatar_url";
+    }
+
+    public Account() {
+        // Empty
+    }
+
+    public Account(final IAccount copy) {
+        setUniqueUserId(copy.getUniqueUserId());
+        setEnvironment(copy.getEnvironment());
+        setRealm(copy.getRealm());
+        setAuthorityAccountId(copy.getAuthorityAccountId());
+        setUsername(copy.getUsername());
+        setAuthorityType(copy.getAuthorityType());
+        setGuestId(copy.getGuestId());
+        setFirstName(copy.getFirstName());
+        setLastName(copy.getLastName());
+        setAvatarUrl(copy.getAvatarUrl());
     }
 
     ///////////////
@@ -138,11 +155,7 @@ public class Account extends AccountCredentialBase {
     // Accessor Methods
     ///////////////
 
-    /**
-     * Gets the unique_user_id.
-     *
-     * @return The unique_user_id to get.
-     */
+    @Override
     public String getUniqueUserId() {
         return mUniqueId;
     }
@@ -156,11 +169,7 @@ public class Account extends AccountCredentialBase {
         mUniqueId = uniqueId;
     }
 
-    /**
-     * Gets the environment.
-     *
-     * @return The environment to get.
-     */
+    @Override
     public String getEnvironment() {
         return mEnvironment;
     }
@@ -174,11 +183,7 @@ public class Account extends AccountCredentialBase {
         mEnvironment = environment;
     }
 
-    /**
-     * Gets the realm.
-     *
-     * @return The realm to get.
-     */
+    @Override
     public String getRealm() {
         return mRealm;
     }
@@ -192,11 +197,7 @@ public class Account extends AccountCredentialBase {
         mRealm = realm;
     }
 
-    /**
-     * Gets the authority_account_id.
-     *
-     * @return The authority_account_id to get.
-     */
+    @Override
     public String getAuthorityAccountId() {
         return mAuthorityAccountId;
     }
@@ -210,11 +211,7 @@ public class Account extends AccountCredentialBase {
         mAuthorityAccountId = authorityAccountId;
     }
 
-    /**
-     * Gets the username.
-     *
-     * @return The username to get.
-     */
+    @Override
     public String getUsername() {
         return mUsername;
     }
@@ -228,11 +225,7 @@ public class Account extends AccountCredentialBase {
         mUsername = username;
     }
 
-    /**
-     * Gets the authority_type.
-     *
-     * @return The authority_type to get.
-     */
+    @Override
     public String getAuthorityType() {
         return mAuthorityType;
     }
@@ -246,11 +239,7 @@ public class Account extends AccountCredentialBase {
         mAuthorityType = authorityType;
     }
 
-    /**
-     * Gets the guest_id.
-     *
-     * @return The guest_id to get.
-     */
+    @Override
     public String getGuestId() {
         return mGuestId;
     }
@@ -264,11 +253,7 @@ public class Account extends AccountCredentialBase {
         mGuestId = guestId;
     }
 
-    /**
-     * Gets the first_name;
-     *
-     * @return The first_name to get.
-     */
+    @Override
     public String getFirstName() {
         return mFirstName;
     }
@@ -282,11 +267,7 @@ public class Account extends AccountCredentialBase {
         mFirstName = firstName;
     }
 
-    /**
-     * Gets the last_name.
-     *
-     * @return The last_name to get.
-     */
+    @Override
     public String getLastName() {
         return mLastName;
     }
@@ -300,11 +281,7 @@ public class Account extends AccountCredentialBase {
         mLastName = lastName;
     }
 
-    /**
-     * Gets the avatar_url.
-     *
-     * @return The avatar_url to get.
-     */
+    @Override
     public String getAvatarUrl() {
         return mAvatarUrl;
     }

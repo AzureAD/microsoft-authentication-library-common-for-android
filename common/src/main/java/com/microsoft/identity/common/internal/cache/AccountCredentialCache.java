@@ -9,6 +9,7 @@ import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.IAccount;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
@@ -61,7 +62,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     }
 
     @Override
-    public synchronized void saveAccount(final Account account) {
+    public synchronized void saveAccount(final IAccount account) {
         final String cacheKey = mCacheValueDelegate.generateCacheKey(account);
         final String cacheValue = mCacheValueDelegate.generateCacheValue(account);
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
@@ -125,9 +126,9 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         return credential;
     }
 
-    private Map<String, Account> getAccountsWithKeys() {
+    private Map<String, IAccount> getAccountsWithKeys() {
         final Map<String, ?> cacheValues = mSharedPreferencesFileManager.getAll();
-        final Map<String, Account> accounts = new HashMap<>();
+        final Map<String, IAccount> accounts = new HashMap<>();
 
         for (Map.Entry<String, ?> cacheValue : cacheValues.entrySet()) {
             final String cacheKey = cacheValue.getKey();
@@ -144,13 +145,13 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     }
 
     @Override
-    public synchronized List<Account> getAccounts() {
-        final Map<String, Account> allAccounts = getAccountsWithKeys();
+    public synchronized List<IAccount> getAccounts() {
+        final Map<String, IAccount> allAccounts = getAccountsWithKeys();
         return new ArrayList<>(allAccounts.values());
     }
 
     @Override
-    public List<Account> getAccounts(
+    public List<IAccount> getAccounts(
             final @Nullable String uniqueId,
             final String environment,
             final @Nullable String realm) {
@@ -160,10 +161,10 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
         final boolean mustMatchOnUniqueId = !StringExtensions.isNullOrBlank(uniqueId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
-        final List<Account> allAccounts = getAccounts();
-        final List<Account> matchingAccounts = new ArrayList<>();
+        final List<IAccount> allAccounts = getAccounts();
+        final List<IAccount> matchingAccounts = new ArrayList<>();
 
-        for (final Account account : allAccounts) {
+        for (final IAccount account : allAccounts) {
             boolean matches = true;
 
             if (mustMatchOnUniqueId) {
@@ -269,15 +270,15 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     }
 
     @Override
-    public boolean removeAccount(final Account accountToRemove) {
+    public boolean removeAccount(final IAccount accountToRemove) {
         if (null == accountToRemove) {
             throw new IllegalArgumentException("Param [accountToRemove] cannot be null.");
         }
 
-        final Map<String, Account> accounts = getAccountsWithKeys();
+        final Map<String, IAccount> accounts = getAccountsWithKeys();
 
-        for (final Map.Entry<String, Account> entry : accounts.entrySet()) {
-            final Account currentAccount = entry.getValue();
+        for (final Map.Entry<String, IAccount> entry : accounts.entrySet()) {
+            final IAccount currentAccount = entry.getValue();
 
             if (currentAccount.equals(accountToRemove)) {
                 mSharedPreferencesFileManager.remove(entry.getKey());

@@ -2,8 +2,11 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.support.annotation.NonNull;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -28,29 +31,36 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     // TODO move me!
     private static final String AUTHORITY_TYPE = "MSSTS";
     private static final String BEARER = "Bearer";
+    private static final String FOCI_PREFIX = "foci-";
 
     @Override
     public Account createAccount(
             final OAuth2Strategy strategy,
             final AuthorizationRequest request,
             final TokenResponse response) {
-        final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
-        final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
-        final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
-        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
-        final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
+        final MicrosoftIdToken msIdToken;
+        try {
+            msIdToken = new MicrosoftIdToken(response.getIdToken());
+            final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
+            final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
+            final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
+            final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
 
-        final Account account = new Account();
-        account.setUniqueUserId(formatUniqueId(clientInfo));
-        account.setEnvironment(msRequest.getAuthority().toString()); // host of authority with optional port
-        account.setRealm(getRealm(strategy, response)); //tid
-        account.setAuthorityAccountId(tokenClaims.get(OJBECT_ID)); // oid claim from id token
-        account.setUsername(tokenClaims.get(PREFERRED_USERNAME));
-        account.setAuthorityType(AUTHORITY_TYPE);
-        account.setFirstName(tokenClaims.get(GIVEN_NAME));
-        account.setLastName(tokenClaims.get(FAMILY_NAME));
+            final Account account = new Account();
+            account.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
+            account.setEnvironment(msRequest.getAuthority().toString()); // host of authority with optional port
+            account.setRealm(getRealm(strategy, response)); //tid
+            account.setAuthorityAccountId(tokenClaims.get(OJBECT_ID)); // oid claim from id token
+            account.setUsername(tokenClaims.get(PREFERRED_USERNAME));
+            account.setAuthorityType(AUTHORITY_TYPE);
+            account.setFirstName(tokenClaims.get(GIVEN_NAME));
+            account.setLastName(tokenClaims.get(FAMILY_NAME));
 
-        return account;
+            return account;
+        } catch (ServiceException e) {
+            // TODO handle this properly
+            throw new RuntimeException(e);
+        }
     }
 
     @NonNull
@@ -131,7 +141,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         final MicrosoftStsOAuth2Strategy msStrategy = asMicrosoftStsOAuth2Strategy(strategy);
         final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
         final MicrosoftStsAccount msAccount = (MicrosoftStsAccount) msStrategy.createAccount(msTokenResponse);
-        return msAccount.getTenantId();
+        return msAccount.getRealm();
     }
 
     @Override
@@ -153,10 +163,47 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         return refreshToken;
     }
 
+    @Override
+    public RefreshToken asRefreshToken(final com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshTokenIn) {
+        final RefreshToken refreshTokenOut = new RefreshToken();
+
+        // Required fields
+        refreshTokenOut.setUniqueUserId(refreshTokenIn.getUniqueUserId());
+        refreshTokenOut.setEnvironment(refreshTokenIn.getEnvironment());
+        refreshTokenOut.setCredentialType(CredentialType.RefreshToken.name());
+        refreshTokenOut.setClientId(refreshTokenIn.getClientId());
+        refreshTokenOut.setSecret(refreshTokenIn.getSecret());
+
+        // Optional fields
+        refreshTokenOut.setTarget(refreshTokenIn.getTarget());
+        refreshTokenOut.setCachedAt(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())));
+        refreshTokenOut.setExpiresOn(refreshTokenIn.getExpiresOn());
+        //refreshTokenOut.setClientInfo(""); TODO OK to drop?
+        refreshTokenOut.setFamilyId(refreshTokenIn.getFamilyId());
+        //refreshTokenOut.setUsername(""); TODO OK to drop?
+
+        if (!StringExtensions.isNullOrBlank(refreshTokenIn.getFamilyId())) {
+            String familyId = refreshTokenIn.getFamilyId();
+            // It is a foci token, replace the client and [possibly] prepend "foci-"
+            if (!familyId.startsWith(FOCI_PREFIX)) {
+                familyId = FOCI_PREFIX + familyId;
+            }
+
+            refreshTokenOut.setClientId(familyId);
+        }
+
+        return refreshTokenOut;
+    }
+
     private String getUsername(final TokenResponse response) {
-        final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
-        final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
-        return tokenClaims.get(PREFERRED_USERNAME);
+        try {
+            final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
+            final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
+            return tokenClaims.get(PREFERRED_USERNAME);
+        } catch (ServiceException e) {
+            // TODO handle this properly
+            throw new RuntimeException(e);
+        }
     }
 
     private String getTarget(final AuthorizationRequest request) {
@@ -183,11 +230,5 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
     private String getFamilyId(final TokenResponse response) {
         final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
         return msTokenResponse.getFamilyId();
-    }
-
-    private String formatUniqueId(final ClientInfo clientInfo) {
-        final String uid = clientInfo.getUid();
-        final String utid = clientInfo.getUtid();
-        return uid + "." + utid;
     }
 }

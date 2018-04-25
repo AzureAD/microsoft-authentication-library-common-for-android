@@ -27,8 +27,8 @@ public class ADALUserInfo {
     public ADALUserInfo(AzureActiveDirectoryAccount account) {
         this.mUniqueId = account.getUserId();
         this.mDisplayableId = account.getDisplayableId();
-        this.mGivenName = account.getGivenName();
-        this.mFamilyName = account.getFamilyName();
+        this.mGivenName = account.getFirstName();
+        this.mFamilyName = account.getLastName();
         this.mIdentityProvider = account.getIdentityProvider();
         this.mPasswordChangeUrl = account.getPasswordChangeUrl();
         this.mPasswordExpiresOn = account.getPasswordExpiresOn();
