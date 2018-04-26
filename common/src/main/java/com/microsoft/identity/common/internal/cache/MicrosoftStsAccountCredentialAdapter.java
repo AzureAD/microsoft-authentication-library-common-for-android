@@ -195,6 +195,11 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         return refreshTokenOut;
     }
 
+    @Override
+    public Account asAccount(com.microsoft.identity.common.Account account) {
+        return new Account(account);
+    }
+
     private String getUsername(final TokenResponse response) {
         try {
             final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());

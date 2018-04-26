@@ -4,7 +4,7 @@ import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.IAccount;
+import com.microsoft.identity.common.internal.dto.Account;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public interface IAccountCredentialCache {
      *
      * @param account The Account to save.
      */
-    void saveAccount(final IAccount account);
+    void saveAccount(final Account account);
 
     /**
      * Saves the supplied Credential in the cache.
@@ -33,7 +33,7 @@ public interface IAccountCredentialCache {
      * @param cacheKey The cache key to use when consulting the cache.
      * @return The saved Account or null if no cache entry exists.
      */
-    IAccount getAccount(final String cacheKey);
+    Account getAccount(final String cacheKey);
 
     /**
      * Gets the Credential saved for the supplied cache key.
@@ -48,7 +48,7 @@ public interface IAccountCredentialCache {
      *
      * @return The saved Accounts.
      */
-    List<IAccount> getAccounts();
+    List<Account> getAccounts();
 
     /**
      * Returns all of the Accounts matching the supplied criteria.
@@ -58,7 +58,7 @@ public interface IAccountCredentialCache {
      * @param realm       The realm used to match Account cache keys.
      * @return A List of Accounts matching the supplied criteria.
      */
-    List<IAccount> getAccounts(
+    List<Account> getAccounts(
             @Nullable final String uniqueId,
             final String environment,
             @Nullable final String realm
@@ -97,7 +97,7 @@ public interface IAccountCredentialCache {
      * @param accountToRemove The Account to delete.
      * @return True if the Account was deleted. False otherwise.
      */
-    boolean removeAccount(final IAccount accountToRemove);
+    boolean removeAccount(final Account accountToRemove);
 
     /**
      * Removes the supplied Credential from the cache.

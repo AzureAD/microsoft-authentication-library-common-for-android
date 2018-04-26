@@ -62,7 +62,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     }
 
     @Override
-    public synchronized void saveAccount(final IAccount account) {
+    public synchronized void saveAccount(final Account account) {
         final String cacheKey = mCacheValueDelegate.generateCacheKey(account);
         final String cacheValue = mCacheValueDelegate.generateCacheValue(account);
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
@@ -126,9 +126,9 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         return credential;
     }
 
-    private Map<String, IAccount> getAccountsWithKeys() {
+    private Map<String, Account> getAccountsWithKeys() {
         final Map<String, ?> cacheValues = mSharedPreferencesFileManager.getAll();
-        final Map<String, IAccount> accounts = new HashMap<>();
+        final Map<String, Account> accounts = new HashMap<>();
 
         for (Map.Entry<String, ?> cacheValue : cacheValues.entrySet()) {
             final String cacheKey = cacheValue.getKey();
@@ -145,13 +145,13 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     }
 
     @Override
-    public synchronized List<IAccount> getAccounts() {
-        final Map<String, IAccount> allAccounts = getAccountsWithKeys();
+    public synchronized List<Account> getAccounts() {
+        final Map<String, Account> allAccounts = getAccountsWithKeys();
         return new ArrayList<>(allAccounts.values());
     }
 
     @Override
-    public List<IAccount> getAccounts(
+    public List<Account> getAccounts(
             final @Nullable String uniqueId,
             final String environment,
             final @Nullable String realm) {
@@ -161,10 +161,10 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
         final boolean mustMatchOnUniqueId = !StringExtensions.isNullOrBlank(uniqueId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
-        final List<IAccount> allAccounts = getAccounts();
-        final List<IAccount> matchingAccounts = new ArrayList<>();
+        final List<Account> allAccounts = getAccounts();
+        final List<Account> matchingAccounts = new ArrayList<>();
 
-        for (final IAccount account : allAccounts) {
+        for (final Account account : allAccounts) {
             boolean matches = true;
 
             if (mustMatchOnUniqueId) {
@@ -270,14 +270,14 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     }
 
     @Override
-    public boolean removeAccount(final IAccount accountToRemove) {
+    public boolean removeAccount(final Account accountToRemove) {
         if (null == accountToRemove) {
             throw new IllegalArgumentException("Param [accountToRemove] cannot be null.");
         }
 
-        final Map<String, IAccount> accounts = getAccountsWithKeys();
+        final Map<String, Account> accounts = getAccountsWithKeys();
 
-        for (final Map.Entry<String, IAccount> entry : accounts.entrySet()) {
+        for (final Map.Entry<String, Account> entry : accounts.entrySet()) {
             final IAccount currentAccount = entry.getValue();
 
             if (currentAccount.equals(accountToRemove)) {

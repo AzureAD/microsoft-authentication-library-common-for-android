@@ -29,6 +29,7 @@ public class MsalOAuth2TokenCache
     private List<IShareSingleSignOnState> mSharedSsoCaches;
     private IAccountCredentialCache mAccountCredentialCache;
     private IAccountCredentialAdapter mAccountCredentialAdapter;
+    private ISsoValidator mSsoValidator;
 
     public MsalOAuth2TokenCache(final Context context,
                                 final IAccountCredentialCache accountCredentialCache,
@@ -37,6 +38,9 @@ public class MsalOAuth2TokenCache
         mAccountCredentialCache = accountCredentialCache;
         mSharedSsoCaches = new ArrayList<>();
         mAccountCredentialAdapter = accountCredentialAdapter;
+        mSsoValidator = new MicrosoftStsSsoValidator();
+        // TODO turn off
+        Logger.setAllowLogcat(true);
     }
 
     public MsalOAuth2TokenCache(final Context context,
@@ -48,6 +52,20 @@ public class MsalOAuth2TokenCache
         mAccountCredentialCache = accountCredentialCache;
         mSharedSsoCaches = sharedSsoCaches;
         mAccountCredentialAdapter = accountCredentialAdapter;
+        mSsoValidator = new MicrosoftStsSsoValidator();
+    }
+
+    public MsalOAuth2TokenCache(final Context context,
+                                final IAccountCredentialCache accountCredentialCache,
+                                final IAccountCredentialAdapter accountCredentialAdapter,
+                                final ISsoValidator ssoValidator,
+                                final List<IShareSingleSignOnState> sharedSsoCaches) {
+        super(context);
+        Logger.verbose(TAG, "Init: " + TAG);
+        mAccountCredentialCache = accountCredentialCache;
+        mSharedSsoCaches = sharedSsoCaches;
+        mAccountCredentialAdapter = accountCredentialAdapter;
+        mSsoValidator = ssoValidator;
     }
 
     @Override
@@ -184,11 +202,35 @@ public class MsalOAuth2TokenCache
         final String methodName = "setSingleSignOnState";
         Logger.entering(TAG, methodName, account, refreshToken);
 
-        final com.microsoft.identity.common.internal.dto.RefreshToken rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
-        mAccountCredentialCache.saveAccount(account);
-        mAccountCredentialCache.saveCredential(rt);
+        final boolean argumentsValid = validateSetSingleSignOnStateArguments(account, refreshToken);
+
+        if (argumentsValid) {
+            final com.microsoft.identity.common.internal.dto.RefreshToken rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
+            final Account accountDto = mAccountCredentialAdapter.asAccount(account);
+            mAccountCredentialCache.saveAccount(accountDto);
+            mAccountCredentialCache.saveCredential(rt);
+        } else {
+            Logger.error(
+                    TAG + ":" + methodName,
+                    "",
+                    new IllegalArgumentException("Cannot set SSO state. Invalid or inadequate Account and/or token provided. (See logs)")
+            );
+        }
 
         Logger.exiting(TAG, methodName);
+    }
+
+    private boolean validateSetSingleSignOnStateArguments(
+            final com.microsoft.identity.common.Account account,
+            final RefreshToken refreshToken) {
+        final String methodName = "validateSetSingleSignOnStateArguments";
+        Logger.entering(TAG, methodName, account, refreshToken);
+
+        boolean valid = mSsoValidator.isAccountValid(account) & mSsoValidator.isRefreshTokenValid(refreshToken);
+
+        Logger.exiting(TAG, methodName, valid);
+
+        return valid;
     }
 
     @Override

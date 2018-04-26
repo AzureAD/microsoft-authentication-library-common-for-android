@@ -63,12 +63,15 @@ public class Account extends AccountCredentialBase implements IAccount {
     }
 
     public Account(final IAccount copy) {
+        // Required
         setUniqueUserId(copy.getUniqueUserId());
         setEnvironment(copy.getEnvironment());
         setRealm(copy.getRealm());
         setAuthorityAccountId(copy.getAuthorityAccountId());
         setUsername(copy.getUsername());
         setAuthorityType(copy.getAuthorityType());
+
+        // Optional
         setGuestId(copy.getGuestId());
         setFirstName(copy.getFirstName());
         setLastName(copy.getLastName());

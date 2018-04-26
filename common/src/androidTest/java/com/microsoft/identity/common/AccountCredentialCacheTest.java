@@ -8,14 +8,11 @@ import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.AccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate;
-import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
-import com.microsoft.identity.common.internal.cache.IAccountCredentialCacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.IAccount;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
@@ -50,8 +47,8 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     private static final String sAccountCredentialSharedPreferences =
             "com.microsoft.identity.client.account_credential_cache";
 
-    private IAccountCredentialCache mAccountCredentialCache;
-    private IAccountCredentialCacheKeyValueDelegate mDelegate;
+    private AccountCredentialCache mAccountCredentialCache;
+    private AccountCredentialCacheKeyValueDelegate mDelegate;
     private SharedPreferencesFileManager mSharedPreferencesFileManager;
 
     @Before
@@ -91,7 +88,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         final String accountCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Account
-        final IAccount restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
+        final Account restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
     }
 
@@ -109,7 +106,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         final String accountCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Account
-        final IAccount restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
+        final Account restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
     }
 
@@ -127,7 +124,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         final String accountCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Account
-        final IAccount restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
+        final Account restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
     }
 
@@ -144,7 +141,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         final String accountCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Account
-        final IAccount restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
+        final Account restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
     }
 
@@ -351,7 +348,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(refreshToken);
 
         // Verify getAccounts() returns one matching element
-        final List<IAccount> accounts = mAccountCredentialCache.getAccounts();
+        final List<Account> accounts = mAccountCredentialCache.getAccounts();
         assertTrue(accounts.size() == 1);
         assertEquals(account, accounts.get(0));
     }
@@ -378,9 +375,9 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<IAccount> accounts = mAccountCredentialCache.getAccounts(UNIQUE_USER_ID, ENVIRONMENT, REALM);
+        final List<Account> accounts = mAccountCredentialCache.getAccounts(UNIQUE_USER_ID, ENVIRONMENT, REALM);
         assertEquals(1, accounts.size());
-        final IAccount retrievedAccount = accounts.get(0);
+        final Account retrievedAccount = accounts.get(0);
         assertEquals(UNIQUE_USER_ID, retrievedAccount.getUniqueUserId());
         assertEquals(ENVIRONMENT, retrievedAccount.getEnvironment());
         assertEquals(REALM, retrievedAccount.getRealm());
@@ -398,9 +395,9 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<IAccount> accounts = mAccountCredentialCache.getAccounts(null, ENVIRONMENT, REALM);
+        final List<Account> accounts = mAccountCredentialCache.getAccounts(null, ENVIRONMENT, REALM);
         assertEquals(1, accounts.size());
-        final IAccount retrievedAccount = accounts.get(0);
+        final Account retrievedAccount = accounts.get(0);
         assertEquals(UNIQUE_USER_ID, retrievedAccount.getUniqueUserId());
         assertEquals(ENVIRONMENT, retrievedAccount.getEnvironment());
         assertEquals(REALM, retrievedAccount.getRealm());
@@ -418,9 +415,9 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<IAccount> accounts = mAccountCredentialCache.getAccounts(null, ENVIRONMENT, null);
+        final List<Account> accounts = mAccountCredentialCache.getAccounts(null, ENVIRONMENT, null);
         assertEquals(1, accounts.size());
-        final IAccount retrievedAccount = accounts.get(0);
+        final Account retrievedAccount = accounts.get(0);
         assertEquals(UNIQUE_USER_ID, retrievedAccount.getUniqueUserId());
         assertEquals(ENVIRONMENT, retrievedAccount.getEnvironment());
         assertEquals(REALM, retrievedAccount.getRealm());
@@ -438,9 +435,9 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<IAccount> accounts = mAccountCredentialCache.getAccounts(UNIQUE_USER_ID, ENVIRONMENT, null);
+        final List<Account> accounts = mAccountCredentialCache.getAccounts(UNIQUE_USER_ID, ENVIRONMENT, null);
         assertEquals(1, accounts.size());
-        final IAccount retrievedAccount = accounts.get(0);
+        final Account retrievedAccount = accounts.get(0);
         assertEquals(UNIQUE_USER_ID, retrievedAccount.getUniqueUserId());
         assertEquals(ENVIRONMENT, retrievedAccount.getEnvironment());
         assertEquals(REALM, retrievedAccount.getRealm());
@@ -478,7 +475,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account3);
         mAccountCredentialCache.saveAccount(account4);
 
-        final List<IAccount> accounts = mAccountCredentialCache.getAccounts(UNIQUE_USER_ID, ENVIRONMENT, null);
+        final List<Account> accounts = mAccountCredentialCache.getAccounts(UNIQUE_USER_ID, ENVIRONMENT, null);
         assertEquals(3, accounts.size());
     }
 
@@ -514,7 +511,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account3);
         mAccountCredentialCache.saveAccount(account4);
 
-        final List<IAccount> accounts = mAccountCredentialCache.getAccounts(null, ENVIRONMENT, REALM);
+        final List<Account> accounts = mAccountCredentialCache.getAccounts(null, ENVIRONMENT, REALM);
         assertEquals(3, accounts.size());
     }
 
@@ -1075,7 +1072,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not an account\"}");
 
-        final IAccount malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
+        final Account malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
         assertNull(malformedAccount);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
@@ -1093,7 +1090,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an account\"}");
 
-        final IAccount malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
+        final Account malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
         assertNull(malformedAccount);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
