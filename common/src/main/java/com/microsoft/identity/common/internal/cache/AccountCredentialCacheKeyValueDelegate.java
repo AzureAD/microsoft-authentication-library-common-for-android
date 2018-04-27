@@ -56,7 +56,7 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
     }
 
     private static String sanitizeNull(final String input) {
-        return null == input ? "" : input.toLowerCase(Locale.US);
+        return null == input ? "" : input.toLowerCase(Locale.US).trim();
     }
 
     @Override
