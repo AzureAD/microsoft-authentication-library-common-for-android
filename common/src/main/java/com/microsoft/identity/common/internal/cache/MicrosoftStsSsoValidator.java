@@ -8,8 +8,8 @@ import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 class MicrosoftStsSsoValidator implements ISsoValidator {
 
     private static final String TAG = MicrosoftStsSsoValidator.class.getSimpleName();
-    private volatile boolean mAccountIsValid;
-    private volatile boolean mRefreshTokenIsValid;
+    private volatile boolean mAccountIsValid = true;
+    private volatile boolean mRefreshTokenIsValid = true;
 
     @Override
     public synchronized boolean isAccountValid(final Account account) {
