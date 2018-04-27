@@ -35,6 +35,7 @@ public class MsalOAuth2TokenCache
                                 final IAccountCredentialCache accountCredentialCache,
                                 final IAccountCredentialAdapter accountCredentialAdapter) {
         super(context);
+        Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
         mSharedSsoCaches = new ArrayList<>();
         mAccountCredentialAdapter = accountCredentialAdapter;
