@@ -39,7 +39,7 @@ public class MsalOAuth2TokenCache
         mAccountCredentialCache = accountCredentialCache;
         mSharedSsoCaches = new ArrayList<>();
         mAccountCredentialAdapter = accountCredentialAdapter;
-        mSsoValidator = new MicrosoftStsSsoValidator();
+        mSsoValidator = new DefaultSsoValidator();
         // TODO turn off
         Logger.setAllowLogcat(true);
     }
@@ -53,7 +53,7 @@ public class MsalOAuth2TokenCache
         mAccountCredentialCache = accountCredentialCache;
         mSharedSsoCaches = sharedSsoCaches;
         mAccountCredentialAdapter = accountCredentialAdapter;
-        mSsoValidator = new MicrosoftStsSsoValidator();
+        mSsoValidator = new DefaultSsoValidator();
     }
 
     public MsalOAuth2TokenCache(final Context context,
