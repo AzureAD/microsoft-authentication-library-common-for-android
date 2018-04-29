@@ -10,9 +10,9 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
 import com.microsoft.identity.common.internal.dto.Credential;
-import com.microsoft.identity.common.internal.dto.IAccount;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
@@ -26,23 +26,23 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CacheKeyReplacements.CLIENT_ID;
-import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CacheKeyReplacements.CREDENTIAL_TYPE;
-import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CacheKeyReplacements.ENVIRONMENT;
-import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CacheKeyReplacements.REALM;
-import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CacheKeyReplacements.TARGET;
-import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CacheKeyReplacements.UNIQUE_USER_ID;
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.CLIENT_ID;
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.CREDENTIAL_TYPE;
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.ENVIRONMENT;
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.REALM;
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.TARGET;
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.UNIQUE_USER_ID;
 
 /**
  * Uses Gson to serialize instances of <T> into {@link String}s.
  */
-public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentialCacheKeyValueDelegate {
+public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
 
     public static final String CACHE_VALUE_SEPARATOR = "-";
 
     private final Gson mGson;
 
-    public AccountCredentialCacheKeyValueDelegate() {
+    public CacheKeyValueDelegate() {
         mGson = new Gson();
     }
 
@@ -60,7 +60,7 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
     }
 
     @Override
-    public String generateCacheKey(IAccount account) {
+    public String generateCacheKey(Account account) {
         String cacheKey = UNIQUE_USER_ID
                 + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT
@@ -90,7 +90,7 @@ public class AccountCredentialCacheKeyValueDelegate implements IAccountCredentia
     }
 
     @Override
-    public String generateCacheValue(IAccount account) {
+    public String generateCacheValue(Account account) {
         return generateCacheValueInternal(account);
     }
 

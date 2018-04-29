@@ -7,10 +7,10 @@ import android.support.test.runner.AndroidJUnit4;
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.AccountCredentialCache;
-import com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
-import com.microsoft.identity.common.internal.cache.IAccountCredentialCacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IShareSingleSignOnState;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
@@ -64,7 +64,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     private Account account;
     private AccessToken accessToken;
     private RefreshToken refreshToken;
-    private IAccountCredentialCacheKeyValueDelegate keyValueDelegate;
+    private ICacheKeyValueDelegate keyValueDelegate;
     private IAccountCredentialCache accountCredentialCache;
 
     @Before
@@ -124,7 +124,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 new StorageHelper(context)
         );
 
-        keyValueDelegate = new AccountCredentialCacheKeyValueDelegate();
+        keyValueDelegate = new CacheKeyValueDelegate();
 
         accountCredentialCache = new AccountCredentialCache(
                 context,

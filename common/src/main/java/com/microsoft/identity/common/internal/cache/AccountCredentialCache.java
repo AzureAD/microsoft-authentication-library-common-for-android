@@ -22,7 +22,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 
 public class AccountCredentialCache implements IAccountCredentialCache {
 
@@ -41,11 +41,11 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     private final ISharedPreferencesFileManager mSharedPreferencesFileManager;
 
     private final Context mContext;
-    private final IAccountCredentialCacheKeyValueDelegate mCacheValueDelegate;
+    private final ICacheKeyValueDelegate mCacheValueDelegate;
 
     public AccountCredentialCache(
             final Context context,
-            final IAccountCredentialCacheKeyValueDelegate accountCacheValueDelegate) {
+            final ICacheKeyValueDelegate accountCacheValueDelegate) {
         Logger.verbose(TAG, "Init: " + TAG);
         mContext = context;
         mSharedPreferencesFileManager = new SharedPreferencesFileManager(
@@ -58,7 +58,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
     public AccountCredentialCache(
             final Context context,
-            final IAccountCredentialCacheKeyValueDelegate accountCacheValueDelegate,
+            final ICacheKeyValueDelegate accountCacheValueDelegate,
             final ISharedPreferencesFileManager sharedPreferencesFileManager) {
         Logger.verbose(TAG, "Init: " + TAG);
         mContext = context;

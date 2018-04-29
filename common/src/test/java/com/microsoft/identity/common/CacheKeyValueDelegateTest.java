@@ -4,8 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate;
-import com.microsoft.identity.common.internal.cache.IAccountCredentialCacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
@@ -21,12 +21,12 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-public class AccountCredentialCacheKeyValueDelegateTest {
+public class CacheKeyValueDelegateTest {
 
     private static final String UNIQUE_USER_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
     private static final String ENVIRONMENT = "login.microsoftonline.com";
@@ -43,11 +43,11 @@ public class AccountCredentialCacheKeyValueDelegateTest {
     private static final String LAST_NAME = "Doe";
     private static final String AVATAR_URL = "https://fake.cdn.microsoft.com/avatars/1";
 
-    private IAccountCredentialCacheKeyValueDelegate mDelegate;
+    private ICacheKeyValueDelegate mDelegate;
 
     @Before
     public void setUp() {
-        mDelegate = new AccountCredentialCacheKeyValueDelegate();
+        mDelegate = new CacheKeyValueDelegate();
     }
 
     // AccessTokens

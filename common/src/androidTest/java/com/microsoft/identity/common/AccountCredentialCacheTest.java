@@ -7,7 +7,7 @@ import android.support.test.runner.AndroidJUnit4;
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.AccountCredentialCache;
-import com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
@@ -23,7 +23,7 @@ import org.junit.runner.RunWith;
 
 import java.util.List;
 
-import static com.microsoft.identity.common.internal.cache.AccountCredentialCacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -48,7 +48,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
             "com.microsoft.identity.client.account_credential_cache";
 
     private AccountCredentialCache mAccountCredentialCache;
-    private AccountCredentialCacheKeyValueDelegate mDelegate;
+    private CacheKeyValueDelegate mDelegate;
     private SharedPreferencesFileManager mSharedPreferencesFileManager;
 
     @Before
@@ -57,9 +57,9 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         final Context testContext = InstrumentationRegistry.getTargetContext();
         mAccountCredentialCache = new AccountCredentialCache(
                 testContext,
-                new AccountCredentialCacheKeyValueDelegate()
+                new CacheKeyValueDelegate()
         );
-        mDelegate = new AccountCredentialCacheKeyValueDelegate();
+        mDelegate = new CacheKeyValueDelegate();
         mSharedPreferencesFileManager = new SharedPreferencesFileManager(
                 testContext,
                 sAccountCredentialSharedPreferences,

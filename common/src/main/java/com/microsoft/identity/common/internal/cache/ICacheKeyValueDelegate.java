@@ -1,14 +1,14 @@
 package com.microsoft.identity.common.internal.cache;
 
+import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
 import com.microsoft.identity.common.internal.dto.Credential;
-import com.microsoft.identity.common.internal.dto.IAccount;
 
-public interface IAccountCredentialCacheKeyValueDelegate {
+public interface ICacheKeyValueDelegate {
 
-    String generateCacheKey(final IAccount account);
+    String generateCacheKey(final Account account);
 
-    String generateCacheValue(final IAccount account);
+    String generateCacheValue(final Account account);
 
     String generateCacheKey(final Credential credential);
 
