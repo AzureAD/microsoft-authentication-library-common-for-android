@@ -31,6 +31,8 @@ public class SchemaUtil {
      */
     public static String getEnvironment(final IDToken idToken) {
         final String methodName = "getEnvironment";
+        Logger.entering(TAG, methodName, idToken);
+
         String environment = null;
 
         if (null != idToken) {
@@ -64,6 +66,8 @@ public class SchemaUtil {
             Logger.warn(TAG + ":" + methodName, "IDToken was null");
         }
 
+        Logger.exiting(TAG, methodName, environment);
+
         return environment;
     }
 
@@ -75,6 +79,8 @@ public class SchemaUtil {
      */
     public static String getAvatarUrl(final IDToken idToken) {
         final String methodName = "getAvatarUrl";
+        Logger.entering(TAG, methodName, idToken);
+
         String avatarUrl = null;
 
         if (null != idToken) {
@@ -95,6 +101,8 @@ public class SchemaUtil {
             Logger.warn(TAG + ":" + methodName, "IDToken was null.");
         }
 
+        Logger.exiting(TAG, methodName, avatarUrl);
+
         return avatarUrl;
     }
 
@@ -106,6 +114,8 @@ public class SchemaUtil {
      */
     public static String getGuestId(final IDToken idToken) {
         final String methodName = "getGuestId";
+        Logger.entering(TAG, methodName, idToken);
+
         String guestId = null;
 
         if (null != idToken) {
@@ -126,11 +136,15 @@ public class SchemaUtil {
             Logger.warn(TAG + ":" + methodName, "IDToken was null.");
         }
 
+        Logger.exiting(TAG, methodName, guestId);
+
         return guestId;
     }
 
     public static String getUniqueId(final ClientInfo clientInfo) {
         final String methodName = ":getUniqueId";
+        Logger.entering(TAG, methodName, clientInfo);
+
         String uniqueId = null;
 
         if (null != clientInfo) {
@@ -154,6 +168,8 @@ public class SchemaUtil {
         } else {
             Logger.warn(TAG + ":" + methodName, "ClientInfo was null.");
         }
+
+        Logger.exiting(TAG, methodName, uniqueId);
 
         return uniqueId;
     }
