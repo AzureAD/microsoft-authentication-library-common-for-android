@@ -192,7 +192,7 @@ public class MsalOAuth2TokenCache
         final String methodName = "setSingleSignOnState";
         Logger.entering(TAG, methodName, account, refreshToken);
 
-        final boolean argumentsValid = validateSetSingleSignOnStateArguments(account, refreshToken);
+        final boolean argumentsValid = validateSingleSignOnStateArguments(account, refreshToken);
 
         if (argumentsValid) {
             final com.microsoft.identity.common.internal.dto.RefreshToken rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
@@ -210,10 +210,10 @@ public class MsalOAuth2TokenCache
         Logger.exiting(TAG, methodName);
     }
 
-    private boolean validateSetSingleSignOnStateArguments(
+    private boolean validateSingleSignOnStateArguments(
             final com.microsoft.identity.common.Account account,
             final RefreshToken refreshToken) {
-        final String methodName = "validateSetSingleSignOnStateArguments";
+        final String methodName = "validateSingleSignOnStateArguments";
         Logger.entering(TAG, methodName, account, refreshToken);
 
         boolean valid = mSsoValidator.isAccountValid(account) & mSsoValidator.isRefreshTokenValid(refreshToken);

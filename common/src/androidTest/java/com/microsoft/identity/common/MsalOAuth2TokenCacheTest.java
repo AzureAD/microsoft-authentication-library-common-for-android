@@ -8,6 +8,7 @@ import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.AccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.DefaultSsoValidator;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
@@ -136,6 +137,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 context,
                 accountCredentialCache,
                 mockCredentialAdapter,
+                new DefaultSsoValidator(),
                 new ArrayList<IShareSingleSignOnState>()
         );
     }
