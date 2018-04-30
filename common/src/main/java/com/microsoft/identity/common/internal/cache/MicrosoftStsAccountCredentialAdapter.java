@@ -7,6 +7,7 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
@@ -54,7 +55,8 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
 
             final Account account = new Account();
             account.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
-            account.setEnvironment(msRequest.getAuthority().toString()); // host of authority with optional port
+            // TODO the below value should probably just be the host...
+            account.setEnvironment(SchemaUtil.getEnvironment(msIdToken)); // host of authority with optional port
             account.setRealm(getRealm(strategy, response)); //tid
             account.setAuthorityAccountId(tokenClaims.get(OJBECT_ID)); // oid claim from id token
             account.setUsername(tokenClaims.get(PREFERRED_USERNAME));
@@ -133,24 +135,33 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         final String methodName = "createAccessToken";
         Logger.entering(TAG, methodName, strategy, request, response);
 
-        final long cachedAt = getCachedAt();
-        final long expiresOn = getExpiresOn(cachedAt, response);
+        try {
+            final long cachedAt = getCachedAt();
+            final long expiresOn = getExpiresOn(cachedAt, response);
+            final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
+            final ClientInfo clientInfo = new ClientInfo(getClientInfo(response));
 
-        final AccessToken accessToken = new AccessToken();
-        accessToken.setTarget(getTarget(request));
-        accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
-        accessToken.setExpiresOn(String.valueOf(expiresOn)); // derived from expires_in
-        accessToken.setClientInfo(getClientInfo(response));
-        // TODO Do AccessTokens track a family id?
-        //accessToken.setFamilyId(msTokenResponse.getFamilyId());
-        accessToken.setAccessTokenType(BEARER); // TODO does this value come from somewhere in the auth response?
-        accessToken.setExtendedExpiresOn(getExtendedExpiresOn(strategy, response));
-        accessToken.setAuthority(getAuthority(request));
-        accessToken.setRealm(getRealm(strategy, response));
+            final AccessToken accessToken = new AccessToken();
+            accessToken.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
+            accessToken.setTarget(getTarget(request));
+            accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
+            accessToken.setExpiresOn(String.valueOf(expiresOn)); // derived from expires_in
+            accessToken.setClientInfo(getClientInfo(response));
+            // TODO Do AccessTokens track a family id?
+            //accessToken.setFamilyId(msTokenResponse.getFamilyId());
+            accessToken.setAccessTokenType(BEARER); // TODO does this value come from somewhere in the auth response?
+            accessToken.setExtendedExpiresOn(getExtendedExpiresOn(strategy, response));
+            accessToken.setAuthority(getAuthority(request));
+            accessToken.setRealm(getRealm(strategy, response));
+            accessToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
 
-        Logger.exiting(TAG, methodName, accessToken);
+            Logger.exiting(TAG, methodName, accessToken);
 
-        return accessToken;
+            return accessToken;
+        } catch (ServiceException e) {
+            // TODO handle this properly
+            throw new RuntimeException(e);
+        }
     }
 
     private String getExtendedExpiresOn(final OAuth2Strategy strategy, final TokenResponse response) {
@@ -209,10 +220,45 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         refreshToken.setClientInfo(getClientInfo(response));
         refreshToken.setFamilyId(getFamilyId(response));
         refreshToken.setUsername(getUsername(response));
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
 
         Logger.exiting(TAG, methodName, refreshToken);
 
         return refreshToken;
+    }
+
+    @Override
+    public IdToken createIdToken(
+            final OAuth2Strategy strategy,
+            final AuthorizationRequest request,
+            final TokenResponse response) {
+        final String methodName = "createIdToken";
+        Logger.entering(TAG, methodName, strategy, request, response);
+
+        try {
+            final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
+            final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
+            final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
+
+            final IdToken idToken = new IdToken();
+            // Required fields
+            idToken.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
+            idToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
+            idToken.setRealm(getRealm(strategy, response));
+            idToken.setCredentialType(CredentialType.IdToken.name());
+            idToken.setClientId(request.getClientId());
+            idToken.setSecret(response.getIdToken());
+
+            // Optional fields
+            idToken.setAuthority(getAuthority(request));
+
+            Logger.exiting(TAG, methodName, idToken);
+
+            return idToken;
+        } catch (ServiceException e) {
+            // TODO handle this properly
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

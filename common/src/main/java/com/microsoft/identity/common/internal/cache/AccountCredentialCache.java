@@ -404,6 +404,9 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             case RefreshToken:
                 credentialClass = RefreshToken.class;
                 break;
+            case IdToken:
+                credentialClass = IdToken.class;
+                break;
             default:
                 // TODO Log a warning? Throw an Exception?
         }

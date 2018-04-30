@@ -20,6 +20,7 @@ import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
@@ -65,6 +66,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     private Account account;
     private AccessToken accessToken;
     private RefreshToken refreshToken;
+    private IdToken idToken;
     private ICacheKeyValueDelegate keyValueDelegate;
     private IAccountCredentialCache accountCredentialCache;
 
@@ -92,6 +94,16 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setClientId(CLIENT_ID);
 
+        idToken = new IdToken();
+        idToken.setUniqueUserId(UNIQUE_USER_ID);
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setRealm(REALM);
+        idToken.setCredentialType(CredentialType.IdToken.name());
+        idToken.setClientId(CLIENT_ID);
+        idToken.setSecret(MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS);
+        idToken.setAuthority("https://sts.windows.net/0287f963-2d72-4363-9e3a-5705c5b0f031/");
+        // TODO populate values
+
         // Mocks
         when(
                 mockCredentialAdapter.createAccount(
@@ -116,6 +128,14 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                         mockResponse
                 )
         ).thenReturn(refreshToken);
+
+        when(
+                mockCredentialAdapter.createIdToken(
+                        mockStrategy,
+                        mockRequest,
+                        mockResponse
+                )
+        ).thenReturn(idToken);
 
         // Context and related init
         final Context context = InstrumentationRegistry.getTargetContext();
@@ -160,16 +180,19 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertEquals(account, accounts.get(0));
 
         final List<Credential> credentials = accountCredentialCache.getCredentials();
-        assertEquals(2, credentials.size());
+        assertEquals(3, credentials.size());
 
         final List<Credential> rts = new ArrayList<>();
         final List<Credential> ats = new ArrayList<>();
+        final List<Credential> ids = new ArrayList<>();
 
         for (final Credential credential : credentials) {
             if (credential.getCredentialType().equalsIgnoreCase(CredentialType.AccessToken.name())) {
                 ats.add(credential);
             } else if (credential.getCredentialType().equalsIgnoreCase(CredentialType.RefreshToken.name())) {
                 rts.add(credential);
+            } else if (credential.getCredentialType().equalsIgnoreCase(CredentialType.IdToken.name())) {
+                ids.add(credential);
             } else {
                 fail();
             }
@@ -177,6 +200,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         assertEquals(accessToken, ats.get(0));
         assertEquals(refreshToken, rts.get(0));
+        assertEquals(idToken, ids.get(0));
     }
 
     @Test
@@ -208,16 +232,19 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertEquals(account, accounts.get(0));
 
         final List<Credential> credentials = accountCredentialCache.getCredentials();
-        assertEquals(2, credentials.size());
+        assertEquals(3, credentials.size());
 
         final List<Credential> rts = new ArrayList<>();
         final List<Credential> ats = new ArrayList<>();
+        final List<Credential> ids = new ArrayList<>();
 
         for (final Credential credential : credentials) {
             if (credential.getCredentialType().equalsIgnoreCase(CredentialType.AccessToken.name())) {
                 ats.add(credential);
             } else if (credential.getCredentialType().equalsIgnoreCase(CredentialType.RefreshToken.name())) {
                 rts.add(credential);
+            } else if (credential.getCredentialType().equalsIgnoreCase(CredentialType.IdToken.name())) {
+                ids.add(credential);
             } else {
                 fail();
             }
@@ -225,6 +252,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         assertEquals(accessToken, ats.get(0));
         assertEquals(refreshToken, rts.get(0));
+        assertEquals(idToken, ids.get(0));
     }
 
 }

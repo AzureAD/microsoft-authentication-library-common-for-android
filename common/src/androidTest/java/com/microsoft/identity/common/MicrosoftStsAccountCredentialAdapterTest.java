@@ -36,8 +36,9 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     private static final String MOCK_PREFERRED_USERNAME = "bmelton";
     private static final String MOCK_OID = "1c1db626-0fcb-42bb-b39e-8e983dd92932";
     private static final String MOCK_TID = "7744ecc5-e130-4af1-ba81-749c395efc8c";
-    private static final String MOCK_AUTHORITY = "https://login.microsoftonline.com";
-    private static final String MOCK_ID_TOKEN_WITH_CLAIMS = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJNb2NrIElzc3VlciIsImlhdCI6MTUyMTQ5ODk1MCwiZXhwIjoxNTUzMDM1NjU2LCJhdWQiOiJ3d3cuZmFrZWRvbWFpbi5jb20iLCJzdWIiOiJmYWtlLmVtYWlsQGZha2Vkb21haW4uY29tIiwib2lkIjoiMWMxZGI2MjYtMGZjYi00MmJiLWIzOWUtOGU5ODNkZDkyOTMyIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiYm1lbHRvbiIsImdpdmVuX25hbWUiOiJCcmlhbiIsImZhbWlseV9uYW1lIjoiTWVsdG9uLUdyYWNlIn0.5yImfq2TvQYPMBM49A1Dzoi2DnRPCUzFYe5hTrW9DxE";
+    private static final String MOCK_AUTHORITY = "https://sts.windows.net/0287f963-2d72-4363-9e3a-5705c5b0f031/";
+    private static final String MOCK_ENVIRONMENT = "sts.windows.net";
+    public static final String MOCK_ID_TOKEN_WITH_CLAIMS = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC8wMjg3Zjk2My0yZDcyLTQzNjMtOWUzYS01NzA1YzViMGYwMzEvIiwiaWF0IjoxNTIxNDk4OTUwLCJleHAiOjE1NTMwMzU2NTYsImF1ZCI6Ind3dy5mYWtlZG9tYWluLmNvbSIsInN1YiI6ImZha2UuZW1haWxAZmFrZWRvbWFpbi5jb20iLCJvaWQiOiIxYzFkYjYyNi0wZmNiLTQyYmItYjM5ZS04ZTk4M2RkOTI5MzIiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJibWVsdG9uIiwiZ2l2ZW5fbmFtZSI6IkJyaWFuIiwiZmFtaWx5X25hbWUiOiJNZWx0b24tR3JhY2UifQ.BqAzS_WM1ME9LV1UNp2clNyCyiQm3G9xxw8Tv6omlCc";
     private static final String MOCK_UID = "mock_uid";
     private static final String MOCK_UTID = "mock_utid";
     private static final String MOCK_CLIENT_INFO = createRawClientInfo(MOCK_UID, MOCK_UTID);
@@ -78,7 +79,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         final Account account = mAccountFactory.createAccount(mockStrategy, mockRequest, mockResponse);
         assertNotNull(account);
         assertEquals(MOCK_UID + "." + MOCK_UTID, account.getUniqueUserId());
-        assertEquals(MOCK_AUTHORITY, account.getEnvironment());
+        assertEquals(MOCK_ENVIRONMENT, account.getEnvironment());
         assertEquals(MOCK_TID, account.getRealm());
         assertEquals(MOCK_OID, account.getAuthorityAccountId());
         assertEquals(MOCK_PREFERRED_USERNAME, account.getUsername());
@@ -100,6 +101,9 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_CLIENT_INFO, accessToken.getClientInfo());
         assertEquals(MOCK_TID, accessToken.getRealm());
         assertEquals(MOCK_AUTHORITY, accessToken.getAuthority());
+        assertEquals(MOCK_ENVIRONMENT, accessToken.getEnvironment());
+        assertEquals(MOCK_UID + "." + MOCK_UTID, accessToken.getUniqueUserId());
+
     }
 
     @Test

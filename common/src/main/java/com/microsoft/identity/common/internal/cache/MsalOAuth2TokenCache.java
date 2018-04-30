@@ -7,6 +7,7 @@ import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -76,6 +77,18 @@ public class MsalOAuth2TokenCache
         Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
         saveAccessToken(oAuth2Strategy, request, response);
         saveRefreshToken(oAuth2Strategy, request, response);
+        saveIdToken(oAuth2Strategy, request, response);
+        Logger.exiting(TAG, methodName);
+    }
+
+    private void saveIdToken(
+            final OAuth2Strategy oAuth2Strategy,
+            final AuthorizationRequest request,
+            final TokenResponse response) {
+        final String methodName = "saveIdToken";
+        Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
+        final IdToken idToken = mAccountCredentialAdapter.createIdToken(oAuth2Strategy, request, response);
+        mAccountCredentialCache.saveCredential(idToken);
         Logger.exiting(TAG, methodName);
     }
 
