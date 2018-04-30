@@ -191,6 +191,7 @@ public abstract class MicrosoftAccount extends Account {
      *
      * @return
      */
+    @Override
     public String getUniqueIdentifier() {
         return StringExtensions.base64UrlEncodeToString(mUid) + "." + StringExtensions.base64UrlEncodeToString(mUtid);
     }
@@ -238,6 +239,10 @@ public abstract class MicrosoftAccount extends Account {
 
     @Override
     public String getUniqueUserId() {
+        // TODO -- This method's functionality is duplicative of
+        // Account#getUniqueIdentifier except that that implementation
+        // was coded for the refactored ADAL cache which expects
+        // uid/utid to be base64 encoded for legacy support.
         return getUid() + "." + getUtid();
     }
 
