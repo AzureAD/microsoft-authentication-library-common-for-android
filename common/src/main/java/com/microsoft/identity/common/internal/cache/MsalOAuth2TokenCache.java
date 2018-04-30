@@ -41,8 +41,6 @@ public class MsalOAuth2TokenCache
         mSharedSsoCaches = new ArrayList<>();
         mAccountCredentialAdapter = accountCredentialAdapter;
         mSsoValidator = ssoValidator;
-        // TODO turn off
-        Logger.setAllowLogcat(true);
     }
 
     public MsalOAuth2TokenCache(final Context context,
