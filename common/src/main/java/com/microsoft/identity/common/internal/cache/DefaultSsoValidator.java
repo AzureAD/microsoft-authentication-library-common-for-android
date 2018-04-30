@@ -9,7 +9,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
  * Default implementation to validate {@link Account} and {@link RefreshToken} token
  * instances prior to cache-writes. This class is thread-safe.
  */
-class DefaultSsoValidator implements ISsoValidator {
+public class DefaultSsoValidator implements ISsoValidator {
 
     /**
      * TAG used for logging.

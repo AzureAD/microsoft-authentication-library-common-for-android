@@ -33,27 +33,16 @@ public class MsalOAuth2TokenCache
 
     public MsalOAuth2TokenCache(final Context context,
                                 final IAccountCredentialCache accountCredentialCache,
-                                final IAccountCredentialAdapter accountCredentialAdapter) {
+                                final IAccountCredentialAdapter accountCredentialAdapter,
+                                final ISsoValidator ssoValidator) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
         mSharedSsoCaches = new ArrayList<>();
         mAccountCredentialAdapter = accountCredentialAdapter;
-        mSsoValidator = new DefaultSsoValidator();
+        mSsoValidator = ssoValidator;
         // TODO turn off
         Logger.setAllowLogcat(true);
-    }
-
-    public MsalOAuth2TokenCache(final Context context,
-                                final IAccountCredentialCache accountCredentialCache,
-                                final IAccountCredentialAdapter accountCredentialAdapter,
-                                final List<IShareSingleSignOnState> sharedSsoCaches) {
-        super(context);
-        Logger.verbose(TAG, "Init: " + TAG);
-        mAccountCredentialCache = accountCredentialCache;
-        mSharedSsoCaches = sharedSsoCaches;
-        mAccountCredentialAdapter = accountCredentialAdapter;
-        mSsoValidator = new DefaultSsoValidator();
     }
 
     public MsalOAuth2TokenCache(final Context context,
