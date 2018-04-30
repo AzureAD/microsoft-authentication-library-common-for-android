@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -15,6 +16,8 @@ import java.util.Map;
  * Convenience class for accessing {@link SharedPreferences}.
  */
 public class SharedPreferencesFileManager implements ISharedPreferencesFileManager {
+
+    private static final String TAG = SharedPreferencesFileManager.class.getSimpleName();
 
     private final String mSharedPreferencesFileName;
     private final SharedPreferences mSharedPreferences;
@@ -31,6 +34,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     public SharedPreferencesFileManager(
             final Context context,
             final String name) {
+        Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
         mStorageHelper = null;
@@ -48,6 +52,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final Context context,
             final String name,
             final int operatingMode) {
+        Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, operatingMode);
         mStorageHelper = null;
@@ -66,6 +71,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final Context context,
             final String name,
             final IStorageHelper storageHelper) {
+        Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
         mStorageHelper = storageHelper;
@@ -85,6 +91,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final String name,
             final int operatingMode,
             final IStorageHelper storageHelper) {
+        Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, operatingMode);
         mStorageHelper = storageHelper;
@@ -96,6 +103,9 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     public final void putString(
             final String key,
             final String value) {
+        final String methodName = "putString";
+        Logger.entering(TAG, methodName, key, value);
+
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
 
         if (null == mStorageHelper) {
@@ -105,26 +115,39 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         }
 
         editor.commit();
+
+        Logger.exiting(TAG, methodName);
     }
 
     @Override
     public final String getString(final String key) {
+        final String methodName = "getString";
+        Logger.entering(TAG, methodName, key);
+
         String restoredValue = mSharedPreferences.getString(key, null);
 
         if (null != mStorageHelper && !StringExtensions.isNullOrBlank(restoredValue)) {
             restoredValue = decrypt(restoredValue);
         }
 
+        Logger.exiting(TAG, methodName, restoredValue);
+
         return restoredValue;
     }
 
     @Override
     public final String getSharedPreferencesFileName() {
+        final String methodName = "getSharedPreferencesFileName";
+        Logger.entering(TAG, methodName);
+        Logger.exiting(TAG, mSharedPreferencesFileName);
         return mSharedPreferencesFileName;
     }
 
     @Override
     public final Map<String, String> getAll() {
+        final String methodName = "getAll";
+        Logger.entering(TAG, methodName);
+
         final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
 
         if (null != mStorageHelper) {
@@ -133,46 +156,96 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             }
         }
 
+        Logger.exiting(TAG, methodName, entries);
+
         return entries;
     }
 
     @Override
     public final boolean contains(final String key) {
-        return mSharedPreferences.contains(key);
+        final String methodName = "contains";
+        Logger.entering(TAG, methodName, key);
+
+        final boolean contains = mSharedPreferences.contains(key);
+
+        Logger.exiting(TAG, methodName, contains);
+
+        return contains;
     }
 
     @SuppressLint("ApplySharedPref")
     @Override
     public final void clear() {
+        final String methodName = "clear";
+        Logger.entering(TAG, methodName);
+
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.clear();
         editor.commit();
+
+        Logger.exiting(TAG, methodName);
     }
 
     @SuppressLint("ApplySharedPref")
     @Override
     public void remove(final String key) {
+        final String methodName = "remove";
+        Logger.entering(TAG, methodName, key);
+
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.remove(key);
         editor.commit();
+
+        Logger.exiting(TAG, methodName);
     }
 
     private String encrypt(final String clearText) {
-        return encryptDecryptInternal(clearText, true);
+        final String methodName = "encrypt";
+        Logger.entering(TAG, methodName, clearText);
+
+        final String encryptedValue = encryptDecryptInternal(clearText, true);
+
+        Logger.exiting(TAG, methodName, encryptedValue);
+
+        return encryptedValue;
     }
 
     private String decrypt(final String encryptedBlob) {
-        return encryptDecryptInternal(encryptedBlob, false);
+        final String methodName = "decrypt";
+        Logger.entering(TAG, methodName, encryptedBlob);
+
+        final String decryptedValue = encryptDecryptInternal(encryptedBlob, false);
+
+        Logger.exiting(TAG, methodName, decryptedValue);
+
+        return decryptedValue;
     }
 
     private String encryptDecryptInternal(final String inputText, final boolean encrypt) {
+        final String methodName = "encryptDecryptInternal";
+        Logger.entering(TAG, methodName, inputText, encrypt);
+
         String result;
         try {
             result = encrypt ? mStorageHelper.encrypt(inputText) : mStorageHelper.decrypt(inputText);
         } catch (GeneralSecurityException | IOException e) {
-            // TODO log an error? Throw a RuntimeException?
+            Logger.error(
+                    TAG + ":" + methodName,
+                    "Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",
+                    null
+            );
+            Logger.errorPII(
+                    TAG + ":" + methodName,
+                    "Failed with Exception",
+                    e
+            );
+
+            // TODO Throw a RuntimeException?
             result = null;
         }
+
+        Logger.exiting(TAG, methodName, result);
+
         return result;
     }
 
