@@ -3,6 +3,7 @@ package com.microsoft.identity.common.internal.cache;
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
 /**
@@ -38,9 +39,21 @@ public class DefaultSsoValidator implements ISsoValidator {
             mAccountIsValid = false;
             Logger.warn(TAG + ":" + methodName, "Account is null.");
         } else {
-            // Validate required & optional fields
-            validateAccountRequiredFields(account);
-            validateAccountOptionalFields(account);
+            if (!(account instanceof MicrosoftAccount)) {
+                mAccountIsValid = false;
+                Logger.warn(TAG + ":" + methodName, "");
+            } else {
+                final MicrosoftAccount msAccount = (MicrosoftAccount) account;
+
+                if (null == msAccount.getIDToken()) {
+                    mAccountIsValid = false;
+                    Logger.warn(TAG + ":" + methodName, "IDToken was null.");
+                }
+
+                // Validate required & optional fields
+                validateAccountRequiredFields(account);
+                validateAccountOptionalFields(account);
+            }
         }
 
         Logger.exiting(TAG, methodName, mAccountIsValid);
