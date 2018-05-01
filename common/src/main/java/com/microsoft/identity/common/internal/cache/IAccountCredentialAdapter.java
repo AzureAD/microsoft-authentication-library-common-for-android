@@ -37,4 +37,7 @@ public interface IAccountCredentialAdapter {
 
     Account asAccount(com.microsoft.identity.common.Account account);
 
+    IdToken asIdToken(com.microsoft.identity.common.Account account,
+                      com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshToken
+    );
 }

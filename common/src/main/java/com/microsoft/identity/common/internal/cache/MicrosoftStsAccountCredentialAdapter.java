@@ -10,6 +10,7 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
@@ -17,6 +18,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
@@ -308,6 +310,38 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         Logger.exiting(TAG, methodName, acct);
 
         return acct;
+    }
+
+    @Override
+    public IdToken asIdToken(com.microsoft.identity.common.Account account, com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshToken) {
+        final String methodName = "asIdToken";
+        Logger.entering(TAG, methodName, account, refreshToken);
+
+        if (!(account instanceof MicrosoftAccount)) {
+            throw new IllegalArgumentException("Account must be an instance or subclass of MicrosoftAccount");
+        }
+
+        final long cachedAt = getCachedAt();
+        final MicrosoftAccount msAccount = (MicrosoftAccount) account;
+        IDToken msIdToken = msAccount.getIDToken();
+        // TODO check that the account is there and the IDToken is present
+
+        final IdToken idToken = new IdToken();
+        // Required fields
+        idToken.setUniqueUserId(refreshToken.getUniqueUserId());
+        idToken.setEnvironment(refreshToken.getEnvironment());
+        idToken.setRealm(msAccount.getRealm());
+        idToken.setCredentialType(CredentialType.IdToken.name());
+        idToken.setClientId(refreshToken.getClientId());
+        idToken.setSecret(msIdToken.getRawIDToken());
+        idToken.setCachedAt(String.valueOf(cachedAt));
+
+        // Optional fields
+        idToken.setAuthority(SchemaUtil.getAuthority(msIdToken));
+
+        Logger.exiting(TAG, methodName, idToken);
+
+        return idToken;
     }
 
     private String getUsername(final TokenResponse response) {

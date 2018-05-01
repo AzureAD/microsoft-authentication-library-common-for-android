@@ -208,7 +208,9 @@ public class MsalOAuth2TokenCache
         if (argumentsValid) {
             final com.microsoft.identity.common.internal.dto.RefreshToken rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
             final Account accountDto = mAccountCredentialAdapter.asAccount(account);
+            final IdToken idToken = mAccountCredentialAdapter.asIdToken(account, refreshToken);
             mAccountCredentialCache.saveAccount(accountDto);
+            mAccountCredentialCache.saveCredential(idToken);
             mAccountCredentialCache.saveCredential(rt);
         } else {
             Logger.error(

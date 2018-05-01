@@ -20,6 +20,40 @@ public class SchemaUtil {
     private static final String TAG = SchemaUtil.class.getSimpleName();
 
     /**
+     * Returns the authority (issuer) for the supplied IDToken.
+     *
+     * @param idToken The IDToken to parse.
+     * @return The issuer or null if the IDToken cannot be parsed or the issuer claim is empty.
+     */
+    public static String getAuthority(final IDToken idToken) {
+        final String methodName = "getAuthority";
+        Logger.entering(TAG, methodName, idToken);
+
+        String issuer = null;
+
+        if (null != idToken) {
+            final Map<String, String> idTokenClaims = idToken.getTokenClaims();
+
+            if (null != idTokenClaims) {
+                issuer = idTokenClaims.get(MicrosoftIdToken.ISSUER);
+                Logger.verbosePII(TAG + ":" + methodName, "Issuer: " + issuer);
+
+                if (null == issuer) {
+                    Logger.warn(TAG + ":" + methodName, "Environment was null or could not be parsed.");
+                }
+            } else {
+                Logger.warn(TAG + ":" + methodName, "IDToken claims were null");
+            }
+        } else {
+            Logger.warn(TAG + ":" + methodName, "IDToken was null");
+        }
+
+        Logger.exiting(TAG, methodName, issuer);
+
+        return issuer;
+    }
+
+    /**
      * Returns the 'environment' for the supplied IDToken.
      * <p>
      * For a description of this field,
@@ -33,37 +67,18 @@ public class SchemaUtil {
         final String methodName = "getEnvironment";
         Logger.entering(TAG, methodName, idToken);
 
+        final String issuer = getAuthority(idToken);
         String environment = null;
-
-        if (null != idToken) {
-            final Map<String, String> idTokenClaims = idToken.getTokenClaims();
-
-            if (null != idTokenClaims) {
-                environment = idTokenClaims.get(MicrosoftIdToken.ISSUER);
-                Logger.verbosePII(TAG + ":" + methodName, "Issuer: " + environment);
-
-                try {
-                    environment = new URL(environment).getHost();
-                } catch (MalformedURLException e) {
-                    environment = null;
-                    Logger.error(
-                            TAG + ":" + methodName,
-                            "Failed to construct URL from issuer claim",
-                            null // Do not supply the Exception, as it contains PII
-                    );
-                    Logger.errorPII(TAG + ":" + methodName, "Failed with Exception", e);
-                }
-
-                Logger.verbosePII(TAG + ":" + methodName, "Environment: " + environment);
-
-                if (null == environment) {
-                    Logger.warn(TAG + ":" + methodName, "Environment was null or could not be parsed.");
-                }
-            } else {
-                Logger.warn(TAG + ":" + methodName, "IDToken claims were null");
-            }
-        } else {
-            Logger.warn(TAG + ":" + methodName, "IDToken was null");
+        try {
+            environment = new URL(issuer).getHost();
+        } catch (MalformedURLException e) {
+            environment = null;
+            Logger.error(
+                    TAG + ":" + methodName,
+                    "Failed to construct URL from issuer claim",
+                    null // Do not supply the Exception, as it contains PII
+            );
+            Logger.errorPII(TAG + ":" + methodName, "Failed with Exception", e);
         }
 
         Logger.exiting(TAG, methodName, environment);
