@@ -324,7 +324,6 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         final long cachedAt = getCachedAt();
         final MicrosoftAccount msAccount = (MicrosoftAccount) account;
         IDToken msIdToken = msAccount.getIDToken();
-        // TODO check that the account is there and the IDToken is present
 
         final IdToken idToken = new IdToken();
         // Required fields
