@@ -1,8 +1,5 @@
 package com.microsoft.identity.common.adal.internal.cache;
 
-import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
-import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
@@ -11,23 +8,21 @@ import android.support.test.runner.AndroidJUnit4;
 import android.util.Base64;
 import android.util.Log;
 
+import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
+import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
+import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.DigestException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 
 import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
 
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static org.junit.Assert.assertEquals;
@@ -36,7 +31,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
-public class StorageHelperTests extends AndroidTestHelper {
+public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
 
     private static final String TAG = "StorageHelperTests";
 
@@ -45,11 +40,6 @@ public class StorageHelperTests extends AndroidTestHelper {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-
-        if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null && Build.VERSION.SDK_INT < MIN_SDK_VERSION) {
-            Log.d(TAG, "setup key at settings");
-            setSecretKeyData();
-        }
     }
 
     @Test
@@ -200,11 +190,11 @@ public class StorageHelperTests extends AndroidTestHelper {
         final Context context = getInstrumentation().getTargetContext();
         final StorageHelper storageHelper = new StorageHelper(context);
         String clearText = "AAAAAAAA2pILN0mn3wlYIlWk7lqOZ5qjRWXH";
-        String encrypted =  storageHelper.encrypt(clearText);
+        String encrypted = storageHelper.encrypt(clearText);
         assertNotNull("encrypted string is not null", encrypted);
         assertFalse("encrypted string is not same as cleartext", encrypted.equals(clearText));
 
-        String decrypted =  storageHelper.decrypt(encrypted);
+        String decrypted = storageHelper.decrypt(encrypted);
         assertTrue("Same without Tampering", decrypted.equals(clearText));
         final String flagVersion = encrypted.substring(0, 3);
         final byte[] bytes = Base64.decode(encrypted.substring(3), Base64.DEFAULT);
@@ -222,7 +212,6 @@ public class StorageHelperTests extends AndroidTestHelper {
     /**
      * Make sure that version sets correctly. It needs to be tested at different
      * emulator(18 and before 18).
-     *
      */
     @Test
     public void testVersion() throws GeneralSecurityException, IOException {
@@ -330,15 +319,4 @@ public class StorageHelperTests extends AndroidTestHelper {
         assertTrue("Key info is same", key.toString().equals(key2.toString()));
     }
 
-    private void setSecretKeyData() throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
-        // use same key for tests
-        SecretKeyFactory keyFactory = SecretKeyFactory
-                .getInstance("PBEWithSHA256And256BitAES-CBC-BC");
-        final int iterations = 100;
-        final int keySize = 256;
-        SecretKey tempkey = keyFactory.generateSecret(new PBEKeySpec("test".toCharArray(),
-                "abcdedfdfd".getBytes("UTF-8"), iterations, keySize));
-        SecretKey secretKey = new SecretKeySpec(tempkey.getEncoded(), "AES");
-        AuthenticationSettings.INSTANCE.setSecretKey(secretKey.getEncoded());
-    }
 }

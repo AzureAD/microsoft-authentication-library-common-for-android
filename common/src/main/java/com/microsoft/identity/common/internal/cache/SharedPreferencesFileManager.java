@@ -1,17 +1,27 @@
 package com.microsoft.identity.common.internal.cache;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.logging.Logger;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Map;
 
 /**
  * Convenience class for accessing {@link SharedPreferences}.
  */
-public class SharedPreferencesFileManager {
+public class SharedPreferencesFileManager implements ISharedPreferencesFileManager {
+
+    private static final String TAG = SharedPreferencesFileManager.class.getSimpleName();
 
     private final String mSharedPreferencesFileName;
     private final SharedPreferences mSharedPreferences;
+    private final IStorageHelper mStorageHelper;
 
     /**
      * Constructs an instance of SharedPreferencesFileManager.
@@ -24,8 +34,10 @@ public class SharedPreferencesFileManager {
     public SharedPreferencesFileManager(
             final Context context,
             final String name) {
+        Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
+        mStorageHelper = null;
     }
 
     /**
@@ -40,80 +52,201 @@ public class SharedPreferencesFileManager {
             final Context context,
             final String name,
             final int operatingMode) {
+        Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, operatingMode);
+        mStorageHelper = null;
     }
 
     /**
-     * Saves a Token (as a {@link String} to the {@link SharedPreferences} file.
+     * Constructs an instance of SharedPreferencesFileManager.
+     * The default operating mode is {@link Context#MODE_PRIVATE}
      *
-     * @param key   The name (key) of the Token to save.
-     * @param value The Token's value (as a {@link String}).
+     * @param context       Interface to global information about an application environment.
+     * @param name          The desired {@link android.content.SharedPreferences} file. It will be created
+     *                      if it does not exist.
+     * @param storageHelper The {@link IStorageHelper} to handle encryption/decryption of values.
      */
+    public SharedPreferencesFileManager(
+            final Context context,
+            final String name,
+            final IStorageHelper storageHelper) {
+        Logger.verbose(TAG, "Init: " + TAG);
+        mSharedPreferencesFileName = name;
+        mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
+        mStorageHelper = storageHelper;
+    }
+
+    /**
+     * Constructs an instance of SharedPreferencesFileManager.
+     *
+     * @param context       Interface to global information about an application enviroment.
+     * @param name          The desired {@link SharedPreferences} file. It will be created
+     *                      if it does not exist.
+     * @param operatingMode Operating mode {@link Context#getSharedPreferences(String, int)}.
+     * @param storageHelper The {@link IStorageHelper} to handle encryption/decryption of values.
+     */
+    public SharedPreferencesFileManager(
+            final Context context,
+            final String name,
+            final int operatingMode,
+            final IStorageHelper storageHelper) {
+        Logger.verbose(TAG, "Init: " + TAG);
+        mSharedPreferencesFileName = name;
+        mSharedPreferences = context.getSharedPreferences(name, operatingMode);
+        mStorageHelper = storageHelper;
+    }
+
+    // Suppressing because cache integrity is a greater concern than perf
+    @SuppressLint("ApplySharedPref")
+    @Override
     public final void putString(
             final String key,
             final String value) {
+        final String methodName = "putString";
+        Logger.entering(TAG, methodName, key, value);
+
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
-        editor.putString(key, value);
-        editor.apply();
+
+        if (null == mStorageHelper) {
+            editor.putString(key, value);
+        } else {
+            editor.putString(key, encrypt(value));
+        }
+
+        editor.commit();
+
+        Logger.exiting(TAG, methodName);
     }
 
-    /**
-     * Retrieves a Token from the {@link SharedPreferences} file.
-     *
-     * @param key The name (key) of the Token.
-     * @return The Token's value or null if no value could be found.
-     */
+    @Override
     public final String getString(final String key) {
-        return mSharedPreferences.getString(key, null);
+        final String methodName = "getString";
+        Logger.entering(TAG, methodName, key);
+
+        String restoredValue = mSharedPreferences.getString(key, null);
+
+        if (null != mStorageHelper && !StringExtensions.isNullOrBlank(restoredValue)) {
+            restoredValue = decrypt(restoredValue);
+        }
+
+        Logger.exiting(TAG, methodName, restoredValue);
+
+        return restoredValue;
     }
 
-    /**
-     * Returns the name of {@link SharedPreferences} file in use.
-     *
-     * @return The name of the file.
-     */
+    @Override
     public final String getSharedPreferencesFileName() {
+        final String methodName = "getSharedPreferencesFileName";
+        Logger.entering(TAG, methodName);
+        Logger.exiting(TAG, mSharedPreferencesFileName);
         return mSharedPreferencesFileName;
     }
 
-    /**
-     * Retuns all entries in the {@link SharedPreferences} file.
-     *
-     * @return A Map of all entries.
-     */
-    public final Map<String, ?> getAll() {
-        return mSharedPreferences.getAll();
+    @Override
+    public final Map<String, String> getAll() {
+        final String methodName = "getAll";
+        Logger.entering(TAG, methodName);
+
+        final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
+
+        if (null != mStorageHelper) {
+            for (final Map.Entry<String, String> entry : entries.entrySet()) {
+                entry.setValue(decrypt(entry.getValue()));
+            }
+        }
+
+        Logger.exiting(TAG, methodName, entries);
+
+        return entries;
     }
 
-    /**
-     * Tests if the {@link SharedPreferences} file contains an entry for the supplied key.
-     *
-     * @param key The key to consult.
-     * @return True, if the key has an associate entry.
-     */
+    @Override
     public final boolean contains(final String key) {
-        return mSharedPreferences.contains(key);
+        final String methodName = "contains";
+        Logger.entering(TAG, methodName, key);
+
+        final boolean contains = mSharedPreferences.contains(key);
+
+        Logger.exiting(TAG, methodName, contains);
+
+        return contains;
     }
 
-    /**
-     * Clears the contents of the {@link SharedPreferences} file.
-     */
+    @SuppressLint("ApplySharedPref")
+    @Override
     public final void clear() {
+        final String methodName = "clear";
+        Logger.entering(TAG, methodName);
+
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.clear();
-        editor.apply();
+        editor.commit();
+
+        Logger.exiting(TAG, methodName);
     }
 
-    /**
-     * Removes any associated entry for the supplied key.
-     *
-     * @param key The key whose value should be cleared.
-     */
+    @SuppressLint("ApplySharedPref")
+    @Override
     public void remove(final String key) {
+        final String methodName = "remove";
+        Logger.entering(TAG, methodName, key);
+
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.remove(key);
-        editor.apply();
+        editor.commit();
+
+        Logger.exiting(TAG, methodName);
+    }
+
+    private String encrypt(final String clearText) {
+        final String methodName = "encrypt";
+        Logger.entering(TAG, methodName, clearText);
+
+        final String encryptedValue = encryptDecryptInternal(clearText, true);
+
+        Logger.exiting(TAG, methodName, encryptedValue);
+
+        return encryptedValue;
+    }
+
+    private String decrypt(final String encryptedBlob) {
+        final String methodName = "decrypt";
+        Logger.entering(TAG, methodName, encryptedBlob);
+
+        final String decryptedValue = encryptDecryptInternal(encryptedBlob, false);
+
+        Logger.exiting(TAG, methodName, decryptedValue);
+
+        return decryptedValue;
+    }
+
+    private String encryptDecryptInternal(final String inputText, final boolean encrypt) {
+        final String methodName = "encryptDecryptInternal";
+        Logger.entering(TAG, methodName, inputText, encrypt);
+
+        String result;
+        try {
+            result = encrypt ? mStorageHelper.encrypt(inputText) : mStorageHelper.decrypt(inputText);
+        } catch (GeneralSecurityException | IOException e) {
+            Logger.error(
+                    TAG + ":" + methodName,
+                    "Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",
+                    null
+            );
+            Logger.errorPII(
+                    TAG + ":" + methodName,
+                    "Failed with Exception",
+                    e
+            );
+
+            // TODO Throw a RuntimeException?
+            result = null;
+        }
+
+        Logger.exiting(TAG, methodName, result);
+
+        return result;
     }
 
 }

@@ -113,6 +113,12 @@ public final class AuthenticationConstants {
         /** String of client id. */
         public static final String CLIENT_ID = "client_id";
 
+        /** String of client info */
+        public static final String CLIENT_INFO = "client_info";
+
+        /** String value used to indicate client_info is requested from the token endpoint */
+        public static final String CLIENT_INFO_TRUE = "1";
+
         /** String of code. */
         public static final String CODE = "code";
 

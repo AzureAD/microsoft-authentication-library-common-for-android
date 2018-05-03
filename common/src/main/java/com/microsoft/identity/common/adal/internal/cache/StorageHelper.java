@@ -1,10 +1,5 @@
 package com.microsoft.identity.common.adal.internal.cache;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ErrorStrings;
-
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -12,6 +7,11 @@ import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
 import android.util.Base64;
 import android.util.Log;
+
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ErrorStrings;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -45,7 +45,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 
 
-public class StorageHelper {
+public class StorageHelper implements IStorageHelper {
     private static final String TAG = "StorageHelper";
 
     /**
@@ -129,8 +129,9 @@ public class StorageHelper {
 
     /**
      * Constructor for {@link StorageHelper}.
+     *
      * @param context The {@link Context} to create {@link StorageHelper}.
-     * TODO: Remove this suppression: https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html
+     *                TODO: Remove this suppression: https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html
      */
     @SuppressLint("TrulyRandom")
     public StorageHelper(Context context) {
@@ -138,14 +139,7 @@ public class StorageHelper {
         mRandom = new SecureRandom();
     }
 
-    /**
-     * Encrypt text with current key based on API level.
-     *
-     * @param clearText Clear text to encrypt.
-     * @return Encrypted blob.
-     * @throws GeneralSecurityException for key related exceptions.
-     * @throws IOException For general IO related exceptions.
-     */
+    @Override
     public String encrypt(final String clearText)
             throws GeneralSecurityException, IOException {
         Log.v(TAG, "Starting encryption");
@@ -201,13 +195,7 @@ public class StorageHelper {
         return getEncodeVersionLengthPrefix() + ENCODE_VERSION + encryptedText;
     }
 
-    /**
-     * Decrypt encrypted blob with either user provided key or key persisted in AndroidKeyStore.
-     * @param encryptedBlob The blob to decrypt
-     * @return Decrypted clear text.
-     * @throws GeneralSecurityException for key related exceptions.
-     * @throws IOException For general IO related exceptions.
-     */
+    @Override
     public String decrypt(final String encryptedBlob)
             throws GeneralSecurityException, IOException {
         Log.v(TAG, "Starting decryption");
@@ -274,29 +262,14 @@ public class StorageHelper {
         return decrypted;
     }
 
-    /**
-     * Get Secret Key based on API level to use in encryption. Decryption key
-     * depends on version# since user can migrate to new Android.OS
-     *
-     * @return SecretKey Get Secret Key based on API level to use in encryption.
-     * @throws GeneralSecurityException
-     * @throws IOException
-     */
+    @Override
     public synchronized SecretKey loadSecretKeyForEncryption() throws IOException,
             GeneralSecurityException {
         final byte[] secretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
         return loadSecretKeyForEncryption(secretKeyData == null ? VERSION_ANDROID_KEY_STORE : VERSION_USER_DEFINED);
     }
 
-    /**
-     * Get Secret Key based on API level to use in encryption. Decryption key
-     * depends on version# since user can migrate to new Android.OS
-     *
-     * @param defaultBlobVersion the blobVersion to use by default
-     * @return SecretKey Get Secret Key based on API level to use in encryption.
-     * @throws GeneralSecurityException
-     * @throws IOException
-     */
+    @Override
     public synchronized SecretKey loadSecretKeyForEncryption(String defaultBlobVersion) throws IOException,
             GeneralSecurityException {
         // Loading key only once for performance. If API is upgraded, it will
@@ -308,10 +281,12 @@ public class StorageHelper {
         mBlobVersion = defaultBlobVersion;
         return getKeyOrCreate(mBlobVersion);
     }
+
     /**
      * For API <18 or user provide the key, will return the user supplied key.
      * Supported API >= 18 PrivateKey is stored in AndroidKeyStore. Loads key
      * from the file if it exists. If not exist, it will generate one.
+     *
      * @param keyVersion The key type of the keys used to encrypt data, could be user provided key
      *                   or key persisted in the keystore.
      * @return The {@link SecretKey} used to encrypt data.
@@ -345,6 +320,7 @@ public class StorageHelper {
 
     /**
      * Get the saved key. Will only do read operation.
+     *
      * @param keyVersion whether the key is user defined or in Android key store
      * @return SecretKey
      * @throws GeneralSecurityException
@@ -352,9 +328,9 @@ public class StorageHelper {
      */
     private synchronized SecretKey getKey(final String keyVersion) throws GeneralSecurityException, IOException {
         switch (keyVersion) {
-            case VERSION_USER_DEFINED :
+            case VERSION_USER_DEFINED:
                 return getSecretKey(AuthenticationSettings.INSTANCE.getSecretKeyData());
-            case VERSION_ANDROID_KEY_STORE :
+            case VERSION_ANDROID_KEY_STORE:
 
                 if (mSecretKeyFromAndroidKeyStore != null) {
                     return mSecretKeyFromAndroidKeyStore;
@@ -365,7 +341,7 @@ public class StorageHelper {
                 mKeyPair = readKeyPair();
                 mSecretKeyFromAndroidKeyStore = getUnwrappedSecretKey();
                 return mSecretKeyFromAndroidKeyStore;
-            default :
+            default:
                 throw new IOException("Unknown keyVersion.");
         }
     }

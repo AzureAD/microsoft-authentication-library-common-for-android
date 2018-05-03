@@ -47,6 +47,11 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
     protected String mFamilyId;
 
     /**
+     * The client_id of the application requesting a token.
+     */
+    protected transient String mClientId;
+
+    /**
      * Returns the family client id
      *
      * @return
@@ -63,12 +68,6 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
     public void setFamilyId(String familyId) {
         this.mFamilyId = familyId;
     }
-
-    /**
-     * Field use to indicate if the issued token is valid for the Microsoft 1st party
-     * 'family' of client ids.
-     */
-    protected String mFoci;
 
     /**
      * The SPE Ring from which this token was issued.
@@ -166,25 +165,7 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
     }
 
     /**
-     * Gets the response foci.
-     *
-     * @return The foci to get.
-     */
-    public String getFoci() {
-        return mFoci;
-    }
-
-    /**
-     * Sets the response foci.
-     *
-     * @param foci The foci to set.
-     */
-    public void setFoci(String foci) {
-        this.mFoci = foci;
-    }
-
-    /**
-     * Gets the response spe ring (x-ms-clitelem)
+     * Gets the response spe ring (x-ms-clitelem).
      *
      * @return The spe ring.
      */
@@ -193,11 +174,29 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
     }
 
     /**
-     * Sets the response spe ring (x-ms-clitelem)
+     * Sets the response spe ring (x-ms-clitelem).
      *
      * @param speRing The spe ring to set.
      */
     public void setSpeRing(String speRing) {
         this.mSpeRing = speRing;
+    }
+
+    /**
+     * Gets the client_id.
+     *
+     * @return The client_id to get.
+     */
+    public String getClientId() {
+        return mClientId;
+    }
+
+    /**
+     * Sets the client_id.
+     *
+     * @param clientId The client_id to set.
+     */
+    public void setClientId(final String clientId) {
+        mClientId = clientId;
     }
 }

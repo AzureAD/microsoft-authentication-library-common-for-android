@@ -177,6 +177,9 @@ public class IDToken {
         mTokenClaims = parseJWT(rawIdToken);
     }
 
+    public String getRawIDToken() {
+        return mRawIdToken;
+    }
 
     public Map<String, String> getTokenClaims() {
         return Collections.unmodifiableMap(mTokenClaims);
