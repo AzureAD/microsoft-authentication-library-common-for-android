@@ -50,7 +50,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     private static final String MOCK_FAMILY_ID = "1";
     private static final long MOCK_EXPIRES_IN = 3600L;
     private static final Date MOCK_EXPIRES_ON = new GregorianCalendar() {{
-        add(Calendar.SECOND, Math.toIntExact(MOCK_EXPIRES_IN));
+        add(Calendar.SECOND, (int) MOCK_EXPIRES_IN);
     }}.getTime();
 
     @Mock
