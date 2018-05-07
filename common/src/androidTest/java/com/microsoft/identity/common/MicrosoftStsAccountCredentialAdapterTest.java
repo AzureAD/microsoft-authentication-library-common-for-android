@@ -22,6 +22,9 @@ import org.mockito.MockitoAnnotations;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -31,6 +34,8 @@ import static org.mockito.Mockito.when;
 @RunWith(AndroidJUnit4.class)
 public class MicrosoftStsAccountCredentialAdapterTest {
 
+    public static final String MOCK_ID_TOKEN_WITH_CLAIMS = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC8wMjg3Zjk2My0yZDcyLTQzNjMtOWUzYS01NzA1YzViMGYwMzEvIiwiaWF0IjoxNTIxNDk4OTUwLCJleHAiOjE1NTMwMzU2NTYsImF1ZCI6Ind3dy5mYWtlZG9tYWluLmNvbSIsInN1YiI6ImZha2UuZW1haWxAZmFrZWRvbWFpbi5jb20iLCJvaWQiOiIxYzFkYjYyNi0wZmNiLTQyYmItYjM5ZS04ZTk4M2RkOTI5MzIiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJibWVsdG9uIiwiZ2l2ZW5fbmFtZSI6IkJyaWFuIiwiZmFtaWx5X25hbWUiOiJNZWx0b24tR3JhY2UifQ.BqAzS_WM1ME9LV1UNp2clNyCyiQm3G9xxw8Tv6omlCc";
+
     private static final String MOCK_GIVEN_NAME = "Brian";
     private static final String MOCK_FAMILY_NAME = "Melton-Grace";
     private static final String MOCK_PREFERRED_USERNAME = "bmelton";
@@ -38,13 +43,15 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     private static final String MOCK_TID = "7744ecc5-e130-4af1-ba81-749c395efc8c";
     private static final String MOCK_AUTHORITY = "https://sts.windows.net/0287f963-2d72-4363-9e3a-5705c5b0f031/";
     private static final String MOCK_ENVIRONMENT = "sts.windows.net";
-    public static final String MOCK_ID_TOKEN_WITH_CLAIMS = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC8wMjg3Zjk2My0yZDcyLTQzNjMtOWUzYS01NzA1YzViMGYwMzEvIiwiaWF0IjoxNTIxNDk4OTUwLCJleHAiOjE1NTMwMzU2NTYsImF1ZCI6Ind3dy5mYWtlZG9tYWluLmNvbSIsInN1YiI6ImZha2UuZW1haWxAZmFrZWRvbWFpbi5jb20iLCJvaWQiOiIxYzFkYjYyNi0wZmNiLTQyYmItYjM5ZS04ZTk4M2RkOTI5MzIiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJibWVsdG9uIiwiZ2l2ZW5fbmFtZSI6IkJyaWFuIiwiZmFtaWx5X25hbWUiOiJNZWx0b24tR3JhY2UifQ.BqAzS_WM1ME9LV1UNp2clNyCyiQm3G9xxw8Tv6omlCc";
     private static final String MOCK_UID = "mock_uid";
     private static final String MOCK_UTID = "mock_utid";
     private static final String MOCK_CLIENT_INFO = createRawClientInfo(MOCK_UID, MOCK_UTID);
     private static final String MOCK_SCOPE = "user.read";
     private static final String MOCK_FAMILY_ID = "1";
     private static final long MOCK_EXPIRES_IN = 3600L;
+    private static final Date MOCK_EXPIRES_ON = new GregorianCalendar() {{
+        add(Calendar.SECOND, Math.toIntExact(MOCK_EXPIRES_IN));
+    }}.getTime();
 
     @Mock
     MicrosoftStsOAuth2Strategy mockStrategy;
@@ -71,6 +78,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockRequest.getScope()).thenReturn(MOCK_SCOPE);
         when(mockResponse.getExpiresIn()).thenReturn(MOCK_EXPIRES_IN);
         when(mockResponse.getFamilyId()).thenReturn(MOCK_FAMILY_ID);
+        when(mockResponse.getExpiresOn()).thenReturn(MOCK_EXPIRES_ON);
         mAccountFactory = new MicrosoftStsAccountCredentialAdapter();
     }
 
@@ -95,15 +103,12 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_SCOPE, accessToken.getTarget());
         assertNotNull(accessToken.getCachedAt());
         assertNotNull(accessToken.getExpiresOn());
-        final long cachedAt = Long.valueOf(accessToken.getCachedAt());
-        final long expiresOn = Long.valueOf(accessToken.getExpiresOn());
-        assertEquals(cachedAt + MOCK_EXPIRES_IN, expiresOn);
+        assertNotNull(accessToken.getExpiresOn());
         assertEquals(MOCK_CLIENT_INFO, accessToken.getClientInfo());
         assertEquals(MOCK_TID, accessToken.getRealm());
         assertEquals(MOCK_AUTHORITY, accessToken.getAuthority());
         assertEquals(MOCK_ENVIRONMENT, accessToken.getEnvironment());
         assertEquals(MOCK_UID + "." + MOCK_UTID, accessToken.getUniqueUserId());
-
     }
 
     @Test
@@ -114,9 +119,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_SCOPE, refreshToken.getTarget());
         assertNotNull(refreshToken.getCachedAt());
         assertNotNull(refreshToken.getExpiresOn());
-        final long cachedAt = Long.valueOf(refreshToken.getCachedAt());
-        final long expiresOn = Long.valueOf(refreshToken.getExpiresOn());
-        assertEquals(cachedAt + MOCK_EXPIRES_IN, expiresOn);
+        assertNotNull(refreshToken.getExpiresOn());
         assertEquals(MOCK_CLIENT_INFO, refreshToken.getClientInfo());
         assertEquals(MOCK_FAMILY_ID, refreshToken.getFamilyId());
         assertEquals(MOCK_PREFERRED_USERNAME, refreshToken.getUsername());

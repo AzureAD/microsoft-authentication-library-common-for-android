@@ -56,15 +56,19 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
             final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
 
             final Account account = new Account();
+            // Required
             account.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
-            // TODO the below value should probably just be the host...
             account.setEnvironment(SchemaUtil.getEnvironment(msIdToken)); // host of authority with optional port
             account.setRealm(getRealm(strategy, response)); //tid
             account.setAuthorityAccountId(tokenClaims.get(OJBECT_ID)); // oid claim from id token
             account.setUsername(tokenClaims.get(PREFERRED_USERNAME));
             account.setAuthorityType(AUTHORITY_TYPE);
+
+            // Optional
+            account.setGuestId(SchemaUtil.getGuestId(msIdToken)); // TODO this field has been renamed to alternative_account_id
             account.setFirstName(tokenClaims.get(GIVEN_NAME));
             account.setLastName(tokenClaims.get(FAMILY_NAME));
+            account.setAvatarUrl(SchemaUtil.getAvatarUrl(msIdToken));
 
             Logger.exiting(TAG, methodName, account);
 
@@ -139,23 +143,27 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
 
         try {
             final long cachedAt = getCachedAt();
-            final long expiresOn = getExpiresOn(cachedAt, response);
+            final long expiresOn = getExpiresOn(response);
             final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
             final ClientInfo clientInfo = new ClientInfo(getClientInfo(response));
 
             final AccessToken accessToken = new AccessToken();
+            // Required fields
+            accessToken.setCredentialType(CredentialType.AccessToken.name());
             accessToken.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
-            accessToken.setTarget(getTarget(request));
-            accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
-            accessToken.setExpiresOn(String.valueOf(expiresOn)); // derived from expires_in
-            accessToken.setClientInfo(getClientInfo(response));
-            // TODO Do AccessTokens track a family id?
-            //accessToken.setFamilyId(msTokenResponse.getFamilyId());
-            accessToken.setAccessTokenType(BEARER); // TODO does this value come from somewhere in the auth response?
-            accessToken.setExtendedExpiresOn(getExtendedExpiresOn(strategy, response));
-            accessToken.setAuthority(getAuthority(request));
             accessToken.setRealm(getRealm(strategy, response));
             accessToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
+            accessToken.setClientId(request.getClientId());
+            accessToken.setTarget(getTarget(request));
+            accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
+            accessToken.setExpiresOn(String.valueOf(expiresOn));
+            accessToken.setSecret(response.getAccessToken());
+
+            // Optional fields
+            accessToken.setExtendedExpiresOn(getExtendedExpiresOn(strategy, response));
+            accessToken.setAuthority(getAuthority(request));
+            accessToken.setClientInfo(getClientInfo(response));
+            accessToken.setAccessTokenType(BEARER); // TODO Don't hardcode this value.
 
             Logger.exiting(TAG, methodName, accessToken);
 
@@ -212,21 +220,38 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         final String methodName = "createRefreshToken";
         Logger.entering(TAG, methodName, strategy, request, response);
 
-        final long cachedAt = getCachedAt();
-        final long expiresOn = getExpiresOn(cachedAt, response);
+        try {
+            final long cachedAt = getCachedAt();
+            final long expiresOn = getExpiresOn(response);
+            final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
+            final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
+            final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
 
-        final RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setTarget(getTarget(request));
-        refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
-        refreshToken.setExpiresOn(String.valueOf(expiresOn)); // derived from expires_in
-        refreshToken.setClientInfo(getClientInfo(response));
-        refreshToken.setFamilyId(getFamilyId(response));
-        refreshToken.setUsername(getUsername(response));
-        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+            final RefreshToken refreshToken = new RefreshToken();
+            // Required
+            refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+            refreshToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
+            refreshToken.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
+            refreshToken.setClientId(msTokenResponse.getClientId());
+            refreshToken.setSecret(response.getRefreshToken());
 
-        Logger.exiting(TAG, methodName, refreshToken);
+            // Optional
+            refreshToken.setFamilyId(getFamilyId(response));
+            refreshToken.setUsername(getUsername(response));
+            refreshToken.setTarget(getTarget(request));
+            refreshToken.setClientInfo(getClientInfo(response));
 
-        return refreshToken;
+            // TODO are these needed? Expected?
+            refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
+            refreshToken.setExpiresOn(String.valueOf(expiresOn)); // derived from expires_in
+
+            Logger.exiting(TAG, methodName, refreshToken);
+
+            return refreshToken;
+        } catch (ServiceException e) {
+            // TODO handle this properly
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -385,17 +410,19 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         return cachedAt;
     }
 
-    private long getExpiresOn(final long cachedAt, final TokenResponse response) {
-        final String methodName = "";
-        Logger.entering(TAG, methodName, cachedAt, response);
+    private long getExpiresOn(final TokenResponse response) {
+        final String methodName = "getExpiresOn";
+        Logger.entering(TAG, methodName, response);
 
         final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
-        final long expiresInSeconds = msTokenResponse.getExpiresIn();
-        final long expiresOn = cachedAt + expiresInSeconds;
+        // This is computed wrong...
+        // Should be seconds since 1970
+        final long millisSince1970 = msTokenResponse.getExpiresOn().getTime();
+        final long secondsSince1970 = TimeUnit.MILLISECONDS.toSeconds(millisSince1970);
 
-        Logger.exiting(TAG, methodName, expiresOn);
+        Logger.exiting(TAG, methodName, secondsSince1970);
 
-        return expiresOn;
+        return secondsSince1970;
     }
 
     private String getClientInfo(final TokenResponse response) {

@@ -30,7 +30,7 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      * extend the valid lifetime of an access_token.
      */
     @SerializedName("ext_expires_in")
-    protected Date mExtExpiresIn;
+    protected Long mExtExpiresIn;
 
     /**
      * Information to uniquely identify the tenant and the user _within_ that tenant.
@@ -53,7 +53,7 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      *
      * @return The ext_expires_in to get.
      */
-    public Date getExtExpiresIn() {
+    public Long getExtExpiresIn() {
         return mExtExpiresIn;
     }
 
@@ -62,7 +62,7 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      *
      * @param extExpiresin The ext_expires_in to set.
      */
-    public void setExtExpiresIn(Date extExpiresin) {
+    public void setExtExpiresIn(Long extExpiresin) {
         mExtExpiresIn = extExpiresin;
     }
 
