@@ -6,7 +6,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 /**
  * Hooks to allow cache implementors to validate inputs contain requisite information.
  */
-interface ISsoValidator {
+public interface ISsoValidator {
 
     /**
      * Method to verify {@link Account} instances are valid prior to writing to the cache.
