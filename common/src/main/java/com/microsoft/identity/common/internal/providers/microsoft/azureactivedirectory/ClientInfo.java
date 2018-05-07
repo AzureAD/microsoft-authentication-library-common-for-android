@@ -38,14 +38,8 @@ public class ClientInfo {
      * @param rawClientInfo
      */
     public ClientInfo(String rawClientInfo) throws ServiceException {
-
-        /*
-        NOTE: Server team would like us to emit telemetry when client Info is null...
-         */
         if (StringExtensions.isNullOrBlank(rawClientInfo)) {
-            mUid = "";
-            mUtid = "";
-            return;
+            throw new IllegalArgumentException("ClientInfo cannot be null or blank.");
         }
 
         // decode the client info first
