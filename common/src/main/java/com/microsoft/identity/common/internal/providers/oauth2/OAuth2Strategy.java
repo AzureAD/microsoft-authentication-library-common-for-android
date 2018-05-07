@@ -123,4 +123,9 @@ public abstract class OAuth2Strategy {
      * @param response
      */
     protected abstract TokenResult getTokenResultFromHttpResponse(HttpResponse response);
+
+    // TODO
+//    protected abstract void validateAuthorizationResponse(AuthorizationResponse response);
+
+//    protected abstract void validateTokenResponse(TokenResponse response);
 }
