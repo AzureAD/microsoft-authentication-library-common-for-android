@@ -23,6 +23,8 @@
 
 package com.microsoft.identity.common.internal.dto;
 
+import android.support.annotation.Nullable;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -43,5 +45,22 @@ public enum CredentialType {
         }
 
         return Collections.unmodifiableSet(strTypes);
+    }
+
+    /**
+     * Returns the enum representation of the supplied String.
+     *
+     * @param name The sought type (case insensitive) or null.
+     * @return The matching CredentialType or null, if supplied name was null.
+     */
+    @Nullable
+    public static CredentialType fromString(@Nullable final String name) {
+        for (final CredentialType credentialType : values()) {
+            if (credentialType.name().equalsIgnoreCase(name)) {
+                return credentialType;
+            }
+        }
+
+        return null;
     }
 }

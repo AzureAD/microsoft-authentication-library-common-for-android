@@ -51,7 +51,6 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         try {
             msIdToken = new MicrosoftIdToken(response.getIdToken());
             final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
-            final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
             final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
             final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
 
@@ -77,60 +76,6 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
             // TODO handle this properly
             throw new RuntimeException(e);
         }
-    }
-
-    @NonNull
-    private static MicrosoftStsTokenResponse asMicrosoftStsTokenResponse(final TokenResponse response) {
-        final String methodName = "asMicrosoftStsTokenResponse";
-        Logger.entering(TAG, methodName, response);
-
-        MicrosoftStsTokenResponse msTokenResponse;
-
-        if (response instanceof MicrosoftStsTokenResponse) {
-            msTokenResponse = (MicrosoftStsTokenResponse) response;
-        } else {
-            throw new IllegalArgumentException("Invalid TokenResponse type.");
-        }
-
-        Logger.exiting(TAG, methodName, msTokenResponse);
-
-        return msTokenResponse;
-    }
-
-    @NonNull
-    private static MicrosoftStsAuthorizationRequest asMicrosoftStsAuthorizationRequest(final AuthorizationRequest request) {
-        final String methodName = "asMicrosoftStsAuthorizationRequest";
-        Logger.entering(TAG, methodName, request);
-
-        MicrosoftStsAuthorizationRequest msRequest;
-
-        if (request instanceof MicrosoftStsAuthorizationRequest) {
-            msRequest = (MicrosoftStsAuthorizationRequest) request;
-        } else {
-            throw new IllegalArgumentException("Invalid AuthorizationRequest type.");
-        }
-
-        Logger.exiting(TAG, methodName, msRequest);
-
-        return msRequest;
-    }
-
-    @NonNull
-    private static MicrosoftStsOAuth2Strategy asMicrosoftStsOAuth2Strategy(final OAuth2Strategy strategy) {
-        final String methodName = "asMicrosoftStsOAuth2Strategy";
-        Logger.entering(TAG, methodName, strategy);
-
-        MicrosoftStsOAuth2Strategy msStrategy;
-
-        if (strategy instanceof MicrosoftStsOAuth2Strategy) {
-            msStrategy = (MicrosoftStsOAuth2Strategy) strategy;
-        } else {
-            throw new IllegalArgumentException("Invalid strategy type.");
-        }
-
-        Logger.exiting(TAG, methodName, msStrategy);
-
-        return msStrategy;
     }
 
     @Override
@@ -172,44 +117,6 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
             // TODO handle this properly
             throw new RuntimeException(e);
         }
-    }
-
-    private String getExtendedExpiresOn(final OAuth2Strategy strategy, final TokenResponse response) {
-        final String methodName = "getExtendedExpiresOn";
-        Logger.entering(TAG, methodName, strategy, response);
-
-        // TODO It doesn't look like the v2 endpoint supports extended_expires_on claims
-        // Is this true?
-        String result = null;
-
-        Logger.exiting(TAG, methodName, result);
-
-        return result;
-    }
-
-    private String getAuthority(final AuthorizationRequest request) {
-        final String methodName = "getAuthority";
-        Logger.entering(TAG, methodName, request);
-
-        final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
-        final String authorityUrl = msRequest.getAuthority().toString();
-
-        Logger.exiting(TAG, methodName, authorityUrl);
-
-        return authorityUrl;
-    }
-
-    private String getRealm(final OAuth2Strategy strategy, final TokenResponse response) {
-        final String methodName = "getRealm";
-        Logger.entering(TAG, methodName, strategy, response);
-
-        final MicrosoftStsOAuth2Strategy msStrategy = asMicrosoftStsOAuth2Strategy(strategy);
-        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
-        final MicrosoftStsAccount msAccount = (MicrosoftStsAccount) msStrategy.createAccount(msTokenResponse);
-
-        Logger.exiting(TAG, methodName, msAccount.getRealm());
-
-        return msAccount.getRealm();
     }
 
     @Override
@@ -366,6 +273,98 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         Logger.exiting(TAG, methodName, idToken);
 
         return idToken;
+    }
+
+    @NonNull
+    private static MicrosoftStsTokenResponse asMicrosoftStsTokenResponse(final TokenResponse response) {
+        final String methodName = "asMicrosoftStsTokenResponse";
+        Logger.entering(TAG, methodName, response);
+
+        MicrosoftStsTokenResponse msTokenResponse;
+
+        if (response instanceof MicrosoftStsTokenResponse) {
+            msTokenResponse = (MicrosoftStsTokenResponse) response;
+        } else {
+            throw new IllegalArgumentException("Invalid TokenResponse type.");
+        }
+
+        Logger.exiting(TAG, methodName, msTokenResponse);
+
+        return msTokenResponse;
+    }
+
+    @NonNull
+    private static MicrosoftStsAuthorizationRequest asMicrosoftStsAuthorizationRequest(final AuthorizationRequest request) {
+        final String methodName = "asMicrosoftStsAuthorizationRequest";
+        Logger.entering(TAG, methodName, request);
+
+        MicrosoftStsAuthorizationRequest msRequest;
+
+        if (request instanceof MicrosoftStsAuthorizationRequest) {
+            msRequest = (MicrosoftStsAuthorizationRequest) request;
+        } else {
+            throw new IllegalArgumentException("Invalid AuthorizationRequest type.");
+        }
+
+        Logger.exiting(TAG, methodName, msRequest);
+
+        return msRequest;
+    }
+
+    @NonNull
+    private static MicrosoftStsOAuth2Strategy asMicrosoftStsOAuth2Strategy(final OAuth2Strategy strategy) {
+        final String methodName = "asMicrosoftStsOAuth2Strategy";
+        Logger.entering(TAG, methodName, strategy);
+
+        MicrosoftStsOAuth2Strategy msStrategy;
+
+        if (strategy instanceof MicrosoftStsOAuth2Strategy) {
+            msStrategy = (MicrosoftStsOAuth2Strategy) strategy;
+        } else {
+            throw new IllegalArgumentException("Invalid strategy type.");
+        }
+
+        Logger.exiting(TAG, methodName, msStrategy);
+
+        return msStrategy;
+    }
+
+    private String getExtendedExpiresOn(final OAuth2Strategy strategy, final TokenResponse response) {
+        final String methodName = "getExtendedExpiresOn";
+        Logger.entering(TAG, methodName, strategy, response);
+
+        // TODO It doesn't look like the v2 endpoint supports extended_expires_on claims
+        // Is this true?
+        String result = null;
+
+        Logger.exiting(TAG, methodName, result);
+
+        return result;
+    }
+
+    private String getAuthority(final AuthorizationRequest request) {
+        final String methodName = "getAuthority";
+        Logger.entering(TAG, methodName, request);
+
+        final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
+        final String authorityUrl = msRequest.getAuthority().toString();
+
+        Logger.exiting(TAG, methodName, authorityUrl);
+
+        return authorityUrl;
+    }
+
+    private String getRealm(final OAuth2Strategy strategy, final TokenResponse response) {
+        final String methodName = "getRealm";
+        Logger.entering(TAG, methodName, strategy, response);
+
+        final MicrosoftStsOAuth2Strategy msStrategy = asMicrosoftStsOAuth2Strategy(strategy);
+        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
+        final MicrosoftStsAccount msAccount = (MicrosoftStsAccount) msStrategy.createAccount(msTokenResponse);
+
+        Logger.exiting(TAG, methodName, msAccount.getRealm());
+
+        return msAccount.getRealm();
     }
 
     private String getUsername(final TokenResponse response) {

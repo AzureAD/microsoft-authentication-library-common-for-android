@@ -3,6 +3,7 @@ package com.microsoft.identity.common.internal.cache;
 import android.content.Context;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -30,31 +31,26 @@ public class MsalOAuth2TokenCache
     private List<IShareSingleSignOnState> mSharedSsoCaches;
     private IAccountCredentialCache mAccountCredentialCache;
     private IAccountCredentialAdapter mAccountCredentialAdapter;
-    private ISsoValidator mSsoValidator;
 
     public MsalOAuth2TokenCache(final Context context,
                                 final IAccountCredentialCache accountCredentialCache,
-                                final IAccountCredentialAdapter accountCredentialAdapter,
-                                final ISsoValidator ssoValidator) {
+                                final IAccountCredentialAdapter accountCredentialAdapter) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
         mSharedSsoCaches = new ArrayList<>();
         mAccountCredentialAdapter = accountCredentialAdapter;
-        mSsoValidator = ssoValidator;
     }
 
     public MsalOAuth2TokenCache(final Context context,
                                 final IAccountCredentialCache accountCredentialCache,
                                 final IAccountCredentialAdapter accountCredentialAdapter,
-                                final ISsoValidator ssoValidator,
                                 final List<IShareSingleSignOnState> sharedSsoCaches) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
         mSharedSsoCaches = sharedSsoCaches;
         mAccountCredentialAdapter = accountCredentialAdapter;
-        mSsoValidator = ssoValidator;
     }
 
     @Override
@@ -64,15 +60,22 @@ public class MsalOAuth2TokenCache
             final TokenResponse response) {
         final String methodName = "saveTokens";
         Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
-        saveAccount(oAuth2Strategy, request, response);
-        saveCredentials(oAuth2Strategy, request, response);
+
+        try {
+            saveAccount(oAuth2Strategy, request, response);
+            saveCredentials(oAuth2Strategy, request, response);
+        } catch (ClientException e) {
+            // TODO do what here?
+            throw new RuntimeException(e);
+        }
+
         Logger.exiting(TAG, methodName);
     }
 
     private void saveCredentials(
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
-            final TokenResponse response) {
+            final TokenResponse response) throws ClientException {
         final String methodName = "saveCredentials";
         Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
         saveAccessToken(oAuth2Strategy, request, response);
@@ -84,7 +87,7 @@ public class MsalOAuth2TokenCache
     private void saveIdToken(
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
-            final TokenResponse response) {
+            final TokenResponse response) throws ClientException {
         final String methodName = "saveIdToken";
         Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
         final IdToken idToken = mAccountCredentialAdapter.createIdToken(oAuth2Strategy, request, response);
@@ -95,7 +98,7 @@ public class MsalOAuth2TokenCache
     private void saveRefreshToken(
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
-            final TokenResponse response) {
+            final TokenResponse response) throws ClientException {
         final String methodName = "saveRefreshToken";
         Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
         final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken = mAccountCredentialAdapter.createRefreshToken(oAuth2Strategy, request, response);
@@ -106,7 +109,7 @@ public class MsalOAuth2TokenCache
     private void saveAccessToken(
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
-            final TokenResponse response) {
+            final TokenResponse response) throws ClientException {
         final String methodName = "saveAccessToken";
         Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
         final AccessToken accessToken = mAccountCredentialAdapter.createAccessToken(oAuth2Strategy, request, response);
@@ -187,7 +190,7 @@ public class MsalOAuth2TokenCache
     private void saveAccount(
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
-            final TokenResponse response) {
+            final TokenResponse response) throws ClientException {
         final String methodName = "saveAccount";
         Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
         final Account accountToSave = mAccountCredentialAdapter.createAccount(oAuth2Strategy, request, response);
@@ -203,37 +206,25 @@ public class MsalOAuth2TokenCache
         final String methodName = "setSingleSignOnState";
         Logger.entering(TAG, methodName, account, refreshToken);
 
-        final boolean argumentsValid = validateSingleSignOnStateArguments(account, refreshToken);
-
-        if (argumentsValid) {
+        try {
             final com.microsoft.identity.common.internal.dto.RefreshToken rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
             final Account accountDto = mAccountCredentialAdapter.asAccount(account);
             final IdToken idToken = mAccountCredentialAdapter.asIdToken(account, refreshToken);
             mAccountCredentialCache.saveAccount(accountDto);
             mAccountCredentialCache.saveCredential(idToken);
             mAccountCredentialCache.saveCredential(rt);
-        } else {
+        } catch (ClientException e) {
             Logger.error(
                     TAG + ":" + methodName,
                     "",
-                    new IllegalArgumentException("Cannot set SSO state. Invalid or inadequate Account and/or token provided. (See logs)")
+                    new IllegalArgumentException(
+                            "Cannot set SSO state. Invalid or inadequate Account and/or token provided. (See logs)",
+                            e
+                    )
             );
         }
 
         Logger.exiting(TAG, methodName);
-    }
-
-    private boolean validateSingleSignOnStateArguments(
-            final com.microsoft.identity.common.Account account,
-            final RefreshToken refreshToken) {
-        final String methodName = "validateSingleSignOnStateArguments";
-        Logger.entering(TAG, methodName, account, refreshToken);
-
-        boolean valid = mSsoValidator.isAccountValid(account) & mSsoValidator.isRefreshTokenValid(refreshToken);
-
-        Logger.exiting(TAG, methodName, valid);
-
-        return valid;
     }
 
     @Override

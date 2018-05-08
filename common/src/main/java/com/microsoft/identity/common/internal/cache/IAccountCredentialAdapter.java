@@ -13,30 +13,86 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
  */
 public interface IAccountCredentialAdapter {
 
+    /**
+     * Constructs an Account.
+     *
+     * @param strategy The strategy used to make the OAuth2 request.
+     * @param request  The OAuth2 request.
+     * @param response The authz response.
+     * @return The derived Account.
+     */
     Account createAccount(OAuth2Strategy strategy,
                           AuthorizationRequest request,
                           TokenResponse response
     );
 
+    /**
+     * Constructs an AccessToken.
+     *
+     * @param strategy The strategy used to make the OAuth2 request.
+     * @param request  The OAuth2 request.
+     * @param response The authz response.
+     * @return The derived AccessToken.
+     */
     AccessToken createAccessToken(OAuth2Strategy strategy,
                                   AuthorizationRequest request,
                                   TokenResponse response
     );
 
+    /**
+     * Constructs a RefreshToken.
+     *
+     * @param strategy The strategy used to make the OAuth2 request.
+     * @param request  The OAuth2 request.
+     * @param response The authz response.
+     * @return The derived RefreshToken.
+     */
     RefreshToken createRefreshToken(OAuth2Strategy strategy,
                                     AuthorizationRequest request,
                                     TokenResponse response
     );
 
+    /**
+     * Constructs an IdToken.
+     *
+     * @param strategy The strategy used to make the OAuth2 request.
+     * @param request  The OAuth2 request.
+     * @param response The authz response.
+     * @return The derived IdToken.
+     */
     IdToken createIdToken(OAuth2Strategy strategy,
                           AuthorizationRequest request,
                           TokenResponse response
     );
 
-    RefreshToken asRefreshToken(com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshToken);
+    /**
+     * Adapter method to turn
+     * {@link com.microsoft.identity.common.internal.providers.oauth2.RefreshToken} instances into
+     * {@link RefreshToken}.
+     *
+     * @param refreshToken The RefreshToken to adapt.
+     * @return The adapted RefreshToken.
+     */
+    RefreshToken asRefreshToken(
+            com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshToken);
 
+    /**
+     * Adapter method to turn {@link com.microsoft.identity.common.Account} instances into
+     * {@link Account} instances.
+     *
+     * @param account The Account to adapt.
+     * @return The adapted Account.
+     */
     Account asAccount(com.microsoft.identity.common.Account account);
 
+    /**
+     * Constructs IdToken instances from {@link com.microsoft.identity.common.Account} and
+     * {@link com.microsoft.identity.common.internal.providers.oauth2.RefreshToken} instances.
+     *
+     * @param account      The Account to read.
+     * @param refreshToken The RefreshToken to read.
+     * @return The newly constructed IdToken.
+     */
     IdToken asIdToken(com.microsoft.identity.common.Account account,
                       com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshToken
     );
