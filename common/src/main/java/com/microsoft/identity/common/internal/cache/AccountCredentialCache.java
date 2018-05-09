@@ -1,12 +1,10 @@
 package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -24,8 +22,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
-import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 
 public class AccountCredentialCache implements IAccountCredentialCache {
@@ -71,37 +67,25 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     }
 
     @Override
-    public synchronized void saveAccount(final Account account) throws ClientException {
+    public synchronized void saveAccount(final Account account) {
         final String methodName = "saveAccount";
         Logger.entering(TAG, methodName, account);
 
-        final boolean isSchemaCompliant = isAccountSchemaCompliant(account);
-
-        if (isSchemaCompliant) {
-            final String cacheKey = mCacheValueDelegate.generateCacheKey(account);
-            final String cacheValue = mCacheValueDelegate.generateCacheValue(account);
-            mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
-        } else {
-            throw new ClientException(ACCOUNT_IS_SCHEMA_NONCOMPLIANT);
-        }
+        final String cacheKey = mCacheValueDelegate.generateCacheKey(account);
+        final String cacheValue = mCacheValueDelegate.generateCacheValue(account);
+        mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
 
         Logger.exiting(TAG, methodName);
     }
 
     @Override
-    public synchronized void saveCredential(Credential credential) throws ClientException {
+    public synchronized void saveCredential(Credential credential) {
         final String methodName = "saveCredential";
         Logger.entering(TAG, methodName, credential);
 
-        final boolean isSchemaCompliant = isCredentialSchemaCompliant(credential);
-
-        if (isSchemaCompliant) {
-            final String cacheKey = mCacheValueDelegate.generateCacheKey(credential);
-            final String cacheValue = mCacheValueDelegate.generateCacheValue(credential);
-            mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
-        } else {
-            throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT);
-        }
+        final String cacheKey = mCacheValueDelegate.generateCacheKey(credential);
+        final String cacheValue = mCacheValueDelegate.generateCacheValue(credential);
+        mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
 
         Logger.exiting(TAG, methodName);
     }
@@ -494,150 +478,6 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         Logger.exiting(TAG, methodName, isCredential);
 
         return isCredential;
-    }
-
-    private static boolean isSchemaCompliant(final Class<?> clazz, final String[][] params) {
-        final String methodName = "isSchemaCompliant";
-        Logger.entering(TAG, methodName, clazz, params);
-
-        boolean isCompliant = true;
-        for (final String[] param : params) {
-            isCompliant = isCompliant && !StringExtensions.isNullOrBlank(param[1]);
-        }
-
-        if (!isCompliant) {
-            Logger.warn(
-                    TAG + ":" + methodName,
-                    clazz.getSimpleName() + " does not contain all required fields."
-            );
-
-            for (final String[] param : params) {
-                Logger.warn(
-                        TAG + ":" + methodName,
-                        param[0] + " is null? [" + StringExtensions.isNullOrBlank(param[1]) + "]"
-                );
-            }
-        }
-
-        Logger.exiting(TAG, methodName, isCompliant);
-
-        return isCompliant;
-    }
-
-    private static boolean isCredentialSchemaCompliant(@NonNull final Credential credential) {
-        final String methodName = "isCredentialSchemaCompliant";
-        Logger.entering(TAG, methodName, credential);
-
-        final CredentialType suppliedType = CredentialType.fromString(credential.getCredentialType());
-        boolean isValid = false;
-
-        if (null != suppliedType) {
-            switch (suppliedType) {
-                case RefreshToken:
-                    isValid = isRefreshTokenSchemaCompliant((RefreshToken) credential);
-                    break;
-                case AccessToken:
-                    isValid = isAccessTokenSchemaCompliant((AccessToken) credential);
-                    break;
-                case IdToken:
-                    isValid = isIdTokenSchemaCompliant((IdToken) credential);
-                    break;
-                default:
-                    isValid = false;
-                    Logger.warn(
-                            TAG + ":" + methodName,
-                            "Unrecognized or unsupported CredentialType"
-                    );
-                    break;
-            }
-        }
-
-        return isValid;
-    }
-
-    private static boolean isAccountSchemaCompliant(@NonNull final Account account) {
-        final String methodName = "isAccountSchemaCompliant";
-        Logger.entering(TAG, methodName, account);
-
-        // Required fields...
-        final String[][] params = new String[][]{
-                {Account.SerializedNames.UNIQUE_USER_ID, account.getUniqueUserId()},
-                {Account.SerializedNames.ENVIRONMENT, account.getEnvironment()},
-                {Account.SerializedNames.REALM, account.getRealm()},
-                {Account.SerializedNames.AUTHORITY_ACCOUNT_ID, account.getAuthorityAccountId()},
-                {Account.SerializedNames.USERNAME, account.getUsername()},
-                {Account.SerializedNames.AUTHORITY_TYPE, account.getAuthorityType()},
-        };
-
-        boolean isCompliant = isSchemaCompliant(account.getClass(), params);
-
-        Logger.exiting(TAG, methodName, isCompliant);
-
-        return isCompliant;
-    }
-
-    private static boolean isAccessTokenSchemaCompliant(@NonNull final AccessToken accessToken) {
-        final String methodName = "isAccessTokenSchemaCompliant";
-        Logger.entering(TAG, methodName, accessToken);
-
-        // Required fields...
-        final String[][] params = new String[][]{
-                {Credential.SerializedNames.CREDENTIAL_TYPE, accessToken.getCredentialType()},
-                {Credential.SerializedNames.UNIQUE_USER_ID, accessToken.getUniqueUserId()},
-                {AccessToken.SerializedNames.REALM, accessToken.getRealm()},
-                {Credential.SerializedNames.ENVIRONMENT, accessToken.getEnvironment()},
-                {Credential.SerializedNames.CLIENT_ID, accessToken.getClientId()},
-                {AccessToken.SerializedNames.TARGET, accessToken.getTarget()},
-                {Credential.SerializedNames.CACHED_AT, accessToken.getCachedAt()},
-                {Credential.SerializedNames.EXPIRES_ON, accessToken.getExpiresOn()},
-                {Credential.SerializedNames.SECRET, accessToken.getSecret()},
-        };
-
-        boolean isValid = isSchemaCompliant(accessToken.getClass(), params);
-
-        Logger.exiting(TAG, methodName, isValid);
-
-        return isValid;
-    }
-
-    private static boolean isRefreshTokenSchemaCompliant(@NonNull final RefreshToken refreshToken) {
-        final String methodName = "isRefreshTokenSchemaCompliant";
-        Logger.entering(TAG, methodName, refreshToken);
-
-        // Required fields...
-        final String[][] params = new String[][]{
-                {Credential.SerializedNames.CREDENTIAL_TYPE, refreshToken.getCredentialType()},
-                {Credential.SerializedNames.ENVIRONMENT, refreshToken.getEnvironment()},
-                {Credential.SerializedNames.UNIQUE_USER_ID, refreshToken.getUniqueUserId()},
-                {Credential.SerializedNames.CLIENT_ID, refreshToken.getClientId()},
-                {Credential.SerializedNames.SECRET, refreshToken.getSecret()},
-        };
-
-        boolean isValid = isSchemaCompliant(refreshToken.getClass(), params);
-
-        Logger.exiting(TAG, methodName, isValid);
-
-        return isValid;
-    }
-
-    private static boolean isIdTokenSchemaCompliant(@NonNull final IdToken idToken) {
-        final String methodName = "isIdTokenSchemaCompliant";
-        Logger.entering(TAG, methodName, idToken);
-
-        final String[][] params = new String[][]{
-                {Credential.SerializedNames.UNIQUE_USER_ID, idToken.getUniqueUserId()},
-                {Credential.SerializedNames.ENVIRONMENT, idToken.getEnvironment()},
-                {IdToken.SerializedNames.REALM, idToken.getRealm()},
-                {Credential.SerializedNames.CREDENTIAL_TYPE, idToken.getCredentialType()},
-                {Credential.SerializedNames.CLIENT_ID, idToken.getClientId()},
-                {Credential.SerializedNames.SECRET, idToken.getSecret()},
-        };
-
-        boolean isValid = isSchemaCompliant(idToken.getClass(), params);
-
-        Logger.exiting(TAG, methodName, isValid);
-
-        return isValid;
     }
 
 }

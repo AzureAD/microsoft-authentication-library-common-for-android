@@ -2,7 +2,6 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.support.annotation.Nullable;
 
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
@@ -19,14 +18,14 @@ public interface IAccountCredentialCache {
      *
      * @param account The Account to save.
      */
-    void saveAccount(final Account account) throws ClientException;
+    void saveAccount(final Account account);
 
     /**
      * Saves the supplied Credential in the cache.
      *
      * @param credential The Credential to save.
      */
-    void saveCredential(final Credential credential) throws ClientException;
+    void saveCredential(final Credential credential);
 
     /**
      * Gets the Account saved for the supplied cache key.

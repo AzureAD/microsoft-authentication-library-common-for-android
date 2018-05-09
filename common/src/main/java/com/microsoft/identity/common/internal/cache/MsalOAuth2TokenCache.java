@@ -1,6 +1,7 @@
 package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
@@ -21,6 +22,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
+import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 
 public class MsalOAuth2TokenCache
         extends OAuth2TokenCache
@@ -54,62 +58,139 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public void saveTokens(
-            final OAuth2Strategy oAuth2Strategy,
-            final AuthorizationRequest request,
-            final TokenResponse response) throws ClientException {
-        final String methodName = "saveTokens";
+    public void saveTokens(final OAuth2Strategy oAuth2Strategy,
+                           final AuthorizationRequest request,
+                           final TokenResponse response) throws ClientException {
+        final String methodName = "saveTokensV2";
         Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
 
-        saveAccount(oAuth2Strategy, request, response);
-        saveCredentials(oAuth2Strategy, request, response);
+        // Create the Account
+        final Account accountToSave =
+                mAccountCredentialAdapter.createAccount(
+                        oAuth2Strategy,
+                        request,
+                        response
+                );
+
+        // Create the AccessToken
+        final AccessToken accessTokenToSave =
+                mAccountCredentialAdapter.createAccessToken(
+                        oAuth2Strategy,
+                        request,
+                        response
+                );
+
+        // Create the RefreshToken
+        final com.microsoft.identity.common.internal.dto.RefreshToken refreshTokenToSave =
+                mAccountCredentialAdapter.createRefreshToken(
+                        oAuth2Strategy,
+                        request,
+                        response
+                );
+
+        // Create the IdToken
+        final IdToken idTokenToSave =
+                mAccountCredentialAdapter.createIdToken(
+                        oAuth2Strategy,
+                        request,
+                        response
+                );
+
+        // Check that everything we're about to save is schema-compliant...
+        validateCacheArtifacts(
+                accountToSave,
+                accessTokenToSave,
+                refreshTokenToSave,
+                idTokenToSave
+        );
+
+        // Save the Account and Credentials...
+        saveAccounts(accountToSave);
+        saveCredentials(accessTokenToSave, refreshTokenToSave, idTokenToSave);
 
         Logger.exiting(TAG, methodName);
     }
 
-    private void saveCredentials(
-            final OAuth2Strategy oAuth2Strategy,
-            final AuthorizationRequest request,
-            final TokenResponse response) throws ClientException {
+    private void saveAccounts(final Account... accounts) {
+        final String methodName = "saveAccounts";
+        Logger.entering(TAG, methodName, accounts);
+
+        for (final Account account : accounts) {
+            mAccountCredentialCache.saveAccount(account);
+        }
+
+        Logger.exiting(TAG, methodName);
+    }
+
+    private void saveCredentials(final Credential... credentials) {
         final String methodName = "saveCredentials";
-        Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
-        saveAccessToken(oAuth2Strategy, request, response);
-        saveRefreshToken(oAuth2Strategy, request, response);
-        saveIdToken(oAuth2Strategy, request, response);
+        Logger.entering(TAG, methodName, credentials);
+
+        for (final Credential credential : credentials) {
+
+            if (credential instanceof AccessToken) {
+                deleteAccessTokensWithIntersectingScopes((AccessToken) credential);
+            }
+
+            mAccountCredentialCache.saveCredential(credential);
+        }
+
         Logger.exiting(TAG, methodName);
     }
 
-    private void saveIdToken(
-            final OAuth2Strategy oAuth2Strategy,
-            final AuthorizationRequest request,
-            final TokenResponse response) throws ClientException {
-        final String methodName = "saveIdToken";
-        Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
-        final IdToken idToken = mAccountCredentialAdapter.createIdToken(oAuth2Strategy, request, response);
-        mAccountCredentialCache.saveCredential(idToken);
-        Logger.exiting(TAG, methodName);
-    }
+    /**
+     * Validates that the supplied artifacts are schema-compliant and OK to write to the cache.
+     *
+     * @param accountToSave      The {@link Account} to save.
+     * @param accessTokenToSave  The {@link AccessToken} to save or null. Null params are assumed
+     *                           valid; this condition supports the SSO case.
+     * @param refreshTokenToSave The {@link com.microsoft.identity.common.internal.dto.RefreshToken}
+     *                           to save.
+     * @param idTokenToSave      The {@link IdToken} to save.
+     * @throws ClientException If any of the supplied artifacts are non schema-compliant.
+     */
+    private void validateCacheArtifacts(
+            @NonNull final Account accountToSave,
+            final AccessToken accessTokenToSave,
+            @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshTokenToSave,
+            @NonNull final IdToken idTokenToSave) throws ClientException {
+        final String methodName = "validateCacheArtifacts";
+        Logger.entering(TAG, methodName, accountToSave, accessTokenToSave, refreshTokenToSave, idTokenToSave);
 
-    private void saveRefreshToken(
-            final OAuth2Strategy oAuth2Strategy,
-            final AuthorizationRequest request,
-            final TokenResponse response) throws ClientException {
-        final String methodName = "saveRefreshToken";
-        Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
-        final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken = mAccountCredentialAdapter.createRefreshToken(oAuth2Strategy, request, response);
-        mAccountCredentialCache.saveCredential(refreshToken);
-        Logger.exiting(TAG, methodName);
-    }
+        final boolean isAccountCompliant = isAccountSchemaCompliant(accountToSave);
+        final boolean isAccessTokenCompliant = null == accessTokenToSave || isAccessTokenSchemaCompliant(accessTokenToSave);
+        final boolean isRefreshTokenCompliant = isRefreshTokenSchemaCompliant(refreshTokenToSave);
+        final boolean isIdTokenCompliant = isIdTokenSchemaCompliant(idTokenToSave);
 
-    private void saveAccessToken(
-            final OAuth2Strategy oAuth2Strategy,
-            final AuthorizationRequest request,
-            final TokenResponse response) throws ClientException {
-        final String methodName = "saveAccessToken";
-        Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
-        final AccessToken accessToken = mAccountCredentialAdapter.createAccessToken(oAuth2Strategy, request, response);
-        deleteAccessTokensWithIntersectingScopes(accessToken);
-        mAccountCredentialCache.saveCredential(accessToken);
+        if (!isAccountCompliant) {
+            throw new ClientException(ACCOUNT_IS_SCHEMA_NONCOMPLIANT);
+        }
+
+        if (!(isAccessTokenCompliant
+                && isRefreshTokenCompliant
+                && isIdTokenCompliant)) {
+            String nonCompliantCredentials = "[";
+
+            if (!isAccessTokenCompliant) {
+                nonCompliantCredentials += "(AT)";
+            }
+
+            if (!isRefreshTokenCompliant) {
+                nonCompliantCredentials += "(RT)";
+            }
+
+            if (!isIdTokenCompliant) {
+                nonCompliantCredentials += "(ID)";
+            }
+
+            nonCompliantCredentials += "]";
+
+            throw new ClientException(
+                    CREDENTIAL_IS_SCHEMA_NONCOMPLIANT,
+                    nonCompliantCredentials
+            );
+        }
+
         Logger.exiting(TAG, methodName);
     }
 
@@ -182,17 +263,118 @@ public class MsalOAuth2TokenCache
         return scopeSet;
     }
 
-    private void saveAccount(
-            final OAuth2Strategy oAuth2Strategy,
-            final AuthorizationRequest request,
-            final TokenResponse response) throws ClientException {
-        final String methodName = "saveAccount";
-        Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
-        final Account accountToSave = mAccountCredentialAdapter.createAccount(oAuth2Strategy, request, response);
-        Logger.info(TAG + ":" + methodName, "Saving Account...");
-        Logger.infoPII(TAG + ":" + methodName, "Account: " + accountToSave);
-        mAccountCredentialCache.saveAccount(accountToSave);
-        Logger.exiting(TAG, methodName);
+    private static boolean isSchemaCompliant(final Class<?> clazz, final String[][] params) {
+        final String methodName = "isSchemaCompliant";
+        Logger.entering(TAG, methodName, clazz, params);
+
+        boolean isCompliant = true;
+        for (final String[] param : params) {
+            isCompliant = isCompliant && !StringExtensions.isNullOrBlank(param[1]);
+        }
+
+        if (!isCompliant) {
+            Logger.warn(
+                    TAG + ":" + methodName,
+                    clazz.getSimpleName() + " does not contain all required fields."
+            );
+
+            for (final String[] param : params) {
+                Logger.warn(
+                        TAG + ":" + methodName,
+                        param[0] + " is null? [" + StringExtensions.isNullOrBlank(param[1]) + "]"
+                );
+            }
+        }
+
+        Logger.exiting(TAG, methodName, isCompliant);
+
+        return isCompliant;
+    }
+
+    private static boolean isAccountSchemaCompliant(@NonNull final Account account) {
+        final String methodName = "isAccountSchemaCompliant";
+        Logger.entering(TAG, methodName, account);
+
+        // Required fields...
+        final String[][] params = new String[][]{
+                {Account.SerializedNames.UNIQUE_USER_ID, account.getUniqueUserId()},
+                {Account.SerializedNames.ENVIRONMENT, account.getEnvironment()},
+                {Account.SerializedNames.REALM, account.getRealm()},
+                {Account.SerializedNames.AUTHORITY_ACCOUNT_ID, account.getAuthorityAccountId()},
+                {Account.SerializedNames.USERNAME, account.getUsername()},
+                {Account.SerializedNames.AUTHORITY_TYPE, account.getAuthorityType()},
+        };
+
+        boolean isCompliant = isSchemaCompliant(account.getClass(), params);
+
+        Logger.exiting(TAG, methodName, isCompliant);
+
+        return isCompliant;
+    }
+
+    private static boolean isAccessTokenSchemaCompliant(@NonNull final AccessToken accessToken) {
+        final String methodName = "isAccessTokenSchemaCompliant";
+        Logger.entering(TAG, methodName, accessToken);
+
+        // Required fields...
+        final String[][] params = new String[][]{
+                {Credential.SerializedNames.CREDENTIAL_TYPE, accessToken.getCredentialType()},
+                {Credential.SerializedNames.UNIQUE_USER_ID, accessToken.getUniqueUserId()},
+                {AccessToken.SerializedNames.REALM, accessToken.getRealm()},
+                {Credential.SerializedNames.ENVIRONMENT, accessToken.getEnvironment()},
+                {Credential.SerializedNames.CLIENT_ID, accessToken.getClientId()},
+                {AccessToken.SerializedNames.TARGET, accessToken.getTarget()},
+                {Credential.SerializedNames.CACHED_AT, accessToken.getCachedAt()},
+                {Credential.SerializedNames.EXPIRES_ON, accessToken.getExpiresOn()},
+                {Credential.SerializedNames.SECRET, accessToken.getSecret()},
+        };
+
+        boolean isValid = isSchemaCompliant(accessToken.getClass(), params);
+
+        Logger.exiting(TAG, methodName, isValid);
+
+        return isValid;
+    }
+
+    private static boolean isRefreshTokenSchemaCompliant(
+            @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken) {
+        final String methodName = "isRefreshTokenSchemaCompliant";
+        Logger.entering(TAG, methodName, refreshToken);
+
+        // Required fields...
+        final String[][] params = new String[][]{
+                {Credential.SerializedNames.CREDENTIAL_TYPE, refreshToken.getCredentialType()},
+                {Credential.SerializedNames.ENVIRONMENT, refreshToken.getEnvironment()},
+                {Credential.SerializedNames.UNIQUE_USER_ID, refreshToken.getUniqueUserId()},
+                {Credential.SerializedNames.CLIENT_ID, refreshToken.getClientId()},
+                {Credential.SerializedNames.SECRET, refreshToken.getSecret()},
+        };
+
+        boolean isValid = isSchemaCompliant(refreshToken.getClass(), params);
+
+        Logger.exiting(TAG, methodName, isValid);
+
+        return isValid;
+    }
+
+    private static boolean isIdTokenSchemaCompliant(@NonNull final IdToken idToken) {
+        final String methodName = "isIdTokenSchemaCompliant";
+        Logger.entering(TAG, methodName, idToken);
+
+        final String[][] params = new String[][]{
+                {Credential.SerializedNames.UNIQUE_USER_ID, idToken.getUniqueUserId()},
+                {Credential.SerializedNames.ENVIRONMENT, idToken.getEnvironment()},
+                {IdToken.SerializedNames.REALM, idToken.getRealm()},
+                {Credential.SerializedNames.CREDENTIAL_TYPE, idToken.getCredentialType()},
+                {Credential.SerializedNames.CLIENT_ID, idToken.getClientId()},
+                {Credential.SerializedNames.SECRET, idToken.getSecret()},
+        };
+
+        boolean isValid = isSchemaCompliant(idToken.getClass(), params);
+
+        Logger.exiting(TAG, methodName, isValid);
+
+        return isValid;
     }
 
     @Override
@@ -202,9 +384,17 @@ public class MsalOAuth2TokenCache
         Logger.entering(TAG, methodName, account, refreshToken);
 
         try {
-            final com.microsoft.identity.common.internal.dto.RefreshToken rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
             final Account accountDto = mAccountCredentialAdapter.asAccount(account);
+            final com.microsoft.identity.common.internal.dto.RefreshToken rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
             final IdToken idToken = mAccountCredentialAdapter.asIdToken(account, refreshToken);
+
+            validateCacheArtifacts(
+                    accountDto,
+                    null,
+                    rt,
+                    idToken
+            );
+
             mAccountCredentialCache.saveAccount(accountDto);
             mAccountCredentialCache.saveCredential(idToken);
             mAccountCredentialCache.saveCredential(rt);
