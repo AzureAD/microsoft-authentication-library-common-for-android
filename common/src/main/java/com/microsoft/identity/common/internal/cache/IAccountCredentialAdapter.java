@@ -11,7 +11,8 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 /**
  * Provides Adapters to the MsalOAuth2TokenCache.
  */
-public interface IAccountCredentialAdapter {
+public interface IAccountCredentialAdapter
+        <T extends OAuth2Strategy, U extends AuthorizationRequest, V extends TokenResponse> {
 
     /**
      * Constructs an Account.
@@ -21,10 +22,7 @@ public interface IAccountCredentialAdapter {
      * @param response The authz response.
      * @return The derived Account.
      */
-    Account createAccount(OAuth2Strategy strategy,
-                          AuthorizationRequest request,
-                          TokenResponse response
-    );
+    Account createAccount(T strategy, U request, V response);
 
     /**
      * Constructs an AccessToken.
@@ -34,10 +32,7 @@ public interface IAccountCredentialAdapter {
      * @param response The authz response.
      * @return The derived AccessToken.
      */
-    AccessToken createAccessToken(OAuth2Strategy strategy,
-                                  AuthorizationRequest request,
-                                  TokenResponse response
-    );
+    AccessToken createAccessToken(T strategy, U request, V response);
 
     /**
      * Constructs a RefreshToken.
@@ -47,10 +42,7 @@ public interface IAccountCredentialAdapter {
      * @param response The authz response.
      * @return The derived RefreshToken.
      */
-    RefreshToken createRefreshToken(OAuth2Strategy strategy,
-                                    AuthorizationRequest request,
-                                    TokenResponse response
-    );
+    RefreshToken createRefreshToken(T strategy, U request, V response);
 
     /**
      * Constructs an IdToken.
@@ -60,10 +52,7 @@ public interface IAccountCredentialAdapter {
      * @param response The authz response.
      * @return The derived IdToken.
      */
-    IdToken createIdToken(OAuth2Strategy strategy,
-                          AuthorizationRequest request,
-                          TokenResponse response
-    );
+    IdToken createIdToken(T strategy, U request, V response);
 
     /**
      * Adapter method to turn

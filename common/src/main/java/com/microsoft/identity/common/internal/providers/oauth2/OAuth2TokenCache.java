@@ -7,7 +7,8 @@ import com.microsoft.identity.common.exception.ClientException;
 /**
  * Class for managing the tokens saved locally on a device
  */
-public abstract class OAuth2TokenCache {
+public abstract class OAuth2TokenCache
+        <T extends OAuth2Strategy, U extends AuthorizationRequest, V extends TokenResponse> {
 
     protected Context mContext;
 
@@ -28,7 +29,7 @@ public abstract class OAuth2TokenCache {
      * @param response       The response received from the IdP/STS.
      * @throws ClientException If tokens cannot be successfully saved.
      */
-    public abstract void saveTokens(final OAuth2Strategy oAuth2Strategy,
-                                    final AuthorizationRequest request,
-                                    final TokenResponse response) throws ClientException;
+    public abstract void saveTokens(final T oAuth2Strategy,
+                                    final U request,
+                                    final V response) throws ClientException;
 }

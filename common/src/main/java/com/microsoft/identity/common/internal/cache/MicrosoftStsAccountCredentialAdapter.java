@@ -1,7 +1,5 @@
 package com.microsoft.identity.common.internal.cache;
 
-import android.support.annotation.NonNull;
-
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.AccessToken;
@@ -17,7 +15,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
@@ -30,7 +27,9 @@ import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.FA
 import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.GIVEN_NAME;
 import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.PREFERRED_USERNAME;
 
-public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialAdapter {
+public class MicrosoftStsAccountCredentialAdapter
+        implements IAccountCredentialAdapter
+        <MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse> {
 
     private static final String TAG = MicrosoftStsAccountCredentialAdapter.class.getSimpleName();
 
@@ -41,9 +40,9 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
 
     @Override
     public Account createAccount(
-            final OAuth2Strategy strategy,
-            final AuthorizationRequest request,
-            final TokenResponse response) {
+            final MicrosoftStsOAuth2Strategy strategy,
+            final MicrosoftStsAuthorizationRequest request,
+            final MicrosoftStsTokenResponse response) {
         final String methodName = "createAccount";
         Logger.entering(TAG, methodName, strategy, request, response);
 
@@ -51,8 +50,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         try {
             msIdToken = new MicrosoftIdToken(response.getIdToken());
             final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
-            final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
-            final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
+            final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
             final Account account = new Account();
             // Required
@@ -80,9 +78,9 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
 
     @Override
     public AccessToken createAccessToken(
-            final OAuth2Strategy strategy,
-            final AuthorizationRequest request,
-            final TokenResponse response) {
+            final MicrosoftStsOAuth2Strategy strategy,
+            final MicrosoftStsAuthorizationRequest request,
+            final MicrosoftStsTokenResponse response) {
         final String methodName = "createAccessToken";
         Logger.entering(TAG, methodName, strategy, request, response);
 
@@ -90,7 +88,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
             final long cachedAt = getCachedAt();
             final long expiresOn = getExpiresOn(response);
             final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
-            final ClientInfo clientInfo = new ClientInfo(getClientInfo(response));
+            final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
             final AccessToken accessToken = new AccessToken();
             // Required fields
@@ -99,15 +97,15 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
             accessToken.setRealm(getRealm(strategy, response));
             accessToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
             accessToken.setClientId(request.getClientId());
-            accessToken.setTarget(getTarget(request));
+            accessToken.setTarget(request.getScope());
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
             accessToken.setExpiresOn(String.valueOf(expiresOn));
             accessToken.setSecret(response.getAccessToken());
 
             // Optional fields
             accessToken.setExtendedExpiresOn(getExtendedExpiresOn(strategy, response));
-            accessToken.setAuthority(getAuthority(request));
-            accessToken.setClientInfo(getClientInfo(response));
+            accessToken.setAuthority(request.getAuthority().toString());
+            accessToken.setClientInfo(response.getClientInfo());
             accessToken.setAccessTokenType(BEARER); // TODO Don't hardcode this value.
 
             Logger.exiting(TAG, methodName, accessToken);
@@ -121,32 +119,31 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
 
     @Override
     public RefreshToken createRefreshToken(
-            final OAuth2Strategy strategy,
-            final AuthorizationRequest request,
-            final TokenResponse response) {
+            final MicrosoftStsOAuth2Strategy strategy,
+            final MicrosoftStsAuthorizationRequest request,
+            final MicrosoftStsTokenResponse response) {
         final String methodName = "createRefreshToken";
         Logger.entering(TAG, methodName, strategy, request, response);
 
         try {
             final long cachedAt = getCachedAt();
             final long expiresOn = getExpiresOn(response);
-            final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
             final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
-            final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
+            final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
             final RefreshToken refreshToken = new RefreshToken();
             // Required
             refreshToken.setCredentialType(CredentialType.RefreshToken.name());
             refreshToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
             refreshToken.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
-            refreshToken.setClientId(msTokenResponse.getClientId());
+            refreshToken.setClientId(response.getClientId());
             refreshToken.setSecret(response.getRefreshToken());
 
             // Optional
-            refreshToken.setFamilyId(getFamilyId(response));
+            refreshToken.setFamilyId(response.getFamilyId());
             refreshToken.setUsername(getUsername(response));
-            refreshToken.setTarget(getTarget(request));
-            refreshToken.setClientInfo(getClientInfo(response));
+            refreshToken.setTarget(request.getScope());
+            refreshToken.setClientInfo(response.getClientInfo());
 
             // TODO are these needed? Expected?
             refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
@@ -163,15 +160,14 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
 
     @Override
     public IdToken createIdToken(
-            final OAuth2Strategy strategy,
-            final AuthorizationRequest request,
-            final TokenResponse response) {
+            final MicrosoftStsOAuth2Strategy strategy,
+            final MicrosoftStsAuthorizationRequest request,
+            final MicrosoftStsTokenResponse response) {
         final String methodName = "createIdToken";
         Logger.entering(TAG, methodName, strategy, request, response);
 
         try {
-            final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
-            final ClientInfo clientInfo = new ClientInfo(msTokenResponse.getClientInfo());
+            final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
             final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
 
             final IdToken idToken = new IdToken();
@@ -184,7 +180,7 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
             idToken.setSecret(response.getIdToken());
 
             // Optional fields
-            idToken.setAuthority(getAuthority(request));
+            idToken.setAuthority(request.getAuthority().toString());
 
             Logger.exiting(TAG, methodName, idToken);
 
@@ -275,60 +271,6 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         return idToken;
     }
 
-    @NonNull
-    private static MicrosoftStsTokenResponse asMicrosoftStsTokenResponse(final TokenResponse response) {
-        final String methodName = "asMicrosoftStsTokenResponse";
-        Logger.entering(TAG, methodName, response);
-
-        MicrosoftStsTokenResponse msTokenResponse;
-
-        if (response instanceof MicrosoftStsTokenResponse) {
-            msTokenResponse = (MicrosoftStsTokenResponse) response;
-        } else {
-            throw new IllegalArgumentException("Invalid TokenResponse type.");
-        }
-
-        Logger.exiting(TAG, methodName, msTokenResponse);
-
-        return msTokenResponse;
-    }
-
-    @NonNull
-    private static MicrosoftStsAuthorizationRequest asMicrosoftStsAuthorizationRequest(final AuthorizationRequest request) {
-        final String methodName = "asMicrosoftStsAuthorizationRequest";
-        Logger.entering(TAG, methodName, request);
-
-        MicrosoftStsAuthorizationRequest msRequest;
-
-        if (request instanceof MicrosoftStsAuthorizationRequest) {
-            msRequest = (MicrosoftStsAuthorizationRequest) request;
-        } else {
-            throw new IllegalArgumentException("Invalid AuthorizationRequest type.");
-        }
-
-        Logger.exiting(TAG, methodName, msRequest);
-
-        return msRequest;
-    }
-
-    @NonNull
-    private static MicrosoftStsOAuth2Strategy asMicrosoftStsOAuth2Strategy(final OAuth2Strategy strategy) {
-        final String methodName = "asMicrosoftStsOAuth2Strategy";
-        Logger.entering(TAG, methodName, strategy);
-
-        MicrosoftStsOAuth2Strategy msStrategy;
-
-        if (strategy instanceof MicrosoftStsOAuth2Strategy) {
-            msStrategy = (MicrosoftStsOAuth2Strategy) strategy;
-        } else {
-            throw new IllegalArgumentException("Invalid strategy type.");
-        }
-
-        Logger.exiting(TAG, methodName, msStrategy);
-
-        return msStrategy;
-    }
-
     private String getExtendedExpiresOn(final OAuth2Strategy strategy, final TokenResponse response) {
         final String methodName = "getExtendedExpiresOn";
         Logger.entering(TAG, methodName, strategy, response);
@@ -342,24 +284,10 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         return result;
     }
 
-    private String getAuthority(final AuthorizationRequest request) {
-        final String methodName = "getAuthority";
-        Logger.entering(TAG, methodName, request);
-
-        final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
-        final String authorityUrl = msRequest.getAuthority().toString();
-
-        Logger.exiting(TAG, methodName, authorityUrl);
-
-        return authorityUrl;
-    }
-
-    private String getRealm(final OAuth2Strategy strategy, final TokenResponse response) {
+    private String getRealm(final MicrosoftStsOAuth2Strategy msStrategy, final MicrosoftStsTokenResponse msTokenResponse) {
         final String methodName = "getRealm";
-        Logger.entering(TAG, methodName, strategy, response);
+        Logger.entering(TAG, methodName, msStrategy, msTokenResponse);
 
-        final MicrosoftStsOAuth2Strategy msStrategy = asMicrosoftStsOAuth2Strategy(strategy);
-        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
         final MicrosoftStsAccount msAccount = (MicrosoftStsAccount) msStrategy.createAccount(msTokenResponse);
 
         Logger.exiting(TAG, methodName, msAccount.getRealm());
@@ -385,18 +313,6 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         }
     }
 
-    private String getTarget(final AuthorizationRequest request) {
-        final String methodName = "getTarget";
-        Logger.entering(TAG, methodName, request);
-
-        final MicrosoftStsAuthorizationRequest msRequest = asMicrosoftStsAuthorizationRequest(request);
-        final String target = msRequest.getScope();
-
-        Logger.exiting(TAG, methodName, target);
-
-        return target;
-    }
-
     private long getCachedAt() {
         final String methodName = "getCachedAt";
         Logger.entering(TAG, methodName);
@@ -409,12 +325,10 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         return cachedAt;
     }
 
-    private long getExpiresOn(final TokenResponse response) {
+    private long getExpiresOn(final MicrosoftStsTokenResponse msTokenResponse) {
         final String methodName = "getExpiresOn";
-        Logger.entering(TAG, methodName, response);
+        Logger.entering(TAG, methodName, msTokenResponse);
 
-        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
-        // This is computed wrong...
         // Should be seconds since 1970
         final long millisSince1970 = msTokenResponse.getExpiresOn().getTime();
         final long secondsSince1970 = TimeUnit.MILLISECONDS.toSeconds(millisSince1970);
@@ -424,27 +338,4 @@ public class MicrosoftStsAccountCredentialAdapter implements IAccountCredentialA
         return secondsSince1970;
     }
 
-    private String getClientInfo(final TokenResponse response) {
-        final String methodName = "getClientInfo";
-        Logger.entering(TAG, methodName, response);
-
-        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
-        final String clientInfo = msTokenResponse.getClientInfo();
-
-        Logger.exiting(TAG, methodName, clientInfo);
-
-        return clientInfo;
-    }
-
-    private String getFamilyId(final TokenResponse response) {
-        final String methodName = "getFamilyId";
-        Logger.entering(TAG, methodName, response);
-
-        final MicrosoftStsTokenResponse msTokenResponse = asMicrosoftStsTokenResponse(response);
-        final String familyId = msTokenResponse.getFamilyId();
-
-        Logger.exiting(TAG, methodName, familyId);
-
-        return familyId;
-    }
 }

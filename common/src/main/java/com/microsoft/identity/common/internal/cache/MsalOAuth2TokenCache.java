@@ -11,11 +11,11 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,18 +27,18 @@ import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SC
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 
 public class MsalOAuth2TokenCache
-        extends OAuth2TokenCache
+        extends OAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse>
         implements IShareSingleSignOnState {
 
     private static final String TAG = MsalOAuth2TokenCache.class.getSimpleName();
 
     private List<IShareSingleSignOnState> mSharedSsoCaches;
     private IAccountCredentialCache mAccountCredentialCache;
-    private IAccountCredentialAdapter mAccountCredentialAdapter;
+    private IAccountCredentialAdapter<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse> mAccountCredentialAdapter;
 
     public MsalOAuth2TokenCache(final Context context,
                                 final IAccountCredentialCache accountCredentialCache,
-                                final IAccountCredentialAdapter accountCredentialAdapter) {
+                                final IAccountCredentialAdapter<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse> accountCredentialAdapter) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
@@ -48,7 +48,7 @@ public class MsalOAuth2TokenCache
 
     public MsalOAuth2TokenCache(final Context context,
                                 final IAccountCredentialCache accountCredentialCache,
-                                final IAccountCredentialAdapter accountCredentialAdapter,
+                                final IAccountCredentialAdapter<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse> accountCredentialAdapter,
                                 final List<IShareSingleSignOnState> sharedSsoCaches) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
@@ -58,9 +58,10 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public void saveTokens(final OAuth2Strategy oAuth2Strategy,
-                           final AuthorizationRequest request,
-                           final TokenResponse response) throws ClientException {
+    public void saveTokens(
+            final MicrosoftStsOAuth2Strategy oAuth2Strategy,
+            final MicrosoftStsAuthorizationRequest request,
+            final MicrosoftStsTokenResponse response) throws ClientException {
         final String methodName = "saveTokensV2";
         Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
 
@@ -421,4 +422,5 @@ public class MsalOAuth2TokenCache
         Logger.exiting(TAG, methodName, result);
         return result;
     }
+
 }
