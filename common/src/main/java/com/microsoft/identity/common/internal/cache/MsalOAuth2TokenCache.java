@@ -57,17 +57,12 @@ public class MsalOAuth2TokenCache
     public void saveTokens(
             final OAuth2Strategy oAuth2Strategy,
             final AuthorizationRequest request,
-            final TokenResponse response) {
+            final TokenResponse response) throws ClientException {
         final String methodName = "saveTokens";
         Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
 
-        try {
-            saveAccount(oAuth2Strategy, request, response);
-            saveCredentials(oAuth2Strategy, request, response);
-        } catch (ClientException e) {
-            // TODO do what here?
-            throw new RuntimeException(e);
-        }
+        saveAccount(oAuth2Strategy, request, response);
+        saveCredentials(oAuth2Strategy, request, response);
 
         Logger.exiting(TAG, methodName);
     }

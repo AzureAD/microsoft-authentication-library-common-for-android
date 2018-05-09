@@ -2,6 +2,8 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.content.Context;
 
+import com.microsoft.identity.common.exception.ClientException;
+
 /**
  * Class for managing the tokens saved locally on a device
  */
@@ -24,9 +26,9 @@ public abstract class OAuth2TokenCache {
      * @param oAuth2Strategy The strategy used to create the token request.
      * @param request        The request used to acquire tokens and credentials.
      * @param response       The response received from the IdP/STS.
+     * @throws ClientException If tokens cannot be successfully saved.
      */
     public abstract void saveTokens(final OAuth2Strategy oAuth2Strategy,
                                     final AuthorizationRequest request,
-                                    final TokenResponse response
-    );
+                                    final TokenResponse response) throws ClientException;
 }
