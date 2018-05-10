@@ -2,9 +2,9 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.support.annotation.Nullable;
 
+import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.Account;
 
 import java.util.List;
 

@@ -162,4 +162,8 @@ public class ErrorStrings {
      * Request to server failed, but no error and error_description is returned back from the service.
      */
     public static final String UNKNOWN_ERROR = "unknown_error";
+
+    public static final String ACCOUNT_IS_SCHEMA_NONCOMPLIANT = "Account is missing schema-required fields.";
+
+    public static final String CREDENTIAL_IS_SCHEMA_NONCOMPLIANT = "Credential is missing schema-required fields.";
 }

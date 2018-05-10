@@ -22,16 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.exception;
 
-import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
-
-import org.json.JSONException;
-
-import java.util.HashMap;
-import java.util.List;
 
 public class BaseException extends Exception {
+
     private String mErrorCode;
 
     /**

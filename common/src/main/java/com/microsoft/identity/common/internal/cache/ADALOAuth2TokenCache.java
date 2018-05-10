@@ -14,11 +14,11 @@ import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -31,7 +31,9 @@ import java.util.ListIterator;
  * Class responsible for saving oAuth2 Tokens for use in future requests.  Ideally this class would
  * work with any IDP; however ADAL only currently supports ADFS and AAD hence this class reflects that
  */
-public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSingleSignOnState {
+public class ADALOAuth2TokenCache
+        extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
+        implements IShareSingleSignOnState {
 
     ISharedPreferencesFileManager mISharedPreferencesFileManager;
     final static String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
@@ -46,21 +48,22 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
     private List<IShareSingleSignOnState> mSharedSSOCaches;
 
 
-    public ADALOAuth2TokenCache(Context context, List<IShareSingleSignOnState> sharedSSOCaches) {
+    public ADALOAuth2TokenCache(final Context context,
+                                final List<IShareSingleSignOnState> sharedSSOCaches) {
         super(context);
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
         mSharedSSOCaches = sharedSSOCaches;
     }
 
-    public ADALOAuth2TokenCache(Context context) {
+    public ADALOAuth2TokenCache(final Context context) {
         super(context);
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
         mSharedSSOCaches = new ArrayList<>();
     }
 
-    protected void initializeSharedPreferencesFileManager(String fileName) {
+    protected void initializeSharedPreferencesFileManager(final String fileName) {
         mISharedPreferencesFileManager = new SharedPreferencesFileManager(super.mContext, fileName);
     }
 
@@ -72,7 +75,10 @@ public class ADALOAuth2TokenCache extends OAuth2TokenCache implements IShareSing
      * @param response
      */
     @Override
-    public void saveTokens(OAuth2Strategy strategy, AuthorizationRequest request, TokenResponse response) {
+    public void saveTokens(
+            final AzureActiveDirectoryOAuth2Strategy strategy,
+            final AzureActiveDirectoryAuthorizationRequest request,
+            final AzureActiveDirectoryTokenResponse response) {
 
         Account account = strategy.createAccount(response);
         String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);

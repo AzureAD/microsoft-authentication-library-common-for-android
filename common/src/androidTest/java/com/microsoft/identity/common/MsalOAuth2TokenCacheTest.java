@@ -8,7 +8,6 @@ import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.AccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
-import com.microsoft.identity.common.internal.cache.DefaultSsoValidator;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
@@ -22,6 +21,7 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
@@ -36,11 +36,16 @@ import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.microsoft.identity.common.AccountCredentialCacheTest.AUTHORITY_ACCOUNT_ID;
+import static com.microsoft.identity.common.AccountCredentialCacheTest.CACHED_AT;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.CLIENT_ID;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.ENVIRONMENT;
+import static com.microsoft.identity.common.AccountCredentialCacheTest.EXPIRES_ON;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.REALM;
+import static com.microsoft.identity.common.AccountCredentialCacheTest.SECRET;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.TARGET;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.UNIQUE_USER_ID;
+import static com.microsoft.identity.common.AccountCredentialCacheTest.USERNAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
@@ -61,7 +66,12 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     MicrosoftStsTokenResponse mockResponse;
 
     @Mock
-    IAccountCredentialAdapter mockCredentialAdapter;
+    IAccountCredentialAdapter<
+            MicrosoftStsOAuth2Strategy,
+            MicrosoftStsAuthorizationRequest,
+            MicrosoftStsTokenResponse,
+            MicrosoftAccount,
+            com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> mockCredentialAdapter;
 
     private Account account;
     private AccessToken accessToken;
@@ -78,17 +88,27 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         // Used by mocks
         account = new Account();
+        account.setAuthorityType("MSSTS");
+        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setUsername(USERNAME);
         account.setUniqueUserId(UNIQUE_USER_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
 
         accessToken = new AccessToken();
+        accessToken.setRealm(REALM);
+        accessToken.setTarget(TARGET);
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(SECRET);
         accessToken.setUniqueUserId(UNIQUE_USER_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
 
         refreshToken = new RefreshToken();
+        refreshToken.setSecret(SECRET);
+        refreshToken.setTarget(TARGET);
         refreshToken.setUniqueUserId(UNIQUE_USER_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
@@ -157,7 +177,6 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 context,
                 accountCredentialCache,
                 mockCredentialAdapter,
-                new DefaultSsoValidator(),
                 new ArrayList<IShareSingleSignOnState>()
         );
     }
@@ -209,9 +228,13 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final String extendedScopes = "calendar.modify user.read user.write https://graph.windows.net";
 
         AccessToken accessTokenToClear = new AccessToken();
+        accessTokenToClear.setRealm(REALM);
+        accessTokenToClear.setCachedAt(CACHED_AT);
+        accessTokenToClear.setExpiresOn(EXPIRES_ON);
+        accessTokenToClear.setSecret(SECRET);
         accessTokenToClear.setUniqueUserId(UNIQUE_USER_ID);
         accessTokenToClear.setEnvironment(ENVIRONMENT);
-        accessTokenToClear.setCredentialType(CredentialType.AccessToken.name().toLowerCase());
+        accessTokenToClear.setCredentialType(CredentialType.AccessToken.name());
         accessTokenToClear.setClientId(CLIENT_ID);
         accessTokenToClear.setTarget(TARGET);
 

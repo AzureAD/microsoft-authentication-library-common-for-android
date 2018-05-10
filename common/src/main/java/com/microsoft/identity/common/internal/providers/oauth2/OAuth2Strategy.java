@@ -18,7 +18,17 @@ import java.util.UUID;
  * Serves as the abstract base class for an oAuth2 client implementation; The base class should be extended
  * by Identity Provider specific implementations; For example: Azure Active Directory, ADFS, Microsoft STS, Etc...
  */
-public abstract class OAuth2Strategy {
+public abstract class OAuth2Strategy
+        <GenericAccessToken extends AccessToken,
+                GenericAccount extends Account,
+                GenericAuthorizationRequest extends AuthorizationRequest,
+                GenericAuthorizationResponse extends AuthorizationResponse,
+                GenericAuthorizationStrategy extends AuthorizationStrategy,
+                GenericOAuth2Configuration extends OAuth2Configuration,
+                GenericRefreshToken extends RefreshToken,
+                GenericTokenRequest extends TokenRequest,
+                GenericTokenResponse extends TokenResponse,
+                GenericTokenResult extends TokenResult> {
 
     protected String mTokenEndpoint;
     protected String mAuthorizationEndpoint;
@@ -26,7 +36,7 @@ public abstract class OAuth2Strategy {
 
     protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
-    public OAuth2Strategy(OAuth2Configuration config) {
+    public OAuth2Strategy(GenericOAuth2Configuration config) {
 
     }
 
@@ -37,33 +47,38 @@ public abstract class OAuth2Strategy {
      * @param authorizationStrategy
      * @return
      */
-    public AuthorizationResponse requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy) {
+    public GenericAuthorizationResponse requestAuthorization(
+            final GenericAuthorizationRequest request,
+            final GenericAuthorizationStrategy authorizationStrategy) {
         validateAuthorizationRequest(request);
         Uri authorizationUri = createAuthorizationUri();
         AuthorizationResult result = authorizationStrategy.requestAuthorization(request);
         //TODO: Reconcile authorization result and response
         AuthorizationResponse response = new AuthorizationResponse();
-        return response;
+        return (GenericAuthorizationResponse) response;
     }
 
 
-    public TokenResult requestToken(TokenRequest request) throws IOException {
+    public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException {
         validateTokenRequest(request);
         HttpResponse response = performTokenRequest(request);
         return getTokenResultFromHttpResponse(response);
     }
 
 
-    protected HttpResponse performTokenRequest(TokenRequest request) throws IOException {
+    protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException {
 
         String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
-        Map<String, String> headers = new TreeMap<String, String>();
+        Map<String, String> headers = new TreeMap<>();
         String correlationId = UUID.randomUUID().toString();
         headers.put("client-request-id", correlationId);
 
-        return HttpRequest.sendPost(new URL(mTokenEndpoint), headers, requestBody.getBytes(ObjectMapper.ENCODING_SCHEME), TOKEN_REQUEST_CONTENT_TYPE);
-
-
+        return HttpRequest.sendPost(
+                new URL(mTokenEndpoint),
+                headers,
+                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
+                TOKEN_REQUEST_CONTENT_TYPE
+        );
     }
 
 
@@ -84,11 +99,11 @@ public abstract class OAuth2Strategy {
      *
      * @return
      */
-    public abstract String getIssuerCacheIdentifier(AuthorizationRequest request);
+    public abstract String getIssuerCacheIdentifier(GenericAuthorizationRequest request);
 
-    public abstract AccessToken getAccessTokenFromResponse(TokenResponse response);
+    public abstract GenericAccessToken getAccessTokenFromResponse(GenericTokenResponse response);
 
-    public abstract RefreshToken getRefreshTokenFromResponse(TokenResponse response);
+    public abstract GenericRefreshToken getRefreshTokenFromResponse(GenericTokenResponse response);
 
     /**
      * An abstract method for returning the user associated with a request;  This
@@ -99,7 +114,7 @@ public abstract class OAuth2Strategy {
      *
      * @return
      */
-    public abstract Account createAccount(TokenResponse response);
+    public abstract GenericAccount createAccount(GenericTokenResponse response);
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method
@@ -107,7 +122,7 @@ public abstract class OAuth2Strategy {
      *
      * @param request
      */
-    protected abstract void validateAuthorizationRequest(AuthorizationRequest request);
+    protected abstract void validateAuthorizationRequest(GenericAuthorizationRequest request);
 
     /**
      * Abstract method for validating the token request.  Generally speaking I expect this just to be validating
@@ -115,17 +130,17 @@ public abstract class OAuth2Strategy {
      *
      * @param request
      */
-    protected abstract void validateTokenRequest(TokenRequest request);
+    protected abstract void validateTokenRequest(GenericTokenRequest request);
 
     /**
      * Abstract method for translating the HttpResponse to a TokenResponse.
      *
      * @param response
      */
-    protected abstract TokenResult getTokenResultFromHttpResponse(HttpResponse response);
+    protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response);
 
     // TODO
-//    protected abstract void validateAuthorizationResponse(AuthorizationResponse response);
+//    protected abstract void validateAuthorizationResponse(GenericAuthorizationResponse response);
 
-//    protected abstract void validateTokenResponse(TokenResponse response);
+//    protected abstract void validateTokenResponse(GenericTokenResponse response);
 }
