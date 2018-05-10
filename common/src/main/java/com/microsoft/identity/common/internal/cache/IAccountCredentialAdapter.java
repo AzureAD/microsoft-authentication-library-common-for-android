@@ -85,6 +85,5 @@ public interface IAccountCredentialAdapter
      * @param refreshToken The RefreshToken to read.
      * @return The newly constructed IdToken.
      */
-    IdToken asIdToken(W account, X refreshToken
-    );
+    IdToken asIdToken(W account, X refreshToken);
 }
