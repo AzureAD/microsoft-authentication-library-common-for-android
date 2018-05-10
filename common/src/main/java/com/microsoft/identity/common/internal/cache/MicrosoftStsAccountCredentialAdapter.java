@@ -29,7 +29,11 @@ import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.PR
 
 public class MicrosoftStsAccountCredentialAdapter
         implements IAccountCredentialAdapter
-        <MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse> {
+        <MicrosoftStsOAuth2Strategy,
+                MicrosoftStsAuthorizationRequest,
+                MicrosoftStsTokenResponse,
+                MicrosoftAccount,
+                com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> {
 
     private static final String TAG = MicrosoftStsAccountCredentialAdapter.class.getSimpleName();
 
@@ -192,7 +196,7 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public RefreshToken asRefreshToken(final com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshTokenIn) {
+    public RefreshToken asRefreshToken(com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshTokenIn) {
         final String methodName = "asRefreshToken";
         Logger.entering(TAG, methodName, refreshTokenIn);
 
@@ -229,7 +233,7 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public Account asAccount(com.microsoft.identity.common.Account account) {
+    public Account asAccount(MicrosoftAccount account) {
         final String methodName = "asAccount";
         Logger.entering(TAG, methodName, account);
 
@@ -241,16 +245,11 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public IdToken asIdToken(com.microsoft.identity.common.Account account, com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshToken) {
+    public IdToken asIdToken(MicrosoftAccount msAccount, com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshToken) {
         final String methodName = "asIdToken";
-        Logger.entering(TAG, methodName, account, refreshToken);
-
-        if (!(account instanceof MicrosoftAccount)) {
-            throw new IllegalArgumentException("Account must be an instance or subclass of MicrosoftAccount");
-        }
+        Logger.entering(TAG, methodName, msAccount, refreshToken);
 
         final long cachedAt = getCachedAt();
-        final MicrosoftAccount msAccount = (MicrosoftAccount) account;
         IDToken msIdToken = msAccount.getIDToken();
 
         final IdToken idToken = new IdToken();
@@ -288,7 +287,7 @@ public class MicrosoftStsAccountCredentialAdapter
         final String methodName = "getRealm";
         Logger.entering(TAG, methodName, msStrategy, msTokenResponse);
 
-        final MicrosoftStsAccount msAccount = (MicrosoftStsAccount) msStrategy.createAccount(msTokenResponse);
+        final MicrosoftStsAccount msAccount = msStrategy.createAccount(msTokenResponse);
 
         Logger.exiting(TAG, methodName, msAccount.getRealm());
 

@@ -12,7 +12,11 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
  * Provides Adapters to the MsalOAuth2TokenCache.
  */
 public interface IAccountCredentialAdapter
-        <T extends OAuth2Strategy, U extends AuthorizationRequest, V extends TokenResponse> {
+        <T extends OAuth2Strategy,
+                U extends AuthorizationRequest,
+                V extends TokenResponse,
+                W extends com.microsoft.identity.common.Account,
+                X extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> {
 
     /**
      * Constructs an Account.
@@ -62,8 +66,7 @@ public interface IAccountCredentialAdapter
      * @param refreshToken The RefreshToken to adapt.
      * @return The adapted RefreshToken.
      */
-    RefreshToken asRefreshToken(
-            com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshToken);
+    RefreshToken asRefreshToken(X refreshToken);
 
     /**
      * Adapter method to turn {@link com.microsoft.identity.common.Account} instances into
@@ -72,7 +75,7 @@ public interface IAccountCredentialAdapter
      * @param account The Account to adapt.
      * @return The adapted Account.
      */
-    Account asAccount(com.microsoft.identity.common.Account account);
+    Account asAccount(W account);
 
     /**
      * Constructs IdToken instances from {@link com.microsoft.identity.common.Account} and
@@ -82,7 +85,6 @@ public interface IAccountCredentialAdapter
      * @param refreshToken The RefreshToken to read.
      * @return The newly constructed IdToken.
      */
-    IdToken asIdToken(com.microsoft.identity.common.Account account,
-                      com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshToken
+    IdToken asIdToken(W account, X refreshToken
     );
 }

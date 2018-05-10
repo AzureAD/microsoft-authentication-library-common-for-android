@@ -11,7 +11,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -70,7 +69,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     @Before
     public void setUp() throws MalformedURLException {
         MockitoAnnotations.initMocks(this);
-        when(mockStrategy.createAccount(any(TokenResponse.class))).thenReturn(mockAccount);
+        when(mockStrategy.createAccount(any(MicrosoftStsTokenResponse.class))).thenReturn(mockAccount);
         when(mockRequest.getAuthority()).thenReturn(new URL(MOCK_AUTHORITY));
         when(mockResponse.getIdToken()).thenReturn(MOCK_ID_TOKEN_WITH_CLAIMS);
         when(mockResponse.getClientInfo()).thenReturn(MOCK_CLIENT_INFO);
