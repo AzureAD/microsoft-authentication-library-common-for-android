@@ -1,5 +1,5 @@
 plugins {
-    id "org.sonarqube" version "2.5"
+    id "org.sonarqube" version "2.6.2"
 }
 
 apply plugin: 'com.android.library'
@@ -131,7 +131,7 @@ task createPom  {
                     name 'MIT License'
                 }
             }
-            inceptionYear '2014'
+            inceptionYear '2017'
 
             properties {
                 branch 'master'
@@ -143,6 +143,26 @@ task createPom  {
             }
         }
     }.writeTo("${archivesBaseName}-${version}.pom")
+}
+
+task jacocoTestReport(type: JacocoReport, dependsOn: 'testDebugUnitTest') {
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+
+    jacocoClasspath = configurations['jacocoAnt']
+
+    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*',]
+    def debugTree = fileTree(dir: "${buildDir}/intermediates/classes/debug", excludes: fileFilter)
+    def mainSrc = "${project.projectDir}/src/main/java"
+
+    sourceDirectories = files([mainSrc])
+    classDirectories = files([debugTree])
+    executionData = fileTree(dir: "$buildDir", includes: [
+            "jacoco/testDebugUnitTest.exec",
+            "outputs/code-coverage/connected/*coverage.ec"
+    ])
 }
 
 // For publishing to the remote maven repo.
@@ -201,9 +221,9 @@ repositories {
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
-        task.dependsOn  'lint','createPom', 'javadocJar', 'sourcesJar'
+        task.dependsOn  'lint','createPom', 'javadocJar', 'sourcesJar', 'jacocoTestReport'
         // TODO: Add the tasks and enable these before release
-        // ,'jacocoTestReport', 'checkstyle' , 'pmd'
+        // ,, 'checkstyle' , 'pmd'
     }
 }
 
