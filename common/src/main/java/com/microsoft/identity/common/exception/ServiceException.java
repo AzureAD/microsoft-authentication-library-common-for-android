@@ -42,6 +42,7 @@ public class ServiceException extends BaseException {
      * When {@link java.net.SocketTimeoutException} is thrown, no status code will be caught. Will use 0 instead.
      */
     static final int DEFAULT_STATUS_CODE = 0;
+
     /**
      * @return The http status code for the request sent to the service.
      */

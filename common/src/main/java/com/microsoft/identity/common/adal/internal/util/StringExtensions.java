@@ -1,11 +1,33 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.util;
-
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.ErrorStrings;
 
 import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
+
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.exception.ErrorStrings;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -21,7 +43,9 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 public final class StringExtensions {
-    /** The Constant ENCODING_UTF8. */
+    /**
+     * The Constant ENCODING_UTF8.
+     */
     public static final String ENCODING_UTF8 = "UTF_8";
 
     private static final String TAG = StringExtensions.class.getSimpleName();
@@ -31,6 +55,7 @@ public final class StringExtensions {
     private StringExtensions() {
         // Intentionally left blank
     }
+
     /**
      * checks if string is null or empty.
      *
@@ -164,7 +189,7 @@ public final class StringExtensions {
      * Checks if header value has this prefix. Prefix + whitespace is
      * acceptable.
      *
-     * @param value String to check
+     * @param value  String to check
      * @param prefix prefix to check the above string
      * @return boolean true if the string starts with prefix and has some body after it.
      */

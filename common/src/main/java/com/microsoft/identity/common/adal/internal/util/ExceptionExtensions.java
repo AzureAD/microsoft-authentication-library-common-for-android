@@ -26,7 +26,6 @@ package com.microsoft.identity.common.adal.internal.util;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-
 /**
  * A helper for getting logging info out of an Exception.
  */
@@ -35,6 +34,7 @@ public final class ExceptionExtensions {
     private ExceptionExtensions() {
         // Intentionally left blank
     }
+
     public static String getExceptionMessage(Exception ex) {
         String message = null;
 

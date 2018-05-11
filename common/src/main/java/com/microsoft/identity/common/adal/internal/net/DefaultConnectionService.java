@@ -32,10 +32,10 @@ import com.microsoft.identity.common.adal.internal.PowerManagerWrapper;
 import com.microsoft.identity.common.adal.internal.UsageStatsManagerWrapper;
 
 /**
- * Default connection service check network connectivity. 
- * TODO: No need for {@link IConnectionService}. Interface was created for testing purpose. 
+ * Default connection service check network connectivity.
+ * TODO: No need for {@link IConnectionService}. Interface was created for testing purpose.
  * Same purpose could be achieved via mocking the context. Since it's a public interface, should
- * be removed in the next major version update. 
+ * be removed in the next major version update.
  * https://github.com/AzureAD/azure-activedirectory-library-for-android/issues/626
  */
 public class DefaultConnectionService implements IConnectionService {

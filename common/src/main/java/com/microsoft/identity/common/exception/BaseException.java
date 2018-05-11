@@ -62,7 +62,7 @@ public class BaseException extends Exception {
      * @param throwable    The {@link Throwable} contains the cause for the exception.
      */
     public BaseException(final String errorCode, final String errorMessage,
-                  final Throwable throwable) {
+                         final Throwable throwable) {
         super(errorMessage, throwable);
         mErrorCode = errorCode;
     }
