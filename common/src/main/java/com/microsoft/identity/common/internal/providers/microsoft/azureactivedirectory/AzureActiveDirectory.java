@@ -6,8 +6,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 
 import org.json.JSONException;
 
@@ -22,7 +20,8 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Implements the IdentityProvider base class...
  */
-public class AzureActiveDirectory extends IdentityProvider {
+public class AzureActiveDirectory
+        extends IdentityProvider<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryOAuth2Configuration> {
 
     // Constants used to parse cloud discovery document metadata
     private static final String TENANT_DISCOVERY_ENDPOINT = "tenant_discovery_endpoint";
@@ -30,13 +29,9 @@ public class AzureActiveDirectory extends IdentityProvider {
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
 
-    public OAuth2Strategy createOAuth2Strategy(OAuth2Configuration config) {
-        if (config instanceof AzureActiveDirectoryOAuth2Configuration) {
-            return new AzureActiveDirectoryOAuth2Strategy((AzureActiveDirectoryOAuth2Configuration) config);
-        } else {
-            throw new IllegalArgumentException("Expected instance of AzureActiveDirectoryOAuth2Configuration in AzureActiveDirectory.CreateOAuth2Strategy");  
-        }
-
+    @Override
+    public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(AzureActiveDirectoryOAuth2Configuration config) {
+        return new AzureActiveDirectoryOAuth2Strategy(config);
     }
 
     static boolean hasCloudHost(final URL authorityUrl) {
@@ -99,4 +94,5 @@ public class AzureActiveDirectory extends IdentityProvider {
         }.getType();
         return new Gson().fromJson(jsonCloudArray, listType);
     }
+
 }
