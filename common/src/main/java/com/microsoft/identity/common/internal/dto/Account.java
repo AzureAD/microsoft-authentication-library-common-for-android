@@ -130,7 +130,7 @@ public class Account extends AccountCredentialBase implements IAccount {
     ///////////////
 
     /**
-     * Internal representation for guest users to the tenants. Corresponds to the “altsecid” claim
+     * Internal representation for guest users to the tenants. Corresponds to the "altsecid" claim
      * in the id_token for AAD.
      */
     @SerializedName(GUEST_ID)
