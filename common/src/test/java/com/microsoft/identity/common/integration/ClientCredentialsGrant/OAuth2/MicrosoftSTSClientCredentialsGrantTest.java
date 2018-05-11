@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.integration.ClientCredentialsGrant.OAuth2;
 
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
 import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfiguration;
@@ -44,6 +45,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 @RunWith(JUnit4.class)
 public class MicrosoftSTSClientCredentialsGrantTest {
@@ -78,9 +80,13 @@ public class MicrosoftSTSClientCredentialsGrantTest {
 
         OAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(new MicrosoftStsOAuth2Configuration());
 
-        TokenResult tokenResult = strategy.requestToken(tr);
+        try {
+            TokenResult tokenResult = strategy.requestToken(tr);
 
-        assertEquals(true, tokenResult.getSuccess());
+            assertEquals(true, tokenResult.getSuccess());
+        } catch (final ServiceException exc) {
+            fail();
+        }
 
     }
 

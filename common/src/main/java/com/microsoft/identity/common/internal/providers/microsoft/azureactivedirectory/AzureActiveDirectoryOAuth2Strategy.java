@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -38,6 +39,10 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorRespons
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.util.StringUtil;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The Azure Active Directory oAuth2 Strategy
@@ -66,6 +71,58 @@ public class AzureActiveDirectoryOAuth2Strategy extends OAuth2Strategy {
     @Override
     protected void validateTokenRequest(TokenRequest request) {
 
+    }
+
+    /**
+     * This function is only used to check if the {@link HttpResponse#mResponseBody} is in the right JSON format.
+     *
+     * There are two kinds of token response in the {@link HttpResponse#mResponseBody} in AAD v1.0, successful response and error response.
+     * The successful response is JSON string containing
+     *             access_token, which is a signed JSON Web Token (JWT)
+     *             token_type
+     *             expires_in
+     *             expires_on
+     *             resource
+     *             scope
+     *             refresh_token
+     *             id_token, which is a unsigned JSON Web Token (JWT)
+     *
+     * The token issuance endpoint errors are HTTP error codes, because the client calls the token
+     * issuance endpoint directly. In addition to the HTTP status code, the Azure AD token issuance
+     * endpoint also returns a JSON document with objects that describe the error.
+     *             error
+     *             error_description in JSON format
+     *             error_codes
+     *             timestamp
+     *             trace_id
+     *             correlation_id
+     *
+     * @param response
+     */
+    @Override
+    protected void validateTokenResponse(final HttpResponse response) throws ServiceException{
+        if (null == response) {
+            throw new IllegalArgumentException("The http response is null.");
+        }
+
+        if(StringUtil.isEmpty(response.getBody())) {
+            throw new IllegalArgumentException("The http response body is null.");
+        }
+
+        StringUtil.validateJsonFormat(response.getBody(), null);
+
+        final Map<String, String> responseItems = new HashMap<>();
+        StringUtil.extractJsonObjects(responseItems, response.getBody());
+
+        if (responseItems.containsKey(AuthenticationConstants.OAuth2.ERROR)
+                && responseItems.containsKey(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION)) {
+            StringUtil.validateJsonFormat(responseItems.get(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION), null);
+        }
+
+        if (responseItems.containsKey(AuthenticationConstants.OAuth2.ACCESS_TOKEN)
+                && responseItems.containsKey(AuthenticationConstants.OAuth2.ID_TOKEN)) {
+            StringUtil.validateJWTFormat(responseItems.get(AuthenticationConstants.OAuth2.ID_TOKEN));
+        }
     }
 
     /**

@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -81,9 +82,10 @@ public abstract class OAuth2Strategy
     }
 
 
-    public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException {
+    public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException, ServiceException {
         validateTokenRequest(request);
         HttpResponse response = performTokenRequest(request);
+        validateTokenResponse(response);
         return getTokenResultFromHttpResponse(response);
     }
 
@@ -153,6 +155,12 @@ public abstract class OAuth2Strategy
      * @param request
      */
     protected abstract void validateTokenRequest(GenericTokenRequest request);
+
+    /**
+     * Abstract method for validating the http response from server for token request.
+     * @param response
+     */
+    protected abstract void validateTokenResponse(final HttpResponse response) throws ServiceException;
 
     /**
      * Abstract method for translating the HttpResponse to a TokenResponse.

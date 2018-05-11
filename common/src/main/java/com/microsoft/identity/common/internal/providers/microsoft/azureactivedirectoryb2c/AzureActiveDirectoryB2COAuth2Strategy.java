@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -36,6 +38,10 @@ import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.util.StringUtil;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Azure Active Directory B2C OAuth Strategy
@@ -86,6 +92,34 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     @Override
     protected void validateTokenRequest(TokenRequest request) {
 
+    }
+
+    /**
+     * This function is only used to check if the {@link HttpResponse#mResponseBody} is in the right JSON format.
+     *
+     * TODO: No sure if the error description is required for AAD B2C. Could not find related docs on the error response.
+     *
+     * @param response
+     */
+    @Override
+    protected void validateTokenResponse(HttpResponse response) throws ServiceException {
+        if (null == response) {
+            throw new IllegalArgumentException("The http response is null.");
+        }
+
+        if(StringUtil.isEmpty(response.getBody())) {
+            throw new IllegalArgumentException("The http response body is null.");
+        }
+
+        StringUtil.validateJsonFormat(response.getBody(), null);
+
+        final Map<String, String> responseItems = new HashMap<>();
+        StringUtil.extractJsonObjects(responseItems, response.getBody());
+
+        if (responseItems.containsKey(AuthenticationConstants.OAuth2.ACCESS_TOKEN)
+                && responseItems.containsKey(AuthenticationConstants.OAuth2.ID_TOKEN)) {
+            StringUtil.validateJWTFormat(responseItems.get(AuthenticationConstants.OAuth2.ID_TOKEN));
+        }
     }
 
     @Override
