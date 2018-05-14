@@ -118,6 +118,7 @@ public class ADALOAuth2TokenCache
 
         ListIterator<IShareSingleSignOnState> otherCaches = mSharedSSOCaches.listIterator();
 
+        // TODO At some point, the type-safety of this call needs to get beefed-up
         while (otherCaches.hasNext()) {
             otherCaches.next().setSingleSignOnState(account, refreshToken);
         }
