@@ -150,6 +150,44 @@ task createPom  {
     }.writeTo("${archivesBaseName}-${version}.pom")
 }
 
+def configDir = new File(buildscript.sourceFile.parentFile.parentFile, 'config')
+ext.checkstyleConfigDir = "$configDir/checkstyle"
+
+checkstyle {
+    ignoreFailures = false
+    reportsDir = file("$project.buildDir/outputs/")
+}
+
+task checkstyle(type: Checkstyle) {
+    configFile file("${project.rootDir}/config/checkstyle/checkstyle.xml")
+
+    configProperties.checkstyleConfigDir = checkstyleConfigDir
+    configProperties.checkstyleSuppressionsPath = file("${project.rootDir}/config/checkstyle/suppressions.xml").absolutePath
+    source 'src'
+    include '**/*.java'
+    exclude '**/gen/**'
+    classpath = files()
+}
+
+
+pmd {
+    ignoreFailures = false
+    reportsDir = file("$project.buildDir/outputs/")
+}
+
+task pmd(type: Pmd) {
+    description 'Run pmd'
+    group 'verification'
+
+    ruleSets = ["java-basic", "java-braces", "java-strings", "java-unusedcode"]
+    source = fileTree('src/main/java')
+
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
 task jacocoTestReport(type: JacocoReport, dependsOn: 'testDebugUnitTest') {
     reports {
         xml.enabled = true
