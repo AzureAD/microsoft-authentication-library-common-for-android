@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
+import android.support.annotation.NonNull;
+
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
@@ -41,7 +43,8 @@ public class AzureActiveDirectoryRefreshToken extends RefreshToken {
     private String mScope;
     private String mClientId;
 
-    public AzureActiveDirectoryRefreshToken(AzureActiveDirectoryTokenResponse response) {
+    public AzureActiveDirectoryRefreshToken(
+            @NonNull final AzureActiveDirectoryTokenResponse response) {
         super(response);
         try {
             mFamilyId = response.getFamilyId();

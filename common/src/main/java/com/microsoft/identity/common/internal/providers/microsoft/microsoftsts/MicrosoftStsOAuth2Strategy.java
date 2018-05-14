@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import android.support.annotation.NonNull;
+
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -56,7 +58,7 @@ public class MicrosoftStsOAuth2Strategy
 
     private MicrosoftStsOAuth2Configuration mConfig;
 
-    public MicrosoftStsOAuth2Strategy(MicrosoftStsOAuth2Configuration config) {
+    public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config) {
         super(config);
         mConfig = config;
         mTokenEndpoint = "https://login.microsoftonline.com/microsoft.com/oAuth2/v2.0/token";
@@ -64,7 +66,7 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     public String getIssuerCacheIdentifier(MicrosoftStsAuthorizationRequest request) {
-        final URL authority = ((MicrosoftStsAuthorizationRequest) request).getAuthority();
+        final URL authority = request.getAuthority();
         // TODO I don't think this is right... This is probably not the correct authority cache to consult...
         final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
         // This map can only be consulted if authority validation is on.
@@ -76,17 +78,20 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsAccessToken getAccessTokenFromResponse(MicrosoftStsTokenResponse response) {
+    public MicrosoftStsAccessToken getAccessTokenFromResponse(
+            @NonNull final MicrosoftStsTokenResponse response) {
         return new MicrosoftStsAccessToken(response);
     }
 
     @Override
-    public MicrosoftStsRefreshToken getRefreshTokenFromResponse(MicrosoftStsTokenResponse response) {
+    public MicrosoftStsRefreshToken getRefreshTokenFromResponse(
+            @NonNull final MicrosoftStsTokenResponse response) {
         return new MicrosoftStsRefreshToken(response);
     }
 
     @Override
-    public MicrosoftStsAccount createAccount(MicrosoftStsTokenResponse response) {
+    public MicrosoftStsAccount createAccount(
+            @NonNull final MicrosoftStsTokenResponse response) {
         IDToken idToken = null;
         ClientInfo clientInfo = null;
         try {
@@ -101,18 +106,18 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    protected void validateAuthorizationRequest(MicrosoftStsAuthorizationRequest request) {
+    protected void validateAuthorizationRequest(final MicrosoftStsAuthorizationRequest request) {
         // TODO implement
 
     }
 
     @Override
-    protected void validateTokenRequest(TokenRequest request) {
+    protected void validateTokenRequest(final TokenRequest request) {
         // TODO implement
     }
 
     @Override
-    protected TokenResult getTokenResultFromHttpResponse(HttpResponse response) {
+    protected TokenResult getTokenResultFromHttpResponse(final HttpResponse response) {
         TokenResponse tokenResponse = null;
         TokenErrorResponse tokenErrorResponse = null;
 

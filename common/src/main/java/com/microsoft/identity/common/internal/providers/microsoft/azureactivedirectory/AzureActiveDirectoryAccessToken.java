@@ -25,24 +25,19 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.Date;
 
-
 public class AzureActiveDirectoryAccessToken extends AccessToken {
 
-    Date mExpiresOn;
-    Date mExtendedExpiresOn;
+    private Date mExpiresOn;
+    private Date mExtendedExpiresOn;
 
-    public AzureActiveDirectoryAccessToken(@NonNull TokenResponse response) {
+    public AzureActiveDirectoryAccessToken(
+            @NonNull final AzureActiveDirectoryTokenResponse response) {
         super(response);
-        if (!(response instanceof AzureActiveDirectoryTokenResponse)) {
-            throw new IllegalArgumentException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryAccessToken constructor");
-        }
-        AzureActiveDirectoryTokenResponse aadResponse = (AzureActiveDirectoryTokenResponse) response;
-        this.mExpiresOn = aadResponse.getExpiresOn();
-        this.mExtendedExpiresOn = aadResponse.getExtExpiresOn();
+        this.mExpiresOn = response.getExpiresOn();
+        this.mExtendedExpiresOn = response.getExtExpiresOn();
     }
 
     public Date getExpiresOn() {
