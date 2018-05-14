@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
+import android.support.annotation.NonNull;
+
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
@@ -33,7 +35,7 @@ public class AzureActiveDirectoryAccessToken extends AccessToken {
     Date mExpiresOn;
     Date mExtendedExpiresOn;
 
-    public AzureActiveDirectoryAccessToken(TokenResponse response) {
+    public AzureActiveDirectoryAccessToken(@NonNull TokenResponse response) {
         super(response);
         if (!(response instanceof AzureActiveDirectoryTokenResponse)) {
             throw new IllegalArgumentException("Expected AzureActiveDirectoryTokenResponse in AzureActiveDirectoryAccessToken constructor");
