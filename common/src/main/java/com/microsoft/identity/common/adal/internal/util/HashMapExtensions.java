@@ -99,7 +99,7 @@ public final class HashMapExtensions {
      *
      * @param webResponse HttpWebResponse to convert to a map
      * @return Map
-     * @throws JSONException
+     * @throws JSONException throws if the response body is JSON malformed.
      */
     public static Map<String, String> getJsonResponse(HttpWebResponse webResponse) throws JSONException {
         final Map<String, String> response = new HashMap<>();

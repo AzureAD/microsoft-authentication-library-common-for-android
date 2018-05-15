@@ -110,6 +110,8 @@ public final class HttpRequest {
      * @param requestHeaders     Headers used to send the http request.
      * @param requestContent     Post message sent in the post request.
      * @param requestContentType Request content type.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
      */
     public static HttpResponse sendPost(final URL requestUrl, final Map<String, String> requestHeaders,
                                         final byte[] requestContent, final String requestContentType)
@@ -124,6 +126,8 @@ public final class HttpRequest {
      *
      * @param requestUrl     The {@link URL} to make the http request.
      * @param requestHeaders Headers used to send the http request.
+     * @return HttpResponse
+     * @throws IOException throw if service error happen during http request.
      */
     public static HttpResponse sendGet(final URL requestUrl, final Map<String, String> requestHeaders)
             throws IOException {

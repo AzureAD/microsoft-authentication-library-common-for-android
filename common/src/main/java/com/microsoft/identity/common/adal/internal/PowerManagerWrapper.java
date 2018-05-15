@@ -35,6 +35,11 @@ public class PowerManagerWrapper {
 
     private static PowerManagerWrapper sInstance;
 
+    /**
+     * Set instance of PowerManagerWrapper.
+     *
+     * @param wrapper PowerManagerWrapper
+     */
     public static void setInstance(final PowerManagerWrapper wrapper) {
         sInstance = wrapper;
     }

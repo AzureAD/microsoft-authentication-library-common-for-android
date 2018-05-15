@@ -66,6 +66,14 @@ public final class StringExtensions {
         return param == null || param.trim().length() == 0; //NOPMD
     }
 
+    /**
+     * Create the Hash string of the message.
+     *
+     * @param msg String
+     * @return String in Hash
+     * @throws NoSuchAlgorithmException     throws if no such algorithm
+     * @throws UnsupportedEncodingException throws if encoding not supported
+     */
     public static String createHash(String msg) throws NoSuchAlgorithmException,
             UnsupportedEncodingException {
         if (!isNullOrBlank(msg)) {
@@ -82,7 +90,7 @@ public final class StringExtensions {
      *
      * @param source the string to encode
      * @return the decoded
-     * @throws UnsupportedEncodingException
+     * @throws UnsupportedEncodingException throws if encoding not supported
      */
     public static String urlFormEncode(String source) throws UnsupportedEncodingException {
         return URLEncoder.encode(source, ENCODING_UTF8);
@@ -93,7 +101,7 @@ public final class StringExtensions {
      *
      * @param source the string to decode
      * @return the encoded string
-     * @throws UnsupportedEncodingException
+     * @throws UnsupportedEncodingException throws if encoding not supported
      */
     public static String urlFormDecode(String source) throws UnsupportedEncodingException {
 
@@ -101,6 +109,13 @@ public final class StringExtensions {
         return URLDecoder.decode(source, ENCODING_UTF8);
     }
 
+    /**
+     * Encode Base64 URL Safe String.
+     *
+     * @param bytes byte[]
+     * @return String
+     * @throws UnsupportedEncodingException throws if encoding not supported
+     */
     public static String encodeBase64URLSafeString(final byte[] bytes)
             throws UnsupportedEncodingException {
         return new String(
@@ -126,6 +141,12 @@ public final class StringExtensions {
         return authority;
     }
 
+    /**
+     * Get URL parameters from final url.
+     *
+     * @param finalUrl String
+     * @return HashMap<String, String>
+     */
     public static HashMap<String, String> getUrlParameters(String finalUrl) {
         Uri response = Uri.parse(finalUrl);
         String fragment = response.getFragment();
@@ -138,6 +159,13 @@ public final class StringExtensions {
         return parameters;
     }
 
+    /**
+     * Get string list split with delimiter.
+     *
+     * @param items     String
+     * @param delimiter String
+     * @return List<String>
+     */
     public static List<String> getStringTokens(final String items, final String delimiter) {
         final StringTokenizer st = new StringTokenizer(items, delimiter);
         final List<String> itemList = new ArrayList<>();
@@ -151,6 +179,13 @@ public final class StringExtensions {
         return itemList;
     }
 
+    /**
+     * Split the input with delimiter.
+     *
+     * @param input     String
+     * @param delimiter char
+     * @return ArrayList<String>
+     */
     public static ArrayList<String> splitWithQuotes(String input, char delimiter) {
         final ArrayList<String> items = new ArrayList<>();
 
@@ -178,6 +213,12 @@ public final class StringExtensions {
         return items;
     }
 
+    /**
+     * Remove quote in header value.
+     *
+     * @param value String
+     * @return String
+     */
     public static String removeQuoteInHeaderValue(String value) {
         if (!isNullOrBlank(value)) {
             return value.replace("\"", "");
@@ -198,6 +239,12 @@ public final class StringExtensions {
                 && Character.isWhitespace(value.charAt(prefix.length()));
     }
 
+    /**
+     * Get the Base64 encode to string of message.
+     *
+     * @param message String
+     * @return String
+     */
     public static String base64UrlEncodeToString(final String message) {
         return Base64.encodeToString(message.getBytes(Charset.forName(ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
     }

@@ -187,12 +187,12 @@ public final class AuthenticationConstants {
         public static final String CLIENT_ID = "client_id";
 
         /**
-         * String of client info
+         * String of client info.
          */
         public static final String CLIENT_INFO = "client_info";
 
         /**
-         * String value used to indicate client_info is requested from the token endpoint
+         * String value used to indicate client_info is requested from the token endpoint.
          */
         public static final String CLIENT_INFO_TRUE = "1";
 
@@ -341,10 +341,19 @@ public final class AuthenticationConstants {
          */
         public static final String HAS_CHROME = "haschrome";
 
+        /**
+         * String for extended expiration time.
+         */
         public static final String EXT_EXPIRES_IN = "ext_expires_in";
 
+        /**
+         * String for claims.
+         */
         public static final String CLAIMS = "claims";
 
+        /**
+         * String for cloud instance host name.
+         */
         public static final String CLOUD_INSTANCE_HOST_NAME = "cloud_instance_host_name";
     }
 
@@ -782,7 +791,10 @@ public final class AuthenticationConstants {
          */
         public static final String REDIRECT_SSL_PREFIX = "https://";
 
-        //* Integer for token expiration buffer. see AuthenticationSettings.mExpirationBuffer
+        /**
+         * String for expiration buffer.
+         * Integer for token expiration buffer. see {@link AuthenticationSettings#mExpirationBuffer}
+         */
         public static final String EXPIRATION_BUFFER = "expiration.buffer";
 
         /**

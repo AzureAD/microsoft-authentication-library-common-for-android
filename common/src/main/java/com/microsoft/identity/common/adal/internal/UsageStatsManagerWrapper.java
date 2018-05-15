@@ -35,6 +35,11 @@ public class UsageStatsManagerWrapper {
 
     private static UsageStatsManagerWrapper sInstance;
 
+    /**
+     * Set instance of UsageStatsManagerWrapper.
+     *
+     * @param instance UsageStatsManagerWrapper
+     */
     public static synchronized void setInstance(final UsageStatsManagerWrapper instance) {
         sInstance = instance;
     }
