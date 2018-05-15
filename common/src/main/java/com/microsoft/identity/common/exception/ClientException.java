@@ -24,14 +24,32 @@ package com.microsoft.identity.common.exception;
 
 public class ClientException extends BaseException {
 
+    /**
+     * Constructor of ClientException.
+     *
+     * @param errorCode String
+     */
     public ClientException(final String errorCode) {
         super(errorCode);
     }
 
+    /**
+     * Constructor of ClientException.
+     *
+     * @param errorCode    String
+     * @param errorMessage String
+     */
     public ClientException(final String errorCode, final String errorMessage) {
         super(errorCode, errorMessage);
     }
 
+    /**
+     * Constructor of ClientException.
+     *
+     * @param errorCode    String
+     * @param errorMessage String
+     * @param throwable    Throwable
+     */
     public ClientException(final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
     }

@@ -114,12 +114,24 @@ public class ErrorStrings {
      */
     static final String ADFS_AUTHORITY_VALIDATION_FAILED = "adfs_authority_validation_failed";
 
+    /**
+     * Failed to unwrap with the android keystore.
+     */
     public static final String ANDROIDKEYSTORE_FAILED = "android_keystore_failed";
 
+    /**
+     * The authority url is invalid.
+     */
     public static final String AUTHORITY_URL_NOT_VALID = "authority_url_not_valid";
 
+    /**
+     * Encounter errors during encryption.
+     */
     public static final String ENCRYPTION_ERROR = "encryption_error";
 
+    /**
+     * Encounter errors during decryption.
+     */
     public static final String DECRYPTION_ERROR = "decryption_error";
 
     /**
@@ -163,7 +175,13 @@ public class ErrorStrings {
      */
     public static final String UNKNOWN_ERROR = "unknown_error";
 
+    /**
+     * Account is missing schema-required fields.
+     */
     public static final String ACCOUNT_IS_SCHEMA_NONCOMPLIANT = "Account is missing schema-required fields.";
 
+    /**
+     * Credential is missing schema-required fields.
+     */
     public static final String CREDENTIAL_IS_SCHEMA_NONCOMPLIANT = "Credential is missing schema-required fields.";
 }

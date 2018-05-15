@@ -68,6 +68,11 @@ public class ServiceException extends BaseException {
         return mHttpResponseHeaders;
     }
 
+    /**
+     * Set the http response {@link HttpWebResponse}.
+     *
+     * @param response HttpWebResponse
+     */
     public void setHttpResponse(HttpWebResponse response) {
         if (null != response) {
             mHttpStatusCode = response.getStatusCode();
@@ -86,11 +91,26 @@ public class ServiceException extends BaseException {
         }
     }
 
+    /**
+     * Constructor of ServiceException.
+     *
+     * @param errorCode    String
+     * @param errorMessage String
+     * @param throwable    Throwable
+     */
     public ServiceException(final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
         mHttpStatusCode = DEFAULT_STATUS_CODE;
     }
 
+    /**
+     * Constructor of ServiceException.
+     *
+     * @param errorCode      String
+     * @param errorMessage   String
+     * @param httpStatusCode int
+     * @param throwable      Throwable
+     */
     public ServiceException(final String errorCode, final String errorMessage, final int httpStatusCode, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
         mHttpStatusCode = httpStatusCode;
