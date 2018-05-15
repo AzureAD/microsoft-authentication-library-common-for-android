@@ -34,11 +34,29 @@ import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedN
 public class AccessToken extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
+        /**
+         * String of access token type.
+         */
         public static final String ACCESS_TOKEN_TYPE = "access_token_type";
+        /**
+         * String of authority.
+         */
         public static final String AUTHORITY = "authority";
+        /**
+         * String of client info.
+         */
         public static final String CLIENT_INFO = "client_info";
+        /**
+         * String of extended expires on.
+         */
         public static final String EXTENDED_EXPIRES_ON = "extended_expires_on";
+        /**
+         * String of realm.
+         */
         public static final String REALM = "realm";
+        /**
+         * String of target.
+         */
         public static final String TARGET = "target";
     }
 

@@ -30,7 +30,13 @@ import static com.microsoft.identity.common.internal.dto.IdToken.SerializedNames
 public class IdToken extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
+        /**
+         * String of realm.
+         */
         public static final String REALM = "realm";
+        /**
+         * String of authority.
+         */
         public static final String AUTHORITY = "authority";
     }
 
@@ -84,21 +90,32 @@ public class IdToken extends Credential {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        if (!super.equals(o)) {
+            return false;
+        }
 
         IdToken idToken = (IdToken) o;
 
-        if (mRealm != null ? !mRealm.equals(idToken.mRealm) : idToken.mRealm != null) return false;
+        if (mRealm != null ? !mRealm.equals(idToken.mRealm) : idToken.mRealm != null) {
+            return false;
+        }
+
         return mAuthority != null ? mAuthority.equals(idToken.mAuthority) : idToken.mAuthority == null;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (mRealm != null ? mRealm.hashCode() : 0);
-        result = 31 * result + (mAuthority != null ? mAuthority.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mRealm != null ? mRealm.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mAuthority != null ? mAuthority.hashCode() : 0);
         return result;
     }
 

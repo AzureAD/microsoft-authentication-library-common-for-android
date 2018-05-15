@@ -74,7 +74,7 @@ public interface IAccount {
     String getGuestId();
 
     /**
-     * Gets the first_name;
+     * Gets the first_name.
      *
      * @return The first_name to get.
      */

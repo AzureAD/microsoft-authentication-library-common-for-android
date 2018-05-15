@@ -43,24 +43,73 @@ import static com.microsoft.identity.common.internal.dto.Account.SerializedNames
  * there's no user present (e.g. client credential grant), only credential schema is necessary.
  */
 public class Account extends AccountCredentialBase implements IAccount {
-
+    /**
+     * String name list for Account object serialization.
+     */
     public static class SerializedNames {
+        /**
+         * String of unique user id.
+         */
         public static final String UNIQUE_USER_ID = "unique_user_id";
+
+        /**
+         * String of environment.
+         */
         public static final String ENVIRONMENT = "environment";
+
+        /**
+         * String of realm.
+         */
         public static final String REALM = "realm";
+
+        /**
+         * String of authority account id.
+         */
         public static final String AUTHORITY_ACCOUNT_ID = "authority_account_id";
+
+        /**
+         * String of username.
+         */
         public static final String USERNAME = "username";
+
+        /**
+         * String of authority type.
+         */
         public static final String AUTHORITY_TYPE = "authority_type";
+
+        /**
+         * String of guest id.
+         */
         public static final String GUEST_ID = "guest_id";
+
+        /**
+         * String of first name.
+         */
         public static final String FIRST_NAME = "first_name";
+
+        /**
+         * String of last name.
+         */
         public static final String LAST_NAME = "last_name";
+
+        /**
+         * String of avatar url.
+         */
         public static final String AVATAR_URL = "avatar_url";
     }
 
+    /**
+     * Empty constructor for Account.
+     */
     public Account() {
         // Empty
     }
 
+    /**
+     * Constructor for Account.
+     *
+     * @param copy IAccount
+     */
     public Account(final IAccount copy) {
         // Required
         setUniqueUserId(copy.getUniqueUserId());
@@ -261,7 +310,7 @@ public class Account extends AccountCredentialBase implements IAccount {
     }
 
     /**
-     * Sets the first_name;
+     * Sets the first_name.
      *
      * @param firstName The first_name to set.
      */
@@ -299,43 +348,66 @@ public class Account extends AccountCredentialBase implements IAccount {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Account account = (Account) o;
 
-        if (mUniqueId != null ? !mUniqueId.equals(account.mUniqueId) : account.mUniqueId != null)
+        if (mUniqueId != null ? !mUniqueId.equals(account.mUniqueId) : account.mUniqueId != null) {
             return false;
-        if (mEnvironment != null ? !mEnvironment.equals(account.mEnvironment) : account.mEnvironment != null)
+        }
+
+        if (mEnvironment != null ? !mEnvironment.equals(account.mEnvironment) : account.mEnvironment != null) {
             return false;
-        if (mRealm != null ? !mRealm.equals(account.mRealm) : account.mRealm != null) return false;
-        if (mAuthorityAccountId != null ? !mAuthorityAccountId.equals(account.mAuthorityAccountId) : account.mAuthorityAccountId != null)
+        }
+
+        if (mRealm != null ? !mRealm.equals(account.mRealm) : account.mRealm != null) {
             return false;
-        if (mUsername != null ? !mUsername.equals(account.mUsername) : account.mUsername != null)
+        }
+
+        if (mAuthorityAccountId != null ? !mAuthorityAccountId.equals(account.mAuthorityAccountId) : account.mAuthorityAccountId != null) {
             return false;
-        if (mAuthorityType != null ? !mAuthorityType.equals(account.mAuthorityType) : account.mAuthorityType != null)
+        }
+
+        if (mUsername != null ? !mUsername.equals(account.mUsername) : account.mUsername != null) {
             return false;
-        if (mGuestId != null ? !mGuestId.equals(account.mGuestId) : account.mGuestId != null)
+        }
+
+        if (mAuthorityType != null ? !mAuthorityType.equals(account.mAuthorityType) : account.mAuthorityType != null) {
             return false;
-        if (mFirstName != null ? !mFirstName.equals(account.mFirstName) : account.mFirstName != null)
+        }
+
+        if (mGuestId != null ? !mGuestId.equals(account.mGuestId) : account.mGuestId != null) {
             return false;
-        if (mLastName != null ? !mLastName.equals(account.mLastName) : account.mLastName != null)
+        }
+
+        if (mFirstName != null ? !mFirstName.equals(account.mFirstName) : account.mFirstName != null) {
             return false;
+        }
+
+        if (mLastName != null ? !mLastName.equals(account.mLastName) : account.mLastName != null) {
+            return false;
+        }
+
         return mAvatarUrl != null ? mAvatarUrl.equals(account.mAvatarUrl) : account.mAvatarUrl == null;
     }
 
     @Override
     public int hashCode() {
         int result = mUniqueId != null ? mUniqueId.hashCode() : 0;
-        result = 31 * result + (mEnvironment != null ? mEnvironment.hashCode() : 0);
-        result = 31 * result + (mRealm != null ? mRealm.hashCode() : 0);
-        result = 31 * result + (mAuthorityAccountId != null ? mAuthorityAccountId.hashCode() : 0);
-        result = 31 * result + (mUsername != null ? mUsername.hashCode() : 0);
-        result = 31 * result + (mAuthorityType != null ? mAuthorityType.hashCode() : 0);
-        result = 31 * result + (mGuestId != null ? mGuestId.hashCode() : 0);
-        result = 31 * result + (mFirstName != null ? mFirstName.hashCode() : 0);
-        result = 31 * result + (mLastName != null ? mLastName.hashCode() : 0);
-        result = 31 * result + (mAvatarUrl != null ? mAvatarUrl.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mEnvironment != null ? mEnvironment.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mRealm != null ? mRealm.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mAuthorityAccountId != null ? mAuthorityAccountId.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mUsername != null ? mUsername.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mAuthorityType != null ? mAuthorityType.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mGuestId != null ? mGuestId.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mFirstName != null ? mFirstName.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mLastName != null ? mLastName.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mAvatarUrl != null ? mAvatarUrl.hashCode() : 0);
         return result;
     }
 }

@@ -39,12 +39,39 @@ import static com.microsoft.identity.common.internal.dto.Credential.SerializedNa
 public abstract class Credential extends AccountCredentialBase {
 
     public static class SerializedNames {
+        /**
+         * String of client id.
+         */
         public static final String CLIENT_ID = "client_id";
+
+        /**
+         * String of credential type.
+         */
         public static final String CREDENTIAL_TYPE = "credential_type";
+
+        /**
+         * String of environment.
+         */
         public static final String ENVIRONMENT = "environment";
+
+        /**
+         * String of secret.
+         */
         public static final String SECRET = "secret";
+
+        /**
+         * String of unique user id.
+         */
         public static final String UNIQUE_USER_ID = "unique_user_id";
+
+        /**
+         * String of cached at.
+         */
         public static final String CACHED_AT = "cached_at";
+
+        /**
+         * String of expires on.
+         */
         public static final String EXPIRES_ON = "expires_on";
     }
 
@@ -232,34 +259,52 @@ public abstract class Credential extends AccountCredentialBase {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Credential that = (Credential) o;
 
-        if (mClientId != null ? !mClientId.equals(that.mClientId) : that.mClientId != null)
+        if (mClientId != null ? !mClientId.equals(that.mClientId) : that.mClientId != null) {
             return false;
-        if (mCredentialType != null ? !mCredentialType.equals(that.mCredentialType) : that.mCredentialType != null)
+        }
+
+        if (mCredentialType != null ? !mCredentialType.equals(that.mCredentialType) : that.mCredentialType != null) {
             return false;
-        if (mEnvironment != null ? !mEnvironment.equals(that.mEnvironment) : that.mEnvironment != null)
+        }
+
+        if (mEnvironment != null ? !mEnvironment.equals(that.mEnvironment) : that.mEnvironment != null) {
             return false;
-        if (mSecret != null ? !mSecret.equals(that.mSecret) : that.mSecret != null) return false;
-        if (mUniqueId != null ? !mUniqueId.equals(that.mUniqueId) : that.mUniqueId != null)
+        }
+
+        if (mSecret != null ? !mSecret.equals(that.mSecret) : that.mSecret != null) {
             return false;
-        if (mCachedAt != null ? !mCachedAt.equals(that.mCachedAt) : that.mCachedAt != null)
+        }
+
+        if (mUniqueId != null ? !mUniqueId.equals(that.mUniqueId) : that.mUniqueId != null) {
             return false;
+        }
+
+        if (mCachedAt != null ? !mCachedAt.equals(that.mCachedAt) : that.mCachedAt != null) {
+            return false;
+        }
+
         return mExpiresOn != null ? mExpiresOn.equals(that.mExpiresOn) : that.mExpiresOn == null;
     }
 
     @Override
     public int hashCode() {
         int result = mClientId != null ? mClientId.hashCode() : 0;
-        result = 31 * result + (mCredentialType != null ? mCredentialType.hashCode() : 0);
-        result = 31 * result + (mEnvironment != null ? mEnvironment.hashCode() : 0);
-        result = 31 * result + (mSecret != null ? mSecret.hashCode() : 0);
-        result = 31 * result + (mUniqueId != null ? mUniqueId.hashCode() : 0);
-        result = 31 * result + (mCachedAt != null ? mCachedAt.hashCode() : 0);
-        result = 31 * result + (mExpiresOn != null ? mExpiresOn.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mCredentialType != null ? mCredentialType.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mEnvironment != null ? mEnvironment.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mSecret != null ? mSecret.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mUniqueId != null ? mUniqueId.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mCachedAt != null ? mCachedAt.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mExpiresOn != null ? mExpiresOn.hashCode() : 0);
         return result;
     }
 }
