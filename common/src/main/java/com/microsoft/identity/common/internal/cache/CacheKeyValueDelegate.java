@@ -63,10 +63,16 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
 
     private static final String TAG = CacheKeyValueDelegate.class.getSimpleName();
 
+    /**
+     * String of cache value separator.
+     */
     public static final String CACHE_VALUE_SEPARATOR = "-";
 
     private final Gson mGson;
 
+    /**
+     * Default constructor of CacheKeyValueDelegate.
+     */
     public CacheKeyValueDelegate() {
         mGson = new Gson();
         Logger.verbose(TAG, "Init: " + TAG);

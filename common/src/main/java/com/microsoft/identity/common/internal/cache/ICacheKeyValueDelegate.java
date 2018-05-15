@@ -27,15 +27,46 @@ import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
 import com.microsoft.identity.common.internal.dto.Credential;
 
 public interface ICacheKeyValueDelegate {
-
+    /**
+     * Generate cache key for a specific account.
+     *
+     * @param account Account
+     * @return String
+     */
     String generateCacheKey(final Account account);
 
+    /**
+     * Generate cache value for a specific account.
+     *
+     * @param account Account
+     * @return String
+     */
     String generateCacheValue(final Account account);
 
+    /**
+     * Generate cache key from the credential.
+     *
+     * @param credential Credential
+     * @return String
+     */
     String generateCacheKey(final Credential credential);
 
+    /**
+     * Generate cache value from the credential.
+     *
+     * @param credential Credential
+     * @return String
+     */
     String generateCacheValue(final Credential credential);
 
+    /**
+     * Get the account credential from cache value.
+     *
+     * @param string String
+     * @param t      AccountCredentialBase
+     * @param <T>
+     * @return AccountCredentialBase
+     */
     <T extends AccountCredentialBase> T fromCacheValue(final String string, Class<? extends AccountCredentialBase> t); // TODO consider throwing an Exception if parsing fails
 
 }

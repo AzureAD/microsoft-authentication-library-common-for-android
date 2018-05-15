@@ -178,6 +178,12 @@ public class SchemaUtil {
         return guestId;
     }
 
+    /**
+     * Get the unique user id with the client info.
+     *
+     * @param clientInfo ClientInfo
+     * @return String unique use id
+     */
     public static String getUniqueId(final ClientInfo clientInfo) {
         final String methodName = ":getUniqueId";
         Logger.entering(TAG, methodName, clientInfo);

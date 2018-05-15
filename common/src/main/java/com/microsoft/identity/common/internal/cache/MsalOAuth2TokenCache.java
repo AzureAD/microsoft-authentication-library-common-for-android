@@ -65,6 +65,13 @@ public class MsalOAuth2TokenCache
             MicrosoftAccount,
             RefreshToken> mAccountCredentialAdapter;
 
+    /**
+     * Constructor of MsalOAuth2TokenCache.
+     *
+     * @param context                  Context
+     * @param accountCredentialCache   IAccountCredentialCache
+     * @param accountCredentialAdapter IAccountCredentialAdapter
+     */
     public MsalOAuth2TokenCache(final Context context,
                                 final IAccountCredentialCache accountCredentialCache,
                                 final IAccountCredentialAdapter<
@@ -80,6 +87,14 @@ public class MsalOAuth2TokenCache
         mAccountCredentialAdapter = accountCredentialAdapter;
     }
 
+    /**
+     * Constructor of MsalOAuth2TokenCache.
+     *
+     * @param context                  Context
+     * @param accountCredentialCache   IAccountCredentialCache
+     * @param accountCredentialAdapter IAccountCredentialAdapter
+     * @param sharedSsoCaches          List<IShareSingleSignOnState>
+     */
     public MsalOAuth2TokenCache(final Context context,
                                 final IAccountCredentialCache accountCredentialCache,
                                 final IAccountCredentialAdapter<

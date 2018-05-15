@@ -56,9 +56,9 @@ import java.util.ListIterator;
 public class ADALOAuth2TokenCache
         extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
         implements IShareSingleSignOnState {
+    private ISharedPreferencesFileManager mISharedPreferencesFileManager;
 
-    ISharedPreferencesFileManager mISharedPreferencesFileManager;
-    final static String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
+    static final String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
     private static final String TAG = "ADALOAuth2TokenCache";
     @SuppressLint("StaticFieldLeak")
     private static StorageHelper sHelper;
@@ -69,7 +69,20 @@ public class ADALOAuth2TokenCache
 
     private List<IShareSingleSignOnState> mSharedSSOCaches;
 
+    protected ISharedPreferencesFileManager getISharedPreferencesFileManager() {
+        return mISharedPreferencesFileManager;
+    }
 
+    protected void setISharedPreferencesFileManager(ISharedPreferencesFileManager iSharedPreferencesFileManager) {
+        this.mISharedPreferencesFileManager = iSharedPreferencesFileManager;
+    }
+
+    /**
+     * Constructor of ADALOAuth2TokenCache.
+     *
+     * @param context         Context
+     * @param sharedSSOCaches List<IShareSingleSignOnState>
+     */
     public ADALOAuth2TokenCache(final Context context,
                                 final List<IShareSingleSignOnState> sharedSSOCaches) {
         super(context);
@@ -78,6 +91,11 @@ public class ADALOAuth2TokenCache
         mSharedSSOCaches = sharedSSOCaches;
     }
 
+    /**
+     * Constructor of ADALOAuth2TokenCache.
+     *
+     * @param context Context
+     */
     public ADALOAuth2TokenCache(final Context context) {
         super(context);
         validateSecretKeySetting();
@@ -86,7 +104,7 @@ public class ADALOAuth2TokenCache
     }
 
     protected void initializeSharedPreferencesFileManager(final String fileName) {
-        mISharedPreferencesFileManager = new SharedPreferencesFileManager(super.mContext, fileName);
+        setISharedPreferencesFileManager(new SharedPreferencesFileManager(super.mContext, fileName));
     }
 
     /**
@@ -147,7 +165,7 @@ public class ADALOAuth2TokenCache
         String json = mGson.toJson(cacheItem);
         String encrypted = encrypt(json);
         if (encrypted != null) {
-            mISharedPreferencesFileManager.putString(key, encrypted);
+            getISharedPreferencesFileManager().putString(key, encrypted);
         } else {
             Log.e(TAG, "Encrypted output is null");
         }
