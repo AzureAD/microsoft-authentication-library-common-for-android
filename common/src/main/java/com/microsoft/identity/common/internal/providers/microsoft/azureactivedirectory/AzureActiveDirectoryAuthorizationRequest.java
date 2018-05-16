@@ -28,7 +28,7 @@ import java.net.URL;
 
 public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationRequest {
 
-    URL mAuthority;
+    private URL mAuthority;
 
     public URL getAuthority() {
         return mAuthority;
