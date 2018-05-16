@@ -47,7 +47,6 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.ListIterator;
 
 /**
  * Class responsible for saving oAuth2 Tokens for use in future requests.  Ideally this class would
@@ -110,18 +109,14 @@ public class ADALOAuth2TokenCache
         ADALTokenCacheItem cacheItem = new ADALTokenCacheItem(strategy, request, response);
 
         //There is more than one valid user identifier for some accounts... AAD Accounts as of this writing have 3
-        ListIterator<String> accountCacheIds = account.getCacheIdentifiers().listIterator();
-
-        while (accountCacheIds.hasNext()) {
+        for (final String cacheIdentifier : account.getCacheIdentifiers()) {
             //Azure AD Uses Resource and Not Scope... but we didn't override... heads up
-            setItemToCacheForUser(issuerCacheIdentifier, request.getScope(), request.getClientId(), cacheItem, accountCacheIds.next());
+            setItemToCacheForUser(issuerCacheIdentifier, request.getScope(), request.getClientId(), cacheItem, cacheIdentifier);
         }
 
-        ListIterator<IShareSingleSignOnState> otherCaches = mSharedSSOCaches.listIterator();
-
         // TODO At some point, the type-safety of this call needs to get beefed-up
-        while (otherCaches.hasNext()) {
-            otherCaches.next().setSingleSignOnState(account, refreshToken);
+        for (final IShareSingleSignOnState sharedSsoCache : mSharedSSOCaches) {
+            sharedSsoCache.setSingleSignOnState(account, refreshToken);
         }
 
         // TODO: I'd like to know exactly why this is here before I put this back in.... i'm assuming for ADFS v3.
