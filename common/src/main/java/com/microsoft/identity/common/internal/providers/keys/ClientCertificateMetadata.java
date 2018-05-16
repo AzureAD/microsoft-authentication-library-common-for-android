@@ -23,21 +23,37 @@
 package com.microsoft.identity.common.internal.providers.keys;
 
 /**
- * Configuration information for the client certificate to be used
+ * Configuration information for the client certificate to be used.
  */
 public class ClientCertificateMetadata {
     private String mAlias;
     private char[] mPassword;
 
+    /**
+     * Constructor of ClientCertificateMetadata.
+     *
+     * @param alias    String
+     * @param password char[]
+     */
     public ClientCertificateMetadata(String alias, char[] password) {
         this.mAlias = alias;
         this.mPassword = password;
     }
 
+    /**
+     * Get alias.
+     *
+     * @return String
+     */
     public String getAlias() {
         return mAlias;
     }
 
+    /**
+     * Get password.
+     *
+     * @return char[]
+     */
     public char[] getPassword() {
         return mPassword;
     }

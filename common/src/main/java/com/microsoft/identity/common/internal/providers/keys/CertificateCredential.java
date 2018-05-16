@@ -33,11 +33,11 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 /**
- * Represents a certificate credential
+ * Represents a certificate credential.
  */
-public class CertificateCredential {
+public final class CertificateCredential {
 
-    private final static int MIN_KEYSIZE_IN_BITS = 2048;
+    private static final int MIN_KEYSIZE_IN_BITS = 2048;
     private final PrivateKey mPrivateKey;
     private final String mClientId;
     private final X509Certificate mPublicCertificate;
@@ -67,30 +67,70 @@ public class CertificateCredential {
         private ClientCertificateMetadata mClientCertificateMetdata;
         private X509Certificate mCertificate;
 
+        /**
+         * Constructor of CertificateCredentialBuilder.
+         *
+         * @param clientId String
+         */
         public CertificateCredentialBuilder(String clientId) {
             this.mClientId = clientId;
         }
 
+        /**
+         * Get the CertificateCredentialBuilder from PrivateKey.
+         *
+         * @param key PrivateKey
+         * @return CertificateCredentialBuilder
+         */
         public CertificateCredentialBuilder privateKey(PrivateKey key) {
             this.mPrivateKey = key;
             return this;
         }
 
+        /**
+         * Get the CertificateCredentialBuilder from KeyStoreConfiguration.
+         *
+         * @param keyStoreConfiguration KeyStoreConfiguration
+         * @return CertificateCredentialBuilder
+         */
         public CertificateCredentialBuilder keyStoreConfiguration(KeyStoreConfiguration keyStoreConfiguration) {
             this.mKeyStoreConfiguration = keyStoreConfiguration;
             return this;
         }
 
+        /**
+         * Get the CertificateCredentialBuilder from ClientCertificateMetadata.
+         *
+         * @param clientCertificateMetadata ClientCertificateMetadata
+         * @return CertificateCredentialBuilder
+         */
         public CertificateCredentialBuilder clientCertificateMetadata(ClientCertificateMetadata clientCertificateMetadata) {
             this.mClientCertificateMetdata = clientCertificateMetadata;
             return this;
         }
 
+        /**
+         * Get the CertificateCredentialBuilder from X509Certificate.
+         *
+         * @param certificate X509Certificate
+         * @return CertificateCredentialBuilder
+         */
         public CertificateCredentialBuilder certificate(X509Certificate certificate) {
             this.mCertificate = certificate;
             return this;
         }
 
+        /**
+         * Get the CertificateCredential object.
+         *
+         * @return CertificateCredential
+         * @throws NoSuchProviderException   thrown when a particular security provider is requested but is not available in the environment.
+         * @throws KeyStoreException         generic KeyStore exception.
+         * @throws NoSuchAlgorithmException  thrown when a particular cryptographic algorithm is requested but is not available in the environment.
+         * @throws UnrecoverableKeyException thrown if a key in the keystore cannot be recovered.
+         * @throws IOException               thrown if failed or interrupted I/O operations happen.
+         * @throws CertificateException      thrown if one of a variety of certificate problems happen.
+         */
         public CertificateCredential build()
                 throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException,
                 IOException, CertificateException {

@@ -30,8 +30,10 @@ public class DateUtilities {
     }
 
     /**
-     * Create a copy of a date
-     * to avoid exposing the internal references.
+     * Create a copy of a date to avoid exposing the internal references.
+     *
+     * @param date Date
+     * @return Date
      */
     public static Date createCopy(final Date date) {
         if (date != null) {

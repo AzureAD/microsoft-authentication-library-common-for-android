@@ -26,6 +26,12 @@ package com.microsoft.identity.common.internal.util;
  * String utilities
  */
 public class StringUtil {
+    /**
+     * Check if the string is null or empty.
+     *
+     * @param message String
+     * @return true if the string object is null or the string is empty.
+     */
     public static boolean isEmpty(final String message) {
         return message == null || message.trim().length() == 0;
     }
