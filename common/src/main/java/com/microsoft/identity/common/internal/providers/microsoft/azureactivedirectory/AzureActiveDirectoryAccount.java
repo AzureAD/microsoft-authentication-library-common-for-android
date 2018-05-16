@@ -37,6 +37,10 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
 
     private static final String TAG = AzureActiveDirectoryAccount.class.getSimpleName();
 
+    public AzureActiveDirectoryAccount() {
+        super();
+    }
+
     /**
      * Constructor for AzureActiveDirectoryAccount object
      *

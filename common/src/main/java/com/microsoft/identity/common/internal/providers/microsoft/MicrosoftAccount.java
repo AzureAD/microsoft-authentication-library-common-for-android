@@ -57,6 +57,11 @@ public abstract class MicrosoftAccount extends Account {
     protected String mGivenName;
     protected String mFamilyName;
 
+    public MicrosoftAccount() {
+        super();
+        Logger.verbose(TAG, "Init: " + TAG);
+    }
+
     public MicrosoftAccount(final IDToken idToken, final String uid, final String utid) {
         Logger.verbose(TAG, "Init: " + TAG);
         mIDToken = idToken;
