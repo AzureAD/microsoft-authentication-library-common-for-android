@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.cache;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
-import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -109,20 +108,32 @@ public class ADALOAuth2TokenCache
             final AzureActiveDirectoryTokenResponse response) {
         final String methodName = "saveTokens";
         Logger.entering(TAG, methodName, strategy, request, response);
+        Logger.info(TAG + ":" + methodName, "Saving Tokens...");
 
-        Account account = strategy.createAccount(response);
-        String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
-        RefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
+        final Account account = strategy.createAccount(response);
+        final String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
+        final RefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
 
-        ADALTokenCacheItem cacheItem = new ADALTokenCacheItem(strategy, request, response);
+        final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem(strategy, request, response);
 
         //There is more than one valid user identifier for some accounts... AAD Accounts as of this writing have 3
+        Logger.info(TAG + ":" + methodName, "Setting items to cache for user...");
         for (final String cacheIdentifier : account.getCacheIdentifiers()) {
             //Azure AD Uses Resource and Not Scope... but we didn't override... heads up
-            setItemToCacheForUser(issuerCacheIdentifier, request.getScope(), request.getClientId(), cacheItem, cacheIdentifier);
+            final String scope = request.getScope();
+            final String clientId = request.getClientId();
+
+            Logger.infoPII(TAG + ":" + methodName, "issuerCacheIdentifier: [" + issuerCacheIdentifier + "]");
+            Logger.infoPII(TAG + ":" + methodName, "scope: [" + scope + "]");
+            Logger.infoPII(TAG + ":" + methodName, "clientId: [" + clientId + "]");
+            Logger.infoPII(TAG + ":" + methodName, "cacheItem: [" + cacheItem + "]");
+            Logger.infoPII(TAG + ":" + methodName, "cacheIdentifier: [" + cacheIdentifier + "]");
+
+            setItemToCacheForUser(issuerCacheIdentifier, scope, clientId, cacheItem, cacheIdentifier);
         }
 
         // TODO At some point, the type-safety of this call needs to get beefed-up
+        Logger.info(TAG + ":" + methodName, "Syncing SSO state to caches...");
         for (final IShareSingleSignOnState sharedSsoCache : mSharedSSOCaches) {
             sharedSsoCache.setSingleSignOnState(account, refreshToken);
         }
@@ -145,10 +156,12 @@ public class ADALOAuth2TokenCache
         setItem(CacheKey.createCacheKeyForRTEntry(issuer, resource, clientId, userId), cacheItem);
 
         if (cacheItem.getIsMultiResourceRefreshToken()) {
+            Logger.info(TAG + ":" + methodName, "CacheItem is an MRRT.");
             setItem(CacheKey.createCacheKeyForMRRT(issuer, clientId, userId), cacheItem);
         }
 
         if (!StringExtensions.isNullOrBlank(cacheItem.getFamilyClientId())) {
+            Logger.info(TAG + ":" + methodName, "CacheItem is an FRT.");
             setItem(CacheKey.createCacheKeyForFRT(issuer, cacheItem.getFamilyClientId(), userId), cacheItem);
         }
 
@@ -162,10 +175,12 @@ public class ADALOAuth2TokenCache
         String json = mGson.toJson(cacheItem);
         String encrypted = encrypt(json);
 
+        Logger.verbosePII(TAG + ":" + methodName, "Derived JSON: " + json);
+
         if (encrypted != null) {
             mISharedPreferencesFileManager.putString(key, encrypted);
         } else {
-            Log.e(TAG, "Encrypted output is null");
+            Logger.error(TAG + ":" + methodName, "Encrypted output was null.", null);
         }
 
         Logger.exiting(TAG, methodName);
@@ -181,9 +196,9 @@ public class ADALOAuth2TokenCache
 
         synchronized (LOCK) {
             if (sHelper == null) {
-                Log.v(TAG, "Initializing StorageHelper");
+                Logger.verbose(TAG + ":" + methodName, "Initializing StorageHelper");
                 sHelper = new StorageHelper(mContext);
-                Log.v(TAG, "Finished initializing StorageHelper");
+                Logger.verbose(TAG + ":" + methodName, "Finished initializing StorageHelper");
             }
         }
 
@@ -201,7 +216,8 @@ public class ADALOAuth2TokenCache
         try {
             encryptedResult = getStorageHelper().encrypt(value);
         } catch (GeneralSecurityException | IOException e) {
-            Log.e(TAG, ErrorStrings.ENCRYPTION_ERROR, e);
+            Logger.error(TAG + ":" + methodName, "Failed to encrypt input value.", null);
+            Logger.errorPII(TAG + ":" + methodName, ErrorStrings.ENCRYPTION_ERROR, e);
             encryptedResult = null;
         }
 
@@ -223,7 +239,7 @@ public class ADALOAuth2TokenCache
         try {
             decryptedResult = getStorageHelper().decrypt(value);
         } catch (GeneralSecurityException | IOException e) {
-            Log.e(TAG, ErrorStrings.DECRYPTION_ERROR, e);
+            Logger.errorPII(TAG, ErrorStrings.DECRYPTION_ERROR, e);
             decryptedResult = null;
 
             //TODO: Implement remove item in this case... not sure I actually want to do this

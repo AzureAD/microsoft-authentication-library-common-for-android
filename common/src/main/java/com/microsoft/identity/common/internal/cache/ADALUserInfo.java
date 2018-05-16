@@ -131,4 +131,17 @@ public class ADALUserInfo {
     public Date getPasswordExpiresOn() {
         return DateExtensions.createCopy(mPasswordExpiresOn);
     }
+
+    @Override
+    public String toString() {
+        return "ADALUserInfo{" +
+                "mUniqueId='" + mUniqueId + '\'' +
+                ", mDisplayableId='" + mDisplayableId + '\'' +
+                ", mGivenName='" + mGivenName + '\'' +
+                ", mFamilyName='" + mFamilyName + '\'' +
+                ", mIdentityProvider='" + mIdentityProvider + '\'' +
+                ", mPasswordChangeUrl=" + mPasswordChangeUrl +
+                ", mPasswordExpiresOn=" + mPasswordExpiresOn +
+                '}';
+    }
 }
