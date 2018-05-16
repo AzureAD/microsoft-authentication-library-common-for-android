@@ -89,7 +89,10 @@ public class ADALOAuth2TokenCache
     }
 
     protected void initializeSharedPreferencesFileManager(final String fileName) {
+        final String methodName = "initializeSharedPreferencesFileManager";
+        Logger.entering(TAG, methodName, fileName);
         mISharedPreferencesFileManager = new SharedPreferencesFileManager(mContext, fileName);
+        Logger.exiting(TAG, methodName);
     }
 
     /**
@@ -104,6 +107,8 @@ public class ADALOAuth2TokenCache
             final AzureActiveDirectoryOAuth2Strategy strategy,
             final AzureActiveDirectoryAuthorizationRequest request,
             final AzureActiveDirectoryTokenResponse response) {
+        final String methodName = "saveTokens";
+        Logger.entering(TAG, methodName, strategy, request, response);
 
         Account account = strategy.createAccount(response);
         String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
@@ -124,6 +129,8 @@ public class ADALOAuth2TokenCache
 
         // TODO: I'd like to know exactly why this is here before I put this back in.... i'm assuming for ADFS v3.
         //setItemToCacheForUser(resource, clientId, result, null);
+
+        Logger.exiting(TAG, methodName);
     }
 
 
@@ -132,6 +139,9 @@ public class ADALOAuth2TokenCache
                                        final String clientId,
                                        final ADALTokenCacheItem cacheItem,
                                        final String userId) {
+        final String methodName = "setItemToCacheForUser";
+        Logger.entering(TAG, methodName, issuer, resource, clientId, cacheItem, userId);
+
         setItem(CacheKey.createCacheKeyForRTEntry(issuer, resource, clientId, userId), cacheItem);
 
         if (cacheItem.getIsMultiResourceRefreshToken()) {
@@ -141,9 +151,14 @@ public class ADALOAuth2TokenCache
         if (!StringExtensions.isNullOrBlank(cacheItem.getFamilyClientId())) {
             setItem(CacheKey.createCacheKeyForFRT(issuer, cacheItem.getFamilyClientId(), userId), cacheItem);
         }
+
+        Logger.exiting(TAG, methodName);
     }
 
     private void setItem(final String key, final ADALTokenCacheItem cacheItem) {
+        final String methodName = "setItem";
+        Logger.entering(TAG, methodName, key, cacheItem);
+
         String json = mGson.toJson(cacheItem);
         String encrypted = encrypt(json);
 
@@ -152,6 +167,8 @@ public class ADALOAuth2TokenCache
         } else {
             Log.e(TAG, "Encrypted output is null");
         }
+
+        Logger.exiting(TAG, methodName);
     }
 
 
@@ -159,59 +176,99 @@ public class ADALOAuth2TokenCache
      * Method that allows to mock StorageHelper class and use custom encryption in UTs.
      */
     protected StorageHelper getStorageHelper() {
+        final String methodName = "getStorageHelper";
+        Logger.entering(TAG, methodName);
+
         synchronized (LOCK) {
             if (sHelper == null) {
-                Log.v(TAG, "Started to initialize storage helper");
+                Log.v(TAG, "Initializing StorageHelper");
                 sHelper = new StorageHelper(mContext);
-                Log.v(TAG, "Finished to initialize storage helper");
+                Log.v(TAG, "Finished initializing StorageHelper");
             }
         }
+
+        Logger.exiting(TAG, methodName, sHelper);
 
         return sHelper;
     }
 
-    private String encrypt(String value) {
+    private String encrypt(final String value) {
+        final String methodName = "encrypt";
+        Logger.entering(TAG, methodName, value);
+
+        String encryptedResult;
+
         try {
-            return getStorageHelper().encrypt(value);
+            encryptedResult = getStorageHelper().encrypt(value);
         } catch (GeneralSecurityException | IOException e) {
             Log.e(TAG, ErrorStrings.ENCRYPTION_ERROR, e);
+            encryptedResult = null;
         }
 
-        return null;
+        Logger.exiting(TAG, methodName, encryptedResult);
+
+        return encryptedResult;
     }
 
     private String decrypt(final String key, final String value) {
+        final String methodName = "decrypt";
+        Logger.entering(TAG, methodName, key, value);
+
         if (StringExtensions.isNullOrBlank(key)) {
             throw new IllegalArgumentException("encryption key is null or blank");
         }
 
+        String decryptedResult;
+
         try {
-            return getStorageHelper().decrypt(value);
+            decryptedResult = getStorageHelper().decrypt(value);
         } catch (GeneralSecurityException | IOException e) {
             Log.e(TAG, ErrorStrings.DECRYPTION_ERROR, e);
+            decryptedResult = null;
+
             //TODO: Implement remove item in this case... not sure I actually want to do this
             //removeItem(key);
         }
 
-        return null;
+        Logger.exiting(TAG, methodName, decryptedResult);
+
+        return decryptedResult;
     }
 
     private void validateSecretKeySetting() {
+        final String methodName = "validateSecretKeySetting";
+        Logger.entering(TAG, methodName);
+
         final byte[] secretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
 
         if (secretKeyData == null && Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
             throw new IllegalArgumentException("Secret key must be provided for API < 18. "
                     + "Use AuthenticationSettings.INSTANCE.setSecretKey()");
         }
+
+        Logger.exiting(TAG, methodName);
     }
 
     @Override
     public void setSingleSignOnState(final Account account, final RefreshToken refreshToken) {
+        final String methodName = "setSingleSignOnState";
+        Logger.entering(TAG, methodName, account, refreshToken);
+
         // Unimplemented
+
+        Logger.exiting(TAG, methodName);
     }
 
     @Override
     public RefreshToken getSingleSignOnState(final Account account) {
-        return null;
+        final String methodName = "getSingleSignOnState";
+        Logger.entering(TAG, methodName, account);
+
+        // Unimplemented
+        final RefreshToken refreshToken = null;
+
+        Logger.exiting(TAG, methodName, refreshToken);
+
+        return refreshToken;
     }
 }
