@@ -71,6 +71,12 @@ public class ADALOAuth2TokenCache
 
     private List<IShareSingleSignOnState> mSharedSSOCaches;
 
+    public ADALOAuth2TokenCache(final Context context) {
+        super(context);
+        validateSecretKeySetting();
+        initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
+        mSharedSSOCaches = new ArrayList<>();
+    }
 
     public ADALOAuth2TokenCache(final Context context,
                                 final List<IShareSingleSignOnState> sharedSSOCaches) {
@@ -78,13 +84,6 @@ public class ADALOAuth2TokenCache
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
         mSharedSSOCaches = sharedSSOCaches;
-    }
-
-    public ADALOAuth2TokenCache(final Context context) {
-        super(context);
-        validateSecretKeySetting();
-        initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
-        mSharedSSOCaches = new ArrayList<>();
     }
 
     protected void initializeSharedPreferencesFileManager(final String fileName) {
