@@ -36,6 +36,7 @@ import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
@@ -72,6 +73,7 @@ public class ADALOAuth2TokenCache
 
     public ADALOAuth2TokenCache(final Context context) {
         super(context);
+        Logger.verbose(TAG, "Init: " + TAG);
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
         mSharedSSOCaches = new ArrayList<>();
@@ -80,13 +82,14 @@ public class ADALOAuth2TokenCache
     public ADALOAuth2TokenCache(final Context context,
                                 final List<IShareSingleSignOnState> sharedSSOCaches) {
         super(context);
+        Logger.verbose(TAG, "Init: " + TAG);
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
         mSharedSSOCaches = sharedSSOCaches;
     }
 
     protected void initializeSharedPreferencesFileManager(final String fileName) {
-        mISharedPreferencesFileManager = new SharedPreferencesFileManager(super.mContext, fileName);
+        mISharedPreferencesFileManager = new SharedPreferencesFileManager(mContext, fileName);
     }
 
     /**
