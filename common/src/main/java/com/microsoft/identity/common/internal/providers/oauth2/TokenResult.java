@@ -22,18 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.microsoft.identity.common.internal.logging.Logger;
+
 /**
  * Holds the request of a token request.  The request will either contain the success result or the error result.
  */
 public class TokenResult {
 
-    private boolean mSuccess = false;
+    private static final String TAG = TokenResult.class.getSimpleName();
 
     private TokenResponse mTokenResponse;
     private TokenErrorResponse mTokenErrorResponse;
+    private boolean mSuccess = false;
 
-    public TokenResult(TokenResponse response, TokenErrorResponse errorResponse) {
-
+    public TokenResult(final TokenResponse response, final TokenErrorResponse errorResponse) {
+        Logger.verbose(TAG, "Init: " + TAG);
         this.mTokenResponse = response;
         this.mTokenErrorResponse = errorResponse;
 
@@ -49,7 +52,7 @@ public class TokenResult {
      * @return TokenResponse
      */
     public TokenResponse getTokenResponse() {
-        return this.mTokenResponse;
+        return mTokenResponse;
     }
 
     /**
@@ -58,7 +61,7 @@ public class TokenResult {
      * @return TokenErrorResponse
      */
     public TokenErrorResponse getErrorResponse() {
-        return this.mTokenErrorResponse;
+        return mTokenErrorResponse;
     }
 
     /**
@@ -67,7 +70,15 @@ public class TokenResult {
      * @return boolean
      */
     public boolean getSuccess() {
-        return this.mSuccess;
+        return mSuccess;
     }
 
+    @Override
+    public String toString() {
+        return "TokenResult{" +
+                "mTokenResponse=" + mTokenResponse +
+                ", mTokenErrorResponse=" + mTokenErrorResponse +
+                ", mSuccess=" + mSuccess +
+                '}';
+    }
 }

@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
@@ -38,7 +39,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 /**
- * The Azure Active Directory oAuth2 Strategy
+ * The Azure Active Directory oAuth2 Strategy.
  */
 public class AzureActiveDirectoryOAuth2Strategy
         extends OAuth2Strategy<
@@ -53,28 +54,34 @@ public class AzureActiveDirectoryOAuth2Strategy
         AzureActiveDirectoryTokenResponse,
         TokenResult> {
 
-    private AzureActiveDirectoryOAuth2Configuration mConfig = null;
+    private static final String TAG = AzureActiveDirectoryOAuth2Strategy.class.getSimpleName();
 
     public AzureActiveDirectoryOAuth2Strategy(final AzureActiveDirectoryOAuth2Configuration config) {
         super(config);
+        Logger.verbose(TAG, "Init: " + TAG);
         mTokenEndpoint = "https://login.microsoftonline.com/microsoft.com/oauth2/token";
-        mConfig = config;
     }
 
     @Override
-    public String getIssuerCacheIdentifier(final AzureActiveDirectoryAuthorizationRequest request) {
-        AzureActiveDirectoryAuthorizationRequest authRequest;
-        authRequest = request;
-        AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
+    public String getIssuerCacheIdentifier(final AzureActiveDirectoryAuthorizationRequest authRequest) {
+        final String methodName = "getIssuerCacheIdentifier";
+        Logger.entering(TAG, methodName, authRequest);
 
-        if (!cloud.isValidated() && this.mConfig.isAuthorityHostValdiationEnabled()) {
-            //We have invalid cloud data... and authority host validation is enabled....
-            //TODO: Throw an exception in this case... need to see what ADAL does in this case.
+        final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
+
+        if (!cloud.isValidated() && mConfig.isAuthorityHostValdiationEnabled()) {
+            Logger.warn(TAG + ":" + methodName, "Authority host validation has been enabled. This data hasn't been validated, though.");
+            // We have invalid cloud data... and authority host validation is enabled....
+            // TODO: Throw an exception in this case... need to see what ADAL does in this case.
         }
 
-        if (!cloud.isValidated() && !this.mConfig.isAuthorityHostValdiationEnabled()) {
-            //Authority host validation not specified... but there is no cloud....
-            //Hence just return the passed in Authority
+        if (!cloud.isValidated() && !mConfig.isAuthorityHostValdiationEnabled()) {
+            Logger.warn(
+                    TAG + ":" + methodName,
+                    "Authority host validation not specified..." +
+                            "but there is no cloud..." +
+                            "Hence just return the passed in Authority"
+            );
             return authRequest.getAuthority().toString();
         }
 
@@ -83,19 +90,37 @@ public class AzureActiveDirectoryOAuth2Strategy
                 .authority(cloud.getPreferredCacheHostName())
                 .build();
 
-        return authorityUri.toString();
+        final String issuerCacheIdentifier = authorityUri.toString();
+
+        Logger.exiting(TAG, methodName, issuerCacheIdentifier);
+
+        return issuerCacheIdentifier;
     }
 
     @Override
     public AzureActiveDirectoryAccessToken getAccessTokenFromResponse(
             @NonNull final AzureActiveDirectoryTokenResponse response) {
-        return new AzureActiveDirectoryAccessToken(response);
+        final String methodName = "getAccessTokenFromResponse";
+        Logger.entering(TAG, methodName, response);
+
+        final AzureActiveDirectoryAccessToken at = new AzureActiveDirectoryAccessToken(response);
+
+        Logger.exiting(TAG, methodName, at);
+
+        return at;
     }
 
     @Override
     public AzureActiveDirectoryRefreshToken getRefreshTokenFromResponse(
             @NonNull final AzureActiveDirectoryTokenResponse response) {
-        return new AzureActiveDirectoryRefreshToken(response);
+        final String methodName = "getRefreshTokenFromResponse";
+        Logger.entering(TAG, methodName, response);
+
+        final AzureActiveDirectoryRefreshToken rt = new AzureActiveDirectoryRefreshToken(response);
+
+        Logger.exiting(TAG, methodName, rt);
+
+        return rt;
     }
 
     /**
@@ -107,21 +132,35 @@ public class AzureActiveDirectoryOAuth2Strategy
     @Override
     public AzureActiveDirectoryAccount createAccount(
             @NonNull final AzureActiveDirectoryTokenResponse response) {
+        final String methodName = "createAccount";
+        Logger.entering(TAG, methodName, response);
+
         IDToken idToken = null;
         ClientInfo clientInfo = null;
+
         try {
             idToken = new IDToken(response.getIdToken());
             clientInfo = new ClientInfo(response.getClientInfo());
         } catch (ServiceException ccse) {
+            Logger.error(TAG + ":" + methodName, "Failed to construct IDToken or ClientInfo", null);
+            Logger.errorPII(TAG + ":" + methodName, "Failed with Exception", ccse);
             // TODO: Add a log here
             // TODO: Should we bail?
         }
-        return AzureActiveDirectoryAccount.create(idToken, clientInfo);
+
+        final AzureActiveDirectoryAccount account = AzureActiveDirectoryAccount.create(idToken, clientInfo);
+
+        Logger.exiting(TAG, methodName, account);
+
+        return account;
     }
 
     @Override
     protected void validateAuthorizationRequest(final AzureActiveDirectoryAuthorizationRequest request) {
+        final String methodName = "validateAuthorizationRequest";
+        Logger.entering(TAG, methodName, request);
         // TODO
+        Logger.exiting(TAG, methodName);
     }
 
     /**
@@ -132,22 +171,33 @@ public class AzureActiveDirectoryOAuth2Strategy
      */
     @Override
     protected void validateTokenRequest(final AzureActiveDirectoryTokenRequest request) {
+        final String methodName = "validateTokenRequest";
+        Logger.entering(TAG, methodName, request);
         // TODO
+        Logger.exiting(TAG, methodName);
     }
 
     @Override
     protected TokenResult getTokenResultFromHttpResponse(final HttpResponse response) {
+        final String methodName = "getTokenResultFromHttpResponse";
+        Logger.entering(TAG, methodName, response);
+
         TokenResponse tokenResponse = null;
         TokenErrorResponse tokenErrorResponse = null;
 
         if (response.getStatusCode() >= 400) {
             //An error occurred
+            Logger.warn(TAG + ":" + methodName, "Status code was: " + response.getStatusCode());
             tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenErrorResponse.class);
         } else {
             tokenResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), AzureActiveDirectoryTokenResponse.class);
         }
 
-        return new TokenResult(tokenResponse, tokenErrorResponse);
+        final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
+
+        Logger.exiting(TAG, methodName, result);
+
+        return result;
     }
 
 }

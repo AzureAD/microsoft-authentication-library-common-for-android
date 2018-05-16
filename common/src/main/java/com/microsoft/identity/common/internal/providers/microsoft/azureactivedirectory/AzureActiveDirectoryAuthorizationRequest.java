@@ -38,4 +38,10 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
         this.mAuthority = mAuthority;
     }
 
+    @Override
+    public String toString() {
+        return "AzureActiveDirectoryAuthorizationRequest{" +
+                "mAuthority=" + mAuthority +
+                "} " + super.toString();
+    }
 }
