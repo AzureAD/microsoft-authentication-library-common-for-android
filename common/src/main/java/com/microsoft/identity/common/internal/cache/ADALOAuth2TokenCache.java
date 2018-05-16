@@ -129,8 +129,11 @@ public class ADALOAuth2TokenCache
     }
 
 
-    private void setItemToCacheForUser(final String issuer, final String resource, final String clientId, final ADALTokenCacheItem cacheItem, final String userId) {
-
+    private void setItemToCacheForUser(final String issuer,
+                                       final String resource,
+                                       final String clientId,
+                                       final ADALTokenCacheItem cacheItem,
+                                       final String userId) {
         setItem(CacheKey.createCacheKeyForRTEntry(issuer, resource, clientId, userId), cacheItem);
 
         if (cacheItem.getIsMultiResourceRefreshToken()) {
@@ -140,19 +143,17 @@ public class ADALOAuth2TokenCache
         if (!StringExtensions.isNullOrBlank(cacheItem.getFamilyClientId())) {
             setItem(CacheKey.createCacheKeyForFRT(issuer, cacheItem.getFamilyClientId(), userId), cacheItem);
         }
-
     }
 
-    private void setItem(String key, ADALTokenCacheItem cacheItem) {
-
+    private void setItem(final String key, final ADALTokenCacheItem cacheItem) {
         String json = mGson.toJson(cacheItem);
         String encrypted = encrypt(json);
+
         if (encrypted != null) {
             mISharedPreferencesFileManager.putString(key, encrypted);
         } else {
             Log.e(TAG, "Encrypted output is null");
         }
-
     }
 
 
@@ -167,6 +168,7 @@ public class ADALOAuth2TokenCache
                 Log.v(TAG, "Finished to initialize storage helper");
             }
         }
+
         return sHelper;
     }
 
@@ -198,6 +200,7 @@ public class ADALOAuth2TokenCache
 
     private void validateSecretKeySetting() {
         final byte[] secretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
+
         if (secretKeyData == null && Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
             throw new IllegalArgumentException("Secret key must be provided for API < 18. "
                     + "Use AuthenticationSettings.INSTANCE.setSecretKey()");
@@ -205,12 +208,12 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public void setSingleSignOnState(Account account, RefreshToken refreshToken) {
-
+    public void setSingleSignOnState(final Account account, final RefreshToken refreshToken) {
+        // Unimplemented
     }
 
     @Override
-    public RefreshToken getSingleSignOnState(Account account) {
+    public RefreshToken getSingleSignOnState(final Account account) {
         return null;
     }
 }
