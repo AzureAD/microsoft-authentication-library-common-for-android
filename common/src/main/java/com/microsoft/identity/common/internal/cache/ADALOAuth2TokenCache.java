@@ -57,12 +57,14 @@ public class ADALOAuth2TokenCache
         extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
         implements IShareSingleSignOnState {
 
-    ISharedPreferencesFileManager mISharedPreferencesFileManager;
-    final static String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
-    private static final String TAG = "ADALOAuth2TokenCache";
+    private static final String TAG = ADALOAuth2TokenCache.class.getSimpleName();
+    private static final String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
+    private static final Object LOCK = new Object();
+
     @SuppressLint("StaticFieldLeak")
     private static StorageHelper sHelper;
-    private static final Object LOCK = new Object();
+
+    private ISharedPreferencesFileManager mISharedPreferencesFileManager;
     private Gson mGson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new DateTimeAdapter())
             .create();
