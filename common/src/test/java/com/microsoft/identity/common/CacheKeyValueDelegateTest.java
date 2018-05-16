@@ -35,6 +35,7 @@ import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,7 +75,7 @@ public class CacheKeyValueDelegateTest {
 
     // AccessTokens
     @Test
-    public void accessTokenCreateCacheKeyComplete() throws Exception {
+    public void accessTokenCreateCacheKeyComplete() {
         final AccessToken accessToken = new AccessToken();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
@@ -94,7 +95,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accessTokenCreateCacheKeyNoUniqueId() throws Exception {
+    public void accessTokenCreateCacheKeyNoHomeAccountId() {
         final AccessToken accessToken = new AccessToken();
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
@@ -113,7 +114,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accessTokenCreateCacheKeyNoRealm() throws Exception {
+    public void accessTokenCreateCacheKeyNoRealm() {
         final AccessToken accessToken = new AccessToken();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
@@ -132,7 +133,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accessTokenCreateCacheKeyNoTarget() throws Exception {
+    public void accessTokenCreateCacheKeyNoTarget() {
         final AccessToken accessToken = new AccessToken();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
@@ -151,7 +152,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accessTokenCreateCacheKeyNoUniqueIdNoRealmNoTarget() throws Exception {
+    public void accessTokenCreateCacheKeyNoHomeAccountIdNoRealmNoTarget() {
         final AccessToken accessToken = new AccessToken();
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
@@ -168,7 +169,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accessTokenCreateCacheKeyNoRealmNoTarget() throws Exception {
+    public void accessTokenCreateCacheKeyNoRealmNoTarget() {
         final AccessToken accessToken = new AccessToken();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
@@ -186,7 +187,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accessTokenCreateCacheValue() throws Exception {
+    public void accessTokenCreateCacheValue() throws JSONException {
         final AccessToken accessToken = new AccessToken();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
@@ -208,7 +209,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accessTokenExtraValueSerialization() throws Exception {
+    public void accessTokenExtraValueSerialization() throws JSONException {
         final AccessToken accessToken = new AccessToken();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
@@ -252,7 +253,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accessTokenExtraValueDeserialization() throws Exception {
+    public void accessTokenExtraValueDeserialization() throws JSONException {
         final AccessToken accessToken = new AccessToken();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
@@ -293,7 +294,7 @@ public class CacheKeyValueDelegateTest {
 
     // Accounts
     @Test
-    public void accountCreateCacheKeyComplete() throws Exception {
+    public void accountCreateCacheKeyComplete() {
         final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
@@ -308,7 +309,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accountCreateCacheKeyCompleteNoUniqueId() throws Exception {
+    public void accountCreateCacheKeyCompleteNoHomeAccountId() {
         final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -322,7 +323,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accountCreateCacheKeyCompleteNoRealm() throws Exception {
+    public void accountCreateCacheKeyCompleteNoRealm() {
         final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
@@ -335,7 +336,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accountCreateCacheKeyCompleteNoUniqueIdNoRealm() throws Exception {
+    public void accountCreateCacheKeyCompleteNoHomeAccountIdNoRealm() {
         final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
         account.setEnvironment(ENVIRONMENT);
 
@@ -347,7 +348,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accountCreateCacheValue() throws Exception {
+    public void accountCreateCacheValue() throws JSONException {
         final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
@@ -374,7 +375,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accountExtraValueSerialization() throws Exception {
+    public void accountExtraValueSerialization() throws JSONException {
         final com.microsoft.identity.common.internal.dto.Account account
                 = new com.microsoft.identity.common.internal.dto.Account();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -425,7 +426,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void accountExtraValueDeserialization() throws Exception {
+    public void accountExtraValueDeserialization() throws JSONException {
         final com.microsoft.identity.common.internal.dto.Account account
                 = new com.microsoft.identity.common.internal.dto.Account();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -474,7 +475,7 @@ public class CacheKeyValueDelegateTest {
 
     // RefreshTokens
     @Test
-    public void refreshTokenCreateCacheKeyComplete() throws Exception {
+    public void refreshTokenCreateCacheKeyComplete() {
         final RefreshToken refreshToken = new RefreshToken();
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
@@ -493,7 +494,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void refreshTokenCreateCacheKeyNoUniqueId() throws Exception {
+    public void refreshTokenCreateCacheKeyNoHomeAccountId() {
         final RefreshToken refreshToken = new RefreshToken();
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
@@ -511,7 +512,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void refreshTokenCreateCacheKeyNoRealm() throws Exception {
+    public void refreshTokenCreateCacheKeyNoRealm() {
         final RefreshToken refreshToken = new RefreshToken();
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
@@ -530,7 +531,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void refreshTokenCreateCacheKeyNoTarget() throws Exception {
+    public void refreshTokenCreateCacheKeyNoTarget() {
         final RefreshToken refreshToken = new RefreshToken();
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
@@ -548,7 +549,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void refreshTokenCreateCacheKeyNoUniqueIdNoTarget() throws Exception {
+    public void refreshTokenCreateCacheKeyNoHomeAccountIdNoTarget() {
         final RefreshToken refreshToken = new RefreshToken();
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
@@ -565,7 +566,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void refreshTokenCreateCacheValue() throws Exception {
+    public void refreshTokenCreateCacheValue() throws JSONException {
         final RefreshToken refreshToken = new RefreshToken();
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
@@ -585,7 +586,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void refreshTokenExtraValueSerialization() throws Exception {
+    public void refreshTokenExtraValueSerialization() throws JSONException {
         final RefreshToken refreshToken = new RefreshToken();
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
@@ -627,7 +628,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void refreshTokenExtraValueDeserialization() throws Exception {
+    public void refreshTokenExtraValueDeserialization() throws JSONException {
         final RefreshToken refreshToken = new RefreshToken();
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
@@ -666,7 +667,7 @@ public class CacheKeyValueDelegateTest {
 
     // IdTokens
     @Test
-    public void idTokenCreateCacheKeyComplete() throws Exception {
+    public void idTokenCreateCacheKeyComplete() {
         final IdToken idToken = new IdToken();
         idToken.setHomeAccountId(HOME_ACCOUNT_ID);
         idToken.setEnvironment(ENVIRONMENT);
@@ -684,7 +685,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void idTokenCreateCacheKeyNoUniqueId() throws Exception {
+    public void idTokenCreateCacheKeyNoHomeAccountId() {
         final IdToken idToken = new IdToken();
         idToken.setEnvironment(ENVIRONMENT);
         idToken.setCredentialType(CredentialType.IdToken.name());
@@ -701,7 +702,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void idTokenCreateCacheKeyNoRealm() throws Exception {
+    public void idTokenCreateCacheKeyNoRealm() {
         final IdToken idToken = new IdToken();
         idToken.setHomeAccountId(HOME_ACCOUNT_ID);
         idToken.setEnvironment(ENVIRONMENT);
@@ -718,7 +719,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void idTokenCreateCacheValue() throws Exception {
+    public void idTokenCreateCacheValue() throws JSONException {
         final IdToken idToken = new IdToken();
         idToken.setHomeAccountId(HOME_ACCOUNT_ID);
         idToken.setEnvironment(ENVIRONMENT);
@@ -738,7 +739,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void idTokenExtraValueSerialization() throws Exception {
+    public void idTokenExtraValueSerialization() throws JSONException {
         final IdToken idToken = new IdToken();
         idToken.setHomeAccountId(HOME_ACCOUNT_ID);
         idToken.setEnvironment(ENVIRONMENT);
@@ -780,7 +781,7 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
-    public void idTokenExtraValueDeserialization() throws Exception {
+    public void idTokenExtraValueDeserialization() throws JSONException {
         final IdToken idToken = new IdToken();
         idToken.setHomeAccountId(HOME_ACCOUNT_ID);
         idToken.setEnvironment(ENVIRONMENT);

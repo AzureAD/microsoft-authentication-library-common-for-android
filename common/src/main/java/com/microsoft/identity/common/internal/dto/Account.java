@@ -77,10 +77,6 @@ public class Account extends AccountCredentialBase implements IAccount {
         setAvatarUrl(copy.getAvatarUrl());
     }
 
-    ///////////////
-    // Required fields
-    ///////////////
-
     /**
      * Unique user identifier for a given authentication scheme.
      */
@@ -124,10 +120,6 @@ public class Account extends AccountCredentialBase implements IAccount {
     @SerializedName(AUTHORITY_TYPE)
     private String mAuthorityType;
 
-    ///////////////
-    // Optional Fields
-    ///////////////
-
     /**
      * Internal representation for guest users to the tenants. Corresponds to the "altsecid" claim
      * in the id_token for AAD.
@@ -152,10 +144,6 @@ public class Account extends AccountCredentialBase implements IAccount {
      */
     @SerializedName(AVATAR_URL)
     private String mAvatarUrl;
-
-    ///////////////
-    // Accessor Methods
-    ///////////////
 
     @Override
     public String getHomeAccountId() {

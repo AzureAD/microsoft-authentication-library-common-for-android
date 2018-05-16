@@ -75,13 +75,13 @@ public interface IAccountCredentialCache {
     /**
      * Returns all of the Accounts matching the supplied criteria.
      *
-     * @param uniqueId    The uniqueId used to match Account cache keys.
+     * @param homeAccountId    The homeAccountId used to match Account cache keys.
      * @param environment The environment used to match Account cache keys.
      * @param realm       The realm used to match Account cache keys.
      * @return A List of Accounts matching the supplied criteria.
      */
     List<Account> getAccounts(
-            @Nullable final String uniqueId,
+            @Nullable final String homeAccountId,
             final String environment,
             @Nullable final String realm
     );
@@ -96,7 +96,7 @@ public interface IAccountCredentialCache {
     /**
      * Returns all of the Credentials matching the supplied criteria.
      *
-     * @param uniqueId       The uniqueId used to match Credential cache keys.
+     * @param homeAccountId       The homeAccountId used to match Credential cache keys.
      * @param environment    The environment used to match Credential cache keys.
      * @param credentialType The sought CredentialType.
      * @param clientId       The clientId used to match Credential cache keys.
@@ -105,7 +105,7 @@ public interface IAccountCredentialCache {
      * @return A List of Credentials matching the supplied criteria.
      */
     List<Credential> getCredentials(
-            @Nullable final String uniqueId,
+            @Nullable final String homeAccountId,
             final String environment,
             final CredentialType credentialType,
             final String clientId,
