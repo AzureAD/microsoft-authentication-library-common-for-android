@@ -46,7 +46,7 @@ public class ActiveDirectoryFederationServices2012R2Account extends Account {
     }
 
     @Override
-    public String getUniqueUserId() {
+    public String getHomeAccountId() {
         throw new UnsupportedOperationException("Method stub!");
     }
 

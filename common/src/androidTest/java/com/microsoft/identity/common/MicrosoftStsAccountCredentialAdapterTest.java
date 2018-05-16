@@ -107,7 +107,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     public void createAccount() throws Exception {
         final Account account = mAccountFactory.createAccount(mockStrategy, mockRequest, mockResponse);
         assertNotNull(account);
-        assertEquals(MOCK_UID + "." + MOCK_UTID, account.getUniqueUserId());
+        assertEquals(MOCK_UID + "." + MOCK_UTID, account.getHomeAccountId());
         assertEquals(MOCK_ENVIRONMENT, account.getEnvironment());
         assertEquals(MOCK_TID, account.getRealm());
         assertEquals(MOCK_OID, account.getAuthorityAccountId());
@@ -129,7 +129,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_TID, accessToken.getRealm());
         assertEquals(MOCK_AUTHORITY, accessToken.getAuthority());
         assertEquals(MOCK_ENVIRONMENT, accessToken.getEnvironment());
-        assertEquals(MOCK_UID + "." + MOCK_UTID, accessToken.getUniqueUserId());
+        assertEquals(MOCK_UID + "." + MOCK_UTID, accessToken.getHomeAccountId());
     }
 
     @Test

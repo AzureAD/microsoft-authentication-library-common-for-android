@@ -70,7 +70,7 @@ public class AzureActiveDirectoryRefreshToken extends RefreshToken {
     }
 
     @Override
-    public String getUniqueUserId() {
+    public String getHomeAccountId() {
         return SchemaUtil.getUniqueId(mClientInfo);
     }
 

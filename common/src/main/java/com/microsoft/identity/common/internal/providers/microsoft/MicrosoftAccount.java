@@ -260,7 +260,7 @@ public abstract class MicrosoftAccount extends Account {
     }
 
     @Override
-    public String getUniqueUserId() {
+    public String getHomeAccountId() {
         // TODO -- This method's functionality is duplicative of
         // Account#getUniqueIdentifier except that that implementation
         // was coded for the refactored ADAL cache which expects

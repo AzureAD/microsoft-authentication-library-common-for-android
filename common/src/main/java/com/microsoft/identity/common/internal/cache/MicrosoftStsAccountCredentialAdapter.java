@@ -80,7 +80,7 @@ public class MicrosoftStsAccountCredentialAdapter
 
             final Account account = new Account();
             // Required
-            account.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
+            account.setHomeAccountId(SchemaUtil.getUniqueId(clientInfo));
             account.setEnvironment(SchemaUtil.getEnvironment(msIdToken)); // host of authority with optional port
             account.setRealm(getRealm(strategy, response)); //tid
             account.setAuthorityAccountId(tokenClaims.get(OJBECT_ID)); // oid claim from id token
@@ -119,7 +119,7 @@ public class MicrosoftStsAccountCredentialAdapter
             final AccessToken accessToken = new AccessToken();
             // Required fields
             accessToken.setCredentialType(CredentialType.AccessToken.name());
-            accessToken.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
+            accessToken.setHomeAccountId(SchemaUtil.getUniqueId(clientInfo));
             accessToken.setRealm(getRealm(strategy, response));
             accessToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
             accessToken.setClientId(request.getClientId());
@@ -161,7 +161,7 @@ public class MicrosoftStsAccountCredentialAdapter
             // Required
             refreshToken.setCredentialType(CredentialType.RefreshToken.name());
             refreshToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
-            refreshToken.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
+            refreshToken.setHomeAccountId(SchemaUtil.getUniqueId(clientInfo));
             refreshToken.setClientId(response.getClientId());
             refreshToken.setSecret(response.getRefreshToken());
 
@@ -198,7 +198,7 @@ public class MicrosoftStsAccountCredentialAdapter
 
             final IdToken idToken = new IdToken();
             // Required fields
-            idToken.setUniqueUserId(SchemaUtil.getUniqueId(clientInfo));
+            idToken.setHomeAccountId(SchemaUtil.getUniqueId(clientInfo));
             idToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
             idToken.setRealm(getRealm(strategy, response));
             idToken.setCredentialType(CredentialType.IdToken.name());
@@ -225,7 +225,7 @@ public class MicrosoftStsAccountCredentialAdapter
         final RefreshToken refreshTokenOut = new RefreshToken();
 
         // Required fields
-        refreshTokenOut.setUniqueUserId(refreshTokenIn.getUniqueUserId());
+        refreshTokenOut.setHomeAccountId(refreshTokenIn.getHomeAccountId());
         refreshTokenOut.setEnvironment(refreshTokenIn.getEnvironment());
         refreshTokenOut.setCredentialType(CredentialType.RefreshToken.name());
         refreshTokenOut.setClientId(refreshTokenIn.getClientId());
@@ -276,7 +276,7 @@ public class MicrosoftStsAccountCredentialAdapter
 
         final IdToken idToken = new IdToken();
         // Required fields
-        idToken.setUniqueUserId(refreshToken.getUniqueUserId());
+        idToken.setHomeAccountId(refreshToken.getHomeAccountId());
         idToken.setEnvironment(refreshToken.getEnvironment());
         idToken.setRealm(msAccount.getRealm());
         idToken.setCredentialType(CredentialType.IdToken.name());

@@ -66,7 +66,7 @@ import static com.microsoft.identity.common.AccountCredentialCacheTest.EXPIRES_O
 import static com.microsoft.identity.common.AccountCredentialCacheTest.REALM;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.SECRET;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.TARGET;
-import static com.microsoft.identity.common.AccountCredentialCacheTest.UNIQUE_USER_ID;
+import static com.microsoft.identity.common.AccountCredentialCacheTest.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.USERNAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -113,7 +113,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setAuthorityType("MSSTS");
         account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
         account.setUsername(USERNAME);
-        account.setUniqueUserId(UNIQUE_USER_ID);
+        account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
 
@@ -123,7 +123,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
         accessToken.setSecret(SECRET);
-        accessToken.setUniqueUserId(UNIQUE_USER_ID);
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
@@ -131,13 +131,13 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken = new RefreshToken();
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
-        refreshToken.setUniqueUserId(UNIQUE_USER_ID);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setClientId(CLIENT_ID);
 
         idToken = new IdToken();
-        idToken.setUniqueUserId(UNIQUE_USER_ID);
+        idToken.setHomeAccountId(HOME_ACCOUNT_ID);
         idToken.setEnvironment(ENVIRONMENT);
         idToken.setRealm(REALM);
         idToken.setCredentialType(CredentialType.IdToken.name());
@@ -254,7 +254,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         accessTokenToClear.setCachedAt(CACHED_AT);
         accessTokenToClear.setExpiresOn(EXPIRES_ON);
         accessTokenToClear.setSecret(SECRET);
-        accessTokenToClear.setUniqueUserId(UNIQUE_USER_ID);
+        accessTokenToClear.setHomeAccountId(HOME_ACCOUNT_ID);
         accessTokenToClear.setEnvironment(ENVIRONMENT);
         accessTokenToClear.setCredentialType(CredentialType.AccessToken.name());
         accessTokenToClear.setClientId(CLIENT_ID);

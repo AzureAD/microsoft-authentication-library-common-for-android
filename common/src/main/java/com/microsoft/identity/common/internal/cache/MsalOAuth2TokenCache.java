@@ -239,7 +239,7 @@ public class MsalOAuth2TokenCache
         Logger.entering(TAG, methodName, referenceToken);
 
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentials(
-                referenceToken.getUniqueUserId(),
+                referenceToken.getHomeAccountId(),
                 referenceToken.getEnvironment(),
                 CredentialType.AccessToken,
                 referenceToken.getClientId(),
@@ -337,7 +337,7 @@ public class MsalOAuth2TokenCache
 
         // Required fields...
         final String[][] params = new String[][]{
-                {Account.SerializedNames.UNIQUE_USER_ID, account.getUniqueUserId()},
+                {Account.SerializedNames.HOME_ACCOUNT_ID, account.getHomeAccountId()},
                 {Account.SerializedNames.ENVIRONMENT, account.getEnvironment()},
                 {Account.SerializedNames.REALM, account.getRealm()},
                 {Account.SerializedNames.AUTHORITY_ACCOUNT_ID, account.getAuthorityAccountId()},
@@ -359,7 +359,7 @@ public class MsalOAuth2TokenCache
         // Required fields...
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.CREDENTIAL_TYPE, accessToken.getCredentialType()},
-                {Credential.SerializedNames.UNIQUE_USER_ID, accessToken.getUniqueUserId()},
+                {Credential.SerializedNames.HOME_ACCOUNT_ID, accessToken.getHomeAccountId()},
                 {AccessToken.SerializedNames.REALM, accessToken.getRealm()},
                 {Credential.SerializedNames.ENVIRONMENT, accessToken.getEnvironment()},
                 {Credential.SerializedNames.CLIENT_ID, accessToken.getClientId()},
@@ -385,7 +385,7 @@ public class MsalOAuth2TokenCache
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.CREDENTIAL_TYPE, refreshToken.getCredentialType()},
                 {Credential.SerializedNames.ENVIRONMENT, refreshToken.getEnvironment()},
-                {Credential.SerializedNames.UNIQUE_USER_ID, refreshToken.getUniqueUserId()},
+                {Credential.SerializedNames.HOME_ACCOUNT_ID, refreshToken.getHomeAccountId()},
                 {Credential.SerializedNames.CLIENT_ID, refreshToken.getClientId()},
                 {Credential.SerializedNames.SECRET, refreshToken.getSecret()},
         };
@@ -402,7 +402,7 @@ public class MsalOAuth2TokenCache
         Logger.entering(TAG, methodName, idToken);
 
         final String[][] params = new String[][]{
-                {Credential.SerializedNames.UNIQUE_USER_ID, idToken.getUniqueUserId()},
+                {Credential.SerializedNames.HOME_ACCOUNT_ID, idToken.getHomeAccountId()},
                 {Credential.SerializedNames.ENVIRONMENT, idToken.getEnvironment()},
                 {IdToken.SerializedNames.REALM, idToken.getRealm()},
                 {Credential.SerializedNames.CREDENTIAL_TYPE, idToken.getCredentialType()},

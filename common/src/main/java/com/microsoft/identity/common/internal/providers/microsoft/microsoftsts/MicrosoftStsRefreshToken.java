@@ -66,7 +66,7 @@ public class MicrosoftStsRefreshToken extends RefreshToken {
     }
 
     @Override
-    public String getUniqueUserId() {
+    public String getHomeAccountId() {
         return SchemaUtil.getUniqueId(mClientInfo);
     }
 

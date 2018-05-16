@@ -211,17 +211,17 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
     @Override
     public List<Account> getAccounts(
-            final @Nullable String uniqueId,
+            final @Nullable String homeAccountId,
             final String environment,
             final @Nullable String realm) {
         final String methodName = "getAccounts";
-        Logger.entering(TAG, methodName, uniqueId, environment, realm);
+        Logger.entering(TAG, methodName, homeAccountId, environment, realm);
 
         if (StringExtensions.isNullOrBlank(environment)) {
             throw new IllegalArgumentException("Param [environment] cannot be null.");
         }
 
-        final boolean mustMatchOnUniqueId = !StringExtensions.isNullOrBlank(uniqueId);
+        final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
         final List<Account> allAccounts = getAccounts();
         final List<Account> matchingAccounts = new ArrayList<>();
@@ -229,8 +229,8 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         for (final Account account : allAccounts) {
             boolean matches = true;
 
-            if (mustMatchOnUniqueId) {
-                matches = uniqueId.equalsIgnoreCase(account.getUniqueUserId());
+            if (mustMatchOnHomeAccountId) {
+                matches = homeAccountId.equalsIgnoreCase(account.getHomeAccountId());
             }
 
             matches = matches && environment.equalsIgnoreCase(account.getEnvironment());
@@ -287,14 +287,14 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
     @Override
     public List<Credential> getCredentials(
-            final @Nullable String uniqueId,
+            final @Nullable String homeAccountId,
             final String environment,
             final CredentialType credentialType,
             final String clientId,
             final @Nullable String realm,
             final @Nullable String target) {
         final String methodName = "getCredentials";
-        Logger.entering(TAG, methodName, uniqueId, environment, credentialType, clientId, realm, target);
+        Logger.entering(TAG, methodName, homeAccountId, environment, credentialType, clientId, realm, target);
 
         if (StringExtensions.isNullOrBlank(environment)) {
             throw new IllegalArgumentException("Param [environment] cannot be null.");
@@ -308,7 +308,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             throw new IllegalArgumentException("Param [clientId] cannot be null.");
         }
 
-        final boolean mustMatchOnUniqueId = !StringExtensions.isNullOrBlank(uniqueId);
+        final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
         final boolean mustMatchOnTarget = !StringExtensions.isNullOrBlank(target);
         final List<Credential> allCredentials = getCredentials();
@@ -317,8 +317,8 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         for (final Credential credential : allCredentials) {
             boolean matches = true;
 
-            if (mustMatchOnUniqueId) {
-                matches = uniqueId.equalsIgnoreCase(credential.getUniqueUserId());
+            if (mustMatchOnHomeAccountId) {
+                matches = homeAccountId.equalsIgnoreCase(credential.getHomeAccountId());
             }
 
             matches = matches && environment.equalsIgnoreCase(credential.getEnvironment());

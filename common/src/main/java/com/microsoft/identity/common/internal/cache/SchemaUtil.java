@@ -182,7 +182,7 @@ public class SchemaUtil {
         final String methodName = ":getUniqueId";
         Logger.entering(TAG, methodName, clientInfo);
 
-        String uniqueId = null;
+        String homeAccountId = null;
 
         if (null != clientInfo) {
             final String uid = clientInfo.getUid();
@@ -197,17 +197,17 @@ public class SchemaUtil {
             }
 
             if (!StringExtensions.isNullOrBlank(uid) && !StringExtensions.isNullOrBlank(utid)) {
-                uniqueId = uid + "." + utid;
+                homeAccountId = uid + "." + utid;
             }
 
-            Logger.verbosePII(TAG + ":" + methodName, "unique_user_id: " + uniqueId);
+            Logger.verbosePII(TAG + ":" + methodName, "home_account_id: " + homeAccountId);
 
         } else {
             Logger.warn(TAG + ":" + methodName, "ClientInfo was null.");
         }
 
-        Logger.exiting(TAG, methodName, uniqueId);
+        Logger.exiting(TAG, methodName, homeAccountId);
 
-        return uniqueId;
+        return homeAccountId;
     }
 }
