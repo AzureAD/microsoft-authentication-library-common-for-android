@@ -178,8 +178,8 @@ public class SchemaUtil {
         return guestId;
     }
 
-    public static String getUniqueId(final ClientInfo clientInfo) {
-        final String methodName = ":getUniqueId";
+    public static String getHomeAccountId(final ClientInfo clientInfo) {
+        final String methodName = ":getHomeAccountId";
         Logger.entering(TAG, methodName, clientInfo);
 
         String homeAccountId = null;
