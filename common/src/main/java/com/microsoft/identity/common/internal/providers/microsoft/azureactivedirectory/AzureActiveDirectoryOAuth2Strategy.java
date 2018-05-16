@@ -144,7 +144,6 @@ public class AzureActiveDirectoryOAuth2Strategy
         } catch (ServiceException ccse) {
             Logger.error(TAG + ":" + methodName, "Failed to construct IDToken or ClientInfo", null);
             Logger.errorPII(TAG + ":" + methodName, "Failed with Exception", ccse);
-            // TODO: Add a log here
             // TODO: Should we bail?
         }
 
