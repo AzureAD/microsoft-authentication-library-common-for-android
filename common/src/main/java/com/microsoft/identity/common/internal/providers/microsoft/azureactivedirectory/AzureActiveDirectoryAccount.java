@@ -34,10 +34,6 @@ import java.util.Map;
  */
 public class AzureActiveDirectoryAccount extends MicrosoftAccount {
 
-    public AzureActiveDirectoryAccount() {
-        super();
-    }
-
     /**
      * Constructor for AzureActiveDirectoryAccount object
      *
@@ -61,10 +57,8 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
         final String uid;
         final String uTid;
 
-        //TODO: objC code throws an exception when uid/utid is null.... something for us to consider
         if (clientInfo == null) {
-            uid = "";
-            uTid = "";
+            throw new IllegalArgumentException("ClientInfo cannot be null");
         } else {
             uid = clientInfo.getUid();
             uTid = clientInfo.getUtid();
@@ -87,5 +81,10 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
         }
 
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return "AzureActiveDirectoryAccount{} " + super.toString();
     }
 }
