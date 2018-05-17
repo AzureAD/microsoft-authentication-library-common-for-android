@@ -61,7 +61,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     static final String TARGET = "user.read user.write https://graph.windows.net";
     // In the case of AAD, the realm is the tenantId
     static final String REALM = "3c62ac97-29eb-4aed-a3c8-add0298508d";
-    static final String AUTHORITY_ACCOUNT_ID = "00000000-0000-0000-088f-0e042cc22ac0";
+    static final String LOCAL_ACCOUNT_ID = "00000000-0000-0000-088f-0e042cc22ac0";
     static final String USERNAME = "user.foo@tenant.onmicrosoft.com";
     static final String AUTHORITY_TYPE = "MSSTS";
     static final String CACHED_AT = "0";
@@ -108,7 +108,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
 
@@ -127,7 +127,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     public void saveAccountNoRealm() {
         final com.microsoft.identity.common.internal.dto.Account account
                 = new com.microsoft.identity.common.internal.dto.Account();
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
         account.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -149,7 +149,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         final com.microsoft.identity.common.internal.dto.Account account
                 = new com.microsoft.identity.common.internal.dto.Account();
         account.setEnvironment(ENVIRONMENT);
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
 
@@ -363,7 +363,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
         mAccountCredentialCache.saveAccount(account);
@@ -414,7 +414,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
 
@@ -434,7 +434,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     public void getAccountsNoHomeAccountId() {
         final com.microsoft.identity.common.internal.dto.Account account
                 = new com.microsoft.identity.common.internal.dto.Account();
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
         account.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -460,7 +460,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
 
@@ -483,7 +483,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
 
@@ -503,7 +503,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     public void getAccountsWithMatchingHomeAccountIdEnvironment() {
         final com.microsoft.identity.common.internal.dto.Account account1
                 = new com.microsoft.identity.common.internal.dto.Account();
-        account1.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account1.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account1.setUsername(USERNAME);
         account1.setAuthorityType(AUTHORITY_TYPE);
         account1.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -512,7 +512,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final com.microsoft.identity.common.internal.dto.Account account2
                 = new com.microsoft.identity.common.internal.dto.Account();
-        account2.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account2.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account2.setUsername(USERNAME);
         account2.setAuthorityType(AUTHORITY_TYPE);
         account2.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -521,7 +521,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final com.microsoft.identity.common.internal.dto.Account account3
                 = new com.microsoft.identity.common.internal.dto.Account();
-        account3.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account3.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account3.setUsername(USERNAME);
         account3.setAuthorityType(AUTHORITY_TYPE);
         account3.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -530,7 +530,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final com.microsoft.identity.common.internal.dto.Account account4
                 = new com.microsoft.identity.common.internal.dto.Account();
-        account4.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account4.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account4.setUsername(USERNAME);
         account4.setAuthorityType(AUTHORITY_TYPE);
         account4.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -551,7 +551,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     public void getAccountsWithMatchingEnvironmentRealm() {
         final com.microsoft.identity.common.internal.dto.Account account1
                 = new com.microsoft.identity.common.internal.dto.Account();
-        account1.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account1.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account1.setUsername(USERNAME);
         account1.setAuthorityType(AUTHORITY_TYPE);
         account1.setHomeAccountId("Foo");
@@ -560,7 +560,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final com.microsoft.identity.common.internal.dto.Account account2
                 = new com.microsoft.identity.common.internal.dto.Account();
-        account2.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account2.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account2.setUsername(USERNAME);
         account2.setAuthorityType(AUTHORITY_TYPE);
         account2.setHomeAccountId("Bar");
@@ -569,7 +569,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final com.microsoft.identity.common.internal.dto.Account account3
                 = new com.microsoft.identity.common.internal.dto.Account();
-        account3.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account3.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account3.setUsername(USERNAME);
         account3.setAuthorityType(AUTHORITY_TYPE);
         account3.setHomeAccountId("Baz");
@@ -578,7 +578,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final com.microsoft.identity.common.internal.dto.Account account4
                 = new com.microsoft.identity.common.internal.dto.Account();
-        account4.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account4.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account4.setUsername(USERNAME);
         account4.setAuthorityType(AUTHORITY_TYPE);
         account4.setHomeAccountId("qux");
@@ -603,7 +603,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
         mAccountCredentialCache.saveAccount(account);
@@ -1061,7 +1061,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
         mAccountCredentialCache.saveAccount(account);
@@ -1108,7 +1108,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
         mAccountCredentialCache.saveAccount(account);
@@ -1155,7 +1155,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
         mAccountCredentialCache.saveAccount(account);

@@ -25,13 +25,13 @@ package com.microsoft.identity.common.internal.dto;
 import com.google.gson.annotations.SerializedName;
 
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.ALTERNATIVE_ACCOUNT_ID;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AUTHORITY_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AUTHORITY_TYPE;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AVATAR_URL;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.FIRST_NAME;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.LAST_NAME;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.LOCAL_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.USERNAME;
 
@@ -48,7 +48,7 @@ public class Account extends AccountCredentialBase implements IAccount {
         public static final String HOME_ACCOUNT_ID = "home_account_id";
         public static final String ENVIRONMENT = "environment";
         public static final String REALM = "realm";
-        public static final String AUTHORITY_ACCOUNT_ID = "authority_account_id";
+        public static final String LOCAL_ACCOUNT_ID = "local_account_id";
         public static final String USERNAME = "username";
         public static final String AUTHORITY_TYPE = "authority_type";
         public static final String ALTERNATIVE_ACCOUNT_ID = "alternative_account_id";
@@ -66,7 +66,7 @@ public class Account extends AccountCredentialBase implements IAccount {
         setHomeAccountId(copy.getHomeAccountId());
         setEnvironment(copy.getEnvironment());
         setRealm(copy.getRealm());
-        setAuthorityAccountId(copy.getAuthorityAccountId());
+        setLocalAccountId(copy.getLocalAccountId());
         setUsername(copy.getUsername());
         setAuthorityType(copy.getAuthorityType());
 
@@ -101,8 +101,8 @@ public class Account extends AccountCredentialBase implements IAccount {
      * Original authority specific account identifier. Can be needed for legacy purposes. OID for
      * AAD (in some unique cases subject instead of OID) and CID for MSA.
      */
-    @SerializedName(AUTHORITY_ACCOUNT_ID)
-    private String mAuthorityAccountId;
+    @SerializedName(LOCAL_ACCOUNT_ID)
+    private String mLocalAccountId;
 
     /**
      * The primary username that represents the user (corresponds to the preferred_username claim
@@ -188,17 +188,17 @@ public class Account extends AccountCredentialBase implements IAccount {
     }
 
     @Override
-    public String getAuthorityAccountId() {
-        return mAuthorityAccountId;
+    public String getLocalAccountId() {
+        return mLocalAccountId;
     }
 
     /**
-     * Sets the authority_account_id.
+     * Sets the local_account_id.
      *
-     * @param authorityAccountId The authority_account_id to set.
+     * @param localAccountId The local_account_id to set.
      */
-    public void setAuthorityAccountId(final String authorityAccountId) {
-        mAuthorityAccountId = authorityAccountId;
+    public void setLocalAccountId(final String localAccountId) {
+        mLocalAccountId = localAccountId;
     }
 
     @Override
@@ -297,7 +297,7 @@ public class Account extends AccountCredentialBase implements IAccount {
         if (mEnvironment != null ? !mEnvironment.equals(account.mEnvironment) : account.mEnvironment != null)
             return false;
         if (mRealm != null ? !mRealm.equals(account.mRealm) : account.mRealm != null) return false;
-        if (mAuthorityAccountId != null ? !mAuthorityAccountId.equals(account.mAuthorityAccountId) : account.mAuthorityAccountId != null)
+        if (mLocalAccountId != null ? !mLocalAccountId.equals(account.mLocalAccountId) : account.mLocalAccountId != null)
             return false;
         if (mUsername != null ? !mUsername.equals(account.mUsername) : account.mUsername != null)
             return false;
@@ -317,7 +317,7 @@ public class Account extends AccountCredentialBase implements IAccount {
         int result = mHomeAccountId != null ? mHomeAccountId.hashCode() : 0;
         result = 31 * result + (mEnvironment != null ? mEnvironment.hashCode() : 0);
         result = 31 * result + (mRealm != null ? mRealm.hashCode() : 0);
-        result = 31 * result + (mAuthorityAccountId != null ? mAuthorityAccountId.hashCode() : 0);
+        result = 31 * result + (mLocalAccountId != null ? mLocalAccountId.hashCode() : 0);
         result = 31 * result + (mUsername != null ? mUsername.hashCode() : 0);
         result = 31 * result + (mAuthorityType != null ? mAuthorityType.hashCode() : 0);
         result = 31 * result + (mAlternativeAccountId != null ? mAlternativeAccountId.hashCode() : 0);

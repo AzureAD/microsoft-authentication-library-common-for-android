@@ -57,7 +57,7 @@ public class ActiveDirectoryFederationServices2016Account extends Account {
     }
 
     @Override
-    public String getAuthorityAccountId() {
+    public String getLocalAccountId() {
         throw new UnsupportedOperationException("Method stub!");
     }
 

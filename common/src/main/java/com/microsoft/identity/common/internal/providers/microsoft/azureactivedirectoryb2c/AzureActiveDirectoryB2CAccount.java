@@ -57,7 +57,7 @@ public class AzureActiveDirectoryB2CAccount extends Account {
     }
 
     @Override
-    public String getAuthorityAccountId() {
+    public String getLocalAccountId() {
         throw new UnsupportedOperationException("Method stub!");
     }
 

@@ -83,7 +83,7 @@ public class MicrosoftStsAccountCredentialAdapter
             account.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             account.setEnvironment(SchemaUtil.getEnvironment(msIdToken)); // host of authority with optional port
             account.setRealm(getRealm(strategy, response)); //tid
-            account.setAuthorityAccountId(tokenClaims.get(OJBECT_ID)); // oid claim from id token
+            account.setLocalAccountId(tokenClaims.get(OJBECT_ID)); // oid claim from id token
             account.setUsername(tokenClaims.get(PREFERRED_USERNAME));
             account.setAuthorityType(AUTHORITY_TYPE);
 

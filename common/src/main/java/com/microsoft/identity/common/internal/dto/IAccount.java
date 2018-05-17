@@ -46,11 +46,11 @@ public interface IAccount {
     String getRealm();
 
     /**
-     * Gets the authority_account_id.
+     * Gets the local_account_id.
      *
-     * @return The authority_account_id to get.
+     * @return The local_account_id to get.
      */
-    String getAuthorityAccountId();
+    String getLocalAccountId();
 
     /**
      * Gets the username.

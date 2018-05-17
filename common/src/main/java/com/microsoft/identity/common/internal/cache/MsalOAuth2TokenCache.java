@@ -340,7 +340,7 @@ public class MsalOAuth2TokenCache
                 {Account.SerializedNames.HOME_ACCOUNT_ID, account.getHomeAccountId()},
                 {Account.SerializedNames.ENVIRONMENT, account.getEnvironment()},
                 {Account.SerializedNames.REALM, account.getRealm()},
-                {Account.SerializedNames.AUTHORITY_ACCOUNT_ID, account.getAuthorityAccountId()},
+                {Account.SerializedNames.LOCAL_ACCOUNT_ID, account.getLocalAccountId()},
                 {Account.SerializedNames.USERNAME, account.getUsername()},
                 {Account.SerializedNames.AUTHORITY_TYPE, account.getAuthorityType()},
         };

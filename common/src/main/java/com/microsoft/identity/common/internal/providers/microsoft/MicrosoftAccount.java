@@ -279,7 +279,7 @@ public abstract class MicrosoftAccount extends Account {
     }
 
     @Override
-    public String getAuthorityAccountId() {
+    public String getLocalAccountId() {
         return getUserId();
     }
 

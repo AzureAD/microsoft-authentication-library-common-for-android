@@ -58,7 +58,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.microsoft.identity.common.AccountCredentialCacheTest.AUTHORITY_ACCOUNT_ID;
+import static com.microsoft.identity.common.AccountCredentialCacheTest.LOCAL_ACCOUNT_ID;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.CACHED_AT;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.CLIENT_ID;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.ENVIRONMENT;
@@ -111,7 +111,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         // Used by mocks
         account = new Account();
         account.setAuthorityType("MSSTS");
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);

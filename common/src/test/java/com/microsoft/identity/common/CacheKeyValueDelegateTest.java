@@ -59,7 +59,7 @@ public class CacheKeyValueDelegateTest {
     private static final String CREDENTIAL_TYPE_ACCESS_TOKEN = CredentialType.AccessToken.name().toLowerCase(Locale.US);
     private static final String CREDENTIAL_TYPE_REFRESH_TOKEN = CredentialType.RefreshToken.name().toLowerCase(Locale.US);
     private static final String CREDENTIAL_TYPE_ID_TOKEN = CredentialType.IdToken.name().toLowerCase(Locale.US);
-    private static final String AUTHORITY_ACCOUNT_ID = "90bc88e6-7c76-45e8-a4e3-a0b1dc0a8ce1";
+    private static final String LOCAL_ACCOUNT_ID = "90bc88e6-7c76-45e8-a4e3-a0b1dc0a8ce1";
     private static final String AUTHORITY_TYPE = "AAD";
     private static final String ALTERNATIVE_ACCOUNT_ID = "32000000000003bde810";
     private static final String FIRST_NAME = "Jane";
@@ -353,7 +353,7 @@ public class CacheKeyValueDelegateTest {
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setAuthorityType(AUTHORITY_TYPE);
         account.setAlternativeAccountId(ALTERNATIVE_ACCOUNT_ID);
         account.setFirstName(FIRST_NAME);
@@ -366,7 +366,7 @@ public class CacheKeyValueDelegateTest {
         assertEquals(HOME_ACCOUNT_ID, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.HOME_ACCOUNT_ID));
         assertEquals(ENVIRONMENT, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT));
         assertEquals(REALM, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM));
-        assertEquals(AUTHORITY_ACCOUNT_ID, jsonObject.getString("authority_account_id"));
+        assertEquals(LOCAL_ACCOUNT_ID, jsonObject.getString("local_account_id"));
         assertEquals(AUTHORITY_TYPE, jsonObject.getString("authority_type"));
         assertEquals(ALTERNATIVE_ACCOUNT_ID, jsonObject.getString("alternative_account_id"));
         assertEquals(FIRST_NAME, jsonObject.getString("first_name"));
@@ -381,7 +381,7 @@ public class CacheKeyValueDelegateTest {
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setAuthorityType(AUTHORITY_TYPE);
         account.setAlternativeAccountId(ALTERNATIVE_ACCOUNT_ID);
         account.setFirstName(FIRST_NAME);
@@ -410,7 +410,7 @@ public class CacheKeyValueDelegateTest {
         assertEquals(HOME_ACCOUNT_ID, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.HOME_ACCOUNT_ID));
         assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT));
         assertEquals(REALM, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM));
-        assertEquals(AUTHORITY_ACCOUNT_ID, derivedCacheValueJsonObject.get("authority_account_id"));
+        assertEquals(LOCAL_ACCOUNT_ID, derivedCacheValueJsonObject.get("local_account_id"));
         assertEquals(AUTHORITY_TYPE, derivedCacheValueJsonObject.get("authority_type"));
         assertEquals(ALTERNATIVE_ACCOUNT_ID, derivedCacheValueJsonObject.get("alternative_account_id"));
         assertEquals(FIRST_NAME, derivedCacheValueJsonObject.get("first_name"));
@@ -432,7 +432,7 @@ public class CacheKeyValueDelegateTest {
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
-        account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setAuthorityType(AUTHORITY_TYPE);
         account.setAlternativeAccountId(ALTERNATIVE_ACCOUNT_ID);
         account.setFirstName(FIRST_NAME);
@@ -461,7 +461,7 @@ public class CacheKeyValueDelegateTest {
         assertEquals(HOME_ACCOUNT_ID, deserializedValue.getHomeAccountId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
         assertEquals(REALM, deserializedValue.getRealm());
-        assertEquals(AUTHORITY_ACCOUNT_ID, deserializedValue.getAuthorityAccountId());
+        assertEquals(LOCAL_ACCOUNT_ID, deserializedValue.getLocalAccountId());
         assertEquals(AUTHORITY_TYPE, deserializedValue.getAuthorityType());
         assertEquals(ALTERNATIVE_ACCOUNT_ID, deserializedValue.getAlternativeAccountId());
         assertEquals(FIRST_NAME, deserializedValue.getFirstName());

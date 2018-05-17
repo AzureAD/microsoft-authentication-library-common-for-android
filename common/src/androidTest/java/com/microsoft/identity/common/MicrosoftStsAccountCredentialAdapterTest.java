@@ -110,7 +110,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_UID + "." + MOCK_UTID, account.getHomeAccountId());
         assertEquals(MOCK_ENVIRONMENT, account.getEnvironment());
         assertEquals(MOCK_TID, account.getRealm());
-        assertEquals(MOCK_OID, account.getAuthorityAccountId());
+        assertEquals(MOCK_OID, account.getLocalAccountId());
         assertEquals(MOCK_PREFERRED_USERNAME, account.getUsername());
         assertEquals("MSSTS", account.getAuthorityType());
         assertEquals(MOCK_GIVEN_NAME, account.getFirstName());
