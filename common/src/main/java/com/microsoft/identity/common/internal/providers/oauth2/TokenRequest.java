@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * A class holding the state of the Token Request (oAuth2)
+ * A class holding the state of the Token Request (oAuth2).
  * OAuth2 Spec: https://tools.ietf.org/html/rfc6749#section-4.1.3
  * OAuth2 Client Authentication: https://tools.ietf.org/html/rfc7521#section-4.2
  * This should include all fo the required parameters of the token request for oAuth2
@@ -61,68 +61,114 @@ public class TokenRequest {
     @SerializedName("scope")
     private String mScope;
 
-
+    /**
+     * @return mCode of the token request
+     */
     public String getCode() {
         return mCode;
     }
 
-    public void setCode(String mCode) {
-        this.mCode = mCode;
+    /**
+     * @param code code of the token request
+     */
+    public void setCode(String code) {
+        this.mCode = code;
     }
 
+    /**
+     * @return mRedirectUri of the token request
+     */
     public String getRedirectUri() {
         return mRedirectUri;
     }
 
-    public void setRedirectUri(String mRedirectUri) {
-        this.mRedirectUri = mRedirectUri;
+    /**
+     * @param redirectUri redirect URI of the token request
+     */
+    public void setRedirectUri(String redirectUri) {
+        this.mRedirectUri = redirectUri;
     }
 
+    /**
+     * @return mClientId of the token request
+     */
     public String getClientId() {
         return mClientId;
     }
 
-    public void setClientId(String mClientId) {
-        this.mClientId = mClientId;
+    /**
+     * @param clientId Client ID of the token request
+     */
+    public void setClientId(String clientId) {
+        this.mClientId = clientId;
     }
 
+    /**
+     * @return mGrantType string of the token request
+     */
     public String getGrantType() {
         return mGrantType;
     }
 
-    public void setGrantType(String mGrantType) {
-        this.mGrantType = mGrantType;
+    /**
+     * @param grantType grant type string of the token request
+     */
+    public void setGrantType(String grantType) {
+        this.mGrantType = grantType;
     }
 
+    /**
+     * @param clientSecret client secret string of the token request
+     */
     public void setClientSecret(String clientSecret) {
         this.mClientSecret = clientSecret;
     }
 
+    /**
+     * @return mClientSecret of the token request
+     */
     public String getClientSecret() {
         return mClientSecret;
     }
 
-
+    /**
+     * @return mClientAssertionType of the token request
+     */
     public String getClientAssertionType() {
         return mClientAssertionType;
     }
 
+    /**
+     * @param clientAssertionType client assertion type of the token request
+     */
     public void setClientAssertionType(String clientAssertionType) {
         this.mClientAssertionType = clientAssertionType;
     }
 
+    /**
+     * @return mClientAssertion of the token request
+     */
     public String getClientAssertion() {
         return mClientAssertion;
     }
 
+    /**
+     * @param clientAssertion client assertion of the token request
+     */
     public void setClientAssertion(String clientAssertion) {
         this.mClientAssertion = clientAssertion;
     }
 
+    /**
+     * @return String mScope of the token request
+     */
     public String getScope() {
         return mScope;
     }
 
+    /**
+     * @param scope scope parameter of the token request
+     */
     public void setScope(String scope) {
         this.mScope = scope;
     }

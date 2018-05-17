@@ -30,24 +30,35 @@ package com.microsoft.identity.common.internal.providers.oauth2;
  */
 public abstract class ClientAssertion {
 
-    public final static String DEFAULT_CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+    private static final String DEFAULT_CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
 
-    protected String mClientAssertion;
-    protected String mClientAssertionType = DEFAULT_CLIENT_ASSERTION_TYPE;
+    private String mClientAssertion;
+    private String mClientAssertionType = DEFAULT_CLIENT_ASSERTION_TYPE;
 
-
+    /**
+     * @return mClientAssertion
+     */
     public String getClientAssertion() {
         return mClientAssertion;
     }
 
+    /**
+     * @param clientAssertion client assertion string
+     */
     public void setClientAssertion(String clientAssertion) {
         this.mClientAssertion = clientAssertion;
     }
 
+    /**
+     * @return mClientAssertionType of the client assertion
+     */
     public String getClientAssertionType() {
         return mClientAssertionType;
     }
 
+    /**
+     * @param clientAssertionType client assertion type of the client assertion
+     */
     public void setClientAssertionType(String clientAssertionType) {
         this.mClientAssertionType = clientAssertionType;
     }

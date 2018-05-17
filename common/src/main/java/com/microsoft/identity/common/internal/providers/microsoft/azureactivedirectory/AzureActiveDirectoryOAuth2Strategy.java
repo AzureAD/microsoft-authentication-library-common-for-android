@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
@@ -38,7 +39,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 /**
- * The Azure Active Directory oAuth2 Strategy
+ * The Azure Active Directory OAuth 2.0 Strategy.
  */
 public class AzureActiveDirectoryOAuth2Strategy
         extends OAuth2Strategy<
@@ -54,7 +55,12 @@ public class AzureActiveDirectoryOAuth2Strategy
         TokenResult> {
 
     private AzureActiveDirectoryOAuth2Configuration mConfig = null;
+    private static final int HTTP_BAD_REQUEST = 400;
 
+    /**
+     * Constructor of AzureActiveDirectoryOAuth2Strategy.
+     * @param config Azure Active Directory OAuth2 configuration
+     */
     public AzureActiveDirectoryOAuth2Strategy(final AzureActiveDirectoryOAuth2Configuration config) {
         super(config);
         mTokenEndpoint = "https://login.microsoftonline.com/microsoft.com/oauth2/token";
@@ -99,7 +105,7 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     /**
-     * Stubbed out for now, but should create a new AzureActiveDirectory account
+     * Stubbed out for now, but should create a new AzureActiveDirectory account.
      * Should accept a parameter (TokenResponse) for producing that user
      *
      * @return
@@ -140,7 +146,7 @@ public class AzureActiveDirectoryOAuth2Strategy
         TokenResponse tokenResponse = null;
         TokenErrorResponse tokenErrorResponse = null;
 
-        if (response.getStatusCode() >= 400) {
+        if (response.getStatusCode() >= HTTP_BAD_REQUEST) {
             //An error occurred
             tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenErrorResponse.class);
         } else {

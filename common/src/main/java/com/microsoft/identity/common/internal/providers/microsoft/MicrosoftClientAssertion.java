@@ -41,14 +41,23 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * This class is used to create a client assertion per the following documentation:
+ * This class is used to create a client assertion per the following documentation.
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-certificate-credentials
  */
 public class MicrosoftClientAssertion extends ClientAssertion {
 
-    public static String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
-    public static String THUMBPRINT_ALGORITHM = "SHA-1";
+    private static String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+    private static String THUMBPRINT_ALGORITHM = "SHA-1";
+    private static final int ONE_HOUR = 60000;
 
+    /**
+     * Constructor of MicrosoftClientAssertion.
+     *
+     * @param audience   audience
+     * @param credential Certificate credential
+     * @throws NoSuchAlgorithmException     thrown when a particular cryptographic algorithm is requested but is not available in the environment.
+     * @throws CertificateEncodingException thrown whenever an error occurs while attempting to encode a certificate.
+     */
     public MicrosoftClientAssertion(String audience, CertificateCredential credential)
             throws NoSuchAlgorithmException, CertificateEncodingException {
 
@@ -73,7 +82,7 @@ public class MicrosoftClientAssertion extends ClientAssertion {
                 .issuer(clientId)
                 .notBeforeTime(new Date(time))
                 .expirationTime(new Date(time
-                        + 60000))
+                        + ONE_HOUR))
                 .subject(clientId)
                 .build();
 

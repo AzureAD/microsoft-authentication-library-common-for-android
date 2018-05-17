@@ -22,21 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-/**
- * Created by shoatman on 11/27/2017.
- */
-
 public class AccessToken {
-
     /**
      * A buffer of ten minutes (in milliseconds) for token expiration
      */
-    protected final long mTokenExpiredBuffer = 600000;
+    private final long mTokenExpiredBuffer = 600000;
+    private static final int SECONDS_MS = 1000;
 
-    protected long mExpiresIn;
-    protected String mTokenType;
-    protected long mTokenReceivedTime;
-    protected String mRawAccessToken;
+    private long mExpiresIn;
+    private String mTokenType;
+    private long mTokenReceivedTime;
+    private String mRawAccessToken;
 
     public AccessToken(TokenResponse response) {
         this.mExpiresIn = response.getExpiresIn();
@@ -49,12 +45,47 @@ public class AccessToken {
         return mRawAccessToken;
     }
 
-    public boolean IsExpired() {
+    public boolean isExpired() {
         long currentTime = System.currentTimeMillis();
         long currentTimeWithBuffer = currentTime + mTokenExpiredBuffer;
-        long expiresOn = mTokenReceivedTime + (mExpiresIn * 1000);
+        long expiresOn = mTokenReceivedTime + (mExpiresIn * SECONDS_MS);
 
         return expiresOn > currentTimeWithBuffer;
     }
 
+    public long getTokenExpiredBuffer() {
+        return mTokenExpiredBuffer;
+    }
+
+    public long getExpiresIn() {
+        return mExpiresIn;
+    }
+
+    public void setExpiresIn(long expiresIn) {
+        this.mExpiresIn = expiresIn;
+    }
+
+    public String getTokenType() {
+        return mTokenType;
+    }
+
+    public void setTokenType(String tokenType) {
+        this.mTokenType = tokenType;
+    }
+
+    public long getTokenReceivedTime() {
+        return mTokenReceivedTime;
+    }
+
+    public void setTokenReceivedTime(long tokenReceivedTime) {
+        this.mTokenReceivedTime = tokenReceivedTime;
+    }
+
+    public String getRawAccessToken() {
+        return mRawAccessToken;
+    }
+
+    public void setRawAccessToken(String rawAccessToken) {
+        this.mRawAccessToken = rawAccessToken;
+    }
 }

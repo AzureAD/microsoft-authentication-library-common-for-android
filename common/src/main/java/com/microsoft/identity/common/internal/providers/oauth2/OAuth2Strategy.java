@@ -53,21 +53,27 @@ public abstract class OAuth2Strategy
                 GenericTokenResult extends TokenResult> {
 
     protected String mTokenEndpoint;
-    protected String mAuthorizationEndpoint;
-    protected Uri mIssuer;
 
-    protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
+    private String mAuthorizationEndpoint;
+    private Uri mIssuer;
 
+    private static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
+
+    /**
+     * Constructor of OAuth2Strategy.
+     *
+     * @param config generic OAuth2 configuration
+     */
     public OAuth2Strategy(GenericOAuth2Configuration config) {
 
     }
 
     /**
-     * Template method for executing an OAuth2 authorization request
+     * Template method for executing an OAuth2 authorization request.
      *
-     * @param request
-     * @param authorizationStrategy
-     * @return
+     * @param request               generic authorization request
+     * @param authorizationStrategy generic authorization strategy
+     * @return GenericAuthorizationResponse
      */
     public GenericAuthorizationResponse requestAuthorization(
             final GenericAuthorizationRequest request,
@@ -80,7 +86,11 @@ public abstract class OAuth2Strategy
         return (GenericAuthorizationResponse) response;
     }
 
-
+    /**
+     * @param request generic token request
+     * @return GenericTokenResult
+     * @throws IOException thrown when failed or interrupted I/O operations occur.
+     */
     public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException {
         validateTokenRequest(request);
         HttpResponse response = performTokenRequest(request);
@@ -105,10 +115,10 @@ public abstract class OAuth2Strategy
 
 
     /**
-     * Construct the authorization endpoint URI based on issuer and path to the authorization endpoint
+     * Construct the authorization endpoint URI based on issuer and path to the authorization endpoint.
      * NOTE: We could look at basing this on the contents returned from the OpenID Configuration document
      *
-     * @return
+     * @return URI
      */
     protected Uri createAuthorizationUri() {
         //final Uri.Builder builder = new Uri.Builder().scheme(originalAuthority.getProtocol()).authority(host).appendPath(path);
@@ -116,25 +126,50 @@ public abstract class OAuth2Strategy
         return authorizationUri;
     }
 
+    protected String getAuthorizationEndpoint() {
+        return mAuthorizationEndpoint;
+    }
+
+    protected void setAuthorizationEndpoint(String authorizationEndpoint) {
+        this.mAuthorizationEndpoint = authorizationEndpoint;
+    }
+
+    protected Uri getIssuer() {
+        return mIssuer;
+    }
+
+    protected void setIssuer(Uri issuer) {
+        this.mIssuer = issuer;
+    }
+
     /**
-     * An abstract method for returning the issuer identifier to be used when caching a token response
+     * An abstract method for returning the issuer identifier to be used when caching a token response.
      *
-     * @return
+     * @param request generic token request
+     * @return String of issuer cache identifier
      */
     public abstract String getIssuerCacheIdentifier(GenericAuthorizationRequest request);
 
+    /**
+     * @param response generic token response
+     * @return generic access token
+     */
     public abstract GenericAccessToken getAccessTokenFromResponse(GenericTokenResponse response);
 
+    /**
+     * @param response generic token response
+     * @return generic refresh token
+     */
     public abstract GenericRefreshToken getRefreshTokenFromResponse(GenericTokenResponse response);
 
     /**
-     * An abstract method for returning the user associated with a request;  This
-     * could be based on the contents of the ID Token or it could be returned based on making a call
+     * An abstract method for returning the user associated with a request.
+     * This could be based on the contents of the ID Token or it could be returned based on making a call
      * to the user_info or profile endpoint associated with a userr: For example: graph.microsoft.com/me
      * This allows IDPs that do not support OIDC to still be able to return a user to us
      * This method should take the TokenResponse as a parameter
      *
-     * @return
+     * @return GenericAccount
      */
     public abstract GenericAccount createAccount(GenericTokenResponse response);
 
@@ -142,7 +177,7 @@ public abstract class OAuth2Strategy
      * Abstract method for validating the authorization request.  In the case of AAD this is the method
      * from which the details of the authorization request including authority validation would occur (preferred network and preferred cache)
      *
-     * @param request
+     * @param request generic authorization request
      */
     protected abstract void validateAuthorizationRequest(GenericAuthorizationRequest request);
 
@@ -150,14 +185,14 @@ public abstract class OAuth2Strategy
      * Abstract method for validating the token request.  Generally speaking I expect this just to be validating
      * that all of the information was provided in the Token Request in order to successfully complete it.
      *
-     * @param request
+     * @param request Generic token request
      */
     protected abstract void validateTokenRequest(GenericTokenRequest request);
 
     /**
      * Abstract method for translating the HttpResponse to a TokenResponse.
      *
-     * @param response
+     * @param response Http response
      */
     protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response);
 

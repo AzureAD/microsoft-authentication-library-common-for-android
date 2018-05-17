@@ -39,36 +39,36 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      *
      * @See <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code">Authorize access to web applications using OAuth 2.0 and Azure Active Directory</a>
      */
-    protected Date mExpiresOn;
+    private Date mExpiresOn;
 
     /**
      * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
      * extend the valid lifetime of an access_token.
      */
-    protected Date mExtExpiresOn;
+    private Date mExtExpiresOn;
 
     /**
      * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
      * extend the valid lifetime of an access_token.
      */
     @SerializedName("ext_expires_in")
-    protected Long mExtExpiresIn;
+    private Long mExtExpiresIn;
 
     /**
      * Information to uniquely identify the tenant and the user _within_ that tenant.
      */
     @SerializedName("client_info")
-    protected String mClientInfo;
+    private String mClientInfo;
 
     /**
      * Information to uniquely identify the family that the client application belongs to.
      */
-    protected String mFamilyId;
+    private String mFamilyId;
 
     /**
      * The client_id of the application requesting a token.
      */
-    protected transient String mClientId;
+    private transient String mClientId;
 
     /**
      * Gets the ext_expires_in.
@@ -143,9 +143,9 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
     }
 
     /**
-     * Returns the family client id
+     * Returns the family client id.
      *
-     * @return
+     * @return mFamilyId
      */
     public String getFamilyId() {
         return mFamilyId;
@@ -154,7 +154,7 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
     /**
      * Sets the family id
      *
-     * @param familyId
+     * @param familyId family id of the token.
      */
     public void setFamilyId(String familyId) {
         this.mFamilyId = familyId;

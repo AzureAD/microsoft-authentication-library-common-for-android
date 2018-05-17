@@ -38,35 +38,35 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
      *
      * @See <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code">Authorize access to web applications using OAuth 2.0 and Azure Active Directory</a>
      */
-    protected Date mExpiresOn;
+    private Date mExpiresOn;
 
     /**
      * The App ID URI of the web API (secured resource).
      *
      * @See <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code">Authorize access to web applications using OAuth 2.0 and Azure Active Directory</a>
      */
-    protected String mResource;
+    private String mResource;
 
     /**
      * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
      * extend the valid lifetime of an access_token.
      */
-    protected Date mExtExpiresOn;
+    private Date mExtExpiresOn;
 
     /**
      * The time after which the issued access_token may be used.
      */
-    protected String mNotBefore;
+    private String mNotBefore;
 
     /**
      * Information to uniquely identify the tenant and the user _within_ that tenant.
      */
-    protected String mClientInfo;
+    private String mClientInfo;
 
     /**
      * Information to uniquely identify the family that the client application belongs to.
      */
-    protected String mFamilyId;
+    private String mFamilyId;
 
     /**
      * The client_id of the application requesting a token.
@@ -74,18 +74,18 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
     protected transient String mClientId;
 
     /**
-     * Returns the family client id
+     * Returns the family client id.
      *
-     * @return
+     * @return mFamilyId
      */
     public String getFamilyId() {
         return mFamilyId;
     }
 
     /**
-     * Sets the family id
+     * Sets the family id.
      *
-     * @param familyId
+     * @param familyId family ID of the token
      */
     public void setFamilyId(String familyId) {
         this.mFamilyId = familyId;
@@ -94,7 +94,7 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
     /**
      * The SPE Ring from which this token was issued.
      */
-    protected String mSpeRing;
+    private String mSpeRing;
 
     /**
      * Gets the response expires_on.

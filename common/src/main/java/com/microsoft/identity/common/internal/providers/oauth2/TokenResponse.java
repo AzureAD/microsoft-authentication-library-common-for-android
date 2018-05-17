@@ -42,7 +42,7 @@ public class TokenResponse {
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
     @SerializedName("expires_in")
-    protected Long mExpiresIn;
+    private Long mExpiresIn;
 
     /**
      * REQUIRED.  The access token issued by the authorization server.
@@ -50,7 +50,7 @@ public class TokenResponse {
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
     @SerializedName("access_token")
-    protected String mAccessToken;
+    private String mAccessToken;
 
     /**
      * REQUIRED.  The type of the token issued as described in
@@ -60,7 +60,7 @@ public class TokenResponse {
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
     @SerializedName("token_type")
-    protected String mTokenType;
+    private String mTokenType;
 
     /**
      * OPTIONAL.  The refresh token, which can be used to obtain new
@@ -70,7 +70,7 @@ public class TokenResponse {
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
     @SerializedName("refresh_token")
-    protected String mRefreshToken;
+    private String mRefreshToken;
 
     /**
      * OPTIONAL, if identical to the scope requested by the client;
@@ -80,7 +80,7 @@ public class TokenResponse {
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
     @SerializedName("scope")
-    protected String mScope;
+    private String mScope;
 
     /**
      * REQUIRED if the "state" parameter was present in the client
@@ -89,7 +89,7 @@ public class TokenResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-4.2.2">RFC 6749 - Access Token Response</a>
      */
-    protected String mState;
+    private String mState;
 
     /**
      * An unsigned JSON Web Token (JWT). The app can base64Url decode the segments of this token
@@ -99,13 +99,13 @@ public class TokenResponse {
      * @See <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code">Authorize access to web applications using OAuth 2.0 and Azure Active Directory</a>
      */
     @SerializedName("id_token")
-    protected String mIdToken;
+    private String mIdToken;
 
 
     /**
-     * A long representing the time at which the response was received in milliseconds since the Unix Epoch
+     * A long representing the time at which the response was received in milliseconds since the Unix Epoch.
      */
-    protected long mResponseReceivedTime;
+    private long mResponseReceivedTime;
 
     /**
      * Gets the response expires_in.
@@ -234,18 +234,18 @@ public class TokenResponse {
     }
 
     /**
-     * Sets the time at which the response was received.  Expressed as milliseconds from the unix epoch
+     * Sets the time at which the response was received. Expressed as milliseconds from the unix epoch
      *
-     * @param responseReceivedTime
+     * @param responseReceivedTime response received time in type Long
      */
     public void setResponseReceivedTime(Long responseReceivedTime) {
         this.mResponseReceivedTime = responseReceivedTime;
     }
 
     /**
-     * Gets the time at which the response was received.  Expressed as milliseconds from the unix epoch
+     * Gets the time at which the response was received.  Expressed as milliseconds from the unix epoch.
      *
-     * @return
+     * @return mResponseReceivedTime
      */
     public long getResponseReceivedTime() {
         return this.mResponseReceivedTime;

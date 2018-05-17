@@ -30,46 +30,69 @@ import java.util.List;
 public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
 
     @SerializedName("error_codes")
-    protected List<Long> mErrorCodes;
+    private List<Long> mErrorCodes;
 
     @SerializedName("timestamp")
-    protected String mTimeStamp;
+    private String mTimeStamp;
 
     @SerializedName("trace_id")
-    protected String mTraceId;
+    private String mTraceId;
 
     @SerializedName("correlation_id")
-    protected String mCorrelationId;
+    private String mCorrelationId;
 
-
+    /**
+     * @return mErrorCodes of the Microsoft token error response
+     */
     public List<Long> getErrorCodes() {
         return mErrorCodes;
     }
 
+    /**
+     * @param errorCodes error codes of the Microsoft token error response in type List<Long>
+     */
     public void setErrorCodes(List<Long> errorCodes) {
         this.mErrorCodes = errorCodes;
     }
 
+    /**
+     * @return mTimeStamp of the Microsoft token error response
+     */
     public String getTimeStamp() {
         return mTimeStamp;
     }
 
+    /**
+     * @param timeStamp time stamp of the Microsoft token error response
+     */
     public void setTimeStamp(String timeStamp) {
         this.mTimeStamp = timeStamp;
     }
 
+    /**
+     * @return mTraceId of the Microsoft token error response
+     */
     public String getTraceId() {
         return mTraceId;
     }
 
+    /**
+     * @param traceId trace ID of the Microsoft token error response
+     */
     public void setTraceId(String traceId) {
         this.mTraceId = traceId;
     }
 
+    /**
+     * @return mCorrelationId of the Microsoft token error response
+     */
     public String getCorrelationId() {
         return mCorrelationId;
     }
 
+    /**
+     * @param correlationId correlation ID of the Microsoft token error response
+     */
     public void setCorrelationId(String correlationId) {
         this.mCorrelationId = correlationId;
     }

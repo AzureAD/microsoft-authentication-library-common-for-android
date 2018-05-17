@@ -40,24 +40,34 @@ import java.util.Map;
 
 public abstract class MicrosoftAccount extends Account {
 
-    protected String mDisplayableId; // Legacy Identifier -  UPN (preferred) or Email
-    protected String mUniqueId; // Legacy Identifier - Object Id (preferred) or Subject
+    private String mDisplayableId; // Legacy Identifier -  UPN (preferred) or Email
+    private String mUniqueId; // Legacy Identifier - Object Id (preferred) or Subject
 
-    protected String mName;
-    protected String mIdentityProvider;
-    protected String mUid;
-    protected String mUtid;
-    protected IDToken mIDToken;
-    protected Uri mPasswordChangeUrl;
-    protected Date mPasswordExpiresOn;
-    protected String mTenantId; // Tenant Id of the authority that issued the idToken... not necessarily the home tenant of the account
-    protected String mGivenName;
-    protected String mFamilyName;
+    private String mName;
+    private String mIdentityProvider;
+    private String mUid;
+    private String mUtid;
+    private IDToken mIDToken;
+    private Uri mPasswordChangeUrl;
+    private Date mPasswordExpiresOn;
+    private String mTenantId; // Tenant Id of the authority that issued the idToken... not necessarily the home tenant of the account
+    private String mGivenName;
+    private String mFamilyName;
 
+    /**
+     * Constructor of MicrosoftAccount.
+     */
     public MicrosoftAccount() {
         super();
     }
 
+    /**
+     * Constructor of MicrosoftAccount.
+     *
+     * @param idToken id token of the Microsoft account
+     * @param uid UID of the Microsoft account
+     * @param utid UTID of the Microsoft account
+     */
     public MicrosoftAccount(final IDToken idToken, String uid, final String utid) {
         mIDToken = idToken;
         Map<String, String> claims = idToken.getTokenClaims();
@@ -104,12 +114,18 @@ public abstract class MicrosoftAccount extends Account {
         return null;
     }
 
-    public void setFirstName(String mGivenName) {
-        this.mGivenName = mGivenName;
+    /**
+     * @param givenName given name of the Microsoft account
+     */
+    public void setFirstName(String givenName) {
+        this.mGivenName = givenName;
     }
 
-    public void setLastName(String mFamilyName) {
-        this.mFamilyName = mFamilyName;
+    /**
+     * @param familyName family name of the Microsoft account
+     */
+    public void setLastName(String familyName) {
+        this.mFamilyName = familyName;
     }
 
     /**
@@ -122,7 +138,7 @@ public abstract class MicrosoftAccount extends Account {
     /**
      * Sets the displayableId of a user when making acquire token API call.
      *
-     * @param displayableId
+     * @param displayableId displayable ID
      */
     public void setDisplayableId(final String displayableId) {
         mDisplayableId = displayableId;
@@ -255,6 +271,9 @@ public abstract class MicrosoftAccount extends Account {
         return DateExtensions.createCopy(mPasswordExpiresOn);
     }
 
+    /**
+     * @return mIDToken of the Microsoft account
+     */
     public IDToken getIDToken() {
         return mIDToken;
     }
