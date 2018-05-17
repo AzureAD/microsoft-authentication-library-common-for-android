@@ -104,7 +104,7 @@ public class ADALOAuth2TokenCache
     }
 
     protected void initializeSharedPreferencesFileManager(final String fileName) {
-        setISharedPreferencesFileManager(new SharedPreferencesFileManager(super.mContext, fileName));
+        setISharedPreferencesFileManager(new SharedPreferencesFileManager(super.getContext(), fileName));
     }
 
     /**
@@ -180,7 +180,7 @@ public class ADALOAuth2TokenCache
         synchronized (LOCK) {
             if (sHelper == null) {
                 Log.v(TAG, "Started to initialize storage helper");
-                sHelper = new StorageHelper(mContext);
+                sHelper = new StorageHelper(this.getContext());
                 Log.v(TAG, "Finished to initialize storage helper");
             }
         }

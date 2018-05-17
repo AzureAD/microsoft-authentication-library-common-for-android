@@ -52,7 +52,7 @@ public abstract class OAuth2Strategy
                 GenericTokenResponse extends TokenResponse,
                 GenericTokenResult extends TokenResult> {
 
-    protected String mTokenEndpoint;
+    private String mTokenEndpoint;
 
     private String mAuthorizationEndpoint;
     private Uri mIssuer;
@@ -134,6 +134,14 @@ public abstract class OAuth2Strategy
         this.mAuthorizationEndpoint = authorizationEndpoint;
     }
 
+    protected String getTokenEndpoint() {
+        return mTokenEndpoint;
+    }
+
+    protected void setTokenEndpoint(String tokenEndpoint) {
+        this.mTokenEndpoint = tokenEndpoint;
+    }
+
     protected Uri getIssuer() {
         return mIssuer;
     }
@@ -169,6 +177,7 @@ public abstract class OAuth2Strategy
      * This allows IDPs that do not support OIDC to still be able to return a user to us
      * This method should take the TokenResponse as a parameter
      *
+     * @param response Generic token response
      * @return GenericAccount
      */
     public abstract GenericAccount createAccount(GenericTokenResponse response);

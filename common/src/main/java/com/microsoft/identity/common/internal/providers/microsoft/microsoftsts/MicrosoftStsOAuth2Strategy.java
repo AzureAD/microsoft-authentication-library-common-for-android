@@ -57,11 +57,17 @@ public class MicrosoftStsOAuth2Strategy
                 TokenResult> {
 
     private MicrosoftStsOAuth2Configuration mConfig;
+    private static final int HTTP_BAD_REQUEST = 400;
 
+    /**
+     * Constructor of MicrosoftStsOAuth2Strategy.
+     *
+     * @param config MicrosoftStsOAuth2Configuration
+     */
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config) {
         super(config);
         mConfig = config;
-        mTokenEndpoint = "https://login.microsoftonline.com/microsoft.com/oAuth2/v2.0/token";
+        this.setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oAuth2/v2.0/token");
     }
 
     @Override
@@ -121,7 +127,7 @@ public class MicrosoftStsOAuth2Strategy
         TokenResponse tokenResponse = null;
         TokenErrorResponse tokenErrorResponse = null;
 
-        if (response.getStatusCode() >= 400) {
+        if (response.getStatusCode() >= HTTP_BAD_REQUEST) {
             //An error occurred
             tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenErrorResponse.class);
         } else {

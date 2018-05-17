@@ -152,7 +152,7 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
     }
 
     /**
-     * Sets the family id
+     * Sets the family id.
      *
      * @param familyId family id of the token.
      */

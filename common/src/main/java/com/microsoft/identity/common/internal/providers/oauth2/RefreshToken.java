@@ -26,16 +26,44 @@ import com.microsoft.identity.common.internal.dto.IRefreshToken;
 
 public abstract class RefreshToken implements IRefreshToken {
 
+    /**
+     * Constructor of RefreshToken.
+     *
+     * @param response TokenResponse object
+     */
     public RefreshToken(TokenResponse response) {
         this.mTokenReceivedTime = response.getResponseReceivedTime();
         this.mRawRefreshToken = response.getRefreshToken();
     }
 
-    protected long mTokenReceivedTime;
-    protected String mRawRefreshToken;
+    private long mTokenReceivedTime;
+    private String mRawRefreshToken;
 
+    /**
+     * @param rawRefreshToken raw refresh token of RefreshToken object
+     */
+    protected void setRawRefreshToken(String rawRefreshToken) {
+        this.mRawRefreshToken = rawRefreshToken;
+    }
+
+    /**
+     * @param tokenReceivedTime received time of refresh token
+     */
+    protected void setTokenReceivedTime(long tokenReceivedTime) {
+        this.mTokenReceivedTime = tokenReceivedTime;
+    }
+
+    /**
+     * @return mRawRefreshToken of RefreshToken object
+     */
     public String getRefreshToken() {
         return mRawRefreshToken;
     }
 
+    /**
+     * @return mTokenReceivedTime of RefreshToken object
+     */
+    public long getTokenReceivedTime() {
+        return mTokenReceivedTime;
+    }
 }

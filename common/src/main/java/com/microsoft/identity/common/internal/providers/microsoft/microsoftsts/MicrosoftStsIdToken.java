@@ -41,6 +41,12 @@ public class MicrosoftStsIdToken extends MicrosoftIdToken {
     public static final String AIO = "aio";
     public static final String UTI = "uti";
 
+    /**
+     * Constructor of MicrosoftStsIdToken.
+     *
+     * @param rawIdToken String
+     * @throws ServiceException thrown if the rawIdToken is JSON malformed
+     */
     public MicrosoftStsIdToken(String rawIdToken) throws ServiceException {
         super(rawIdToken);
     }

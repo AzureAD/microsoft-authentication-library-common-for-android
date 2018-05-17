@@ -37,10 +37,12 @@ import java.util.Map;
 /**
  * Utility class for performing common actions needed for the common cache schema.
  */
-public class SchemaUtil {
+public final class SchemaUtil {
 
     private static final String TAG = SchemaUtil.class.getSimpleName();
 
+    private SchemaUtil() {
+    }
     /**
      * Returns the authority (issuer) for the supplied IDToken.
      *

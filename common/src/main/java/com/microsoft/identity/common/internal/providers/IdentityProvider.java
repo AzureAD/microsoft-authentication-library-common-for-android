@@ -26,7 +26,12 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configurati
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 
 public abstract class IdentityProvider<T extends OAuth2Strategy, U extends OAuth2Configuration> {
-
+    /**
+     * Create OAuth2 strategy.
+     *
+     * @param config generic OAuth2 configuration
+     * @return Generic OAuth2Strategy
+     */
     public abstract T createOAuth2Strategy(U config);
 
 }

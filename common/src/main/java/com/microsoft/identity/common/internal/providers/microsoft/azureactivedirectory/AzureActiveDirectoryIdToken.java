@@ -26,7 +26,7 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 
 /**
- * Represents additional id token claims issued by AAD (V1 Endpoint)
+ * Represents additional id token claims issued by AAD (V1 Endpoint).
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims
  */
 public class AzureActiveDirectoryIdToken extends MicrosoftIdToken {
@@ -41,9 +41,23 @@ public class AzureActiveDirectoryIdToken extends MicrosoftIdToken {
      * guaranteed to be unique within a tenant and is designed to be used only for display purposes.
      */
     public static final String UNIQUE_NAME = "unique_name";
+
+    /**
+     * Password expiration.
+     */
     public static final String PASSWORD_EXPIRATION = "pwd_exp";
+
+    /**
+     * Password change URL.
+     */
     public static final String PASSWORD_CHANGE_URL = "pwd_url";
 
+    /**
+     * Constructor of AzureActiveDirectoryIdToken.
+     *
+     * @param rawIdToken raw ID token
+     * @throws ServiceException thrown if rawIdToken is JSON malformed
+     */
     public AzureActiveDirectoryIdToken(String rawIdToken) throws ServiceException {
         super(rawIdToken);
     }

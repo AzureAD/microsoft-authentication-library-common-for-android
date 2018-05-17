@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 public class AccessToken {
     /**
-     * A buffer of ten minutes (in milliseconds) for token expiration
+     * A buffer of ten minutes (in milliseconds) for token expiration.
      */
     private final long mTokenExpiredBuffer = 600000;
     private static final int SECONDS_MS = 1000;
@@ -34,6 +34,11 @@ public class AccessToken {
     private long mTokenReceivedTime;
     private String mRawAccessToken;
 
+    /**
+     * Constructor of AccessToken.
+     *
+     * @param response TokenResponse object
+     */
     public AccessToken(TokenResponse response) {
         this.mExpiresIn = response.getExpiresIn();
         this.mTokenReceivedTime = response.getResponseReceivedTime();
@@ -41,10 +46,16 @@ public class AccessToken {
         this.mRawAccessToken = response.getAccessToken();
     }
 
+    /**
+     * @return mRawAccessToken of the access token object
+     */
     public String getAccessToken() {
         return mRawAccessToken;
     }
 
+    /**
+     * @return true if the access token is expired, false otherwise.
+     */
     public boolean isExpired() {
         long currentTime = System.currentTimeMillis();
         long currentTimeWithBuffer = currentTime + mTokenExpiredBuffer;
@@ -53,38 +64,65 @@ public class AccessToken {
         return expiresOn > currentTimeWithBuffer;
     }
 
+    /**
+     * @return mTokenExpiredBuffer of the access token object
+     */
     public long getTokenExpiredBuffer() {
         return mTokenExpiredBuffer;
     }
 
+    /**
+     * @return mExpiresIn of the access token object
+     */
     public long getExpiresIn() {
         return mExpiresIn;
     }
 
+    /**
+     * @param expiresIn expires in
+     */
     public void setExpiresIn(long expiresIn) {
         this.mExpiresIn = expiresIn;
     }
 
+    /**
+     * @return mTokenType of the access token object
+     */
     public String getTokenType() {
         return mTokenType;
     }
 
+    /**
+     * @param tokenType token type
+     */
     public void setTokenType(String tokenType) {
         this.mTokenType = tokenType;
     }
 
+    /**
+     * @return mTokenReceivedTime of the access token object
+     */
     public long getTokenReceivedTime() {
         return mTokenReceivedTime;
     }
 
+    /**
+     * @param tokenReceivedTime token received time
+     */
     public void setTokenReceivedTime(long tokenReceivedTime) {
         this.mTokenReceivedTime = tokenReceivedTime;
     }
 
+    /**
+     * @return mRawAccessToken of the access token object
+     */
     public String getRawAccessToken() {
         return mRawAccessToken;
     }
 
+    /**
+     * @param rawAccessToken raw access token
+     */
     public void setRawAccessToken(String rawAccessToken) {
         this.mRawAccessToken = rawAccessToken;
     }

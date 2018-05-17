@@ -32,7 +32,10 @@ import java.util.Map;
 /**
  * Helper methods related to JSON.
  */
-public class JsonExtensions {
+public final class JsonExtensions {
+    private JsonExtensions() {
+    }
+
     /**
      * Extract JSON Object into Map<String, String>.
      *

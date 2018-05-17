@@ -31,7 +31,7 @@ import static com.microsoft.identity.common.adal.internal.util.StringExtensions.
 /**
  * Util class for encoding related tasks.
  */
-public class EncodingUtil {
+public final class EncodingUtil {
 
     private EncodingUtil() {
         // Utility class.

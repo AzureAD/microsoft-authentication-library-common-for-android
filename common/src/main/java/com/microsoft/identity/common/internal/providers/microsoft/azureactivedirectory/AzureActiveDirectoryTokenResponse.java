@@ -71,7 +71,7 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
     /**
      * The client_id of the application requesting a token.
      */
-    protected transient String mClientId;
+    private transient String mClientId;
 
     /**
      * Returns the family client id.

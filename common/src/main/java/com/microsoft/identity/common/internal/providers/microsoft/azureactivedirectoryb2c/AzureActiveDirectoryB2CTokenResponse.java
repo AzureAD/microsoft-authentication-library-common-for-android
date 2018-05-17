@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 /**
- * The Azure Active Directory B2C Token Response
+ * The Azure Active Directory B2C Token Response.
  */
 public class AzureActiveDirectoryB2CTokenResponse extends TokenResponse {
 }

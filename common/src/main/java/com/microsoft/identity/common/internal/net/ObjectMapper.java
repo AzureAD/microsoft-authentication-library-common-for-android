@@ -31,10 +31,21 @@ import java.net.URLEncoder;
 import java.util.Iterator;
 import java.util.TreeMap;
 
-public class ObjectMapper {
+public final class ObjectMapper {
 
+    /**
+     * Encoding scheme.
+     */
     public static final String ENCODING_SCHEME = "UTF-8";
 
+    private ObjectMapper() {
+    }
+
+    /**
+     * Serialize object to JSON string.
+     * @param object Object
+     * @return JSON string
+     */
     public static String serializeObjectToJsonString(Object object) {
         return new Gson().toJson(object);
     }

@@ -24,9 +24,12 @@ package com.microsoft.identity.common.internal.logging;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 
-public class DiagnosticContext {
+public final class DiagnosticContext {
 
     private static final String THREAD_ID = "thread_id";
+
+    private DiagnosticContext() {
+    }
 
     private static final ThreadLocal<IRequestContext> REQUEST_CONTEXT_THREAD_LOCAL =
             new ThreadLocal<IRequestContext>() {

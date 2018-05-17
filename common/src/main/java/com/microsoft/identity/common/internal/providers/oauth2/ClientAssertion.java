@@ -23,8 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 /**
- * A class representing a client assertion used by the authorization server to authenticate
- * the client application
+ * A class representing a client assertion used by the authorization server to authenticate the client application.
  * Adding support for client authentication for internal use with test execution
  * https://tools.ietf.org/html/rfc7521#section-6.1
  */

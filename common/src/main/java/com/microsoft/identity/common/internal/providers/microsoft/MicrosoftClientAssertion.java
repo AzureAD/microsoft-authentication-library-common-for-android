@@ -46,8 +46,8 @@ import java.util.List;
  */
 public class MicrosoftClientAssertion extends ClientAssertion {
 
-    private static String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
-    private static String THUMBPRINT_ALGORITHM = "SHA-1";
+    private static final String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+    private static final String THUMBPRINT_ALGORITHM = "SHA-1";
     private static final int ONE_HOUR = 60000;
 
     /**
@@ -66,8 +66,8 @@ public class MicrosoftClientAssertion extends ClientAssertion {
         }
 
         SignedJWT assertion = createSignedJwt(credential.getClientId(), audience, credential);
-        this.mClientAssertion = assertion.serialize();
-        this.mClientAssertionType = MicrosoftClientAssertion.CLIENT_ASSERTION_TYPE;
+        this.setClientAssertion(assertion.serialize());
+        this.setClientAssertionType(MicrosoftClientAssertion.CLIENT_ASSERTION_TYPE);
 
     }
 

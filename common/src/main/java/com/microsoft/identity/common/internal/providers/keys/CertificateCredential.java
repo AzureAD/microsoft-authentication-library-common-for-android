@@ -42,14 +42,23 @@ public final class CertificateCredential {
     private final String mClientId;
     private final X509Certificate mPublicCertificate;
 
+    /**
+     * @return mPrivateKey of the CertificateCredential object
+     */
     public PrivateKey getPrivateKey() {
         return this.mPrivateKey;
     }
 
+    /**
+     * @return mClientId of the CertificateCredential object
+     */
     public String getClientId() {
         return this.mClientId;
     }
 
+    /**
+     * @return mPublicCertificate of the CertificateCredential object
+     */
     public X509Certificate getPublicCertificate() {
         return this.mPublicCertificate;
     }

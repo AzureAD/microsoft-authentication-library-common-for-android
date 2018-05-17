@@ -64,10 +64,18 @@ public class AzureActiveDirectory
         return hasCloudHost(authorityUrl) && getAzureActiveDirectoryCloud(authorityUrl).isValidated();
     }
 
+    /**
+     * @param authorityUrl URL
+     * @return AzureActiveDirectoryCloud
+     */
     public static AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(final URL authorityUrl) {
         return sAadClouds.get(authorityUrl.getHost().toLowerCase(Locale.US));
     }
 
+    /**
+     * @param host  String
+     * @param cloud AzureActiveDirectoryCloud
+     */
     @VisibleForTesting
     public static void putCloud(final String host, final AzureActiveDirectoryCloud cloud) {
         sAadClouds.put(host.toLowerCase(Locale.US), cloud);

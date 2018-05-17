@@ -27,12 +27,11 @@ import android.content.Context;
 import com.microsoft.identity.common.exception.ClientException;
 
 /**
- * Class for managing the tokens saved locally on a device
+ * Class for managing the tokens saved locally on a device.
  */
 public abstract class OAuth2TokenCache
         <T extends OAuth2Strategy, U extends AuthorizationRequest, V extends TokenResponse> {
-
-    protected Context mContext;
+    private Context mContext;
 
     /**
      * Constructs a new OAuth2TokenCache.
@@ -54,4 +53,12 @@ public abstract class OAuth2TokenCache
     public abstract void saveTokens(final T oAuth2Strategy,
                                     final U request,
                                     final V response) throws ClientException;
+
+    protected Context getContext() {
+        return mContext;
+    }
+
+    protected void setContext(Context context) {
+        this.mContext = context;
+    }
 }

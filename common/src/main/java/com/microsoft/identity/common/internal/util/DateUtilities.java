@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.util;
 
 import java.util.Date;
 
-public class DateUtilities {
+public final class DateUtilities {
 
     private DateUtilities() {
     }

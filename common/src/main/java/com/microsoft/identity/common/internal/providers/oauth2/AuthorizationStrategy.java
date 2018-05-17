@@ -28,5 +28,11 @@ package com.microsoft.identity.common.internal.providers.oauth2;
  * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
  */
 public abstract class AuthorizationStrategy {
+    /**
+     * Perform the authorization request.
+     *
+     * @param request authorization request
+     * @return AuthorizationResult
+     */
     public abstract AuthorizationResult requestAuthorization(AuthorizationRequest request);
 }

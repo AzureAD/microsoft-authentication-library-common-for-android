@@ -26,7 +26,6 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
@@ -63,7 +62,7 @@ public class AzureActiveDirectoryOAuth2Strategy
      */
     public AzureActiveDirectoryOAuth2Strategy(final AzureActiveDirectoryOAuth2Configuration config) {
         super(config);
-        mTokenEndpoint = "https://login.microsoftonline.com/microsoft.com/oauth2/token";
+        this.setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oauth2/token");
         mConfig = config;
     }
 
@@ -73,12 +72,12 @@ public class AzureActiveDirectoryOAuth2Strategy
         authRequest = request;
         AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
 
-        if (!cloud.isValidated() && this.mConfig.isAuthorityHostValdiationEnabled()) {
-            //We have invalid cloud data... and authority host validation is enabled....
-            //TODO: Throw an exception in this case... need to see what ADAL does in this case.
+        if (!cloud.isValidated() && this.mConfig.isAuthorityHostValidationEnabled()) {
+            // TODO: Throw an exception in this case... need to see what ADAL does in this case.
+            // We have invalid cloud data... and authority host validation is enabled....
         }
 
-        if (!cloud.isValidated() && !this.mConfig.isAuthorityHostValdiationEnabled()) {
+        if (!cloud.isValidated() && !this.mConfig.isAuthorityHostValidationEnabled()) {
             //Authority host validation not specified... but there is no cloud....
             //Hence just return the passed in Authority
             return authRequest.getAuthority().toString();

@@ -38,11 +38,16 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 /**
- * Azure Active Directory Federation Services 2016 oAuth2 Strategy
+ * Azure Active Directory Federation Services 2016 oAuth2 Strategy.
  * For information on ADFS 2016 oAuth and OIDC support
  * see <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-scenarios-for-developers'>https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-scenarios-for-developers</a>
  */
 public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2Strategy {
+    /**
+     * Constructor of ActiveDirectoryFederationServices2016OAuth2Strategy.
+     *
+     * @param config OAuth2Configuration
+     */
     public ActiveDirectoryFederationServices2016OAuth2Strategy(OAuth2Configuration config) {
         super(config);
     }

@@ -28,11 +28,17 @@ import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import java.util.Map;
 
 /**
- * ID Tokens only became available with ADFS 2016
+ * ID Tokens only became available with ADFS 2016.
  * ADFS 2016 supports custom claims in id tokens
  * see <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/development/custom-id-tokens-in-ad-fs'>https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/development/custom-id-tokens-in-ad-fs</a>
  */
 public class ActiveDirectoryFederationServicesIdToken extends IDToken {
+    /**
+     * Constructor of ActiveDirectoryFederationServicesIdToken.
+     *
+     * @param rawIdToken String
+     * @throws ServiceException thrown if rawIdToken is JSON malformeds
+     */
     public ActiveDirectoryFederationServicesIdToken(String rawIdToken) throws ServiceException {
         super(rawIdToken);
     }

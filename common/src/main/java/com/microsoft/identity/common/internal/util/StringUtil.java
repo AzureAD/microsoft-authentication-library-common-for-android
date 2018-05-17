@@ -23,9 +23,12 @@
 package com.microsoft.identity.common.internal.util;
 
 /**
- * String utilities
+ * String utilities.
  */
-public class StringUtil {
+public final class StringUtil {
+    private StringUtil() {
+    }
+
     /**
      * Check if the string is null or empty.
      *

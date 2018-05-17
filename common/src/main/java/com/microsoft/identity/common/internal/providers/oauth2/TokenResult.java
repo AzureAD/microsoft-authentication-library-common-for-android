@@ -32,6 +32,12 @@ public class TokenResult {
     private TokenResponse mTokenResponse;
     private TokenErrorResponse mTokenErrorResponse;
 
+    /**
+     * Constructor of TokenResult.
+     *
+     * @param response      TokenResponse
+     * @param errorResponse TokenErrorResponse
+     */
     public TokenResult(TokenResponse response, TokenErrorResponse errorResponse) {
 
         this.mTokenResponse = response;
