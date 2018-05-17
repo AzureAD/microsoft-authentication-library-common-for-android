@@ -289,8 +289,8 @@ public abstract class MicrosoftAccount extends Account {
     }
 
     @Override
-    public String getGuestId() {
-        return SchemaUtil.getGuestId(mIDToken);
+    public String getAlternativeAccountId() {
+        return SchemaUtil.getAlternativeAccountId(mIDToken);
     }
 
     @Override

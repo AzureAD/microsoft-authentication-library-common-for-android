@@ -67,11 +67,11 @@ public interface IAccount {
     String getAuthorityType();
 
     /**
-     * Gets the guest_id.
+     * Gets the alternative_account_id.
      *
-     * @return The guest_id to get.
+     * @return The alternative_account_id to get.
      */
-    String getGuestId();
+    String getAlternativeAccountId();
 
     /**
      * Gets the first_name;

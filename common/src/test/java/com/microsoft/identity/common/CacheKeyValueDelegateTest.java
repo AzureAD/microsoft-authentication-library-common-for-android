@@ -61,7 +61,7 @@ public class CacheKeyValueDelegateTest {
     private static final String CREDENTIAL_TYPE_ID_TOKEN = CredentialType.IdToken.name().toLowerCase(Locale.US);
     private static final String AUTHORITY_ACCOUNT_ID = "90bc88e6-7c76-45e8-a4e3-a0b1dc0a8ce1";
     private static final String AUTHORITY_TYPE = "AAD";
-    private static final String GUEST_ID = "32000000000003bde810";
+    private static final String ALTERNATIVE_ACCOUNT_ID = "32000000000003bde810";
     private static final String FIRST_NAME = "Jane";
     private static final String LAST_NAME = "Doe";
     private static final String AVATAR_URL = "https://fake.cdn.microsoft.com/avatars/1";
@@ -355,7 +355,7 @@ public class CacheKeyValueDelegateTest {
         account.setRealm(REALM);
         account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
         account.setAuthorityType(AUTHORITY_TYPE);
-        account.setGuestId(GUEST_ID);
+        account.setAlternativeAccountId(ALTERNATIVE_ACCOUNT_ID);
         account.setFirstName(FIRST_NAME);
         account.setLastName(LAST_NAME);
         account.setAvatarUrl(AVATAR_URL);
@@ -368,7 +368,7 @@ public class CacheKeyValueDelegateTest {
         assertEquals(REALM, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM));
         assertEquals(AUTHORITY_ACCOUNT_ID, jsonObject.getString("authority_account_id"));
         assertEquals(AUTHORITY_TYPE, jsonObject.getString("authority_type"));
-        assertEquals(GUEST_ID, jsonObject.getString("guest_id"));
+        assertEquals(ALTERNATIVE_ACCOUNT_ID, jsonObject.getString("alternative_account_id"));
         assertEquals(FIRST_NAME, jsonObject.getString("first_name"));
         assertEquals(LAST_NAME, jsonObject.getString("last_name"));
         assertEquals(AVATAR_URL, jsonObject.getString("avatar_url"));
@@ -383,7 +383,7 @@ public class CacheKeyValueDelegateTest {
         account.setRealm(REALM);
         account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
         account.setAuthorityType(AUTHORITY_TYPE);
-        account.setGuestId(GUEST_ID);
+        account.setAlternativeAccountId(ALTERNATIVE_ACCOUNT_ID);
         account.setFirstName(FIRST_NAME);
         account.setLastName(LAST_NAME);
         account.setAvatarUrl(AVATAR_URL);
@@ -412,7 +412,7 @@ public class CacheKeyValueDelegateTest {
         assertEquals(REALM, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM));
         assertEquals(AUTHORITY_ACCOUNT_ID, derivedCacheValueJsonObject.get("authority_account_id"));
         assertEquals(AUTHORITY_TYPE, derivedCacheValueJsonObject.get("authority_type"));
-        assertEquals(GUEST_ID, derivedCacheValueJsonObject.get("guest_id"));
+        assertEquals(ALTERNATIVE_ACCOUNT_ID, derivedCacheValueJsonObject.get("alternative_account_id"));
         assertEquals(FIRST_NAME, derivedCacheValueJsonObject.get("first_name"));
         assertEquals(LAST_NAME, derivedCacheValueJsonObject.get("last_name"));
         assertEquals(AVATAR_URL, derivedCacheValueJsonObject.get("avatar_url"));
@@ -434,7 +434,7 @@ public class CacheKeyValueDelegateTest {
         account.setRealm(REALM);
         account.setAuthorityAccountId(AUTHORITY_ACCOUNT_ID);
         account.setAuthorityType(AUTHORITY_TYPE);
-        account.setGuestId(GUEST_ID);
+        account.setAlternativeAccountId(ALTERNATIVE_ACCOUNT_ID);
         account.setFirstName(FIRST_NAME);
         account.setLastName(LAST_NAME);
         account.setAvatarUrl(AVATAR_URL);
@@ -463,7 +463,7 @@ public class CacheKeyValueDelegateTest {
         assertEquals(REALM, deserializedValue.getRealm());
         assertEquals(AUTHORITY_ACCOUNT_ID, deserializedValue.getAuthorityAccountId());
         assertEquals(AUTHORITY_TYPE, deserializedValue.getAuthorityType());
-        assertEquals(GUEST_ID, deserializedValue.getGuestId());
+        assertEquals(ALTERNATIVE_ACCOUNT_ID, deserializedValue.getAlternativeAccountId());
         assertEquals(FIRST_NAME, deserializedValue.getFirstName());
         assertEquals(LAST_NAME, deserializedValue.getLastName());
         assertEquals(AVATAR_URL, deserializedValue.getAvatarUrl());

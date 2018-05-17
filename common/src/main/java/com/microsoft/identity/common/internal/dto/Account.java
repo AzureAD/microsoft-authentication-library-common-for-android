@@ -24,12 +24,12 @@ package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
 
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.ALTERNATIVE_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AUTHORITY_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AUTHORITY_TYPE;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AVATAR_URL;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.FIRST_NAME;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.GUEST_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.LAST_NAME;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM;
@@ -51,7 +51,7 @@ public class Account extends AccountCredentialBase implements IAccount {
         public static final String AUTHORITY_ACCOUNT_ID = "authority_account_id";
         public static final String USERNAME = "username";
         public static final String AUTHORITY_TYPE = "authority_type";
-        public static final String GUEST_ID = "guest_id";
+        public static final String ALTERNATIVE_ACCOUNT_ID = "alternative_account_id";
         public static final String FIRST_NAME = "first_name";
         public static final String LAST_NAME = "last_name";
         public static final String AVATAR_URL = "avatar_url";
@@ -71,7 +71,7 @@ public class Account extends AccountCredentialBase implements IAccount {
         setAuthorityType(copy.getAuthorityType());
 
         // Optional
-        setGuestId(copy.getGuestId());
+        setAlternativeAccountId(copy.getAlternativeAccountId());
         setFirstName(copy.getFirstName());
         setLastName(copy.getLastName());
         setAvatarUrl(copy.getAvatarUrl());
@@ -124,8 +124,8 @@ public class Account extends AccountCredentialBase implements IAccount {
      * Internal representation for guest users to the tenants. Corresponds to the "altsecid" claim
      * in the id_token for AAD.
      */
-    @SerializedName(GUEST_ID)
-    private String mGuestId;
+    @SerializedName(ALTERNATIVE_ACCOUNT_ID)
+    private String mAlternativeAccountId;
 
     /**
      * First name for this Account.
@@ -230,17 +230,17 @@ public class Account extends AccountCredentialBase implements IAccount {
     }
 
     @Override
-    public String getGuestId() {
-        return mGuestId;
+    public String getAlternativeAccountId() {
+        return mAlternativeAccountId;
     }
 
     /**
-     * Sets the guest_id.
+     * Sets the alternative_account_id.
      *
-     * @param guestId The guest_id to set.
+     * @param alternativeAccountId The alternative_account_id to set.
      */
-    public void setGuestId(final String guestId) {
-        mGuestId = guestId;
+    public void setAlternativeAccountId(final String alternativeAccountId) {
+        mAlternativeAccountId = alternativeAccountId;
     }
 
     @Override
@@ -303,7 +303,7 @@ public class Account extends AccountCredentialBase implements IAccount {
             return false;
         if (mAuthorityType != null ? !mAuthorityType.equals(account.mAuthorityType) : account.mAuthorityType != null)
             return false;
-        if (mGuestId != null ? !mGuestId.equals(account.mGuestId) : account.mGuestId != null)
+        if (mAlternativeAccountId != null ? !mAlternativeAccountId.equals(account.mAlternativeAccountId) : account.mAlternativeAccountId != null)
             return false;
         if (mFirstName != null ? !mFirstName.equals(account.mFirstName) : account.mFirstName != null)
             return false;
@@ -320,7 +320,7 @@ public class Account extends AccountCredentialBase implements IAccount {
         result = 31 * result + (mAuthorityAccountId != null ? mAuthorityAccountId.hashCode() : 0);
         result = 31 * result + (mUsername != null ? mUsername.hashCode() : 0);
         result = 31 * result + (mAuthorityType != null ? mAuthorityType.hashCode() : 0);
-        result = 31 * result + (mGuestId != null ? mGuestId.hashCode() : 0);
+        result = 31 * result + (mAlternativeAccountId != null ? mAlternativeAccountId.hashCode() : 0);
         result = 31 * result + (mFirstName != null ? mFirstName.hashCode() : 0);
         result = 31 * result + (mLastName != null ? mLastName.hashCode() : 0);
         result = 31 * result + (mAvatarUrl != null ? mAvatarUrl.hashCode() : 0);

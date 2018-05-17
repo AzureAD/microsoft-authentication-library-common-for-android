@@ -88,7 +88,7 @@ public class MicrosoftStsAccountCredentialAdapter
             account.setAuthorityType(AUTHORITY_TYPE);
 
             // Optional
-            account.setGuestId(SchemaUtil.getGuestId(msIdToken)); // TODO this field has been renamed to alternative_account_id
+            account.setAlternativeAccountId(SchemaUtil.getAlternativeAccountId(msIdToken)); // TODO this field has been renamed to alternative_account_id
             account.setFirstName(tokenClaims.get(GIVEN_NAME));
             account.setLastName(tokenClaims.get(FAMILY_NAME));
             account.setAvatarUrl(SchemaUtil.getAvatarUrl(msIdToken));

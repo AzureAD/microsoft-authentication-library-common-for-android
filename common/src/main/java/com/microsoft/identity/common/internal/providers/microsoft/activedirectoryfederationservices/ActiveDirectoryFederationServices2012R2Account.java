@@ -76,7 +76,7 @@ public class ActiveDirectoryFederationServices2012R2Account extends Account {
     }
 
     @Override
-    public String getGuestId() {
+    public String getAlternativeAccountId() {
         throw new UnsupportedOperationException("Method stub!");
     }
 
