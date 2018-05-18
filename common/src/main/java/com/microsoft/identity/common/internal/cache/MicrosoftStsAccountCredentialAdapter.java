@@ -44,9 +44,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken.OJBECT_ID;
-import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.FAMILY_NAME;
-import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.GIVEN_NAME;
 import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.PREFERRED_USERNAME;
 
 public class MicrosoftStsAccountCredentialAdapter
@@ -60,7 +57,6 @@ public class MicrosoftStsAccountCredentialAdapter
     private static final String TAG = MicrosoftStsAccountCredentialAdapter.class.getSimpleName();
 
     // TODO move me!
-    private static final String AUTHORITY_TYPE = "MSSTS";
     private static final String BEARER = "Bearer";
     private static final String FOCI_PREFIX = "foci-";
 
@@ -72,34 +68,11 @@ public class MicrosoftStsAccountCredentialAdapter
         final String methodName = "createAccount";
         Logger.entering(TAG, methodName, strategy, request, response);
 
-        final MicrosoftIdToken msIdToken;
-        try {
-            msIdToken = new MicrosoftIdToken(response.getIdToken());
-            final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
-            final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
+        final Account account = new Account(strategy.createAccount(response));
 
-            final Account account = new Account();
-            // Required
-            account.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            account.setEnvironment(SchemaUtil.getEnvironment(msIdToken)); // host of authority with optional port
-            account.setRealm(getRealm(strategy, response)); //tid
-            account.setLocalAccountId(tokenClaims.get(OJBECT_ID)); // oid claim from id token
-            account.setUsername(tokenClaims.get(PREFERRED_USERNAME));
-            account.setAuthorityType(AUTHORITY_TYPE);
+        Logger.exiting(TAG, methodName, account);
 
-            // Optional
-            account.setAlternativeAccountId(SchemaUtil.getAlternativeAccountId(msIdToken));
-            account.setFirstName(tokenClaims.get(GIVEN_NAME));
-            account.setLastName(tokenClaims.get(FAMILY_NAME));
-            account.setAvatarUrl(SchemaUtil.getAvatarUrl(msIdToken));
-
-            Logger.exiting(TAG, methodName, account);
-
-            return account;
-        } catch (ServiceException e) {
-            // TODO handle this properly
-            throw new RuntimeException(e);
-        }
+        return account;
     }
 
     @Override

@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import android.support.annotation.NonNull;
+
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -43,19 +45,10 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
      * @param clientInfo The ClientInfo for this Account.
      * @return The newly created MicrosoftStsAccount.
      */
-    public static MicrosoftStsAccount create(final IDToken idToken, ClientInfo clientInfo) {
-
-        final String uid;
-        final String uTid;
-
-        //TODO: objC code throws an exception when uid/utid is null.... something for us to consider
-        if (clientInfo == null) {
-            uid = "";
-            uTid = "";
-        } else {
-            uid = clientInfo.getUid();
-            uTid = clientInfo.getUtid();
-        }
+    public static MicrosoftStsAccount create(@NonNull final IDToken idToken,
+                                             @NonNull final ClientInfo clientInfo) {
+        final String uid = clientInfo.getUid();
+        final String uTid = clientInfo.getUtid();
 
         return new MicrosoftStsAccount(idToken, uid, uTid);
     }
@@ -66,7 +59,7 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
     }
 
     @Override
-    protected String getDisplayableId(Map<String, String> claims) {
+    protected String getDisplayableId(final Map<String, String> claims) {
         if (!StringExtensions.isNullOrBlank(claims.get(MicrosoftStsIdToken.PREFERRED_USERNAME))) {
             return claims.get(MicrosoftStsIdToken.PREFERRED_USERNAME);
         } else if (!StringExtensions.isNullOrBlank(claims.get(MicrosoftStsIdToken.EMAIL))) {

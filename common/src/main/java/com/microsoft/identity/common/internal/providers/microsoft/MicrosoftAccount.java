@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
@@ -58,7 +59,9 @@ public abstract class MicrosoftAccount extends Account {
         super();
     }
 
-    public MicrosoftAccount(final IDToken idToken, String uid, final String utid) {
+    public MicrosoftAccount(@NonNull final IDToken idToken,
+                            final String uid,
+                            final String utid) {
         mIDToken = idToken;
         Map<String, String> claims = idToken.getTokenClaims();
         mUniqueId = getUniqueId(claims);
@@ -93,8 +96,7 @@ public abstract class MicrosoftAccount extends Account {
 
     protected abstract String getDisplayableId(final Map<String, String> claims);
 
-    private String getUniqueId(Map<String, String> claims) {
-
+    private String getUniqueId(final Map<String, String> claims) {
         if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.OJBECT_ID))) {
             return claims.get(AzureActiveDirectoryIdToken.OJBECT_ID);
         } else if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.SUBJECT))) {
@@ -104,12 +106,12 @@ public abstract class MicrosoftAccount extends Account {
         return null;
     }
 
-    public void setFirstName(String mGivenName) {
-        this.mGivenName = mGivenName;
+    public void setFirstName(final String givenName) {
+        mGivenName = givenName;
     }
 
-    public void setLastName(String mFamilyName) {
-        this.mFamilyName = mFamilyName;
+    public void setLastName(final String familyName) {
+        mFamilyName = familyName;
     }
 
     /**

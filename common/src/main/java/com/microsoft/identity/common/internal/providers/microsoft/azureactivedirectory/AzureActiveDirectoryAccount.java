@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
+import android.support.annotation.NonNull;
+
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
@@ -45,7 +47,9 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
      * @param uid     Returned via clientInfo of TokenResponse
      * @param uTid    Returned via ClientInfo of Token Response
      */
-    public AzureActiveDirectoryAccount(IDToken idToken, String uid, final String uTid) {
+    public AzureActiveDirectoryAccount(@NonNull final IDToken idToken,
+                                       final String uid,
+                                       final String uTid) {
         super(idToken, uid, uTid);
     }
 
@@ -56,19 +60,10 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
      * @param idToken
      * @return
      */
-    public static AzureActiveDirectoryAccount create(final IDToken idToken, ClientInfo clientInfo) {
-
-        final String uid;
-        final String uTid;
-
-        //TODO: objC code throws an exception when uid/utid is null.... something for us to consider
-        if (clientInfo == null) {
-            uid = "";
-            uTid = "";
-        } else {
-            uid = clientInfo.getUid();
-            uTid = clientInfo.getUtid();
-        }
+    public static AzureActiveDirectoryAccount create(@NonNull final IDToken idToken,
+                                                     @NonNull final ClientInfo clientInfo) {
+        final String uid = clientInfo.getUid();
+        final String uTid = clientInfo.getUtid();
 
         return new AzureActiveDirectoryAccount(idToken, uid, uTid);
     }
