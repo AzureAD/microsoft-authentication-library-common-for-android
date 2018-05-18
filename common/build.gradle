@@ -264,9 +264,9 @@ repositories {
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
-        task.dependsOn  'lint','createPom', 'javadocJar', 'sourcesJar', 'jacocoTestReport'
+        task.dependsOn  'lint','createPom', 'javadocJar', 'sourcesJar', 'jacocoTestReport', 'checkstyle'
         // TODO: Add the tasks and enable these before release
-        // ,, 'checkstyle' , 'pmd'
+        // , 'pmd'
     }
 }
 
