@@ -37,7 +37,7 @@ public class ActiveDirectoryFederationServicesIdToken extends IDToken {
      * Constructor of ActiveDirectoryFederationServicesIdToken.
      *
      * @param rawIdToken String
-     * @throws ServiceException thrown if rawIdToken is JSON malformeds
+     * @throws ServiceException if rawIdToken is malformed in JSON format.
      */
     public ActiveDirectoryFederationServicesIdToken(String rawIdToken) throws ServiceException {
         super(rawIdToken);

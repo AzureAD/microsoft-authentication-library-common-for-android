@@ -73,7 +73,7 @@ public final class Logger {
     }
 
     /**
-     * @return The single instance of {@link Logger}
+     * @return The single instance of {@link Logger}.
      */
     public static Logger getInstance() {
         return INSTANCE;

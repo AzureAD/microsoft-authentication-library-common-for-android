@@ -35,7 +35,7 @@ public final class DateExtensions {
      * Create an immutable object for the input Date object
      * to avoid exposing the internal references.
      *
-     * @param date Date
+     * @param date represents a specific instant in time, with millisecond precision.
      * @return Date
      */
     public static Date createCopy(final Date date) {

@@ -64,9 +64,9 @@ public abstract class MicrosoftAccount extends Account {
     /**
      * Constructor of MicrosoftAccount.
      *
-     * @param idToken id token of the Microsoft account
-     * @param uid UID of the Microsoft account
-     * @param utid UTID of the Microsoft account
+     * @param idToken id token of the Microsoft account.
+     * @param uid UID of the Microsoft account.
+     * @param utid UTID of the Microsoft account.
      */
     public MicrosoftAccount(final IDToken idToken, String uid, final String utid) {
         mIDToken = idToken;
@@ -115,14 +115,14 @@ public abstract class MicrosoftAccount extends Account {
     }
 
     /**
-     * @param givenName given name of the Microsoft account
+     * @param givenName given name of the Microsoft account.
      */
     public void setFirstName(String givenName) {
         this.mGivenName = givenName;
     }
 
     /**
-     * @param familyName family name of the Microsoft account
+     * @param familyName family name of the Microsoft account.
      */
     public void setLastName(String familyName) {
         this.mFamilyName = familyName;
@@ -138,7 +138,7 @@ public abstract class MicrosoftAccount extends Account {
     /**
      * Sets the displayableId of a user when making acquire token API call.
      *
-     * @param displayableId displayable ID
+     * @param displayableId displayable ID.
      */
     public void setDisplayableId(final String displayableId) {
         mDisplayableId = displayableId;
@@ -227,7 +227,7 @@ public abstract class MicrosoftAccount extends Account {
     /**
      * Return the unique identifier for the account...
      *
-     * @return
+     * @return unique identifier string.
      */
     @Override
     public String getUniqueIdentifier() {
@@ -256,7 +256,7 @@ public abstract class MicrosoftAccount extends Account {
     /**
      * Gets password change url.
      *
-     * @return the password change uri
+     * @return the password change uri.
      */
     public Uri getPasswordChangeUrl() {
         return mPasswordChangeUrl;
@@ -265,14 +265,14 @@ public abstract class MicrosoftAccount extends Account {
     /**
      * Gets password expires on.
      *
-     * @return the time when the password will expire
+     * @return the time when the password will expire.
      */
     public Date getPasswordExpiresOn() {
         return DateExtensions.createCopy(mPasswordExpiresOn);
     }
 
     /**
-     * @return mIDToken of the Microsoft account
+     * @return mIDToken of the Microsoft account.
      */
     public IDToken getIDToken() {
         return mIDToken;

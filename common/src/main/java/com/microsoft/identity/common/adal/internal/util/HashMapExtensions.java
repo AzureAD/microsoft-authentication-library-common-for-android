@@ -48,7 +48,7 @@ public final class HashMapExtensions {
      * decode url string into a key value pairs with default query delimiter.
      *
      * @param parameters URL query parameter
-     * @return key value pairs
+     * @return key value pairs.
      */
     static HashMap<String, String> urlFormDecode(String parameters) {
         return urlFormDecodeData(parameters, "&");
@@ -60,7 +60,7 @@ public final class HashMapExtensions {
      *
      * @param parameters URL parameter to be decoded
      * @param delimiter  query delimiter
-     * @return Map key value pairs
+     * @return Map key value pairs.
      */
     static HashMap<String, String> urlFormDecodeData(String parameters, String delimiter) {
         final HashMap<String, String> result = new HashMap<>();
@@ -99,7 +99,7 @@ public final class HashMapExtensions {
      *
      * @param webResponse HttpWebResponse to convert to a map
      * @return Map
-     * @throws JSONException throws if the response body is JSON malformed.
+     * @throws JSONException if JSON string is malformed.
      */
     public static Map<String, String> getJsonResponse(HttpWebResponse webResponse) throws JSONException {
         final Map<String, String> response = new HashMap<>();

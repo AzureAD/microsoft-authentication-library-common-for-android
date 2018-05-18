@@ -87,7 +87,7 @@ public class MicrosoftIdToken extends IDToken {
      * Constructor of MicrosoftIdToken.
      *
      * @param rawIdToken rawIdToken
-     * @throws ServiceException thrown if the rawIdToken is JSON malformed
+     * @throws ServiceException if rawIdToken is malformed in JSON format.
      */
     public MicrosoftIdToken(String rawIdToken) throws ServiceException {
         super(rawIdToken);

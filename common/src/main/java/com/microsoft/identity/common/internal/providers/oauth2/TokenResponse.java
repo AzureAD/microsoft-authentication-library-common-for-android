@@ -236,7 +236,7 @@ public class TokenResponse {
     /**
      * Sets the time at which the response was received. Expressed as milliseconds from the unix epoch
      *
-     * @param responseReceivedTime response received time in type Long
+     * @param responseReceivedTime response received time in type Long.
      */
     public void setResponseReceivedTime(Long responseReceivedTime) {
         this.mResponseReceivedTime = responseReceivedTime;

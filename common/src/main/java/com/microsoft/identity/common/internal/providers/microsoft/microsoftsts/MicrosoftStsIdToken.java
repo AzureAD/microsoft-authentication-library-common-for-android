@@ -45,7 +45,7 @@ public class MicrosoftStsIdToken extends MicrosoftIdToken {
      * Constructor of MicrosoftStsIdToken.
      *
      * @param rawIdToken String
-     * @throws ServiceException thrown if the rawIdToken is JSON malformed
+     * @throws ServiceException if rawIdToken is malformed in JSON format.
      */
     public MicrosoftStsIdToken(String rawIdToken) throws ServiceException {
         super(rawIdToken);

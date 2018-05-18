@@ -30,7 +30,7 @@ public class MicrosoftSts
     /**
      * Create the MicrosoftStsOAuth2Strategy from MicrosoftStsOAuth2Configuration.
      *
-     * @param config generic OAuth2 configuration
+     * @param config generic OAuth2 configuration.
      * @return MicrosoftStsOAuth2Strategy
      */
     @Override

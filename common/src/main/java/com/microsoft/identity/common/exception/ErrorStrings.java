@@ -23,7 +23,9 @@
 package com.microsoft.identity.common.exception;
 
 public final class ErrorStrings {
+
     private ErrorStrings() {
+        // Utility class.
     }
     /**
      * There are multiple cache entries found, the sdk cannot pick the correct access token

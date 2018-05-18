@@ -59,8 +59,8 @@ public final class StringExtensions {
     /**
      * checks if string is null or empty.
      *
-     * @param param String to check for null or blank
-     * @return boolean if the string was null or blank
+     * @param param String to check for null or blank.
+     * @return boolean if the string was null or blank.
      */
     public static boolean isNullOrBlank(String param) {
         return param == null || param.trim().length() == 0; //NOPMD
@@ -71,8 +71,8 @@ public final class StringExtensions {
      *
      * @param msg String
      * @return String in Hash
-     * @throws NoSuchAlgorithmException     throws if no such algorithm
-     * @throws UnsupportedEncodingException throws if encoding not supported
+     * @throws NoSuchAlgorithmException     throws if no such algorithm.
+     * @throws UnsupportedEncodingException throws if encoding not supported.
      */
     public static String createHash(String msg) throws NoSuchAlgorithmException,
             UnsupportedEncodingException {
@@ -86,11 +86,11 @@ public final class StringExtensions {
     }
 
     /**
-     * encode string with url form encoding. Space will be +
+     * encode string with url form encoding. Space will be +.
      *
-     * @param source the string to encode
+     * @param source the string to encode.
      * @return the decoded
-     * @throws UnsupportedEncodingException throws if encoding not supported
+     * @throws UnsupportedEncodingException throws if encoding not supported.
      */
     public static String urlFormEncode(String source) throws UnsupportedEncodingException {
         return URLEncoder.encode(source, ENCODING_UTF8);
@@ -99,9 +99,9 @@ public final class StringExtensions {
     /**
      * replace + to space and decode.
      *
-     * @param source the string to decode
-     * @return the encoded string
-     * @throws UnsupportedEncodingException throws if encoding not supported
+     * @param source the string to decode.
+     * @return the encoded string.
+     * @throws UnsupportedEncodingException throws if encoding not supported.
      */
     public static String urlFormDecode(String source) throws UnsupportedEncodingException {
 
@@ -114,7 +114,7 @@ public final class StringExtensions {
      *
      * @param bytes byte[]
      * @return String
-     * @throws UnsupportedEncodingException throws if encoding not supported
+     * @throws UnsupportedEncodingException throws if encoding not supported.
      */
     public static String encodeBase64URLSafeString(final byte[] bytes)
             throws UnsupportedEncodingException {
@@ -126,8 +126,8 @@ public final class StringExtensions {
     /**
      * create url from given endpoint. return null if format is not right.
      *
-     * @param endpoint url as a string
-     * @return URL object for this string
+     * @param endpoint url as a string.
+     * @return URL object for this string.
      */
     public static URL getUrl(String endpoint) {
         URL authority = null;
@@ -160,7 +160,7 @@ public final class StringExtensions {
     }
 
     /**
-     * Get string list split with delimiter.
+     * Split the input string into a list of string tokens.
      *
      * @param items     String
      * @param delimiter String
@@ -227,11 +227,10 @@ public final class StringExtensions {
     }
 
     /**
-     * Checks if header value has this prefix. Prefix + whitespace is
-     * acceptable.
+     * Checks if header value has this prefix. Prefix + whitespace is acceptable.
      *
-     * @param value  String to check
-     * @param prefix prefix to check the above string
+     * @param value  String to check.
+     * @param prefix prefix to check the above string.
      * @return boolean true if the string starts with prefix and has some body after it.
      */
     public static boolean hasPrefixInHeader(final String value, final String prefix) {
@@ -240,7 +239,7 @@ public final class StringExtensions {
     }
 
     /**
-     * Get the Base64 encode to string of message.
+     * Based64URL encode the input string.
      *
      * @param message String
      * @return String

@@ -42,6 +42,7 @@ public final class SchemaUtil {
     private static final String TAG = SchemaUtil.class.getSimpleName();
 
     private SchemaUtil() {
+        // Utility class.
     }
     /**
      * Returns the authority (issuer) for the supplied IDToken.

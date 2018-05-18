@@ -56,7 +56,7 @@ public class AzureActiveDirectoryIdToken extends MicrosoftIdToken {
      * Constructor of AzureActiveDirectoryIdToken.
      *
      * @param rawIdToken raw ID token
-     * @throws ServiceException thrown if rawIdToken is JSON malformed
+     * @throws ServiceException if rawIdToken is malformed in JSON format.
      */
     public AzureActiveDirectoryIdToken(String rawIdToken) throws ServiceException {
         super(rawIdToken);

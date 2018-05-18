@@ -42,21 +42,21 @@ public abstract class ClientAssertion {
     }
 
     /**
-     * @param clientAssertion client assertion string
+     * @param clientAssertion client assertion string.
      */
     public void setClientAssertion(String clientAssertion) {
         this.mClientAssertion = clientAssertion;
     }
 
     /**
-     * @return mClientAssertionType of the client assertion
+     * @return mClientAssertionType of the client assertion.
      */
     public String getClientAssertionType() {
         return mClientAssertionType;
     }
 
     /**
-     * @param clientAssertionType client assertion type of the client assertion
+     * @param clientAssertionType client assertion type of the client assertion.
      */
     public void setClientAssertionType(String clientAssertionType) {
         this.mClientAssertionType = clientAssertionType;

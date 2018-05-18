@@ -62,112 +62,112 @@ public class TokenRequest {
     private String mScope;
 
     /**
-     * @return mCode of the token request
+     * @return mCode of the token request.
      */
     public String getCode() {
         return mCode;
     }
 
     /**
-     * @param code code of the token request
+     * @param code code of the token request.
      */
     public void setCode(String code) {
         this.mCode = code;
     }
 
     /**
-     * @return mRedirectUri of the token request
+     * @return mRedirectUri of the token request.
      */
     public String getRedirectUri() {
         return mRedirectUri;
     }
 
     /**
-     * @param redirectUri redirect URI of the token request
+     * @param redirectUri redirect URI of the token request.
      */
     public void setRedirectUri(String redirectUri) {
         this.mRedirectUri = redirectUri;
     }
 
     /**
-     * @return mClientId of the token request
+     * @return mClientId of the token request.
      */
     public String getClientId() {
         return mClientId;
     }
 
     /**
-     * @param clientId Client ID of the token request
+     * @param clientId Client ID of the token request.
      */
     public void setClientId(String clientId) {
         this.mClientId = clientId;
     }
 
     /**
-     * @return mGrantType string of the token request
+     * @return mGrantType string of the token request.
      */
     public String getGrantType() {
         return mGrantType;
     }
 
     /**
-     * @param grantType grant type string of the token request
+     * @param grantType grant type string of the token request.
      */
     public void setGrantType(String grantType) {
         this.mGrantType = grantType;
     }
 
     /**
-     * @param clientSecret client secret string of the token request
+     * @param clientSecret client secret string of the token request.
      */
     public void setClientSecret(String clientSecret) {
         this.mClientSecret = clientSecret;
     }
 
     /**
-     * @return mClientSecret of the token request
+     * @return mClientSecret of the token request.
      */
     public String getClientSecret() {
         return mClientSecret;
     }
 
     /**
-     * @return mClientAssertionType of the token request
+     * @return mClientAssertionType of the token request.
      */
     public String getClientAssertionType() {
         return mClientAssertionType;
     }
 
     /**
-     * @param clientAssertionType client assertion type of the token request
+     * @param clientAssertionType client assertion type of the token request.
      */
     public void setClientAssertionType(String clientAssertionType) {
         this.mClientAssertionType = clientAssertionType;
     }
 
     /**
-     * @return mClientAssertion of the token request
+     * @return mClientAssertion of the token request.
      */
     public String getClientAssertion() {
         return mClientAssertion;
     }
 
     /**
-     * @param clientAssertion client assertion of the token request
+     * @param clientAssertion client assertion of the token request.
      */
     public void setClientAssertion(String clientAssertion) {
         this.mClientAssertion = clientAssertion;
     }
 
     /**
-     * @return String mScope of the token request
+     * @return String mScope of the token request.
      */
     public String getScope() {
         return mScope;
     }
 
     /**
-     * @param scope scope parameter of the token request
+     * @param scope scope parameter of the token request.
      */
     public void setScope(String scope) {
         this.mScope = scope;

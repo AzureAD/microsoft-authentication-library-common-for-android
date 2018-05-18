@@ -37,7 +37,7 @@ public class AzureActiveDirectoryB2CIdToken extends IDToken {
      * Constructor of AzureActiveDirectoryB2CIdToken.
      *
      * @param rawIdToken String
-     * @throws ServiceException thrown if the rawIdToken is JSON malformed
+     * @throws ServiceException if rawIdToken is malformed in JSON format.
      */
     public AzureActiveDirectoryB2CIdToken(String rawIdToken) throws ServiceException {
         super(rawIdToken);

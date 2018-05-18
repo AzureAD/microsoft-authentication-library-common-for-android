@@ -71,8 +71,8 @@ public abstract class OAuth2Strategy
     /**
      * Template method for executing an OAuth2 authorization request.
      *
-     * @param request               generic authorization request
-     * @param authorizationStrategy generic authorization strategy
+     * @param request               generic authorization request.
+     * @param authorizationStrategy generic authorization strategy.
      * @return GenericAuthorizationResponse
      */
     public GenericAuthorizationResponse requestAuthorization(
@@ -87,7 +87,7 @@ public abstract class OAuth2Strategy
     }
 
     /**
-     * @param request generic token request
+     * @param request generic token request.
      * @return GenericTokenResult
      * @throws IOException thrown when failed or interrupted I/O operations occur.
      */
@@ -153,20 +153,20 @@ public abstract class OAuth2Strategy
     /**
      * An abstract method for returning the issuer identifier to be used when caching a token response.
      *
-     * @param request generic token request
-     * @return String of issuer cache identifier
+     * @param request generic token request.
+     * @return String of issuer cache identifier.
      */
     public abstract String getIssuerCacheIdentifier(GenericAuthorizationRequest request);
 
     /**
-     * @param response generic token response
-     * @return generic access token
+     * @param response generic token response.
+     * @return generic access token.
      */
     public abstract GenericAccessToken getAccessTokenFromResponse(GenericTokenResponse response);
 
     /**
-     * @param response generic token response
-     * @return generic refresh token
+     * @param response generic token response.
+     * @return generic refresh token.
      */
     public abstract GenericRefreshToken getRefreshTokenFromResponse(GenericTokenResponse response);
 
@@ -177,7 +177,7 @@ public abstract class OAuth2Strategy
      * This allows IDPs that do not support OIDC to still be able to return a user to us
      * This method should take the TokenResponse as a parameter
      *
-     * @param response Generic token response
+     * @param response Generic token response.
      * @return GenericAccount
      */
     public abstract GenericAccount createAccount(GenericTokenResponse response);
@@ -186,7 +186,7 @@ public abstract class OAuth2Strategy
      * Abstract method for validating the authorization request.  In the case of AAD this is the method
      * from which the details of the authorization request including authority validation would occur (preferred network and preferred cache)
      *
-     * @param request generic authorization request
+     * @param request generic authorization request.
      */
     protected abstract void validateAuthorizationRequest(GenericAuthorizationRequest request);
 
@@ -194,14 +194,14 @@ public abstract class OAuth2Strategy
      * Abstract method for validating the token request.  Generally speaking I expect this just to be validating
      * that all of the information was provided in the Token Request in order to successfully complete it.
      *
-     * @param request Generic token request
+     * @param request Generic token request.
      */
     protected abstract void validateTokenRequest(GenericTokenRequest request);
 
     /**
      * Abstract method for translating the HttpResponse to a TokenResponse.
      *
-     * @param response Http response
+     * @param response Http response.
      */
     protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response);
 

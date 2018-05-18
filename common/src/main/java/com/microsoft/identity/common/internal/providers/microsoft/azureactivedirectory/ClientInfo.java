@@ -58,7 +58,7 @@ public class ClientInfo {
      * Constructor for ClientInfo object.
      *
      * @param rawClientInfo raw client info
-     * @throws ServiceException JSONException will be wrapped with error code {@link ErrorStrings#INVALID_JWT} when thrown
+     * @throws ServiceException if rawIdToken is malformed in JSON format.
      */
     public ClientInfo(String rawClientInfo) throws ServiceException {
         if (StringExtensions.isNullOrBlank(rawClientInfo)) {

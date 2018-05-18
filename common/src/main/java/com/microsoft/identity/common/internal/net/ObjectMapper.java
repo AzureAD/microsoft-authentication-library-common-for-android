@@ -39,6 +39,7 @@ public final class ObjectMapper {
     public static final String ENCODING_SCHEME = "UTF-8";
 
     private ObjectMapper() {
+        // Utility class.
     }
 
     /**

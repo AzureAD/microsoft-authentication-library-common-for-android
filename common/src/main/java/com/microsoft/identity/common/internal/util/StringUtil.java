@@ -26,7 +26,9 @@ package com.microsoft.identity.common.internal.util;
  * String utilities.
  */
 public final class StringUtil {
+
     private StringUtil() {
+        // Utility class.
     }
 
     /**

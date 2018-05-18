@@ -37,70 +37,70 @@ public class AuthorizationRequest {
     private String mState;
 
     /**
-     * @return mResponseType of the authorization request
+     * @return mResponseType of the authorization request.
      */
     public String getResponseType() {
         return mResponseType;
     }
 
     /**
-     * @param responseType response type of the authorization request
+     * @param responseType response type of the authorization request.
      */
     public void setResponseType(String responseType) {
         this.mResponseType = responseType;
     }
 
     /**
-     * @return mClientId of the authorization request
+     * @return mClientId of the authorization request.
      */
     public String getClientId() {
         return mClientId;
     }
 
     /**
-     * @param clientId client ID of the authorization request
+     * @param clientId client ID of the authorization request.
      */
     public void setClientId(String clientId) {
         this.mClientId = clientId;
     }
 
     /**
-     * @return mRedirectUri of the authorization request
+     * @return mRedirectUri of the authorization request.
      */
     public String getRedirectUri() {
         return mRedirectUri;
     }
 
     /**
-     * @param redirectUri redirect URI of the authorization request
+     * @param redirectUri redirect URI of the authorization request.
      */
     public void setRedirectUri(String redirectUri) {
         this.mRedirectUri = redirectUri;
     }
 
     /**
-     * @return mScope of the authorization request
+     * @return mScope of the authorization request.
      */
     public String getScope() {
         return mScope;
     }
 
     /**
-     * @param scope scope of the authorization request
+     * @param scope scope of the authorization request.
      */
     public void setScope(String scope) {
         this.mScope = scope;
     }
 
     /**
-     * @return mState of the authorization request
+     * @return mState of the authorization request.
      */
     public String getState() {
         return mState;
     }
 
     /**
-     * @param state state of the authorization request
+     * @param state state of the authorization request.
      */
     public void setState(String state) {
         this.mState = state;

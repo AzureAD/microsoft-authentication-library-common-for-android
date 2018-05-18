@@ -42,56 +42,56 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
     private String mCorrelationId;
 
     /**
-     * @return mErrorCodes of the Microsoft token error response
+     * @return mErrorCodes of the Microsoft token error response.
      */
     public List<Long> getErrorCodes() {
         return mErrorCodes;
     }
 
     /**
-     * @param errorCodes error codes of the Microsoft token error response in type List<Long>
+     * @param errorCodes error codes of the Microsoft token error response in type List<Long>.
      */
     public void setErrorCodes(List<Long> errorCodes) {
         this.mErrorCodes = errorCodes;
     }
 
     /**
-     * @return mTimeStamp of the Microsoft token error response
+     * @return mTimeStamp of the Microsoft token error response.
      */
     public String getTimeStamp() {
         return mTimeStamp;
     }
 
     /**
-     * @param timeStamp time stamp of the Microsoft token error response
+     * @param timeStamp time stamp of the Microsoft token error response.
      */
     public void setTimeStamp(String timeStamp) {
         this.mTimeStamp = timeStamp;
     }
 
     /**
-     * @return mTraceId of the Microsoft token error response
+     * @return mTraceId of the Microsoft token error response.
      */
     public String getTraceId() {
         return mTraceId;
     }
 
     /**
-     * @param traceId trace ID of the Microsoft token error response
+     * @param traceId trace ID of the Microsoft token error response.
      */
     public void setTraceId(String traceId) {
         this.mTraceId = traceId;
     }
 
     /**
-     * @return mCorrelationId of the Microsoft token error response
+     * @return mCorrelationId of the Microsoft token error response.
      */
     public String getCorrelationId() {
         return mCorrelationId;
     }
 
     /**
-     * @param correlationId correlation ID of the Microsoft token error response
+     * @param correlationId correlation ID of the Microsoft token error response.
      */
     public void setCorrelationId(String correlationId) {
         this.mCorrelationId = correlationId;

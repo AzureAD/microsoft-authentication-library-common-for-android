@@ -67,7 +67,7 @@ public class MicrosoftStsRefreshToken extends RefreshToken {
     }
 
     /**
-     * @return true if this token is family refresh token, false otherwise
+     * @return true if this token is family refresh token, false otherwise.
      */
     public boolean getIsFamilyRefreshToken() {
         return mIsFamilyRefreshToken;

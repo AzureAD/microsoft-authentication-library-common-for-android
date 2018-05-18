@@ -47,7 +47,7 @@ public class AccessToken {
     }
 
     /**
-     * @return mRawAccessToken of the access token object
+     * @return mRawAccessToken of the access token object.
      */
     public String getAccessToken() {
         return mRawAccessToken;
@@ -65,63 +65,63 @@ public class AccessToken {
     }
 
     /**
-     * @return mTokenExpiredBuffer of the access token object
+     * @return mTokenExpiredBuffer of the access token object.
      */
     public long getTokenExpiredBuffer() {
         return mTokenExpiredBuffer;
     }
 
     /**
-     * @return mExpiresIn of the access token object
+     * @return mExpiresIn of the access token object.
      */
     public long getExpiresIn() {
         return mExpiresIn;
     }
 
     /**
-     * @param expiresIn expires in
+     * @param expiresIn expires in.
      */
     public void setExpiresIn(long expiresIn) {
         this.mExpiresIn = expiresIn;
     }
 
     /**
-     * @return mTokenType of the access token object
+     * @return mTokenType of the access token object.
      */
     public String getTokenType() {
         return mTokenType;
     }
 
     /**
-     * @param tokenType token type
+     * @param tokenType token type.
      */
     public void setTokenType(String tokenType) {
         this.mTokenType = tokenType;
     }
 
     /**
-     * @return mTokenReceivedTime of the access token object
+     * @return mTokenReceivedTime of the access token object.
      */
     public long getTokenReceivedTime() {
         return mTokenReceivedTime;
     }
 
     /**
-     * @param tokenReceivedTime token received time
+     * @param tokenReceivedTime token received time.
      */
     public void setTokenReceivedTime(long tokenReceivedTime) {
         this.mTokenReceivedTime = tokenReceivedTime;
     }
 
     /**
-     * @return mRawAccessToken of the access token object
+     * @return mRawAccessToken of the access token object.
      */
     public String getRawAccessToken() {
         return mRawAccessToken;
     }
 
     /**
-     * @param rawAccessToken raw access token
+     * @param rawAccessToken raw access token.
      */
     public void setRawAccessToken(String rawAccessToken) {
         this.mRawAccessToken = rawAccessToken;

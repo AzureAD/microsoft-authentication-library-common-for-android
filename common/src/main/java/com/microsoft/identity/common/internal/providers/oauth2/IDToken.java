@@ -191,7 +191,7 @@ public class IDToken {
      * Constructor of IDToken.
      *
      * @param rawIdToken raw ID token
-     * @throws ServiceException if the rawIdToken is JSON malformed with error code {@link ErrorStrings#INVALID_JWT}
+     * @throws ServiceException if rawIdToken is malformed in JSON format.
      */
     public IDToken(final String rawIdToken) throws ServiceException {
 
@@ -206,14 +206,14 @@ public class IDToken {
     }
 
     /**
-     * @return mRawIdToken of IDToken object
+     * @return mRawIdToken of IDToken object.
      */
     public String getRawIDToken() {
         return mRawIdToken;
     }
 
     /**
-     * @return Token claims in Map<String, String>
+     * @return Token claims in Map<String, String>.
      */
     public Map<String, String> getTokenClaims() {
         return Collections.unmodifiableMap(mTokenClaims);
