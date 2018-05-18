@@ -73,7 +73,7 @@ public class ServiceException extends BaseException {
      *
      * @param response HttpWebResponse
      */
-    public void setHttpResponse(HttpWebResponse response) {
+    public void setHttpResponse(final HttpWebResponse response) {
         if (null != response) {
             mHttpStatusCode = response.getStatusCode();
 

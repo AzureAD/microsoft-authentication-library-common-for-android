@@ -37,7 +37,7 @@ public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration
      * @param authorityHostValidationEnabled boolean
      */
     public void setAuthorityHostValidationEnabled(boolean authorityHostValidationEnabled) {
-        this.mAuthorityHostValidationEnabled = authorityHostValidationEnabled;
+        mAuthorityHostValidationEnabled = authorityHostValidationEnabled;
     }
 
     private boolean mAuthorityHostValidationEnabled = true;

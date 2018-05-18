@@ -175,8 +175,8 @@ public class AccessToken extends Credential {
      *
      * @param accessTokenType The access_token_type to set.
      */
-    public void setAccessTokenType(String accessTokenType) {
-        this.mAccessTokenType = accessTokenType;
+    public void setAccessTokenType(final String accessTokenType) {
+        mAccessTokenType = accessTokenType;
     }
 
     /**
@@ -193,8 +193,8 @@ public class AccessToken extends Credential {
      *
      * @param authority The authority to set.
      */
-    public void setAuthority(String authority) {
-        this.mAuthority = authority;
+    public void setAuthority(final String authority) {
+        mAuthority = authority;
     }
 
     /**
@@ -211,7 +211,7 @@ public class AccessToken extends Credential {
      *
      * @param extendedExpiresOn The extended_expires_on to set.
      */
-    public void setExtendedExpiresOn(String extendedExpiresOn) {
-        this.mExtendedExpiresOn = extendedExpiresOn;
+    public void setExtendedExpiresOn(final String extendedExpiresOn) {
+        mExtendedExpiresOn = extendedExpiresOn;
     }
 }

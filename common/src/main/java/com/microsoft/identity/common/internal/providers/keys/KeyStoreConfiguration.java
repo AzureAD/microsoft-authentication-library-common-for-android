@@ -41,9 +41,9 @@ public class KeyStoreConfiguration {
      * @param keyStorePassword char[]
      */
     public KeyStoreConfiguration(String keyStoreType, String keyStoreProvider, char[] keyStorePassword) {
-        this.mKeyStoreType = keyStoreType;
-        this.mKeyStoreProvider = keyStoreProvider;
-        this.mKeyStorePassword = keyStorePassword;
+        mKeyStoreType = keyStoreType;
+        mKeyStoreProvider = keyStoreProvider;
+        mKeyStorePassword = keyStorePassword;
     }
 
     /**

@@ -117,15 +117,15 @@ public abstract class MicrosoftAccount extends Account {
     /**
      * @param givenName given name of the Microsoft account.
      */
-    public void setFirstName(String givenName) {
-        this.mGivenName = givenName;
+    public void setFirstName(final String givenName) {
+        mGivenName = givenName;
     }
 
     /**
      * @param familyName family name of the Microsoft account.
      */
-    public void setLastName(String familyName) {
-        this.mFamilyName = familyName;
+    public void setLastName(final String familyName) {
+        mFamilyName = familyName;
     }
 
     /**
@@ -220,7 +220,7 @@ public abstract class MicrosoftAccount extends Account {
         return mUtid;
     }
 
-    void setUserId(String userid) {
+    void setUserId(final String userid) {
         mUniqueId = userid;
     }
 

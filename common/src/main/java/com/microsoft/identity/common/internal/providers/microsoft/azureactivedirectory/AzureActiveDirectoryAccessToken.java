@@ -41,8 +41,8 @@ public class AzureActiveDirectoryAccessToken extends AccessToken {
     public AzureActiveDirectoryAccessToken(
             @NonNull final AzureActiveDirectoryTokenResponse response) {
         super(response);
-        this.mExpiresOn = response.getExpiresOn();
-        this.mExtendedExpiresOn = response.getExtExpiresOn();
+        mExpiresOn = response.getExpiresOn();
+        mExtendedExpiresOn = response.getExtExpiresOn();
     }
 
     /**

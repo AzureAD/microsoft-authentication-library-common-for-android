@@ -37,6 +37,8 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorRespons
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
+import java.net.HttpURLConnection;
+
 /**
  * The Azure Active Directory OAuth 2.0 Strategy.
  */
@@ -54,7 +56,6 @@ public class AzureActiveDirectoryOAuth2Strategy
         TokenResult> {
 
     private AzureActiveDirectoryOAuth2Configuration mConfig = null;
-    private static final int HTTP_BAD_REQUEST = 400;
 
     /**
      * Constructor of AzureActiveDirectoryOAuth2Strategy.
@@ -62,7 +63,7 @@ public class AzureActiveDirectoryOAuth2Strategy
      */
     public AzureActiveDirectoryOAuth2Strategy(final AzureActiveDirectoryOAuth2Configuration config) {
         super(config);
-        this.setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oauth2/token");
+        setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oauth2/token");
         mConfig = config;
     }
 
@@ -72,12 +73,12 @@ public class AzureActiveDirectoryOAuth2Strategy
         authRequest = request;
         AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
 
-        if (!cloud.isValidated() && this.mConfig.isAuthorityHostValidationEnabled()) {
+        if (!cloud.isValidated() && mConfig.isAuthorityHostValidationEnabled()) {
             // TODO: Throw an exception in this case... need to see what ADAL does in this case.
             // We have invalid cloud data... and authority host validation is enabled....
         }
 
-        if (!cloud.isValidated() && !this.mConfig.isAuthorityHostValidationEnabled()) {
+        if (!cloud.isValidated() && !mConfig.isAuthorityHostValidationEnabled()) {
             //Authority host validation not specified... but there is no cloud....
             //Hence just return the passed in Authority
             return authRequest.getAuthority().toString();
@@ -145,7 +146,7 @@ public class AzureActiveDirectoryOAuth2Strategy
         TokenResponse tokenResponse = null;
         TokenErrorResponse tokenErrorResponse = null;
 
-        if (response.getStatusCode() >= HTTP_BAD_REQUEST) {
+        if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             //An error occurred
             tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenErrorResponse.class);
         } else {

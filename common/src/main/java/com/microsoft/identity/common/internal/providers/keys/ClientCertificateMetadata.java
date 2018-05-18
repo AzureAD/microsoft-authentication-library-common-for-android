@@ -36,8 +36,8 @@ public class ClientCertificateMetadata {
      * @param password char[]
      */
     public ClientCertificateMetadata(String alias, char[] password) {
-        this.mAlias = alias;
-        this.mPassword = password;
+        mAlias = alias;
+        mPassword = password;
     }
 
     /**

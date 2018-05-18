@@ -121,8 +121,8 @@ public class TokenResponse {
      *
      * @param expiresIn The expires_in to set.
      */
-    public void setExpiresIn(Long expiresIn) {
-        this.mExpiresIn = expiresIn;
+    public void setExpiresIn(final Long expiresIn) {
+        mExpiresIn = expiresIn;
     }
 
     /**
@@ -139,8 +139,8 @@ public class TokenResponse {
      *
      * @param accessToken The access_token to set.
      */
-    public void setAccessToken(String accessToken) {
-        this.mAccessToken = accessToken;
+    public void setAccessToken(final String accessToken) {
+        mAccessToken = accessToken;
     }
 
     /**
@@ -157,8 +157,8 @@ public class TokenResponse {
      *
      * @param tokenType The token_type to set.
      */
-    public void setTokenType(String tokenType) {
-        this.mTokenType = tokenType;
+    public void setTokenType(final String tokenType) {
+        mTokenType = tokenType;
     }
 
     /**
@@ -175,8 +175,8 @@ public class TokenResponse {
      *
      * @param refreshToken The refresh_token to set.
      */
-    public void setRefreshToken(String refreshToken) {
-        this.mRefreshToken = refreshToken;
+    public void setRefreshToken(final String refreshToken) {
+        mRefreshToken = refreshToken;
     }
 
     /**
@@ -193,8 +193,8 @@ public class TokenResponse {
      *
      * @param scope The scope to set.
      */
-    public void setScope(String scope) {
-        this.mScope = scope;
+    public void setScope(final String scope) {
+        mScope = scope;
     }
 
     /**
@@ -211,8 +211,8 @@ public class TokenResponse {
      *
      * @param state The state to set.
      */
-    public void setState(String state) {
-        this.mState = state;
+    public void setState(final String state) {
+        mState = state;
     }
 
     /**
@@ -229,8 +229,8 @@ public class TokenResponse {
      *
      * @param idToken The id_token to set.
      */
-    public void setIdToken(String idToken) {
-        this.mIdToken = idToken;
+    public void setIdToken(final String idToken) {
+        mIdToken = idToken;
     }
 
     /**
@@ -238,8 +238,8 @@ public class TokenResponse {
      *
      * @param responseReceivedTime response received time in type Long.
      */
-    public void setResponseReceivedTime(Long responseReceivedTime) {
-        this.mResponseReceivedTime = responseReceivedTime;
+    public void setResponseReceivedTime(final Long responseReceivedTime) {
+        mResponseReceivedTime = responseReceivedTime;
     }
 
     /**
@@ -248,7 +248,7 @@ public class TokenResponse {
      * @return mResponseReceivedTime
      */
     public long getResponseReceivedTime() {
-        return this.mResponseReceivedTime;
+        return mResponseReceivedTime;
     }
 
 }

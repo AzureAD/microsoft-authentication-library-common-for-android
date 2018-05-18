@@ -34,6 +34,6 @@ public class MicrosoftTokenResponse extends TokenResponse {
     }
 
     protected void setExtendedExpiresIn(Long extendedExpiresIn) {
-        this.mExtendedExpiresIn = extendedExpiresIn;
+        mExtendedExpiresIn = extendedExpiresIn;
     }
 }

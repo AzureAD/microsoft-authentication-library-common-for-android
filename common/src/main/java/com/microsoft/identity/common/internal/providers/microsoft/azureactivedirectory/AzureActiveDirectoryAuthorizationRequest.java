@@ -41,7 +41,7 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
      * @param authority URL
      */
     public void setAuthority(URL authority) {
-        this.mAuthority = authority;
+        mAuthority = authority;
     }
 
 }

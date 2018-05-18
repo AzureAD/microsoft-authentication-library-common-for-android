@@ -49,7 +49,7 @@ public abstract class AccountCredentialBase {
      * @param additionalFields Map<String, JsonElement>
      */
     public void setAdditionalFields(Map<String, JsonElement> additionalFields) {
-        this.mAdditionalFields = additionalFields;
+        mAdditionalFields = additionalFields;
     }
 
     @Override

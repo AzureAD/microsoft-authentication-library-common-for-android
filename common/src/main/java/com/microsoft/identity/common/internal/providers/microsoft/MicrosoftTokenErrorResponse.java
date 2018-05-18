@@ -51,8 +51,8 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
     /**
      * @param errorCodes error codes of the Microsoft token error response in type List<Long>.
      */
-    public void setErrorCodes(List<Long> errorCodes) {
-        this.mErrorCodes = errorCodes;
+    public void setErrorCodes(final List<Long> errorCodes) {
+        mErrorCodes = errorCodes;
     }
 
     /**
@@ -65,8 +65,8 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
     /**
      * @param timeStamp time stamp of the Microsoft token error response.
      */
-    public void setTimeStamp(String timeStamp) {
-        this.mTimeStamp = timeStamp;
+    public void setTimeStamp(final String timeStamp) {
+        mTimeStamp = timeStamp;
     }
 
     /**
@@ -79,8 +79,8 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
     /**
      * @param traceId trace ID of the Microsoft token error response.
      */
-    public void setTraceId(String traceId) {
-        this.mTraceId = traceId;
+    public void setTraceId(final String traceId) {
+        mTraceId = traceId;
     }
 
     /**
@@ -93,7 +93,7 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
     /**
      * @param correlationId correlation ID of the Microsoft token error response.
      */
-    public void setCorrelationId(String correlationId) {
-        this.mCorrelationId = correlationId;
+    public void setCorrelationId(final String correlationId) {
+        mCorrelationId = correlationId;
     }
 }

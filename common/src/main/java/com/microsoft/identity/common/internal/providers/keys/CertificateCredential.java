@@ -46,27 +46,27 @@ public final class CertificateCredential {
      * @return mPrivateKey of the CertificateCredential object
      */
     public PrivateKey getPrivateKey() {
-        return this.mPrivateKey;
+        return mPrivateKey;
     }
 
     /**
      * @return mClientId of the CertificateCredential object
      */
     public String getClientId() {
-        return this.mClientId;
+        return mClientId;
     }
 
     /**
      * @return mPublicCertificate of the CertificateCredential object
      */
     public X509Certificate getPublicCertificate() {
-        return this.mPublicCertificate;
+        return mPublicCertificate;
     }
 
     private CertificateCredential(CertificateCredentialBuilder builder) {
-        this.mClientId = builder.mClientId;
-        this.mPublicCertificate = builder.mCertificate;
-        this.mPrivateKey = builder.mPrivateKey;
+        mClientId = builder.mClientId;
+        mPublicCertificate = builder.mCertificate;
+        mPrivateKey = builder.mPrivateKey;
     }
 
     public static class CertificateCredentialBuilder {
@@ -82,7 +82,7 @@ public final class CertificateCredential {
          * @param clientId String
          */
         public CertificateCredentialBuilder(String clientId) {
-            this.mClientId = clientId;
+            mClientId = clientId;
         }
 
         /**
@@ -92,7 +92,7 @@ public final class CertificateCredential {
          * @return CertificateCredentialBuilder
          */
         public CertificateCredentialBuilder privateKey(PrivateKey key) {
-            this.mPrivateKey = key;
+            mPrivateKey = key;
             return this;
         }
 
@@ -103,7 +103,7 @@ public final class CertificateCredential {
          * @return CertificateCredentialBuilder
          */
         public CertificateCredentialBuilder keyStoreConfiguration(KeyStoreConfiguration keyStoreConfiguration) {
-            this.mKeyStoreConfiguration = keyStoreConfiguration;
+            mKeyStoreConfiguration = keyStoreConfiguration;
             return this;
         }
 
@@ -114,7 +114,7 @@ public final class CertificateCredential {
          * @return CertificateCredentialBuilder
          */
         public CertificateCredentialBuilder clientCertificateMetadata(ClientCertificateMetadata clientCertificateMetadata) {
-            this.mClientCertificateMetdata = clientCertificateMetadata;
+            mClientCertificateMetdata = clientCertificateMetadata;
             return this;
         }
 
@@ -125,7 +125,7 @@ public final class CertificateCredential {
          * @return CertificateCredentialBuilder
          */
         public CertificateCredentialBuilder certificate(X509Certificate certificate) {
-            this.mCertificate = certificate;
+            mCertificate = certificate;
             return this;
         }
 
@@ -146,12 +146,12 @@ public final class CertificateCredential {
 
             CertificateCredential cred = null;
 
-            if (this.mClientId != null) {
-                if (this.mCertificate != null && this.mPrivateKey != null) {
+            if (mClientId != null) {
+                if (mCertificate != null && mPrivateKey != null) {
                     cred = new CertificateCredential(this);
                 } else {
-                    if (this.mClientCertificateMetdata != null && this.mKeyStoreConfiguration != null) {
-                        getCertificateInfoFromStore(this.mKeyStoreConfiguration, this.mClientCertificateMetdata);
+                    if (mClientCertificateMetdata != null && mKeyStoreConfiguration != null) {
+                        getCertificateInfoFromStore(mKeyStoreConfiguration, mClientCertificateMetdata);
                         cred = new CertificateCredential(this);
                     }
                 }
@@ -191,8 +191,8 @@ public final class CertificateCredential {
             final X509Certificate publicCertificate = (X509Certificate) keystore
                     .getCertificate(clientCertificateMetadata.getAlias());
 
-            this.mPrivateKey = key;
-            this.mCertificate = publicCertificate;
+            mPrivateKey = key;
+            mCertificate = publicCertificate;
 
         }
 

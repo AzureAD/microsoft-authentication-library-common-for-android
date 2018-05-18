@@ -40,10 +40,10 @@ public class AccessToken {
      * @param response TokenResponse object
      */
     public AccessToken(TokenResponse response) {
-        this.mExpiresIn = response.getExpiresIn();
-        this.mTokenReceivedTime = response.getResponseReceivedTime();
-        this.mTokenType = response.getTokenType();
-        this.mRawAccessToken = response.getAccessToken();
+        mExpiresIn = response.getExpiresIn();
+        mTokenReceivedTime = response.getResponseReceivedTime();
+        mTokenType = response.getTokenType();
+        mRawAccessToken = response.getAccessToken();
     }
 
     /**
@@ -82,7 +82,7 @@ public class AccessToken {
      * @param expiresIn expires in.
      */
     public void setExpiresIn(long expiresIn) {
-        this.mExpiresIn = expiresIn;
+        mExpiresIn = expiresIn;
     }
 
     /**
@@ -96,7 +96,7 @@ public class AccessToken {
      * @param tokenType token type.
      */
     public void setTokenType(String tokenType) {
-        this.mTokenType = tokenType;
+        mTokenType = tokenType;
     }
 
     /**
@@ -110,7 +110,7 @@ public class AccessToken {
      * @param tokenReceivedTime token received time.
      */
     public void setTokenReceivedTime(long tokenReceivedTime) {
-        this.mTokenReceivedTime = tokenReceivedTime;
+        mTokenReceivedTime = tokenReceivedTime;
     }
 
     /**
@@ -124,6 +124,6 @@ public class AccessToken {
      * @param rawAccessToken raw access token.
      */
     public void setRawAccessToken(String rawAccessToken) {
-        this.mRawAccessToken = rawAccessToken;
+        mRawAccessToken = rawAccessToken;
     }
 }

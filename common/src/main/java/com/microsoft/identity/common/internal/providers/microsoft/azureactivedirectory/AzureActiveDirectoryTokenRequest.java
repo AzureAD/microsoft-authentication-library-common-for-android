@@ -34,13 +34,13 @@ public class AzureActiveDirectoryTokenRequest extends TokenRequest {
      * @return mResourceId of AzureActiveDirectoryTokenRequest
      */
     public String getResourceId() {
-        return this.mResourceId;
+        return mResourceId;
     }
 
     /**
      * @param resourceId String of resource ID
      */
     public void setResourceId(String resourceId) {
-        this.mResourceId = resourceId;
+        mResourceId = resourceId;
     }
 }

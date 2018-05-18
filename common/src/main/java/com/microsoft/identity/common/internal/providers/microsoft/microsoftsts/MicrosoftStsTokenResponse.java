@@ -84,7 +84,7 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      *
      * @param extExpiresin The ext_expires_in to set.
      */
-    public void setExtExpiresIn(Long extExpiresin) {
+    public void setExtExpiresIn(final Long extExpiresin) {
         mExtExpiresIn = extExpiresin;
     }
 
@@ -102,7 +102,7 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      *
      * @param clientInfo The client_info to set.
      */
-    public void setClientInfo(String clientInfo) {
+    public void setClientInfo(final String clientInfo) {
         mClientInfo = clientInfo;
     }
 
@@ -120,8 +120,8 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      *
      * @param expiresOn The expires on to set.
      */
-    public void setExpiresOn(Date expiresOn) {
-        this.mExpiresOn = expiresOn;
+    public void setExpiresOn(final Date expiresOn) {
+        mExpiresOn = expiresOn;
     }
 
     /**
@@ -138,8 +138,8 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      *
      * @param extExpiresOn The expires on to set.
      */
-    public void setExtExpiresOn(Date extExpiresOn) {
-        this.mExtExpiresOn = extExpiresOn;
+    public void setExtExpiresOn(final Date extExpiresOn) {
+        mExtExpiresOn = extExpiresOn;
     }
 
     /**
@@ -156,8 +156,8 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      *
      * @param familyId family id of the token.
      */
-    public void setFamilyId(String familyId) {
-        this.mFamilyId = familyId;
+    public void setFamilyId(final String familyId) {
+        mFamilyId = familyId;
     }
 
     /**

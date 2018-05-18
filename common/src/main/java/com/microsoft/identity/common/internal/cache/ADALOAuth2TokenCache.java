@@ -73,8 +73,8 @@ public class ADALOAuth2TokenCache
         return mISharedPreferencesFileManager;
     }
 
-    protected void setISharedPreferencesFileManager(ISharedPreferencesFileManager iSharedPreferencesFileManager) {
-        this.mISharedPreferencesFileManager = iSharedPreferencesFileManager;
+    protected void setISharedPreferencesFileManager(final ISharedPreferencesFileManager iSharedPreferencesFileManager) {
+        mISharedPreferencesFileManager = iSharedPreferencesFileManager;
     }
 
     /**
@@ -104,7 +104,7 @@ public class ADALOAuth2TokenCache
     }
 
     protected void initializeSharedPreferencesFileManager(final String fileName) {
-        setISharedPreferencesFileManager(new SharedPreferencesFileManager(super.getContext(), fileName));
+        setISharedPreferencesFileManager(new SharedPreferencesFileManager(mContext, fileName));
     }
 
     /**
@@ -160,7 +160,7 @@ public class ADALOAuth2TokenCache
 
     }
 
-    private void setItem(String key, ADALTokenCacheItem cacheItem) {
+    private void setItem(final String key, final ADALTokenCacheItem cacheItem) {
 
         String json = mGson.toJson(cacheItem);
         String encrypted = encrypt(json);
@@ -180,7 +180,7 @@ public class ADALOAuth2TokenCache
         synchronized (LOCK) {
             if (sHelper == null) {
                 Log.v(TAG, "Started to initialize storage helper");
-                sHelper = new StorageHelper(this.getContext());
+                sHelper = new StorageHelper(mContext);
                 Log.v(TAG, "Finished to initialize storage helper");
             }
         }
@@ -222,7 +222,7 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public void setSingleSignOnState(Account account, RefreshToken refreshToken) {
+    public void setSingleSignOnState(final Account account, final RefreshToken refreshToken) {
 
     }
 

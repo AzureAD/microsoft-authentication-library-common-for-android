@@ -43,6 +43,6 @@ public class MicrosoftStsAccessToken extends AccessToken {
     }
 
     protected void setExtExpiresIn(Long extExpiresIn) {
-        this.mExtExpiresIn = extExpiresIn;
+        mExtExpiresIn = extExpiresIn;
     }
 }

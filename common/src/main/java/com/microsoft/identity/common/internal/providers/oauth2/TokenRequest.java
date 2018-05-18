@@ -71,8 +71,8 @@ public class TokenRequest {
     /**
      * @param code code of the token request.
      */
-    public void setCode(String code) {
-        this.mCode = code;
+    public void setCode(final String code) {
+        mCode = code;
     }
 
     /**
@@ -85,8 +85,8 @@ public class TokenRequest {
     /**
      * @param redirectUri redirect URI of the token request.
      */
-    public void setRedirectUri(String redirectUri) {
-        this.mRedirectUri = redirectUri;
+    public void setRedirectUri(final String redirectUri) {
+        mRedirectUri = redirectUri;
     }
 
     /**
@@ -99,8 +99,8 @@ public class TokenRequest {
     /**
      * @param clientId Client ID of the token request.
      */
-    public void setClientId(String clientId) {
-        this.mClientId = clientId;
+    public void setClientId(final String clientId) {
+        mClientId = clientId;
     }
 
     /**
@@ -113,15 +113,15 @@ public class TokenRequest {
     /**
      * @param grantType grant type string of the token request.
      */
-    public void setGrantType(String grantType) {
-        this.mGrantType = grantType;
+    public void setGrantType(final String grantType) {
+        mGrantType = grantType;
     }
 
     /**
      * @param clientSecret client secret string of the token request.
      */
-    public void setClientSecret(String clientSecret) {
-        this.mClientSecret = clientSecret;
+    public void setClientSecret(final String clientSecret) {
+        mClientSecret = clientSecret;
     }
 
     /**
@@ -141,8 +141,8 @@ public class TokenRequest {
     /**
      * @param clientAssertionType client assertion type of the token request.
      */
-    public void setClientAssertionType(String clientAssertionType) {
-        this.mClientAssertionType = clientAssertionType;
+    public void setClientAssertionType(final String clientAssertionType) {
+        mClientAssertionType = clientAssertionType;
     }
 
     /**
@@ -155,8 +155,8 @@ public class TokenRequest {
     /**
      * @param clientAssertion client assertion of the token request.
      */
-    public void setClientAssertion(String clientAssertion) {
-        this.mClientAssertion = clientAssertion;
+    public void setClientAssertion(final String clientAssertion) {
+        mClientAssertion = clientAssertion;
     }
 
     /**
@@ -169,7 +169,7 @@ public class TokenRequest {
     /**
      * @param scope scope parameter of the token request.
      */
-    public void setScope(String scope) {
-        this.mScope = scope;
+    public void setScope(final String scope) {
+        mScope = scope;
     }
 }

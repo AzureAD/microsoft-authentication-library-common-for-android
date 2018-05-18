@@ -65,7 +65,7 @@ public class AuthorizationResponse {
      * @param code The code to set.
      */
     public void setCode(String code) {
-        this.mCode = code;
+        mCode = code;
     }
 
     /**
@@ -83,6 +83,6 @@ public class AuthorizationResponse {
      * @param state The state to set.
      */
     public void setState(String state) {
-        this.mState = state;
+        mState = state;
     }
 }

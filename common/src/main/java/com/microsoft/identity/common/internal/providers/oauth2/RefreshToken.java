@@ -32,8 +32,8 @@ public abstract class RefreshToken implements IRefreshToken {
      * @param response TokenResponse object.
      */
     public RefreshToken(TokenResponse response) {
-        this.mTokenReceivedTime = response.getResponseReceivedTime();
-        this.mRawRefreshToken = response.getRefreshToken();
+        mTokenReceivedTime = response.getResponseReceivedTime();
+        mRawRefreshToken = response.getRefreshToken();
     }
 
     private long mTokenReceivedTime;
@@ -42,15 +42,15 @@ public abstract class RefreshToken implements IRefreshToken {
     /**
      * @param rawRefreshToken raw refresh token of RefreshToken object.
      */
-    protected void setRawRefreshToken(String rawRefreshToken) {
-        this.mRawRefreshToken = rawRefreshToken;
+    protected void setRawRefreshToken(final String rawRefreshToken) {
+        mRawRefreshToken = rawRefreshToken;
     }
 
     /**
      * @param tokenReceivedTime received time of refresh token.
      */
-    protected void setTokenReceivedTime(long tokenReceivedTime) {
-        this.mTokenReceivedTime = tokenReceivedTime;
+    protected void setTokenReceivedTime(final long tokenReceivedTime) {
+        mTokenReceivedTime = tokenReceivedTime;
     }
 
     /**

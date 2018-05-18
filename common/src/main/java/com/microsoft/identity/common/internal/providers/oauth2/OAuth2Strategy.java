@@ -126,28 +126,24 @@ public abstract class OAuth2Strategy
         return authorizationUri;
     }
 
-    protected String getAuthorizationEndpoint() {
+    public String getAuthorizationEndpoint() {
         return mAuthorizationEndpoint;
-    }
-
-    protected void setAuthorizationEndpoint(String authorizationEndpoint) {
-        this.mAuthorizationEndpoint = authorizationEndpoint;
     }
 
     protected String getTokenEndpoint() {
         return mTokenEndpoint;
     }
 
-    protected void setTokenEndpoint(String tokenEndpoint) {
-        this.mTokenEndpoint = tokenEndpoint;
+    protected void setTokenEndpoint(final String tokenEndpoint) {
+        mTokenEndpoint = tokenEndpoint;
     }
 
     protected Uri getIssuer() {
         return mIssuer;
     }
 
-    protected void setIssuer(Uri issuer) {
-        this.mIssuer = issuer;
+    protected void setIssuer(final Uri issuer) {
+        mIssuer = issuer;
     }
 
     /**

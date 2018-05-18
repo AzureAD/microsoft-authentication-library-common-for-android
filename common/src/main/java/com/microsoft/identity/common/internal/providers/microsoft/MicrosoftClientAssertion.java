@@ -66,8 +66,8 @@ public class MicrosoftClientAssertion extends ClientAssertion {
         }
 
         SignedJWT assertion = createSignedJwt(credential.getClientId(), audience, credential);
-        this.setClientAssertion(assertion.serialize());
-        this.setClientAssertionType(MicrosoftClientAssertion.CLIENT_ASSERTION_TYPE);
+        setClientAssertion(assertion.serialize());
+        setClientAssertionType(MicrosoftClientAssertion.CLIENT_ASSERTION_TYPE);
 
     }
 

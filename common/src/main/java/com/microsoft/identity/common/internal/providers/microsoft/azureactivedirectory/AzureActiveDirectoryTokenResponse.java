@@ -87,8 +87,8 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
      *
      * @param familyId family ID of the token
      */
-    public void setFamilyId(String familyId) {
-        this.mFamilyId = familyId;
+    public void setFamilyId(final String familyId) {
+        mFamilyId = familyId;
     }
 
     /**
@@ -110,8 +110,8 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
      *
      * @param expiresOn The expires_on to set.
      */
-    public void setExpiresOn(Date expiresOn) {
-        this.mExpiresOn = expiresOn;
+    public void setExpiresOn(final Date expiresOn) {
+        mExpiresOn = expiresOn;
     }
 
     /**
@@ -128,8 +128,8 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
      *
      * @param resource The resource to set.
      */
-    public void setResource(String resource) {
-        this.mResource = resource;
+    public void setResource(final String resource) {
+        mResource = resource;
     }
 
     /**
@@ -146,8 +146,8 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
      *
      * @param extExpiresOn The ext_expires_in to set.
      */
-    public void setExtExpiresOn(Date extExpiresOn) {
-        this.mExtExpiresOn = extExpiresOn;
+    public void setExtExpiresOn(final Date extExpiresOn) {
+        mExtExpiresOn = extExpiresOn;
     }
 
     /**
@@ -164,8 +164,8 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
      *
      * @param notBefore The not_before to set.
      */
-    public void setNotBefore(String notBefore) {
-        this.mNotBefore = notBefore;
+    public void setNotBefore(final String notBefore) {
+        mNotBefore = notBefore;
     }
 
     /**
@@ -182,8 +182,8 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
      *
      * @param clientInfo The client_info to set.
      */
-    public void setClientInfo(String clientInfo) {
-        this.mClientInfo = clientInfo;
+    public void setClientInfo(final String clientInfo) {
+        mClientInfo = clientInfo;
     }
 
     /**
@@ -200,8 +200,8 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
      *
      * @param speRing The spe ring to set.
      */
-    public void setSpeRing(String speRing) {
-        this.mSpeRing = speRing;
+    public void setSpeRing(final String speRing) {
+        mSpeRing = speRing;
     }
 
     /**

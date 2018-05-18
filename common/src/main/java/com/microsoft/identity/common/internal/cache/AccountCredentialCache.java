@@ -484,7 +484,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                     type = CredentialType.IdToken;
                 } else {
                     // TODO Log a warning and skip this value?
-                    Logger.verbose(TAG, "Unexpected credential type.");
+                    Logger.warn(TAG, "Unexpected credential type.");
                 }
             }
         }

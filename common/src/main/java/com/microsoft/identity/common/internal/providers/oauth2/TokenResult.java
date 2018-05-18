@@ -40,8 +40,8 @@ public class TokenResult {
      */
     public TokenResult(TokenResponse response, TokenErrorResponse errorResponse) {
 
-        this.mTokenResponse = response;
-        this.mTokenErrorResponse = errorResponse;
+        mTokenResponse = response;
+        mTokenErrorResponse = errorResponse;
 
         if (response != null) {
             mSuccess = true;
@@ -55,7 +55,7 @@ public class TokenResult {
      * @return TokenResponse
      */
     public TokenResponse getTokenResponse() {
-        return this.mTokenResponse;
+        return mTokenResponse;
     }
 
     /**
@@ -64,7 +64,7 @@ public class TokenResult {
      * @return TokenErrorResponse
      */
     public TokenErrorResponse getErrorResponse() {
-        return this.mTokenErrorResponse;
+        return mTokenErrorResponse;
     }
 
     /**
@@ -73,7 +73,7 @@ public class TokenResult {
      * @return boolean
      */
     public boolean getSuccess() {
-        return this.mSuccess;
+        return mSuccess;
     }
 
 }

@@ -45,8 +45,8 @@ public class TokenErrorResponse {
     /**
      * @param error error string of the token error response.
      */
-    public void setError(String error) {
-        this.mError = error;
+    public void setError(final String error) {
+        mError = error;
     }
 
     /**
@@ -59,8 +59,8 @@ public class TokenErrorResponse {
     /**
      * @param errorDescription error description details.
      */
-    public void setErrorDescription(String errorDescription) {
-        this.mErrorDescription = errorDescription;
+    public void setErrorDescription(final String errorDescription) {
+        mErrorDescription = errorDescription;
     }
 
     /**
@@ -73,7 +73,7 @@ public class TokenErrorResponse {
     /**
      * @param errorUri error URI string.
      */
-    public void setErrorUri(String errorUri) {
-        this.mErrorUri = errorUri;
+    public void setErrorUri(final String errorUri) {
+        mErrorUri = errorUri;
     }
 }

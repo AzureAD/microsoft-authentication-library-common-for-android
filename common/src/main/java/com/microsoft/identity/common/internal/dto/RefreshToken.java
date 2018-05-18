@@ -131,8 +131,8 @@ public class RefreshToken extends Credential {
      *
      * @param familyId The family_id to set.
      */
-    public void setFamilyId(String familyId) {
-        this.mFamilyId = familyId;
+    public void setFamilyId(final String familyId) {
+        mFamilyId = familyId;
     }
 
     /**
@@ -149,8 +149,8 @@ public class RefreshToken extends Credential {
      *
      * @param username The username to set.
      */
-    public void setUsername(String username) {
-        this.mUsername = username;
+    public void setUsername(final String username) {
+        mUsername = username;
     }
 
     @Override

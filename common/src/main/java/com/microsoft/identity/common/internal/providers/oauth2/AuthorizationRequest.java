@@ -46,8 +46,8 @@ public class AuthorizationRequest {
     /**
      * @param responseType response type of the authorization request.
      */
-    public void setResponseType(String responseType) {
-        this.mResponseType = responseType;
+    public void setResponseType(final String responseType) {
+        mResponseType = responseType;
     }
 
     /**
@@ -60,8 +60,8 @@ public class AuthorizationRequest {
     /**
      * @param clientId client ID of the authorization request.
      */
-    public void setClientId(String clientId) {
-        this.mClientId = clientId;
+    public void setClientId(final String clientId) {
+        mClientId = clientId;
     }
 
     /**
@@ -74,8 +74,8 @@ public class AuthorizationRequest {
     /**
      * @param redirectUri redirect URI of the authorization request.
      */
-    public void setRedirectUri(String redirectUri) {
-        this.mRedirectUri = redirectUri;
+    public void setRedirectUri(final String redirectUri) {
+        mRedirectUri = redirectUri;
     }
 
     /**
@@ -88,8 +88,8 @@ public class AuthorizationRequest {
     /**
      * @param scope scope of the authorization request.
      */
-    public void setScope(String scope) {
-        this.mScope = scope;
+    public void setScope(final String scope) {
+        mScope = scope;
     }
 
     /**
@@ -102,8 +102,8 @@ public class AuthorizationRequest {
     /**
      * @param state state of the authorization request.
      */
-    public void setState(String state) {
-        this.mState = state;
+    public void setState(final String state) {
+        mState = state;
     }
 
 }
