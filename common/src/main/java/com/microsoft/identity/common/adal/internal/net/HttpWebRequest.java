@@ -183,7 +183,7 @@ public class HttpWebRequest {
     /**
      * Check if the network is available. If the network is unavailable, {@link ClientException}
      * will throw with error code {@link ErrorStrings#NO_NETWORK_CONNECTION_POWER_OPTIMIZATION}
-     * when Connection is not available to refresh token because power optimization is enabled, or
+     * when connection is not available to refresh token because power optimization is enabled, or
      * throw with error code {@link ErrorStrings#DEVICE_NETWORK_NOT_AVAILABLE} otherwise.
      *
      * @param context Context
