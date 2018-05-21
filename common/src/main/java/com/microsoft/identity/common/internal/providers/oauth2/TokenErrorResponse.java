@@ -76,4 +76,13 @@ public class TokenErrorResponse {
     public void setErrorUri(final String errorUri) {
         mErrorUri = errorUri;
     }
+
+    @Override
+    public String toString() {
+        return "TokenErrorResponse{" +
+                "mError='" + mError + '\'' +
+                ", mErrorDescription='" + mErrorDescription + '\'' +
+                ", mErrorUri='" + mErrorUri + '\'' +
+                '}';
+    }
 }

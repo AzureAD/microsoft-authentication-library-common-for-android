@@ -343,4 +343,22 @@ public class ADALTokenCacheItem {
         return DateUtilities.createCopy(mExtendedExpiresOn);
     }
 
+    @Override
+    public String toString() {
+        return "ADALTokenCacheItem{" +
+                "mUserInfo=" + mUserInfo +
+                ", mResource='" + mResource + '\'' +
+                ", mAuthority='" + mAuthority + '\'' +
+                ", mClientId='" + mClientId + '\'' +
+                ", mAccessToken='" + mAccessToken + '\'' +
+                ", mRefreshtoken='" + mRefreshtoken + '\'' +
+                ", mRawIdToken='" + mRawIdToken + '\'' +
+                ", mExpiresOn=" + mExpiresOn +
+                ", mIsMultiResourceRefreshToken=" + mIsMultiResourceRefreshToken +
+                ", mTenantId='" + mTenantId + '\'' +
+                ", mFamilyClientId='" + mFamilyClientId + '\'' +
+                ", mExtendedExpiresOn=" + mExtendedExpiresOn +
+                ", mSpeRing='" + mSpeRing + '\'' +
+                '}';
+    }
 }

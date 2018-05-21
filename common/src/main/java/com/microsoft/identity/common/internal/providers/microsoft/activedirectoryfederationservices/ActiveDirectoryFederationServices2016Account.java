@@ -42,7 +42,7 @@ public class ActiveDirectoryFederationServices2016Account extends Account {
     }
 
     @Override
-    public String getUniqueUserId() {
+    public String getHomeAccountId() {
         throw new UnsupportedOperationException("Method stub!");
     }
 
@@ -57,7 +57,7 @@ public class ActiveDirectoryFederationServices2016Account extends Account {
     }
 
     @Override
-    public String getAuthorityAccountId() {
+    public String getLocalAccountId() {
         throw new UnsupportedOperationException("Method stub!");
     }
 
@@ -72,7 +72,7 @@ public class ActiveDirectoryFederationServices2016Account extends Account {
     }
 
     @Override
-    public String getGuestId() {
+    public String getAlternativeAccountId() {
         throw new UnsupportedOperationException("Method stub!");
     }
 

@@ -147,27 +147,28 @@ public final class SchemaUtil {
     }
 
     /**
-     * Returns the 'guest_id' for the supplied IDToken.
+     * Returns the 'alternative_account_id' for the supplied IDToken.
      *
      * @param idToken The IDToken to parse.
-     * @return The guestId or null if the IDToken cannot be parsed or the altsecid claim is empty.
+     * @return The alternative_account_id or null if the IDToken cannot be parsed or the altsecid
+     * claim is empty.
      */
-    public static String getGuestId(final IDToken idToken) {
-        final String methodName = "getGuestId";
+    public static String getAlternativeAccountId(final IDToken idToken) {
+        final String methodName = "getAlternativeAccountId";
         Logger.entering(TAG, methodName, idToken);
 
-        String guestId = null;
+        String alternativeAccountId = null;
 
         if (null != idToken) {
             final Map<String, String> idTokenClaims = idToken.getTokenClaims();
 
             if (null != idTokenClaims) {
-                guestId = idTokenClaims.get("altsecid");
+                alternativeAccountId = idTokenClaims.get("altsecid");
 
-                Logger.verbosePII(TAG + ":" + methodName, "Guest Id: " + guestId);
+                Logger.verbosePII(TAG + ":" + methodName, "alternative_account_id: " + alternativeAccountId);
 
-                if (null == guestId) {
-                    Logger.warn(TAG + ":" + methodName, "Guest Id was null.");
+                if (null == alternativeAccountId) {
+                    Logger.warn(TAG + ":" + methodName, "alternative_account_id was null.");
                 }
             } else {
                 Logger.warn(TAG + ":" + methodName, "IDToken claims were null.");
@@ -176,22 +177,22 @@ public final class SchemaUtil {
             Logger.warn(TAG + ":" + methodName, "IDToken was null.");
         }
 
-        Logger.exiting(TAG, methodName, guestId);
+        Logger.exiting(TAG, methodName, alternativeAccountId);
 
-        return guestId;
+        return alternativeAccountId;
     }
-
-    /**
-     * Get the unique user id with the client info.
+  
+   /**
+     * Get the home account id with the client info.
      *
      * @param clientInfo ClientInfo
-     * @return String unique use id
+     * @return String home account id
      */
-    public static String getUniqueId(final ClientInfo clientInfo) {
-        final String methodName = ":getUniqueId";
+    public static String getHomeAccountId(final ClientInfo clientInfo) {
+        final String methodName = ":getHomeAccountId";
         Logger.entering(TAG, methodName, clientInfo);
 
-        String uniqueId = null;
+        String homeAccountId = null;
 
         if (null != clientInfo) {
             final String uid = clientInfo.getUid();
@@ -206,17 +207,17 @@ public final class SchemaUtil {
             }
 
             if (!StringExtensions.isNullOrBlank(uid) && !StringExtensions.isNullOrBlank(utid)) {
-                uniqueId = uid + "." + utid;
+                homeAccountId = uid + "." + utid;
             }
 
-            Logger.verbosePII(TAG + ":" + methodName, "unique_user_id: " + uniqueId);
+            Logger.verbosePII(TAG + ":" + methodName, "home_account_id: " + homeAccountId);
 
         } else {
             Logger.warn(TAG + ":" + methodName, "ClientInfo was null.");
         }
 
-        Logger.exiting(TAG, methodName, uniqueId);
+        Logger.exiting(TAG, methodName, homeAccountId);
 
-        return uniqueId;
+        return homeAccountId;
     }
 }

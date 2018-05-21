@@ -22,15 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.microsoft.identity.common.internal.logging.Logger;
+
 /**
  * Holds the request of a token request.  The request will either contain the success result or the error result.
  */
 public class TokenResult {
 
-    private boolean mSuccess = false;
+    private static final String TAG = TokenResult.class.getSimpleName();
 
     private TokenResponse mTokenResponse;
     private TokenErrorResponse mTokenErrorResponse;
+    private boolean mSuccess = false;
 
     /**
      * Constructor of TokenResult.
@@ -38,10 +41,10 @@ public class TokenResult {
      * @param response      TokenResponse
      * @param errorResponse TokenErrorResponse
      */
-    public TokenResult(TokenResponse response, TokenErrorResponse errorResponse) {
-
-        mTokenResponse = response;
-        mTokenErrorResponse = errorResponse;
+    public TokenResult(final TokenResponse response, final TokenErrorResponse errorResponse) {
+        Logger.verbose(TAG, "Init: " + TAG);
+        this.mTokenResponse = response;
+        this.mTokenErrorResponse = errorResponse;
 
         if (response != null) {
             mSuccess = true;
@@ -76,4 +79,12 @@ public class TokenResult {
         return mSuccess;
     }
 
+    @Override
+    public String toString() {
+        return "TokenResult{" +
+                "mTokenResponse=" + mTokenResponse +
+                ", mTokenErrorResponse=" + mTokenErrorResponse +
+                ", mSuccess=" + mSuccess +
+                '}';
+    }
 }

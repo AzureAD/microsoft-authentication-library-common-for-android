@@ -29,8 +29,8 @@ import static com.microsoft.identity.common.internal.dto.Credential.SerializedNa
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.CREDENTIAL_TYPE;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.ENVIRONMENT;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
+import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.SECRET;
-import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.UNIQUE_USER_ID;
 
 /**
  * This is a generic credential schema that should be used as a reference to define schemas for
@@ -60,10 +60,10 @@ public abstract class Credential extends AccountCredentialBase {
         public static final String SECRET = "secret";
 
         /**
-         * String of unique user id.
+         * String of home account id.
          */
-        public static final String UNIQUE_USER_ID = "unique_user_id";
-
+        public static final String HOME_ACCOUNT_ID = "home_account_id";
+      
         /**
          * String of cached at.
          */
@@ -114,8 +114,8 @@ public abstract class Credential extends AccountCredentialBase {
      * This field is optional if there's no user present for the flow (e.g. client credential
      * grants)
      */
-    @SerializedName(UNIQUE_USER_ID)
-    private String mUniqueId;
+    @SerializedName(HOME_ACCOUNT_ID)
+    private String mHomeAccountId;
 
     /**
      * Absolute device time when entry was created in cache in milliseconds from epoch (1970).
@@ -132,21 +132,21 @@ public abstract class Credential extends AccountCredentialBase {
     private String mExpiresOn;
 
     /**
-     * Gets the unique_user_id.
+     * Gets the home_account_id.
      *
-     * @return The unique_user_id to get.
+     * @return The home_account_id to get.
      */
-    public String getUniqueUserId() {
-        return mUniqueId;
+    public String getHomeAccountId() {
+        return mHomeAccountId;
     }
 
     /**
-     * Sets the unique_user_id.
+     * Sets the home_account_id.
      *
-     * @param uniqueId The unique_user_id to set.
+     * @param homeAccountId The home_account_id to set.
      */
-    public void setUniqueUserId(final String uniqueId) {
-        mUniqueId = uniqueId;
+    public void setHomeAccountId(final String homeAccountId) {
+        mHomeAccountId = homeAccountId;
     }
 
     /**
@@ -280,8 +280,11 @@ public abstract class Credential extends AccountCredentialBase {
         if (mEnvironment != null ? !mEnvironment.equals(that.mEnvironment) : that.mEnvironment != null) {
             return false;
         }
-
+      
         if (mSecret != null ? !mSecret.equals(that.mSecret) : that.mSecret != null) {
+            return false;
+        }
+        if (mHomeAccountId != null ? !mHomeAccountId.equals(that.mHomeAccountId) : that.mHomeAccountId != null) {
             return false;
         }
 
@@ -302,7 +305,7 @@ public abstract class Credential extends AccountCredentialBase {
         result = UNIQUE_ID_LENGTH * result + (mCredentialType != null ? mCredentialType.hashCode() : 0);
         result = UNIQUE_ID_LENGTH * result + (mEnvironment != null ? mEnvironment.hashCode() : 0);
         result = UNIQUE_ID_LENGTH * result + (mSecret != null ? mSecret.hashCode() : 0);
-        result = UNIQUE_ID_LENGTH * result + (mUniqueId != null ? mUniqueId.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mHomeAccountId != null ? mHomeAccountId.hashCode() : 0);
         result = UNIQUE_ID_LENGTH * result + (mCachedAt != null ? mCachedAt.hashCode() : 0);
         result = UNIQUE_ID_LENGTH * result + (mExpiresOn != null ? mExpiresOn.hashCode() : 0);
         return result;

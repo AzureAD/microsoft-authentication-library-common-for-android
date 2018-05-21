@@ -106,4 +106,14 @@ public class AuthorizationRequest {
         mState = state;
     }
 
+    @Override
+    public String toString() {
+        return "AuthorizationRequest{" +
+                "mResponseType='" + mResponseType + '\'' +
+                ", mClientId='" + mClientId + '\'' +
+                ", mRedirectUri='" + mRedirectUri + '\'' +
+                ", mScope='" + mScope + '\'' +
+                ", mState='" + mState + '\'' +
+                '}';
+    }
 }

@@ -51,13 +51,12 @@ public abstract class OAuth2Strategy
                 GenericTokenRequest extends TokenRequest,
                 GenericTokenResponse extends TokenResponse,
                 GenericTokenResult extends TokenResult> {
+    protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
+    private final GenericOAuth2Configuration mConfig;
     private String mTokenEndpoint;
-
     private String mAuthorizationEndpoint;
     private Uri mIssuer;
-
-    private static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
     /**
      * Constructor of OAuth2Strategy.
@@ -65,7 +64,7 @@ public abstract class OAuth2Strategy
      * @param config generic OAuth2 configuration
      */
     public OAuth2Strategy(GenericOAuth2Configuration config) {
-
+        mConfig = config;
     }
 
     /**
@@ -96,7 +95,6 @@ public abstract class OAuth2Strategy
         HttpResponse response = performTokenRequest(request);
         return getTokenResultFromHttpResponse(response);
     }
-
 
     protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException {
 

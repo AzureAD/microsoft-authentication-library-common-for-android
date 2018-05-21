@@ -251,4 +251,17 @@ public class TokenResponse {
         return mResponseReceivedTime;
     }
 
+    @Override
+    public String toString() {
+        return "TokenResponse{" +
+                "mExpiresIn=" + mExpiresIn +
+                ", mAccessToken='" + mAccessToken + '\'' +
+                ", mTokenType='" + mTokenType + '\'' +
+                ", mRefreshToken='" + mRefreshToken + '\'' +
+                ", mScope='" + mScope + '\'' +
+                ", mState='" + mState + '\'' +
+                ", mIdToken='" + mIdToken + '\'' +
+                ", mResponseReceivedTime=" + mResponseReceivedTime +
+                '}';
+    }
 }
