@@ -47,6 +47,7 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * Class responsible for saving oAuth2 Tokens for use in future requests.  Ideally this class would
@@ -132,16 +133,21 @@ public class ADALOAuth2TokenCache
             setItemToCacheForUser(issuerCacheIdentifier, scope, clientId, cacheItem, cacheIdentifier);
         }
 
+        //For legacy reasons creating a cache entry where the userid is null
+        //ADAL supported a single user mode where it was not necessary for the developer to provide the user id
+        //on calls to acquireTokenSilentAsync
+        setItemToCacheForUser(issuerCacheIdentifier, request.getScope(), request.getClientId(), cacheItem, null);
+
+        ListIterator<IShareSingleSignOnState> otherCaches = mSharedSSOCaches.listIterator();
+
         // TODO At some point, the type-safety of this call needs to get beefed-up
         Logger.info(TAG + ":" + methodName, "Syncing SSO state to caches...");
         for (final IShareSingleSignOnState sharedSsoCache : mSharedSSOCaches) {
             sharedSsoCache.setSingleSignOnState(account, refreshToken);
         }
 
-        // TODO: I'd like to know exactly why this is here before I put this back in.... i'm assuming for ADFS v3.
-        //setItemToCacheForUser(resource, clientId, result, null);
-
         Logger.exiting(TAG, methodName);
+
     }
 
 
