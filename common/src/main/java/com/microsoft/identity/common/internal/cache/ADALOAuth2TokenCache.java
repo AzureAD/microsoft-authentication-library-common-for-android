@@ -81,8 +81,7 @@ public class ADALOAuth2TokenCache
     /**
      * Constructor of ADALOAuth2TokenCache.
      *
-     * @param context         Context
-     * @param sharedSSOCaches List<IShareSingleSignOnState>
+     * @param context Context
      */
     public ADALOAuth2TokenCache(final Context context) {
         super(context);
@@ -95,7 +94,8 @@ public class ADALOAuth2TokenCache
     /**
      * Constructor of ADALOAuth2TokenCache.
      *
-     * @param context Context
+     * @param context         Context
+     * @param sharedSSOCaches List<IShareSingleSignOnState>
      */
     public ADALOAuth2TokenCache(final Context context,
                                 final List<IShareSingleSignOnState> sharedSSOCaches) {
@@ -109,7 +109,7 @@ public class ADALOAuth2TokenCache
     protected void initializeSharedPreferencesFileManager(final String fileName) {
         final String methodName = "initializeSharedPreferencesFileManager";
         Logger.entering(TAG, methodName, fileName);
-        mISharedPreferencesFileManager = new SharedPreferencesFileManager(mContext, fileName);
+        mISharedPreferencesFileManager = new SharedPreferencesFileManager(getContext(), fileName);
         Logger.exiting(TAG, methodName);
     }
 
@@ -216,7 +216,7 @@ public class ADALOAuth2TokenCache
         synchronized (LOCK) {
             if (sHelper == null) {
                 Logger.verbose(TAG + ":" + methodName, "Initializing StorageHelper");
-                sHelper = new StorageHelper(mContext);
+                sHelper = new StorageHelper(getContext());
                 Logger.verbose(TAG + ":" + methodName, "Finished initializing StorageHelper");
             }
         }

@@ -31,7 +31,8 @@ import com.microsoft.identity.common.exception.ClientException;
  */
 public abstract class OAuth2TokenCache
         <T extends OAuth2Strategy, U extends AuthorizationRequest, V extends TokenResponse> {
-    protected final Context mContext;
+
+    private final Context mContext;
 
     /**
      * Constructs a new OAuth2TokenCache.
@@ -53,4 +54,8 @@ public abstract class OAuth2TokenCache
     public abstract void saveTokens(final T oAuth2Strategy,
                                     final U request,
                                     final V response) throws ClientException;
+
+    protected final Context getContext() {
+        return mContext;
+    }
 }
