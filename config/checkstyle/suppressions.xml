@@ -8,5 +8,9 @@
   <suppress checks=".*" files=".*[\\/]unit[\\/]"/>
   <suppress checks="JavadocVariable" files="MicrosoftStsIdToken.java"/>
   <suppress checks="EmptyBlock" files="AzureActiveDirectoryOAuth2Strategy.java"/>
-  <suppress checks="EqualsHashCodeCheck" files="*.java"/>
+  <suppress checks="EqualsHashCodeCheck" files="Account.java"/>
+  <suppress checks="EqualsHashCodeCheck" files="AccountCredentialBase.java"/>
+  <suppress checks="EqualsHashCodeCheck" files="Credential.java"/>
+  <suppress checks="EqualsHashCodeCheck" files="RefreshToken.java"/>
+  <suppress checks="EqualsHashCodeCheck" files="IdToken.java"/>
 </suppressions>
