@@ -335,6 +335,7 @@ public class Account extends AccountCredentialBase implements IAccount {
         mAvatarUrl = avatarUrl;
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -361,7 +362,9 @@ public class Account extends AccountCredentialBase implements IAccount {
             return false;
         return mAvatarUrl != null ? mAvatarUrl.equals(account.mAvatarUrl) : account.mAvatarUrl == null;
     }
+    //CHECKSTYLE:ON
 
+    //CHECKSTYLE:OFF
     @Override
     public int hashCode() {
         int result = mHomeAccountId != null ? mHomeAccountId.hashCode() : 0;
@@ -376,4 +379,6 @@ public class Account extends AccountCredentialBase implements IAccount {
         result = 31 * result + (mAvatarUrl != null ? mAvatarUrl.hashCode() : 0);
         return result;
     }
+    //CHECKSTYLE:ON
+
 }
