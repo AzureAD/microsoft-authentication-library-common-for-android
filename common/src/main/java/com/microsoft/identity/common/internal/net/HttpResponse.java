@@ -29,6 +29,7 @@ import java.util.Map;
  * Internal class to wrap the raw server response, headers and status code.
  */
 public final class HttpResponse {
+
     private final int mStatusCode;
     private final String mResponseBody;
     private final Map<String, List<String>> mResponseHeaders;
@@ -67,5 +68,14 @@ public final class HttpResponse {
      */
     public Map<String, List<String>> getHeaders() {
         return mResponseHeaders;
+    }
+
+    @Override
+    public String toString() {
+        return "HttpResponse{" +
+                "mStatusCode=" + mStatusCode +
+                ", mResponseBody='" + mResponseBody + '\'' +
+                ", mResponseHeaders=" + mResponseHeaders +
+                '}';
     }
 }

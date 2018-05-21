@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
@@ -33,6 +34,8 @@ import java.util.Map;
  * UTID, UID combined as a single identifier per current MSAL implementation
  */
 public class AzureActiveDirectoryAccount extends MicrosoftAccount {
+
+    private static final String TAG = AzureActiveDirectoryAccount.class.getSimpleName();
 
     public AzureActiveDirectoryAccount() {
         super();
@@ -47,6 +50,7 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
      */
     public AzureActiveDirectoryAccount(IDToken idToken, String uid, final String uTid) {
         super(idToken, uid, uTid);
+        Logger.verbose(TAG, "Init: " + TAG);
     }
 
     /**
@@ -57,20 +61,21 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
      * @return
      */
     public static AzureActiveDirectoryAccount create(final IDToken idToken, ClientInfo clientInfo) {
+        final String methodName = "create";
+        Logger.entering(TAG, methodName, idToken, clientInfo);
 
-        final String uid;
-        final String uTid;
-
-        //TODO: objC code throws an exception when uid/utid is null.... something for us to consider
-        if (clientInfo == null) {
-            uid = "";
-            uTid = "";
-        } else {
-            uid = clientInfo.getUid();
-            uTid = clientInfo.getUtid();
+        if (null == clientInfo) {
+            throw new IllegalArgumentException("ClientInfo cannot be null");
         }
 
-        return new AzureActiveDirectoryAccount(idToken, uid, uTid);
+        final String uid = clientInfo.getUid();
+        final String uTid = clientInfo.getUtid();
+
+        AzureActiveDirectoryAccount acct = new AzureActiveDirectoryAccount(idToken, uid, uTid);
+
+        Logger.exiting(TAG, methodName, acct);
+
+        return acct;
     }
 
     @Override
@@ -80,12 +85,26 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
 
     @Override
     protected String getDisplayableId(Map<String, String> claims) {
+        final String methodName = "getDisplayableId";
+        Logger.entering(TAG, methodName, claims);
+
+        String displayableId = null;
+
         if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.UPN))) {
-            return claims.get(AzureActiveDirectoryIdToken.UPN);
+            Logger.info(TAG + ":" + methodName, "Returning upn as displayableId");
+            displayableId = claims.get(AzureActiveDirectoryIdToken.UPN);
         } else if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.EMAIL))) {
-            return claims.get(AzureActiveDirectoryIdToken.EMAIL);
+            Logger.info(TAG + ":" + methodName, "Returning email as displayableId");
+            displayableId = claims.get(AzureActiveDirectoryIdToken.EMAIL);
         }
 
-        return null;
+        Logger.exiting(TAG, methodName, displayableId);
+
+        return displayableId;
+    }
+
+    @Override
+    public String toString() {
+        return "AzureActiveDirectoryAccount{} " + super.toString();
     }
 }

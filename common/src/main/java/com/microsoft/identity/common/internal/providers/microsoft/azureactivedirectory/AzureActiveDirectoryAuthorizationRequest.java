@@ -28,7 +28,7 @@ import java.net.URL;
 
 public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationRequest {
 
-    URL mAuthority;
+    private URL mAuthority;
 
     public URL getAuthority() {
         return mAuthority;
@@ -38,4 +38,10 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
         this.mAuthority = mAuthority;
     }
 
+    @Override
+    public String toString() {
+        return "AzureActiveDirectoryAuthorizationRequest{" +
+                "mAuthority=" + mAuthority +
+                "} " + super.toString();
+    }
 }
