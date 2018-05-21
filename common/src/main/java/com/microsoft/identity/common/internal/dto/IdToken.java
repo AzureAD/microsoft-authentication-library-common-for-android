@@ -88,6 +88,7 @@ public class IdToken extends Credential {
         mRealm = realm;
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -99,7 +100,9 @@ public class IdToken extends Credential {
         if (mRealm != null ? !mRealm.equals(idToken.mRealm) : idToken.mRealm != null) return false;
         return mAuthority != null ? mAuthority.equals(idToken.mAuthority) : idToken.mAuthority == null;
     }
+    //CHECKSTYLE:ON
 
+    //CHECKSTYLE:OFF
     @Override
     public int hashCode() {
         int result = super.hashCode();
@@ -107,5 +110,6 @@ public class IdToken extends Credential {
         result = 31 * result + (mAuthority != null ? mAuthority.hashCode() : 0);
         return result;
     }
+    //CHECKSTYLE:ON
 
 }
