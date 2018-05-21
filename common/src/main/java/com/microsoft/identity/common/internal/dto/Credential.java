@@ -63,7 +63,7 @@ public abstract class Credential extends AccountCredentialBase {
          * String of home account id.
          */
         public static final String HOME_ACCOUNT_ID = "home_account_id";
-      
+
         /**
          * String of cached at.
          */
@@ -257,6 +257,7 @@ public abstract class Credential extends AccountCredentialBase {
         mExpiresOn = expiresOn;
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -277,7 +278,9 @@ public abstract class Credential extends AccountCredentialBase {
             return false;
         return mExpiresOn != null ? mExpiresOn.equals(that.mExpiresOn) : that.mExpiresOn == null;
     }
+    //CHECKSTYLE:ON
 
+    //CHECKSTYLE:OFF
     @Override
     public int hashCode() {
         int result = mClientId != null ? mClientId.hashCode() : 0;
@@ -289,4 +292,5 @@ public abstract class Credential extends AccountCredentialBase {
         result = 31 * result + (mExpiresOn != null ? mExpiresOn.hashCode() : 0);
         return result;
     }
+    //CHECKSTYLE:ON
 }
