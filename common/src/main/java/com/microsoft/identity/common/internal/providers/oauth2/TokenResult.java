@@ -79,6 +79,7 @@ public class TokenResult {
         return mSuccess;
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public String toString() {
         return "TokenResult{" +
@@ -87,4 +88,6 @@ public class TokenResult {
                 ", mSuccess=" + mSuccess +
                 '}';
     }
+    //CHECKSTYLE:ON
+
 }
