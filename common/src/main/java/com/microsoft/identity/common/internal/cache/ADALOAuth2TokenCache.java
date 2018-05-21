@@ -47,7 +47,6 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.ListIterator;
 
 /**
  * Class responsible for saving oAuth2 Tokens for use in future requests.  Ideally this class would
@@ -137,8 +136,6 @@ public class ADALOAuth2TokenCache
         //ADAL supported a single user mode where it was not necessary for the developer to provide the user id
         //on calls to acquireTokenSilentAsync
         setItemToCacheForUser(issuerCacheIdentifier, request.getScope(), request.getClientId(), cacheItem, null);
-
-        ListIterator<IShareSingleSignOnState> otherCaches = mSharedSSOCaches.listIterator();
 
         // TODO At some point, the type-safety of this call needs to get beefed-up
         Logger.info(TAG + ":" + methodName, "Syncing SSO state to caches...");
