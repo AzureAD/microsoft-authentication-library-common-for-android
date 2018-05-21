@@ -85,9 +85,9 @@ public class AzureActiveDirectoryOAuth2Strategy
         if (!cloud.isValidated() && !getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
             Logger.warn(
                     TAG + ":" + methodName,
-                    "Authority host validation not specified..." +
-                            "but there is no cloud..." +
-                            "Hence just return the passed in Authority"
+                    "Authority host validation not specified..."
+                            + "but there is no cloud..."
+                            + "Hence just return the passed in Authority"
             );
             return authRequest.getAuthority().toString();
         }
