@@ -30,4 +30,10 @@ public class MicrosoftTokenResponse extends TokenResponse {
     @SerializedName("ext_expires_in")
     protected Long mExtendedExpiresIn;
 
+    @Override
+    public String toString() {
+        return "MicrosoftTokenResponse{" +
+                "mExtendedExpiresIn=" + mExtendedExpiresIn +
+                "} " + super.toString();
+    }
 }

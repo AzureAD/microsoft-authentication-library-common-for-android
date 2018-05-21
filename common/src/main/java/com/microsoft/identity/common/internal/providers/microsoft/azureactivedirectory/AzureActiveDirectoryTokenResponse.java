@@ -221,4 +221,18 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
     public void setClientId(final String clientId) {
         mClientId = clientId;
     }
+
+    @Override
+    public String toString() {
+        return "AzureActiveDirectoryTokenResponse{" +
+                "mExpiresOn=" + mExpiresOn +
+                ", mResource='" + mResource + '\'' +
+                ", mExtExpiresOn=" + mExtExpiresOn +
+                ", mNotBefore='" + mNotBefore + '\'' +
+                ", mClientInfo='" + mClientInfo + '\'' +
+                ", mFamilyId='" + mFamilyId + '\'' +
+                ", mClientId='" + mClientId + '\'' +
+                ", mSpeRing='" + mSpeRing + '\'' +
+                "} " + super.toString();
+    }
 }

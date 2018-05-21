@@ -29,6 +29,7 @@ import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
@@ -40,6 +41,8 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class MicrosoftAccount extends Account {
+
+    private static final String TAG = MicrosoftAccount.class.getSimpleName();
 
     protected String mDisplayableId; // Legacy Identifier -  UPN (preferred) or Email
     protected String mUniqueId; // Legacy Identifier - Object Id (preferred) or Subject
@@ -57,13 +60,15 @@ public abstract class MicrosoftAccount extends Account {
 
     public MicrosoftAccount() {
         super();
+        Logger.verbose(TAG, "Init: " + TAG);
     }
 
     public MicrosoftAccount(@NonNull final IDToken idToken,
                             final String uid,
                             final String utid) {
+        Logger.verbose(TAG, "Init: " + TAG);
         mIDToken = idToken;
-        Map<String, String> claims = idToken.getTokenClaims();
+        final Map<String, String> claims = idToken.getTokenClaims();
         mUniqueId = getUniqueId(claims);
         mDisplayableId = getDisplayableId(claims);
         mName = claims.get(AzureActiveDirectoryIdToken.NAME);
@@ -97,13 +102,22 @@ public abstract class MicrosoftAccount extends Account {
     protected abstract String getDisplayableId(final Map<String, String> claims);
 
     private String getUniqueId(final Map<String, String> claims) {
+        final String methodName = "getUniqueId";
+        Logger.entering(TAG, methodName, claims);
+
+        String uniqueId = null;
+
         if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.OJBECT_ID))) {
-            return claims.get(AzureActiveDirectoryIdToken.OJBECT_ID);
+            Logger.info(TAG + ":" + methodName, "Using ObjectId as uniqueId");
+            uniqueId = claims.get(AzureActiveDirectoryIdToken.OJBECT_ID);
         } else if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.SUBJECT))) {
-            return claims.get(AzureActiveDirectoryIdToken.SUBJECT);
+            Logger.info(TAG + ":" + methodName, "Using Subject as uniqueId");
+            uniqueId = claims.get(AzureActiveDirectoryIdToken.SUBJECT);
         }
 
-        return null;
+        Logger.exiting(TAG, methodName, uniqueId);
+
+        return uniqueId;
     }
 
     public void setFirstName(final String givenName) {
@@ -115,7 +129,8 @@ public abstract class MicrosoftAccount extends Account {
     }
 
     /**
-     * @return The displayable value in the UserPrincipleName(UPN) format. Can be null if not returned from the service.
+     * @return The displayable value in the UserPrincipleName(UPN) format. Can be null if not
+     * returned from the service.
      */
     public String getDisplayableId() {
         return mDisplayableId;
@@ -129,7 +144,6 @@ public abstract class MicrosoftAccount extends Account {
     public void setDisplayableId(final String displayableId) {
         mDisplayableId = displayableId;
     }
-
 
     /**
      * @return The given name of the user. Can be null if not returned from the service.
@@ -206,7 +220,7 @@ public abstract class MicrosoftAccount extends Account {
         return mUtid;
     }
 
-    void setUserId(String userid) {
+    void setUserId(final String userid) {
         mUniqueId = userid;
     }
 
@@ -222,7 +236,7 @@ public abstract class MicrosoftAccount extends Account {
 
     @Override
     public List<String> getCacheIdentifiers() {
-        List<String> cacheIdentifiers = new ArrayList<String>();
+        List<String> cacheIdentifiers = new ArrayList<>();
 
         if (mDisplayableId != null) {
             cacheIdentifiers.add(mDisplayableId);
@@ -308,5 +322,23 @@ public abstract class MicrosoftAccount extends Account {
     @Override
     public String getAvatarUrl() {
         return SchemaUtil.getAvatarUrl(mIDToken);
+    }
+
+    @Override
+    public String toString() {
+        return "MicrosoftAccount{" +
+                "mDisplayableId='" + mDisplayableId + '\'' +
+                ", mUniqueId='" + mUniqueId + '\'' +
+                ", mName='" + mName + '\'' +
+                ", mIdentityProvider='" + mIdentityProvider + '\'' +
+                ", mUid='" + mUid + '\'' +
+                ", mUtid='" + mUtid + '\'' +
+                ", mIDToken=" + mIDToken +
+                ", mPasswordChangeUrl=" + mPasswordChangeUrl +
+                ", mPasswordExpiresOn=" + mPasswordExpiresOn +
+                ", mTenantId='" + mTenantId + '\'' +
+                ", mGivenName='" + mGivenName + '\'' +
+                ", mFamilyName='" + mFamilyName + '\'' +
+                "} " + super.toString();
     }
 }
