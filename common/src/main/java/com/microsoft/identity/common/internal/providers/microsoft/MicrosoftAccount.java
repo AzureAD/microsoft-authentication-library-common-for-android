@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
@@ -62,7 +63,9 @@ public abstract class MicrosoftAccount extends Account {
         Logger.verbose(TAG, "Init: " + TAG);
     }
 
-    public MicrosoftAccount(final IDToken idToken, final String uid, final String utid) {
+    public MicrosoftAccount(@NonNull final IDToken idToken,
+                            final String uid,
+                            final String utid) {
         Logger.verbose(TAG, "Init: " + TAG);
         mIDToken = idToken;
         final Map<String, String> claims = idToken.getTokenClaims();
@@ -273,7 +276,7 @@ public abstract class MicrosoftAccount extends Account {
     }
 
     @Override
-    public String getUniqueUserId() {
+    public String getHomeAccountId() {
         // TODO -- This method's functionality is duplicative of
         // Account#getUniqueIdentifier except that that implementation
         // was coded for the refactored ADAL cache which expects
@@ -292,7 +295,7 @@ public abstract class MicrosoftAccount extends Account {
     }
 
     @Override
-    public String getAuthorityAccountId() {
+    public String getLocalAccountId() {
         return getUserId();
     }
 
@@ -302,8 +305,8 @@ public abstract class MicrosoftAccount extends Account {
     }
 
     @Override
-    public String getGuestId() {
-        return SchemaUtil.getGuestId(mIDToken);
+    public String getAlternativeAccountId() {
+        return SchemaUtil.getAlternativeAccountId(mIDToken);
     }
 
     @Override

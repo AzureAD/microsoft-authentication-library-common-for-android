@@ -25,11 +25,11 @@ package com.microsoft.identity.common.internal.dto;
 public interface IAccount {
 
     /**
-     * Gets the unique_user_id.
+     * Gets the home_account_id.
      *
-     * @return The unique_user_id to get.
+     * @return The home_account_id to get.
      */
-    String getUniqueUserId();
+    String getHomeAccountId();
 
     /**
      * Gets the environment.
@@ -46,11 +46,11 @@ public interface IAccount {
     String getRealm();
 
     /**
-     * Gets the authority_account_id.
+     * Gets the local_account_id.
      *
-     * @return The authority_account_id to get.
+     * @return The local_account_id to get.
      */
-    String getAuthorityAccountId();
+    String getLocalAccountId();
 
     /**
      * Gets the username.
@@ -67,11 +67,11 @@ public interface IAccount {
     String getAuthorityType();
 
     /**
-     * Gets the guest_id.
+     * Gets the alternative_account_id.
      *
-     * @return The guest_id to get.
+     * @return The alternative_account_id to get.
      */
-    String getGuestId();
+    String getAlternativeAccountId();
 
     /**
      * Gets the first_name;

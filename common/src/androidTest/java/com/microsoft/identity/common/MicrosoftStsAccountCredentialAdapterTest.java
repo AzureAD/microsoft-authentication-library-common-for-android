@@ -86,7 +86,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     @Mock
     MicrosoftStsAccount mockAccount;
 
-    private MicrosoftStsAccountCredentialAdapter mAccountFactory;
+    private MicrosoftStsAccountCredentialAdapter mAccountCredentialAdapter;
 
     @Before
     public void setUp() throws MalformedURLException {
@@ -96,21 +96,31 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockResponse.getIdToken()).thenReturn(MOCK_ID_TOKEN_WITH_CLAIMS);
         when(mockResponse.getClientInfo()).thenReturn(MOCK_CLIENT_INFO);
         when(mockAccount.getRealm()).thenReturn(MOCK_TID);
+        when(mockAccount.getHomeAccountId()).thenReturn(MOCK_UID + "." + MOCK_UTID);
+        when(mockAccount.getEnvironment()).thenReturn(MOCK_ENVIRONMENT);
+        when(mockAccount.getRealm()).thenReturn(MOCK_TID);
+        when(mockAccount.getLocalAccountId()).thenReturn(MOCK_OID);
+        when(mockAccount.getUsername()).thenReturn(MOCK_PREFERRED_USERNAME);
+        when(mockAccount.getAuthorityType()).thenReturn("MSSTS");
+        when(mockAccount.getFirstName()).thenReturn(MOCK_GIVEN_NAME);
+        when(mockAccount.getLastName()).thenReturn(MOCK_FAMILY_NAME);
         when(mockRequest.getScope()).thenReturn(MOCK_SCOPE);
         when(mockResponse.getExpiresIn()).thenReturn(MOCK_EXPIRES_IN);
         when(mockResponse.getFamilyId()).thenReturn(MOCK_FAMILY_ID);
         when(mockResponse.getExpiresOn()).thenReturn(MOCK_EXPIRES_ON);
-        mAccountFactory = new MicrosoftStsAccountCredentialAdapter();
+        mAccountCredentialAdapter = new MicrosoftStsAccountCredentialAdapter();
     }
 
     @Test
     public void createAccount() throws Exception {
-        final Account account = mAccountFactory.createAccount(mockStrategy, mockRequest, mockResponse);
+        // TODO update this tests when the middle_name and name field are added
+        // This test is now basically a copy-constructor test
+        final Account account = mAccountCredentialAdapter.createAccount(mockStrategy, mockRequest, mockResponse);
         assertNotNull(account);
-        assertEquals(MOCK_UID + "." + MOCK_UTID, account.getUniqueUserId());
+        assertEquals(MOCK_UID + "." + MOCK_UTID, account.getHomeAccountId());
         assertEquals(MOCK_ENVIRONMENT, account.getEnvironment());
         assertEquals(MOCK_TID, account.getRealm());
-        assertEquals(MOCK_OID, account.getAuthorityAccountId());
+        assertEquals(MOCK_OID, account.getLocalAccountId());
         assertEquals(MOCK_PREFERRED_USERNAME, account.getUsername());
         assertEquals("MSSTS", account.getAuthorityType());
         assertEquals(MOCK_GIVEN_NAME, account.getFirstName());
@@ -119,7 +129,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
 
     @Test
     public void createAccessToken() throws Exception {
-        final AccessToken accessToken = mAccountFactory.createAccessToken(mockStrategy, mockRequest, mockResponse);
+        final AccessToken accessToken = mAccountCredentialAdapter.createAccessToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(accessToken);
         assertEquals(MOCK_SCOPE, accessToken.getTarget());
         assertNotNull(accessToken.getCachedAt());
@@ -129,12 +139,12 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_TID, accessToken.getRealm());
         assertEquals(MOCK_AUTHORITY, accessToken.getAuthority());
         assertEquals(MOCK_ENVIRONMENT, accessToken.getEnvironment());
-        assertEquals(MOCK_UID + "." + MOCK_UTID, accessToken.getUniqueUserId());
+        assertEquals(MOCK_UID + "." + MOCK_UTID, accessToken.getHomeAccountId());
     }
 
     @Test
     public void createRefreshToken() throws Exception {
-        final RefreshToken refreshToken = mAccountFactory.createRefreshToken(mockStrategy, mockRequest, mockResponse);
+        final RefreshToken refreshToken = mAccountCredentialAdapter.createRefreshToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(refreshToken);
         assertNotNull(refreshToken);
         assertEquals(MOCK_SCOPE, refreshToken.getTarget());

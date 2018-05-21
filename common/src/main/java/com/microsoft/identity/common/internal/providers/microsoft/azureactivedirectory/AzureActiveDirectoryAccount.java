@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
+import android.support.annotation.NonNull;
+
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
@@ -48,7 +50,9 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
      * @param uid     Returned via clientInfo of TokenResponse
      * @param uTid    Returned via ClientInfo of Token Response
      */
-    public AzureActiveDirectoryAccount(IDToken idToken, String uid, final String uTid) {
+    public AzureActiveDirectoryAccount(@NonNull final IDToken idToken,
+                                       final String uid,
+                                       final String uTid) {
         super(idToken, uid, uTid);
         Logger.verbose(TAG, "Init: " + TAG);
     }
@@ -60,13 +64,10 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
      * @param idToken
      * @return
      */
-    public static AzureActiveDirectoryAccount create(final IDToken idToken, ClientInfo clientInfo) {
+    public static AzureActiveDirectoryAccount create(@NonNull final IDToken idToken,
+                                                     @NonNull final ClientInfo clientInfo) {
         final String methodName = "create";
         Logger.entering(TAG, methodName, idToken, clientInfo);
-
-        if (null == clientInfo) {
-            throw new IllegalArgumentException("ClientInfo cannot be null");
-        }
 
         final String uid = clientInfo.getUid();
         final String uTid = clientInfo.getUtid();

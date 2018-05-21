@@ -24,15 +24,15 @@ package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
 
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AUTHORITY_ACCOUNT_ID;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.ALTERNATIVE_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AUTHORITY_TYPE;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AVATAR_URL;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.FIRST_NAME;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.GUEST_ID;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.LAST_NAME;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.LOCAL_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.UNIQUE_USER_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.USERNAME;
 
 /**
@@ -45,13 +45,13 @@ import static com.microsoft.identity.common.internal.dto.Account.SerializedNames
 public class Account extends AccountCredentialBase implements IAccount {
 
     public static class SerializedNames {
-        public static final String UNIQUE_USER_ID = "unique_user_id";
+        public static final String HOME_ACCOUNT_ID = "home_account_id";
         public static final String ENVIRONMENT = "environment";
         public static final String REALM = "realm";
-        public static final String AUTHORITY_ACCOUNT_ID = "authority_account_id";
+        public static final String LOCAL_ACCOUNT_ID = "local_account_id";
         public static final String USERNAME = "username";
         public static final String AUTHORITY_TYPE = "authority_type";
-        public static final String GUEST_ID = "guest_id";
+        public static final String ALTERNATIVE_ACCOUNT_ID = "alternative_account_id";
         public static final String FIRST_NAME = "first_name";
         public static final String LAST_NAME = "last_name";
         public static final String AVATAR_URL = "avatar_url";
@@ -63,29 +63,25 @@ public class Account extends AccountCredentialBase implements IAccount {
 
     public Account(final IAccount copy) {
         // Required
-        setUniqueUserId(copy.getUniqueUserId());
+        setHomeAccountId(copy.getHomeAccountId());
         setEnvironment(copy.getEnvironment());
         setRealm(copy.getRealm());
-        setAuthorityAccountId(copy.getAuthorityAccountId());
+        setLocalAccountId(copy.getLocalAccountId());
         setUsername(copy.getUsername());
         setAuthorityType(copy.getAuthorityType());
 
         // Optional
-        setGuestId(copy.getGuestId());
+        setAlternativeAccountId(copy.getAlternativeAccountId());
         setFirstName(copy.getFirstName());
         setLastName(copy.getLastName());
         setAvatarUrl(copy.getAvatarUrl());
     }
 
-    ///////////////
-    // Required fields
-    ///////////////
-
     /**
      * Unique user identifier for a given authentication scheme.
      */
-    @SerializedName(UNIQUE_USER_ID)
-    private String mUniqueId;
+    @SerializedName(HOME_ACCOUNT_ID)
+    private String mHomeAccountId;
 
     /**
      * Entity who issued the token represented as the host portion of a URL. For AAD it's host part
@@ -105,8 +101,8 @@ public class Account extends AccountCredentialBase implements IAccount {
      * Original authority specific account identifier. Can be needed for legacy purposes. OID for
      * AAD (in some unique cases subject instead of OID) and CID for MSA.
      */
-    @SerializedName(AUTHORITY_ACCOUNT_ID)
-    private String mAuthorityAccountId;
+    @SerializedName(LOCAL_ACCOUNT_ID)
+    private String mLocalAccountId;
 
     /**
      * The primary username that represents the user (corresponds to the preferred_username claim
@@ -124,16 +120,12 @@ public class Account extends AccountCredentialBase implements IAccount {
     @SerializedName(AUTHORITY_TYPE)
     private String mAuthorityType;
 
-    ///////////////
-    // Optional Fields
-    ///////////////
-
     /**
      * Internal representation for guest users to the tenants. Corresponds to the "altsecid" claim
      * in the id_token for AAD.
      */
-    @SerializedName(GUEST_ID)
-    private String mGuestId;
+    @SerializedName(ALTERNATIVE_ACCOUNT_ID)
+    private String mAlternativeAccountId;
 
     /**
      * First name for this Account.
@@ -153,22 +145,18 @@ public class Account extends AccountCredentialBase implements IAccount {
     @SerializedName(AVATAR_URL)
     private String mAvatarUrl;
 
-    ///////////////
-    // Accessor Methods
-    ///////////////
-
     @Override
-    public String getUniqueUserId() {
-        return mUniqueId;
+    public String getHomeAccountId() {
+        return mHomeAccountId;
     }
 
     /**
-     * Sets the unique_user_id.
+     * Sets the home_account_id.
      *
-     * @param uniqueId The unique_user_id to get.
+     * @param homeAccountId The home_account_id to get.
      */
-    public void setUniqueUserId(final String uniqueId) {
-        mUniqueId = uniqueId;
+    public void setHomeAccountId(final String homeAccountId) {
+        mHomeAccountId = homeAccountId;
     }
 
     @Override
@@ -200,17 +188,17 @@ public class Account extends AccountCredentialBase implements IAccount {
     }
 
     @Override
-    public String getAuthorityAccountId() {
-        return mAuthorityAccountId;
+    public String getLocalAccountId() {
+        return mLocalAccountId;
     }
 
     /**
-     * Sets the authority_account_id.
+     * Sets the local_account_id.
      *
-     * @param authorityAccountId The authority_account_id to set.
+     * @param localAccountId The local_account_id to set.
      */
-    public void setAuthorityAccountId(final String authorityAccountId) {
-        mAuthorityAccountId = authorityAccountId;
+    public void setLocalAccountId(final String localAccountId) {
+        mLocalAccountId = localAccountId;
     }
 
     @Override
@@ -242,17 +230,17 @@ public class Account extends AccountCredentialBase implements IAccount {
     }
 
     @Override
-    public String getGuestId() {
-        return mGuestId;
+    public String getAlternativeAccountId() {
+        return mAlternativeAccountId;
     }
 
     /**
-     * Sets the guest_id.
+     * Sets the alternative_account_id.
      *
-     * @param guestId The guest_id to set.
+     * @param alternativeAccountId The alternative_account_id to set.
      */
-    public void setGuestId(final String guestId) {
-        mGuestId = guestId;
+    public void setAlternativeAccountId(final String alternativeAccountId) {
+        mAlternativeAccountId = alternativeAccountId;
     }
 
     @Override
@@ -304,18 +292,18 @@ public class Account extends AccountCredentialBase implements IAccount {
 
         Account account = (Account) o;
 
-        if (mUniqueId != null ? !mUniqueId.equals(account.mUniqueId) : account.mUniqueId != null)
+        if (mHomeAccountId != null ? !mHomeAccountId.equals(account.mHomeAccountId) : account.mHomeAccountId != null)
             return false;
         if (mEnvironment != null ? !mEnvironment.equals(account.mEnvironment) : account.mEnvironment != null)
             return false;
         if (mRealm != null ? !mRealm.equals(account.mRealm) : account.mRealm != null) return false;
-        if (mAuthorityAccountId != null ? !mAuthorityAccountId.equals(account.mAuthorityAccountId) : account.mAuthorityAccountId != null)
+        if (mLocalAccountId != null ? !mLocalAccountId.equals(account.mLocalAccountId) : account.mLocalAccountId != null)
             return false;
         if (mUsername != null ? !mUsername.equals(account.mUsername) : account.mUsername != null)
             return false;
         if (mAuthorityType != null ? !mAuthorityType.equals(account.mAuthorityType) : account.mAuthorityType != null)
             return false;
-        if (mGuestId != null ? !mGuestId.equals(account.mGuestId) : account.mGuestId != null)
+        if (mAlternativeAccountId != null ? !mAlternativeAccountId.equals(account.mAlternativeAccountId) : account.mAlternativeAccountId != null)
             return false;
         if (mFirstName != null ? !mFirstName.equals(account.mFirstName) : account.mFirstName != null)
             return false;
@@ -326,13 +314,13 @@ public class Account extends AccountCredentialBase implements IAccount {
 
     @Override
     public int hashCode() {
-        int result = mUniqueId != null ? mUniqueId.hashCode() : 0;
+        int result = mHomeAccountId != null ? mHomeAccountId.hashCode() : 0;
         result = 31 * result + (mEnvironment != null ? mEnvironment.hashCode() : 0);
         result = 31 * result + (mRealm != null ? mRealm.hashCode() : 0);
-        result = 31 * result + (mAuthorityAccountId != null ? mAuthorityAccountId.hashCode() : 0);
+        result = 31 * result + (mLocalAccountId != null ? mLocalAccountId.hashCode() : 0);
         result = 31 * result + (mUsername != null ? mUsername.hashCode() : 0);
         result = 31 * result + (mAuthorityType != null ? mAuthorityType.hashCode() : 0);
-        result = 31 * result + (mGuestId != null ? mGuestId.hashCode() : 0);
+        result = 31 * result + (mAlternativeAccountId != null ? mAlternativeAccountId.hashCode() : 0);
         result = 31 * result + (mFirstName != null ? mFirstName.hashCode() : 0);
         result = 31 * result + (mLastName != null ? mLastName.hashCode() : 0);
         result = 31 * result + (mAvatarUrl != null ? mAvatarUrl.hashCode() : 0);

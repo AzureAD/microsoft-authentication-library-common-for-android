@@ -52,9 +52,9 @@ import java.util.Set;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.CLIENT_ID;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.CREDENTIAL_TYPE;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.ENVIRONMENT;
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.REALM;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.TARGET;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.UNIQUE_USER_ID;
 
 /**
  * Uses Gson to serialize instances of <T> into {@link String}s.
@@ -73,7 +73,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
     }
 
     static class CacheKeyReplacements {
-        static final String UNIQUE_USER_ID = "<unique_user_id>";
+        static final String HOME_ACCOUNT_ID = "<home_account_id>";
         static final String ENVIRONMENT = "<environment>";
         static final String REALM = "<realm>";
         static final String CREDENTIAL_TYPE = "<credential_type>";
@@ -97,12 +97,12 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         final String methodName = "generateCacheKey";
         Logger.entering(TAG, methodName, account);
 
-        String cacheKey = UNIQUE_USER_ID
+        String cacheKey = HOME_ACCOUNT_ID
                 + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT
                 + CACHE_VALUE_SEPARATOR
                 + REALM;
-        cacheKey = cacheKey.replace(UNIQUE_USER_ID, sanitizeNull(account.getUniqueUserId()));
+        cacheKey = cacheKey.replace(HOME_ACCOUNT_ID, sanitizeNull(account.getHomeAccountId()));
         cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(account.getEnvironment()));
         cacheKey = cacheKey.replace(REALM, sanitizeNull(account.getRealm()));
 
@@ -152,13 +152,13 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         Logger.entering(TAG, methodName, credential);
 
         String cacheKey =
-                UNIQUE_USER_ID + CACHE_VALUE_SEPARATOR
+                HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
                         + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                         + CREDENTIAL_TYPE + CACHE_VALUE_SEPARATOR
                         + CLIENT_ID + CACHE_VALUE_SEPARATOR
                         + REALM + CACHE_VALUE_SEPARATOR
                         + TARGET;
-        cacheKey = cacheKey.replace(UNIQUE_USER_ID, sanitizeNull(credential.getUniqueUserId()));
+        cacheKey = cacheKey.replace(HOME_ACCOUNT_ID, sanitizeNull(credential.getHomeAccountId()));
         cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(credential.getEnvironment()));
         cacheKey = cacheKey.replace(CREDENTIAL_TYPE, sanitizeNull(credential.getCredentialType()));
         cacheKey = cacheKey.replace(CLIENT_ID, sanitizeNull(credential.getClientId()));

@@ -28,11 +28,11 @@ package com.microsoft.identity.common.internal.dto;
 public interface IRefreshToken {
 
     /**
-     * Gets the unique_user_id.
+     * Gets the home_account_id.
      *
-     * @return The unique_user_id to get.
+     * @return The home_account_id to get.
      */
-    String getUniqueUserId();
+    String getHomeAccountId();
 
     /**
      * Gets the environment.
