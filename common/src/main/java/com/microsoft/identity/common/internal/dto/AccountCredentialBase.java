@@ -52,6 +52,7 @@ public abstract class AccountCredentialBase {
         mAdditionalFields = additionalFields;
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -62,12 +63,16 @@ public abstract class AccountCredentialBase {
 
         return mAdditionalFields != null ? mAdditionalFields.equals(that.mAdditionalFields) : that.mAdditionalFields == null;
     }
+    //CHECKSTYLE:ON
 
+    //CHECKSTYLE:OFF
     @Override
     public int hashCode() {
         return mAdditionalFields != null ? mAdditionalFields.hashCode() : 0;
     }
+    //CHECKSTYLE:ON
 
+    //CHECKSTYLE:OFF
     @Override
     public String toString() {
         return "AccountCredentialBase{"
@@ -75,4 +80,5 @@ public abstract class AccountCredentialBase {
                 + mAdditionalFields
                 + '}';
     }
+    //CHECKSTYLE:ON
 }
