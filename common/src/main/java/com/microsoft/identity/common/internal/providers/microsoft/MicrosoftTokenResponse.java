@@ -32,11 +32,13 @@ public class MicrosoftTokenResponse extends TokenResponse {
     protected Long getExtendedExpiresIn() {
         return mExtendedExpiresIn;
     }
-  
+
+    //CHECKSTYLE:OFF
     @Override
     public String toString() {
         return "MicrosoftTokenResponse{" +
                 "mExtendedExpiresIn=" + mExtendedExpiresIn +
                 "} " + super.toString();
     }
+    //CHECKSTYLE:ON
 }
