@@ -335,70 +335,43 @@ public class Account extends AccountCredentialBase implements IAccount {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
         Account account = (Account) o;
 
-        if (mHomeAccountId != null ? !mHomeAccountId.equals(account.mHomeAccountId) : account.mHomeAccountId != null) {
+        if (mHomeAccountId != null ? !mHomeAccountId.equals(account.mHomeAccountId) : account.mHomeAccountId != null)
             return false;
-        }
-
-        if (mEnvironment != null ? !mEnvironment.equals(account.mEnvironment) : account.mEnvironment != null) {
+        if (mEnvironment != null ? !mEnvironment.equals(account.mEnvironment) : account.mEnvironment != null)
             return false;
-        }
-
-        if (mRealm != null ? !mRealm.equals(account.mRealm) : account.mRealm != null) {
+        if (mRealm != null ? !mRealm.equals(account.mRealm) : account.mRealm != null) return false;
+        if (mLocalAccountId != null ? !mLocalAccountId.equals(account.mLocalAccountId) : account.mLocalAccountId != null)
             return false;
-        }
-  
-        if (mRealm != null ? !mRealm.equals(account.mRealm) : account.mRealm != null) {
+        if (mUsername != null ? !mUsername.equals(account.mUsername) : account.mUsername != null)
             return false;
-        }
-  
-        if (mLocalAccountId != null ? !mLocalAccountId.equals(account.mLocalAccountId) : account.mLocalAccountId != null) {
+        if (mAuthorityType != null ? !mAuthorityType.equals(account.mAuthorityType) : account.mAuthorityType != null)
             return false;
-        }
-
-        if (mUsername != null ? !mUsername.equals(account.mUsername) : account.mUsername != null) {
+        if (mAlternativeAccountId != null ? !mAlternativeAccountId.equals(account.mAlternativeAccountId) : account.mAlternativeAccountId != null)
             return false;
-        }
-
-        if (mAuthorityType != null ? !mAuthorityType.equals(account.mAuthorityType) : account.mAuthorityType != null) {
+        if (mFirstName != null ? !mFirstName.equals(account.mFirstName) : account.mFirstName != null)
             return false;
-        }
-  
-        if (mAlternativeAccountId != null ? !mAlternativeAccountId.equals(account.mAlternativeAccountId) : account.mAlternativeAccountId != null) {
+        if (mLastName != null ? !mLastName.equals(account.mLastName) : account.mLastName != null)
             return false;
-        }
-
-        if (mFirstName != null ? !mFirstName.equals(account.mFirstName) : account.mFirstName != null) {
-            return false;
-        }
-
-        if (mLastName != null ? !mLastName.equals(account.mLastName) : account.mLastName != null) {
-            return false;
-        }
-
         return mAvatarUrl != null ? mAvatarUrl.equals(account.mAvatarUrl) : account.mAvatarUrl == null;
     }
 
     @Override
     public int hashCode() {
         int result = mHomeAccountId != null ? mHomeAccountId.hashCode() : 0;
-        result = UNIQUE_ID_LENGTH * result + (mEnvironment != null ? mEnvironment.hashCode() : 0);
-        result = UNIQUE_ID_LENGTH * result + (mRealm != null ? mRealm.hashCode() : 0);
-        result = UNIQUE_ID_LENGTH * result + (mLocalAccountId != null ? mLocalAccountId.hashCode() : 0);
-        result = UNIQUE_ID_LENGTH * result + (mUsername != null ? mUsername.hashCode() : 0);
-        result = UNIQUE_ID_LENGTH * result + (mAuthorityType != null ? mAuthorityType.hashCode() : 0);
-        result = UNIQUE_ID_LENGTH * result + (mAlternativeAccountId != null ? mAlternativeAccountId.hashCode() : 0);
-        result = UNIQUE_ID_LENGTH * result + (mFirstName != null ? mFirstName.hashCode() : 0);
-        result = UNIQUE_ID_LENGTH * result + (mLastName != null ? mLastName.hashCode() : 0);
-        result = UNIQUE_ID_LENGTH * result + (mAvatarUrl != null ? mAvatarUrl.hashCode() : 0);
+        result = 31 * result + (mEnvironment != null ? mEnvironment.hashCode() : 0);
+        result = 31 * result + (mRealm != null ? mRealm.hashCode() : 0);
+        result = 31 * result + (mLocalAccountId != null ? mLocalAccountId.hashCode() : 0);
+        result = 31 * result + (mUsername != null ? mUsername.hashCode() : 0);
+        result = 31 * result + (mAuthorityType != null ? mAuthorityType.hashCode() : 0);
+        result = 31 * result + (mAlternativeAccountId != null ? mAlternativeAccountId.hashCode() : 0);
+        result = 31 * result + (mFirstName != null ? mFirstName.hashCode() : 0);
+        result = 31 * result + (mLastName != null ? mLastName.hashCode() : 0);
+        result = 31 * result + (mAvatarUrl != null ? mAvatarUrl.hashCode() : 0);
         return result;
     }
 }

@@ -48,7 +48,7 @@ public class MicrosoftClientAssertion extends ClientAssertion {
 
     private static final String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
     private static final String THUMBPRINT_ALGORITHM = "SHA-1";
-    private static final int ONE_HOUR = 60000;
+    private static final int ONE_MINUTE_MILLIS = 60000;
 
     /**
      * Constructor of MicrosoftClientAssertion.
@@ -82,7 +82,7 @@ public class MicrosoftClientAssertion extends ClientAssertion {
                 .issuer(clientId)
                 .notBeforeTime(new Date(time))
                 .expirationTime(new Date(time
-                        + ONE_HOUR))
+                        + ONE_MINUTE_MILLIS))
                 .subject(clientId)
                 .build();
 
