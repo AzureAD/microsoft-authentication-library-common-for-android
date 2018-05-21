@@ -75,13 +75,13 @@ public class AzureActiveDirectoryOAuth2Strategy
 
         final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
 
-        if (!cloud.isValidated() && mConfig.isAuthorityHostValdiationEnabled()) {
+        if (!cloud.isValidated() && mConfig.isAuthorityHostValidationEnabled()) {
             Logger.warn(TAG + ":" + methodName, "Authority host validation has been enabled. This data hasn't been validated, though.");
             // We have invalid cloud data... and authority host validation is enabled....
             // TODO: Throw an exception in this case... need to see what ADAL does in this case.
         }
 
-        if (!cloud.isValidated() && !mConfig.isAuthorityHostValdiationEnabled()) {
+        if (!cloud.isValidated() && !mConfig.isAuthorityHostValidationEnabled()) {
             Logger.warn(
                     TAG + ":" + methodName,
                     "Authority host validation not specified..." +

@@ -53,8 +53,8 @@ public abstract class OAuth2Strategy
                 GenericTokenResult extends TokenResult> {
     protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
-    private final GenericOAuth2Configuration mConfig;
-    private String mTokenEndpoint;
+    protected final GenericOAuth2Configuration mConfig;
+    protected String mTokenEndpoint;
     private String mAuthorizationEndpoint;
     private Uri mIssuer;
 

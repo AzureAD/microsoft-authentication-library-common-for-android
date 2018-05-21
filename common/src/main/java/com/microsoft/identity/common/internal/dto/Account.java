@@ -344,7 +344,7 @@ public class Account extends AccountCredentialBase implements IAccount {
 
         Account account = (Account) o;
 
-        if (mHomeAccountId != null ? !mHomeAccountId.equals(account.mHomeAccountId) : account.mHomeAccountId != null)
+        if (mHomeAccountId != null ? !mHomeAccountId.equals(account.mHomeAccountId) : account.mHomeAccountId != null) {
             return false;
         }
 
@@ -389,13 +389,13 @@ public class Account extends AccountCredentialBase implements IAccount {
 
     @Override
     public int hashCode() {
-        int result = mUniqueId != null ? mUniqueId.hashCode() : 0;
+        int result = mHomeAccountId != null ? mHomeAccountId.hashCode() : 0;
         result = UNIQUE_ID_LENGTH * result + (mEnvironment != null ? mEnvironment.hashCode() : 0);
         result = UNIQUE_ID_LENGTH * result + (mRealm != null ? mRealm.hashCode() : 0);
-        result = UNIQUE_ID_LENGTH * result + (mAuthorityAccountId != null ? mAuthorityAccountId.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mLocalAccountId != null ? mLocalAccountId.hashCode() : 0);
         result = UNIQUE_ID_LENGTH * result + (mUsername != null ? mUsername.hashCode() : 0);
         result = UNIQUE_ID_LENGTH * result + (mAuthorityType != null ? mAuthorityType.hashCode() : 0);
-        result = UNIQUE_ID_LENGTH * result + (mGuestId != null ? mGuestId.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mAlternativeAccountId != null ? mAlternativeAccountId.hashCode() : 0);
         result = UNIQUE_ID_LENGTH * result + (mFirstName != null ? mFirstName.hashCode() : 0);
         result = UNIQUE_ID_LENGTH * result + (mLastName != null ? mLastName.hashCode() : 0);
         result = UNIQUE_ID_LENGTH * result + (mAvatarUrl != null ? mAvatarUrl.hashCode() : 0);

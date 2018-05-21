@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class MicrosoftAccount extends Account {
+    private static final String TAG = MicrosoftAccount.class.getSimpleName();
 
     private String mDisplayableId; // Legacy Identifier -  UPN (preferred) or Email
     private String mUniqueId; // Legacy Identifier - Object Id (preferred) or Subject

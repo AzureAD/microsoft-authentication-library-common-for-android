@@ -288,10 +288,6 @@ public abstract class Credential extends AccountCredentialBase {
             return false;
         }
 
-        if (mUniqueId != null ? !mUniqueId.equals(that.mUniqueId) : that.mUniqueId != null) {
-            return false;
-        }
-
         if (mCachedAt != null ? !mCachedAt.equals(that.mCachedAt) : that.mCachedAt != null) {
             return false;
         }

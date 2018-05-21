@@ -64,7 +64,6 @@ public class ADALOAuth2TokenCache
     @SuppressLint("StaticFieldLeak")
     private static StorageHelper sHelper;
 
-    private ISharedPreferencesFileManager mISharedPreferencesFileManager;
     private Gson mGson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new DateTimeAdapter())
             .create();
