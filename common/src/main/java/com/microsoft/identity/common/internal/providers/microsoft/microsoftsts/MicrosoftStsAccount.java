@@ -44,18 +44,12 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
      * @return The newly created MicrosoftStsAccount.
      */
     public static MicrosoftStsAccount create(final IDToken idToken, ClientInfo clientInfo) {
-
-        final String uid;
-        final String uTid;
-
-        //TODO: objC code throws an exception when uid/utid is null.... something for us to consider
-        if (clientInfo == null) {
-            uid = "";
-            uTid = "";
-        } else {
-            uid = clientInfo.getUid();
-            uTid = clientInfo.getUtid();
+        if (null == clientInfo) {
+            throw new IllegalArgumentException("ClientInfo cannot be null");
         }
+
+        final String uid = clientInfo.getUid();
+        final String uTid = clientInfo.getUtid();
 
         return new MicrosoftStsAccount(idToken, uid, uTid);
     }

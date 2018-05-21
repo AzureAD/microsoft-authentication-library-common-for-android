@@ -64,15 +64,12 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
         final String methodName = "create";
         Logger.entering(TAG, methodName, idToken, clientInfo);
 
-        final String uid;
-        final String uTid;
-
-        if (clientInfo == null) {
+        if (null == clientInfo) {
             throw new IllegalArgumentException("ClientInfo cannot be null");
-        } else {
-            uid = clientInfo.getUid();
-            uTid = clientInfo.getUtid();
         }
+
+        final String uid = clientInfo.getUid();
+        final String uTid = clientInfo.getUtid();
 
         AzureActiveDirectoryAccount acct = new AzureActiveDirectoryAccount(idToken, uid, uTid);
 
