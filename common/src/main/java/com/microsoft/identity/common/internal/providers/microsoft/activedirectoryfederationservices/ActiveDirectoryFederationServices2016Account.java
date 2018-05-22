@@ -82,7 +82,7 @@ public class ActiveDirectoryFederationServices2016Account extends Account {
     }
 
     @Override
-    public String getLastName() {
+    public String getFamilyName() {
         throw new UnsupportedOperationException("Method stub!");
     }
 

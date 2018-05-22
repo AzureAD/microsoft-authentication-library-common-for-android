@@ -103,7 +103,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockAccount.getUsername()).thenReturn(MOCK_PREFERRED_USERNAME);
         when(mockAccount.getAuthorityType()).thenReturn("MSSTS");
         when(mockAccount.getFirstName()).thenReturn(MOCK_GIVEN_NAME);
-        when(mockAccount.getLastName()).thenReturn(MOCK_FAMILY_NAME);
+        when(mockAccount.getFamilyName()).thenReturn(MOCK_FAMILY_NAME);
         when(mockRequest.getScope()).thenReturn(MOCK_SCOPE);
         when(mockResponse.getExpiresIn()).thenReturn(MOCK_EXPIRES_IN);
         when(mockResponse.getFamilyId()).thenReturn(MOCK_FAMILY_ID);
@@ -124,7 +124,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_PREFERRED_USERNAME, account.getUsername());
         assertEquals("MSSTS", account.getAuthorityType());
         assertEquals(MOCK_GIVEN_NAME, account.getFirstName());
-        assertEquals(MOCK_FAMILY_NAME, account.getLastName());
+        assertEquals(MOCK_FAMILY_NAME, account.getFamilyName());
     }
 
     @Test

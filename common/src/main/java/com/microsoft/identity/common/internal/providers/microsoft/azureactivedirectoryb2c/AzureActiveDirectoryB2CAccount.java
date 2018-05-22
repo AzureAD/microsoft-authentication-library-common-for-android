@@ -82,7 +82,7 @@ public class AzureActiveDirectoryB2CAccount extends Account {
     }
 
     @Override
-    public String getLastName() {
+    public String getFamilyName() {
         throw new UnsupportedOperationException("Method stub!");
     }
 
