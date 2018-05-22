@@ -24,14 +24,16 @@ package com.microsoft.identity.common.internal.util;
 
 import java.util.Date;
 
-public class DateUtilities {
+public final class DateUtilities {
 
     private DateUtilities() {
     }
 
     /**
-     * Create a copy of a date
-     * to avoid exposing the internal references.
+     * Create a copy of a date to avoid exposing the internal references.
+     *
+     * @param date represents a specific instant in time, with millisecond precision.
+     * @return Date
      */
     public static Date createCopy(final Date date) {
         if (date != null) {

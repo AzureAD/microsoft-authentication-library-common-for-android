@@ -30,12 +30,18 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
 
     private URL mAuthority;
 
+    /**
+     * @return URL authority
+     */
     public URL getAuthority() {
         return mAuthority;
     }
 
-    public void setAuthority(URL mAuthority) {
-        this.mAuthority = mAuthority;
+    /**
+     * @param authority URL
+     */
+    public void setAuthority(URL authority) {
+        mAuthority = authority;
     }
 
     @Override

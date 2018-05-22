@@ -41,10 +41,13 @@ public abstract class Account implements IAccount {
      * <p>
      * Let the IDP give us the representation of the user/account based on the token response
      *
-     * @return
+     * @return String of unique identifier
      */
     public abstract String getUniqueIdentifier();
 
+    /**
+     * @return cache identifiers in List<String>
+     */
     public abstract List<String> getCacheIdentifiers();
 
 }

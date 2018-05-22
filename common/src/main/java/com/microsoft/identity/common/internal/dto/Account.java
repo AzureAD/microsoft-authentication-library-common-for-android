@@ -43,24 +43,72 @@ import static com.microsoft.identity.common.internal.dto.Account.SerializedNames
  * there's no user present (e.g. client credential grant), only credential schema is necessary.
  */
 public class Account extends AccountCredentialBase implements IAccount {
-
+    /**
+     * String name list for Account object serialization.
+     */
     public static class SerializedNames {
+        /**
+         * String of home account id.
+         */
         public static final String HOME_ACCOUNT_ID = "home_account_id";
+ 
         public static final String ENVIRONMENT = "environment";
+
+        /**
+         * String of realm.
+         */
         public static final String REALM = "realm";
+
+        /**
+         * String of authority account id.
+         */
+        public static final String AUTHORITY_ACCOUNT_ID = "authority_account_id";
+
+        /**
+         * String of local account id.
+         */
         public static final String LOCAL_ACCOUNT_ID = "local_account_id";
+      
+       /**
+         * String of user name.
+         */
         public static final String USERNAME = "username";
+
+        /**
+         * String of authority type.
+         */
         public static final String AUTHORITY_TYPE = "authority_type";
+
+       /**
+         * String of alternative account id.
+         */
         public static final String ALTERNATIVE_ACCOUNT_ID = "alternative_account_id";
+
         public static final String FIRST_NAME = "first_name";
+
+        /**
+         * String of last name.
+         */
         public static final String LAST_NAME = "last_name";
+
+        /**
+         * String of avatar url.
+         */
         public static final String AVATAR_URL = "avatar_url";
     }
 
+    /**
+     * Empty constructor for Account.
+     */
     public Account() {
         // Empty
     }
 
+    /**
+     * Constructor for Account.
+     *
+     * @param copy IAccount
+     */
     public Account(final IAccount copy) {
         // Required
         setHomeAccountId(copy.getHomeAccountId());
@@ -249,7 +297,7 @@ public class Account extends AccountCredentialBase implements IAccount {
     }
 
     /**
-     * Sets the first_name;
+     * Sets the first_name.
      *
      * @param firstName The first_name to set.
      */

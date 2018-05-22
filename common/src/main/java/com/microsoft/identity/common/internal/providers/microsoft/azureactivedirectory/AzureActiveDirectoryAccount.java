@@ -32,19 +32,21 @@ import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import java.util.Map;
 
 /**
- * Inherits from account and implements the getUniqueIdentifier method for returning a unique identifier for an AAD User
- * UTID, UID combined as a single identifier per current MSAL implementation
+ * Inherits from account and implements the getUniqueIdentifier method for returning a unique identifier for an AAD User UTID, UID combined as a single identifier per current MSAL implementation.
  */
 public class AzureActiveDirectoryAccount extends MicrosoftAccount {
 
     private static final String TAG = AzureActiveDirectoryAccount.class.getSimpleName();
 
+    /**
+     * Constructor of AzureActiveDirectoryAccount.
+     */
     public AzureActiveDirectoryAccount() {
         super();
     }
 
     /**
-     * Constructor for AzureActiveDirectoryAccount object
+     * Constructor for AzureActiveDirectoryAccount object.
      *
      * @param idToken Returned as part of the TokenResponse
      * @param uid     Returned via clientInfo of TokenResponse
@@ -58,11 +60,12 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
     }
 
     /**
-     * Creates an AzureActiveDirectoryAccount based on the contents of the IDToken and based on the contents of the ClientInfo JSON
-     * returned as part of the TokenResponse
+     * Creates an AzureActiveDirectoryAccount based on the contents of the IDToken.
+     * And based on the contents of the ClientInfo JSON returned as part of the TokenResponse
      *
-     * @param idToken
-     * @return
+     * @param idToken IDToken
+     * @param clientInfo ClientInfo
+     * @return AzureActiveDirectoryAccount
      */
     public static AzureActiveDirectoryAccount create(@NonNull final IDToken idToken,
                                                      @NonNull final ClientInfo clientInfo) {

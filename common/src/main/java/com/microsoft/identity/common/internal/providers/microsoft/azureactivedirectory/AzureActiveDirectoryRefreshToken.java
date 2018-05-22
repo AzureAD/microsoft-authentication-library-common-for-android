@@ -43,13 +43,18 @@ public class AzureActiveDirectoryRefreshToken extends RefreshToken {
     private String mScope;
     private String mClientId;
 
+    /**
+     * Constructor of AzureActiveDirectoryRefreshToken.
+     *
+     * @param response AzureActiveDirectoryTokenResponse
+     */
     public AzureActiveDirectoryRefreshToken(
             @NonNull final AzureActiveDirectoryTokenResponse response) {
         super(response);
         try {
             mFamilyId = response.getFamilyId();
             mIsFamilyRefreshToken = !StringExtensions.isNullOrBlank(mFamilyId);
-            mExpiresOn = response.mExpiresOn;
+            mExpiresOn = response.getExpiresOn();
             mClientInfo = new ClientInfo(response.getClientInfo());
             mIdToken = new IDToken(response.getIdToken());
             mScope = response.getScope();
@@ -60,6 +65,9 @@ public class AzureActiveDirectoryRefreshToken extends RefreshToken {
         }
     }
 
+    /**
+     * @return true if the token is family refresh token, false otherwise.
+     */
     public boolean getIsFamilyRefreshToken() {
         return mIsFamilyRefreshToken;
     }

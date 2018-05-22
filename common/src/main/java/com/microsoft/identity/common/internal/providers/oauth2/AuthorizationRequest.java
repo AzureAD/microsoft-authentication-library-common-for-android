@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 /**
- * A class holding the state of the Authorization Request (oAuth2)
+ * A class holding the state of the Authorization Request (OAuth 2.0).
  * https://tools.ietf.org/html/rfc6749#section-4.1.1
  * This should include all fo the required parameters of the authorization request for oAuth2
  * This should provide an extension point for additional parameters to be set
@@ -36,44 +36,74 @@ public class AuthorizationRequest {
     private String mScope;
     private String mState;
 
+    /**
+     * @return mResponseType of the authorization request.
+     */
     public String getResponseType() {
         return mResponseType;
     }
 
-    public void setResponseType(String mResponseType) {
-        this.mResponseType = mResponseType;
+    /**
+     * @param responseType response type of the authorization request.
+     */
+    public void setResponseType(final String responseType) {
+        mResponseType = responseType;
     }
 
+    /**
+     * @return mClientId of the authorization request.
+     */
     public String getClientId() {
         return mClientId;
     }
 
-    public void setClientId(String mClientId) {
-        this.mClientId = mClientId;
+    /**
+     * @param clientId client ID of the authorization request.
+     */
+    public void setClientId(final String clientId) {
+        mClientId = clientId;
     }
 
+    /**
+     * @return mRedirectUri of the authorization request.
+     */
     public String getRedirectUri() {
         return mRedirectUri;
     }
 
-    public void setRedirectUri(String mRedirectUri) {
-        this.mRedirectUri = mRedirectUri;
+    /**
+     * @param redirectUri redirect URI of the authorization request.
+     */
+    public void setRedirectUri(final String redirectUri) {
+        mRedirectUri = redirectUri;
     }
 
+    /**
+     * @return mScope of the authorization request.
+     */
     public String getScope() {
         return mScope;
     }
 
-    public void setScope(String mScope) {
-        this.mScope = mScope;
+    /**
+     * @param scope scope of the authorization request.
+     */
+    public void setScope(final String scope) {
+        mScope = scope;
     }
 
+    /**
+     * @return mState of the authorization request.
+     */
     public String getState() {
         return mState;
     }
 
-    public void setState(String mState) {
-        this.mState = mState;
+    /**
+     * @param state state of the authorization request.
+     */
+    public void setState(final String state) {
+        mState = state;
     }
 
     @Override

@@ -35,14 +35,20 @@ import java.util.Map;
 public class MicrosoftStsAccount extends MicrosoftAccount {
 
     private static final String TAG = MicrosoftStsAccount.class.getSimpleName();
-
+  
+    /**
+     * Constructor of MicrosoftStsAccount.
+     *
+     * @param idToken IDToken
+     * @param uid     String
+     * @param uTid    String
+     */
     public MicrosoftStsAccount(IDToken idToken, String uid, final String uTid) {
         super(idToken, uid, uTid);
     }
 
     /**
-     * Creates an MicrosoftStsAccount based on the contents of the IDToken and based on the contents of the ClientInfo JSON
-     * returned as part of the TokenResponse
+     * Creates an MicrosoftStsAccount based on the contents of the IDToken and based on the contents of the ClientInfo JSON returned as part of the TokenResponse.
      *
      * @param idToken    The IDToken for this Account.
      * @param clientInfo The ClientInfo for this Account.

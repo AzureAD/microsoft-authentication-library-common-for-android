@@ -33,31 +33,40 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 /**
- * Represents a certificate credential
+ * Represents a certificate credential.
  */
-public class CertificateCredential {
+public final class CertificateCredential {
 
-    private final static int MIN_KEYSIZE_IN_BITS = 2048;
+    private static final int MIN_KEYSIZE_IN_BITS = 2048;
     private final PrivateKey mPrivateKey;
     private final String mClientId;
     private final X509Certificate mPublicCertificate;
 
+    /**
+     * @return mPrivateKey of the CertificateCredential object
+     */
     public PrivateKey getPrivateKey() {
-        return this.mPrivateKey;
+        return mPrivateKey;
     }
 
+    /**
+     * @return mClientId of the CertificateCredential object
+     */
     public String getClientId() {
-        return this.mClientId;
+        return mClientId;
     }
 
+    /**
+     * @return mPublicCertificate of the CertificateCredential object
+     */
     public X509Certificate getPublicCertificate() {
-        return this.mPublicCertificate;
+        return mPublicCertificate;
     }
 
     private CertificateCredential(CertificateCredentialBuilder builder) {
-        this.mClientId = builder.mClientId;
-        this.mPublicCertificate = builder.mCertificate;
-        this.mPrivateKey = builder.mPrivateKey;
+        mClientId = builder.mClientId;
+        mPublicCertificate = builder.mCertificate;
+        mPrivateKey = builder.mPrivateKey;
     }
 
     public static class CertificateCredentialBuilder {
@@ -67,42 +76,82 @@ public class CertificateCredential {
         private ClientCertificateMetadata mClientCertificateMetdata;
         private X509Certificate mCertificate;
 
+        /**
+         * Constructor of CertificateCredentialBuilder.
+         *
+         * @param clientId String
+         */
         public CertificateCredentialBuilder(String clientId) {
-            this.mClientId = clientId;
+            mClientId = clientId;
         }
 
+        /**
+         * Get the CertificateCredentialBuilder from PrivateKey.
+         *
+         * @param key PrivateKey
+         * @return CertificateCredentialBuilder
+         */
         public CertificateCredentialBuilder privateKey(PrivateKey key) {
-            this.mPrivateKey = key;
+            mPrivateKey = key;
             return this;
         }
 
+        /**
+         * Get the CertificateCredentialBuilder from KeyStoreConfiguration.
+         *
+         * @param keyStoreConfiguration KeyStoreConfiguration
+         * @return CertificateCredentialBuilder
+         */
         public CertificateCredentialBuilder keyStoreConfiguration(KeyStoreConfiguration keyStoreConfiguration) {
-            this.mKeyStoreConfiguration = keyStoreConfiguration;
+            mKeyStoreConfiguration = keyStoreConfiguration;
             return this;
         }
 
+        /**
+         * Get the CertificateCredentialBuilder from ClientCertificateMetadata.
+         *
+         * @param clientCertificateMetadata ClientCertificateMetadata
+         * @return CertificateCredentialBuilder
+         */
         public CertificateCredentialBuilder clientCertificateMetadata(ClientCertificateMetadata clientCertificateMetadata) {
-            this.mClientCertificateMetdata = clientCertificateMetadata;
+            mClientCertificateMetdata = clientCertificateMetadata;
             return this;
         }
 
+        /**
+         * Get the CertificateCredentialBuilder from X509Certificate.
+         *
+         * @param certificate X509Certificate
+         * @return CertificateCredentialBuilder
+         */
         public CertificateCredentialBuilder certificate(X509Certificate certificate) {
-            this.mCertificate = certificate;
+            mCertificate = certificate;
             return this;
         }
 
+        /**
+         * Get the CertificateCredential object.
+         *
+         * @return CertificateCredential
+         * @throws NoSuchProviderException   thrown when a particular security provider is requested but is not available in the environment.
+         * @throws KeyStoreException         generic KeyStore exception.
+         * @throws NoSuchAlgorithmException  thrown when a particular cryptographic algorithm is requested but is not available in the environment.
+         * @throws UnrecoverableKeyException thrown if a key in the keystore cannot be recovered.
+         * @throws IOException               thrown if failed or interrupted I/O operations happen.
+         * @throws CertificateException      thrown if one of a variety of certificate problems happen.
+         */
         public CertificateCredential build()
                 throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException,
                 IOException, CertificateException {
 
             CertificateCredential cred = null;
 
-            if (this.mClientId != null) {
-                if (this.mCertificate != null && this.mPrivateKey != null) {
+            if (mClientId != null) {
+                if (mCertificate != null && mPrivateKey != null) {
                     cred = new CertificateCredential(this);
                 } else {
-                    if (this.mClientCertificateMetdata != null && this.mKeyStoreConfiguration != null) {
-                        getCertificateInfoFromStore(this.mKeyStoreConfiguration, this.mClientCertificateMetdata);
+                    if (mClientCertificateMetdata != null && mKeyStoreConfiguration != null) {
+                        getCertificateInfoFromStore(mKeyStoreConfiguration, mClientCertificateMetdata);
                         cred = new CertificateCredential(this);
                     }
                 }
@@ -142,8 +191,8 @@ public class CertificateCredential {
             final X509Certificate publicCertificate = (X509Certificate) keystore
                     .getCertificate(clientCertificateMetadata.getAlias());
 
-            this.mPrivateKey = key;
-            this.mCertificate = publicCertificate;
+            mPrivateKey = key;
+            mCertificate = publicCertificate;
 
         }
 

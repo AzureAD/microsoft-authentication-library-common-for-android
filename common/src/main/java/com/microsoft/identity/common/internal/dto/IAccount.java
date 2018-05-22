@@ -74,7 +74,7 @@ public interface IAccount {
     String getAlternativeAccountId();
 
     /**
-     * Gets the first_name;
+     * Gets the first_name.
      *
      * @return The first_name to get.
      */

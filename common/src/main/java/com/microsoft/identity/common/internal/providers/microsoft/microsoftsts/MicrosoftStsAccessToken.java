@@ -26,10 +26,23 @@ import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 
 public class MicrosoftStsAccessToken extends AccessToken {
 
-    protected Long mExtExpiresIn;
+    private Long mExtExpiresIn;
 
+    /**
+     * Constructor of MicrosoftStsAccessToken.
+     *
+     * @param response MicrosoftStsTokenResponse
+     */
     public MicrosoftStsAccessToken(MicrosoftStsTokenResponse response) {
         super(response);
         mExtExpiresIn = response.getExtExpiresIn();
+    }
+
+    protected Long getExtExpiresIn() {
+        return mExtExpiresIn;
+    }
+
+    protected void setExtExpiresIn(Long extExpiresIn) {
+        mExtExpiresIn = extExpiresIn;
     }
 }

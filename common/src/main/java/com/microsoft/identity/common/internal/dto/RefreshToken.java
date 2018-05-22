@@ -33,9 +33,21 @@ import static com.microsoft.identity.common.internal.dto.RefreshToken.Serialized
 public class RefreshToken extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
+        /**
+         * String of client info.
+         */
         public static final String CLIENT_INFO = "client_info";
+        /**
+         * String of family id.
+         */
         public static final String FAMILY_ID = "family_id";
+        /**
+         * String of target.
+         */
         public static final String TARGET = "target";
+        /**
+         * String of username.
+         */
         public static final String USERNAME = "username";
     }
 
@@ -119,8 +131,8 @@ public class RefreshToken extends Credential {
      *
      * @param familyId The family_id to set.
      */
-    public void setFamilyId(String familyId) {
-        this.mFamilyId = familyId;
+    public void setFamilyId(final String familyId) {
+        mFamilyId = familyId;
     }
 
     /**
@@ -137,33 +149,48 @@ public class RefreshToken extends Credential {
      *
      * @param username The username to set.
      */
-    public void setUsername(String username) {
-        this.mUsername = username;
+    public void setUsername(final String username) {
+        mUsername = username;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        if (!super.equals(o)) {
+            return false;
+        }
 
         RefreshToken that = (RefreshToken) o;
 
-        if (mClientInfo != null ? !mClientInfo.equals(that.mClientInfo) : that.mClientInfo != null)
+        if (mClientInfo != null ? !mClientInfo.equals(that.mClientInfo) : that.mClientInfo != null) {
             return false;
-        if (mFamilyId != null ? !mFamilyId.equals(that.mFamilyId) : that.mFamilyId != null)
+        }
+
+        if (mFamilyId != null ? !mFamilyId.equals(that.mFamilyId) : that.mFamilyId != null) {
             return false;
-        if (mTarget != null ? !mTarget.equals(that.mTarget) : that.mTarget != null) return false;
+        }
+
+        if (mTarget != null ? !mTarget.equals(that.mTarget) : that.mTarget != null) {
+            return false;
+        }
+
         return mUsername != null ? mUsername.equals(that.mUsername) : that.mUsername == null;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (mClientInfo != null ? mClientInfo.hashCode() : 0);
-        result = 31 * result + (mFamilyId != null ? mFamilyId.hashCode() : 0);
-        result = 31 * result + (mTarget != null ? mTarget.hashCode() : 0);
-        result = 31 * result + (mUsername != null ? mUsername.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mClientInfo != null ? mClientInfo.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mFamilyId != null ? mFamilyId.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mTarget != null ? mTarget.hashCode() : 0);
+        result = UNIQUE_ID_LENGTH * result + (mUsername != null ? mUsername.hashCode() : 0);
         return result;
     }
 }

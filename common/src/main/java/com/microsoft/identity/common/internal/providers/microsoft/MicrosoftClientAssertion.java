@@ -41,14 +41,23 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * This class is used to create a client assertion per the following documentation:
+ * This class is used to create a client assertion per the following documentation.
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-certificate-credentials
  */
 public class MicrosoftClientAssertion extends ClientAssertion {
 
-    public static String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
-    public static String THUMBPRINT_ALGORITHM = "SHA-1";
+    private static final String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+    private static final String THUMBPRINT_ALGORITHM = "SHA-1";
+    private static final int ONE_MINUTE_MILLIS = 60000;
 
+    /**
+     * Constructor of MicrosoftClientAssertion.
+     *
+     * @param audience   audience
+     * @param credential Certificate credential
+     * @throws NoSuchAlgorithmException     thrown when a particular cryptographic algorithm is requested but is not available in the environment.
+     * @throws CertificateEncodingException thrown whenever an error occurs while attempting to encode a certificate.
+     */
     public MicrosoftClientAssertion(String audience, CertificateCredential credential)
             throws NoSuchAlgorithmException, CertificateEncodingException {
 
@@ -57,8 +66,8 @@ public class MicrosoftClientAssertion extends ClientAssertion {
         }
 
         SignedJWT assertion = createSignedJwt(credential.getClientId(), audience, credential);
-        this.mClientAssertion = assertion.serialize();
-        this.mClientAssertionType = MicrosoftClientAssertion.CLIENT_ASSERTION_TYPE;
+        setClientAssertion(assertion.serialize());
+        setClientAssertionType(MicrosoftClientAssertion.CLIENT_ASSERTION_TYPE);
 
     }
 
@@ -73,7 +82,7 @@ public class MicrosoftClientAssertion extends ClientAssertion {
                 .issuer(clientId)
                 .notBeforeTime(new Date(time))
                 .expirationTime(new Date(time
-                        + 60000))
+                        + ONE_MINUTE_MILLIS))
                 .subject(clientId)
                 .build();
 

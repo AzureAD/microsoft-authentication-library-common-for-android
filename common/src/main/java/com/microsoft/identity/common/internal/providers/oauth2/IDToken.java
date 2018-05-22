@@ -36,7 +36,7 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * Represents the OpenID Connect Id Token
+ * Represents the OpenID Connect Id Token.
  * Standard ID token Claims per spec
  * http://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
  */
@@ -187,6 +187,12 @@ public class IDToken {
     private Map<String, String> mTokenClaims = null;
     private final String mRawIdToken;
 
+    /**
+     * Constructor of IDToken.
+     *
+     * @param rawIdToken raw ID token
+     * @throws ServiceException if rawIdToken is malformed in JSON format.
+     */
     public IDToken(final String rawIdToken) throws ServiceException {
 
         if (StringExtensions.isNullOrBlank(rawIdToken)) {
@@ -199,10 +205,16 @@ public class IDToken {
         mTokenClaims = parseJWT(rawIdToken);
     }
 
+    /**
+     * @return mRawIdToken of IDToken object.
+     */
     public String getRawIDToken() {
         return mRawIdToken;
     }
 
+    /**
+     * @return Token claims in Map<String, String>.
+     */
     public Map<String, String> getTokenClaims() {
         return Collections.unmodifiableMap(mTokenClaims);
     }

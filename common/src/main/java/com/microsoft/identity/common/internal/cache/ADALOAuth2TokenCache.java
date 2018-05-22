@@ -55,6 +55,7 @@ import java.util.List;
 public class ADALOAuth2TokenCache
         extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
         implements IShareSingleSignOnState {
+    private ISharedPreferencesFileManager mISharedPreferencesFileManager;
 
     private static final String TAG = ADALOAuth2TokenCache.class.getSimpleName();
     private static final String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
@@ -63,13 +64,26 @@ public class ADALOAuth2TokenCache
     @SuppressLint("StaticFieldLeak")
     private static StorageHelper sHelper;
 
-    private ISharedPreferencesFileManager mISharedPreferencesFileManager;
     private Gson mGson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new DateTimeAdapter())
             .create();
 
     private List<IShareSingleSignOnState> mSharedSSOCaches;
 
+    protected ISharedPreferencesFileManager getISharedPreferencesFileManager() {
+        return mISharedPreferencesFileManager;
+    }
+
+    protected void setISharedPreferencesFileManager(final ISharedPreferencesFileManager iSharedPreferencesFileManager) {
+        mISharedPreferencesFileManager = iSharedPreferencesFileManager;
+    }
+
+    /**
+     * Constructor of ADALOAuth2TokenCache.
+     *
+     * @param context         Context
+     * @param sharedSSOCaches List<IShareSingleSignOnState>
+     */
     public ADALOAuth2TokenCache(final Context context) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
@@ -78,6 +92,11 @@ public class ADALOAuth2TokenCache
         mSharedSSOCaches = new ArrayList<>();
     }
 
+    /**
+     * Constructor of ADALOAuth2TokenCache.
+     *
+     * @param context Context
+     */
     public ADALOAuth2TokenCache(final Context context,
                                 final List<IShareSingleSignOnState> sharedSSOCaches) {
         super(context);
@@ -178,7 +197,7 @@ public class ADALOAuth2TokenCache
         Logger.verbosePII(TAG + ":" + methodName, "Derived JSON: " + json);
 
         if (encrypted != null) {
-            mISharedPreferencesFileManager.putString(key, encrypted);
+            getISharedPreferencesFileManager().putString(key, encrypted);
         } else {
             Logger.error(TAG + ":" + methodName, "Encrypted output was null.", null);
         }
@@ -269,7 +288,6 @@ public class ADALOAuth2TokenCache
     public void setSingleSignOnState(final Account account, final RefreshToken refreshToken) {
         final String methodName = "setSingleSignOnState";
         Logger.entering(TAG, methodName, account, refreshToken);
-
         // Unimplemented
 
         Logger.exiting(TAG, methodName);

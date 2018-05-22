@@ -27,6 +27,12 @@ import com.microsoft.identity.common.internal.providers.IdentityProvider;
 public class MicrosoftSts
         extends IdentityProvider<MicrosoftStsOAuth2Strategy, MicrosoftStsOAuth2Configuration> {
 
+    /**
+     * Create the MicrosoftStsOAuth2Strategy from MicrosoftStsOAuth2Configuration.
+     *
+     * @param config generic OAuth2 configuration.
+     * @return MicrosoftStsOAuth2Strategy
+     */
     @Override
     public MicrosoftStsOAuth2Strategy createOAuth2Strategy(MicrosoftStsOAuth2Configuration config) {
         return new MicrosoftStsOAuth2Strategy(config);

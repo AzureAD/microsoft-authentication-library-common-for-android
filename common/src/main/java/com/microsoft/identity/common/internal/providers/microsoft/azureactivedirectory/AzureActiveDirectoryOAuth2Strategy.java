@@ -38,8 +38,10 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorRespons
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
+import java.net.HttpURLConnection;
+
 /**
- * The Azure Active Directory oAuth2 Strategy.
+ * The Azure Active Directory OAuth 2.0 Strategy.
  */
 public class AzureActiveDirectoryOAuth2Strategy
         extends OAuth2Strategy<
@@ -56,6 +58,10 @@ public class AzureActiveDirectoryOAuth2Strategy
 
     private static final String TAG = AzureActiveDirectoryOAuth2Strategy.class.getSimpleName();
 
+    /**
+     * Constructor of AzureActiveDirectoryOAuth2Strategy.
+     * @param config Azure Active Directory OAuth2 configuration
+     */
     public AzureActiveDirectoryOAuth2Strategy(final AzureActiveDirectoryOAuth2Configuration config) {
         super(config);
         Logger.verbose(TAG, "Init: " + TAG);
@@ -69,13 +75,13 @@ public class AzureActiveDirectoryOAuth2Strategy
 
         final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
 
-        if (!cloud.isValidated() && mConfig.isAuthorityHostValdiationEnabled()) {
+        if (!cloud.isValidated() && mConfig.isAuthorityHostValidationEnabled()) {
             Logger.warn(TAG + ":" + methodName, "Authority host validation has been enabled. This data hasn't been validated, though.");
             // We have invalid cloud data... and authority host validation is enabled....
             // TODO: Throw an exception in this case... need to see what ADAL does in this case.
         }
 
-        if (!cloud.isValidated() && !mConfig.isAuthorityHostValdiationEnabled()) {
+        if (!cloud.isValidated() && !mConfig.isAuthorityHostValidationEnabled()) {
             Logger.warn(
                     TAG + ":" + methodName,
                     "Authority host validation not specified..." +
@@ -124,7 +130,7 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     /**
-     * Stubbed out for now, but should create a new AzureActiveDirectory account
+     * Stubbed out for now, but should create a new AzureActiveDirectory account.
      * Should accept a parameter (TokenResponse) for producing that user
      *
      * @return
@@ -184,7 +190,7 @@ public class AzureActiveDirectoryOAuth2Strategy
         TokenResponse tokenResponse = null;
         TokenErrorResponse tokenErrorResponse = null;
 
-        if (response.getStatusCode() >= 400) {
+        if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             //An error occurred
             Logger.warn(TAG + ":" + methodName, "Status code was: " + response.getStatusCode());
             tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenErrorResponse.class);

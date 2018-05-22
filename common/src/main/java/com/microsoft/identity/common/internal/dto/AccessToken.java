@@ -34,11 +34,34 @@ import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedN
 public class AccessToken extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
+        /**
+         * String of access token type.
+         */
         public static final String ACCESS_TOKEN_TYPE = "access_token_type";
+
+        /**
+         * String of authority.
+         */
         public static final String AUTHORITY = "authority";
+
+        /**
+         * String of client info.
+         */
         public static final String CLIENT_INFO = "client_info";
+
+        /**
+         * String of extended expires on.
+         */
         public static final String EXTENDED_EXPIRES_ON = "extended_expires_on";
+
+        /**
+         * String of realm.
+         */
         public static final String REALM = "realm";
+
+        /**
+         * String of target.
+         */
         public static final String TARGET = "target";
     }
 
@@ -152,8 +175,8 @@ public class AccessToken extends Credential {
      *
      * @param accessTokenType The access_token_type to set.
      */
-    public void setAccessTokenType(String accessTokenType) {
-        this.mAccessTokenType = accessTokenType;
+    public void setAccessTokenType(final String accessTokenType) {
+        mAccessTokenType = accessTokenType;
     }
 
     /**
@@ -170,8 +193,8 @@ public class AccessToken extends Credential {
      *
      * @param authority The authority to set.
      */
-    public void setAuthority(String authority) {
-        this.mAuthority = authority;
+    public void setAuthority(final String authority) {
+        mAuthority = authority;
     }
 
     /**
@@ -188,7 +211,7 @@ public class AccessToken extends Credential {
      *
      * @param extendedExpiresOn The extended_expires_on to set.
      */
-    public void setExtendedExpiresOn(String extendedExpiresOn) {
-        this.mExtendedExpiresOn = extendedExpiresOn;
+    public void setExtendedExpiresOn(final String extendedExpiresOn) {
+        mExtendedExpiresOn = extendedExpiresOn;
     }
 }

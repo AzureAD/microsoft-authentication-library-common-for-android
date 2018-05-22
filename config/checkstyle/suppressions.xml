@@ -4,5 +4,13 @@
     "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
 
 <suppressions>
-  <!--add any suppressions here -->
+  <suppress checks=".*" files=".*Test.java"/>
+  <suppress checks=".*" files=".*[\\/]unit[\\/]"/>
+  <suppress checks="JavadocVariable" files="MicrosoftStsIdToken.java"/>
+  <suppress checks="EmptyBlock" files="AzureActiveDirectoryOAuth2Strategy.java"/>
+  <suppress checks="EqualsHashCodeCheck" files="Account.java"/>
+  <suppress checks="EqualsHashCodeCheck" files="AccountCredentialBase.java"/>
+  <suppress checks="EqualsHashCodeCheck" files="Credential.java"/>
+  <suppress checks="EqualsHashCodeCheck" files="RefreshToken.java"/>
+  <suppress checks="EqualsHashCodeCheck" files="IdToken.java"/>
 </suppressions>

@@ -51,7 +51,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     private static final String TAG = AccountCredentialCache.class.getSimpleName();
 
     // The names of the SharedPreferences file on disk.
-    private static final String sAccountCredentialSharedPreferences =
+    private static final String ACCOUNT_CREDENTIAL_SHARED_PREFERENCES =
             "com.microsoft.identity.client.account_credential_cache";
 
     private static final Account EMPTY_ACCOUNT = new Account();
@@ -65,6 +65,12 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     private final Context mContext;
     private final ICacheKeyValueDelegate mCacheValueDelegate;
 
+    /**
+     * Constructor of AccountCredentialCache.
+     *
+     * @param context                   Context
+     * @param accountCacheValueDelegate ICacheKeyValueDelegate
+     */
     public AccountCredentialCache(
             final Context context,
             final ICacheKeyValueDelegate accountCacheValueDelegate) {
@@ -72,12 +78,19 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         mContext = context;
         mSharedPreferencesFileManager = new SharedPreferencesFileManager(
                 mContext,
-                sAccountCredentialSharedPreferences,
+                ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
                 new StorageHelper(mContext)
         );
         mCacheValueDelegate = accountCacheValueDelegate;
     }
 
+    /**
+     * Constructor of AccountCredentialCache.
+     *
+     * @param context                      Context
+     * @param accountCacheValueDelegate    ICacheKeyValueDelegate
+     * @param sharedPreferencesFileManager ISharedPreferencesFileManager
+     */
     public AccountCredentialCache(
             final Context context,
             final ICacheKeyValueDelegate accountCacheValueDelegate,
@@ -471,6 +484,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                     type = CredentialType.IdToken;
                 } else {
                     // TODO Log a warning and skip this value?
+                    Logger.warn(TAG, "Unexpected credential type.");
                 }
             }
         }

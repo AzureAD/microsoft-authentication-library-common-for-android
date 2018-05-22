@@ -136,7 +136,7 @@ public enum AuthenticationSettings {
         if (StringExtensions.isNullOrBlank(brokerSignature)) {
             throw new IllegalArgumentException("brokerSignature cannot be empty or null");
         }
-        this.mBrokerSignature = brokerSignature;
+        mBrokerSignature = brokerSignature;
     }
 
     /**
@@ -218,7 +218,7 @@ public enum AuthenticationSettings {
      * @param useBroker True to use broker
      */
     public void setUseBroker(boolean useBroker) {
-        this.mUseBroker = useBroker;
+        mUseBroker = useBroker;
     }
 
     /**
@@ -228,7 +228,7 @@ public enum AuthenticationSettings {
      * @param packageNameForSharedFile Package name of other app
      */
     public void setSharedPrefPackageName(String packageNameForSharedFile) {
-        this.mSharedPrefPackageName = packageNameForSharedFile;
+        mSharedPrefPackageName = packageNameForSharedFile;
     }
 
     /**
@@ -258,7 +258,7 @@ public enum AuthenticationSettings {
      * @param expirationBuffer the time buffer provided to expiration time.
      */
     public void setExpirationBuffer(int expirationBuffer) {
-        this.mExpirationBuffer = expirationBuffer;
+        mExpirationBuffer = expirationBuffer;
     }
 
     /**
@@ -282,7 +282,7 @@ public enum AuthenticationSettings {
         if (timeOutMillis < 0) {
             throw new IllegalArgumentException("Invalid timeOutMillis");
         }
-        this.mConnectTimeOut = timeOutMillis;
+        mConnectTimeOut = timeOutMillis;
     }
 
     /**
@@ -306,7 +306,7 @@ public enum AuthenticationSettings {
             throw new IllegalArgumentException("Invalid timeOutMillis");
         }
 
-        this.mReadTimeOut = timeOutMillis;
+        mReadTimeOut = timeOutMillis;
     }
 
     /**
@@ -319,7 +319,7 @@ public enum AuthenticationSettings {
      * @see #getDisableWebViewHardwareAcceleration()
      */
     public void setDisableWebViewHardwareAcceleration(boolean enable) {
-        this.mEnableHardwareAcceleration = enable;
+        mEnableHardwareAcceleration = enable;
     }
 
     /**
@@ -330,7 +330,7 @@ public enum AuthenticationSettings {
      * @see #setDisableWebViewHardwareAcceleration(boolean)
      */
     public boolean getDisableWebViewHardwareAcceleration() {
-        return this.mEnableHardwareAcceleration;
+        return mEnableHardwareAcceleration;
     }
 }
 

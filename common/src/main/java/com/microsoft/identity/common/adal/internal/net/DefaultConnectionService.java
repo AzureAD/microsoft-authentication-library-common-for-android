@@ -44,10 +44,20 @@ public class DefaultConnectionService implements IConnectionService {
 
     private static final String TAG = "DefaultConnectionService";
 
+    /**
+     * Constructor of DefaultConnectionService.
+     *
+     * @param ctx Context
+     */
     public DefaultConnectionService(Context ctx) {
         mConnectionContext = ctx;
     }
 
+    /**
+     * Check if the network connection is available.
+     *
+     * @return True if network connection available, false otherwise.
+     */
     public boolean isConnectionAvailable() {
         ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
                 .getSystemService(Context.CONNECTIVITY_SERVICE);

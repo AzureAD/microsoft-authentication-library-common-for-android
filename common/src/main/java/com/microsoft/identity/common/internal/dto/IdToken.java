@@ -30,7 +30,13 @@ import static com.microsoft.identity.common.internal.dto.IdToken.SerializedNames
 public class IdToken extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
+        /**
+         * String of realm.
+         */
         public static final String REALM = "realm";
+        /**
+         * String of authority.
+         */
         public static final String AUTHORITY = "authority";
     }
 

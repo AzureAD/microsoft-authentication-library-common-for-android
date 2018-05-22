@@ -35,6 +35,12 @@ public class TokenResult {
     private TokenErrorResponse mTokenErrorResponse;
     private boolean mSuccess = false;
 
+    /**
+     * Constructor of TokenResult.
+     *
+     * @param response      TokenResponse
+     * @param errorResponse TokenErrorResponse
+     */
     public TokenResult(final TokenResponse response, final TokenErrorResponse errorResponse) {
         Logger.verbose(TAG, "Init: " + TAG);
         this.mTokenResponse = response;

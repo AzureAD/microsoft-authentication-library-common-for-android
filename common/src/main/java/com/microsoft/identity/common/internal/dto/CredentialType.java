@@ -29,13 +29,41 @@ import java.util.HashSet;
 import java.util.Set;
 
 public enum CredentialType {
+    /**
+     * RefreshToken.
+     */
     RefreshToken,
+
+    /**
+     * AccessToken.
+     */
     AccessToken,
+
+    /**
+     * IdToken.
+     */
     IdToken,
+
+    /**
+     * Password.
+     */
     Password,
+
+    /**
+     * Cookie.
+     */
     Cookie,
+
+    /**
+     * Certificate.
+     */
     Certificate;
 
+    /**
+     * Get the credential type name set.
+     *
+     * @return Set<String>
+     */
     public static Set<String> valueSet() {
         final Set<String> strTypes = new HashSet<>();
 

@@ -59,10 +59,26 @@ public class HttpWebRequest {
     private final String mRequestContentType;
     private final Map<String, String> mRequestHeaders;
 
+    /**
+     * Constructor of HttpWebRequest.
+     *
+     * @param requestURL    URL
+     * @param requestMethod String
+     * @param headers       Map<String, String>
+     */
     public HttpWebRequest(URL requestURL, String requestMethod, Map<String, String> headers) {
         this(requestURL, requestMethod, headers, null, null);
     }
 
+    /**
+     * Constructor of HttpWebRequest.
+     *
+     * @param requestURL         URL
+     * @param requestMethod      String
+     * @param headers            Map<String, String>
+     * @param requestContent     byte[]
+     * @param requestContentType String
+     */
     public HttpWebRequest(
             URL requestURL,
             String requestMethod,
@@ -115,7 +131,10 @@ public class HttpWebRequest {
     }
 
     /**
-     * send the request.
+     * Send the request.
+     *
+     * @return HttpWebResponse
+     * @throws IOException throws if the input stream is null.
      */
     public HttpWebResponse send() throws IOException {
         final HttpURLConnection connection = setupConnection();
@@ -161,6 +180,15 @@ public class HttpWebRequest {
         return response;
     }
 
+    /**
+     * Check if the network is available. If the network is unavailable, {@link ClientException}
+     * will throw with error code {@link ErrorStrings#NO_NETWORK_CONNECTION_POWER_OPTIMIZATION}
+     * when connection is not available to refresh token because power optimization is enabled, or
+     * throw with error code {@link ErrorStrings#DEVICE_NETWORK_NOT_AVAILABLE} otherwise.
+     *
+     * @param context Context
+     * @throws ClientException throw network exception
+     */
     public static void throwIfNetworkNotAvailable(final Context context) throws ClientException {
         final DefaultConnectionService connectionService = new DefaultConnectionService(context);
         if (!connectionService.isConnectionAvailable()) {

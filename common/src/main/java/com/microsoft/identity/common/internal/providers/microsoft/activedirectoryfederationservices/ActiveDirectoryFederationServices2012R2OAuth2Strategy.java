@@ -46,6 +46,11 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
  * see <a href='https://blogs.technet.microsoft.com/maheshu/2015/04/28/oauth-2-0-support-in-adfs-on-windows-server-2012-r2/'>https://blogs.technet.microsoft.com/maheshu/2015/04/28/oauth-2-0-support-in-adfs-on-windows-server-2012-r2/</a>
  */
 public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth2Strategy {
+    /**
+     * Constructor of ActiveDirectoryFederationServices2012R2OAuth2Strategy.
+     *
+     * @param config OAuth2Configuration
+     */
     public ActiveDirectoryFederationServices2012R2OAuth2Strategy(OAuth2Configuration config) {
         super(config);
     }

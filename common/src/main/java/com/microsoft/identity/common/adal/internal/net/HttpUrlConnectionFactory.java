@@ -43,6 +43,7 @@ public final class HttpUrlConnectionFactory {
      * Private constructor to prevent the class from being initiated.
      */
     private HttpUrlConnectionFactory() {
+        // Utility class.
     }
 
     /**
@@ -57,6 +58,13 @@ public final class HttpUrlConnectionFactory {
         }
     }
 
+    /**
+     * Constructor of HttpURLConnection.
+     *
+     * @param url URL
+     * @return HttpURLConnection
+     * @throws IOException throws if error happens during opening connection.
+     */
     public static HttpURLConnection createHttpUrlConnection(final URL url) throws IOException {
         if (sMockedConnection != null) {
             sMockedConnectionOpenUrl = url;
@@ -66,6 +74,11 @@ public final class HttpUrlConnectionFactory {
         return (HttpURLConnection) url.openConnection();
     }
 
+    /**
+     * Get mocked Connection Open Url.
+     *
+     * @return URL
+     */
     @VisibleForTesting
     public static URL getMockedConnectionOpenUrl() {
         return sMockedConnectionOpenUrl;

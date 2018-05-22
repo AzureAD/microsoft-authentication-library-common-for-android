@@ -37,10 +37,13 @@ import java.util.Map;
 /**
  * Utility class for performing common actions needed for the common cache schema.
  */
-public class SchemaUtil {
+public final class SchemaUtil {
 
     private static final String TAG = SchemaUtil.class.getSimpleName();
 
+    private SchemaUtil() {
+        // Utility class.
+    }
     /**
      * Returns the authority (issuer) for the supplied IDToken.
      *
@@ -178,7 +181,13 @@ public class SchemaUtil {
 
         return alternativeAccountId;
     }
-
+  
+   /**
+     * Get the home account id with the client info.
+     *
+     * @param clientInfo ClientInfo
+     * @return String home account id
+     */
     public static String getHomeAccountId(final ClientInfo clientInfo) {
         final String methodName = ":getHomeAccountId";
         Logger.entering(TAG, methodName, clientInfo);

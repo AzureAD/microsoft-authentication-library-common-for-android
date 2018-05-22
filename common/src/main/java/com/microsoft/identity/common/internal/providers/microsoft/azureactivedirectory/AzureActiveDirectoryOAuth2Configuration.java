@@ -24,18 +24,20 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 
-/**
- * Created by shoatman on 12/1/2017.
- */
-
 public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration {
 
-    public boolean isAuthorityHostValdiationEnabled() {
+    /**
+     * @return True if authority host validation enabled, false otherwise.
+     */
+    public boolean isAuthorityHostValidationEnabled() {
         return mAuthorityHostValidationEnabled;
     }
 
-    public void setAuthorityHostValdiationEnabled(boolean mAuthorityHostValdiationEnabled) {
-        this.mAuthorityHostValidationEnabled = mAuthorityHostValdiationEnabled;
+    /**
+     * @param authorityHostValidationEnabled boolean
+     */
+    public void setAuthorityHostValidationEnabled(boolean authorityHostValidationEnabled) {
+        mAuthorityHostValidationEnabled = authorityHostValidationEnabled;
     }
 
     private boolean mAuthorityHostValidationEnabled = true;

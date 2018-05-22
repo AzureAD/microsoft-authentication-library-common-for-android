@@ -35,6 +35,11 @@ public class UsageStatsManagerWrapper {
 
     private static UsageStatsManagerWrapper sInstance;
 
+    /**
+     * Set instance of UsageStatsManagerWrapper.
+     *
+     * @param instance UsageStatsManagerWrapper
+     */
     public static synchronized void setInstance(final UsageStatsManagerWrapper instance) {
         sInstance = instance;
     }
@@ -54,8 +59,8 @@ public class UsageStatsManagerWrapper {
     /**
      * Wrap the final class function UsageStatsManager.isAppInactive(). And make the code testable.
      *
-     * @param connectionContext Context used to query app active state
-     * @return true if the app is inactive
+     * @param connectionContext Context used to query app active state.
+     * @return true if the app is inactive.
      */
     @TargetApi(Build.VERSION_CODES.M)
     public boolean isAppInactive(final Context connectionContext) {

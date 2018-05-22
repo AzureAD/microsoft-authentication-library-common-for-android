@@ -24,11 +24,14 @@ package com.microsoft.identity.common.internal.logging;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 
-public class DiagnosticContext {
+public final class DiagnosticContext {
 
     private static final String THREAD_ID = "thread_id";
 
-    private static final ThreadLocal<IRequestContext> sREQUEST_CONTEXT_THREAD_LOCAL =
+    private DiagnosticContext() {
+    }
+
+    private static final ThreadLocal<IRequestContext> REQUEST_CONTEXT_THREAD_LOCAL =
             new ThreadLocal<IRequestContext>() {
                 @Override // This is the default value for the RequestContext if it's unset
                 protected RequestContext initialValue() {
@@ -38,6 +41,11 @@ public class DiagnosticContext {
                 }
             };
 
+    /**
+     * Set the request context.
+     *
+     * @param requestContext IRequestContext
+     */
     public static void setRequestContext(final IRequestContext requestContext) {
         if (null == requestContext) {
             clear();
@@ -45,29 +53,37 @@ public class DiagnosticContext {
         }
 
         requestContext.put(THREAD_ID, String.valueOf(Thread.currentThread().getId()));
-        sREQUEST_CONTEXT_THREAD_LOCAL.set(requestContext);
+        REQUEST_CONTEXT_THREAD_LOCAL.set(requestContext);
     }
 
+    /**
+     * Get the request context.
+     *
+     * @return IRequestContext
+     */
     public static IRequestContext getRequestContext() {
         if (!hasThreadId()) {
             setThreadId();
         }
 
-        return sREQUEST_CONTEXT_THREAD_LOCAL.get();
+        return REQUEST_CONTEXT_THREAD_LOCAL.get();
     }
 
     private static void setThreadId() {
-        sREQUEST_CONTEXT_THREAD_LOCAL.get().put(
+        REQUEST_CONTEXT_THREAD_LOCAL.get().put(
                 THREAD_ID,
                 String.valueOf(Thread.currentThread().getId())
         );
     }
 
     private static boolean hasThreadId() {
-        return sREQUEST_CONTEXT_THREAD_LOCAL.get().containsKey(THREAD_ID);
+        return REQUEST_CONTEXT_THREAD_LOCAL.get().containsKey(THREAD_ID);
     }
 
+    /**
+     * Clear rhe local request context thread.
+     */
     public static void clear() {
-        sREQUEST_CONTEXT_THREAD_LOCAL.remove();
+        REQUEST_CONTEXT_THREAD_LOCAL.remove();
     }
 }

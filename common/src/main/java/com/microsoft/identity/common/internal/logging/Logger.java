@@ -46,9 +46,9 @@ public final class Logger {
     private final Object mLock = new Object();
 
     // Disable to log PII by default.
-    private static boolean mAllowPii = false;
+    private static boolean sAllowPii = false;
     // Disable to Logcat logging by default.
-    private static boolean mAllowLogcat = false;
+    private static boolean sAllowLogcat = false;
 
     /**
      * Enum class for LogLevel that the sdk recognizes.
@@ -73,7 +73,7 @@ public final class Logger {
     }
 
     /**
-     * @return The single instance of {@link Logger}
+     * @return The single instance of {@link Logger}.
      */
     public static Logger getInstance() {
         return INSTANCE;
@@ -86,7 +86,7 @@ public final class Logger {
      * @param allowPii True if enabling PII info to be logged, false otherwise.
      */
     public static void setAllowPii(final boolean allowPii) {
-        mAllowPii = allowPii;
+        sAllowPii = allowPii;
     }
 
     /**
@@ -95,21 +95,25 @@ public final class Logger {
      * @param allowLogcat True if enabling the logcat logging, false otherwise.
      */
     public static void setAllowLogcat(final boolean allowLogcat) {
-        mAllowLogcat = allowLogcat;
+        sAllowLogcat = allowLogcat;
     }
 
     /**
      * Get if log PII is enabled.
+     *
+     * @return true if pii is allowed in logging, false otherwise.
      */
     public static boolean getAllowPii() {
-        return mAllowPii;
+        return sAllowPii;
     }
 
     /**
      * Get if logcat is enabled.
+     *
+     * @return true if logcat turned on, false otherwise.
      */
     public static boolean getAllowLogcat() {
-        return mAllowLogcat;
+        return sAllowLogcat;
     }
 
     /**
@@ -530,7 +534,7 @@ public final class Logger {
 
         // Developer turns off PII logging, if the log meLoggerSettingssage contains any PII,
         // we should not send it.
-        if (!mAllowPii && containsPII) {
+        if (!sAllowPii && containsPII) {
             return;
         }
 
@@ -538,7 +542,7 @@ public final class Logger {
         final String logMessage = formatMessage(correlationID, message, throwable);
 
         // Send logs into Logcat.
-        if (mAllowLogcat) {
+        if (sAllowLogcat) {
             sendLogcatLogs(tag, logLevel, logMessage);
         }
 
@@ -549,7 +553,7 @@ public final class Logger {
                     mExternalLogger.log(tag, logLevel, logMessage, containsPII);
                 } catch (final Exception e) {
                     // log message as warning to report callback error issue
-                    if (!containsPII || mAllowPii) {
+                    if (!containsPII || sAllowPii) {
                         Log.w(tag, String.format(CUSTOM_LOG_ERROR, logMessage));
                     }
                 }

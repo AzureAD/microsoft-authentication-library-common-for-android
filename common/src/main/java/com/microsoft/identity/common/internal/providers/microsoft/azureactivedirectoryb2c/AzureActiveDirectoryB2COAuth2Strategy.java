@@ -38,12 +38,17 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 /**
- * Azure Active Directory B2C OAuth Strategy
+ * Azure Active Directory B2C OAuth Strategy.
  * See the following for more information on the B2C OAuth Implementation:
  * see <a href='https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-oauth-code'>
  * https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-oauth-code</a>
  */
 public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
+    /**
+     * Constructor of AzureActiveDirectoryB2COAuth2Strategy.
+     *
+     * @param config OAuth2Configuration
+     */
     public AzureActiveDirectoryB2COAuth2Strategy(OAuth2Configuration config) {
         super(config);
     }

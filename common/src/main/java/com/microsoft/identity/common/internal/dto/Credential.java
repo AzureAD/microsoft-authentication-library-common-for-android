@@ -39,12 +39,39 @@ import static com.microsoft.identity.common.internal.dto.Credential.SerializedNa
 public abstract class Credential extends AccountCredentialBase {
 
     public static class SerializedNames {
+        /**
+         * String of client id.
+         */
         public static final String CLIENT_ID = "client_id";
+
+        /**
+         * String of credential type.
+         */
         public static final String CREDENTIAL_TYPE = "credential_type";
+
+        /**
+         * String of environment.
+         */
         public static final String ENVIRONMENT = "environment";
+
+        /**
+         * String of secret.
+         */
         public static final String SECRET = "secret";
+
+        /**
+         * String of home account id.
+         */
         public static final String HOME_ACCOUNT_ID = "home_account_id";
+      
+        /**
+         * String of cached at.
+         */
         public static final String CACHED_AT = "cached_at";
+
+        /**
+         * String of expires on.
+         */
         public static final String EXPIRES_ON = "expires_on";
     }
 

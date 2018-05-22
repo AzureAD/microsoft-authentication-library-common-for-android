@@ -26,6 +26,11 @@ import java.util.Map;
 
 public interface IRequestContext extends Map<String, String> {
 
+    /**
+     * Get the JSON String for the request context.
+     *
+     * @return String
+     */
     String toJsonString();
 
 }

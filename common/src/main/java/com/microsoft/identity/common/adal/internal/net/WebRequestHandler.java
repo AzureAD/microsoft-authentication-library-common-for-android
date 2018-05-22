@@ -93,7 +93,7 @@ public class WebRequestHandler implements IWebRequestHandler {
      *
      * @param requestCorrelationId {@link UUID}
      */
-    public void setRequestCorrelationId(UUID requestCorrelationId) {
-        this.mRequestCorrelationId = requestCorrelationId;
+    public void setRequestCorrelationId(final UUID requestCorrelationId) {
+        mRequestCorrelationId = requestCorrelationId;
     }
 }

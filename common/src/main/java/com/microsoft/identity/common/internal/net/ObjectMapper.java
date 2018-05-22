@@ -31,14 +31,34 @@ import java.net.URLEncoder;
 import java.util.Iterator;
 import java.util.TreeMap;
 
-public class ObjectMapper {
+public final class ObjectMapper {
 
-    public final static String ENCODING_SCHEME = "UTF-8";
+    /**
+     * Encoding scheme.
+     */
+    public static final String ENCODING_SCHEME = "UTF-8";
 
+    private ObjectMapper() {
+        // Utility class.
+    }
+
+    /**
+     * Serialize object to JSON string.
+     * @param object Object
+     * @return JSON string
+     */
     public static String serializeObjectToJsonString(Object object) {
         return new Gson().toJson(object);
     }
 
+    /**
+     * Deserialize Json String to Object.
+     *
+     * @param json String
+     * @param objectClass object class
+     * @param <T> type T
+     * @return object
+     */
     public static <T> T deserializeJsonStringToObject(String json, Class<T> objectClass) {
         return new Gson().fromJson(json, objectClass);
     }
@@ -48,9 +68,9 @@ public class ObjectMapper {
      * this method is the behavior of GSON which excludes null fields from the resulting JSON.  A TreeMap was used to
      * simplify testing.... the resulting url encoded string is in alphabetical order (keys).
      *
-     * @param object
-     * @return
-     * @throws UnsupportedEncodingException
+     * @param object Object
+     * @return String
+     * @throws UnsupportedEncodingException thrown if encoding not supported
      */
     public static String serializeObjectToFormUrlEncoded(Object object) throws UnsupportedEncodingException {
         String json = ObjectMapper.serializeObjectToJsonString(object);

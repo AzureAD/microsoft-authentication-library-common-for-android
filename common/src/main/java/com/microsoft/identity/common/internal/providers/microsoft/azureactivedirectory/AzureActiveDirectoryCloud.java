@@ -52,6 +52,13 @@ public class AzureActiveDirectoryCloud {
         mPreferredCacheHostName = null;
     }
 
+    /**
+     * Constructor of AzureActiveDirectoryCloud.
+     *
+     * @param preferredNetwork preferred network
+     * @param preferredCache preferred cache
+     * @param aliases aliases
+     */
     public AzureActiveDirectoryCloud(final String preferredNetwork, final String preferredCache, final List<String> aliases) {
         mPreferredNetworkHostName = preferredNetwork;
         mPreferredCacheHostName = preferredCache;
@@ -66,14 +73,23 @@ public class AzureActiveDirectoryCloud {
         mIsValidated = true;
     }
 
+    /**
+     * @return mPreferredNetworkHostName of the AzureActiveDirectoryCloud object
+     */
     public String getPreferredNetworkHostName() {
         return mPreferredNetworkHostName;
     }
 
+    /**
+     * @return mPreferredCacheHostName of the AzureActiveDirectoryCloud object
+     */
     public String getPreferredCacheHostName() {
         return mPreferredCacheHostName;
     }
 
+    /**
+     * @return mCloudHostAliases of the AzureActiveDirectoryCloud object
+     */
     public List<String> getHostAliases() {
         return mCloudHostAliases;
     }

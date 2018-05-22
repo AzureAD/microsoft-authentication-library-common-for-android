@@ -39,6 +39,7 @@ public final class HttpUrlConnectionFactory {
      * Private constructor to prevent the class from being initiated.
      */
     private HttpUrlConnectionFactory() {
+        // Utility class.
     }
 
     /**

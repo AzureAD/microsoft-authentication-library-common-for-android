@@ -30,10 +30,21 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Helper methods related to JSON
+ * Helper methods related to JSON.
  */
-public class JsonExtensions {
+public final class JsonExtensions {
 
+    private JsonExtensions() {
+        // Utility class.
+    }
+
+    /**
+     * Extract JSON Object into Map<String, String>.
+     *
+     * @param jsonString String
+     * @return Map<String, String>
+     * @throws JSONException if JSON string is malformed.
+     */
     public static Map<String, String> extractJsonObjectIntoMap(final String jsonString)
             throws JSONException {
 

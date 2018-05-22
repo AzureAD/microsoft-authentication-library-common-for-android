@@ -44,15 +44,19 @@ public class ADALUserInfo {
 
     private transient Date mPasswordExpiresOn;
 
-
+    /**
+     * Constructor of ADALUserInfo.
+     *
+     * @param account AzureActiveDirectoryAccount
+     */
     public ADALUserInfo(AzureActiveDirectoryAccount account) {
-        this.mUniqueId = account.getUserId();
-        this.mDisplayableId = account.getDisplayableId();
-        this.mGivenName = account.getFirstName();
-        this.mFamilyName = account.getLastName();
-        this.mIdentityProvider = account.getIdentityProvider();
-        this.mPasswordChangeUrl = account.getPasswordChangeUrl();
-        this.mPasswordExpiresOn = account.getPasswordExpiresOn();
+        mUniqueId = account.getUserId();
+        mDisplayableId = account.getDisplayableId();
+        mGivenName = account.getFirstName();
+        mFamilyName = account.getLastName();
+        mIdentityProvider = account.getIdentityProvider();
+        mPasswordChangeUrl = account.getPasswordChangeUrl();
+        mPasswordExpiresOn = account.getPasswordExpiresOn();
     }
 
     /**

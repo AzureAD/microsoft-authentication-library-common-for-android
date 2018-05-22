@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.providers.keys;
 
 /**
  * Class holds information necessary to instantiate a keystore in order to retrieve and access
- * a ClientCertificateConfiguration and the private key associated with that ClientCertificateConfiguration
+ * a ClientCertificateConfiguration and the private key associated with that ClientCertificateConfiguration.
  * NOTE: This class should move to library configuration
  */
 public class KeyStoreConfiguration {
@@ -33,20 +33,42 @@ public class KeyStoreConfiguration {
     private final String mKeyStoreProvider;
     private final char[] mKeyStorePassword;
 
+    /**
+     * Constructor of KeyStoreConfiguration.
+     *
+     * @param keyStoreType     String
+     * @param keyStoreProvider String
+     * @param keyStorePassword char[]
+     */
     public KeyStoreConfiguration(String keyStoreType, String keyStoreProvider, char[] keyStorePassword) {
-        this.mKeyStoreType = keyStoreType;
-        this.mKeyStoreProvider = keyStoreProvider;
-        this.mKeyStorePassword = keyStorePassword;
+        mKeyStoreType = keyStoreType;
+        mKeyStoreProvider = keyStoreProvider;
+        mKeyStorePassword = keyStorePassword;
     }
 
+    /**
+     * Get the key store type.
+     *
+     * @return String
+     */
     public String getKeyStoreType() {
         return mKeyStoreType;
     }
 
+    /**
+     * Get the key store provider.
+     *
+     * @return String
+     */
     public String getKeyStoreProvider() {
         return mKeyStoreProvider;
     }
 
+    /**
+     * Get the key store password.
+     *
+     * @return String
+     */
     public char[] getKeyStorePassword() {
         return mKeyStorePassword;
     }

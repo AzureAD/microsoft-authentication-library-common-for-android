@@ -26,10 +26,13 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 public class MicrosoftTokenResponse extends TokenResponse {
-
     @SerializedName("ext_expires_in")
-    protected Long mExtendedExpiresIn;
+    private Long mExtendedExpiresIn;
 
+    protected Long getExtendedExpiresIn() {
+        return mExtendedExpiresIn;
+    }
+  
     @Override
     public String toString() {
         return "MicrosoftTokenResponse{" +

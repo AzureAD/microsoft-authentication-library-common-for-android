@@ -35,6 +35,11 @@ public class PowerManagerWrapper {
 
     private static PowerManagerWrapper sInstance;
 
+    /**
+     * Set instance of PowerManagerWrapper.
+     *
+     * @param wrapper PowerManagerWrapper
+     */
     public static void setInstance(final PowerManagerWrapper wrapper) {
         sInstance = wrapper;
     }
@@ -42,7 +47,7 @@ public class PowerManagerWrapper {
     /**
      * Singleton implementation for PowerManagerWrapper.
      *
-     * @return PowerManagerWrapper singleton instance
+     * @return PowerManagerWrapper singleton instance.
      */
     public static synchronized PowerManagerWrapper getInstance() {
         if (sInstance == null) {
@@ -54,8 +59,8 @@ public class PowerManagerWrapper {
     /**
      * Wrap the calling to method isDeviceIdleMode() of final class PowerManager.
      *
-     * @param connectionContext Context used to query if app is in idle mode
-     * @return true if the device is in doze/idle mode
+     * @param connectionContext Context used to query if app is in idle mode.
+     * @return true if the device is in doze/idle mode.
      */
     @TargetApi(Build.VERSION_CODES.M)
     public boolean isDeviceIdleMode(final Context connectionContext) {
@@ -65,8 +70,8 @@ public class PowerManagerWrapper {
     /**
      * Wrap the calling to method isIgnoringBatteryOptimizations() of final class PowerManager.
      *
-     * @param connectionContext Context used to query if app is ignoring battery optimizations
-     * @return true if the given application package name is on the device's power whitelist
+     * @param connectionContext Context used to query if app is ignoring battery optimizations.
+     * @return true if the given application package name is on the device's power whitelist.
      */
     @TargetApi(Build.VERSION_CODES.M)
     public boolean isIgnoringBatteryOptimizations(final Context connectionContext) {

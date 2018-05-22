@@ -27,37 +27,54 @@ import com.google.gson.annotations.SerializedName;
 public class TokenErrorResponse {
 
     @SerializedName("error")
-    protected String mError;
+    private String mError;
 
     @SerializedName("error_description")
-    protected String mErrorDescription;
+    private String mErrorDescription;
 
     @SerializedName("error_uri")
-    protected String mErrorUri;
+    private String mErrorUri;
 
-
+    /**
+     * @return mError of the token error response.
+     */
     public String getError() {
         return mError;
     }
 
-    public void setError(String error) {
-        this.mError = error;
+    /**
+     * @param error error string of the token error response.
+     */
+    public void setError(final String error) {
+        mError = error;
     }
 
+    /**
+     * @return mErrorDescription of the token error response.
+     */
     public String getErrorDescription() {
         return mErrorDescription;
     }
 
-    public void setErrorDescription(String errorDescription) {
-        this.mErrorDescription = errorDescription;
+    /**
+     * @param errorDescription error description details.
+     */
+    public void setErrorDescription(final String errorDescription) {
+        mErrorDescription = errorDescription;
     }
 
+    /**
+     * @return mErrorUri of the token error response.
+     */
     public String getErrorUri() {
         return mErrorUri;
     }
 
-    public void setErrorUri(String errorUri) {
-        this.mErrorUri = errorUri;
+    /**
+     * @param errorUri error URI string.
+     */
+    public void setErrorUri(final String errorUri) {
+        mErrorUri = errorUri;
     }
 
     @Override

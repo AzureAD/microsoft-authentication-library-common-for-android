@@ -35,6 +35,12 @@ public final class ExceptionExtensions {
         // Intentionally left blank
     }
 
+    /**
+     * Get exception message.
+     *
+     * @param ex Exception
+     * @return String
+     */
     public static String getExceptionMessage(Exception ex) {
         String message = null;
 

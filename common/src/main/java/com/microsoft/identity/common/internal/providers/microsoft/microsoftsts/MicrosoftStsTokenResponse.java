@@ -39,36 +39,36 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      *
      * @See <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code">Authorize access to web applications using OAuth 2.0 and Azure Active Directory</a>
      */
-    protected Date mExpiresOn;
+    private Date mExpiresOn;
 
     /**
      * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
      * extend the valid lifetime of an access_token.
      */
-    protected Date mExtExpiresOn;
+    private Date mExtExpiresOn;
 
     /**
      * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
      * extend the valid lifetime of an access_token.
      */
     @SerializedName("ext_expires_in")
-    protected Long mExtExpiresIn;
+    private Long mExtExpiresIn;
 
     /**
      * Information to uniquely identify the tenant and the user _within_ that tenant.
      */
     @SerializedName("client_info")
-    protected String mClientInfo;
+    private String mClientInfo;
 
     /**
      * Information to uniquely identify the family that the client application belongs to.
      */
-    protected String mFamilyId;
+    private String mFamilyId;
 
     /**
      * The client_id of the application requesting a token.
      */
-    protected transient String mClientId;
+    private transient String mClientId;
 
     /**
      * Gets the ext_expires_in.
@@ -84,7 +84,7 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      *
      * @param extExpiresin The ext_expires_in to set.
      */
-    public void setExtExpiresIn(Long extExpiresin) {
+    public void setExtExpiresIn(final Long extExpiresin) {
         mExtExpiresIn = extExpiresin;
     }
 
@@ -102,7 +102,7 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      *
      * @param clientInfo The client_info to set.
      */
-    public void setClientInfo(String clientInfo) {
+    public void setClientInfo(final String clientInfo) {
         mClientInfo = clientInfo;
     }
 
@@ -120,8 +120,8 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      *
      * @param expiresOn The expires on to set.
      */
-    public void setExpiresOn(Date expiresOn) {
-        this.mExpiresOn = expiresOn;
+    public void setExpiresOn(final Date expiresOn) {
+        mExpiresOn = expiresOn;
     }
 
     /**
@@ -138,26 +138,26 @@ public class MicrosoftStsTokenResponse extends TokenResponse {
      *
      * @param extExpiresOn The expires on to set.
      */
-    public void setExtExpiresOn(Date extExpiresOn) {
-        this.mExtExpiresOn = extExpiresOn;
+    public void setExtExpiresOn(final Date extExpiresOn) {
+        mExtExpiresOn = extExpiresOn;
     }
 
     /**
-     * Returns the family client id
+     * Returns the family client id.
      *
-     * @return
+     * @return mFamilyId
      */
     public String getFamilyId() {
         return mFamilyId;
     }
 
     /**
-     * Sets the family id
+     * Sets the family id.
      *
-     * @param familyId
+     * @param familyId family id of the token.
      */
-    public void setFamilyId(String familyId) {
-        this.mFamilyId = familyId;
+    public void setFamilyId(final String familyId) {
+        mFamilyId = familyId;
     }
 
     /**

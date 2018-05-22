@@ -39,25 +39,26 @@ import java.util.Map;
  */
 public class ClientInfo {
 
-    public static final String UNIQUE_IDENTIFIER = "uid";
-    public static final String UNIQUE_TENANT_IDENTIFIER = "utid";
+    private static final String UNIQUE_IDENTIFIER = "uid";
+    private static final String UNIQUE_TENANT_IDENTIFIER = "utid";
 
     /**
      * Unique identifier for a user in the current tenant.
      */
-    protected String mUid;
+    private String mUid;
 
     /**
      * Unique identifier for a tenant.
      */
-    protected String mUtid;
+    private String mUtid;
 
     private String mRawClientInfo;
 
     /**
-     * Constructor for ClientInfo object
+     * Constructor for ClientInfo object.
      *
-     * @param rawClientInfo
+     * @param rawClientInfo raw client info
+     * @throws ServiceException if rawIdToken is malformed in JSON format.
      */
     public ClientInfo(String rawClientInfo) throws ServiceException {
         if (StringExtensions.isNullOrBlank(rawClientInfo)) {

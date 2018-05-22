@@ -141,7 +141,7 @@ public class ADALTokenCacheItem {
      *
      * @param info UserInfo object which contains user information.
      */
-    public void setUserInfo(ADALUserInfo info) {
+    public void setUserInfo(final ADALUserInfo info) {
         mUserInfo = info;
     }
 
@@ -159,7 +159,7 @@ public class ADALTokenCacheItem {
      *
      * @param resource resource identifier.
      */
-    public void setResource(String resource) {
+    public void setResource(final String resource) {
         mResource = resource;
     }
 
@@ -177,7 +177,7 @@ public class ADALTokenCacheItem {
      *
      * @param authority String authority url.
      */
-    public void setAuthority(String authority) {
+    public void setAuthority(final String authority) {
         mAuthority = authority;
     }
 
@@ -195,7 +195,7 @@ public class ADALTokenCacheItem {
      *
      * @param clientId client identifier string.
      */
-    public void setClientId(String clientId) {
+    public void setClientId(final String clientId) {
         mClientId = clientId;
     }
 
@@ -213,7 +213,7 @@ public class ADALTokenCacheItem {
      *
      * @param accessToken the access token string.
      */
-    public void setAccessToken(String accessToken) {
+    public void setAccessToken(final String accessToken) {
         mAccessToken = accessToken;
     }
 
@@ -231,7 +231,7 @@ public class ADALTokenCacheItem {
      *
      * @param refreshToken the refresh token string.
      */
-    public void setRefreshToken(String refreshToken) {
+    public void setRefreshToken(final String refreshToken) {
         mRefreshtoken = refreshToken;
     }
 
@@ -285,7 +285,7 @@ public class ADALTokenCacheItem {
      *
      * @param tenantId the tenant identifier string.
      */
-    public void setTenantId(String tenantId) {
+    public void setTenantId(final String tenantId) {
         mTenantId = tenantId;
     }
 
@@ -303,7 +303,7 @@ public class ADALTokenCacheItem {
      *
      * @param rawIdToken raw ID token string.
      */
-    public void setRawIdToken(String rawIdToken) {
+    public void setRawIdToken(final String rawIdToken) {
         mRawIdToken = rawIdToken;
     }
 

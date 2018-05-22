@@ -44,6 +44,11 @@ public class MicrosoftStsRefreshToken extends RefreshToken {
     private Date mExpiresOn;
     private String mFamilyId;
 
+    /**
+     * Constructor of MicrosoftStsRefreshToken.
+     *
+     * @param response MicrosoftStsTokenResponse
+     */
     public MicrosoftStsRefreshToken(
             @NonNull final MicrosoftStsTokenResponse response) {
         super(response);
@@ -61,6 +66,9 @@ public class MicrosoftStsRefreshToken extends RefreshToken {
         }
     }
 
+    /**
+     * @return true if this token is family refresh token, false otherwise.
+     */
     public boolean getIsFamilyRefreshToken() {
         return mIsFamilyRefreshToken;
     }

@@ -27,7 +27,7 @@ import com.microsoft.identity.common.Account;
 import java.util.List;
 
 /**
- * Represents the Azure AD B2C Account
+ * Represents the Azure AD B2C Account.
  */
 public class AzureActiveDirectoryB2CAccount extends Account {
 

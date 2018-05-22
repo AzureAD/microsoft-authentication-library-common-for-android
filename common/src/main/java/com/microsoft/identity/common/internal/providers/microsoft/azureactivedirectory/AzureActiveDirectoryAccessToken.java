@@ -33,17 +33,28 @@ public class AzureActiveDirectoryAccessToken extends AccessToken {
     private Date mExpiresOn;
     private Date mExtendedExpiresOn;
 
+    /**
+     * Constructor of AzureActiveDirectoryAccessToken.
+     *
+     * @param response AzureActiveDirectoryTokenResponse
+     */
     public AzureActiveDirectoryAccessToken(
             @NonNull final AzureActiveDirectoryTokenResponse response) {
         super(response);
-        this.mExpiresOn = response.getExpiresOn();
-        this.mExtendedExpiresOn = response.getExtExpiresOn();
+        mExpiresOn = response.getExpiresOn();
+        mExtendedExpiresOn = response.getExtExpiresOn();
     }
 
+    /**
+     * @return mExpiresOn of AzureActiveDirectoryAccessToken
+     */
     public Date getExpiresOn() {
         return mExpiresOn;
     }
 
+    /**
+     * @return mExtendedExpiresOn of AzureActiveDirectoryAccessToken
+     */
     public Date getExtendedExpiresOn() {
         return mExtendedExpiresOn;
     }
