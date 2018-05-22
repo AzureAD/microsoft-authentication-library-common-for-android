@@ -149,7 +149,7 @@ public abstract class OAuth2Strategy
         return mIssuer;
     }
 
-    protected void setIssuer(final Uri issuer) {
+    protected final void setIssuer(final Uri issuer) {
         mIssuer = issuer;
     }
 
