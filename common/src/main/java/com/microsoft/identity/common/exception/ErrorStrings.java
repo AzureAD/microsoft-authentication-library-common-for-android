@@ -27,6 +27,7 @@ public final class ErrorStrings {
     private ErrorStrings() {
         // Utility class.
     }
+
     /**
      * There are multiple cache entries found, the sdk cannot pick the correct access token
      * or refresh token from the cache. Likely it's a bug in the sdk when caching tokens or authority

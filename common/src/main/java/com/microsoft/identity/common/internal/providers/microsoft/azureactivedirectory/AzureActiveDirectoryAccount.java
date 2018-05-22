@@ -63,7 +63,7 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
      * Creates an AzureActiveDirectoryAccount based on the contents of the IDToken.
      * And based on the contents of the ClientInfo JSON returned as part of the TokenResponse
      *
-     * @param idToken IDToken
+     * @param idToken    IDToken
      * @param clientInfo ClientInfo
      * @return AzureActiveDirectoryAccount
      */

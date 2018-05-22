@@ -44,6 +44,7 @@ public final class ObjectMapper {
 
     /**
      * Serialize object to JSON string.
+     *
      * @param object Object
      * @return JSON string
      */
@@ -54,9 +55,9 @@ public final class ObjectMapper {
     /**
      * Deserialize Json String to Object.
      *
-     * @param json String
+     * @param json        String
      * @param objectClass object class
-     * @param <T> type T
+     * @param <T>         type T
      * @return object
      */
     public static <T> T deserializeJsonStringToObject(String json, Class<T> objectClass) {

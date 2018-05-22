@@ -56,8 +56,8 @@ public class AzureActiveDirectoryCloud {
      * Constructor of AzureActiveDirectoryCloud.
      *
      * @param preferredNetwork preferred network
-     * @param preferredCache preferred cache
-     * @param aliases aliases
+     * @param preferredCache   preferred cache
+     * @param aliases          aliases
      */
     public AzureActiveDirectoryCloud(final String preferredNetwork, final String preferredCache, final List<String> aliases) {
         mPreferredNetworkHostName = preferredNetwork;
