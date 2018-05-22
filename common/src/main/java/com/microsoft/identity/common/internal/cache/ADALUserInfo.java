@@ -136,6 +136,7 @@ public class ADALUserInfo {
         return DateExtensions.createCopy(mPasswordExpiresOn);
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public String toString() {
         return "ADALUserInfo{" +
@@ -148,4 +149,5 @@ public class ADALUserInfo {
                 ", mPasswordExpiresOn=" + mPasswordExpiresOn +
                 '}';
     }
+    //CHECKSTYLE:ON
 }

@@ -106,6 +106,7 @@ public class AuthorizationRequest {
         mState = state;
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public String toString() {
         return "AuthorizationRequest{" +
@@ -116,4 +117,6 @@ public class AuthorizationRequest {
                 ", mState='" + mState + '\'' +
                 '}';
     }
+    //CHECKSTYLE:ON
+
 }

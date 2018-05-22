@@ -251,6 +251,7 @@ public class TokenResponse {
         return mResponseReceivedTime;
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public String toString() {
         return "TokenResponse{" +
@@ -264,4 +265,5 @@ public class TokenResponse {
                 ", mResponseReceivedTime=" + mResponseReceivedTime +
                 '}';
     }
+    //CHECKSTYLE:ON
 }

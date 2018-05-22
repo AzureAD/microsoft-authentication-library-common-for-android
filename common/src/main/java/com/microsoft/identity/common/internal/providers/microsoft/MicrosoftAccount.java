@@ -69,8 +69,8 @@ public abstract class MicrosoftAccount extends Account {
      * Constructor of MicrosoftAccount.
      *
      * @param idToken id token of the Microsoft account.
-     * @param uid UID of the Microsoft account.
-     * @param utid UTID of the Microsoft account.
+     * @param uid     UID of the Microsoft account.
+     * @param utid    UTID of the Microsoft account.
      */
     public MicrosoftAccount(@NonNull final IDToken idToken,
                             final String uid,
@@ -342,6 +342,7 @@ public abstract class MicrosoftAccount extends Account {
         return SchemaUtil.getAvatarUrl(mIDToken);
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public String toString() {
         return "MicrosoftAccount{" +
@@ -359,4 +360,5 @@ public abstract class MicrosoftAccount extends Account {
                 ", mFamilyName='" + mFamilyName + '\'' +
                 "} " + super.toString();
     }
+    //CHECKSTYLE:ON
 }

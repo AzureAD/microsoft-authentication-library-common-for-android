@@ -44,6 +44,7 @@ public final class SchemaUtil {
     private SchemaUtil() {
         // Utility class.
     }
+
     /**
      * Returns the authority (issuer) for the supplied IDToken.
      *
@@ -181,8 +182,8 @@ public final class SchemaUtil {
 
         return alternativeAccountId;
     }
-  
-   /**
+
+    /**
      * Get the home account id with the client info.
      *
      * @param clientInfo ClientInfo

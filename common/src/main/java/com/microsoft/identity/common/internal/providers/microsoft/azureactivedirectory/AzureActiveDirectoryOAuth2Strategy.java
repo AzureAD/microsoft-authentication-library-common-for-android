@@ -60,12 +60,17 @@ public class AzureActiveDirectoryOAuth2Strategy
 
     /**
      * Constructor of AzureActiveDirectoryOAuth2Strategy.
+     * <<<<<<< HEAD
+     * <p>
+     * =======
+     * >>>>>>> dev
+     *
      * @param config Azure Active Directory OAuth2 configuration
      */
     public AzureActiveDirectoryOAuth2Strategy(final AzureActiveDirectoryOAuth2Configuration config) {
         super(config);
         Logger.verbose(TAG, "Init: " + TAG);
-        mTokenEndpoint = "https://login.microsoftonline.com/microsoft.com/oauth2/token";
+        setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oauth2/token");
     }
 
     @Override
@@ -75,18 +80,18 @@ public class AzureActiveDirectoryOAuth2Strategy
 
         final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
 
-        if (!cloud.isValidated() && mConfig.isAuthorityHostValidationEnabled()) {
+        if (!cloud.isValidated() && getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
             Logger.warn(TAG + ":" + methodName, "Authority host validation has been enabled. This data hasn't been validated, though.");
             // We have invalid cloud data... and authority host validation is enabled....
             // TODO: Throw an exception in this case... need to see what ADAL does in this case.
         }
 
-        if (!cloud.isValidated() && !mConfig.isAuthorityHostValidationEnabled()) {
+        if (!cloud.isValidated() && !getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
             Logger.warn(
                     TAG + ":" + methodName,
-                    "Authority host validation not specified..." +
-                            "but there is no cloud..." +
-                            "Hence just return the passed in Authority"
+                    "Authority host validation not specified..."
+                            + "but there is no cloud..."
+                            + "Hence just return the passed in Authority"
             );
             return authRequest.getAuthority().toString();
         }

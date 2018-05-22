@@ -222,6 +222,7 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
         mClientId = clientId;
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public String toString() {
         return "AzureActiveDirectoryTokenResponse{" +
@@ -235,4 +236,5 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
                 ", mSpeRing='" + mSpeRing + '\'' +
                 "} " + super.toString();
     }
+    //CHECKSTYLE:ON
 }

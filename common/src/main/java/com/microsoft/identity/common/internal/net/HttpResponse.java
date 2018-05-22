@@ -70,6 +70,7 @@ public final class HttpResponse {
         return mResponseHeaders;
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public String toString() {
         return "HttpResponse{" +
@@ -78,4 +79,5 @@ public final class HttpResponse {
                 ", mResponseHeaders=" + mResponseHeaders +
                 '}';
     }
+    //CHECKSTYLE:ON
 }

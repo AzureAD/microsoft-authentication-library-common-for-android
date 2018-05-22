@@ -58,15 +58,15 @@ import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.microsoft.identity.common.AccountCredentialCacheTest.LOCAL_ACCOUNT_ID;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.CACHED_AT;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.CLIENT_ID;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.ENVIRONMENT;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.EXPIRES_ON;
+import static com.microsoft.identity.common.AccountCredentialCacheTest.HOME_ACCOUNT_ID;
+import static com.microsoft.identity.common.AccountCredentialCacheTest.LOCAL_ACCOUNT_ID;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.REALM;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.SECRET;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.TARGET;
-import static com.microsoft.identity.common.AccountCredentialCacheTest.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.AccountCredentialCacheTest.USERNAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

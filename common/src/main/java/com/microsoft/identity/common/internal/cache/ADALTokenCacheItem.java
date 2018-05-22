@@ -343,6 +343,7 @@ public class ADALTokenCacheItem {
         return DateUtilities.createCopy(mExtendedExpiresOn);
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public String toString() {
         return "ADALTokenCacheItem{" +
@@ -361,4 +362,5 @@ public class ADALTokenCacheItem {
                 ", mSpeRing='" + mSpeRing + '\'' +
                 '}';
     }
+    //CHECKSTYLE:ON
 }

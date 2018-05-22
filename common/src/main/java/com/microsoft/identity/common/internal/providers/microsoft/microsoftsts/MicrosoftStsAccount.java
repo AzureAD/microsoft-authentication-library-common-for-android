@@ -35,7 +35,7 @@ import java.util.Map;
 public class MicrosoftStsAccount extends MicrosoftAccount {
 
     private static final String TAG = MicrosoftStsAccount.class.getSimpleName();
-  
+
     /**
      * Constructor of MicrosoftStsAccount.
      *

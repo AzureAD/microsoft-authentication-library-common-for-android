@@ -53,8 +53,8 @@ public abstract class OAuth2Strategy
                 GenericTokenResult extends TokenResult> {
     protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
-    protected final GenericOAuth2Configuration mConfig;
-    protected String mTokenEndpoint;
+    private final GenericOAuth2Configuration mConfig;
+    private String mTokenEndpoint;
     private String mAuthorizationEndpoint;
     private Uri mIssuer;
 
@@ -124,6 +124,11 @@ public abstract class OAuth2Strategy
         return authorizationUri;
     }
 
+    /**
+     * Gets the authorization endpoint used by this strategy.
+     *
+     * @return The authorization endpoint to use.
+     */
     public String getAuthorizationEndpoint() {
         return mAuthorizationEndpoint;
     }
@@ -132,15 +137,19 @@ public abstract class OAuth2Strategy
         return mTokenEndpoint;
     }
 
-    protected void setTokenEndpoint(final String tokenEndpoint) {
+    protected final void setTokenEndpoint(final String tokenEndpoint) {
         mTokenEndpoint = tokenEndpoint;
+    }
+
+    protected GenericOAuth2Configuration getOAuth2Configuration() {
+        return mConfig;
     }
 
     protected Uri getIssuer() {
         return mIssuer;
     }
 
-    protected void setIssuer(final Uri issuer) {
+    protected final void setIssuer(final Uri issuer) {
         mIssuer = issuer;
     }
 

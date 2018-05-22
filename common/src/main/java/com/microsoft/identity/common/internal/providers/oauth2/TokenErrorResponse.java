@@ -77,6 +77,7 @@ public class TokenErrorResponse {
         mErrorUri = errorUri;
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public String toString() {
         return "TokenErrorResponse{" +
@@ -85,4 +86,6 @@ public class TokenErrorResponse {
                 ", mErrorUri='" + mErrorUri + '\'' +
                 '}';
     }
+    //CHECKSTYLE:ON
+
 }

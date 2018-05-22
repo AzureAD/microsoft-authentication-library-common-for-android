@@ -43,56 +43,58 @@ import static com.microsoft.identity.common.internal.dto.Account.SerializedNames
  * there's no user present (e.g. client credential grant), only credential schema is necessary.
  */
 public class Account extends AccountCredentialBase implements IAccount {
+
     /**
      * String name list for Account object serialization.
      */
     public static class SerializedNames {
         /**
-         * String of home account id.
+         * JSON name of home account id.
          */
         public static final String HOME_ACCOUNT_ID = "home_account_id";
- 
+
+        /**
+         * JSON name of the environment.
+         */
         public static final String ENVIRONMENT = "environment";
 
         /**
-         * String of realm.
+         * JSON name of the realm.
          */
         public static final String REALM = "realm";
 
         /**
-         * String of authority account id.
-         */
-        public static final String AUTHORITY_ACCOUNT_ID = "authority_account_id";
-
-        /**
-         * String of local account id.
+         * JSON name of the local account id.
          */
         public static final String LOCAL_ACCOUNT_ID = "local_account_id";
-      
-       /**
-         * String of user name.
+
+        /**
+         * JSON name of the username.
          */
         public static final String USERNAME = "username";
 
         /**
-         * String of authority type.
+         * JSON name of the authority type.
          */
         public static final String AUTHORITY_TYPE = "authority_type";
 
-       /**
-         * String of alternative account id.
+        /**
+         * JSON name of the alternative account id.
          */
         public static final String ALTERNATIVE_ACCOUNT_ID = "alternative_account_id";
 
+        /**
+         * JSON name of the first name.
+         */
         public static final String FIRST_NAME = "first_name";
 
         /**
-         * String of last name.
+         * JSON name of the last name.
          */
         public static final String LAST_NAME = "last_name";
 
         /**
-         * String of avatar url.
+         * JSON name of the avatar url.
          */
         public static final String AVATAR_URL = "avatar_url";
     }
@@ -333,6 +335,7 @@ public class Account extends AccountCredentialBase implements IAccount {
         mAvatarUrl = avatarUrl;
     }
 
+    //CHECKSTYLE:OFF
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -359,7 +362,9 @@ public class Account extends AccountCredentialBase implements IAccount {
             return false;
         return mAvatarUrl != null ? mAvatarUrl.equals(account.mAvatarUrl) : account.mAvatarUrl == null;
     }
+    //CHECKSTYLE:ON
 
+    //CHECKSTYLE:OFF
     @Override
     public int hashCode() {
         int result = mHomeAccountId != null ? mHomeAccountId.hashCode() : 0;
@@ -374,4 +379,6 @@ public class Account extends AccountCredentialBase implements IAccount {
         result = 31 * result + (mAvatarUrl != null ? mAvatarUrl.hashCode() : 0);
         return result;
     }
+    //CHECKSTYLE:ON
+
 }
