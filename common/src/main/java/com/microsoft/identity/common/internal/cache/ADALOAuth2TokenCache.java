@@ -70,14 +70,6 @@ public class ADALOAuth2TokenCache
 
     private List<IShareSingleSignOnState> mSharedSSOCaches;
 
-    protected ISharedPreferencesFileManager getISharedPreferencesFileManager() {
-        return mISharedPreferencesFileManager;
-    }
-
-    protected void setISharedPreferencesFileManager(final ISharedPreferencesFileManager iSharedPreferencesFileManager) {
-        mISharedPreferencesFileManager = iSharedPreferencesFileManager;
-    }
-
     /**
      * Constructor of ADALOAuth2TokenCache.
      *
@@ -197,7 +189,7 @@ public class ADALOAuth2TokenCache
         Logger.verbosePII(TAG + ":" + methodName, "Derived JSON: " + json);
 
         if (encrypted != null) {
-            getISharedPreferencesFileManager().putString(key, encrypted);
+            mISharedPreferencesFileManager.putString(key, encrypted);
         } else {
             Logger.error(TAG + ":" + methodName, "Encrypted output was null.", null);
         }
