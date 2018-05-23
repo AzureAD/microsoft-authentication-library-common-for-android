@@ -61,6 +61,8 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     static final String TARGET = "user.read user.write https://graph.windows.net";
     // In the case of AAD, the realm is the tenantId
     static final String REALM = "3c62ac97-29eb-4aed-a3c8-add0298508d";
+    static final String MIDDLE_NAME = "Q";
+    static final String NAME = "Jane Doe";
     static final String LOCAL_ACCOUNT_ID = "00000000-0000-0000-088f-0e042cc22ac0";
     static final String USERNAME = "user.foo@tenant.onmicrosoft.com";
     static final String AUTHORITY_TYPE = "MSSTS";
@@ -111,6 +113,8 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
+        account.setMiddleName(MIDDLE_NAME);
+        account.setName(NAME);
 
         // Save the Account
         mAccountCredentialCache.saveAccount(account);
