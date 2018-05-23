@@ -32,6 +32,8 @@ import static com.microsoft.identity.common.internal.dto.Account.SerializedNames
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.FIRST_NAME;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.LOCAL_ACCOUNT_ID;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.MIDDLE_NAME;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.NAME;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.USERNAME;
 
@@ -94,6 +96,16 @@ public class Account extends AccountCredentialBase implements IAccount {
         public static final String FAMILY_NAME = "family_name";
 
         /**
+         * JSON name of the middle_name.
+         */
+        public static final String MIDDLE_NAME = "middle_name";
+
+        /**
+         * JSON name of the name.
+         */
+        public static final String NAME = "name";
+
+        /**
          * JSON name of the avatar url.
          */
         public static final String AVATAR_URL = "avatar_url";
@@ -124,6 +136,8 @@ public class Account extends AccountCredentialBase implements IAccount {
         setAlternativeAccountId(copy.getAlternativeAccountId());
         setFirstName(copy.getFirstName());
         setFamilyName(copy.getFamilyName());
+        setMiddleName(copy.getMiddleName());
+        setName(copy.getName());
         setAvatarUrl(copy.getAvatarUrl());
     }
 
@@ -188,6 +202,18 @@ public class Account extends AccountCredentialBase implements IAccount {
      */
     @SerializedName(FAMILY_NAME)
     private String mFamilyName;
+
+    /**
+     * Middle name for this Account.
+     */
+    @SerializedName(MIDDLE_NAME)
+    private String mMiddleName;
+
+    /**
+     * Name for this Account.
+     */
+    @SerializedName(NAME)
+    private String mName;
 
     /**
      * URL corresponding to a picture for this Account.
@@ -310,6 +336,34 @@ public class Account extends AccountCredentialBase implements IAccount {
     @Override
     public String getFamilyName() {
         return mFamilyName;
+    }
+
+    /**
+     * Sets the middle_name.
+     *
+     * @param middleName The middle_name to set.
+     */
+    public void setMiddleName(final String middleName) {
+        mMiddleName = middleName;
+    }
+
+    @Override
+    public String getMiddleName() {
+        return mMiddleName;
+    }
+
+    /**
+     * Sets the name.
+     *
+     * @param name The name to set.
+     */
+    public void setName(final String name) {
+        mName = name;
+    }
+
+    @Override
+    public String getName() {
+        return mName;
     }
 
     /**

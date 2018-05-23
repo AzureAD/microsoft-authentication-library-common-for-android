@@ -56,6 +56,7 @@ public abstract class MicrosoftAccount extends Account {
     private String mTenantId; // Tenant Id of the authority that issued the idToken... not necessarily the home tenant of the account
     private String mGivenName;
     private String mFamilyName;
+    private String mMiddleName;
 
     /**
      * Constructor of MicrosoftAccount.
@@ -84,6 +85,7 @@ public abstract class MicrosoftAccount extends Account {
         mIdentityProvider = claims.get(AzureActiveDirectoryIdToken.ISSUER);
         mGivenName = claims.get(AzureActiveDirectoryIdToken.GIVEN_NAME);
         mFamilyName = claims.get(AzureActiveDirectoryIdToken.FAMILY_NAME);
+        mMiddleName = claims.get(AzureActiveDirectoryIdToken.MIDDLE_NAME);
         mTenantId = claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
         mUid = uid;
         mUtid = utid;
@@ -158,13 +160,6 @@ public abstract class MicrosoftAccount extends Account {
      */
     public void setDisplayableId(final String displayableId) {
         mDisplayableId = displayableId;
-    }
-
-    /**
-     * @return The given name of the user. Can be null if not returned from the service.
-     */
-    public String getName() {
-        return mName;
     }
 
     /**
@@ -335,6 +330,19 @@ public abstract class MicrosoftAccount extends Account {
     @Override
     public String getFamilyName() {
         return mFamilyName;
+    }
+
+    /**
+     * @return The given name of the user. Can be null if not returned from the service.
+     */
+    @Override
+    public String getName() {
+        return mName;
+    }
+
+    @Override
+    public String getMiddleName() {
+        return mMiddleName;
     }
 
     @Override
