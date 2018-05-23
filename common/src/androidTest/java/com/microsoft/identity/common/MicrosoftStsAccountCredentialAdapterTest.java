@@ -55,10 +55,12 @@ import static org.mockito.Mockito.when;
 @RunWith(AndroidJUnit4.class)
 public class MicrosoftStsAccountCredentialAdapterTest {
 
-    public static final String MOCK_ID_TOKEN_WITH_CLAIMS = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC8wMjg3Zjk2My0yZDcyLTQzNjMtOWUzYS01NzA1YzViMGYwMzEvIiwiaWF0IjoxNTIxNDk4OTUwLCJleHAiOjE1NTMwMzU2NTYsImF1ZCI6Ind3dy5mYWtlZG9tYWluLmNvbSIsInN1YiI6ImZha2UuZW1haWxAZmFrZWRvbWFpbi5jb20iLCJvaWQiOiIxYzFkYjYyNi0wZmNiLTQyYmItYjM5ZS04ZTk4M2RkOTI5MzIiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJibWVsdG9uIiwiZ2l2ZW5fbmFtZSI6IkJyaWFuIiwiZmFtaWx5X25hbWUiOiJNZWx0b24tR3JhY2UifQ.BqAzS_WM1ME9LV1UNp2clNyCyiQm3G9xxw8Tv6omlCc";
+    public static final String MOCK_ID_TOKEN_WITH_CLAIMS = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC8wMjg3Zjk2My0yZDcyLTQzNjMtOWUzYS01NzA1YzViMGYwMzEvIiwiaWF0IjoxNTIxNDk4OTUwLCJleHAiOjE1NTMwMzU2NTYsImF1ZCI6Ind3dy5mYWtlZG9tYWluLmNvbSIsInN1YiI6ImZha2UuZW1haWxAZmFrZWRvbWFpbi5jb20iLCJvaWQiOiIxYzFkYjYyNi0wZmNiLTQyYmItYjM5ZS04ZTk4M2RkOTI5MzIiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJibWVsdG9uIiwiZ2l2ZW5fbmFtZSI6IkJyaWFuIiwiZmFtaWx5X25hbWUiOiJNZWx0b24tR3JhY2UiLCJuYW1lIjoiQnJpYW4gTWVsdG9uLUdyYWNlIiwibWlkZGxlX25hbWUiOiJKYW1lcyJ9.qI2kEpvV9tIb3c3fiWF3fop-1A7b7Kra80ub1ogt1YI";
 
     private static final String MOCK_GIVEN_NAME = "Brian";
     private static final String MOCK_FAMILY_NAME = "Melton-Grace";
+    private static final String MOCK_NAME = "Brian Melton-Grace";
+    private static final String MOCK_MIDDLE_NAME = "James";
     private static final String MOCK_PREFERRED_USERNAME = "bmelton";
     private static final String MOCK_OID = "1c1db626-0fcb-42bb-b39e-8e983dd92932";
     private static final String MOCK_TID = "7744ecc5-e130-4af1-ba81-749c395efc8c";
@@ -103,6 +105,8 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockAccount.getUsername()).thenReturn(MOCK_PREFERRED_USERNAME);
         when(mockAccount.getAuthorityType()).thenReturn("MSSTS");
         when(mockAccount.getFirstName()).thenReturn(MOCK_GIVEN_NAME);
+        when(mockAccount.getName()).thenReturn(MOCK_NAME);
+        when(mockAccount.getMiddleName()).thenReturn(MOCK_MIDDLE_NAME);
         when(mockAccount.getFamilyName()).thenReturn(MOCK_FAMILY_NAME);
         when(mockRequest.getScope()).thenReturn(MOCK_SCOPE);
         when(mockResponse.getExpiresIn()).thenReturn(MOCK_EXPIRES_IN);
@@ -112,8 +116,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     }
 
     @Test
-    public void createAccount() throws Exception {
-        // TODO update this tests when the middle_name and name field are added
+    public void createAccount() {
         // This test is now basically a copy-constructor test
         final Account account = mAccountCredentialAdapter.createAccount(mockStrategy, mockRequest, mockResponse);
         assertNotNull(account);
@@ -125,10 +128,12 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals("MSSTS", account.getAuthorityType());
         assertEquals(MOCK_GIVEN_NAME, account.getFirstName());
         assertEquals(MOCK_FAMILY_NAME, account.getFamilyName());
+        assertEquals(MOCK_MIDDLE_NAME, account.getMiddleName());
+        assertEquals(MOCK_NAME, account.getName());
     }
 
     @Test
-    public void createAccessToken() throws Exception {
+    public void createAccessToken() {
         final AccessToken accessToken = mAccountCredentialAdapter.createAccessToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(accessToken);
         assertEquals(MOCK_SCOPE, accessToken.getTarget());
@@ -143,7 +148,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     }
 
     @Test
-    public void createRefreshToken() throws Exception {
+    public void createRefreshToken() {
         final RefreshToken refreshToken = mAccountCredentialAdapter.createRefreshToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(refreshToken);
         assertNotNull(refreshToken);
