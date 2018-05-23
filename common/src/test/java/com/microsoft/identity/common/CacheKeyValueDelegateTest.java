@@ -63,7 +63,7 @@ public class CacheKeyValueDelegateTest {
     private static final String AUTHORITY_TYPE = "AAD";
     private static final String ALTERNATIVE_ACCOUNT_ID = "32000000000003bde810";
     private static final String FIRST_NAME = "Jane";
-    private static final String LAST_NAME = "Doe";
+    private static final String FAMILY_NAME = "Doe";
     private static final String AVATAR_URL = "https://fake.cdn.microsoft.com/avatars/1";
 
     private ICacheKeyValueDelegate mDelegate;
@@ -357,7 +357,7 @@ public class CacheKeyValueDelegateTest {
         account.setAuthorityType(AUTHORITY_TYPE);
         account.setAlternativeAccountId(ALTERNATIVE_ACCOUNT_ID);
         account.setFirstName(FIRST_NAME);
-        account.setLastName(LAST_NAME);
+        account.setFamilyName(FAMILY_NAME);
         account.setAvatarUrl(AVATAR_URL);
 
         final String serializedValue = mDelegate.generateCacheValue(account);
@@ -370,7 +370,7 @@ public class CacheKeyValueDelegateTest {
         assertEquals(AUTHORITY_TYPE, jsonObject.getString("authority_type"));
         assertEquals(ALTERNATIVE_ACCOUNT_ID, jsonObject.getString("alternative_account_id"));
         assertEquals(FIRST_NAME, jsonObject.getString("first_name"));
-        assertEquals(LAST_NAME, jsonObject.getString("last_name"));
+        assertEquals(FAMILY_NAME, jsonObject.getString("family_name"));
         assertEquals(AVATAR_URL, jsonObject.getString("avatar_url"));
     }
 
@@ -385,7 +385,7 @@ public class CacheKeyValueDelegateTest {
         account.setAuthorityType(AUTHORITY_TYPE);
         account.setAlternativeAccountId(ALTERNATIVE_ACCOUNT_ID);
         account.setFirstName(FIRST_NAME);
-        account.setLastName(LAST_NAME);
+        account.setFamilyName(FAMILY_NAME);
         account.setAvatarUrl(AVATAR_URL);
 
         final Map<String, JsonElement> additionalFields = new HashMap<>();
@@ -414,7 +414,7 @@ public class CacheKeyValueDelegateTest {
         assertEquals(AUTHORITY_TYPE, derivedCacheValueJsonObject.get("authority_type"));
         assertEquals(ALTERNATIVE_ACCOUNT_ID, derivedCacheValueJsonObject.get("alternative_account_id"));
         assertEquals(FIRST_NAME, derivedCacheValueJsonObject.get("first_name"));
-        assertEquals(LAST_NAME, derivedCacheValueJsonObject.get("last_name"));
+        assertEquals(FAMILY_NAME, derivedCacheValueJsonObject.get("family_name"));
         assertEquals(AVATAR_URL, derivedCacheValueJsonObject.get("avatar_url"));
         assertEquals("bar", derivedCacheValueJsonObject.getString("foo"));
 
@@ -436,7 +436,7 @@ public class CacheKeyValueDelegateTest {
         account.setAuthorityType(AUTHORITY_TYPE);
         account.setAlternativeAccountId(ALTERNATIVE_ACCOUNT_ID);
         account.setFirstName(FIRST_NAME);
-        account.setLastName(LAST_NAME);
+        account.setFamilyName(FAMILY_NAME);
         account.setAvatarUrl(AVATAR_URL);
 
         String serializedValue = mDelegate.generateCacheValue(account);
@@ -465,7 +465,7 @@ public class CacheKeyValueDelegateTest {
         assertEquals(AUTHORITY_TYPE, deserializedValue.getAuthorityType());
         assertEquals(ALTERNATIVE_ACCOUNT_ID, deserializedValue.getAlternativeAccountId());
         assertEquals(FIRST_NAME, deserializedValue.getFirstName());
-        assertEquals(LAST_NAME, deserializedValue.getLastName());
+        assertEquals(FAMILY_NAME, deserializedValue.getFamilyName());
         assertEquals(AVATAR_URL, deserializedValue.getAvatarUrl());
         assertEquals(3, deserializedValue.getAdditionalFields().size());
         assertEquals("bar", deserializedValue.getAdditionalFields().get("foo").getAsString());

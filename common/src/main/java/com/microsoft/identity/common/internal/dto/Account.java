@@ -28,9 +28,9 @@ import static com.microsoft.identity.common.internal.dto.Account.SerializedNames
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AUTHORITY_TYPE;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AVATAR_URL;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT;
+import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.FAMILY_NAME;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.FIRST_NAME;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.HOME_ACCOUNT_ID;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.LAST_NAME;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.LOCAL_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM;
 import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.USERNAME;
@@ -89,9 +89,9 @@ public class Account extends AccountCredentialBase implements IAccount {
         public static final String FIRST_NAME = "first_name";
 
         /**
-         * JSON name of the last name.
+         * JSON name of the family name.
          */
-        public static final String LAST_NAME = "last_name";
+        public static final String FAMILY_NAME = "family_name";
 
         /**
          * JSON name of the avatar url.
@@ -123,7 +123,7 @@ public class Account extends AccountCredentialBase implements IAccount {
         // Optional
         setAlternativeAccountId(copy.getAlternativeAccountId());
         setFirstName(copy.getFirstName());
-        setLastName(copy.getLastName());
+        setFamilyName(copy.getFamilyName());
         setAvatarUrl(copy.getAvatarUrl());
     }
 
@@ -184,10 +184,10 @@ public class Account extends AccountCredentialBase implements IAccount {
     private String mFirstName;
 
     /**
-     * Last name for this Account.
+     * Family name for this Account.
      */
-    @SerializedName(LAST_NAME)
-    private String mLastName;
+    @SerializedName(FAMILY_NAME)
+    private String mFamilyName;
 
     /**
      * URL corresponding to a picture for this Account.
@@ -308,17 +308,17 @@ public class Account extends AccountCredentialBase implements IAccount {
     }
 
     @Override
-    public String getLastName() {
-        return mLastName;
+    public String getFamilyName() {
+        return mFamilyName;
     }
 
     /**
-     * Sets the last_name.
+     * Sets the family_name.
      *
-     * @param lastName The last_name to set.
+     * @param familyName The family_name to set.
      */
-    public void setLastName(final String lastName) {
-        mLastName = lastName;
+    public void setFamilyName(final String familyName) {
+        mFamilyName = familyName;
     }
 
     @Override
@@ -358,7 +358,7 @@ public class Account extends AccountCredentialBase implements IAccount {
             return false;
         if (mFirstName != null ? !mFirstName.equals(account.mFirstName) : account.mFirstName != null)
             return false;
-        if (mLastName != null ? !mLastName.equals(account.mLastName) : account.mLastName != null)
+        if (mFamilyName != null ? !mFamilyName.equals(account.mFamilyName) : account.mFamilyName != null)
             return false;
         return mAvatarUrl != null ? mAvatarUrl.equals(account.mAvatarUrl) : account.mAvatarUrl == null;
     }
@@ -375,7 +375,7 @@ public class Account extends AccountCredentialBase implements IAccount {
         result = 31 * result + (mAuthorityType != null ? mAuthorityType.hashCode() : 0);
         result = 31 * result + (mAlternativeAccountId != null ? mAlternativeAccountId.hashCode() : 0);
         result = 31 * result + (mFirstName != null ? mFirstName.hashCode() : 0);
-        result = 31 * result + (mLastName != null ? mLastName.hashCode() : 0);
+        result = 31 * result + (mFamilyName != null ? mFamilyName.hashCode() : 0);
         result = 31 * result + (mAvatarUrl != null ? mAvatarUrl.hashCode() : 0);
         return result;
     }

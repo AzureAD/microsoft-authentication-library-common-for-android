@@ -139,7 +139,7 @@ public abstract class MicrosoftAccount extends Account {
     /**
      * @param familyName family name of the Microsoft account.
      */
-    public void setLastName(final String familyName) {
+    public void setFamilyName(final String familyName) {
         mFamilyName = familyName;
     }
 
@@ -333,7 +333,7 @@ public abstract class MicrosoftAccount extends Account {
     }
 
     @Override
-    public String getLastName() {
+    public String getFamilyName() {
         return mFamilyName;
     }
 

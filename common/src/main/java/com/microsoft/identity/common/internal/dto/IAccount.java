@@ -81,11 +81,11 @@ public interface IAccount {
     String getFirstName();
 
     /**
-     * Gets the last_name.
+     * Gets the family_name.
      *
-     * @return The last_name to get.
+     * @return The family_name to get.
      */
-    String getLastName();
+    String getFamilyName();
 
     /**
      * Gets the avatar_url.

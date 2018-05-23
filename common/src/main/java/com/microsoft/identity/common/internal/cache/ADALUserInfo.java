@@ -53,7 +53,7 @@ public class ADALUserInfo {
         mUniqueId = account.getUserId();
         mDisplayableId = account.getDisplayableId();
         mGivenName = account.getFirstName();
-        mFamilyName = account.getLastName();
+        mFamilyName = account.getFamilyName();
         mIdentityProvider = account.getIdentityProvider();
         mPasswordChangeUrl = account.getPasswordChangeUrl();
         mPasswordExpiresOn = account.getPasswordExpiresOn();
