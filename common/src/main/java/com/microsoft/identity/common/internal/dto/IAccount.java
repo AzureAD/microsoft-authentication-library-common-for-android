@@ -88,6 +88,20 @@ public interface IAccount {
     String getFamilyName();
 
     /**
+     * Gets the middle_name.
+     *
+     * @return The middle_name to get.
+     */
+    String getMiddleName();
+
+    /**
+     * Gets the name.
+     *
+     * @return The name to get.
+     */
+    String getName();
+
+    /**
      * Gets the avatar_url.
      *
      * @return The avatar_url to get.

@@ -87,6 +87,16 @@ public class AzureActiveDirectoryB2CAccount extends Account {
     }
 
     @Override
+    public String getMiddleName() {
+        throw new UnsupportedOperationException("Method stub!");
+    }
+
+    @Override
+    public String getName() {
+        throw new UnsupportedOperationException("Method stub!");
+    }
+
+    @Override
     public String getAvatarUrl() {
         throw new UnsupportedOperationException("Method stub!");
     }

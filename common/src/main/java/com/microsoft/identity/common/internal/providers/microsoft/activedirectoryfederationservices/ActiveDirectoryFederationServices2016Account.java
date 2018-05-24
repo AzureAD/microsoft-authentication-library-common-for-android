@@ -87,6 +87,16 @@ public class ActiveDirectoryFederationServices2016Account extends Account {
     }
 
     @Override
+    public String getMiddleName() {
+        throw new UnsupportedOperationException("Method stub!");
+    }
+
+    @Override
+    public String getName() {
+        throw new UnsupportedOperationException("Method stub!");
+    }
+
+    @Override
     public String getAvatarUrl() {
         throw new UnsupportedOperationException("Method stub!");
     }
