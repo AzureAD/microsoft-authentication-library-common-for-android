@@ -74,7 +74,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final Context context,
             final String name,
             final int operatingMode) {
-        Logger.verbose(TAG, "Init: " + TAG);
+        Logger.verbose(TAG, "Init with operating mode: " + TAG);
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, operatingMode);
         mStorageHelper = null;
@@ -93,7 +93,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final Context context,
             final String name,
             final IStorageHelper storageHelper) {
-        Logger.verbose(TAG, "Init: " + TAG);
+        Logger.verbose(TAG, "Init with storage helper:  " + TAG);
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
         mStorageHelper = storageHelper;
@@ -113,7 +113,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final String name,
             final int operatingMode,
             final IStorageHelper storageHelper) {
-        Logger.verbose(TAG, "Init: " + TAG);
+        Logger.verbose(TAG, "Init with operating mode and storage helper " + TAG);
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, operatingMode);
         mStorageHelper = storageHelper;

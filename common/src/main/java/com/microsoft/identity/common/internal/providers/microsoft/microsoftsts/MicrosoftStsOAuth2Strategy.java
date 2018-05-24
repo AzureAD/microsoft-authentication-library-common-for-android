@@ -57,7 +57,7 @@ public class MicrosoftStsOAuth2Strategy
                 MicrosoftStsTokenResponse,
                 TokenResult> {
 
-    private MicrosoftStsOAuth2Configuration mConfig;
+    private MicrosoftStsOAuth2Configuration mConfig;//NOPMD
 
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.

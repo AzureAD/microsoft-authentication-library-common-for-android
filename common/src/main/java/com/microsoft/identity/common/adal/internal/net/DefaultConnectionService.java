@@ -42,8 +42,6 @@ public class DefaultConnectionService implements IConnectionService {
 
     private final Context mConnectionContext;
 
-    private static final String TAG = "DefaultConnectionService";
-
     /**
      * Constructor of DefaultConnectionService.
      *

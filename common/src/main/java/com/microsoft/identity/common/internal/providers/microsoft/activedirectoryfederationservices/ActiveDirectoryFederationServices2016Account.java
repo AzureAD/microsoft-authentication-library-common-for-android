@@ -29,6 +29,7 @@ import java.util.List;
 /**
  * The ADFS 2016 Account Object.
  */
+@SuppressWarnings("PMD")
 public class ActiveDirectoryFederationServices2016Account extends Account {
 
     @Override

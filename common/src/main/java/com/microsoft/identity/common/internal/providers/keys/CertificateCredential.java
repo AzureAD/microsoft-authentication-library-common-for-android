@@ -37,7 +37,7 @@ import java.security.cert.X509Certificate;
  */
 public final class CertificateCredential {
 
-    private static final int MIN_KEYSIZE_IN_BITS = 2048;
+    private static final int MIN_KEYSIZE_IN_BITS = 2048; //NOPMD
     private final PrivateKey mPrivateKey;
     private final String mClientId;
     private final X509Certificate mPublicCertificate;

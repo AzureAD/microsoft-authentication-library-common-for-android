@@ -34,7 +34,6 @@ import java.util.TimeZone;
 
 public final class Logger {
 
-    private static final String TAG = Logger.class.getSimpleName();
     private static final String CUSTOM_LOG_ERROR = "Custom log failed to log message:%s";
 
     private static final Logger INSTANCE = new Logger();

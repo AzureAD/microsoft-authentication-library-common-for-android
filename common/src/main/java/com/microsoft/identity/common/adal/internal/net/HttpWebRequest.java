@@ -49,7 +49,6 @@ public class HttpWebRequest {
     static final String REQUEST_METHOD_POST = "POST";
     static final String REQUEST_METHOD_GET = "GET";
 
-    private static final String TAG = "HttpWebRequest";
     private static final int DEBUG_SIMULATE_DELAY = 0;
     private static final int CONNECT_TIME_OUT = AuthenticationSettings.INSTANCE.getConnectTimeOut();
     private static final int READ_TIME_OUT = AuthenticationSettings.INSTANCE.getReadTimeOut();

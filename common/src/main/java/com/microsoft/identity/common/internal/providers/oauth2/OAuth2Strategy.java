@@ -78,8 +78,8 @@ public abstract class OAuth2Strategy
             final GenericAuthorizationRequest request,
             final GenericAuthorizationStrategy authorizationStrategy) {
         validateAuthorizationRequest(request);
-        Uri authorizationUri = createAuthorizationUri();
-        AuthorizationResult result = authorizationStrategy.requestAuthorization(request);
+        Uri authorizationUri = createAuthorizationUri(); //NOPMD
+        AuthorizationResult result = authorizationStrategy.requestAuthorization(request); //NOPMD
         //TODO: Reconcile authorization result and response
         AuthorizationResponse response = new AuthorizationResponse();
         return (GenericAuthorizationResponse) response;

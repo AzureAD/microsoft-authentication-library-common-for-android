@@ -38,6 +38,6 @@ public final class StringUtil {
      * @return true if the string object is null or the string is empty.
      */
     public static boolean isEmpty(final String message) {
-        return message == null || message.trim().length() == 0;
+        return message == null || message.trim().length() == 0; //NOPMD
     }
 }
