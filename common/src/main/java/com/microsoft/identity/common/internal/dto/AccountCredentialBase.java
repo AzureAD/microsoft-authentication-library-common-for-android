@@ -31,7 +31,7 @@ import java.util.Map;
  * Base class for Objects to support the [de]/serialization of extra fields.
  */
 public abstract class AccountCredentialBase {
-    static final int UNIQUE_ID_LENGTH = 31;
+
     private transient Map<String, JsonElement> mAdditionalFields = new HashMap<>();
 
     /**
@@ -56,7 +56,6 @@ public abstract class AccountCredentialBase {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-
         if (o == null || getClass() != o.getClass()) return false;
 
         AccountCredentialBase that = (AccountCredentialBase) o;

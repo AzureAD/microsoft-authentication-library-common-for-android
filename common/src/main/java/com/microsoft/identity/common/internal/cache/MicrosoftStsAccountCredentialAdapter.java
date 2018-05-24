@@ -22,7 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import android.support.annotation.NonNull;
+
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
@@ -32,6 +33,7 @@ import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -41,10 +43,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import static com.microsoft.identity.common.internal.providers.oauth2.IDToken.PREFERRED_USERNAME;
 
 public class MicrosoftStsAccountCredentialAdapter
         implements IAccountCredentialAdapter
@@ -52,7 +51,7 @@ public class MicrosoftStsAccountCredentialAdapter
                 MicrosoftStsAuthorizationRequest,
                 MicrosoftStsTokenResponse,
                 MicrosoftAccount,
-                com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> {
+                MicrosoftRefreshToken> {
 
     private static final String TAG = MicrosoftStsAccountCredentialAdapter.class.getSimpleName();
 
@@ -140,7 +139,6 @@ public class MicrosoftStsAccountCredentialAdapter
 
             // Optional
             refreshToken.setFamilyId(response.getFamilyId());
-            refreshToken.setUsername(getUsername(response));
             refreshToken.setTarget(request.getScope());
             refreshToken.setClientInfo(response.getClientInfo());
 
@@ -191,7 +189,7 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public RefreshToken asRefreshToken(com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshTokenIn) {
+    public RefreshToken asRefreshToken(@NonNull final MicrosoftRefreshToken refreshTokenIn) {
         final String methodName = "asRefreshToken";
         Logger.entering(TAG, methodName, refreshTokenIn);
 
@@ -208,19 +206,8 @@ public class MicrosoftStsAccountCredentialAdapter
         refreshTokenOut.setTarget(refreshTokenIn.getTarget());
         refreshTokenOut.setCachedAt(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())));
         refreshTokenOut.setExpiresOn(refreshTokenIn.getExpiresOn());
-        //refreshTokenOut.setClientInfo(""); TODO OK to drop?
+        refreshTokenOut.setClientInfo(refreshTokenIn.getClientInfo().getRawClientInfo());
         refreshTokenOut.setFamilyId(refreshTokenIn.getFamilyId());
-        //refreshTokenOut.setUsername(""); TODO OK to drop?
-
-        if (!StringExtensions.isNullOrBlank(refreshTokenIn.getFamilyId())) {
-            String familyId = refreshTokenIn.getFamilyId();
-            // It is a foci token, replace the client and [possibly] prepend "foci-"
-            if (!familyId.startsWith(FOCI_PREFIX)) {
-                familyId = FOCI_PREFIX + familyId;
-            }
-
-            refreshTokenOut.setClientId(familyId);
-        }
 
         Logger.exiting(TAG, methodName, refreshTokenOut);
 
@@ -240,7 +227,7 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public IdToken asIdToken(MicrosoftAccount msAccount, com.microsoft.identity.common.internal.providers.oauth2.RefreshToken refreshToken) {
+    public IdToken asIdToken(MicrosoftAccount msAccount, MicrosoftRefreshToken refreshToken) {
         final String methodName = "asIdToken";
         Logger.entering(TAG, methodName, msAccount, refreshToken);
 
@@ -287,24 +274,6 @@ public class MicrosoftStsAccountCredentialAdapter
         Logger.exiting(TAG, methodName, msAccount.getRealm());
 
         return msAccount.getRealm();
-    }
-
-    private String getUsername(final TokenResponse response) {
-        final String methodName = "getUsername";
-        Logger.entering(TAG, methodName, response);
-
-        try {
-            final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
-            final Map<String, String> tokenClaims = msIdToken.getTokenClaims();
-            final String username = tokenClaims.get(PREFERRED_USERNAME);
-
-            Logger.exiting(TAG, methodName, username);
-
-            return username;
-        } catch (ServiceException e) {
-            // TODO handle this properly
-            throw new RuntimeException(e);
-        }
     }
 
     private long getCachedAt() {

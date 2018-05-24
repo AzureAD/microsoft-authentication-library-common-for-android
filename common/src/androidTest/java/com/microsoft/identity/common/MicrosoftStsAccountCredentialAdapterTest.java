@@ -158,7 +158,6 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertNotNull(refreshToken.getExpiresOn());
         assertEquals(MOCK_CLIENT_INFO, refreshToken.getClientInfo());
         assertEquals(MOCK_FAMILY_ID, refreshToken.getFamilyId());
-        assertEquals(MOCK_PREFERRED_USERNAME, refreshToken.getUsername());
     }
 
     static String createRawClientInfo(final String uid, final String utid) {
