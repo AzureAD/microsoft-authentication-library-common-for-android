@@ -389,45 +389,31 @@ public class Account extends AccountCredentialBase implements IAccount {
         mAvatarUrl = avatarUrl;
     }
 
+    @SuppressWarnings("PMD")
     //CHECKSTYLE:OFF
-    @Override
     public boolean equals(Object o) {
-        if (this == o){
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()){
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
         Account account = (Account) o;
 
-        if (mHomeAccountId != null ? !mHomeAccountId.equals(account.mHomeAccountId) : account.mHomeAccountId != null) {
+        if (mHomeAccountId != null ? !mHomeAccountId.equals(account.mHomeAccountId) : account.mHomeAccountId != null)
             return false;
-        }
-        if (mEnvironment != null ? !mEnvironment.equals(account.mEnvironment) : account.mEnvironment != null) {
+        if (mEnvironment != null ? !mEnvironment.equals(account.mEnvironment) : account.mEnvironment != null)
             return false;
-        }
-        if (mRealm != null ? !mRealm.equals(account.mRealm) : account.mRealm != null){
+        if (mRealm != null ? !mRealm.equals(account.mRealm) : account.mRealm != null) return false;
+        if (mLocalAccountId != null ? !mLocalAccountId.equals(account.mLocalAccountId) : account.mLocalAccountId != null)
             return false;
-        }
-        if (mLocalAccountId != null ? !mLocalAccountId.equals(account.mLocalAccountId) : account.mLocalAccountId != null) {
+        if (mUsername != null ? !mUsername.equals(account.mUsername) : account.mUsername != null)
             return false;
-        }
-        if (mUsername != null ? !mUsername.equals(account.mUsername) : account.mUsername != null) {
+        if (mAuthorityType != null ? !mAuthorityType.equals(account.mAuthorityType) : account.mAuthorityType != null)
             return false;
-        }
-        if (mAuthorityType != null ? !mAuthorityType.equals(account.mAuthorityType) : account.mAuthorityType != null) {
+        if (mAlternativeAccountId != null ? !mAlternativeAccountId.equals(account.mAlternativeAccountId) : account.mAlternativeAccountId != null)
             return false;
-        }
-        if (mAlternativeAccountId != null ? !mAlternativeAccountId.equals(account.mAlternativeAccountId) : account.mAlternativeAccountId != null) {
+        if (mFirstName != null ? !mFirstName.equals(account.mFirstName) : account.mFirstName != null)
             return false;
-        }
-        if (mFirstName != null ? !mFirstName.equals(account.mFirstName) : account.mFirstName != null) {
+        if (mFamilyName != null ? !mFamilyName.equals(account.mFamilyName) : account.mFamilyName != null)
             return false;
-        }
-        if (mFamilyName != null ? !mFamilyName.equals(account.mFamilyName) : account.mFamilyName != null) {
-            return false;
-        }
         return mAvatarUrl != null ? mAvatarUrl.equals(account.mAvatarUrl) : account.mAvatarUrl == null;
     }
     //CHECKSTYLE:ON

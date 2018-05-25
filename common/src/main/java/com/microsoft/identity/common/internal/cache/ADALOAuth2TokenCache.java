@@ -240,7 +240,7 @@ public class ADALOAuth2TokenCache
         return encryptedResult;
     }
 
-    private String decrypt(final String key, final String value) { //NOPMD
+    private String decrypt(final String key, final String value) { //NOPMD Suppressing PMD warning for unused method
         final String methodName = "decrypt";
         Logger.entering(TAG, methodName, key, value);
 

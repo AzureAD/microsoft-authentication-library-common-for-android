@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * Represents the Azure AD B2C Account.
  */
-@SuppressWarnings("PMD")
+@SuppressWarnings("PMD") // Suppressing PMD warning for multiple usages of the String "Method stub!"
 public class AzureActiveDirectoryB2CAccount extends Account {
 
     @Override

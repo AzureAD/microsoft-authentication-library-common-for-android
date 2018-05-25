@@ -257,36 +257,26 @@ public abstract class Credential extends AccountCredentialBase {
         mExpiresOn = expiresOn;
     }
 
+    @SuppressWarnings("PMD")
     //CHECKSTYLE:OFF
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()){
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
         Credential that = (Credential) o;
 
-        if (mClientId != null ? !mClientId.equals(that.mClientId) : that.mClientId != null) {
+        if (mClientId != null ? !mClientId.equals(that.mClientId) : that.mClientId != null)
             return false;
-        }
-        if (mCredentialType != null ? !mCredentialType.equals(that.mCredentialType) : that.mCredentialType != null) {
+        if (mCredentialType != null ? !mCredentialType.equals(that.mCredentialType) : that.mCredentialType != null)
             return false;
-        }
-        if (mEnvironment != null ? !mEnvironment.equals(that.mEnvironment) : that.mEnvironment != null) {
+        if (mEnvironment != null ? !mEnvironment.equals(that.mEnvironment) : that.mEnvironment != null)
             return false;
-        }
-        if (mSecret != null ? !mSecret.equals(that.mSecret) : that.mSecret != null){
+        if (mSecret != null ? !mSecret.equals(that.mSecret) : that.mSecret != null) return false;
+        if (mHomeAccountId != null ? !mHomeAccountId.equals(that.mHomeAccountId) : that.mHomeAccountId != null)
             return false;
-        }
-        if (mHomeAccountId != null ? !mHomeAccountId.equals(that.mHomeAccountId) : that.mHomeAccountId != null) {
+        if (mCachedAt != null ? !mCachedAt.equals(that.mCachedAt) : that.mCachedAt != null)
             return false;
-        }
-        if (mCachedAt != null ? !mCachedAt.equals(that.mCachedAt) : that.mCachedAt != null) {
-            return false;
-        }
         return mExpiresOn != null ? mExpiresOn.equals(that.mExpiresOn) : that.mExpiresOn == null;
     }
     //CHECKSTYLE:ON

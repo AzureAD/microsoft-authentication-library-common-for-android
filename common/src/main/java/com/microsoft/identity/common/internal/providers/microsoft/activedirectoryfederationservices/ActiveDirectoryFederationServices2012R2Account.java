@@ -33,7 +33,7 @@ import java.util.List;
  * need for the API to support generating a unique identifier to a user and returning that to the caller
  * OR for the caller to provide a unique identifier prior to initiating the request
  */
-@SuppressWarnings("PMD")
+@SuppressWarnings("PMD") // Suppressing PMD warning for multiple usages of the String "Method stub!"
 public class ActiveDirectoryFederationServices2012R2Account extends Account {
 
     @Override

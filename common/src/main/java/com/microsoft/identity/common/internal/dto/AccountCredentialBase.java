@@ -52,16 +52,13 @@ public abstract class AccountCredentialBase {
         mAdditionalFields = additionalFields;
     }
 
+    @SuppressWarnings("PMD")
     //CHECKSTYLE:OFF
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
+        if (this == o) return true;
 
-        if (o == null || getClass() != o.getClass()){
-            return false;
-        }
+        if (o == null || getClass() != o.getClass()) return false;
 
         AccountCredentialBase that = (AccountCredentialBase) o;
 

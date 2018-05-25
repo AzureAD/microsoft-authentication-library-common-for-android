@@ -88,24 +88,17 @@ public class IdToken extends Credential {
         mRealm = realm;
     }
 
+    @SuppressWarnings("PMD")
     //CHECKSTYLE:OFF
     @Override
     public boolean equals(Object o) {
-        if (this == o){
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()){
-            return false;
-        }
-        if (!super.equals(o)){
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
 
         IdToken idToken = (IdToken) o;
 
-        if (mRealm != null ? !mRealm.equals(idToken.mRealm) : idToken.mRealm != null){
-            return false;
-        }
+        if (mRealm != null ? !mRealm.equals(idToken.mRealm) : idToken.mRealm != null) return false;
         return mAuthority != null ? mAuthority.equals(idToken.mAuthority) : idToken.mAuthority == null;
     }
     //CHECKSTYLE:ON
