@@ -59,11 +59,11 @@ public class BrokerValidator {
     private static final String TAG = "BrokerValidator";
 
     private final Context mContext;
-    private final String mBrokerTag;
+    private final String mCompanyPortalSignature;
 
     public BrokerValidator(final Context context) {
         mContext = context;
-        mBrokerTag = AuthenticationSettings.INSTANCE.getBrokerSignature();
+        mCompanyPortalSignature = AuthenticationSettings.INSTANCE.getBrokerSignature();
     }
 
     public boolean verifySignature(final String brokerPackageName) {
@@ -105,7 +105,7 @@ public class BrokerValidator {
 
             // Check the hash for signer cert is the same as what we hardcoded.
             final String signatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
-            if (mBrokerTag.equals(signatureHash)
+            if (mCompanyPortalSignature.equals(signatureHash)
                     || AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_SIGNATURE.equals(signatureHash)) {
                 return;
             }
