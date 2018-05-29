@@ -123,6 +123,7 @@ public class RefreshToken extends Credential {
     }
 
     //CHECKSTYLE:OFF
+    @SuppressWarnings("PMD")
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -140,6 +141,7 @@ public class RefreshToken extends Credential {
     //CHECKSTYLE:ON
 
     //CHECKSTYLE:OFF
+    @SuppressWarnings("PMD")
     @Override
     public int hashCode() {
         int result = super.hashCode();
@@ -151,6 +153,7 @@ public class RefreshToken extends Credential {
     //CHECKSTYLE:ON
 
     //CHECKSTYLE:OFF
+    @SuppressWarnings("PMD")
     @Override
     public String toString() {
         return "RefreshToken{" +
