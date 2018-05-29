@@ -44,6 +44,11 @@ public class MicrosoftRefreshToken extends RefreshToken {
     private String mClientId;
     private boolean mIsFamilyRefreshToken;
 
+    /**
+     * Constructs a new MicrosoftRefreshToken instance.
+     *
+     * @param tokenResponse The {@link MicrosoftTokenResponse} from which to construct this rt.
+     */
     public MicrosoftRefreshToken(@NonNull final MicrosoftTokenResponse tokenResponse) {
         super(tokenResponse);
         try {
@@ -110,6 +115,11 @@ public class MicrosoftRefreshToken extends RefreshToken {
         return mIsFamilyRefreshToken;
     }
 
+    /**
+     * Gets the {@link ClientInfo}.
+     *
+     * @return The ClientInfo to get.
+     */
     public ClientInfo getClientInfo() {
         return mClientInfo;
     }
