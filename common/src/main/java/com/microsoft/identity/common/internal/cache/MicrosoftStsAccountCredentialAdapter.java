@@ -57,7 +57,6 @@ public class MicrosoftStsAccountCredentialAdapter
 
     // TODO move me!
     private static final String BEARER = "Bearer";
-    private static final String FOCI_PREFIX = "foci-";
 
     @Override
     public Account createAccount(
