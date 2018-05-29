@@ -389,8 +389,8 @@ public class Account extends AccountCredentialBase implements IAccount {
         mAvatarUrl = avatarUrl;
     }
 
+    @SuppressWarnings("PMD")
     //CHECKSTYLE:OFF
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

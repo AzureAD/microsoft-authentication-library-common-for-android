@@ -30,6 +30,7 @@ import java.util.List;
  * https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
  */
 
+@SuppressWarnings("PMD")
 public class OpenIDProviderConfiguration {
 
     private String mIssuer;

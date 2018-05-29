@@ -29,6 +29,7 @@ import java.util.List;
 /**
  * The ADFS 2016 Account Object.
  */
+@SuppressWarnings("PMD") // Suppressing PMD warning for multiple usages of the String "Method stub!"
 public class ActiveDirectoryFederationServices2016Account extends Account {
 
     @Override

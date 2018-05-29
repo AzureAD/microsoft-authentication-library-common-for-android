@@ -52,6 +52,7 @@ public abstract class AccountCredentialBase {
         mAdditionalFields = additionalFields;
     }
 
+    @SuppressWarnings("PMD")
     //CHECKSTYLE:OFF
     @Override
     public boolean equals(Object o) {

@@ -88,6 +88,7 @@ public class IdToken extends Credential {
         mRealm = realm;
     }
 
+    @SuppressWarnings("PMD")
     //CHECKSTYLE:OFF
     @Override
     public boolean equals(Object o) {

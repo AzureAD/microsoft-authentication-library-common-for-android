@@ -257,6 +257,7 @@ public abstract class Credential extends AccountCredentialBase {
         mExpiresOn = expiresOn;
     }
 
+    @SuppressWarnings("PMD")
     //CHECKSTYLE:OFF
     @Override
     public boolean equals(Object o) {

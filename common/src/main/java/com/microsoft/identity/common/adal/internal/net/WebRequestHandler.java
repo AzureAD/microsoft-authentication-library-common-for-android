@@ -41,8 +41,6 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
  */
 public class WebRequestHandler implements IWebRequestHandler {
 
-    private static final String TAG = "WebRequestHandler";
-
     /**
      * Header for accept.
      */

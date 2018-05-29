@@ -42,8 +42,6 @@ import java.util.Set;
  * Internal class for handling http request.
  */
 public final class HttpRequest {
-    // static constant variables
-    private static final String TAG = HttpRequest.class.getSimpleName();
 
     private static final String HOST = "Host";
     /**
