@@ -55,7 +55,7 @@ public class MsalOAuth2TokenCache
 
     private static final String TAG = MsalOAuth2TokenCache.class.getSimpleName();
 
-    private List<IShareSingleSignOnState> mSharedSsoCaches;
+    private List<IShareSingleSignOnState> mSharedSsoCaches; //NOPMD Suppressing PMD warning for unused variable
     private IAccountCredentialCache mAccountCredentialCache;
 
     private IAccountCredentialAdapter<
