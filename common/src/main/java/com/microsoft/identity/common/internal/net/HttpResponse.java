@@ -71,6 +71,9 @@ public final class HttpResponse {
     }
 
     //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
     @Override
     public String toString() {
         return "HttpResponse{" +

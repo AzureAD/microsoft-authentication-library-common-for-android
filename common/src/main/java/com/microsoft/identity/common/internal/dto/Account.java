@@ -390,6 +390,9 @@ public class Account extends AccountCredentialBase implements IAccount {
     }
 
     //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
     @SuppressWarnings("PMD")
     @Override
     public boolean equals(Object o) {
@@ -420,6 +423,9 @@ public class Account extends AccountCredentialBase implements IAccount {
     //CHECKSTYLE:ON
 
     //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
     @Override
     public int hashCode() {
         int result = mHomeAccountId != null ? mHomeAccountId.hashCode() : 0;

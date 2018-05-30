@@ -123,6 +123,9 @@ public class RefreshToken extends Credential {
     }
 
     //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
     @SuppressWarnings("PMD")
     @Override
     public boolean equals(Object o) {
@@ -141,6 +144,9 @@ public class RefreshToken extends Credential {
     //CHECKSTYLE:ON
 
     //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
     @SuppressWarnings("PMD")
     @Override
     public int hashCode() {
@@ -153,6 +159,9 @@ public class RefreshToken extends Credential {
     //CHECKSTYLE:ON
 
     //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
     @SuppressWarnings("PMD")
     @Override
     public String toString() {
