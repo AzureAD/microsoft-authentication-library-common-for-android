@@ -56,32 +56,6 @@ public abstract class AccountCredentialBase {
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
-    @SuppressWarnings("PMD")
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        AccountCredentialBase that = (AccountCredentialBase) o;
-
-        return mAdditionalFields != null ? mAdditionalFields.equals(that.mAdditionalFields) : that.mAdditionalFields == null;
-    }
-    //CHECKSTYLE:ON
-
-    //CHECKSTYLE:OFF
-    // This method is generated. Checkstyle and/or PMD has been disabled.
-    // This method *must* be regenerated if the class' structural definition changes through the
-    // addition/subtraction of fields.
-    @Override
-    public int hashCode() {
-        return mAdditionalFields != null ? mAdditionalFields.hashCode() : 0;
-    }
-    //CHECKSTYLE:ON
-
-    //CHECKSTYLE:OFF
-    // This method is generated. Checkstyle and/or PMD has been disabled.
-    // This method *must* be regenerated if the class' structural definition changes through the
-    // addition/subtraction of fields.
     @Override
     public String toString() {
         return "AccountCredentialBase{"

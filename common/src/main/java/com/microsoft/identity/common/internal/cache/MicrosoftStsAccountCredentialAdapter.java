@@ -124,7 +124,6 @@ public class MicrosoftStsAccountCredentialAdapter
 
         try {
             final long cachedAt = getCachedAt();
-            final long expiresOn = getExpiresOn(response);
             final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
@@ -143,7 +142,6 @@ public class MicrosoftStsAccountCredentialAdapter
 
             // TODO are these needed? Expected?
             refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
-            refreshToken.setExpiresOn(String.valueOf(expiresOn)); // derived from expires_in
 
             Logger.exiting(TAG, methodName, refreshToken);
 
@@ -204,7 +202,6 @@ public class MicrosoftStsAccountCredentialAdapter
         // Optional fields
         refreshTokenOut.setTarget(refreshTokenIn.getTarget());
         refreshTokenOut.setCachedAt(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())));
-        refreshTokenOut.setExpiresOn(refreshTokenIn.getExpiresOn());
         refreshTokenOut.setClientInfo(refreshTokenIn.getClientInfo().getRawClientInfo());
         refreshTokenOut.setFamilyId(refreshTokenIn.getFamilyId());
 

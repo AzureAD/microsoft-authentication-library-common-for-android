@@ -28,7 +28,6 @@ import static com.microsoft.identity.common.internal.dto.RefreshToken.Serialized
 import static com.microsoft.identity.common.internal.dto.RefreshToken.SerializedNames.FAMILY_ID;
 import static com.microsoft.identity.common.internal.dto.RefreshToken.SerializedNames.TARGET;
 
-
 public class RefreshToken extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {

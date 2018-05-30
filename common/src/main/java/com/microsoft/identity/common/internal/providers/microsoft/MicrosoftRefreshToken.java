@@ -31,13 +31,9 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-
 public class MicrosoftRefreshToken extends RefreshToken {
 
     private ClientInfo mClientInfo;
-    private Date mExpiresOn;
     private IDToken mIdToken;
     private String mFamilyId;
     private String mScope;
@@ -53,7 +49,6 @@ public class MicrosoftRefreshToken extends RefreshToken {
         super(tokenResponse);
         try {
             mClientInfo = new ClientInfo(tokenResponse.getClientInfo());
-            mExpiresOn = tokenResponse.getExpiresOn();
             mIdToken = new IDToken(tokenResponse.getIdToken());
             mFamilyId = tokenResponse.getFamilyId();
             mScope = tokenResponse.getScope();
@@ -88,19 +83,6 @@ public class MicrosoftRefreshToken extends RefreshToken {
     @Override
     public String getTarget() {
         return mScope;
-    }
-
-    @Override
-    public String getExpiresOn() {
-        String expiresOn = null;
-
-        if (null != mExpiresOn) {
-            final long millis = mExpiresOn.getTime();
-            final long seconds = TimeUnit.MILLISECONDS.toSeconds(millis);
-            expiresOn = String.valueOf(seconds);
-        }
-
-        return expiresOn;
     }
 
     @Override

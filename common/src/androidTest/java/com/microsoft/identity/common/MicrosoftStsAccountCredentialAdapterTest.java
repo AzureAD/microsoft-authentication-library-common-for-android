@@ -154,8 +154,6 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertNotNull(refreshToken);
         assertEquals(MOCK_SCOPE, refreshToken.getTarget());
         assertNotNull(refreshToken.getCachedAt());
-        assertNotNull(refreshToken.getExpiresOn());
-        assertNotNull(refreshToken.getExpiresOn());
         assertEquals(MOCK_CLIENT_INFO, refreshToken.getClientInfo());
         assertEquals(MOCK_FAMILY_ID, refreshToken.getFamilyId());
     }

@@ -63,13 +63,6 @@ public interface IRefreshToken {
     String getTarget();
 
     /**
-     * Gets the expires_on.
-     *
-     * @return The expires_on to get.
-     */
-    String getExpiresOn();
-
-    /**
      * Gets the family_id.
      *
      * @return The family_id to get.
