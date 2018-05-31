@@ -30,6 +30,7 @@ import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedN
 import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.EXTENDED_EXPIRES_ON;
 import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.REALM;
 import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.TARGET;
+import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
 
 public class AccessToken extends Credential {
 
@@ -106,6 +107,14 @@ public class AccessToken extends Credential {
      */
     @SerializedName(TARGET)
     private String mTarget;
+
+    /**
+     * Token expiry time. This value should be calculated based on the current UTC time measured
+     * locally and the value expires_in returned from the service. Measured in milliseconds from
+     * epoch (1970).
+     */
+    @SerializedName(EXPIRES_ON)
+    private String mExpiresOn;
 
     /**
      * Gets the realm.
@@ -213,5 +222,23 @@ public class AccessToken extends Credential {
      */
     public void setExtendedExpiresOn(final String extendedExpiresOn) {
         mExtendedExpiresOn = extendedExpiresOn;
+    }
+
+    /**
+     * Gets the expires_on.
+     *
+     * @return The expires_on to get.
+     */
+    public String getExpiresOn() {
+        return mExpiresOn;
+    }
+
+    /**
+     * Sets the expires_on.
+     *
+     * @param expiresOn The expires_on to set.
+     */
+    public void setExpiresOn(final String expiresOn) {
+        mExpiresOn = expiresOn;
     }
 }

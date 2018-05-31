@@ -34,11 +34,11 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
-import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +51,7 @@ import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS
 
 public class MsalOAuth2TokenCache
         extends OAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse>
-        implements IShareSingleSignOnState<MicrosoftAccount, RefreshToken> {
+        implements IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> {
 
     private static final String TAG = MsalOAuth2TokenCache.class.getSimpleName();
 
@@ -63,7 +63,7 @@ public class MsalOAuth2TokenCache
             MicrosoftStsAuthorizationRequest,
             MicrosoftStsTokenResponse,
             MicrosoftAccount,
-            RefreshToken> mAccountCredentialAdapter;
+            MicrosoftRefreshToken> mAccountCredentialAdapter;
 
     /**
      * Constructor of MsalOAuth2TokenCache.
@@ -79,7 +79,7 @@ public class MsalOAuth2TokenCache
                                         MicrosoftStsAuthorizationRequest,
                                         MicrosoftStsTokenResponse,
                                         MicrosoftAccount,
-                                        RefreshToken> accountCredentialAdapter) {
+                                        MicrosoftRefreshToken> accountCredentialAdapter) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
@@ -102,7 +102,7 @@ public class MsalOAuth2TokenCache
                                         MicrosoftStsAuthorizationRequest,
                                         MicrosoftStsTokenResponse,
                                         MicrosoftAccount,
-                                        RefreshToken> accountCredentialAdapter,
+                                        MicrosoftRefreshToken> accountCredentialAdapter,
                                 final List<IShareSingleSignOnState> sharedSsoCaches) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
@@ -434,7 +434,7 @@ public class MsalOAuth2TokenCache
 
     @Override
     public void setSingleSignOnState(final MicrosoftAccount account,
-                                     final RefreshToken refreshToken) {
+                                     final MicrosoftRefreshToken refreshToken) {
         final String methodName = "setSingleSignOnState";
         Logger.entering(TAG, methodName, account, refreshToken);
 
@@ -468,10 +468,10 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public RefreshToken getSingleSignOnState(final MicrosoftAccount account) {
+    public MicrosoftRefreshToken getSingleSignOnState(final MicrosoftAccount account) {
         final String methodName = "getSingleSignOnState";
         Logger.entering(TAG, methodName, account);
-        final RefreshToken result = null;
+        final MicrosoftRefreshToken result = null;
         // TODO
         Logger.exiting(TAG, methodName, result);
         return result;

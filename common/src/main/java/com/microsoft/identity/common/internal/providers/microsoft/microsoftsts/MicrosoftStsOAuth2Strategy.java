@@ -57,8 +57,6 @@ public class MicrosoftStsOAuth2Strategy
                 MicrosoftStsTokenResponse,
                 TokenResult> {
 
-    private MicrosoftStsOAuth2Configuration mConfig;//NOPMD
-
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
      *
@@ -66,7 +64,6 @@ public class MicrosoftStsOAuth2Strategy
      */
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config) {
         super(config);
-        mConfig = config;
         setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oAuth2/v2.0/token");
     }
 
