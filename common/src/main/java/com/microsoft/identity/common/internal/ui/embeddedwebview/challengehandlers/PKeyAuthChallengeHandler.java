@@ -22,5 +22,28 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers;
 
+import android.os.Handler;
+
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
+
 final class PKeyAuthChallengeHandler {
+    private Handler mRefHandler;
+
+    private AuthorizationResponse mResponse;
+
+    PKeyAuthChallengeHandler(Handler ref, AuthorizationResponse response) {
+        mRefHandler = ref;
+        mResponse = response;
+    }
+
+    public void onError() {
+        //TODO
+    }
+
+    public void onSuccess() {
+        //TODO
+    }
+
+
+
 }
