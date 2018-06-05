@@ -27,23 +27,16 @@ import android.os.Handler;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 
 final class PKeyAuthChallengeHandler {
-    private Handler mRefHandler;
+    private Handler mRefHandler; //NOPMD
 
-    private AuthorizationResponse mResponse;
+    private AuthorizationResponse mResponse; //NOPMD
 
     PKeyAuthChallengeHandler(Handler ref, AuthorizationResponse response) {
         mRefHandler = ref;
         mResponse = response;
     }
 
-    public void onError() {
+    void handleChallenge() {
         //TODO
     }
-
-    public void onSuccess() {
-        //TODO
-    }
-
-
-
 }

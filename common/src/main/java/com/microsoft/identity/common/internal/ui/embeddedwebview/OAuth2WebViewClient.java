@@ -38,7 +38,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 public abstract class OAuth2WebViewClient extends WebViewClient {
-
     /**
      * Redirect URLs are a critical part of the OAuth flow. After a user successfully authorizes an
      * application, the authorization server will redirect the user back to the application with
@@ -48,9 +47,9 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      */
     private final String mRedirectURL;
 
-    private final AuthorizationRequest mRequest;
+    private final AuthorizationRequest mRequest; //NOPMD
 
-    private final Context mContext;
+    private final Context mContext; //NOPMD
 
     static final String BLANK_PAGE = "about:blank";
 
@@ -65,6 +64,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         mContext = context;
         mRedirectURL = redirectURL;
         mRequest = request;
+    }
+
+    public String getmRedirectURL() {
+        return mRedirectURL;
     }
 
     /**
@@ -159,23 +162,5 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     @Override
     public void onReceivedClientCertRequest(WebView view, ClientCertRequest request) {
         super.onReceivedClientCertRequest(view, request);
-    }
-
-    /**
-     * Give the host application a chance to take over the control when a new
-     * url is about to be loaded in the current WebView. If WebViewClient is not
-     * provided, by default WebView will ask Activity Manager to choose the
-     * proper handler for the url. If WebViewClient is provided, return true
-     * means the host application handles the url, while return false means the
-     * current WebView handles the url.
-     *
-     * @param view The WebView that is initiating the callback.
-     * @param request Object containing the details of the request.
-     * @return True if the host application wants to leave the current WebView
-     *         and handle the url itself, otherwise return false.
-     */
-    @Override
-    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-        return super.shouldOverrideUrlLoading(view, request);
     }
 }

@@ -22,18 +22,66 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.embeddedwebview;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.net.Uri;
+import android.os.Build;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebView;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
-public class AADWebviewClient extends OAuth2WebViewClient {
+import java.util.Locale;
 
-    AADWebviewClient(final Context context, final String redirectURL, final AzureActiveDirectoryAuthorizationRequest request) {
+
+public class AADWebViewClient extends OAuth2WebViewClient {
+
+    AADWebViewClient(final Context context, final String redirectURL, final AzureActiveDirectoryAuthorizationRequest request) {
         super(context, redirectURL, request);
     }
 
+    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+        if (StringUtil.isEmpty(url)) {
+            throw new IllegalArgumentException("Empty url.");
+        }
+
+        return handleUrl(view, url);
+    }
+
+    @Override
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+        final Uri requestUrl = request.getUrl();
+        return  handleUrl(view, requestUrl.toString());
+    }
+
+    private boolean handleUrl(final WebView view, final String url) {
+        final String formattedURL = url.toLowerCase(Locale.US);
+        if (formattedURL.startsWith(AuthenticationConstants.Broker.PKEYAUTH_REDIRECT)) {
+            //TODO handle Pkeyauth challenge
+        } else if (formattedURL.startsWith(getmRedirectURL().toLowerCase(Locale.US))) {
+            processRedirectUrl(view, url);
+        } else if (formattedURL.startsWith(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX)) {
+            // handle external website request
+        } else if (formattedURL.startsWith(AuthenticationConstants.Broker.BROWSER_EXT_INSTALL_PREFIX)) {
+            // handle install request
+        } else {
+            // handle invalid url
+        }
+        return false;
+    }
+
+    private void processRedirectUrl(final WebView view, final String url) { //NOPMD
+        //TODO
+        throw new UnsupportedOperationException("Not implemented yet.");
+
+    }
 
     void showSpinner(final boolean showSpinner) {
         // TODO
+        throw new UnsupportedOperationException("Not implemented yet.");
+
     }
 }

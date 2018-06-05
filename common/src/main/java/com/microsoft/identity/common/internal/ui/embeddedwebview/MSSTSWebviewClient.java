@@ -20,8 +20,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.embeddedwebview;
 
-final class NTMLChallengeHandler {
+import android.content.Context;
 
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
+
+public class MSSTSWebViewClient extends OAuth2WebViewClient {
+    MSSTSWebViewClient(final Context context, final String redirectURL, final AzureActiveDirectoryAuthorizationRequest request) {
+        super(context, redirectURL, request);
+    }
+
+
+    void showSpinner(final boolean showSpinner) {
+        // TODO
+    }
 }

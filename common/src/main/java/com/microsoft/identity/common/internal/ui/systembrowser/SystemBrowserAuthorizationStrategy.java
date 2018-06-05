@@ -20,8 +20,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.systembrowser;
 
-final class NTMLChallengeHandler {
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 
+import android.support.customtabs.CustomTabsIntent;
+
+public class SystemBrowserAuthorizationStrategy extends AuthorizationStrategy {
+    private CustomTabsIntent mCustomTabsIntent; //NOPMD
+
+    public AuthorizationResult requestAuthorization(AuthorizationRequest request) {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
 }
