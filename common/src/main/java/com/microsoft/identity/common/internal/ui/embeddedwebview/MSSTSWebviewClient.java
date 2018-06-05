@@ -26,7 +26,7 @@ import android.content.Context;
 
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 
-public class MSSTSWebViewClient extends OAuth2WebViewClient {
+class MSSTSWebViewClient extends OAuth2WebViewClient {
     MSSTSWebViewClient(final Context context, final String redirectURL, final AzureActiveDirectoryAuthorizationRequest request) {
         super(context, redirectURL, request);
     }

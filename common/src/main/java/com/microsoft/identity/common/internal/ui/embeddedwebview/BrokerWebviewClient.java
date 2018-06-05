@@ -26,8 +26,13 @@ import android.content.Context;
 
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 
-public class BrokerWebViewClient extends MSSTSWebViewClient {
+class BrokerWebViewClient extends OAuth2WebViewClient {
     BrokerWebViewClient(final Context context, final String redirectURL, final AzureActiveDirectoryAuthorizationRequest request) {
         super(context, redirectURL, request);
+    }
+
+    @Override
+    void showSpinner(boolean showing) { //NOPMD
+
     }
 }

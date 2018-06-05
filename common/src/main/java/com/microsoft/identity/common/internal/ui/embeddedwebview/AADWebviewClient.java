@@ -36,7 +36,7 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import java.util.Locale;
 
 
-public class AADWebViewClient extends OAuth2WebViewClient {
+class AADWebViewClient extends OAuth2WebViewClient {
 
     AADWebViewClient(final Context context, final String redirectURL, final AzureActiveDirectoryAuthorizationRequest request) {
         super(context, redirectURL, request);
