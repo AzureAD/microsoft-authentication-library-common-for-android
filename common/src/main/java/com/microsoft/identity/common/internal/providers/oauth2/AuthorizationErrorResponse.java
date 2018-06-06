@@ -23,6 +23,6 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 public class AuthorizationErrorResponse {
-    private String mError;
-    private String mErrorDescription;
+    private String mError; //NOPMD
+    private String mErrorDescription; //NOPMD
 }
