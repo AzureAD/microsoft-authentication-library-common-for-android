@@ -122,8 +122,9 @@ public class ADALOAuth2TokenCache
         final String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
         final RefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
 
-        Logger.info(TAG, "Constructor new ADALTokenCacheItem");
+        Logger.info(TAG, "Constructing new ADALTokenCacheItem");
         final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem(strategy, request, response);
+        logTokenCacheItem(cacheItem);
 
         //There is more than one valid user identifier for some accounts... AAD Accounts as of this writing have 3
         Logger.info(TAG + ":" + methodName, "Setting items to cache for user...");
@@ -150,6 +151,19 @@ public class ADALOAuth2TokenCache
         for (final IShareSingleSignOnState sharedSsoCache : mSharedSSOCaches) {
             sharedSsoCache.setSingleSignOnState(account, refreshToken);
         }
+    }
+
+    private static void logTokenCacheItem(final ADALTokenCacheItem tokenCacheItem) {
+        Logger.info(TAG, "Logging TokenCacheItem");
+        Logger.infoPII(TAG, "resource: [" + tokenCacheItem.getResource() + "]");
+        Logger.infoPII(TAG, "authority: [" + tokenCacheItem.getAuthority() + "]");
+        Logger.infoPII(TAG, "clientId: [" + tokenCacheItem.getClientId() + "]");
+        Logger.infoPII(TAG, "expiresOn: [" + tokenCacheItem.getExpiresOn() + "]");
+        Logger.infoPII(TAG, "isMrrt: [" + tokenCacheItem.getIsMultiResourceRefreshToken() + "]");
+        Logger.infoPII(TAG, "tenantId: [" + tokenCacheItem.getTenantId() + "]");
+        Logger.infoPII(TAG, "foci: [" + tokenCacheItem.getFamilyClientId() + "]");
+        Logger.infoPII(TAG, "extendedExpires: [" + tokenCacheItem.getExtendedExpiresOn() + "]");
+        Logger.infoPII(TAG, "speRing: [" + tokenCacheItem.getSpeRing() + "]");
     }
 
     private void setItemToCacheForUser(final String issuer,

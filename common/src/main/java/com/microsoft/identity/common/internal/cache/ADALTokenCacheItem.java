@@ -83,8 +83,9 @@ public class ADALTokenCacheItem {
         mSpeRing = tokenCacheItem.getSpeRing();
     }
 
-    ADALTokenCacheItem(OAuth2Strategy strategy, AuthorizationRequest request, TokenResponse response) {
-
+    ADALTokenCacheItem(final OAuth2Strategy strategy,
+                       final AuthorizationRequest request,
+                       final TokenResponse response) {
         Account account = strategy.createAccount(response);
         String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
         AccessToken accessToken = strategy.getAccessTokenFromResponse(response);
@@ -342,28 +343,4 @@ public class ADALTokenCacheItem {
     public final Date getExtendedExpiresOn() {
         return DateUtilities.createCopy(mExtendedExpiresOn);
     }
-
-    //CHECKSTYLE:OFF
-    // This method is generated. Checkstyle and/or PMD has been disabled.
-    // This method *must* be regenerated if the class' structural definition changes through the
-    // addition/subtraction of fields.
-    @Override
-    public String toString() {
-        return "ADALTokenCacheItem{" +
-                "mUserInfo=" + mUserInfo +
-                ", mResource='" + mResource + '\'' +
-                ", mAuthority='" + mAuthority + '\'' +
-                ", mClientId='" + mClientId + '\'' +
-                ", mAccessToken='" + mAccessToken + '\'' +
-                ", mRefreshtoken='" + mRefreshtoken + '\'' +
-                ", mRawIdToken='" + mRawIdToken + '\'' +
-                ", mExpiresOn=" + mExpiresOn +
-                ", mIsMultiResourceRefreshToken=" + mIsMultiResourceRefreshToken +
-                ", mTenantId='" + mTenantId + '\'' +
-                ", mFamilyClientId='" + mFamilyClientId + '\'' +
-                ", mExtendedExpiresOn=" + mExtendedExpiresOn +
-                ", mSpeRing='" + mSpeRing + '\'' +
-                '}';
-    }
-    //CHECKSTYLE:ON
 }
