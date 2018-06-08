@@ -88,15 +88,19 @@ public class AzureActiveDirectoryOAuth2Strategy
                             + "but there is no cloud..."
                             + "Hence just return the passed in Authority"
             );
+
             return authRequest.getAuthority().toString();
         }
 
+        Logger.info(TAG, "Building authority URI");
         Uri authorityUri = Uri.parse(authRequest.getAuthority().toString())
                 .buildUpon()
                 .authority(cloud.getPreferredCacheHostName())
                 .build();
 
         final String issuerCacheIdentifier = authorityUri.toString();
+
+        Logger.infoPII(TAG, "Issuer cache identifier created: " + issuerCacheIdentifier);
 
         return issuerCacheIdentifier;
     }
@@ -132,7 +136,10 @@ public class AzureActiveDirectoryOAuth2Strategy
         ClientInfo clientInfo = null;
 
         try {
+            Logger.info(TAG, "Constructing IDToken from response");
             idToken = new IDToken(response.getIdToken());
+
+            Logger.info(TAG, "Constructing ClientInfo from response");
             clientInfo = new ClientInfo(response.getClientInfo());
         } catch (ServiceException ccse) {
             Logger.error(TAG + ":" + methodName, "Failed to construct IDToken or ClientInfo", null);
@@ -141,6 +148,9 @@ public class AzureActiveDirectoryOAuth2Strategy
         }
 
         final AzureActiveDirectoryAccount account = AzureActiveDirectoryAccount.create(idToken, clientInfo);
+
+        Logger.info(TAG, "Account created");
+        Logger.infoPII(TAG, account.toString());
 
         return account;
     }

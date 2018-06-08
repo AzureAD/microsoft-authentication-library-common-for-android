@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.cache;
 
 import android.annotation.SuppressLint;
+import android.app.Application;
 import android.content.Context;
 import android.os.Build;
 
@@ -93,12 +94,15 @@ public class ADALOAuth2TokenCache
                                 final List<IShareSingleSignOnState> sharedSSOCaches) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
+        Logger.info(TAG, "Context is an Application? [" + (context instanceof Application) + "]");
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
         mSharedSSOCaches = sharedSSOCaches;
     }
 
     protected void initializeSharedPreferencesFileManager(final String fileName) {
+        Logger.verbose(TAG, "Initializing SharedPreferencesFileManager");
+        Logger.verbosePII(TAG, "Initializing with name: " + fileName);
         mISharedPreferencesFileManager = new SharedPreferencesFileManager(getContext(), fileName);
     }
 
@@ -121,6 +125,7 @@ public class ADALOAuth2TokenCache
         final String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
         final RefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
 
+        Logger.info(TAG, "Constructor new ADALTokenCacheItem");
         final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem(strategy, request, response);
 
         //There is more than one valid user identifier for some accounts... AAD Accounts as of this writing have 3
@@ -158,6 +163,7 @@ public class ADALOAuth2TokenCache
                                        final String userId) {
         final String methodName = "setItemToCacheForUser";
 
+        Logger.info(TAG + ":" + methodName, "Setting cacheitem for RT entry.");
         setItem(CacheKey.createCacheKeyForRTEntry(issuer, resource, clientId, userId), cacheItem);
 
         if (cacheItem.getIsMultiResourceRefreshToken()) {
@@ -199,7 +205,6 @@ public class ADALOAuth2TokenCache
             }
         }
 
-
         return sHelper;
     }
 
@@ -226,6 +231,7 @@ public class ADALOAuth2TokenCache
         try {
             decryptedResult = getStorageHelper().decrypt(value);
         } catch (GeneralSecurityException | IOException e) {
+            Logger.error(TAG, "Decryption failed.", null);
             Logger.errorPII(TAG, ErrorStrings.DECRYPTION_ERROR, e);
             decryptedResult = null;
 
@@ -237,6 +243,7 @@ public class ADALOAuth2TokenCache
     }
 
     private void validateSecretKeySetting() {
+        Logger.verbose(TAG, "Validating secret key settings.");
         final byte[] secretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
 
         if (secretKeyData == null && Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
@@ -248,11 +255,13 @@ public class ADALOAuth2TokenCache
     @Override
     public void setSingleSignOnState(final Account account, final RefreshToken refreshToken) {
         // Unimplemented
+        Logger.warn(TAG, "setSingleSignOnState was called, but is not implemented.");
     }
 
     @Override
     public RefreshToken getSingleSignOnState(final Account account) {
         // Unimplemented
+        Logger.warn(TAG, "getSingleSignOnState was called, but is not implemented.");
         final RefreshToken refreshToken = null;
         return refreshToken;
     }
