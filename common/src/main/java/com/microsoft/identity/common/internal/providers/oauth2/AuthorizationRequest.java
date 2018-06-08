@@ -22,20 +22,30 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.net.Uri;
+import android.os.Build;
+
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ClientException;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
  * https://tools.ietf.org/html/rfc6749#section-4.1.1
  * This should include all fo the required parameters of the authorization request for oAuth2
  * This should provide an extension point for additional parameters to be set
  */
-public class AuthorizationRequest {
-
+public abstract class AuthorizationRequest {
     private String mResponseType;
     private String mClientId;
     private String mRedirectUri;
     private String mScope;
     private String mState;
 
+    public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
     /**
      * @return mResponseType of the authorization request.
      */

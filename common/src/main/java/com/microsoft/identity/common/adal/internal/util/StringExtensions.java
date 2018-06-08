@@ -28,6 +28,7 @@ import android.util.Log;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -39,18 +40,20 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 public final class StringExtensions {
-    /**
-     * The Constant ENCODING_UTF8.
-     */
-    public static final String ENCODING_UTF8 = "UTF_8";
-
     private static final String TAG = StringExtensions.class.getSimpleName();
 
     private static final String TOKEN_HASH_ALGORITHM = "SHA256";
+
+    private static final String QUERY_STRING_SYMBOL = "?";
+    private static final String QUERY_STRING_DELIMITER = "&";
 
     private StringExtensions() {
         // Intentionally left blank
@@ -93,7 +96,7 @@ public final class StringExtensions {
      * @throws UnsupportedEncodingException throws if encoding not supported.
      */
     public static String urlFormEncode(String source) throws UnsupportedEncodingException {
-        return URLEncoder.encode(source, ENCODING_UTF8);
+        return URLEncoder.encode(source, AuthenticationConstants.ENCODING_UTF8);
     }
 
     /**
@@ -106,7 +109,7 @@ public final class StringExtensions {
     public static String urlFormDecode(String source) throws UnsupportedEncodingException {
 
         // Decode everything else
-        return URLDecoder.decode(source, ENCODING_UTF8);
+        return URLDecoder.decode(source, AuthenticationConstants.ENCODING_UTF8);
     }
 
     /**
@@ -245,6 +248,98 @@ public final class StringExtensions {
      * @return String
      */
     public static String base64UrlEncodeToString(final String message) {
-        return Base64.encodeToString(message.getBytes(Charset.forName(ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
+        return Base64.encodeToString(message.getBytes(Charset.forName(AuthenticationConstants.ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
+    }
+
+    /**
+     * Convert the given set of scopes into the string with the provided delimiter.
+     *
+     * @param inputSet  The Set of scopes to convert.
+     * @param delimiter The delimiter used to construct the scopes in the format of String.
+     * @return The converted scopes in the format of String.
+     */
+    public static String convertSetToString(final Set<String> inputSet, final String delimiter) {
+        if (inputSet == null || inputSet.isEmpty() || delimiter == null) {
+            return "";
+        }
+
+        final StringBuilder stringBuilder = new StringBuilder();
+        final Iterator<String> iterator = inputSet.iterator();
+        stringBuilder.append(iterator.next());
+
+        while (iterator.hasNext()) {
+            stringBuilder.append(delimiter);
+            stringBuilder.append(iterator.next());
+        }
+
+        return stringBuilder.toString();
+    }
+
+    /**
+     * Decode the given url, and convert it into map with the given delimiter.
+     *
+     * @param url       The url to decode for.
+     * @param delimiter The delimiter used to parse the url string.
+     * @return The Map of the items decoded with the given delimiter.
+     */
+    public static Map<String, String> decodeUrlToMap(final String url, final String delimiter) {
+        final Map<String, String> decodedUrlMap = new HashMap<>();
+
+        // delimiter can be " "
+        if (isNullOrBlank(url) || delimiter == null) {
+            return decodedUrlMap;
+        }
+
+        final StringTokenizer tokenizer = new StringTokenizer(url, delimiter);
+        while (tokenizer.hasMoreTokens()) {
+            final String pair = tokenizer.nextToken();
+            final String[] elements = pair.split("=");
+
+            if (elements.length != 2) {
+                continue;
+            }
+
+            try {
+                final String key = urlFormDecode(elements[0]);
+                final String value = urlFormDecode(elements[1]);
+
+                if (!isNullOrBlank(key) && !isNullOrBlank(value)) {
+                    decodedUrlMap.put(key, value);
+                }
+            } catch (final UnsupportedEncodingException e) {
+                Logger.error(TAG, null, "URL form decode failed.", e);
+            }
+        }
+
+        return decodedUrlMap;
+    }
+
+    /**
+     * Append parameter to the url. If the no query parameters, return the url originally passed in.
+     */
+    public static String appendQueryParameterToUrl(final String url, final Map<String, String> requestParams)
+            throws UnsupportedEncodingException {
+        if (isNullOrBlank(url)) {
+            throw new IllegalArgumentException("Empty authority string");
+        }
+
+        if (requestParams.isEmpty()) {
+            return url;
+        }
+
+        final Set<String> queryParamsSet = new HashSet<>();
+        for (Map.Entry<String, String> entry : requestParams.entrySet()) {
+            queryParamsSet.add(entry.getKey() + "=" + urlFormEncode(entry.getValue()));
+        }
+
+        final String queryString = convertSetToString(queryParamsSet, QUERY_STRING_DELIMITER);
+        final String queryStringFormat;
+        if (url.contains(QUERY_STRING_SYMBOL)) {
+            queryStringFormat = url.endsWith(QUERY_STRING_DELIMITER) ? "%s%s" : "%s" + QUERY_STRING_DELIMITER + "%s";
+        } else {
+            queryStringFormat = "%s" + QUERY_STRING_SYMBOL + "%s";
+        }
+
+        return String.format(queryStringFormat, url, queryString);
     }
 }
