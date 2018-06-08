@@ -22,11 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import android.net.Uri;
-import android.os.Build;
-
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.io.UnsupportedEncodingException;
@@ -42,7 +37,6 @@ public abstract class AuthorizationRequest {
     private String mResponseType;
     private String mClientId;
     private String mRedirectUri;
-    private String mScope;
     private String mState;
 
     public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
@@ -89,20 +83,6 @@ public abstract class AuthorizationRequest {
     }
 
     /**
-     * @return mScope of the authorization request.
-     */
-    public String getScope() {
-        return mScope;
-    }
-
-    /**
-     * @param scope scope of the authorization request.
-     */
-    public void setScope(final String scope) {
-        mScope = scope;
-    }
-
-    /**
      * @return mState of the authorization request.
      */
     public String getState() {
@@ -123,10 +103,8 @@ public abstract class AuthorizationRequest {
                 "mResponseType='" + mResponseType + '\'' +
                 ", mClientId='" + mClientId + '\'' +
                 ", mRedirectUri='" + mRedirectUri + '\'' +
-                ", mScope='" + mScope + '\'' +
                 ", mState='" + mState + '\'' +
                 '}';
     }
     //CHECKSTYLE:ON
-
 }

@@ -22,10 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+
+import java.io.UnsupportedEncodingException;
 
 /**
  * Azure Active Directory B2C Authorization Request.
  */
 public class AzureActiveDirectoryB2CAuthorizationRequest extends AuthorizationRequest {
+    public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
+        throw new UnsupportedEncodingException("Not implemented.");
+    }
 }

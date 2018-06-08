@@ -50,9 +50,11 @@ import static android.content.ContentValues.TAG;
 
 public class MicrosoftStsAuthorizationRequest extends AuthorizationRequest {
     private String mAuthorizationEndpoint;
+    private UUID mCorrelationId; //nullable
+
     private final Set<String> mScope = new HashSet<>();
     private final Set<String> mExtraScopesToConsent = new HashSet<>();
-    private UUID mCorrelationId; //nullable
+
     private String mLoginHint;
     private String mUid;
     private String mUtid;
@@ -72,6 +74,94 @@ public class MicrosoftStsAuthorizationRequest extends AuthorizationRequest {
         mCorrelationId = correlationId;
     }
 
+    public String getAuthorizationEndpoint() {
+        return mAuthorizationEndpoint;
+    }
+
+    public void setAuthorizationEndpoint(final String authorizationEndpoint) {
+        mAuthorizationEndpoint = authorizationEndpoint;
+    }
+
+
+    public Set<String> getScope() {
+        return mScope;
+    }
+
+    public Set<String> getExtraScopesToConsent() {
+        return mExtraScopesToConsent;
+    }
+
+    public String getLoginHint() {
+        return mLoginHint;
+    }
+
+    public void setLoginHint(final String loginHint) {
+        mLoginHint = loginHint;
+    }
+
+    public String getUid() {
+        return mUid;
+    }
+
+    public void setUid(final String uid) {
+        mUid = uid;
+    }
+
+    public String getUtid() {
+        return mUtid;
+    }
+
+    public void setUtid(final String utid) {
+        mUtid = utid;
+    }
+
+    public String getDisplayableId() {
+        return mDisplayableId;
+    }
+
+    public void setDisplayableId(final String displayableId) {
+        mDisplayableId = displayableId;
+    }
+
+    public MicrosoftStsPromptBehavior getPromptBehavior() {
+        return mPromptBehavior;
+    }
+
+    public void setPromptBehavior(final MicrosoftStsPromptBehavior promptBehavior) {
+        mPromptBehavior = promptBehavior;
+    }
+
+    public PKCEChallengeFactory.PKCEChallenge getPKCEChallenge() {
+        return mPKCEChallenge;
+    }
+
+    public void setPKCEChallenge(final PKCEChallengeFactory.PKCEChallenge pKCEChallenge) {
+        mPKCEChallenge = pKCEChallenge;
+    }
+
+    public String getExtraQueryParam() {
+        return mExtraQueryParam;
+    }
+
+    public void setExtraQueryParam(final String extraQueryParam) {
+        mExtraQueryParam = extraQueryParam;
+    }
+
+    public String getSliceParameters() {
+        return mSliceParameters;
+    }
+
+    public void setmSliceParameters(final String sliceParameters) {
+        mSliceParameters = sliceParameters;
+    }
+
+    public String getAuthority() {
+        return mAuthority;
+    }
+
+    public void setAuthority(final String authority) {
+        mAuthority = authority;
+    }
 
     public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException{
         if(AuthorizationConfiguration.getInstance().isBrokerRequest()) {
@@ -94,13 +184,7 @@ public class MicrosoftStsAuthorizationRequest extends AuthorizationRequest {
         return authorizationUrl;
     }
 
-    public String getAuthorizationEndpoint() {
-        return mAuthorizationEndpoint;
-    }
 
-    public void setAuthorizationEndpoint(final String authorizationEndpoint) {
-        mAuthorizationEndpoint = authorizationEndpoint;
-    }
 
     private Map<String, String> createAuthorizationRequestParameters() throws UnsupportedEncodingException, ClientException {
         final Map<String, String> requestParameters = new HashMap<>();

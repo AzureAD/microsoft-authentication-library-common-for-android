@@ -274,5 +274,4 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
         String state = String.format("a=%s&r=%s", mAuthorizationEndpoint, mResource);
         return Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE);
     }
-
 }
