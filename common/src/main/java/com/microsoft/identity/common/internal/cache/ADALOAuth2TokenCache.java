@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 import android.os.Build;
@@ -35,7 +34,6 @@ import com.microsoft.identity.common.adal.internal.cache.CacheKey;
 import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
@@ -43,8 +41,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -60,10 +56,6 @@ public class ADALOAuth2TokenCache
 
     private static final String TAG = ADALOAuth2TokenCache.class.getSimpleName();
     private static final String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
-    private static final Object LOCK = new Object();
-
-    @SuppressLint("StaticFieldLeak")
-    private static StorageHelper sHelper;
 
     private Gson mGson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new DateTimeAdapter())
@@ -103,7 +95,12 @@ public class ADALOAuth2TokenCache
     protected void initializeSharedPreferencesFileManager(final String fileName) {
         Logger.verbose(TAG, "Initializing SharedPreferencesFileManager");
         Logger.verbosePII(TAG, "Initializing with name: " + fileName);
-        mISharedPreferencesFileManager = new SharedPreferencesFileManager(getContext(), fileName);
+        mISharedPreferencesFileManager =
+                new SharedPreferencesFileManager(
+                        getContext(),
+                        fileName,
+                        new StorageHelper(getContext())
+                );
     }
 
     /**
@@ -155,7 +152,6 @@ public class ADALOAuth2TokenCache
         }
     }
 
-
     private void setItemToCacheForUser(final String issuer,
                                        final String resource,
                                        final String clientId,
@@ -178,68 +174,9 @@ public class ADALOAuth2TokenCache
     }
 
     private void setItem(final String key, final ADALTokenCacheItem cacheItem) {
-        final String methodName = "setItem";
-
+        Logger.info(TAG, "Setting item to cache");
         String json = mGson.toJson(cacheItem);
-        String encrypted = encrypt(json);
-
-        if (encrypted != null) {
-            mISharedPreferencesFileManager.putString(key, encrypted);
-        } else {
-            Logger.error(TAG + ":" + methodName, "Encrypted output was null.", null);
-        }
-    }
-
-
-    /**
-     * Method that allows to mock StorageHelper class and use custom encryption in UTs.
-     */
-    protected StorageHelper getStorageHelper() {
-        final String methodName = "getStorageHelper";
-
-        synchronized (LOCK) {
-            if (sHelper == null) {
-                Logger.verbose(TAG + ":" + methodName, "Initializing StorageHelper");
-                sHelper = new StorageHelper(getContext());
-                Logger.verbose(TAG + ":" + methodName, "Finished initializing StorageHelper");
-            }
-        }
-
-        return sHelper;
-    }
-
-    private String encrypt(final String value) {
-        final String methodName = "encrypt";
-
-        String encryptedResult = null;
-        try {
-            encryptedResult = getStorageHelper().encrypt(value);
-        } catch (GeneralSecurityException | IOException e) {
-            Logger.error(TAG + ":" + methodName, "Failed to encrypt input value.", null);
-        }
-
-        return encryptedResult;
-    }
-
-    private String decrypt(final String key, final String value) { //NOPMD Suppressing PMD warning for unused method
-        if (StringExtensions.isNullOrBlank(key)) {
-            throw new IllegalArgumentException("encryption key is null or blank");
-        }
-
-        String decryptedResult;
-
-        try {
-            decryptedResult = getStorageHelper().decrypt(value);
-        } catch (GeneralSecurityException | IOException e) {
-            Logger.error(TAG, "Decryption failed.", null);
-            Logger.errorPII(TAG, ErrorStrings.DECRYPTION_ERROR, e);
-            decryptedResult = null;
-
-            //TODO: Implement remove item in this case... not sure I actually want to do this
-            //removeItem(key);
-        }
-
-        return decryptedResult;
+        mISharedPreferencesFileManager.putString(key, json);
     }
 
     private void validateSecretKeySetting() {
