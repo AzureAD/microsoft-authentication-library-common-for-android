@@ -103,33 +103,20 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
     @Override
     public synchronized void saveAccount(final Account account) {
-        final String methodName = "saveAccount";
-        Logger.entering(TAG, methodName, account);
-
         final String cacheKey = mCacheValueDelegate.generateCacheKey(account);
         final String cacheValue = mCacheValueDelegate.generateCacheValue(account);
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
-
-        Logger.exiting(TAG, methodName);
     }
 
     @Override
     public synchronized void saveCredential(Credential credential) {
-        final String methodName = "saveCredential";
-        Logger.entering(TAG, methodName, credential);
-
         final String cacheKey = mCacheValueDelegate.generateCacheKey(credential);
         final String cacheValue = mCacheValueDelegate.generateCacheValue(credential);
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
-
-        Logger.exiting(TAG, methodName);
     }
 
     @Override
     public synchronized Account getAccount(final String cacheKey) {
-        final String methodName = "getAccount";
-        Logger.entering(TAG, methodName, cacheKey);
-
         Account account = mCacheValueDelegate.fromCacheValue(
                 mSharedPreferencesFileManager.getString(cacheKey),
                 Account.class
@@ -142,16 +129,11 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             account = null;
         }
 
-        Logger.exiting(TAG, methodName, account);
-
         return account;
     }
 
     @Override
     public synchronized Credential getCredential(final String cacheKey) {
-        final String methodName = "getCredential";
-        Logger.entering(TAG, methodName, cacheKey);
-
         // TODO add support for more Credential types...
         final CredentialType type = getCredentialTypeForCredentialCacheKey(cacheKey);
         final Class<? extends Credential> clazz;
@@ -181,15 +163,10 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             credential = null;
         }
 
-        Logger.exiting(TAG, methodName, credential);
-
         return credential;
     }
 
     private Map<String, Account> getAccountsWithKeys() {
-        final String methodName = "getAccountsWithKeys";
-        Logger.entering(TAG, methodName);
-
         final Map<String, ?> cacheValues = mSharedPreferencesFileManager.getAll();
         final Map<String, Account> accounts = new HashMap<>();
 
@@ -204,20 +181,13 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
-        Logger.exiting(TAG, methodName, accounts);
-
         return accounts;
     }
 
     @Override
     public synchronized List<Account> getAccounts() {
-        final String methodName = "getAccounts";
-        Logger.entering(TAG, methodName);
-
         final Map<String, Account> allAccounts = getAccountsWithKeys();
         final List<Account> accounts = new ArrayList<>(allAccounts.values());
-
-        Logger.exiting(TAG, methodName, accounts);
 
         return accounts;
     }
@@ -227,9 +197,6 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             final @Nullable String homeAccountId,
             final String environment,
             final @Nullable String realm) {
-        final String methodName = "getAccounts";
-        Logger.entering(TAG, methodName, homeAccountId, environment, realm);
-
         if (StringExtensions.isNullOrBlank(environment)) {
             throw new IllegalArgumentException("Param [environment] cannot be null.");
         }
@@ -257,15 +224,10 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
-        Logger.exiting(TAG, methodName, matchingAccounts);
-
         return matchingAccounts;
     }
 
     private Map<String, Credential> getCredentialsWithKeys() {
-        final String methodName = "getCredentialsWithKeys";
-        Logger.entering(TAG, methodName);
-
         final Map<String, ?> cacheValues = mSharedPreferencesFileManager.getAll();
         final Map<String, Credential> credentials = new HashMap<>();
 
@@ -280,20 +242,13 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
-        Logger.exiting(TAG, methodName, credentials);
-
         return credentials;
     }
 
     @Override
     public synchronized List<Credential> getCredentials() {
-        final String methodName = "getCredentials";
-        Logger.entering(TAG, methodName);
-
         final Map<String, Credential> allCredentials = getCredentialsWithKeys();
         final List<Credential> creds = new ArrayList<>(allCredentials.values());
-
-        Logger.exiting(TAG, methodName, creds);
 
         return creds;
     }
@@ -306,9 +261,6 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             final String clientId,
             final @Nullable String realm,
             final @Nullable String target) {
-        final String methodName = "getCredentials";
-        Logger.entering(TAG, methodName, homeAccountId, environment, credentialType, clientId, realm, target);
-
         if (StringExtensions.isNullOrBlank(environment)) {
             throw new IllegalArgumentException("Param [environment] cannot be null.");
         }
@@ -358,16 +310,11 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
-        Logger.exiting(TAG, methodName, matchingCredentials);
-
         return matchingCredentials;
     }
 
     @Override
     public boolean removeAccount(final Account accountToRemove) {
-        final String methodName = "removeAccount";
-        Logger.entering(TAG, methodName, accountToRemove);
-
         if (null == accountToRemove) {
             throw new IllegalArgumentException("Param [accountToRemove] cannot be null.");
         }
@@ -385,16 +332,11 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
-        Logger.exiting(TAG, methodName, accountRemoved);
-
         return accountRemoved;
     }
 
     @Override
     public boolean removeCredential(final Credential credentialToRemove) {
-        final String methodName = "removeCredential";
-        Logger.entering(TAG, methodName, credentialToRemove);
-
         if (null == credentialToRemove) {
             throw new IllegalArgumentException("Param [credentialToRemove] cannot be null.");
         }
@@ -412,23 +354,15 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
-        Logger.exiting(TAG, methodName, credentialRemoved);
-
         return credentialRemoved;
     }
 
     @Override
     public void clearAll() {
-        final String methodName = "clearAll";
-        Logger.entering(TAG, methodName);
         mSharedPreferencesFileManager.clear();
-        Logger.exiting(TAG, methodName);
     }
 
     private Class<? extends Credential> credentialClassForType(final String cacheKey) {
-        final String methodName = "credentialClassForType";
-        Logger.entering(TAG, methodName, cacheKey);
-
         final CredentialType targetType = getCredentialTypeForCredentialCacheKey(cacheKey);
         Class<? extends Credential> credentialClass = null;
 
@@ -446,8 +380,6 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                 // TODO Log a warning? Throw an Exception?
         }
 
-        Logger.exiting(TAG, methodName, credentialClass);
-
         return credentialClass;
     }
 
@@ -458,9 +390,6 @@ public class AccountCredentialCache implements IAccountCredentialCache {
      * @return The CredentialType or null if a proper type cannot be resolved.
      */
     private CredentialType getCredentialTypeForCredentialCacheKey(final String cacheKey) {
-        final String methodName = "getCredentialTypeForCredentialCacheKey";
-        Logger.entering(TAG, methodName, cacheKey);
-
         if (StringExtensions.isNullOrBlank(cacheKey)) {
             throw new IllegalArgumentException("Param [cacheKey] cannot be null.");
         }
@@ -489,30 +418,16 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
-        Logger.exiting(TAG, methodName, type);
-
         return type;
     }
 
     private boolean isAccount(final String cacheKey) {
-        final String methodName = "isAccount";
-        Logger.entering(TAG, methodName, cacheKey);
-
         boolean isAccount = null == getCredentialTypeForCredentialCacheKey(cacheKey);
-
-        Logger.exiting(TAG, methodName, isAccount);
-
         return isAccount;
     }
 
     private boolean isCredential(String cacheKey) {
-        final String methodName = "isCredential";
-        Logger.entering(TAG, methodName, cacheKey);
-
         boolean isCredential = null != getCredentialTypeForCredentialCacheKey(cacheKey);
-
-        Logger.exiting(TAG, methodName, isCredential);
-
         return isCredential;
     }
 

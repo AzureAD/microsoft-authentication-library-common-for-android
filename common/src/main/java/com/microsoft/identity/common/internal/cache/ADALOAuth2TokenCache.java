@@ -99,10 +99,7 @@ public class ADALOAuth2TokenCache
     }
 
     protected void initializeSharedPreferencesFileManager(final String fileName) {
-        final String methodName = "initializeSharedPreferencesFileManager";
-        Logger.entering(TAG, methodName, fileName);
         mISharedPreferencesFileManager = new SharedPreferencesFileManager(getContext(), fileName);
-        Logger.exiting(TAG, methodName);
     }
 
     /**
@@ -118,7 +115,6 @@ public class ADALOAuth2TokenCache
             final AzureActiveDirectoryAuthorizationRequest request,
             final AzureActiveDirectoryTokenResponse response) {
         final String methodName = "saveTokens";
-        Logger.entering(TAG, methodName, strategy, request, response);
         Logger.info(TAG + ":" + methodName, "Saving Tokens...");
 
         final Account account = strategy.createAccount(response);
@@ -137,7 +133,6 @@ public class ADALOAuth2TokenCache
             Logger.infoPII(TAG + ":" + methodName, "issuerCacheIdentifier: [" + issuerCacheIdentifier + "]");
             Logger.infoPII(TAG + ":" + methodName, "scope: [" + scope + "]");
             Logger.infoPII(TAG + ":" + methodName, "clientId: [" + clientId + "]");
-            Logger.infoPII(TAG + ":" + methodName, "cacheItem: [" + cacheItem + "]");
             Logger.infoPII(TAG + ":" + methodName, "cacheIdentifier: [" + cacheIdentifier + "]");
 
             setItemToCacheForUser(issuerCacheIdentifier, scope, clientId, cacheItem, cacheIdentifier);
@@ -153,9 +148,6 @@ public class ADALOAuth2TokenCache
         for (final IShareSingleSignOnState sharedSsoCache : mSharedSSOCaches) {
             sharedSsoCache.setSingleSignOnState(account, refreshToken);
         }
-
-        Logger.exiting(TAG, methodName);
-
     }
 
 
@@ -165,7 +157,6 @@ public class ADALOAuth2TokenCache
                                        final ADALTokenCacheItem cacheItem,
                                        final String userId) {
         final String methodName = "setItemToCacheForUser";
-        Logger.entering(TAG, methodName, issuer, resource, clientId, cacheItem, userId);
 
         setItem(CacheKey.createCacheKeyForRTEntry(issuer, resource, clientId, userId), cacheItem);
 
@@ -178,26 +169,19 @@ public class ADALOAuth2TokenCache
             Logger.info(TAG + ":" + methodName, "CacheItem is an FRT.");
             setItem(CacheKey.createCacheKeyForFRT(issuer, cacheItem.getFamilyClientId(), userId), cacheItem);
         }
-
-        Logger.exiting(TAG, methodName);
     }
 
     private void setItem(final String key, final ADALTokenCacheItem cacheItem) {
         final String methodName = "setItem";
-        Logger.entering(TAG, methodName, key, cacheItem);
 
         String json = mGson.toJson(cacheItem);
         String encrypted = encrypt(json);
-
-        Logger.verbosePII(TAG + ":" + methodName, "Derived JSON: " + json);
 
         if (encrypted != null) {
             mISharedPreferencesFileManager.putString(key, encrypted);
         } else {
             Logger.error(TAG + ":" + methodName, "Encrypted output was null.", null);
         }
-
-        Logger.exiting(TAG, methodName);
     }
 
 
@@ -206,7 +190,6 @@ public class ADALOAuth2TokenCache
      */
     protected StorageHelper getStorageHelper() {
         final String methodName = "getStorageHelper";
-        Logger.entering(TAG, methodName);
 
         synchronized (LOCK) {
             if (sHelper == null) {
@@ -216,34 +199,24 @@ public class ADALOAuth2TokenCache
             }
         }
 
-        Logger.exiting(TAG, methodName, sHelper);
 
         return sHelper;
     }
 
     private String encrypt(final String value) {
         final String methodName = "encrypt";
-        Logger.entering(TAG, methodName, value);
 
-        String encryptedResult;
-
+        String encryptedResult = null;
         try {
             encryptedResult = getStorageHelper().encrypt(value);
         } catch (GeneralSecurityException | IOException e) {
             Logger.error(TAG + ":" + methodName, "Failed to encrypt input value.", null);
-            Logger.errorPII(TAG + ":" + methodName, ErrorStrings.ENCRYPTION_ERROR, e);
-            encryptedResult = null;
         }
-
-        Logger.exiting(TAG, methodName, encryptedResult);
 
         return encryptedResult;
     }
 
     private String decrypt(final String key, final String value) { //NOPMD Suppressing PMD warning for unused method
-        final String methodName = "decrypt";
-        Logger.entering(TAG, methodName, key, value);
-
         if (StringExtensions.isNullOrBlank(key)) {
             throw new IllegalArgumentException("encryption key is null or blank");
         }
@@ -260,44 +233,27 @@ public class ADALOAuth2TokenCache
             //removeItem(key);
         }
 
-        Logger.exiting(TAG, methodName, decryptedResult);
-
         return decryptedResult;
     }
 
     private void validateSecretKeySetting() {
-        final String methodName = "validateSecretKeySetting";
-        Logger.entering(TAG, methodName);
-
         final byte[] secretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
 
         if (secretKeyData == null && Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
             throw new IllegalArgumentException("Secret key must be provided for API < 18. "
                     + "Use AuthenticationSettings.INSTANCE.setSecretKey()");
         }
-
-        Logger.exiting(TAG, methodName);
     }
 
     @Override
     public void setSingleSignOnState(final Account account, final RefreshToken refreshToken) {
-        final String methodName = "setSingleSignOnState";
-        Logger.entering(TAG, methodName, account, refreshToken);
         // Unimplemented
-
-        Logger.exiting(TAG, methodName);
     }
 
     @Override
     public RefreshToken getSingleSignOnState(final Account account) {
-        final String methodName = "getSingleSignOnState";
-        Logger.entering(TAG, methodName, account);
-
         // Unimplemented
         final RefreshToken refreshToken = null;
-
-        Logger.exiting(TAG, methodName, refreshToken);
-
         return refreshToken;
     }
 }
