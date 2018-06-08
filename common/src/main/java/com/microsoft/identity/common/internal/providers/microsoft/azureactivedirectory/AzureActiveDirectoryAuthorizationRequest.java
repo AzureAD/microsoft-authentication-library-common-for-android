@@ -37,6 +37,9 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.UUID;
 
+/**
+ * Ref: https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code
+ */
 public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationRequest {
     private static final String TAG = StringExtensions.class.getSimpleName();
     /**
@@ -44,10 +47,37 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
      */
     private String mAuthorizationEndpoint; //not null
     private URL mAuthority;
+
+    /**
+     * A recommended value.
+     *
+     * Specifies the method that should be used to send the resulting token back to your app.
+     * Can be "query" or "form_post". "query" provides the code as a query string parameter on your
+     * redirect URI, while "form_post" executes a POST containing the code to your redirect URI.
+     */
+    private String mResponseMode;
+
+    /**
+     * The App ID URI of the target web API.
+     * This is required in one of either the authorization or token requests.
+     * To ensure fewer authentication prompts place it in the authorization request to
+     * ensure consent is received from the user.
+     */
     private String mResource; //not null
-    private String mLoginHint; //nullable
-    private UUID mCorrelationId; //nullable
+
+    //TODO The microsoft doc is different with V1 has currently.
+    /**
+     * Optional. Indicate the type of user interaction that is required.
+     */
     private AADPromptBehavior mPromptBehavior; //nullable
+
+    /**
+     * Optional. Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
+     */
+    private String mLoginHint; //nullable
+
+    private UUID mCorrelationId; //nullable
+
     private String mExtraQP; //nullable
     private String mClaimsChallenge; //nullable
 
@@ -141,6 +171,13 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
         mAuthority = authority;
     }
 
+    public String getResponseMode() {
+        return mResponseMode;
+    }
+
+    public void setResponseMode(final String responseMode) {
+        mResponseMode = responseMode;
+    }
 
     //CHECKSTYLE:OFF
     @Override

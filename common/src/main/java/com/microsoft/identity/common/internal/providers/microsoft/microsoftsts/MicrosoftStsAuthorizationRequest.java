@@ -30,12 +30,11 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.ui.AuthorizationConfiguration;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -48,23 +47,40 @@ import java.util.UUID;
 
 import static android.content.ContentValues.TAG;
 
+/**
+ * Ref: https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-v2-protocols-oauth-code
+ */
 public class MicrosoftStsAuthorizationRequest extends AuthorizationRequest {
     private String mAuthorizationEndpoint;
+    private URL mAuthority;
     private UUID mCorrelationId; //nullable
-
-    private final Set<String> mScope = new HashSet<>();
     private final Set<String> mExtraScopesToConsent = new HashSet<>();
 
+    /**
+     * Recommended. Specifies the method that should be used to send the resulting token back to your app. Can be query or form_post.
+     */
+    private String mResponseMode;
+
+    /**
+     * Optional. Indicates the type of user interaction that is required. The only valid values at this time are 'login', 'none', and 'consent'.
+     */
+    //TODO MSAL implementation is different with v2 microsoft doc.
+    private MicrosoftStsPromptBehavior mPromptBehavior;
+
+    /**
+     * Optional. Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
+     */
     private String mLoginHint;
     private String mUid;
     private String mUtid;
     private String mDisplayableId;
 
-    private MicrosoftStsPromptBehavior mPromptBehavior;
+    /**
+     *  Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
+     */
     private PKCEChallengeFactory.PKCEChallenge mPKCEChallenge;
     private String mExtraQueryParam;
     private String mSliceParameters;
-    private String mAuthority;
 
     public UUID getCorrelationId() {
         return mCorrelationId;
@@ -80,11 +96,6 @@ public class MicrosoftStsAuthorizationRequest extends AuthorizationRequest {
 
     public void setAuthorizationEndpoint(final String authorizationEndpoint) {
         mAuthorizationEndpoint = authorizationEndpoint;
-    }
-
-
-    public Set<String> getScope() {
-        return mScope;
     }
 
     public Set<String> getExtraScopesToConsent() {
@@ -155,12 +166,20 @@ public class MicrosoftStsAuthorizationRequest extends AuthorizationRequest {
         mSliceParameters = sliceParameters;
     }
 
-    public String getAuthority() {
+    public URL getAuthority() {
         return mAuthority;
     }
 
-    public void setAuthority(final String authority) {
+    public void setAuthority(final URL authority) {
         mAuthority = authority;
+    }
+
+    public String getResponseMode() {
+        return mResponseMode;
+    }
+
+    public void setResponseMode(final String responseMode) {
+        this.mResponseMode = responseMode;
     }
 
     public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException{
@@ -184,12 +203,10 @@ public class MicrosoftStsAuthorizationRequest extends AuthorizationRequest {
         return authorizationUrl;
     }
 
-
-
     private Map<String, String> createAuthorizationRequestParameters() throws UnsupportedEncodingException, ClientException {
         final Map<String, String> requestParameters = new HashMap<>();
 
-        final Set<String> scopes = new HashSet<>(mScope);
+        final Set<String> scopes = new HashSet<>(getScope());
         scopes.addAll(mExtraScopesToConsent);
         final Set<String> requestedScopes = getDecoratedScope(scopes);
         requestParameters.put(AuthenticationConstants.OAuth2.SCOPE,
@@ -250,9 +267,9 @@ public class MicrosoftStsAuthorizationRequest extends AuthorizationRequest {
 
     private String encodeProtocolState() throws UnsupportedEncodingException {
         final String state = String.format("a=%s&r=%s", StringExtensions.urlFormEncode(
-                mAuthority),
+                mAuthority.toString()),
                 StringExtensions.urlFormEncode(StringExtensions.convertSetToString(
-                        mScope, " ")));
+                        getScope(), " ")));
         return Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE);
     }
 
@@ -302,6 +319,10 @@ public class MicrosoftStsAuthorizationRequest extends AuthorizationRequest {
 
         // Add it to our Authorization request
         requestParameters.put(AuthenticationConstants.MSSTS.CODE_CHALLENGE, mPKCEChallenge.mCodeChallenge);
+        // The method used to encode the code_verifier for the code_challenge parameter.
+        // Can be one of plain or S256.
+        // If excluded, code_challenge is assumed to be plaintext if code_challenge is included.
+        // Azure AAD v2.0 supports both plain and S256.
         requestParameters.put(AuthenticationConstants.MSSTS.CODE_CHALLENGE_METHOD, PKCEChallengeFactory.PKCEChallenge.ChallengeMethod.S256.name());
     }
 

@@ -25,7 +25,8 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
@@ -34,12 +35,49 @@ import java.net.URLEncoder;
  * This should provide an extension point for additional parameters to be set
  */
 public abstract class AuthorizationRequest {
+    /**
+     * A required value.
+     *
+     * Must include code for the authorization code flow.
+     */
     private String mResponseType;
+
+    /**
+     * A required value.
+     *
+     * The Application ID that the registration portal (apps.dev.microsoft.com) assigned your app.
+     */
     private String mClientId;
+
+    /**
+     * A recommended value.
+     *
+     * The redirect_uri of your app, where authentication responses can be sent and received by your app.
+     * It must exactly match one of the redirect_uris you registered in the portal, except it must be url encoded.
+     */
     private String mRedirectUri;
+
+    /**
+     * A recommended value.
+     *
+     * A value included in the request that will also be returned in the token response.
+     * It can be a string of any content that you wish. A randomly generated unique value is
+     * typically used for preventing cross-site request forgery attacks. The value can also
+     * encode information about the user's state in the app before the authentication request
+     * occurred, such as the page or view they were on.
+     */
     private String mState;
 
+    /**
+     * Scopes scopes that you want the user to consent to is required for V2 auth request.
+     *
+     * The scope is an ignored value for V1 auth request.
+     * For v1 Azure AD apps, scopes must be statically configured in the Azure Portal.
+     */
+    private Set<String> mScope;
+
     public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
+
     /**
      * @return mResponseType of the authorization request.
      */
@@ -94,6 +132,14 @@ public abstract class AuthorizationRequest {
      */
     public void setState(final String state) {
         mState = state;
+    }
+
+    public Set<String> getScope() {
+        return mScope;
+    }
+
+    public void setScope(final Set<String> scope) {
+        mScope = new HashSet<>(scope);
     }
 
     //CHECKSTYLE:OFF

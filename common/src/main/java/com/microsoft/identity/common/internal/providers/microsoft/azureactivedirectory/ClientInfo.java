@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import android.util.Base64;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -66,7 +67,7 @@ public class ClientInfo {
         }
 
         // decode the client info first
-        final String decodedClientInfo = new String(Base64.decode(rawClientInfo, Base64.URL_SAFE), Charset.forName(StringExtensions.ENCODING_UTF8));
+        final String decodedClientInfo = new String(Base64.decode(rawClientInfo, Base64.URL_SAFE), Charset.forName(AuthenticationConstants.ENCODING_UTF8));
         final Map<String, String> clientInfoItems;
         try {
             clientInfoItems = JsonExtensions.extractJsonObjectIntoMap(decodedClientInfo);
