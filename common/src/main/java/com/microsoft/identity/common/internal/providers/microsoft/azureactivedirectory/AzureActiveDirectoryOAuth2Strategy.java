@@ -60,10 +60,6 @@ public class AzureActiveDirectoryOAuth2Strategy
 
     /**
      * Constructor of AzureActiveDirectoryOAuth2Strategy.
-     * <<<<<<< HEAD
-     * <p>
-     * =======
-     * >>>>>>> dev
      *
      * @param config Azure Active Directory OAuth2 configuration
      */

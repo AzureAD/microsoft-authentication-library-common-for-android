@@ -446,7 +446,6 @@ public final class Logger {
     }
 
     /**
-     * <<<<<<< HEAD
      * Log a method entry, with optional parameters. This method only writes output if the
      * {@link LogLevel} is {@link LogLevel#VERBOSE} and PII logging is enabled.
      *
@@ -514,13 +513,6 @@ public final class Logger {
         return text.replaceFirst("(?s)(.*)" + regex, "$1" + replacement);
     }
 
-    /**
-     * TODO. Need to discuss on how to keep the correlationID.
-     * CorrelationID should be per request => need to sync with Telemetry implementation
-     * =======
-     * TODO. Need to discuss on how to keep the correlationID. CorrelationID should be per request => need to sync with Telemetry implementation
-     * >>>>>>> dev
-     */
     private void log(final String tag,
                      final LogLevel logLevel,
                      @Nullable final String correlationID,
