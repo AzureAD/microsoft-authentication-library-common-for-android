@@ -53,6 +53,10 @@ import static android.content.ContentValues.TAG;
 public class MicrosoftStsAuthorizationRequest extends AuthorizationRequest {
     private String mAuthorizationEndpoint;
     private URL mAuthority;
+
+    /*
+     *
+     */
     private UUID mCorrelationId; //nullable
     private final Set<String> mExtraScopesToConsent = new HashSet<>();
 

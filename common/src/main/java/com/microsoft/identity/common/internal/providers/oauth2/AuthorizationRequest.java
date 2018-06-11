@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.io.UnsupportedEncodingException;
@@ -36,21 +37,19 @@ import java.util.Set;
  */
 public abstract class AuthorizationRequest {
     /**
-     * A required value.
-     *
-     * Must include code for the authorization code flow.
+     * A required value and must be set to "code".
      */
     private String mResponseType;
 
     /**
      * A required value.
      *
-     * The Application ID that the registration portal (apps.dev.microsoft.com) assigned your app.
+     * The client identifier as assigned by the authorization server, when the client was registered.
      */
     private String mClientId;
 
     /**
-     * A recommended value.
+     * A optional value.
      *
      * The redirect_uri of your app, where authentication responses can be sent and received by your app.
      * It must exactly match one of the redirect_uris you registered in the portal, except it must be url encoded.
@@ -149,6 +148,7 @@ public abstract class AuthorizationRequest {
                 "mResponseType='" + mResponseType + '\'' +
                 ", mClientId='" + mClientId + '\'' +
                 ", mRedirectUri='" + mRedirectUri + '\'' +
+                ", mScope=" + StringExtensions.convertSetToString(mScope, " ") + '\'' +
                 ", mState='" + mState + '\'' +
                 '}';
     }

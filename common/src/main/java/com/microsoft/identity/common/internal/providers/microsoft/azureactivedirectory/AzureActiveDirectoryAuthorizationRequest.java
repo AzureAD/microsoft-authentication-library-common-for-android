@@ -42,20 +42,27 @@ import java.util.UUID;
  */
 public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationRequest {
     private static final String TAG = StringExtensions.class.getSimpleName();
-    /**
-     * Passed in from ADAL/MSAL after authority verification.
+
+    /*
+     * sliceParameters
+     * extraQueryParameters
+     * scope = MSID_OAUTH2_SCOPE_OPENID_VALUE;
+     * correlation_id
+     * loginhint
+     * pkce.codeChallenge
+     * pkce.codeChallengeMethod
+     * deviceId
+     * claims
      */
-    private String mAuthorizationEndpoint; //not null
     private URL mAuthority;
 
     /**
-     * A recommended value.
+     * Required.
      *
-     * Specifies the method that should be used to send the resulting token back to your app.
-     * Can be "query" or "form_post". "query" provides the code as a query string parameter on your
-     * redirect URI, while "form_post" executes a POST containing the code to your redirect URI.
+     * Passed in from ADAL/MSAL after authority verification.
      */
-    private String mResponseMode;
+    private String mAuthorizationEndpoint;
+
 
     /**
      * The App ID URI of the target web API.
@@ -169,14 +176,6 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
 
     public void setAuthority(final URL authority) {
         mAuthority = authority;
-    }
-
-    public String getResponseMode() {
-        return mResponseMode;
-    }
-
-    public void setResponseMode(final String responseMode) {
-        mResponseMode = responseMode;
     }
 
     //CHECKSTYLE:OFF
