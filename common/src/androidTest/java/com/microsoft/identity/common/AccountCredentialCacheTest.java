@@ -85,15 +85,15 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     public void setUp() throws Exception {
         super.setUp();
         final Context testContext = InstrumentationRegistry.getTargetContext();
-        mAccountCredentialCache = new AccountCredentialCache(
-                testContext,
-                new CacheKeyValueDelegate()
-        );
         mDelegate = new CacheKeyValueDelegate();
         mSharedPreferencesFileManager = new SharedPreferencesFileManager(
                 testContext,
                 sAccountCredentialSharedPreferences,
                 new StorageHelper(testContext) // Use encrypted storage for tests...
+        );
+        mAccountCredentialCache = new AccountCredentialCache(
+                mDelegate,
+                mSharedPreferencesFileManager
         );
     }
 

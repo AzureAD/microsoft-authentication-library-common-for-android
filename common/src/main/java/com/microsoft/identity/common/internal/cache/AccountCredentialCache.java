@@ -22,10 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
@@ -51,7 +50,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     private static final String TAG = AccountCredentialCache.class.getSimpleName();
 
     // The names of the SharedPreferences file on disk.
-    private static final String ACCOUNT_CREDENTIAL_SHARED_PREFERENCES =
+    public static final String ACCOUNT_CREDENTIAL_SHARED_PREFERENCES =
             "com.microsoft.identity.client.account_credential_cache";
 
     private static final Account EMPTY_ACCOUNT = new Account();
@@ -62,54 +61,34 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     // SharedPreferences used to store Accounts and Credentials
     private final ISharedPreferencesFileManager mSharedPreferencesFileManager;
 
-    private final Context mContext;
     private final ICacheKeyValueDelegate mCacheValueDelegate;
 
     /**
      * Constructor of AccountCredentialCache.
      *
-     * @param context                   Context
-     * @param accountCacheValueDelegate ICacheKeyValueDelegate
-     */
-    public AccountCredentialCache(
-            final Context context,
-            final ICacheKeyValueDelegate accountCacheValueDelegate) {
-        Logger.verbose(TAG, "Init: " + TAG);
-        mContext = context;
-        mSharedPreferencesFileManager = new SharedPreferencesFileManager(
-                mContext,
-                ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                new StorageHelper(mContext)
-        );
-        mCacheValueDelegate = accountCacheValueDelegate;
-    }
-
-    /**
-     * Constructor of AccountCredentialCache.
-     *
-     * @param context                      Context
      * @param accountCacheValueDelegate    ICacheKeyValueDelegate
      * @param sharedPreferencesFileManager ISharedPreferencesFileManager
      */
     public AccountCredentialCache(
-            final Context context,
-            final ICacheKeyValueDelegate accountCacheValueDelegate,
-            final ISharedPreferencesFileManager sharedPreferencesFileManager) {
+            @NonNull final ICacheKeyValueDelegate accountCacheValueDelegate,
+            @NonNull final ISharedPreferencesFileManager sharedPreferencesFileManager) {
         Logger.verbose(TAG, "Init: " + TAG);
-        mContext = context;
         mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;
     }
 
     @Override
-    public synchronized void saveAccount(final Account account) {
+    public synchronized void saveAccount(@NonNull final Account account) {
+        Logger.verbose(TAG, "Saving Account...");
+        Logger.verbose(TAG, "Account type: [" + account.getClass().getSimpleName() + "]");
         final String cacheKey = mCacheValueDelegate.generateCacheKey(account);
         final String cacheValue = mCacheValueDelegate.generateCacheValue(account);
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
     }
 
     @Override
-    public synchronized void saveCredential(Credential credential) {
+    public synchronized void saveCredential(@NonNull Credential credential) {
+        Logger.verbose(TAG, "Saving credential...");
         final String cacheKey = mCacheValueDelegate.generateCacheKey(credential);
         final String cacheValue = mCacheValueDelegate.generateCacheValue(credential);
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
