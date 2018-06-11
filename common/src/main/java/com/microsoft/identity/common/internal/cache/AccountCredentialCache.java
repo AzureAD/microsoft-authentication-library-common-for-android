@@ -45,6 +45,7 @@ import java.util.Set;
 
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class AccountCredentialCache implements IAccountCredentialCache {
 
     private static final String TAG = AccountCredentialCache.class.getSimpleName();
@@ -82,6 +83,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         Logger.verbose(TAG, "Saving Account...");
         Logger.verbose(TAG, "Account type: [" + account.getClass().getSimpleName() + "]");
         final String cacheKey = mCacheValueDelegate.generateCacheKey(account);
+        Logger.verbosePII(TAG, "Generated cache key: [" + cacheKey + "]");
         final String cacheValue = mCacheValueDelegate.generateCacheValue(account);
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
     }
@@ -90,12 +92,14 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     public synchronized void saveCredential(@NonNull Credential credential) {
         Logger.verbose(TAG, "Saving credential...");
         final String cacheKey = mCacheValueDelegate.generateCacheKey(credential);
+        Logger.verbosePII(TAG, "Generated cache key: [" + cacheKey + "]");
         final String cacheValue = mCacheValueDelegate.generateCacheValue(credential);
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
     }
 
     @Override
-    public synchronized Account getAccount(final String cacheKey) {
+    public synchronized Account getAccount(@NonNull final String cacheKey) {
+        Logger.verbose(TAG, "Loading Account by key...");
         Account account = mCacheValueDelegate.fromCacheValue(
                 mSharedPreferencesFileManager.getString(cacheKey),
                 Account.class
@@ -104,6 +108,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         if (null == account || EMPTY_ACCOUNT.equals(account)) { // Either we found nothing or it wasn't an Account
             // The returned account came back uninitialized...
             // Remove the entry and return null...
+            Logger.warn(TAG, "The returned Account was uninitialized. Removing...");
             mSharedPreferencesFileManager.remove(cacheKey);
             account = null;
         }
@@ -112,8 +117,10 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     }
 
     @Override
-    public synchronized Credential getCredential(final String cacheKey) {
+    public synchronized Credential getCredential(@NonNull final String cacheKey) {
         // TODO add support for more Credential types...
+        Logger.verbose(TAG, "getCredential()");
+        Logger.verbosePII(TAG, "Using cache key: [" + cacheKey + "]");
         final CredentialType type = getCredentialTypeForCredentialCacheKey(cacheKey);
         final Class<? extends Credential> clazz;
         if (CredentialType.AccessToken == type) {
@@ -138,6 +145,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                 || (IdToken.class == clazz) && EMPTY_ID.equals(credential)) {
             // The returned credential came back uninitialized...
             // Remove the entry and return null...
+            Logger.warn(TAG, "The returned Credential was uninitialized. Removing...");
             mSharedPreferencesFileManager.remove(cacheKey);
             credential = null;
         }
@@ -145,7 +153,9 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         return credential;
     }
 
+    @NonNull
     private Map<String, Account> getAccountsWithKeys() {
+        Logger.verbose(TAG, "Loading Accounts + keys...");
         final Map<String, ?> cacheValues = mSharedPreferencesFileManager.getAll();
         final Map<String, Account> accounts = new HashMap<>();
 
@@ -160,28 +170,38 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
+        Logger.verbose(TAG, "Returning [" + accounts.size() + "] Accounts w/ keys...");
+
         return accounts;
     }
 
     @Override
+    @NonNull
     public synchronized List<Account> getAccounts() {
+        Logger.verbose(TAG, "Loading Accounts...(no arg)");
         final Map<String, Account> allAccounts = getAccountsWithKeys();
         final List<Account> accounts = new ArrayList<>(allAccounts.values());
-
+        Logger.info(TAG, "Found [" + accounts.size() + "] Accounts...");
         return accounts;
     }
 
     @Override
+    @NonNull
     public List<Account> getAccounts(
-            final @Nullable String homeAccountId,
-            final String environment,
-            final @Nullable String realm) {
+            @Nullable final String homeAccountId,
+            @NonNull final String environment,
+            @Nullable final String realm) {
+        Logger.verbose(TAG, "Loading Accounts...");
         if (StringExtensions.isNullOrBlank(environment)) {
             throw new IllegalArgumentException("Param [environment] cannot be null.");
         }
 
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
+
+        Logger.verbose(TAG, "mustMatchOnHomeAccountId? [" + mustMatchOnHomeAccountId + "]");
+        Logger.verbose(TAG, "mustMatchOnRealm? [" + mustMatchOnRealm + "]");
+
         final List<Account> allAccounts = getAccounts();
         final List<Account> matchingAccounts = new ArrayList<>();
 
@@ -203,10 +223,14 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
+        Logger.info(TAG, "Found [" + matchingAccounts.size() + "] matching Accounts...");
+
         return matchingAccounts;
     }
 
+    @NonNull
     private Map<String, Credential> getCredentialsWithKeys() {
+        Logger.verbose(TAG, "Loading Credentials with keys...");
         final Map<String, ?> cacheValues = mSharedPreferencesFileManager.getAll();
         final Map<String, Credential> credentials = new HashMap<>();
 
@@ -221,25 +245,31 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
+        Logger.verbose(TAG, "Loaded [" + credentials.size() + "] Credentials...");
+
         return credentials;
     }
 
     @Override
+    @NonNull
     public synchronized List<Credential> getCredentials() {
+        Logger.verbose(TAG, "Loading Credentials...");
         final Map<String, Credential> allCredentials = getCredentialsWithKeys();
         final List<Credential> creds = new ArrayList<>(allCredentials.values());
-
+        Logger.verbose(TAG, "Found [" + creds.size() + "] Credentials");
         return creds;
     }
 
     @Override
+    @NonNull
     public List<Credential> getCredentials(
-            final @Nullable String homeAccountId,
-            final String environment,
-            final CredentialType credentialType,
-            final String clientId,
-            final @Nullable String realm,
-            final @Nullable String target) {
+            @Nullable final String homeAccountId,
+            @NonNull final String environment,
+            @NonNull final CredentialType credentialType,
+            @NonNull final String clientId,
+            @Nullable final String realm,
+            @Nullable final String target) {
+        Logger.verbose(TAG, "getCredentials()");
         if (StringExtensions.isNullOrBlank(environment)) {
             throw new IllegalArgumentException("Param [environment] cannot be null.");
         }
@@ -255,6 +285,12 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
         final boolean mustMatchOnTarget = !StringExtensions.isNullOrBlank(target);
+
+        Logger.verbose(TAG, "mustMatchOnHomeAccountId? [" + mustMatchOnHomeAccountId + "]");
+        Logger.verbose(TAG, "mustMatchOnRealm? [" + mustMatchOnRealm + "]");
+        Logger.verbose(TAG, "mustMatchOnTarget? [" + mustMatchOnTarget + "]");
+
+        Logger.verbose(TAG, "Loading Credentials...");
         final List<Credential> allCredentials = getCredentials();
         final List<Credential> matchingCredentials = new ArrayList<>();
 
@@ -281,6 +317,8 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                 } else if (credential instanceof RefreshToken) {
                     final RefreshToken refreshToken = (RefreshToken) credential;
                     matches = matches && target.equalsIgnoreCase(refreshToken.getTarget());
+                } else {
+                    Logger.warn(TAG, "Query specified target-match, but no target to match.");
                 }
             }
 
@@ -289,19 +327,25 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
+        Logger.info(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
+
         return matchingCredentials;
     }
 
     @Override
-    public boolean removeAccount(final Account accountToRemove) {
+    public boolean removeAccount(@NonNull final Account accountToRemove) {
+        Logger.info(TAG, "Removing Account...");
         if (null == accountToRemove) {
             throw new IllegalArgumentException("Param [accountToRemove] cannot be null.");
         }
 
+        Logger.verbose(TAG, "Loading Accounts + keys...");
         final Map<String, Account> accounts = getAccountsWithKeys();
+        Logger.info(TAG, "Found [" + accounts.size() + "] Accounts...");
 
         boolean accountRemoved = false;
         for (final Map.Entry<String, Account> entry : accounts.entrySet()) {
+            Logger.infoPII(TAG, "Inspecting: [" + entry.getKey() + "]");
             final IAccount currentAccount = entry.getValue();
 
             if (currentAccount.equals(accountToRemove)) {
@@ -311,19 +355,25 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
+        Logger.info(TAG, "Account was removed? [" + accountRemoved + "]");
+
         return accountRemoved;
     }
 
     @Override
-    public boolean removeCredential(final Credential credentialToRemove) {
+    public boolean removeCredential(@NonNull final Credential credentialToRemove) {
+        Logger.info(TAG, "Removing Credential...");
         if (null == credentialToRemove) {
             throw new IllegalArgumentException("Param [credentialToRemove] cannot be null.");
         }
 
+        Logger.verbose(TAG, "Loading Credentials + keys...");
         final Map<String, Credential> credentials = getCredentialsWithKeys();
+        Logger.info(TAG, "Found [" + credentials.size() + "] Credentials...");
 
         boolean credentialRemoved = false;
         for (final Map.Entry<String, Credential> entry : credentials.entrySet()) {
+            Logger.infoPII(TAG, "Inspecting: [" + entry.getKey() + "]");
             final Credential currentCredential = entry.getValue();
 
             if (currentCredential.equals(credentialToRemove)) {
@@ -333,18 +383,27 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
+        Logger.info(TAG, "Credential was removed? [" + credentialRemoved + "]");
+
         return credentialRemoved;
     }
 
     @Override
     public void clearAll() {
+        Logger.info(TAG, "Clearing all SharedPreferences entries...");
         mSharedPreferencesFileManager.clear();
+        Logger.info(TAG, "SharedPreferences cleared.");
     }
 
-    private Class<? extends Credential> credentialClassForType(final String cacheKey) {
-        final CredentialType targetType = getCredentialTypeForCredentialCacheKey(cacheKey);
-        Class<? extends Credential> credentialClass = null;
+    private Class<? extends Credential> credentialClassForType(@NonNull final String cacheKey) {
+        Logger.verbose(TAG, "Resolving class for key/CredentialType...");
+        Logger.verbosePII(TAG, "Supplied key: [" + cacheKey + "]");
 
+        final CredentialType targetType = getCredentialTypeForCredentialCacheKey(cacheKey);
+
+        Logger.verbose(TAG, "CredentialType matched: [" + targetType + "]");
+
+        Class<? extends Credential> credentialClass = null;
         switch (targetType) {
             case AccessToken:
                 credentialClass = AccessToken.class;
@@ -356,7 +415,9 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                 credentialClass = IdToken.class;
                 break;
             default:
-                // TODO Log a warning? Throw an Exception?
+                Logger.warn(TAG, "Could not match CredentialType to class."
+                        + "Did you forget to update this method with a new type?");
+                Logger.warnPII(TAG, "Sought key was: [" + cacheKey + "]");
         }
 
         return credentialClass;
@@ -368,10 +429,12 @@ public class AccountCredentialCache implements IAccountCredentialCache {
      * @param cacheKey The cache key to inspect.
      * @return The CredentialType or null if a proper type cannot be resolved.
      */
-    private CredentialType getCredentialTypeForCredentialCacheKey(final String cacheKey) {
+    private CredentialType getCredentialTypeForCredentialCacheKey(@NonNull final String cacheKey) {
         if (StringExtensions.isNullOrBlank(cacheKey)) {
             throw new IllegalArgumentException("Param [cacheKey] cannot be null.");
         }
+
+        Logger.verbosePII(TAG, "Evaluating cache key for CredentialType [" + cacheKey + "]");
 
         final Set<String> credentialTypesLowerCase = new HashSet<>();
 
@@ -379,17 +442,22 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             credentialTypesLowerCase.add(credentialTypeStr.toLowerCase(Locale.US));
         }
 
+        Logger.info(TAG, "Comparing cache key to known types...");
+
         CredentialType type = null;
         for (final String credentialTypeStr : credentialTypesLowerCase) {
             if (cacheKey.contains(CACHE_VALUE_SEPARATOR + credentialTypeStr + CACHE_VALUE_SEPARATOR)) {
-                // it's a Credential
-                // now choose whether to serialize an AT or RT...
+                Logger.info(TAG, "Cache key is a Credential type...");
+
                 if (credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken.name())) {
                     type = CredentialType.AccessToken;
+                    break;
                 } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.RefreshToken.name())) {
                     type = CredentialType.RefreshToken;
+                    break;
                 } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.IdToken.name())) {
                     type = CredentialType.IdToken;
+                    break;
                 } else {
                     // TODO Log a warning and skip this value?
                     Logger.warn(TAG, "Unexpected credential type.");
@@ -397,16 +465,22 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             }
         }
 
+        Logger.info(TAG, "Cache key was type: [" + type + "]");
+
         return type;
     }
 
-    private boolean isAccount(final String cacheKey) {
+    private boolean isAccount(@NonNull final String cacheKey) {
+        Logger.verbosePII(TAG, "Evaluating cache key: [" + cacheKey + "]");
         boolean isAccount = null == getCredentialTypeForCredentialCacheKey(cacheKey);
+        Logger.info(TAG, "isAccount? [" + isAccount + "]");
         return isAccount;
     }
 
-    private boolean isCredential(String cacheKey) {
+    private boolean isCredential(@NonNull String cacheKey) {
+        Logger.verbosePII(TAG, "Evaluating cache key: [" + cacheKey + "]");
         boolean isCredential = null != getCredentialTypeForCredentialCacheKey(cacheKey);
+        Logger.info(TAG, "isCredential? [" + isCredential + "]");
         return isCredential;
     }
 
