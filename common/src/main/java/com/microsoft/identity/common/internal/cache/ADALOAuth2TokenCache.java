@@ -35,8 +35,12 @@ import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
@@ -61,7 +65,7 @@ public class ADALOAuth2TokenCache
             .registerTypeAdapter(Date.class, new DateTimeAdapter())
             .create();
 
-    private List<IShareSingleSignOnState> mSharedSSOCaches;
+    private List<IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken>> mSharedSSOCaches;
 
     /**
      * Constructor of ADALOAuth2TokenCache.
@@ -83,7 +87,7 @@ public class ADALOAuth2TokenCache
      * @param sharedSSOCaches List<IShareSingleSignOnState>
      */
     public ADALOAuth2TokenCache(final Context context,
-                                final List<IShareSingleSignOnState> sharedSSOCaches) {
+                                final List<IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken>> sharedSSOCaches) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
         Logger.info(TAG, "Context is an Application? [" + (context instanceof Application) + "]");
@@ -118,9 +122,9 @@ public class ADALOAuth2TokenCache
         final String methodName = "saveTokens";
         Logger.info(TAG + ":" + methodName, "Saving Tokens...");
 
-        final Account account = strategy.createAccount(response);
+        final AzureActiveDirectoryAccount account = strategy.createAccount(response);
         final String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
-        final RefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
+        final AzureActiveDirectoryRefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
 
         Logger.info(TAG, "Constructing new ADALTokenCacheItem");
         final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem(strategy, request, response);
@@ -148,7 +152,7 @@ public class ADALOAuth2TokenCache
 
         // TODO At some point, the type-safety of this call needs to get beefed-up
         Logger.info(TAG + ":" + methodName, "Syncing SSO state to caches...");
-        for (final IShareSingleSignOnState sharedSsoCache : mSharedSSOCaches) {
+        for (final IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> sharedSsoCache : mSharedSSOCaches) {
             sharedSsoCache.setSingleSignOnState(account, refreshToken);
         }
     }
