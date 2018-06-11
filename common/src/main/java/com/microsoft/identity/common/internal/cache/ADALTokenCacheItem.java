@@ -22,16 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccessToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryRefreshToken;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.util.DateUtilities;
 
 import java.util.Date;
@@ -83,10 +80,10 @@ public class ADALTokenCacheItem {
         mSpeRing = tokenCacheItem.getSpeRing();
     }
 
-    ADALTokenCacheItem(final OAuth2Strategy strategy,
-                       final AuthorizationRequest request,
-                       final TokenResponse response) {
-        Account account = strategy.createAccount(response);
+    ADALTokenCacheItem(final AzureActiveDirectoryOAuth2Strategy strategy,
+                       final AzureActiveDirectoryAuthorizationRequest request,
+                       final AzureActiveDirectoryTokenResponse response) {
+        AzureActiveDirectoryAccount account = strategy.createAccount(response);
         String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
         AccessToken accessToken = strategy.getAccessTokenFromResponse(response);
         RefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
@@ -97,26 +94,13 @@ public class ADALTokenCacheItem {
         mAccessToken = accessToken.getAccessToken();
         mRefreshtoken = refreshToken.getRefreshToken();
         mRawIdToken = response.getIdToken();
-
-        if (account instanceof AzureActiveDirectoryAccount) {
-            mUserInfo = new ADALUserInfo((AzureActiveDirectoryAccount) account);
-            mTenantId = account.getRealm();
-        }
-
-        if (accessToken instanceof AzureActiveDirectoryAccessToken) {
-            mExpiresOn = ((AzureActiveDirectoryAccessToken) accessToken).getExpiresOn();
-            mExtendedExpiresOn = ((AzureActiveDirectoryAccessToken) accessToken).getExtendedExpiresOn();
-        }
-
-        if (refreshToken instanceof AzureActiveDirectoryRefreshToken) {
-            mIsMultiResourceRefreshToken = true;
-            mFamilyClientId = ((AzureActiveDirectoryRefreshToken) refreshToken).getFamilyId();
-        }
-
-        if (response instanceof AzureActiveDirectoryTokenResponse) {
-            mSpeRing = ((AzureActiveDirectoryTokenResponse) response).getSpeRing();
-        }
-
+        mUserInfo = new ADALUserInfo(account);
+        mTenantId = account.getRealm();
+        mExpiresOn = ((AzureActiveDirectoryAccessToken) accessToken).getExpiresOn();
+        mExtendedExpiresOn = ((AzureActiveDirectoryAccessToken) accessToken).getExtendedExpiresOn();
+        mIsMultiResourceRefreshToken = true;
+        mFamilyClientId = (refreshToken).getFamilyId();
+        mSpeRing = (response).getSpeRing();
     }
 
 
