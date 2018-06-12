@@ -50,8 +50,10 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
     private static final String TAG = AccountCredentialCache.class.getSimpleName();
 
-    // The names of the SharedPreferences file on disk.
-    public static final String ACCOUNT_CREDENTIAL_SHARED_PREFERENCES =
+    /**
+     * The name of the SharedPreferences file on disk.
+     */
+    public static final String DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES =
             "com.microsoft.identity.client.account_credential_cache";
 
     private static final Account EMPTY_ACCOUNT = new Account();
@@ -199,8 +201,8 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
 
-        Logger.verbose(TAG, "mustMatchOnHomeAccountId? [" + mustMatchOnHomeAccountId + "]");
-        Logger.verbose(TAG, "mustMatchOnRealm? [" + mustMatchOnRealm + "]");
+        Logger.verbose(TAG, "Account lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]");
+        Logger.verbose(TAG, "Account lookup filtered by realm? [" + mustMatchOnRealm + "]");
 
         final List<Account> allAccounts = getAccounts();
         final List<Account> matchingAccounts = new ArrayList<>();
@@ -286,9 +288,9 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
         final boolean mustMatchOnTarget = !StringExtensions.isNullOrBlank(target);
 
-        Logger.verbose(TAG, "mustMatchOnHomeAccountId? [" + mustMatchOnHomeAccountId + "]");
-        Logger.verbose(TAG, "mustMatchOnRealm? [" + mustMatchOnRealm + "]");
-        Logger.verbose(TAG, "mustMatchOnTarget? [" + mustMatchOnTarget + "]");
+        Logger.verbose(TAG, "Credential lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]");
+        Logger.verbose(TAG, "Credential lookup filtered by realm? [" + mustMatchOnRealm + "]");
+        Logger.verbose(TAG, "Credential lookup filtered by target? [" + mustMatchOnTarget + "]");
 
         Logger.verbose(TAG, "Loading Credentials...");
         final List<Credential> allCredentials = getCredentials();
