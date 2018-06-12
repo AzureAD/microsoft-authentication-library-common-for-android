@@ -34,8 +34,6 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
  */
 public abstract class AuthorizationResult {
 
-    private static final String TAG = AuthorizationResult.class.getSimpleName();
-
     /* Authorization Response Constants */
     protected static final String CODE = "code";
     protected static final String STATE = "state";

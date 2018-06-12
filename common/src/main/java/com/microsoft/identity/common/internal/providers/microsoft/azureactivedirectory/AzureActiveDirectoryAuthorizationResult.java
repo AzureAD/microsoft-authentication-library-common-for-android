@@ -77,8 +77,7 @@ public class AzureActiveDirectoryAuthorizationResult extends AuthorizationResult
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION:
-                Serializable authException = extras
-                        .getSerializable(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION);
+                //Serializable authException = extras.getSerializable(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION);
                 //TODO : AuthenticationException is not part of Common, what needs to be done here.
                 break;
 
