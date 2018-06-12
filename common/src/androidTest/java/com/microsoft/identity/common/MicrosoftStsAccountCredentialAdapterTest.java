@@ -22,9 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import android.support.test.espresso.core.deps.guava.collect.Sets;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Base64;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
@@ -40,12 +42,15 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -69,7 +74,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     private static final String MOCK_UID = "mock_uid";
     private static final String MOCK_UTID = "mock_utid";
     private static final String MOCK_CLIENT_INFO = createRawClientInfo(MOCK_UID, MOCK_UTID);
-    private static final String MOCK_SCOPE = "user.read";
+    private static final Set<String> MOCK_SCOPE = Sets.newHashSet("user.read");
     private static final String MOCK_FAMILY_ID = "1";
     private static final long MOCK_EXPIRES_IN = 3600L;
     private static final Date MOCK_EXPIRES_ON = new GregorianCalendar() {{
@@ -136,7 +141,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     public void createAccessToken() {
         final AccessToken accessToken = mAccountCredentialAdapter.createAccessToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(accessToken);
-        assertEquals(MOCK_SCOPE, accessToken.getTarget());
+        assertEquals(StringExtensions.convertSetToString(MOCK_SCOPE, " "), accessToken.getTarget());
         assertNotNull(accessToken.getCachedAt());
         assertNotNull(accessToken.getExpiresOn());
         assertNotNull(accessToken.getExpiresOn());
@@ -151,8 +156,8 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     public void createRefreshToken() {
         final RefreshToken refreshToken = mAccountCredentialAdapter.createRefreshToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(refreshToken);
-        assertNotNull(refreshToken);
-        assertEquals(MOCK_SCOPE, refreshToken.getTarget());
+       assertNotNull(refreshToken);
+        assertEquals(StringExtensions.convertSetToString(MOCK_SCOPE, " "), refreshToken.getTarget());
         assertNotNull(refreshToken.getCachedAt());
         assertNotNull(refreshToken.getExpiresOn());
         assertNotNull(refreshToken.getExpiresOn());

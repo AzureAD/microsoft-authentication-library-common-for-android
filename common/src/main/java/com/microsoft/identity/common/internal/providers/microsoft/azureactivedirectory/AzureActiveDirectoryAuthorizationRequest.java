@@ -22,75 +22,74 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import android.net.Uri;
 import android.os.Build;
 import android.util.Base64;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.internal.ui.AuthorizationConfiguration;
+import com.microsoft.identity.common.internal.providers.oauth2.PKCEChallenge;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
-/**
- * Ref: https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code
- */
 public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationRequest {
+    protected static final String ENCODING_UTF8 = "UTF_8";
     private static final String TAG = StringExtensions.class.getSimpleName();
+    private static final String RESOURCE = "resource";
+    private static final String LOGIN_HINT = "login_hint";
+    private static final String ADAL_ID_PLATFORM = "x-client-SKU";
+    private static final String ADAL_ID_VERSION = "x-client-Ver";
+    private static final String ADAL_ID_OS_VER = "x-client-OS";
+    private static final String ADAL_ID_DM = "x-client-DM";
+    private static final String CLIENT_REQUEST_ID = "client-request-id";
+    private static final String QUERY_PROMPT = "prompt";
+    private static final String CODE_CHALLENGE = "code_challenge";
+    private static final String CODE_CHALLENGE_METHOD = "code_challenge_method";
+    private static final String SCOPE_OPENID_VALUE = "openid";
+    private static final String ADAL_ID_PLATFORM_VALUE = "Android";
+    private static final String QUERY_PROMPT_VALUE = "login";
+    private static final String QUERY_PROMPT_REFRESH_SESSION_VALUE = "refresh_session";
 
-    /*
-     * sliceParameters
-     * extraQueryParameters
-     * scope = MSID_OAUTH2_SCOPE_OPENID_VALUE;
-     * correlation_id
-     * loginhint
-     * pkce.codeChallenge
-     * pkce.codeChallengeMethod
-     * deviceId
-     * claims
+    /**
+     * Required.
      */
     private URL mAuthority;
-
     /**
      * Required.
      *
      * Passed in from ADAL/MSAL after authority verification.
      */
     private String mAuthorizationEndpoint;
-
-
     /**
      * The App ID URI of the target web API.
      * This is required in one of either the authorization or token requests.
      * To ensure fewer authentication prompts place it in the authorization request to
      * ensure consent is received from the user.
      */
-    private String mResource; //not null
-
+    private String mResource;
     //TODO The microsoft doc is different with V1 has currently.
     /**
      * Optional. Indicate the type of user interaction that is required.
      */
-    private AADPromptBehavior mPromptBehavior; //nullable
-
+    private AADPromptBehavior mPromptBehavior;
     /**
      * Optional. Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
      */
-    private String mLoginHint; //nullable
-
-    private UUID mCorrelationId; //nullable
-
-    private String mExtraQP; //nullable
-    private String mClaimsChallenge; //nullable
-
-    //For broker authorization request.
-    private String mCallingPackage;
-    private String mSignatureDigest;
+    private String mLoginHint;
+    private UUID mCorrelationId;
+    private String mExtraQP;
+    private String mClaimsChallenge;
+    private PKCEChallenge mPKCEChallenge;
+    private String mLibraryVersion;
 
     /**
      * @return URL authority
@@ -104,6 +103,10 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
      */
     public void setAuthorizationEndpoint(String authorizationEndpoint) {
         mAuthorizationEndpoint = authorizationEndpoint;
+    }
+
+    public void setPKCEChallenge(final PKCEChallenge pKCEChallenge) {
+        mPKCEChallenge = pKCEChallenge;
     }
 
     public String getResource() {
@@ -154,21 +157,6 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
         mClaimsChallenge = claimsChallenge;
     }
 
-    public String getCallingPackage() {
-        return mCallingPackage;
-    }
-
-    public void setCallingPackage(final String callingPackage) {
-        mCallingPackage = callingPackage;
-    }
-
-    public String getSignatureDigest() {
-        return mSignatureDigest;
-    }
-
-    public void setSignatureDigest(final String signatureDigest) {
-        mSignatureDigest = signatureDigest;
-    }
 
     public URL getAuthority() {
         return mAuthority;
@@ -176,6 +164,23 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
 
     public void setAuthority(final URL authority) {
         mAuthority = authority;
+    }
+
+
+    /**
+     * @return String of ADAL version name.
+     */
+    public String getLibraryVersion() {
+        return mLibraryVersion;
+    }
+
+    /**
+     * The ADAL library should pass in its version.
+     *
+     * @param libraryVersion String of the library version name.
+     */
+    public void setLibraryVersion(final String libraryVersion) {
+        mLibraryVersion = libraryVersion;
     }
 
     //CHECKSTYLE:OFF
@@ -187,127 +192,88 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
     }
     //CHECKSTYLE:ON
 
-    public String getAuthorizationStartUrl() throws UnsupportedEncodingException {
-        if (AuthorizationConfiguration.getInstance().isBrokerRequest()) {
-            return getBrokerAuthorizationStartUrl();
-        } else {
-            return getLocalAuthorizationStartUrl();
-        }
+    public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
+        final String authorizationUrl = StringExtensions.appendQueryParameterToUrl(
+                mAuthorizationEndpoint,
+                createAuthorizationRequestParameters());
+        Logger.infoPII(TAG, mCorrelationId.toString(), "Request uri to authorize endpoint is: " + authorizationUrl);
+        return authorizationUrl;
+
     }
 
-    private String getLocalAuthorizationStartUrl() {
-        try {
-            return String.format("%s?%s", getAuthorizationEndpoint(), getAuthorizationEndpointQueryParameters());
-        } catch (final UnsupportedEncodingException e) {
-            // This encoding issue will happen at the beginning of API call,
-            // if it is not supported on this device. ADAL uses one encoding
-            // type.
-            Logger.error(TAG, "Encoding", e);
-            return null;
-        }
-    }
-
-    private String getBrokerAuthorizationStartUrl() {
-        try {
-            final String startUrl = getLocalAuthorizationStartUrl();
-            if (!StringExtensions.isNullOrBlank(mCallingPackage)
-                    && !StringExtensions.isNullOrBlank(mSignatureDigest)) {
-
-                return startUrl + "&package_name="
-                        + URLEncoder.encode(mCallingPackage, AuthenticationConstants.ENCODING_UTF8)
-                        + "&signature="
-                        + URLEncoder.encode(mSignatureDigest, AuthenticationConstants.ENCODING_UTF8);
-
-            }
-            return startUrl;
-        } catch (final UnsupportedEncodingException e) {
-            // This encoding issue will happen at the beginning of API call,
-            // if it is not supported on this device. ADAL uses one encoding
-            // type.
-            Logger.error(TAG, "Encoding", e);
-            return null;
-        }
-    }
-
-    public String getAuthorizationEndpointQueryParameters() throws UnsupportedEncodingException {
-        final Uri.Builder queryParameter = new Uri.Builder();
-        queryParameter.appendQueryParameter(AuthenticationConstants.OAuth2.RESPONSE_TYPE,
-                AuthenticationConstants.OAuth2.CODE)
-                .appendQueryParameter(AuthenticationConstants.OAuth2.CLIENT_ID,
-                        URLEncoder.encode(getClientId(),
-                                AuthenticationConstants.ENCODING_UTF8))
-                .appendQueryParameter(AuthenticationConstants.AAD.RESOURCE,
-                        URLEncoder.encode(mResource,
-                                AuthenticationConstants.ENCODING_UTF8))
-                .appendQueryParameter(AuthenticationConstants.OAuth2.REDIRECT_URI,
-                        URLEncoder.encode(getRedirectUri(),
-                                AuthenticationConstants.ENCODING_UTF8))
-                .appendQueryParameter(AuthenticationConstants.OAuth2.STATE, encodeProtocolState());
-
-        if (!StringExtensions.isNullOrBlank(mLoginHint)) {
-            queryParameter.appendQueryParameter(AuthenticationConstants.AAD.LOGIN_HINT,
-                    URLEncoder.encode(mLoginHint,
-                            AuthenticationConstants.ENCODING_UTF8));
-        }
+    private Map<String, String> createAuthorizationRequestParameters() throws UnsupportedEncodingException, ClientException {
+        final Map<String, String> requestParameters = new HashMap<>();
+        requestParameters.put(AuthenticationConstants.OAuth2.RESPONSE_TYPE, AuthenticationConstants.OAuth2.CODE);
+        requestParameters.put(AuthenticationConstants.OAuth2.CLIENT_ID,
+                URLEncoder.encode(getClientId(), ENCODING_UTF8));
+        requestParameters.put(RESOURCE, URLEncoder.encode(mResource, ENCODING_UTF8));
+        requestParameters.put(AuthenticationConstants.OAuth2.REDIRECT_URI,
+                URLEncoder.encode(getRedirectUri(), ENCODING_UTF8));
+        requestParameters.put(AuthenticationConstants.OAuth2.STATE, encodeProtocolState());
+        requestParameters.put(AuthenticationConstants.OAuth2.SCOPE, SCOPE_OPENID_VALUE);
 
         // append device and platform info in the query parameters
-        queryParameter.appendQueryParameter(AuthenticationConstants.AAD.ADAL_ID_PLATFORM,
-                AuthenticationConstants.AAD.ADAL_ID_PLATFORM_VALUE)
-                .appendQueryParameter(AuthenticationConstants.AAD.ADAL_ID_VERSION,
-                        URLEncoder.encode(AuthenticationConstants.ADAL_VERSION_NAME,
-                                AuthenticationConstants.ENCODING_UTF8))
-                .appendQueryParameter(AuthenticationConstants.AAD.ADAL_ID_OS_VER,
-                        URLEncoder.encode(String.valueOf(Build.VERSION.SDK_INT),
-                                AuthenticationConstants.ENCODING_UTF8))
-                .appendQueryParameter(AuthenticationConstants.AAD.ADAL_ID_DM,
-                        URLEncoder.encode(android.os.Build.MODEL,
-                                AuthenticationConstants.ENCODING_UTF8));
+        requestParameters.put(ADAL_ID_PLATFORM, ADAL_ID_PLATFORM_VALUE);
+        requestParameters.put(ADAL_ID_VERSION, URLEncoder.encode(mLibraryVersion, ENCODING_UTF8));
+        requestParameters.put(ADAL_ID_OS_VER, URLEncoder.encode(String.valueOf(Build.VERSION.SDK_INT), ENCODING_UTF8));
+        requestParameters.put(ADAL_ID_DM, URLEncoder.encode(android.os.Build.MODEL, ENCODING_UTF8) );
+
+        if (!StringExtensions.isNullOrBlank(mLoginHint)) {
+            requestParameters.put(LOGIN_HINT, URLEncoder.encode(mLoginHint, ENCODING_UTF8) );
+        }
 
         if (mCorrelationId != null) {
-            queryParameter.appendQueryParameter(AuthenticationConstants.AAD.CLIENT_REQUEST_ID,
-                    URLEncoder.encode(mCorrelationId.toString(),
-                            AuthenticationConstants.ENCODING_UTF8));
+            requestParameters.put(CLIENT_REQUEST_ID, URLEncoder.encode(mCorrelationId.toString(), ENCODING_UTF8));
         }
 
         // Setting prompt behavior to always will skip the cookies for webview.
         // It is added to authorization url.
         if (mPromptBehavior == AADPromptBehavior.Always) {
-            queryParameter.appendQueryParameter(AuthenticationConstants.AAD.QUERY_PROMPT,
-                    URLEncoder.encode(AuthenticationConstants.AAD.QUERY_PROMPT_VALUE,
-                            AuthenticationConstants.ENCODING_UTF8));
+            requestParameters.put(QUERY_PROMPT, URLEncoder.encode(QUERY_PROMPT_VALUE, ENCODING_UTF8));
         } else if (mPromptBehavior == AADPromptBehavior.REFRESH_SESSION) {
-            queryParameter.appendQueryParameter(AuthenticationConstants.AAD.QUERY_PROMPT,
-                    URLEncoder.encode(
-                            AuthenticationConstants.AAD.QUERY_PROMPT_REFRESH_SESSION_VALUE,
-                            AuthenticationConstants.ENCODING_UTF8));
+            requestParameters.put(QUERY_PROMPT, URLEncoder.encode(QUERY_PROMPT_REFRESH_SESSION_VALUE, ENCODING_UTF8));
+        }
+
+        if (null != mPKCEChallenge) {
+            requestParameters.put(CODE_CHALLENGE, URLEncoder.encode(mPKCEChallenge.getCodeChallenge(), ENCODING_UTF8));
+            // The method used to encode the code_verifier for the code_challenge parameter.
+            requestParameters.put(CODE_CHALLENGE_METHOD, URLEncoder.encode(mPKCEChallenge.getCodeChallengeMethod(), ENCODING_UTF8));
         }
 
         // Reading extra qp supplied by developer. append haschrome=1 if developer does not pass as extra qp
         if (StringExtensions.isNullOrBlank(mExtraQP)
                 || !mExtraQP.contains(AuthenticationConstants.OAuth2.HAS_CHROME)) {
-            queryParameter.appendQueryParameter(AuthenticationConstants.OAuth2.HAS_CHROME, "1");
+            requestParameters.put(AuthenticationConstants.OAuth2.HAS_CHROME, "1");
         }
 
         // Claims challenge are opaque to the sdk, we're not going to do any merging if both extra qp and claims parameter
         // contain it. Also, if developer sends it in both places, server will fail it.
         if (!StringExtensions.isNullOrBlank(mClaimsChallenge)) {
-            queryParameter.appendQueryParameter(AuthenticationConstants.OAuth2.CLAIMS, mClaimsChallenge);
+            requestParameters.put(AuthenticationConstants.OAuth2.CLAIMS, mClaimsChallenge);
         }
-
-        String requestUrl = queryParameter.build().getQuery();
         if (!StringExtensions.isNullOrBlank(mExtraQP)) {
-            String parsedQP = mExtraQP;
-            if (!mExtraQP.startsWith("&")) {
-                parsedQP = "&" + parsedQP;
-            }
-            requestUrl += parsedQP;
+            appendExtraQueryParameters(mExtraQP, requestParameters);
         }
 
-        return requestUrl;
+        return requestParameters;
     }
 
     private String encodeProtocolState() throws UnsupportedEncodingException {
         String state = String.format("a=%s&r=%s", mAuthorizationEndpoint, mResource);
         return Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE);
+    }
+
+    private void appendExtraQueryParameters(final String queryParams, final Map<String, String> requestParams) throws ClientException {
+        final Map<String, String> extraQps = StringExtensions.decodeUrlToMap(queryParams, "&");
+        final Set<Map.Entry<String, String>> extraQpEntries = extraQps.entrySet();
+        for (final Map.Entry<String, String> extraQpEntry : extraQpEntries) {
+            if (requestParams.containsKey(extraQpEntry.getKey())) {
+                throw new ClientException(ErrorStrings.DUPLICATE_QUERY_PARAMETER,
+                        "Extra query parameter " + extraQpEntry.getKey() + " is already sent by "
+                                + "the SDK. ");
+            }
+
+            requestParams.put(extraQpEntry.getKey(), extraQpEntry.getValue());
+        }
     }
 }

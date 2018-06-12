@@ -33,11 +33,6 @@ public final class AuthenticationConstants {
     }
 
     /**
-     * Version name of ADAL.
-     */
-    public static final String ADAL_VERSION_NAME = "0.1";
-
-    /**
      * ADAL package name.
      */
     public static final String ADAL_PACKAGE_NAME = "com.microsoft.aad.adal";
@@ -360,11 +355,6 @@ public final class AuthenticationConstants {
          * String for cloud instance host name.
          */
         public static final String CLOUD_INSTANCE_HOST_NAME = "cloud_instance_host_name";
-
-        /**
-         * String for default authorization endpoint.
-         */
-        public static final String DEFAULT_AUTHORIZE_ENDPOINT = "/oauth2/authorize";
     }
 
     /**
@@ -471,6 +461,11 @@ public final class AuthenticationConstants {
          * String for request id returned from Evo.
          **/
         public static final String REQUEST_ID_HEADER = "x-ms-request-id";
+
+        /**
+         * The default scope for AAD request.
+         */
+        public static final String SCOPE_OPENID_VALUE = "openid";
     }
 
     /**
@@ -835,32 +830,6 @@ public final class AuthenticationConstants {
             public static final String SPE_RING = PREFIX + "spe_ring";
         }
     }
-
-    /**
-     * Represents the constants value for Microsoft STS.
-     */
-    public static final class MSSTS {
-        public static final String SCOPE_PROFILE = "profile";
-        public static final String[] RESERVED_SCOPES = {"openid", SCOPE_PROFILE, "offline_access"};
-        public static final String PLATFORM_VALUE = "MSAL.Android";
-        public static final String MSAL_ID_VERSION = "0.1";
-
-        public static final class PromptValue {
-            public static final String LOGIN = "login";
-            public static final String SELECT_ACCOUNT = "select_account";
-            public static final String CONSENT = "consent";
-        }
-
-        public static final String CODE_CHALLENGE = "code_challenge";
-        public static final String CODE_VERIFIER = "code_verifier";
-        public static final String CODE_CHALLENGE_METHOD = "code_challenge_method";
-
-        public static final String LOGIN_HINT = "login_hint";
-        public static final String LOGIN_REQ = "login_req";
-        public static final String DOMAIN_REQ = "domain_req";
-
-    }
-
 
         /**
      * Represents the oauth2 error code.
