@@ -262,14 +262,14 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
     @Override
     @NonNull
-    public List<Credential> getCredentials(
+    public List<Credential> getCredentialsFilteredBy(
             @Nullable final String homeAccountId,
             @NonNull final String environment,
             @NonNull final CredentialType credentialType,
             @NonNull final String clientId,
             @Nullable final String realm,
             @Nullable final String target) {
-        Logger.verbose(TAG, "getCredentials()");
+        Logger.verbose(TAG, "getCredentialsFilteredBy()");
         if (StringExtensions.isNullOrBlank(environment)) {
             throw new IllegalArgumentException("Param [environment] cannot be null.");
         }

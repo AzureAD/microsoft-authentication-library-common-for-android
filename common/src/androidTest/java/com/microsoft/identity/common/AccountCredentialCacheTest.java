@@ -643,7 +643,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void getCredentialsNoEnvironment() {
         try {
-            mAccountCredentialCache.getCredentials(
+            mAccountCredentialCache.getCredentialsFilteredBy(
                     HOME_ACCOUNT_ID,
                     null,
                     CredentialType.RefreshToken,
@@ -660,7 +660,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void getCredentialsNoCredentialType() {
         try {
-            mAccountCredentialCache.getCredentials(
+            mAccountCredentialCache.getCredentialsFilteredBy(
                     HOME_ACCOUNT_ID,
                     ENVIRONMENT,
                     null,
@@ -677,7 +677,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void getCredentialsNoClientId() {
         try {
-            mAccountCredentialCache.getCredentials(
+            mAccountCredentialCache.getCredentialsFilteredBy(
                     HOME_ACCOUNT_ID,
                     ENVIRONMENT,
                     CredentialType.RefreshToken,
@@ -716,7 +716,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(refreshToken);
         mAccountCredentialCache.saveCredential(accessToken);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
                 HOME_ACCOUNT_ID,
                 ENVIRONMENT,
                 CredentialType.RefreshToken,
@@ -758,7 +758,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(refreshToken);
         mAccountCredentialCache.saveCredential(accessToken);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
                 null,
                 ENVIRONMENT,
                 CredentialType.RefreshToken,
@@ -806,7 +806,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(accessToken);
         mAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
                 null,
                 ENVIRONMENT,
                 CredentialType.AccessToken,
@@ -854,7 +854,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(accessToken);
         mAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
                 null,
                 ENVIRONMENT,
                 CredentialType.AccessToken,
@@ -902,7 +902,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(accessToken);
         mAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
                 HOME_ACCOUNT_ID,
                 ENVIRONMENT,
                 CredentialType.AccessToken,
@@ -950,7 +950,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(accessToken);
         mAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
                 HOME_ACCOUNT_ID,
                 ENVIRONMENT,
                 CredentialType.AccessToken,
@@ -998,7 +998,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(accessToken);
         mAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
                 HOME_ACCOUNT_ID,
                 ENVIRONMENT,
                 CredentialType.AccessToken,
@@ -1046,7 +1046,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(accessToken);
         mAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentials(
+        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
                 null,
                 ENVIRONMENT,
                 CredentialType.AccessToken,

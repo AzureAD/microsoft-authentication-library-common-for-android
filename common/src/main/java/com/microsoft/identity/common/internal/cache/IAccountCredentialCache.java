@@ -104,7 +104,7 @@ public interface IAccountCredentialCache {
      * @param target         The target used to match Credential cache keys.
      * @return A List of Credentials matching the supplied criteria.
      */
-    List<Credential> getCredentials(
+    List<Credential> getCredentialsFilteredBy(
             @Nullable final String homeAccountId,
             final String environment,
             final CredentialType credentialType,

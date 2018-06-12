@@ -232,7 +232,7 @@ public class MsalOAuth2TokenCache
     private void deleteAccessTokensWithIntersectingScopes(final AccessToken referenceToken) {
         final String methodName = "deleteAccessTokensWithIntersectingScopes";
 
-        final List<Credential> accessTokens = mAccountCredentialCache.getCredentials(
+        final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 referenceToken.getHomeAccountId(),
                 referenceToken.getEnvironment(),
                 CredentialType.AccessToken,
