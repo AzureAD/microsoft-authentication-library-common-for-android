@@ -395,7 +395,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setTarget(TARGET);
         mAccountCredentialCache.saveCredential(refreshToken);
 
-        // Verify getAccounts() returns one matching element
+        // Verify getAccountsFilteredBy() returns one matching element
         final List<Account> accounts = mAccountCredentialCache.getAccounts();
         assertTrue(accounts.size() == 1);
         assertEquals(account, accounts.get(0));
@@ -404,7 +404,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void getAccountsNullEnvironment() {
         try {
-            mAccountCredentialCache.getAccounts(HOME_ACCOUNT_ID, null, REALM);
+            mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, null, REALM);
             fail();
         } catch (IllegalArgumentException e) {
             assertNotNull(e);
@@ -426,7 +426,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<Account> accounts = mAccountCredentialCache.getAccounts(HOME_ACCOUNT_ID, ENVIRONMENT, REALM);
+        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, REALM);
         assertEquals(1, accounts.size());
         final Account retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
@@ -449,7 +449,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<Account> accounts = mAccountCredentialCache.getAccounts(null, ENVIRONMENT, REALM);
+        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, REALM);
         assertEquals(1, accounts.size());
         final Account retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
@@ -472,7 +472,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<Account> accounts = mAccountCredentialCache.getAccounts(null, ENVIRONMENT, null);
+        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, null);
         assertEquals(1, accounts.size());
         final Account retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
@@ -495,7 +495,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<Account> accounts = mAccountCredentialCache.getAccounts(HOME_ACCOUNT_ID, ENVIRONMENT, null);
+        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, null);
         assertEquals(1, accounts.size());
         final Account retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
@@ -547,7 +547,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account3);
         mAccountCredentialCache.saveAccount(account4);
 
-        final List<Account> accounts = mAccountCredentialCache.getAccounts(HOME_ACCOUNT_ID, ENVIRONMENT, null);
+        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, null);
         assertEquals(3, accounts.size());
     }
 
@@ -595,7 +595,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account3);
         mAccountCredentialCache.saveAccount(account4);
 
-        final List<Account> accounts = mAccountCredentialCache.getAccounts(null, ENVIRONMENT, REALM);
+        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, REALM);
         assertEquals(3, accounts.size());
     }
 
@@ -1096,7 +1096,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         // Call clearAccounts()
         mAccountCredentialCache.removeAccount(account);
 
-        // Verify getAccounts() returns zero items
+        // Verify getAccountsFilteredBy() returns zero items
         assertTrue(mAccountCredentialCache.getAccounts().isEmpty());
 
         // Verify getCredentials() returns two items
@@ -1144,7 +1144,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.removeCredential(accessToken);
         mAccountCredentialCache.removeCredential(refreshToken);
 
-        // Verify getAccounts() returns 1 item
+        // Verify getAccountsFilteredBy() returns 1 item
         assertEquals(1, mAccountCredentialCache.getAccounts().size());
 
         // Verify getCredentials() returns zero items
@@ -1190,7 +1190,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         // Call clearAll()
         mAccountCredentialCache.clearAll();
 
-        // Verify getAccounts() returns zero items
+        // Verify getAccountsFilteredBy() returns zero items
         assertTrue(mAccountCredentialCache.getAccounts().isEmpty());
 
         // Verify getCredentials() returns zero items
