@@ -114,7 +114,6 @@ public abstract class MicrosoftAccount extends Account {
 
     private String getUniqueId(final Map<String, String> claims) {
         final String methodName = "getUniqueId";
-        Logger.entering(TAG, methodName, claims);
 
         String uniqueId = null;
 
@@ -125,8 +124,6 @@ public abstract class MicrosoftAccount extends Account {
             Logger.info(TAG + ":" + methodName, "Using Subject as uniqueId");
             uniqueId = claims.get(AzureActiveDirectoryIdToken.SUBJECT);
         }
-
-        Logger.exiting(TAG, methodName, uniqueId);
 
         return uniqueId;
     }

@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
+import android.support.annotation.NonNull;
 import android.util.Base64;
 
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
@@ -60,7 +61,7 @@ public class ClientInfo {
      * @param rawClientInfo raw client info
      * @throws ServiceException if rawIdToken is malformed in JSON format.
      */
-    public ClientInfo(String rawClientInfo) throws ServiceException {
+    public ClientInfo(@NonNull String rawClientInfo) throws ServiceException {
         if (StringExtensions.isNullOrBlank(rawClientInfo)) {
             throw new IllegalArgumentException("ClientInfo cannot be null or blank.");
         }

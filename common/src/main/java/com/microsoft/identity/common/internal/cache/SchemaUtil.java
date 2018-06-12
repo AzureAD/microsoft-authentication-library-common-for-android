@@ -53,7 +53,6 @@ public final class SchemaUtil {
      */
     public static String getAuthority(final IDToken idToken) {
         final String methodName = "getAuthority";
-        Logger.entering(TAG, methodName, idToken);
 
         String issuer = null;
 
@@ -74,8 +73,6 @@ public final class SchemaUtil {
             Logger.warn(TAG + ":" + methodName, "IDToken was null");
         }
 
-        Logger.exiting(TAG, methodName, issuer);
-
         return issuer;
     }
 
@@ -91,7 +88,6 @@ public final class SchemaUtil {
      */
     public static String getEnvironment(final IDToken idToken) {
         final String methodName = "getEnvironment";
-        Logger.entering(TAG, methodName, idToken);
 
         final String issuer = getAuthority(idToken);
         String environment = null;
@@ -107,8 +103,6 @@ public final class SchemaUtil {
             Logger.errorPII(TAG + ":" + methodName, "Failed with Exception", e);
         }
 
-        Logger.exiting(TAG, methodName, environment);
-
         return environment;
     }
 
@@ -120,7 +114,6 @@ public final class SchemaUtil {
      */
     public static String getAvatarUrl(final IDToken idToken) {
         final String methodName = "getAvatarUrl";
-        Logger.entering(TAG, methodName, idToken);
 
         String avatarUrl = null;
 
@@ -142,8 +135,6 @@ public final class SchemaUtil {
             Logger.warn(TAG + ":" + methodName, "IDToken was null.");
         }
 
-        Logger.exiting(TAG, methodName, avatarUrl);
-
         return avatarUrl;
     }
 
@@ -156,7 +147,6 @@ public final class SchemaUtil {
      */
     public static String getAlternativeAccountId(final IDToken idToken) {
         final String methodName = "getAlternativeAccountId";
-        Logger.entering(TAG, methodName, idToken);
 
         String alternativeAccountId = null;
 
@@ -178,8 +168,6 @@ public final class SchemaUtil {
             Logger.warn(TAG + ":" + methodName, "IDToken was null.");
         }
 
-        Logger.exiting(TAG, methodName, alternativeAccountId);
-
         return alternativeAccountId;
     }
 
@@ -191,7 +179,6 @@ public final class SchemaUtil {
      */
     public static String getHomeAccountId(final ClientInfo clientInfo) {
         final String methodName = ":getHomeAccountId";
-        Logger.entering(TAG, methodName, clientInfo);
 
         String homeAccountId = null;
 
@@ -216,8 +203,6 @@ public final class SchemaUtil {
         } else {
             Logger.warn(TAG + ":" + methodName, "ClientInfo was null.");
         }
-
-        Logger.exiting(TAG, methodName, homeAccountId);
 
         return homeAccountId;
     }
