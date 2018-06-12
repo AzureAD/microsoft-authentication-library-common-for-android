@@ -69,9 +69,6 @@ public abstract class AuthorizationRequest {
 
     /**
      * Scopes scopes that you want the user to consent to is required for V2 auth request.
-     *
-     * The scope is an ignored value for V1 auth request.
-     * For v1 Azure AD apps, scopes must be statically configured in the Azure Portal.
      */
     private Set<String> mScope;
 
