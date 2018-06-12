@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 
 public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration {
+
     /**
      * @return True if authority host validation enabled, false otherwise.
      */

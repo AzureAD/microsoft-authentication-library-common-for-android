@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.util.Base64;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -225,7 +224,7 @@ public class IDToken {
         final byte[] data = Base64.decode(idTokenBody, Base64.URL_SAFE);
 
         try {
-            final String decodedBody = new String(data, Charset.forName(AuthenticationConstants.ENCODING_UTF8));
+            final String decodedBody = new String(data, Charset.forName(StringExtensions.ENCODING_UTF8));
             return JsonExtensions.extractJsonObjectIntoMap(decodedBody);
         } catch (final JSONException e) {
             throw new ServiceException("", ErrorStrings.INVALID_JWT, e);

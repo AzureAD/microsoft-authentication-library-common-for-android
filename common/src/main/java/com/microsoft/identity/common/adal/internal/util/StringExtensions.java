@@ -26,7 +26,6 @@ import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -48,6 +47,11 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 public final class StringExtensions {
+    /**
+     * The constant ENCODING_UTF8.
+     */
+    public static final String ENCODING_UTF8 = "UTF_8";
+
     private static final String TAG = StringExtensions.class.getSimpleName();
 
     private static final String TOKEN_HASH_ALGORITHM = "SHA256";
@@ -81,9 +85,9 @@ public final class StringExtensions {
             UnsupportedEncodingException {
         if (!isNullOrBlank(msg)) {
             MessageDigest digester = MessageDigest.getInstance(TOKEN_HASH_ALGORITHM);
-            final byte[] msgInBytes = msg.getBytes(AuthenticationConstants.ENCODING_UTF8);
+            final byte[] msgInBytes = msg.getBytes(ENCODING_UTF8);
             return new String(Base64.encode(digester.digest(msgInBytes), Base64.NO_WRAP),
-                    AuthenticationConstants.ENCODING_UTF8);
+                    ENCODING_UTF8);
         }
         return msg;
     }
@@ -96,7 +100,7 @@ public final class StringExtensions {
      * @throws UnsupportedEncodingException throws if encoding not supported.
      */
     public static String urlFormEncode(String source) throws UnsupportedEncodingException {
-        return URLEncoder.encode(source, AuthenticationConstants.ENCODING_UTF8);
+        return URLEncoder.encode(source, ENCODING_UTF8);
     }
 
     /**
@@ -109,7 +113,7 @@ public final class StringExtensions {
     public static String urlFormDecode(String source) throws UnsupportedEncodingException {
 
         // Decode everything else
-        return URLDecoder.decode(source, AuthenticationConstants.ENCODING_UTF8);
+        return URLDecoder.decode(source, ENCODING_UTF8);
     }
 
     /**
@@ -123,7 +127,7 @@ public final class StringExtensions {
             throws UnsupportedEncodingException {
         return new String(
                 Base64.encode(bytes, Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE),
-                AuthenticationConstants.ENCODING_UTF8);
+                ENCODING_UTF8);
     }
 
     /**
@@ -248,7 +252,7 @@ public final class StringExtensions {
      * @return String
      */
     public static String base64UrlEncodeToString(final String message) {
-        return Base64.encodeToString(message.getBytes(Charset.forName(AuthenticationConstants.ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
+        return Base64.encodeToString(message.getBytes(Charset.forName(ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
     }
 
     /**

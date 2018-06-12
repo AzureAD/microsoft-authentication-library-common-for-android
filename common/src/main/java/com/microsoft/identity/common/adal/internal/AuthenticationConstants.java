@@ -461,11 +461,6 @@ public final class AuthenticationConstants {
          * String for request id returned from Evo.
          **/
         public static final String REQUEST_ID_HEADER = "x-ms-request-id";
-
-        /**
-         * The default scope for AAD request.
-         */
-        public static final String SCOPE_OPENID_VALUE = "openid";
     }
 
     /**
@@ -831,7 +826,7 @@ public final class AuthenticationConstants {
         }
     }
 
-        /**
+    /**
      * Represents the oauth2 error code.
      */
     public static final class OAuth2ErrorCode {

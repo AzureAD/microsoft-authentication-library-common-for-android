@@ -156,7 +156,6 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     public void createRefreshToken() {
         final RefreshToken refreshToken = mAccountCredentialAdapter.createRefreshToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(refreshToken);
-       assertNotNull(refreshToken);
         assertEquals(StringExtensions.convertSetToString(MOCK_SCOPE, " "), refreshToken.getTarget());
         assertNotNull(refreshToken.getCachedAt());
         assertNotNull(refreshToken.getExpiresOn());

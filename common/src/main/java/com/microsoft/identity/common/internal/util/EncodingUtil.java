@@ -33,6 +33,7 @@ import java.nio.charset.Charset;
  */
 public final class EncodingUtil {
 
+
     private EncodingUtil() {
         // Utility class.
     }
