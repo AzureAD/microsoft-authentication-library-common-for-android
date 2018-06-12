@@ -1096,7 +1096,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         // Call clearAccounts()
         mAccountCredentialCache.removeAccount(account);
 
-        // Verify getAccountsFilteredBy() returns zero items
+        // Verify getAccounts() returns zero items
         assertTrue(mAccountCredentialCache.getAccounts().isEmpty());
 
         // Verify getCredentials() returns two items
@@ -1144,7 +1144,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.removeCredential(accessToken);
         mAccountCredentialCache.removeCredential(refreshToken);
 
-        // Verify getAccountsFilteredBy() returns 1 item
+        // Verify getAccounts() returns 1 item
         assertEquals(1, mAccountCredentialCache.getAccounts().size());
 
         // Verify getCredentials() returns zero items
@@ -1190,7 +1190,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         // Call clearAll()
         mAccountCredentialCache.clearAll();
 
-        // Verify getAccountsFilteredBy() returns zero items
+        // Verify getAccounts() returns zero items
         assertTrue(mAccountCredentialCache.getAccounts().isEmpty());
 
         // Verify getCredentials() returns zero items
