@@ -33,38 +33,55 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
  * In the case of an error/exception this class should return the associated exception
  */
 public abstract class AuthorizationResult {
-    AuthorizationStatus mAuthorizationStatus;
-    AuthorizationResponse mAuthorizationResponse;
-    AuthorizationErrorResponse mAuthorizationErrorResponse;
 
-    public static AuthorizationResult create(int resultCode, final Intent data) {
-        //Step 1: validate data
-        // return the authorization exception/result with AUTHORIZATION_FAILED error.
+    private static final String TAG = AuthorizationResult.class.getSimpleName();
 
-        if(resultCode == AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL) {
-            // User cancel the request in webview.
-            // return the Authentication result with user cancel error.
-        } else if (resultCode == AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE) {
-            // extract the url from data parse url
-            // and encapsulate the auth code into the AuthorizationResponse
-            // thus AuthorizationResponse should be part of Authentication Result
-        } else if (resultCode == AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR) {
-            // webview returns AuthorizationErrorResponse with error and error description
-        } else if (resultCode == AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION) {
-            // Serializable exception returned, need to deserialize it and throw it.
-        } else if (resultCode == AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME) {
-            //Device needs to have broker installed, we expect the apps to call us back when the broker is installed
-        } else {
-            // throw exception for unknown result code.
-        }
+    /* Authorization Response Constants */
+    protected static final String CODE = "code";
+    protected static final String STATE = "state";
+    protected static final String ERROR = "error";
+    protected static final String ERROR_DESCRIPTION = "error_description";
 
-        return null;
+    private AuthorizationStatus mAuthorizationStatus;
+    private AuthorizationResponse mAuthorizationResponse;
+    private AuthorizationErrorResponse mAuthorizationErrorResponse;
+
+    /**
+     * @return The {@link AuthorizationStatus} indicating the auth status for the request sent to authorize endopoint.
+     */
+    public AuthorizationStatus getAuthorizationStatus() {
+        return mAuthorizationStatus;
     }
+
+    /**
+     * @return The {@link AuthorizationResponse} indicating the auth response  for the request sent to authorize endopoint.
+     */
+    public AuthorizationResponse getAuthorizationResponse() {
+        return mAuthorizationResponse;
+    }
+
+    /**
+     * @return The {@link AuthorizationErrorResponse} indicating the auth error response for the request sent to authorize endopoint.
+     */
+    public AuthorizationErrorResponse getAuthorizationErrorResponse() {
+        return mAuthorizationErrorResponse;
+    }
+
+    protected void setAuthorizationErrorResponse(AuthorizationStatus authStatus, AuthorizationErrorResponse authErrorResponse) {
+        mAuthorizationStatus = authStatus;
+        mAuthorizationErrorResponse = authErrorResponse;
+    }
+
+    protected void setAuthorizationResponse(AuthorizationStatus authStatus, AuthorizationResponse authResponse) {
+        mAuthorizationStatus = authStatus;
+        mAuthorizationResponse = authResponse;
+    }
+
 
     /**
      * Enum for representing different authorization status.
      */
-    enum AuthorizationStatus {
+    protected enum AuthorizationStatus {
         /**
          * Code is successfully returned.
          */
