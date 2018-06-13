@@ -49,7 +49,7 @@ import java.security.SecureRandom;
  * @see <a href="https://tools.ietf.org/html/rfc7636#page-17">RFC-7636</a>
  */
 
-public class PKCEChallenge {
+public class PkceChallenge {
     private static final int CODE_VERIFIER_BYTE_SIZE = 32;
     private static final int ENCODE_MASK = Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP;
     private static final String DIGEST_ALGORITHM = "SHA-256";
@@ -76,7 +76,7 @@ public class PKCEChallenge {
 
     private final String mCodeChallengeMethod = CHALLENGE_SHA256;
 
-    private PKCEChallenge(String codeVerifier, String codeChallenge) {
+    private PkceChallenge(final String codeVerifier, final String codeChallenge) {
         mCodeVerifier = codeVerifier;
         mCodeChallenge = codeChallenge;
     }
@@ -103,18 +103,18 @@ public class PKCEChallenge {
     }
 
     /**
-     * Creates a new instance of {@link PKCEChallenge}.
+     * Creates a new instance of {@link PkceChallenge}.
      *
      * @return the newly created Challenge
      */
-    public static PKCEChallenge newPKCEChallenge() throws ClientException {
+    public static PkceChallenge newPkceChallenge() throws ClientException {
         // Generate the code_verifier as a high-entropy cryptographic random String
         final String codeVerifier = generateCodeVerifier();
 
         // Create a code_challenge derived from the code_verifier
         final String codeChallenge = generateCodeVerifierChallenge(codeVerifier);
 
-        return new PKCEChallenge(codeVerifier, codeChallenge);
+        return new PkceChallenge(codeVerifier, codeChallenge);
     }
 
     private static String generateCodeVerifier() {

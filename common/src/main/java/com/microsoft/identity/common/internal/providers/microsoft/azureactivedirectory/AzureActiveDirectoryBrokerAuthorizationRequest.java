@@ -20,18 +20,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
+package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
-/**
- * Azure Active Directory B2C Authorization Request.
- */
-public class AzureActiveDirectoryB2CAuthorizationRequest extends AuthorizationRequest {
-    public String getAuthorizationStartUrl() throws UnsupportedOperationException, ClientException {
-        throw new UnsupportedOperationException("Not implemented.");
+public class AzureActiveDirectoryBrokerAuthorizationRequest extends AzureActiveDirectoryAuthorizationRequest {
+    private String mCallingPackage;
+    private String mSignatureDigest;
+
+    @Override
+    public String getAuthorizationStartUrl() throws ClientException, UnsupportedEncodingException{
+        final String startUrl = super.getAuthorizationStartUrl();
+        if (!StringExtensions.isNullOrBlank(mCallingPackage)
+                && !StringExtensions.isNullOrBlank(mSignatureDigest)) {
+            return startUrl + "&package_name="
+                    + URLEncoder.encode(mCallingPackage, ENCODING_UTF8)
+                    + "&signature="
+                    + URLEncoder.encode(mSignatureDigest, ENCODING_UTF8);
+        }
+
+        return startUrl;
     }
 }

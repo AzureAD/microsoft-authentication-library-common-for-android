@@ -26,11 +26,11 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
  * Prompt Behaviors that sets the behavior for authentication activity launch.
  */
 
-public enum AADPromptBehavior {
+public enum AzureActiveDirectoryPromptBehavior {
     /**
      * Acquire token will prompt the user for credentials only when necessary.
      */
-    Auto,
+    AUTO,
 
     /**
      * The user will be prompted for credentials even if it is available in the
@@ -38,7 +38,7 @@ public enum AADPromptBehavior {
      * refresh token will be used to replace previous value. If Settings
      * switched to Auto, new request will use this latest token from cache.
      */
-    Always,
+    ALWAYS,
 
     /**
      * Re-authorizes (through displaying webview) the resource usage, making
