@@ -81,7 +81,7 @@ public abstract class OAuth2Strategy
         Uri authorizationUri = createAuthorizationUri(); //NOPMD Suppressing PMD warning for unused variable
         AuthorizationResult result = authorizationStrategy.requestAuthorization(request); //NOPMD Suppressing PMD warning for unused variable
         //TODO: Reconcile authorization result and response
-        AuthorizationResponse response = new AuthorizationResponse();
+        AuthorizationResponse response = new AuthorizationResponse("");
         return (GenericAuthorizationResponse) response;
     }
 
