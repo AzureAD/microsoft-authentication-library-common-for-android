@@ -60,7 +60,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
     }
 
     private MicrosoftStsAuthorizationResult parseUrlAndCreateAuthorizationResponse(final String url) {
-        HashMap<String, String> urlParameters = StringExtensions.getUrlParameters(url);
+        HashMap<String, String> urlParameters = StringUtil.isEmpty(url) ? null : StringExtensions.getUrlParameters(url);
         if (urlParameters == null || urlParameters.isEmpty()) {
             Logger.warn(TAG, null, "Invalid server response, empty query string from the webview redirect.");
             return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,

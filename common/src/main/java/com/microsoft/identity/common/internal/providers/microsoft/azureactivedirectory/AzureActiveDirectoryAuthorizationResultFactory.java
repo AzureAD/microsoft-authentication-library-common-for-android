@@ -123,7 +123,7 @@ public class AzureActiveDirectoryAuthorizationResultFactory extends Authorizatio
         } else {
             //TODO : validate state that it matches the one from request
             Logger.info(TAG, correlationId, "Auth code is successfully returned from webview redirect.");
-            AzureActiveDirectoryAuthorizationResponse response = new AzureActiveDirectoryAuthorizationResponse(state, code);
+            AzureActiveDirectoryAuthorizationResponse response = new AzureActiveDirectoryAuthorizationResponse(code, state);
             response.setCorrelationId(correlationId);
             return new AzureActiveDirectoryAuthorizationResult(AuthorizationStatus.SUCCESS, response);
         }
