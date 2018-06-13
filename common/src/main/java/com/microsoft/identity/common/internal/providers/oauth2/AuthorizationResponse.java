@@ -50,6 +50,15 @@ public class AuthorizationResponse {
      */
     private String mState;
 
+    public AuthorizationResponse(final String code){
+        new AuthorizationResponse(code, null);
+    }
+
+    public AuthorizationResponse(final String code, final String state){
+        mCode = code;
+        mState = state;
+    }
+
     /**
      * Gets the responses code.
      *

@@ -22,10 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import android.content.Intent;
-
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-
 /**
  * A class to return the result of the authorization request to the calling code (ADAL or MSAL Controller classes)
  * This class should have a generic status in terms of : Cancelled, TimedOut, Error,  etc...
@@ -34,71 +30,42 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
  */
 public abstract class AuthorizationResult {
 
-    /* Authorization Response Constants */
-    protected static final String CODE = "code";
-    protected static final String STATE = "state";
-    protected static final String ERROR = "error";
-    protected static final String ERROR_DESCRIPTION = "error_description";
-
     private AuthorizationStatus mAuthorizationStatus;
     private AuthorizationResponse mAuthorizationResponse;
     private AuthorizationErrorResponse mAuthorizationErrorResponse;
 
     /**
-     * @return The {@link AuthorizationStatus} indicating the auth status for the request sent to authorize endopoint.
+     * @return The {@link AuthorizationStatus} indicating the auth status for the request sent to authorize endpoint.
      */
     public AuthorizationStatus getAuthorizationStatus() {
         return mAuthorizationStatus;
     }
 
     /**
-     * @return The {@link AuthorizationResponse} indicating the auth response  for the request sent to authorize endopoint.
+     * @return The {@link AuthorizationResponse} indicating the auth response  for the request sent to authorize endpoint.
      */
     public AuthorizationResponse getAuthorizationResponse() {
         return mAuthorizationResponse;
     }
 
     /**
-     * @return The {@link AuthorizationErrorResponse} indicating the auth error response for the request sent to authorize endopoint.
+     * @return The {@link AuthorizationErrorResponse} indicating the auth error response for the request sent to authorize endpoint.
      */
     public AuthorizationErrorResponse getAuthorizationErrorResponse() {
         return mAuthorizationErrorResponse;
     }
 
-    protected void setAuthorizationErrorResponse(AuthorizationStatus authStatus, AuthorizationErrorResponse authErrorResponse) {
-        mAuthorizationStatus = authStatus;
+    protected void setAuthorizationErrorResponse(final AuthorizationErrorResponse authErrorResponse) {
         mAuthorizationErrorResponse = authErrorResponse;
     }
 
-    protected void setAuthorizationResponse(AuthorizationStatus authStatus, AuthorizationResponse authResponse) {
-        mAuthorizationStatus = authStatus;
+    protected void setAuthorizationResponse(final AuthorizationResponse authResponse) {
         mAuthorizationResponse = authResponse;
     }
 
-
-    /**
-     * Enum for representing different authorization status.
-     */
-    protected enum AuthorizationStatus {
-        /**
-         * Code is successfully returned.
-         */
-        SUCCESS,
-
-        /**
-         * User press device back button.
-         */
-        USER_CANCEL,
-
-        /**
-         * Returned URI contains error.
-         */
-        FAIL,
-
-        /**
-         * AuthenticationActivity detects the invalid request.
-         */
-        INVALID_REQUEST
-        //TODO:  Investigate how chrome tab returns http timeout error
+    protected void setAuthorizationStatus(final AuthorizationStatus authStatus) {
+        mAuthorizationStatus = authStatus;
     }
+
+
 }

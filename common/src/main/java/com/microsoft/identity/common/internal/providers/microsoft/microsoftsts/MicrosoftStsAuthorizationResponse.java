@@ -22,21 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 
-public class MicrosoftStsAuthorizationResult extends MicrosoftAuthorizationResult {
 
-    MicrosoftStsAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationResponse authResponse) {
-        setAuthorizationStatus(authStatus);
-        setAuthorizationResponse(authResponse);
+public class MicrosoftStsAuthorizationResponse extends AuthorizationResponse {
+
+    public MicrosoftStsAuthorizationResponse(final String code) {
+        super(code);
     }
 
-    MicrosoftStsAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationErrorResponse errorResponse) {
-        setAuthorizationStatus(authStatus);
-        setAuthorizationErrorResponse(errorResponse);
+    public MicrosoftStsAuthorizationResponse(final String code, final String state) {
+        super(code, state);
     }
 
 }

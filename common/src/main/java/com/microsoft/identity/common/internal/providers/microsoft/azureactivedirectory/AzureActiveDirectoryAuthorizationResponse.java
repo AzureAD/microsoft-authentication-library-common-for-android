@@ -20,23 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
+package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 
-public class MicrosoftStsAuthorizationResult extends MicrosoftAuthorizationResult {
 
-    MicrosoftStsAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationResponse authResponse) {
-        setAuthorizationStatus(authStatus);
-        setAuthorizationResponse(authResponse);
+public class AzureActiveDirectoryAuthorizationResponse extends AuthorizationResponse {
+
+    private String mCorrelationId;
+
+    public AzureActiveDirectoryAuthorizationResponse(final String code) {
+        super(code);
     }
 
-    MicrosoftStsAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationErrorResponse errorResponse) {
-        setAuthorizationStatus(authStatus);
-        setAuthorizationErrorResponse(errorResponse);
+    public AzureActiveDirectoryAuthorizationResponse(final String code, final String state) {
+        super(code, state);
     }
 
+    public String getCorrelationId() {
+        return mCorrelationId;
+    }
+
+    public void setCorrelationId(final String correlationId) {
+        this.mCorrelationId = correlationId;
+    }
 }
