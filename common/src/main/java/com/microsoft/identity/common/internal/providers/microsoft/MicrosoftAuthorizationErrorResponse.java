@@ -2,6 +2,10 @@ package com.microsoft.identity.common.internal.providers.microsoft;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 
+/**
+ * Sub class of {@link AuthorizationErrorResponse}.
+ * Encapsulates Microsoft specific Authorization Result errors in addition to standard OAuth2 errors.
+ */
 public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorResponse {
     /* Constants */
     public static final String AUTHORIZATION_FAILED = "authorization_failed";
@@ -24,6 +28,11 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
 
     public static final String BROKER_NEEDS_TO_BE_INSTALLED = "Device needs to have broker installed";
 
+    /**
+     * Constructor of {@link MicrosoftAuthorizationErrorResponse}.
+     * @param error  error string returned from the Authorization Server.
+     * @param errorDescription  description of the error.
+     */
     public MicrosoftAuthorizationErrorResponse(String error, String errorDescription) {
         super(error, errorDescription);
     }

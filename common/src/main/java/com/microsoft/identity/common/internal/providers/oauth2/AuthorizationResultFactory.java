@@ -3,7 +3,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.content.Intent;
 
 /**
- * Abstract Factory class to construct {@link AuthorizationResult}
+ * Abstract Factory class which can be extended to construct provider specific {@link AuthorizationResult}.
  */
 
 public abstract class AuthorizationResultFactory {
@@ -16,10 +16,10 @@ public abstract class AuthorizationResultFactory {
     protected static final String ERROR_DESCRIPTION = "error_description";
 
     /**
-     * Factory method to construct {@link AuthorizationResult}
+     * Factory method which can implemented to construct provider specific {@link AuthorizationResult}.
      *
-     * @param resultCode Result code from the calling Activity
-     * @param data       Intent data from the calling Activity
+     * @param resultCode Result code from the calling Activity.
+     * @param data       Intent data from the calling Activity.
      * @return {@link AuthorizationResult}
      */
     public abstract AuthorizationResult createAuthorizationResult(final int resultCode, final Intent data);

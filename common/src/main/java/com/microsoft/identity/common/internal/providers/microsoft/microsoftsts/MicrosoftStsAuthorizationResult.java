@@ -27,16 +27,28 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErro
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 
+/**
+ * Sub class of {@link MicrosoftAuthorizationResult}.
+ * Encapsulates Microsoft Authorization Response and additional MicrosoftSTS specific parameters and errors.
+ */
 public class MicrosoftStsAuthorizationResult extends MicrosoftAuthorizationResult {
 
-    MicrosoftStsAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationResponse authResponse) {
-        setAuthorizationStatus(authStatus);
-        setAuthorizationResponse(authResponse);
+    /**
+     * Constructor of {@link MicrosoftStsAuthorizationResult}.
+     * @param authStatus    {@link AuthorizationStatus}
+     * @param authResponse  {@link AuthorizationResponse}
+     */
+    public MicrosoftStsAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationResponse authResponse) {
+        super(authStatus, authResponse);
     }
 
-    MicrosoftStsAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationErrorResponse errorResponse) {
-        setAuthorizationStatus(authStatus);
-        setAuthorizationErrorResponse(errorResponse);
+    /**
+     * Constructor of {@link MicrosoftStsAuthorizationResult}.
+     * @param authStatus    {@link AuthorizationStatus}
+     * @param errorResponse {@link AuthorizationErrorResponse}
+     */
+    public MicrosoftStsAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationErrorResponse errorResponse) {
+        super(authStatus, errorResponse);
     }
 
 }

@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 /**
- * Class to encapsulate Authorization Result errors
+ * Class to encapsulate Authorization Result errors.
  */
 public class AuthorizationErrorResponse {
 
@@ -31,9 +31,9 @@ public class AuthorizationErrorResponse {
     private String mErrorDescription;
 
     /**
-     * AuthorizationErrorResponse Constructor
-     * @param error error returned due to Authorization request failure
-     * @param errorDescription error description returned due to Authorization request failure
+     * Constructor of {@link AuthorizationErrorResponse}.
+     * @param error error returned due to Authorization request failure.
+     * @param errorDescription error description returned due to Authorization request failure.
      */
     public AuthorizationErrorResponse(final String error, final String errorDescription) {
         mError = error;
@@ -55,5 +55,4 @@ public class AuthorizationErrorResponse {
     public void setErrorDescription(final String mErrorDescription) {
         this.mErrorDescription = mErrorDescription;
     }
-
 }

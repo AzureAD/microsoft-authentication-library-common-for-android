@@ -1,3 +1,25 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import android.content.Intent;
@@ -18,6 +40,11 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import java.io.Serializable;
 import java.util.HashMap;
 
+/**
+ * Sub class of {@link AuthorizationResultFactory}
+ * Encapsulates Authorization response or errors specific to Azure Active Directory in the form of
+ * {@link AzureActiveDirectoryAuthorizationResult}
+ */
 public class AzureActiveDirectoryAuthorizationResultFactory extends AuthorizationResultFactory {
 
     private static final String TAG = AzureActiveDirectoryAuthorizationResultFactory.class.getSimpleName();
@@ -33,43 +60,55 @@ public class AzureActiveDirectoryAuthorizationResultFactory extends Authorizatio
         }
         final Bundle extras = data.getExtras();
         final int requestId = extras.getInt(AuthenticationConstants.Browser.REQUEST_ID);
+        AuthorizationResult result = null;
         switch (resultCode) {
             case AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL:
                 Logger.verbose(TAG, "User cancel the request in webview: " + requestId);
-                return createAuthorizationResultWithErrorResponse(AuthorizationStatus.USER_CANCEL,
+                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.USER_CANCEL,
                         MicrosoftAuthorizationErrorResponse.USER_CANCEL,
                         MicrosoftAuthorizationErrorResponse.USER_CANCELLED_FLOW);
+                break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE:
                 final String url = extras.getString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, "");
-                return parseUrlAndCreateAuthorizationResult(url);
+                result = parseUrlAndCreateAuthorizationResult(url);
+                break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR:
                 // This is purely client side error, possible return could be chrome_not_installed or the request intent is
                 // not resolvable
                 final String error = extras.getString(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE);
                 final String errorDescription = extras.getString(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE);
-                return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL, error, errorDescription);
+                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL, error, errorDescription);
+                break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION:
                 //TODO : Verify that a ClientException is serialized here after Broker Implementation
-                Serializable clientException = extras.getSerializable(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION);
-                if (clientException != null && clientException instanceof ClientException) {
-                    ClientException exception = (ClientException) clientException;
-                    return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                Serializable responseAuthenticationException =
+                        extras.getSerializable(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION);
+
+                if (responseAuthenticationException != null && responseAuthenticationException instanceof ClientException) {
+                    ClientException exception = (ClientException) responseAuthenticationException;
+                    result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                             exception.getErrorCode(), exception.getMessage());
                 }
+                break;
 
             case AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME:
                 Logger.verbose(TAG, "Device needs to have broker installed, we expect the apps to call us"
                         + "back when the broker is installed");
-                return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                         MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED);
+                break;
         }
-        return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
-                MicrosoftAuthorizationErrorResponse.UNKNOWN_ERROR,
-                MicrosoftAuthorizationErrorResponse.UNKNOWN_RESULT_CODE + "[" + resultCode + "]");
+
+        if (result == null) {
+            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                    MicrosoftAuthorizationErrorResponse.UNKNOWN_ERROR,
+                    MicrosoftAuthorizationErrorResponse.UNKNOWN_RESULT_CODE + "[" + resultCode + "]");
+        }
+        return result;
     }
 
     private AzureActiveDirectoryAuthorizationResult createAuthorizationResultWithErrorResponse(final AuthorizationStatus authStatus,
@@ -93,40 +132,49 @@ public class AzureActiveDirectoryAuthorizationResultFactory extends Authorizatio
     }
 
     private AzureActiveDirectoryAuthorizationResult parseUrlAndCreateAuthorizationResult(final String url) {
-        HashMap<String, String> urlParameters = StringExtensions.getUrlParameters(url);
+        final HashMap<String, String> urlParameters = StringExtensions.getUrlParameters(url);
+
         if (urlParameters == null || urlParameters.isEmpty()) {
-            Logger.warn(TAG, null, "Invalid server response, empty query string from the webview redirect.");
+            Logger.warn(TAG, "Invalid server response, empty query string from the webview redirect.");
             return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
         }
         String correlationInResponse = urlParameters.get(AuthenticationConstants.AAD.CORRELATION_ID);
+        AzureActiveDirectoryAuthorizationResult result;
+
         if (urlParameters.containsKey(CODE)) {
-            return validateAndCreateAuthorizationResult(urlParameters.get(CODE), urlParameters.get(STATE), correlationInResponse);
-        } else if (urlParameters.containsKey(ERROR)) {
-            return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL, urlParameters.get(ERROR),
+            result = validateAndCreateAuthorizationResult(urlParameters.get(CODE), urlParameters.get(STATE), correlationInResponse);
+        }
+        else if (urlParameters.containsKey(ERROR)) {
+            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL, urlParameters.get(ERROR),
                     urlParameters.get(ERROR_DESCRIPTION), urlParameters.get(ERROR_CODES), correlationInResponse);
-        } else {
-            return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+        }
+        else {
+            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
         }
+        return result;
     }
 
     private AzureActiveDirectoryAuthorizationResult validateAndCreateAuthorizationResult(final String code,
                                                                                          final String state,
                                                                                          final String correlationId) {
+        AzureActiveDirectoryAuthorizationResult result;
         if (StringUtil.isEmpty(state)) {
             Logger.warn(TAG, correlationId, "State parameter is not returned from the webview redirect.");
-            return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     ErrorStrings.STATE_MISMATCH, MicrosoftAuthorizationErrorResponse.STATE_NOT_RETURNED);
-        } else {
+        }
+        else {
             //TODO : validate state that it matches the one from request
             Logger.info(TAG, correlationId, "Auth code is successfully returned from webview redirect.");
             AzureActiveDirectoryAuthorizationResponse response = new AzureActiveDirectoryAuthorizationResponse(code, state);
             response.setCorrelationId(correlationId);
-            return new AzureActiveDirectoryAuthorizationResult(AuthorizationStatus.SUCCESS, response);
+            result = new AzureActiveDirectoryAuthorizationResult(AuthorizationStatus.SUCCESS, response);
         }
+        return result;
     }
 
 }

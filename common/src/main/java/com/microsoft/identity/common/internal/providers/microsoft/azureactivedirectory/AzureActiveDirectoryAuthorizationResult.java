@@ -24,18 +24,31 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 
+/**
+ * Sub class of {@link MicrosoftAuthorizationResult}.
+ * Encapsulates Microsoft Authorization Response and additional Azure Active Directory specific parameters and errors.
+ */
 public class AzureActiveDirectoryAuthorizationResult extends MicrosoftAuthorizationResult {
 
 
-    public AzureActiveDirectoryAuthorizationResult(final AuthorizationStatus authStatus, final AzureActiveDirectoryAuthorizationResponse authResponse) {
-        setAuthorizationStatus(authStatus);
-        setAuthorizationResponse(authResponse);
+    /**
+     * Constructor of {@link AzureActiveDirectoryAuthorizationResult}.
+     * @param authStatus    {@link AuthorizationStatus}
+     * @param authResponse  {@link AuthorizationResponse}
+     */
+    public AzureActiveDirectoryAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationResponse authResponse) {
+        super(authStatus, authResponse);
     }
 
+    /**
+     * Constructor of {@link AzureActiveDirectoryAuthorizationResult}.
+     * @param authStatus    {@link AuthorizationStatus}
+     * @param errorResponse  {@link AuthorizationErrorResponse}
+     */
     public AzureActiveDirectoryAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationErrorResponse errorResponse) {
-        setAuthorizationStatus(authStatus);
-        setAuthorizationErrorResponse(errorResponse);
+        super(authStatus, errorResponse);
     }
 }
