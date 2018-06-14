@@ -36,7 +36,7 @@ final class PKeyAuthChallengeHandler {
         mResponse = response;
     }
 
-    void handleChallenge() {
+    void processPkeyAuthChallenge() {
         //TODO
     }
 }

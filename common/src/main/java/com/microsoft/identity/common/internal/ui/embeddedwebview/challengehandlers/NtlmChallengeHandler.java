@@ -20,17 +20,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers;
 
+final class NtlmChallengeHandler {
 
-/**
- * Configuration class for OAuth2Settings
- * Settings include things like:
- * - The address of the OIDC meta data document
- * - Whether or not to validate the issuer/host
- * - The issuer value to use
- * - The scopes supported by the oAuth provider
- * - etc...
- */
-public class OAuth2Configuration {
 }

@@ -45,7 +45,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      *
      * @TODO Will it be a part of the auth configuration class?
      */
-    private final String mRedirectURL;
+    private final String mRedirectUrl;
 
     private final AuthorizationRequest mRequest; //NOPMD
 
@@ -62,12 +62,12 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         }
 
         mContext = context;
-        mRedirectURL = redirectURL;
+        mRedirectUrl = redirectURL;
         mRequest = request;
     }
 
-    public String getmRedirectURL() {
-        return mRedirectURL;
+    public String getRedirectUrl() {
+        return mRedirectUrl;
     }
 
     /**

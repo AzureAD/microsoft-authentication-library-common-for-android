@@ -28,12 +28,9 @@ import android.view.View;
 import android.webkit.WebView;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.ui.AuthorizationConfiguration;
 
 
 public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy {
@@ -83,30 +80,11 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
         mWebView.getSettings().setUseWideViewPort(true);
         mWebView.getSettings().setBuiltInZoomControls(true);
         mWebView.setVisibility(View.INVISIBLE);
-
-        selectWebViewClient(activity, request);
+        mWebView.setWebViewClient(new AzureActiveDirectoryWebViewClient(activity, request.getRedirectUri(), request));
     }
 
-    private void selectWebViewClient (final Activity activity, final AuthorizationRequest request) {
-        // if it is an ADAL request, we set the AADWebViewClient
-        // if it is a MSAL request, we set the MSSTSWebviewClient
-        // if it is a broker request, we set the BrokerWebviewClient and broker always talk to MSAL
+    //TODO change the AuthorizationRequest type into MicrosoftAuthorizationRequest
 
-        if(AuthorizationConfiguration.getInstance().isADALRequest() &&
-                request instanceof AzureActiveDirectoryAuthorizationRequest) {
-            mWebView.setWebViewClient(new AADWebViewClient(activity, request.getRedirectUri(), (AzureActiveDirectoryAuthorizationRequest)request));
-        }
-
-        if(AuthorizationConfiguration.getInstance().isMSALRequest() &&
-                request instanceof MicrosoftStsAuthorizationRequest) {
-            mWebView.setWebViewClient(new MSSTSWebViewClient(activity, request.getRedirectUri(), (MicrosoftStsAuthorizationRequest)request));
-        }
-
-        if(AuthorizationConfiguration.getInstance().isBrokerRequest() &&
-                request instanceof MicrosoftStsAuthorizationRequest) {
-            mWebView.setWebViewClient(new MSSTSWebViewClient(activity, request.getRedirectUri(), (MicrosoftStsAuthorizationRequest)request));
-        }
-    }
 
     private void setupStartURL() {
         throw new UnsupportedOperationException("Not implemented yet.");
