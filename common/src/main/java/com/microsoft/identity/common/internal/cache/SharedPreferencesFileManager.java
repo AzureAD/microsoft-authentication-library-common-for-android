@@ -125,9 +125,6 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     public final void putString(
             final String key,
             final String value) {
-        final String methodName = "putString";
-        Logger.entering(TAG, methodName, key, value);
-
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
 
         if (null == mStorageHelper) {
@@ -137,39 +134,26 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         }
 
         editor.commit();
-
-        Logger.exiting(TAG, methodName);
     }
 
     @Override
     public final String getString(final String key) {
-        final String methodName = "getString";
-        Logger.entering(TAG, methodName, key);
-
         String restoredValue = mSharedPreferences.getString(key, null);
 
         if (null != mStorageHelper && !StringExtensions.isNullOrBlank(restoredValue)) {
             restoredValue = decrypt(restoredValue);
         }
 
-        Logger.exiting(TAG, methodName, restoredValue);
-
         return restoredValue;
     }
 
     @Override
     public final String getSharedPreferencesFileName() {
-        final String methodName = "getSharedPreferencesFileName";
-        Logger.entering(TAG, methodName);
-        Logger.exiting(TAG, mSharedPreferencesFileName);
         return mSharedPreferencesFileName;
     }
 
     @Override
     public final Map<String, String> getAll() {
-        final String methodName = "getAll";
-        Logger.entering(TAG, methodName);
-
         final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
 
         if (null != mStorageHelper) {
@@ -178,74 +162,45 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             }
         }
 
-        Logger.exiting(TAG, methodName, entries);
-
         return entries;
     }
 
     @Override
     public final boolean contains(final String key) {
-        final String methodName = "contains";
-        Logger.entering(TAG, methodName, key);
-
         final boolean contains = mSharedPreferences.contains(key);
-
-        Logger.exiting(TAG, methodName, contains);
-
         return contains;
     }
 
     @SuppressLint("ApplySharedPref")
     @Override
     public final void clear() {
-        final String methodName = "clear";
-        Logger.entering(TAG, methodName);
-
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.clear();
         editor.commit();
-
-        Logger.exiting(TAG, methodName);
     }
 
     @SuppressLint("ApplySharedPref")
     @Override
     public void remove(final String key) {
-        final String methodName = "remove";
-        Logger.entering(TAG, methodName, key);
-
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.remove(key);
         editor.commit();
-
-        Logger.exiting(TAG, methodName);
     }
 
     private String encrypt(final String clearText) {
-        final String methodName = "encrypt";
-        Logger.entering(TAG, methodName, clearText);
-
         final String encryptedValue = encryptDecryptInternal(clearText, true);
-
-        Logger.exiting(TAG, methodName, encryptedValue);
 
         return encryptedValue;
     }
 
     private String decrypt(final String encryptedBlob) {
-        final String methodName = "decrypt";
-        Logger.entering(TAG, methodName, encryptedBlob);
-
         final String decryptedValue = encryptDecryptInternal(encryptedBlob, false);
-
-        Logger.exiting(TAG, methodName, decryptedValue);
 
         return decryptedValue;
     }
 
     private String encryptDecryptInternal(final String inputText, final boolean encrypt) {
         final String methodName = "encryptDecryptInternal";
-        Logger.entering(TAG, methodName, inputText, encrypt);
 
         String result;
         try {
@@ -256,17 +211,10 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
                     "Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",
                     null
             );
-            Logger.errorPII(
-                    TAG + ":" + methodName,
-                    "Failed with Exception",
-                    e
-            );
 
             // TODO Throw a RuntimeException?
             result = null;
         }
-
-        Logger.exiting(TAG, methodName, result);
 
         return result;
     }

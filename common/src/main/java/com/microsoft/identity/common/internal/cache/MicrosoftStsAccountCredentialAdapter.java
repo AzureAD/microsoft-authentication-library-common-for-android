@@ -63,12 +63,8 @@ public class MicrosoftStsAccountCredentialAdapter
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
-        final String methodName = "createAccount";
-        Logger.entering(TAG, methodName, strategy, request, response);
-
+        Logger.verbose(TAG, "Creating Account");
         final Account account = new Account(strategy.createAccount(response));
-
-        Logger.exiting(TAG, methodName, account);
 
         return account;
     }
@@ -78,9 +74,6 @@ public class MicrosoftStsAccountCredentialAdapter
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
-        final String methodName = "createAccessToken";
-        Logger.entering(TAG, methodName, strategy, request, response);
-
         try {
             final long cachedAt = getCachedAt();
             final long expiresOn = getExpiresOn(response);
@@ -105,8 +98,6 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setClientInfo(response.getClientInfo());
             accessToken.setAccessTokenType(BEARER); // TODO Don't hardcode this value.
 
-            Logger.exiting(TAG, methodName, accessToken);
-
             return accessToken;
         } catch (ServiceException e) {
             // TODO handle this properly
@@ -119,9 +110,6 @@ public class MicrosoftStsAccountCredentialAdapter
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
-        final String methodName = "createRefreshToken";
-        Logger.entering(TAG, methodName, strategy, request, response);
-
         try {
             final long cachedAt = getCachedAt();
             final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
@@ -143,8 +131,6 @@ public class MicrosoftStsAccountCredentialAdapter
             // TODO are these needed? Expected?
             refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
 
-            Logger.exiting(TAG, methodName, refreshToken);
-
             return refreshToken;
         } catch (ServiceException e) {
             // TODO handle this properly
@@ -157,9 +143,6 @@ public class MicrosoftStsAccountCredentialAdapter
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
-        final String methodName = "createIdToken";
-        Logger.entering(TAG, methodName, strategy, request, response);
-
         try {
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
             final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
@@ -176,8 +159,6 @@ public class MicrosoftStsAccountCredentialAdapter
             // Optional fields
             idToken.setAuthority(request.getAuthority().toString());
 
-            Logger.exiting(TAG, methodName, idToken);
-
             return idToken;
         } catch (ServiceException e) {
             // TODO handle this properly
@@ -187,9 +168,6 @@ public class MicrosoftStsAccountCredentialAdapter
 
     @Override
     public RefreshToken asRefreshToken(@NonNull final MicrosoftRefreshToken refreshTokenIn) {
-        final String methodName = "asRefreshToken";
-        Logger.entering(TAG, methodName, refreshTokenIn);
-
         final RefreshToken refreshTokenOut = new RefreshToken();
 
         // Required fields
@@ -205,28 +183,18 @@ public class MicrosoftStsAccountCredentialAdapter
         refreshTokenOut.setClientInfo(refreshTokenIn.getClientInfo().getRawClientInfo());
         refreshTokenOut.setFamilyId(refreshTokenIn.getFamilyId());
 
-        Logger.exiting(TAG, methodName, refreshTokenOut);
-
         return refreshTokenOut;
     }
 
     @Override
     public Account asAccount(MicrosoftAccount account) {
-        final String methodName = "asAccount";
-        Logger.entering(TAG, methodName, account);
-
         Account acct = new Account(account);
-
-        Logger.exiting(TAG, methodName, acct);
 
         return acct;
     }
 
     @Override
     public IdToken asIdToken(MicrosoftAccount msAccount, MicrosoftRefreshToken refreshToken) {
-        final String methodName = "asIdToken";
-        Logger.entering(TAG, methodName, msAccount, refreshToken);
-
         final long cachedAt = getCachedAt();
         IDToken msIdToken = msAccount.getIDToken();
 
@@ -243,56 +211,33 @@ public class MicrosoftStsAccountCredentialAdapter
         // Optional fields
         idToken.setAuthority(SchemaUtil.getAuthority(msIdToken));
 
-        Logger.exiting(TAG, methodName, idToken);
-
         return idToken;
     }
 
-    private String getExtendedExpiresOn(final OAuth2Strategy strategy, final TokenResponse response) {
-        final String methodName = "getExtendedExpiresOn";
-        Logger.entering(TAG, methodName, strategy, response);
-
+    private String getExtendedExpiresOn(final OAuth2Strategy strategy, final TokenResponse response) { //NOPMD (unused params - method is TODO)
         // TODO It doesn't look like the v2 endpoint supports extended_expires_on claims
         // Is this true?
         String result = null;
-
-        Logger.exiting(TAG, methodName, result);
 
         return result;
     }
 
     private String getRealm(final MicrosoftStsOAuth2Strategy msStrategy, final MicrosoftStsTokenResponse msTokenResponse) {
-        final String methodName = "getRealm";
-        Logger.entering(TAG, methodName, msStrategy, msTokenResponse);
-
         final MicrosoftStsAccount msAccount = msStrategy.createAccount(msTokenResponse);
-
-        Logger.exiting(TAG, methodName, msAccount.getRealm());
-
         return msAccount.getRealm();
     }
 
     private long getCachedAt() {
-        final String methodName = "getCachedAt";
-        Logger.entering(TAG, methodName);
-
         final long currentTimeMillis = System.currentTimeMillis();
         final long cachedAt = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
-
-        Logger.exiting(TAG, methodName, cachedAt);
 
         return cachedAt;
     }
 
     private long getExpiresOn(final MicrosoftStsTokenResponse msTokenResponse) {
-        final String methodName = "getExpiresOn";
-        Logger.entering(TAG, methodName, msTokenResponse);
-
         // Should be seconds since 1970
         final long millisSince1970 = msTokenResponse.getExpiresOn().getTime();
         final long secondsSince1970 = TimeUnit.MILLISECONDS.toSeconds(millisSince1970);
-
-        Logger.exiting(TAG, methodName, secondsSince1970);
 
         return secondsSince1970;
     }

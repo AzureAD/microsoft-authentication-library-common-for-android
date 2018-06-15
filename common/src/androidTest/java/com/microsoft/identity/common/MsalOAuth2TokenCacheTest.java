@@ -191,7 +191,6 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         keyValueDelegate = new CacheKeyValueDelegate();
 
         accountCredentialCache = new AccountCredentialCache(
-                context,
                 keyValueDelegate,
                 mSharedPreferencesFileManager
         );

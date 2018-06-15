@@ -80,7 +80,7 @@ public interface IAccountCredentialCache {
      * @param realm         The realm used to match Account cache keys.
      * @return A List of Accounts matching the supplied criteria.
      */
-    List<Account> getAccounts(
+    List<Account> getAccountsFilteredBy(
             @Nullable final String homeAccountId,
             final String environment,
             @Nullable final String realm
@@ -104,7 +104,7 @@ public interface IAccountCredentialCache {
      * @param target         The target used to match Credential cache keys.
      * @return A List of Credentials matching the supplied criteria.
      */
-    List<Credential> getCredentials(
+    List<Credential> getCredentialsFilteredBy(
             @Nullable final String homeAccountId,
             final String environment,
             final CredentialType credentialType,
