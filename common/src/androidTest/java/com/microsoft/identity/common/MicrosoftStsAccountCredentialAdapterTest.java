@@ -35,6 +35,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -141,7 +142,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     public void createAccessToken() {
         final AccessToken accessToken = mAccountCredentialAdapter.createAccessToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(accessToken);
-        assertEquals(StringExtensions.convertSetToString(MOCK_SCOPE, " "), accessToken.getTarget());
+        assertEquals(StringUtil.convertSetToString(MOCK_SCOPE, " "), accessToken.getTarget());
         assertNotNull(accessToken.getCachedAt());
         assertNotNull(accessToken.getExpiresOn());
         assertNotNull(accessToken.getExpiresOn());
@@ -156,7 +157,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     public void createRefreshToken() {
         final RefreshToken refreshToken = mAccountCredentialAdapter.createRefreshToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(refreshToken);
-        assertEquals(StringExtensions.convertSetToString(MOCK_SCOPE, " "), refreshToken.getTarget());
+        assertEquals(StringUtil.convertSetToString(MOCK_SCOPE, " "), refreshToken.getTarget());
         assertNotNull(refreshToken.getCachedAt());
         assertNotNull(refreshToken.getExpiresOn());
         assertNotNull(refreshToken.getExpiresOn());

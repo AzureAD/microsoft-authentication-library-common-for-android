@@ -23,20 +23,17 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import android.os.Build;
-import android.util.Base64;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthorizationRequest {
     private static final String TAG = StringExtensions.class.getSimpleName();
@@ -94,79 +91,76 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
         return authorizationUrl;
     }
 
-    private Map<String, String> createAuthorizationRequestParameters() throws UnsupportedEncodingException, ClientException {
-        final Map<String, String> requestParameters = new HashMap<>();
-        requestParameters.put(AuthenticationConstants.OAuth2.RESPONSE_TYPE, AuthenticationConstants.OAuth2.CODE);
-        requestParameters.put(AuthenticationConstants.OAuth2.CLIENT_ID,
-                URLEncoder.encode(getClientId(), ENCODING_UTF8));
-        requestParameters.put(RESOURCE, URLEncoder.encode(mResource, ENCODING_UTF8));
-        requestParameters.put(AuthenticationConstants.OAuth2.REDIRECT_URI,
-                URLEncoder.encode(getRedirectUri(), ENCODING_UTF8));
-        requestParameters.put(AuthenticationConstants.OAuth2.STATE, encodeProtocolState());
-        requestParameters.put(AuthenticationConstants.OAuth2.SCOPE, SCOPE_OPENID_VALUE);
-
+    private void addDiagnosticParameters(@NonNull final Map<String, String> requestParameters) {
         // append device and platform info in the query parameters
         requestParameters.put(LIB_ID_PLATFORM, PLATFORM_VALUE);
-        requestParameters.put(LIB_ID_VERSION, URLEncoder.encode(getLibraryVersion(), ENCODING_UTF8));
-        requestParameters.put(LIB_ID_OS_VER, URLEncoder.encode(String.valueOf(Build.VERSION.SDK_INT), ENCODING_UTF8));
-        requestParameters.put(LIB_ID_DM, URLEncoder.encode(android.os.Build.MODEL, ENCODING_UTF8) );
+        requestParameters.put(LIB_ID_VERSION, getLibraryVersion());
+        requestParameters.put(LIB_ID_OS_VER, String.valueOf(Build.VERSION.SDK_INT));
+        requestParameters.put(LIB_ID_DM, android.os.Build.MODEL);
+    }
 
-        if (!StringExtensions.isNullOrBlank(getLoginHint())) {
-            requestParameters.put(LOGIN_HINT, URLEncoder.encode(getLoginHint(), ENCODING_UTF8) );
-        }
-
-        if (getCorrelationId() != null) {
-            requestParameters.put(CLIENT_REQUEST_ID, URLEncoder.encode(getCorrelationId().toString(), ENCODING_UTF8));
-        }
-
+    private void addPromptParameter(@NonNull final Map<String, String> requestParameters) {
         // Setting prompt behavior to always will skip the cookies for webview.
         // It is added to authorization url.
         if (mPromptBehavior == AzureActiveDirectoryPromptBehavior.ALWAYS) {
-            requestParameters.put(QUERY_PROMPT, URLEncoder.encode(QUERY_PROMPT_VALUE, ENCODING_UTF8));
+            requestParameters.put(QUERY_PROMPT, QUERY_PROMPT_VALUE);
         } else if (mPromptBehavior == AzureActiveDirectoryPromptBehavior.REFRESH_SESSION) {
-            requestParameters.put(QUERY_PROMPT, URLEncoder.encode(QUERY_PROMPT_REFRESH_SESSION_VALUE, ENCODING_UTF8));
+            requestParameters.put(QUERY_PROMPT, QUERY_PROMPT_REFRESH_SESSION_VALUE);
         }
+    }
 
+    private void addUserInfoParameter(@NonNull final Map<String, String> requestParameters) {
+        if (!StringExtensions.isNullOrBlank(getLoginHint())) {
+            requestParameters.put(LOGIN_HINT, getLoginHint());
+        }
+    }
+
+    private void addPkceChallengeParameters(@NonNull final Map<String, String> requestParameters) {
         if (null != getPkceChallenge()) {
-            requestParameters.put(CODE_CHALLENGE, URLEncoder.encode(getPkceChallenge().getCodeChallenge(), ENCODING_UTF8));
+            requestParameters.put(CODE_CHALLENGE, getPkceChallenge().getCodeChallenge());
             // The method used to encode the code_verifier for the code_challenge parameter.
-            requestParameters.put(CODE_CHALLENGE_METHOD, URLEncoder.encode(getPkceChallenge().getCodeChallengeMethod(), ENCODING_UTF8));
+            requestParameters.put(CODE_CHALLENGE_METHOD, getPkceChallenge().getCodeChallengeMethod());
         }
+    }
 
+    private void addExtraQueryParameters(@NonNull final Map<String, String> requestParameters) throws ClientException {
         // Reading extra qp supplied by developer. append haschrome=1 if developer does not pass as extra qp
         if (StringExtensions.isNullOrBlank(getExtraQueryParam())
                 || !getExtraQueryParam().contains(AuthenticationConstants.OAuth2.HAS_CHROME)) {
             requestParameters.put(AuthenticationConstants.OAuth2.HAS_CHROME, "1");
+        } else {
+            appendExtraQueryParameters(getExtraQueryParam(), requestParameters);
         }
+    }
 
+    private void addClaimsChallengeParameters(@NonNull final Map<String, String> requestParameters) throws ClientException {
         // Claims challenge are opaque to the sdk, we're not going to do any merging if both extra qp and claims parameter
         // contain it. Also, if developer sends it in both places, server will fail it.
         if (!StringExtensions.isNullOrBlank(mClaimsChallenge)) {
             requestParameters.put(AuthenticationConstants.OAuth2.CLAIMS, mClaimsChallenge);
         }
-        if (!StringExtensions.isNullOrBlank(getExtraQueryParam())) {
-            appendExtraQueryParameters(getExtraQueryParam(), requestParameters);
+    }
+
+    private Map<String, String> createAuthorizationRequestParameters() throws UnsupportedEncodingException, ClientException {
+        final Map<String, String> requestParameters = new HashMap<>();
+
+        requestParameters.put(AuthenticationConstants.OAuth2.RESPONSE_TYPE, AuthenticationConstants.OAuth2.CODE);
+        requestParameters.put(AuthenticationConstants.OAuth2.CLIENT_ID, getClientId());
+        requestParameters.put(AuthenticationConstants.OAuth2.REDIRECT_URI, getRedirectUri());
+        requestParameters.put(AuthenticationConstants.OAuth2.SCOPE, SCOPE_OPENID_VALUE);
+        requestParameters.put(RESOURCE, mResource);
+        requestParameters.put(AuthenticationConstants.OAuth2.STATE, encodeProtocolState());
+        if (getCorrelationId() != null) {
+            requestParameters.put(CLIENT_REQUEST_ID, getCorrelationId().toString());
         }
+
+        addDiagnosticParameters(requestParameters);
+        addPromptParameter(requestParameters);
+        addUserInfoParameter(requestParameters);
+        addPkceChallengeParameters(requestParameters);
+        addExtraQueryParameters(requestParameters);
+        addClaimsChallengeParameters(requestParameters);
 
         return requestParameters;
-    }
-
-    private String encodeProtocolState() throws UnsupportedEncodingException {
-        String state = String.format("a=%s&r=%s", getAuthorizationEndpoint(), mResource);
-        return Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE);
-    }
-
-    private void appendExtraQueryParameters(final String queryParams, final Map<String, String> requestParams) throws ClientException {
-        final Map<String, String> extraQps = StringExtensions.decodeUrlToMap(queryParams, "&");
-        final Set<Map.Entry<String, String>> extraQpEntries = extraQps.entrySet();
-        for (final Map.Entry<String, String> extraQpEntry : extraQpEntries) {
-            if (requestParams.containsKey(extraQpEntry.getKey())) {
-                throw new ClientException(ErrorStrings.DUPLICATE_QUERY_PARAMETER,
-                        "Extra query parameter " + extraQpEntry.getKey() + " is already sent by "
-                                + "the SDK. ");
-            }
-
-            requestParams.put(extraQpEntry.getKey(), extraQpEntry.getValue());
-        }
     }
 }

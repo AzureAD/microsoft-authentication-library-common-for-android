@@ -22,15 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft;
 
+import android.util.Base64;
+
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
-public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest{
+public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest {
     /* Constants */
     public static final String ENCODING_UTF8 = "UTF_8";
     public static final String CODE_CHALLENGE = "code_challenge";
@@ -51,7 +58,7 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
     private URL mAuthority;
     /**
      * Required value.
-     *
+     * <p>
      * Passed in from ADAL/MSAL after authority verification.
      */
     private String mAuthorizationEndpoint;
@@ -64,7 +71,7 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
      */
     private UUID mCorrelationId;
     /**
-     *  Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
+     * Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
      */
     private PkceChallenge mPkceChallenge;
     /**
@@ -135,9 +142,42 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
 
     /**
      * Return the start URL to load in the web view.
+     *
      * @return String of start URL.
      * @throws UnsupportedEncodingException
      * @throws ClientException
      */
     public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
+
+    protected void appendExtraQueryParameters(final String queryParams, final Map<String, String> requestParams) throws ClientException {
+        final Map<String, String> extraQps = StringExtensions.decodeUrlToMap(queryParams, "&");
+        final Set<Map.Entry<String, String>> extraQpEntries = extraQps.entrySet();
+        for (final Map.Entry<String, String> extraQpEntry : extraQpEntries) {
+            if (requestParams.containsKey(extraQpEntry.getKey())) {
+                throw new ClientException(ErrorStrings.DUPLICATE_QUERY_PARAMETER,
+                        "Extra query parameter " + extraQpEntry.getKey() + " is already sent by "
+                                + "the SDK. ");
+            }
+
+            requestParams.put(extraQpEntry.getKey(), extraQpEntry.getValue());
+        }
+    }
+
+    private String generateState() throws UnsupportedEncodingException {
+        //TODO Re-implement in the state verification task.
+        return String.format("a=%s&r=%s", StringExtensions.urlFormEncode(
+                getAuthorizationEndpoint()),
+                StringExtensions.urlFormEncode(StringUtil.convertSetToString(
+                        getScope(), " ")));
+    }
+
+    protected String encodeProtocolState() throws UnsupportedEncodingException {
+        return Base64.encodeToString(generateState().getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE);
+    }
+
+    protected void addExtraQueryParameter(final String key, final String value, final Map<String, String> requestParams) {
+        if (!StringExtensions.isNullOrBlank(key) && !StringExtensions.isNullOrBlank(value)) {
+            requestParams.put(key, value);
+        }
+    }
 }

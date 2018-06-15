@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.util.DateUtilities;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.Date;
 
@@ -92,7 +93,7 @@ public class ADALTokenCacheItem {
         RefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
 
         mAuthority = issuerCacheIdentifier;
-        mResource = StringExtensions.convertSetToString(request.getScope(), " ");
+        mResource = StringUtil.convertSetToString(request.getScope(), " ");
         mClientId = request.getClientId();
         mAccessToken = accessToken.getAccessToken();
         mRefreshtoken = refreshToken.getRefreshToken();

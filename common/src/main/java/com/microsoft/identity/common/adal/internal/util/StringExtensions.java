@@ -28,6 +28,7 @@ import android.util.Log;
 
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -40,7 +41,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -255,29 +255,7 @@ public final class StringExtensions {
         return Base64.encodeToString(message.getBytes(Charset.forName(ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
     }
 
-    /**
-     * Convert the given set of scopes into the string with the provided delimiter.
-     *
-     * @param inputSet  The Set of scopes to convert.
-     * @param delimiter The delimiter used to construct the scopes in the format of String.
-     * @return The converted scopes in the format of String.
-     */
-    public static String convertSetToString(final Set<String> inputSet, final String delimiter) {
-        if (inputSet == null || inputSet.isEmpty() || delimiter == null) {
-            return "";
-        }
 
-        final StringBuilder stringBuilder = new StringBuilder();
-        final Iterator<String> iterator = inputSet.iterator();
-        stringBuilder.append(iterator.next());
-
-        while (iterator.hasNext()) {
-            stringBuilder.append(delimiter);
-            stringBuilder.append(iterator.next());
-        }
-
-        return stringBuilder.toString();
-    }
 
     /**
      * Decode the given url, and convert it into map with the given delimiter.
@@ -336,7 +314,7 @@ public final class StringExtensions {
             queryParamsSet.add(entry.getKey() + "=" + urlFormEncode(entry.getValue()));
         }
 
-        final String queryString = convertSetToString(queryParamsSet, QUERY_STRING_DELIMITER);
+        final String queryString = StringUtil.convertSetToString(queryParamsSet, QUERY_STRING_DELIMITER);
         final String queryStringFormat;
         if (url.contains(QUERY_STRING_SYMBOL)) {
             queryStringFormat = url.endsWith(QUERY_STRING_DELIMITER) ? "%s%s" : "%s" + QUERY_STRING_DELIMITER + "%s";

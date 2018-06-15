@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.io.UnsupportedEncodingException;
@@ -43,14 +42,14 @@ public abstract class AuthorizationRequest {
 
     /**
      * A required value.
-     *
+     * <p>
      * The client identifier as assigned by the authorization server, when the client was registered.
      */
     private String mClientId;
 
     /**
      * A optional value.
-     *
+     * <p>
      * The redirect_uri of your app, where authentication responses can be sent and received by your app.
      * It must exactly match one of the redirect_uris you registered in the portal, except it must be url encoded.
      */
@@ -58,7 +57,7 @@ public abstract class AuthorizationRequest {
 
     /**
      * A recommended value.
-     *
+     * <p>
      * A value included in the request that will also be returned in the token response.
      * It can be a string of any content that you wish. A randomly generated unique value is
      * typically used for preventing cross-site request forgery attacks. The value can also
@@ -137,17 +136,4 @@ public abstract class AuthorizationRequest {
     public void setScope(final Set<String> scope) {
         mScope = new HashSet<>(scope);
     }
-
-    //CHECKSTYLE:OFF
-    @Override
-    public String toString() {
-        return "AuthorizationRequest{" +
-                "mResponseType='" + mResponseType + '\'' +
-                ", mClientId='" + mClientId + '\'' +
-                ", mRedirectUri='" + mRedirectUri + '\'' +
-                ", mScope=" + StringExtensions.convertSetToString(mScope, " ") + '\'' +
-                ", mState='" + mState + '\'' +
-                '}';
-    }
-    //CHECKSTYLE:ON
 }

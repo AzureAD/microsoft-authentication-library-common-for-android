@@ -23,15 +23,15 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.os.Build;
-import android.util.Base64;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -103,7 +103,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         return mSliceParameters;
     }
 
-    public void setmSliceParameters(final String sliceParameters) {
+    public void setSliceParameters(final String sliceParameters) {
         mSliceParameters = sliceParameters;
     }
 
@@ -112,6 +112,13 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
                 getAuthorizationEndpoint(), createAuthorizationRequestParameters());
         Logger.infoPII(TAG, getCorrelationId().toString(), "Request uri to authorize endpoint is: " + authorizationUrl);
         return authorizationUrl;
+    }
+
+    private String getRequestScopeString() {
+        final Set<String> scopes = new HashSet<>(getScope());
+        scopes.addAll(mExtraScopesToConsent);
+        final Set<String> requestedScopes = getDecoratedScope(scopes);
+        return StringUtil.convertSetToString(requestedScopes, " ");
     }
 
     /**
@@ -124,16 +131,23 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     private Map<String, String> createAuthorizationRequestParameters() throws UnsupportedEncodingException, ClientException {
         final Map<String, String> requestParameters = new HashMap<>();
 
-        final Set<String> scopes = new HashSet<>(getScope());
-        scopes.addAll(mExtraScopesToConsent);
-        final Set<String> requestedScopes = getDecoratedScope(scopes);
-        requestParameters.put(AuthenticationConstants.OAuth2.SCOPE,
-                StringExtensions.convertSetToString(requestedScopes, " "));
+        requestParameters.put(AuthenticationConstants.OAuth2.SCOPE, getRequestScopeString());
         requestParameters.put(AuthenticationConstants.OAuth2.CLIENT_ID, getClientId());
         requestParameters.put(AuthenticationConstants.OAuth2.REDIRECT_URI, getRedirectUri());
         requestParameters.put(AuthenticationConstants.OAuth2.RESPONSE_TYPE, AuthenticationConstants.OAuth2.CODE);
+        requestParameters.put(AuthenticationConstants.OAuth2.STATE, encodeProtocolState());
         requestParameters.put(CORRELATION_ID, getCorrelationId().toString());
 
+        addDiagnosticParameters(requestParameters);
+        addPromptParameter(requestParameters);
+        addPkceChallengeToRequestParameters(requestParameters);
+        addUserInfoParameter(requestParameters);
+        addExtraQueryParameter(requestParameters);
+
+        return requestParameters;
+    }
+
+    private void addDiagnosticParameters(@NonNull final Map<String, String> requestParameters) {
         requestParameters.put(LIB_ID_PLATFORM, PLATFORM_VALUE);
         requestParameters.put(LIB_ID_VERSION, getLibraryVersion());
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -146,11 +160,9 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
         requestParameters.put(LIB_ID_OS_VER, String.valueOf(Build.VERSION.SDK_INT));
         requestParameters.put(LIB_ID_DM, Build.MODEL);
+    }
 
-        if (!StringExtensions.isNullOrBlank(getLoginHint())) {
-            requestParameters.put(LOGIN_HINT, getLoginHint());
-        }
-
+    private void addPromptParameter(@NonNull final Map<String, String> requestParameters) {
         if (mPromptBehavior == MicrosoftStsPromptBehavior.FORCE_LOGIN) {
             requestParameters.put(QUERY_PROMPT, QUERY_PROMPT_VALUE);
         } else if (mPromptBehavior == MicrosoftStsPromptBehavior.SELECT_ACCOUNT) {
@@ -158,56 +170,28 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         } else if (mPromptBehavior == MicrosoftStsPromptBehavior.CONSENT) {
             requestParameters.put(QUERY_PROMPT, PROMPT_CONSENT);
         }
+    }
 
-        // append state in the query parameters
-        requestParameters.put(AuthenticationConstants.OAuth2.STATE, encodeProtocolState());
-
-        // Add PKCE Challenge
-        addPkceChallengeToRequestParameters(requestParameters);
+    private void addUserInfoParameter(@NonNull final Map<String, String> requestParameters) {
+        if (!StringExtensions.isNullOrBlank(getLoginHint())) {
+            requestParameters.put(LOGIN_HINT, getLoginHint());
+        }
 
         // Enforce session continuation if user is provided in the API request
         //TODO can wrap the user info into User class object.
         addExtraQueryParameter(LOGIN_REQ, mUid, requestParameters);
         addExtraQueryParameter(DOMAIN_REQ, mUtid, requestParameters);
         addExtraQueryParameter(LOGIN_HINT, mDisplayableId, requestParameters);
+    }
 
-        // adding extra qp
+    private void addExtraQueryParameter(@NonNull final Map<String, String> requestParameters) throws ClientException {
+        // adding extra query parameters
         if (!StringExtensions.isNullOrBlank(getExtraQueryParam())) {
             appendExtraQueryParameters(getExtraQueryParam(), requestParameters);
         }
-
+        // adding slice parameters
         if (!StringExtensions.isNullOrBlank(mSliceParameters)) {
             appendExtraQueryParameters(mSliceParameters, requestParameters);
-        }
-
-        return requestParameters;
-    }
-
-    private String encodeProtocolState() throws UnsupportedEncodingException {
-        final String state = String.format("a=%s&r=%s", StringExtensions.urlFormEncode(
-                getAuthority().toString()),
-                StringExtensions.urlFormEncode(StringExtensions.convertSetToString(
-                        getScope(), " ")));
-        return Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE);
-    }
-
-    private void addExtraQueryParameter(final String key, final String value, final Map<String, String> requestParams) {
-        if (!StringExtensions.isNullOrBlank(key) && !StringExtensions.isNullOrBlank(value)) {
-            requestParams.put(key, value);
-        }
-    }
-
-    private void appendExtraQueryParameters(final String queryParams, final Map<String, String> requestParams) throws ClientException {
-        final Map<String, String> extraQps = StringExtensions.decodeUrlToMap(queryParams, "&");
-        final Set<Map.Entry<String, String>> extraQpEntries = extraQps.entrySet();
-        for (final Map.Entry<String, String> extraQpEntry : extraQpEntries) {
-            if (requestParams.containsKey(extraQpEntry.getKey())) {
-                throw new ClientException(ErrorStrings.DUPLICATE_QUERY_PARAMETER,
-                        "Extra query parameter " + extraQpEntry.getKey() + " is already sent by "
-                                + "the SDK. ");
-            }
-
-            requestParams.put(extraQpEntry.getKey(), extraQpEntry.getValue());
         }
     }
 
@@ -218,7 +202,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
      * @param inputScopes The input scopes to decorate.
      * @return The combined scopes.
      */
-    Set<String> getDecoratedScope(final Set<String> inputScopes) {
+    private Set<String> getDecoratedScope(final Set<String> inputScopes) {
         final Set<String> scopes = new HashSet<>(inputScopes);
         final Set<String> reservedScopes = getReservedScopesAsSet();
         scopes.addAll(reservedScopes);
@@ -231,7 +215,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         return new HashSet<>(Arrays.asList(RESERVED_SCOPES));
     }
 
-    private void addPkceChallengeToRequestParameters(final Map<String, String> requestParameters) throws ClientException {
+    // Add PKCE Challenge
+    private void addPkceChallengeToRequestParameters(@NonNull final Map<String, String> requestParameters) throws ClientException {
         // Create our Challenge
         setPkceChallenge(PkceChallenge.newPkceChallenge());
 
