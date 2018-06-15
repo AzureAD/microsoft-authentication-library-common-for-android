@@ -61,11 +61,23 @@ public class BrokerValidator {
     private final Context mContext;
     private final String mCompanyPortalSignature;
 
+    /**
+     * Constructs a new BrokerValidator.
+     *
+     * @param context The Context of the host application.
+     */
     public BrokerValidator(final Context context) {
         mContext = context;
         mCompanyPortalSignature = AuthenticationSettings.INSTANCE.getBrokerSignature();
     }
 
+    /**
+     * Verifies that the installed broker package's signing certificate hash matches the known
+     * release certificate hash.
+     *
+     * @param brokerPackageName The broker package to inspect.
+     * @return True if the certificate hash is known. False otherwise.
+     */
     public boolean verifySignature(final String brokerPackageName) {
         final String methodName = ":verifySignature";
         try {
