@@ -67,6 +67,4 @@ public final class StringUtil {
 
         return stringBuilder.toString();
     }
-
-
 }
