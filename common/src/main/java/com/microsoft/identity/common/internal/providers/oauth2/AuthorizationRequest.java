@@ -22,16 +22,25 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.microsoft.identity.common.exception.ClientException;
+
+import java.io.UnsupportedEncodingException;
+
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
  * https://tools.ietf.org/html/rfc6749#section-4.1.1
  * This should include all fo the required parameters of the authorization request for oAuth2
  * This should provide an extension point for additional parameters to be set
  */
-public class AuthorizationRequest {
+public abstract class AuthorizationRequest {
 
     private String mResponseType;
     private String mClientId;
+    /**
+     * Redirect URLs are a critical part of the OAuth flow. After a user successfully authorizes an
+     * application, the authorization server will redirect the user back to the application with
+     * either an authorization code or access token in the URL.
+     */
     private String mRedirectUri;
     private String mScope;
     private String mState;
@@ -119,4 +128,12 @@ public class AuthorizationRequest {
     }
     //CHECKSTYLE:ON
 
+    /**
+     * Return the start URL to load in the web view.
+     * @return String of start URL.
+     * @throws UnsupportedEncodingException
+     * @throws ClientException
+     */
+     public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
+     //TODO this is implemented in the authorization request pull request.
 }

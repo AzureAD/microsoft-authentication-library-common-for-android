@@ -22,10 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+
+import java.io.UnsupportedEncodingException;
 
 /**
  * Active Directory Federation Services Authorization Request.
  */
 public class ActiveDirectoryFederationServicesAuthorizationRequest extends AuthorizationRequest {
+    public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
+        throw new UnsupportedOperationException("Not implemented");
+    }
 }

@@ -22,8 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 
 public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationRequest {
@@ -52,4 +54,8 @@ public class AzureActiveDirectoryAuthorizationRequest extends AuthorizationReque
                 "} " + super.toString();
     }
     //CHECKSTYLE:ON
+
+    public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
+        throw new UnsupportedOperationException("Not implemented");
+    }
 }

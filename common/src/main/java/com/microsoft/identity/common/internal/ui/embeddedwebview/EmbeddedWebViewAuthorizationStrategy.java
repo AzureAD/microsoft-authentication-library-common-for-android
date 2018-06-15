@@ -28,38 +28,63 @@ import android.view.View;
 import android.webkit.WebView;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 
+import java.io.UnsupportedEncodingException;
 
+/**
+ * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
+ */
 public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy {
+    private static final String TAG = StringExtensions.class.getSimpleName();
     private WebView mWebView;
     private String mStartUrl;
 
-    public AuthorizationResult requestAuthorization (AuthorizationRequest request) {
+    /**
+     * Perform the authorization request in the embedded web view and return the authorization result.
+     *
+     * @param request authorization request
+     * @return AuthorizationResult
+     */
+    public AuthorizationResult requestAuthorization(final AuthorizationRequest request) {
+        loadURL();
         throw new UnsupportedOperationException("Not implemented yet.");
     }
 
-    EmbeddedWebViewAuthorizationStrategy(Activity activity, AuthorizationRequest request) {
+    /**
+     * Constructor of EmbeddedWebViewAuthorizationStrategy.
+     *
+     * @param activity Authentication activity
+     * @param request  Authorization request
+     * @throws UnsupportedEncodingException
+     * @throws ClientException
+     */
+    public EmbeddedWebViewAuthorizationStrategy(final Activity activity, final AuthorizationRequest request) throws UnsupportedEncodingException, ClientException {
         if (activity == null || request == null) {
             throw new IllegalArgumentException("Null activity or request");
         }
 
-        //TODO validate auth request
-        setupWebView(activity, request);
-        setupStartURL();
-
+        //TODO validate auth request in OAuth2Strategy.
+        createWebView(activity, request);
+        mStartUrl = request.getAuthorizationStartUrl();
     }
 
-    private void setupWebView(final Activity activity, final AuthorizationRequest request) {
+    /**
+     * Set up the web view configurations.
+     * @param activity  AuthenticationActivity
+     * @param request AuthorizationRequest
+     */
+    private void createWebView(final Activity activity, final AuthorizationRequest request) {
         // Create the Web View to show the page
-        mWebView = (WebView)activity.findViewById(activity.getResources().getIdentifier("webView1", "id",
+        mWebView = (WebView) activity.findViewById(activity.getResources().getIdentifier("webView1", "id",
                 activity.getPackageName()));
-        mStartUrl = "about:blank";
         mWebView.getSettings().setUserAgentString(
                 mWebView.getSettings().getUserAgentString() + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
-
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.requestFocus(View.FOCUS_DOWN);
 
@@ -69,7 +94,7 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
             public boolean onTouch(View view, MotionEvent event) {
                 int action = event.getAction();
                 if ((action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_UP) && !view.hasFocus()) {
-                        view.requestFocus();
+                    view.requestFocus();
                 }
                 return false;
             }
@@ -80,25 +105,22 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
         mWebView.getSettings().setUseWideViewPort(true);
         mWebView.getSettings().setBuiltInZoomControls(true);
         mWebView.setVisibility(View.INVISIBLE);
-        mWebView.setWebViewClient(new AzureActiveDirectoryWebViewClient(activity, request.getRedirectUri(), request));
+        mWebView.setWebViewClient(new AzureActiveDirectoryWebViewClient(activity, request));
     }
 
-    //TODO change the AuthorizationRequest type into MicrosoftAuthorizationRequest
-
-
-    private void setupStartURL() {
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
-
-    void loadURL() {
+    /**
+     * Load the start url for auth grant flow. It will load the black page first to avoid error for not loading web view.
+     */
+    private void loadURL() {
         mWebView.post(new Runnable() {
             @Override
             public void run() {
                 // load blank first to avoid error for not loading webview
                 mWebView.loadUrl("about:blank");
+                Logger.verbose(TAG, "Launching embedded WebView for acquiring auth code.");
+                Logger.verbosePII(TAG, "The start url is" + mStartUrl);
                 mWebView.loadUrl(mStartUrl);
             }
         });
     }
-
 }
