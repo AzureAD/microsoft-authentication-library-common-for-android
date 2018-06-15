@@ -33,6 +33,7 @@ import android.os.Build;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.view.View;
 import android.webkit.ClientCertRequest;
@@ -65,7 +66,7 @@ import java.util.Map;
  */
 class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     //TODO Change AuthorizationRequest into MicrosoftAuthorizationRequest after merging the AuthorizationRequest PR.
-    AzureActiveDirectoryWebViewClient(final Context context, final AuthorizationRequest request) {
+    AzureActiveDirectoryWebViewClient(@NonNull final Context context, @NonNull final AuthorizationRequest request) {
         super(context, request);
     }
 

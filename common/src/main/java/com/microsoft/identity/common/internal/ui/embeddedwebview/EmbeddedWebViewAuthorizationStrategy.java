@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.ui.embeddedwebview;
 
 import android.app.Activity;
+import android.support.annotation.NonNull;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebView;
@@ -51,8 +52,8 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
      * @param request authorization request
      * @return AuthorizationResult
      */
-    public AuthorizationResult requestAuthorization(final AuthorizationRequest request) {
-        loadURL();
+    public AuthorizationResult requestAuthorization(@NonNull final AuthorizationRequest request) {
+        loadStartUrl();
         throw new UnsupportedOperationException("Not implemented yet.");
     }
 
@@ -64,11 +65,9 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
      * @throws UnsupportedEncodingException
      * @throws ClientException
      */
-    public EmbeddedWebViewAuthorizationStrategy(final Activity activity, final AuthorizationRequest request) throws UnsupportedEncodingException, ClientException {
-        if (activity == null || request == null) {
-            throw new IllegalArgumentException("Null activity or request");
-        }
-
+    public EmbeddedWebViewAuthorizationStrategy(@NonNull final Activity activity,
+                                                @NonNull final AuthorizationRequest request)
+            throws UnsupportedEncodingException, ClientException {
         //TODO validate auth request in OAuth2Strategy.
         createWebView(activity, request);
         mStartUrl = request.getAuthorizationStartUrl();
@@ -91,7 +90,7 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
         // Set focus to the view for touch event
         mWebView.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public boolean onTouch(View view, MotionEvent event) {
+            public boolean onTouch(final View view, final MotionEvent event) {
                 int action = event.getAction();
                 if ((action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_UP) && !view.hasFocus()) {
                     view.requestFocus();
@@ -111,7 +110,7 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
     /**
      * Load the start url for auth grant flow. It will load the black page first to avoid error for not loading web view.
      */
-    private void loadURL() {
+    private void loadStartUrl() {
         mWebView.post(new Runnable() {
             @Override
             public void run() {

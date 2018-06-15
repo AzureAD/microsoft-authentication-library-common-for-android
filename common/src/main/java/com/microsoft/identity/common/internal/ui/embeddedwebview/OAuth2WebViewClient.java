@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.ui.embeddedwebview;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
@@ -61,7 +62,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * @param context app Context
      * @param request Authorization request
      */
-    OAuth2WebViewClient(final Context context, final AuthorizationRequest request) {
+    OAuth2WebViewClient(@NonNull final Context context, @NonNull final AuthorizationRequest request) {
         //the validation of redirect url and authorization request should be in upper level before launching the webview.
         if (null == context || null == request) {
             throw new IllegalArgumentException("Null parameter to initialize OAuth2WebViewClient.");
