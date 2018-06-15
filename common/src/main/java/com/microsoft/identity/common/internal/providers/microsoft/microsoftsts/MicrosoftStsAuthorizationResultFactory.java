@@ -30,7 +30,6 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -42,19 +41,20 @@ import java.util.HashMap;
  * Encapsulates Authorization response or errors specific to Microsoft STS in the form of
  * {@link MicrosoftStsAuthorizationResult}
  */
-public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultFactory {
+public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultFactory<MicrosoftStsAuthorizationResult> {
 
     private static final String TAG = MicrosoftStsAuthorizationResultFactory.class.getSimpleName();
 
     public static final String MSSTS_AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.finalUrl";
 
     @Override
-    public AuthorizationResult createAuthorizationResult(final int resultCode, final Intent data) {
+    public MicrosoftStsAuthorizationResult createAuthorizationResult(final int resultCode, final Intent data) {
         if (data == null) {
             return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED, MicrosoftAuthorizationErrorResponse.NULL_INTENT);
         }
-        AuthorizationResult result;
+
+        MicrosoftStsAuthorizationResult result;
         switch (resultCode) {
             case AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL:
                 Logger.verbose(TAG, null, "User cancel the request in webview.");
@@ -79,6 +79,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.UNKNOWN_ERROR, MicrosoftAuthorizationErrorResponse.UNKNOWN_RESULT_CODE);
         }
+
         return result;
     }
 
@@ -96,23 +97,21 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
         MicrosoftStsAuthorizationResult result;
 
         if (urlParameters == null || urlParameters.isEmpty()) {
-            Logger.warn(TAG, null, "Invalid server response, empty query string from the webview redirect.");
+            Logger.warn(TAG,"Invalid server response, empty query string from the webview redirect.");
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
-        }
-        else if (urlParameters.containsKey(CODE)) {
+        } else if (urlParameters.containsKey(CODE)) {
             result = validateAndCreateAuthorizationResult(urlParameters.get(CODE), urlParameters.get(STATE));
-        }
-        else if (urlParameters.containsKey(ERROR)) {
+        } else if (urlParameters.containsKey(ERROR)) {
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     urlParameters.get(ERROR), urlParameters.get(ERROR_DESCRIPTION));
-        }
-        else {
+        } else {
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
         }
+
         return result;
     }
 

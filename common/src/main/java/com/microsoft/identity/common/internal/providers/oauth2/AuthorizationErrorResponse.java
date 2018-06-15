@@ -44,15 +44,15 @@ public class AuthorizationErrorResponse {
         return mError;
     }
 
-    public void setError(final String mError) {
-        this.mError = mError;
+    public void setError(final String error) {
+        mError = error;
     }
 
     public String getErrorDescription() {
         return mErrorDescription;
     }
 
-    public void setErrorDescription(final String mErrorDescription) {
-        this.mErrorDescription = mErrorDescription;
+    public void setErrorDescription(final String errorDescription) {
+        mErrorDescription = errorDescription;
     }
 }

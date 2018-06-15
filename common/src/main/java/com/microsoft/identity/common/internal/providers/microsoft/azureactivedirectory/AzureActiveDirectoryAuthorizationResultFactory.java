@@ -45,22 +45,23 @@ import java.util.HashMap;
  * Encapsulates Authorization response or errors specific to Azure Active Directory in the form of
  * {@link AzureActiveDirectoryAuthorizationResult}
  */
-public class AzureActiveDirectoryAuthorizationResultFactory extends AuthorizationResultFactory {
+public class AzureActiveDirectoryAuthorizationResultFactory extends AuthorizationResultFactory<AzureActiveDirectoryAuthorizationResult> {
 
     private static final String TAG = AzureActiveDirectoryAuthorizationResultFactory.class.getSimpleName();
 
     private static final String ERROR_CODES = "error_codes";
 
     @Override
-    public AuthorizationResult createAuthorizationResult(final int resultCode, final Intent data) {
+    public AzureActiveDirectoryAuthorizationResult createAuthorizationResult(final int resultCode, final Intent data) {
         if (data == null || data.getExtras() == null) {
             return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.NULL_INTENT);
         }
+
         final Bundle extras = data.getExtras();
         final int requestId = extras.getInt(AuthenticationConstants.Browser.REQUEST_ID);
-        AuthorizationResult result = null;
+        AzureActiveDirectoryAuthorizationResult result = null;
         switch (resultCode) {
             case AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL:
                 Logger.verbose(TAG, "User cancel the request in webview: " + requestId);
@@ -108,6 +109,7 @@ public class AzureActiveDirectoryAuthorizationResultFactory extends Authorizatio
                     MicrosoftAuthorizationErrorResponse.UNKNOWN_ERROR,
                     MicrosoftAuthorizationErrorResponse.UNKNOWN_RESULT_CODE + "[" + resultCode + "]");
         }
+
         return result;
     }
 
@@ -140,21 +142,21 @@ public class AzureActiveDirectoryAuthorizationResultFactory extends Authorizatio
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
         }
+
         String correlationInResponse = urlParameters.get(AuthenticationConstants.AAD.CORRELATION_ID);
         AzureActiveDirectoryAuthorizationResult result;
 
         if (urlParameters.containsKey(CODE)) {
             result = validateAndCreateAuthorizationResult(urlParameters.get(CODE), urlParameters.get(STATE), correlationInResponse);
-        }
-        else if (urlParameters.containsKey(ERROR)) {
+        } else if (urlParameters.containsKey(ERROR)) {
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL, urlParameters.get(ERROR),
                     urlParameters.get(ERROR_DESCRIPTION), urlParameters.get(ERROR_CODES), correlationInResponse);
-        }
-        else {
+        } else {
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
         }
+
         return result;
     }
 
@@ -162,18 +164,19 @@ public class AzureActiveDirectoryAuthorizationResultFactory extends Authorizatio
                                                                                          final String state,
                                                                                          final String correlationId) {
         AzureActiveDirectoryAuthorizationResult result;
+
         if (StringUtil.isEmpty(state)) {
             Logger.warn(TAG, correlationId, "State parameter is not returned from the webview redirect.");
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     ErrorStrings.STATE_MISMATCH, MicrosoftAuthorizationErrorResponse.STATE_NOT_RETURNED);
-        }
-        else {
+        } else {
             //TODO : validate state that it matches the one from request
             Logger.info(TAG, correlationId, "Auth code is successfully returned from webview redirect.");
             AzureActiveDirectoryAuthorizationResponse response = new AzureActiveDirectoryAuthorizationResponse(code, state);
             response.setCorrelationId(correlationId);
             result = new AzureActiveDirectoryAuthorizationResult(AuthorizationStatus.SUCCESS, response);
         }
+
         return result;
     }
 
