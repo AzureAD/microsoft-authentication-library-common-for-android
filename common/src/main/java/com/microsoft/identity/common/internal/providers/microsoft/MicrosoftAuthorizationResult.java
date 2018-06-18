@@ -32,12 +32,13 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStat
 public abstract class MicrosoftAuthorizationResult<
         GenericMicrosoftAuthorizationResponse extends MicrosoftAuthorizationResponse,
         GenericMicrosoftAuthorizationErrorResponse extends MicrosoftAuthorizationErrorResponse>
-        extends AuthorizationResult<MicrosoftAuthorizationResponse, MicrosoftAuthorizationErrorResponse> {
+        extends AuthorizationResult<GenericMicrosoftAuthorizationResponse, GenericMicrosoftAuthorizationErrorResponse> {
 
     /**
      * Constructor of {@link MicrosoftAuthorizationResult}.
-     * @param authStatus    {@link AuthorizationStatus}
-     * @param authResponse  {@link MicrosoftAuthorizationResponse}
+     *
+     * @param authStatus   {@link AuthorizationStatus}
+     * @param authResponse {@link MicrosoftAuthorizationResponse}
      */
     public MicrosoftAuthorizationResult(final AuthorizationStatus authStatus, final GenericMicrosoftAuthorizationResponse authResponse) {
         setAuthorizationStatus(authStatus);
@@ -46,6 +47,7 @@ public abstract class MicrosoftAuthorizationResult<
 
     /**
      * Constructor of {@link MicrosoftAuthorizationResult}.
+     *
      * @param authStatus    {@link AuthorizationStatus}
      * @param errorResponse {@link MicrosoftAuthorizationErrorResponse}
      */
