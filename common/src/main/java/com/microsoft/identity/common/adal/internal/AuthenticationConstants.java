@@ -691,7 +691,7 @@ public final class AuthenticationConstants {
         /**
          * String for pkeyauth sent in user agent string.
          */
-        public static final String CLIENT_TLS_NOT_SUPPORTED = " PKeyAuth/1.0";
+        public static final String USER_AGENT_VALUE_PKEY_AUTH = " PKeyAuth/1.0";
 
         /**
          * String of challenge request header.

@@ -84,7 +84,7 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
         mWebView = (WebView) activity.findViewById(activity.getResources().getIdentifier("webView1", "id",
                 activity.getPackageName()));
         mWebView.getSettings().setUserAgentString(
-                mWebView.getSettings().getUserAgentString() + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
+                mWebView.getSettings().getUserAgentString() + AuthenticationConstants.Broker.USER_AGENT_VALUE_PKEY_AUTH);
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.requestFocus(View.FOCUS_DOWN);
 
