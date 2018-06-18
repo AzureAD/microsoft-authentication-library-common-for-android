@@ -31,8 +31,6 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -41,7 +39,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 /**
- * Sub class of {@link AuthorizationResultFactory}
+ * Sub class of {@link AuthorizationResultFactory}.
  * Encapsulates Authorization response or errors specific to Azure Active Directory in the form of
  * {@link AzureActiveDirectoryAuthorizationResult}
  */
@@ -101,6 +99,12 @@ public class AzureActiveDirectoryAuthorizationResultFactory extends Authorizatio
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                         MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED);
+                break;
+
+            default:
+                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                        MicrosoftAuthorizationErrorResponse.UNKNOWN_ERROR,
+                        MicrosoftAuthorizationErrorResponse.UNKNOWN_RESULT_CODE + "[" + resultCode + "]");
                 break;
         }
 

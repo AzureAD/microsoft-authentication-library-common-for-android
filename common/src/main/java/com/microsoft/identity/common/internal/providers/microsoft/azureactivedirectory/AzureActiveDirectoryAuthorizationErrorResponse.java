@@ -34,8 +34,9 @@ public class AzureActiveDirectoryAuthorizationErrorResponse extends MicrosoftAut
 
     /**
      * Constructor of {@link AzureActiveDirectoryAuthorizationErrorResponse}.
-     * @param error  Error string returned from the Authorization Server.
-     * @param errorDescription  Description string of the error.
+     *
+     * @param error            Error string returned from the Authorization Server.
+     * @param errorDescription Description string of the error.
      */
     public AzureActiveDirectoryAuthorizationErrorResponse(final String error, final String errorDescription) {
         super(error, errorDescription);
@@ -43,7 +44,8 @@ public class AzureActiveDirectoryAuthorizationErrorResponse extends MicrosoftAut
 
     /**
      * Getter method for error codes.
-     * @return  error codes.
+     *
+     * @return error codes.
      */
     public String getErrorCodes() {
         return mErrorCodes;
@@ -51,10 +53,11 @@ public class AzureActiveDirectoryAuthorizationErrorResponse extends MicrosoftAut
 
     /**
      * Setter method for error codes.
-     * @param mErrorCodes   error codes.
+     *
+     * @param errorCodes error codes.
      */
-    public void setErrorCodes(final String mErrorCodes) {
-        this.mErrorCodes = mErrorCodes;
+    public void setErrorCodes(final String errorCodes) {
+        mErrorCodes = errorCodes;
     }
 
 }

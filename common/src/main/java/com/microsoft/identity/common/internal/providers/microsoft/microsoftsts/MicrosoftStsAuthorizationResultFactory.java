@@ -29,7 +29,6 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -37,7 +36,7 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import java.util.HashMap;
 
 /**
- * Sub class of {@link AuthorizationResultFactory}
+ * Sub class of {@link AuthorizationResultFactory}.
  * Encapsulates Authorization response or errors specific to Microsoft STS in the form of
  * {@link MicrosoftStsAuthorizationResult}
  */
@@ -45,6 +44,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
 
     private static final String TAG = MicrosoftStsAuthorizationResultFactory.class.getSimpleName();
 
+    /** Constant key to get authorization request final url from intent. */
     public static final String MSSTS_AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.finalUrl";
 
     @Override
@@ -86,8 +86,8 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
     private MicrosoftStsAuthorizationResult createAuthorizationResultWithErrorResponse(final AuthorizationStatus authStatus,
                                                                                        final String error,
                                                                                        final String errorDescription) {
-        Logger.info(TAG,"Error is returned from webview redirect");
-        Logger.infoPII(TAG,"error: " + error + " errorDescription: " + errorDescription);
+        Logger.info(TAG, "Error is returned from webview redirect");
+        Logger.infoPII(TAG, "error: " + error + " errorDescription: " + errorDescription);
         MicrosoftStsAuthorizationErrorResponse errorResponse = new MicrosoftStsAuthorizationErrorResponse(error, errorDescription);
         return new MicrosoftStsAuthorizationResult(authStatus, errorResponse);
     }
@@ -97,7 +97,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
         MicrosoftStsAuthorizationResult result;
 
         if (urlParameters == null || urlParameters.isEmpty()) {
-            Logger.warn(TAG,"Invalid server response, empty query string from the webview redirect.");
+            Logger.warn(TAG, "Invalid server response, empty query string from the webview redirect.");
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);

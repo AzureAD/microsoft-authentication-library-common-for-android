@@ -32,8 +32,9 @@ public class MicrosoftStsAuthorizationErrorResponse extends MicrosoftAuthorizati
 
     /**
      * Constructor of {@link MicrosoftStsAuthorizationErrorResponse}.
-     * @param error  Error string returned from the Authorization Server.
-     * @param errorDescription  Description string of the error.
+     *
+     * @param error            Error string returned from the Authorization Server.
+     * @param errorDescription Description string of the error.
      */
     public MicrosoftStsAuthorizationErrorResponse(final String error, final String errorDescription) {
         super(error, errorDescription);

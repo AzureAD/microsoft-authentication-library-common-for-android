@@ -28,7 +28,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
  * this class should also contain the AuthorizationResponse which contains the details returned from the
  * In the case of an error/exception this class should return the associated exception
  */
-public abstract class AuthorizationResult <
+public abstract class AuthorizationResult<
         GenericAuthorizationResponse extends AuthorizationResponse,
         GenericAuthorizationErrorResponse extends AuthorizationErrorResponse> {
 

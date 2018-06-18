@@ -32,7 +32,8 @@ public class AuthorizationErrorResponse {
 
     /**
      * Constructor of {@link AuthorizationErrorResponse}.
-     * @param error error returned due to Authorization request failure.
+     *
+     * @param error            error returned due to Authorization request failure.
      * @param errorDescription error description returned due to Authorization request failure.
      */
     public AuthorizationErrorResponse(final String error, final String errorDescription) {
@@ -40,18 +41,38 @@ public class AuthorizationErrorResponse {
         mErrorDescription = errorDescription;
     }
 
+    /**
+     * Getter method for error.
+     *
+     * @return error
+     */
     public String getError() {
         return mError;
     }
 
+    /**
+     * Setter method for error.
+     *
+     * @param error error returned due to Authorization request failure.
+     */
     public void setError(final String error) {
         mError = error;
     }
 
+    /**
+     * Getter method for error description.
+     *
+     * @return errorDescription
+     */
     public String getErrorDescription() {
         return mErrorDescription;
     }
 
+    /**
+     * Setter method for error description.
+     *
+     * @param errorDescription error description returned due to Authorization request failure.
+     */
     public void setErrorDescription(final String errorDescription) {
         mErrorDescription = errorDescription;
     }
