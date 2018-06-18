@@ -22,68 +22,52 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import android.content.Intent;
-
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-
 /**
  * A class to return the result of the authorization request to the calling code (ADAL or MSAL Controller classes)
  * This class should have a generic status in terms of : Cancelled, TimedOut, Error,  etc...
  * this class should also contain the AuthorizationResponse which contains the details returned from the
  * In the case of an error/exception this class should return the associated exception
  */
-public abstract class AuthorizationResult {
-    AuthorizationStatus mAuthorizationStatus;
-    AuthorizationResponse mAuthorizationResponse;
-    AuthorizationErrorResponse mAuthorizationErrorResponse;
+public abstract class AuthorizationResult<
+        GenericAuthorizationResponse extends AuthorizationResponse,
+        GenericAuthorizationErrorResponse extends AuthorizationErrorResponse> {
 
-    public static AuthorizationResult create(int resultCode, final Intent data) {
-        //Step 1: validate data
-        // return the authorization exception/result with AUTHORIZATION_FAILED error.
+    private AuthorizationStatus mAuthorizationStatus;
+    private GenericAuthorizationResponse mAuthorizationResponse;
+    private GenericAuthorizationErrorResponse mAuthorizationErrorResponse;
 
-        if(resultCode == AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL) {
-            // User cancel the request in webview.
-            // return the Authentication result with user cancel error.
-        } else if (resultCode == AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE) {
-            // extract the url from data parse url
-            // and encapsulate the auth code into the AuthorizationResponse
-            // thus AuthorizationResponse should be part of Authentication Result
-        } else if (resultCode == AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR) {
-            // webview returns AuthorizationErrorResponse with error and error description
-        } else if (resultCode == AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION) {
-            // Serializable exception returned, need to deserialize it and throw it.
-        } else if (resultCode == AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME) {
-            //Device needs to have broker installed, we expect the apps to call us back when the broker is installed
-        } else {
-            // throw exception for unknown result code.
-        }
-
-        return null;
+    /**
+     * @return The {@link AuthorizationStatus} indicating the auth status for the request sent to authorize endpoint.
+     */
+    public AuthorizationStatus getAuthorizationStatus() {
+        return mAuthorizationStatus;
     }
 
     /**
-     * Enum for representing different authorization status.
+     * @return The {@link AuthorizationResponse} indicating the auth response  for the request sent to authorize endpoint.
      */
-    enum AuthorizationStatus {
-        /**
-         * Code is successfully returned.
-         */
-        SUCCESS,
-
-        /**
-         * User press device back button.
-         */
-        USER_CANCEL,
-
-        /**
-         * Returned URI contains error.
-         */
-        FAIL,
-
-        /**
-         * AuthenticationActivity detects the invalid request.
-         */
-        INVALID_REQUEST
-        //TODO:  Investigate how chrome tab returns http timeout error
+    public GenericAuthorizationResponse getAuthorizationResponse() {
+        return mAuthorizationResponse;
     }
+
+    /**
+     * @return The {@link AuthorizationErrorResponse} indicating the auth error response for the request sent to authorize endpoint.
+     */
+    public GenericAuthorizationErrorResponse getAuthorizationErrorResponse() {
+        return mAuthorizationErrorResponse;
+    }
+
+    protected void setAuthorizationErrorResponse(final GenericAuthorizationErrorResponse authErrorResponse) {
+        mAuthorizationErrorResponse = authErrorResponse;
+    }
+
+    protected void setAuthorizationResponse(final GenericAuthorizationResponse authResponse) {
+        mAuthorizationResponse = authResponse;
+    }
+
+    protected void setAuthorizationStatus(final AuthorizationStatus authStatus) {
+        mAuthorizationStatus = authStatus;
+    }
+
+
 }

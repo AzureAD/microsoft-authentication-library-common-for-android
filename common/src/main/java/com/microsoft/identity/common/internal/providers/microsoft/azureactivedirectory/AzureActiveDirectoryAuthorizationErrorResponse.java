@@ -22,34 +22,42 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 
 /**
- * Sub class of {@link MicrosoftAuthorizationResult}.
- * Encapsulates Microsoft Authorization Response and additional Azure Active Directory specific parameters and errors.
+ * Sub class of {@link MicrosoftAuthorizationErrorResponse}.
+ * Encapsulates Azure Active Directory specific Authorization Result errors in addition to Microsoft error parameters.
  */
-public class AzureActiveDirectoryAuthorizationResult
-        extends MicrosoftAuthorizationResult<AzureActiveDirectoryAuthorizationResponse, AzureActiveDirectoryAuthorizationErrorResponse> {
+public class AzureActiveDirectoryAuthorizationErrorResponse extends MicrosoftAuthorizationErrorResponse {
 
+    private String mErrorCodes;
 
     /**
-     * Constructor of {@link AzureActiveDirectoryAuthorizationResult}.
+     * Constructor of {@link AzureActiveDirectoryAuthorizationErrorResponse}.
      *
-     * @param authStatus   {@link AuthorizationStatus}
-     * @param authResponse {@link AzureActiveDirectoryAuthorizationResponse}
+     * @param error            Error string returned from the Authorization Server.
+     * @param errorDescription Description string of the error.
      */
-    public AzureActiveDirectoryAuthorizationResult(final AuthorizationStatus authStatus, final AzureActiveDirectoryAuthorizationResponse authResponse) {
-        super(authStatus, authResponse);
+    public AzureActiveDirectoryAuthorizationErrorResponse(final String error, final String errorDescription) {
+        super(error, errorDescription);
     }
 
     /**
-     * Constructor of {@link AzureActiveDirectoryAuthorizationResult}.
+     * Getter method for error codes.
      *
-     * @param authStatus    {@link AuthorizationStatus}
-     * @param errorResponse {@link AzureActiveDirectoryAuthorizationErrorResponse}
+     * @return error codes.
      */
-    public AzureActiveDirectoryAuthorizationResult(final AuthorizationStatus authStatus, final AzureActiveDirectoryAuthorizationErrorResponse errorResponse) {
-        super(authStatus, errorResponse);
+    public String getErrorCodes() {
+        return mErrorCodes;
     }
+
+    /**
+     * Setter method for error codes.
+     *
+     * @param errorCodes error codes.
+     */
+    public void setErrorCodes(final String errorCodes) {
+        mErrorCodes = errorCodes;
+    }
+
 }
