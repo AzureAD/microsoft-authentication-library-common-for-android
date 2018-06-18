@@ -68,17 +68,18 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
     public EmbeddedWebViewAuthorizationStrategy(@NonNull final Activity activity,
                                                 @NonNull final AuthorizationRequest request)
             throws UnsupportedEncodingException, ClientException {
+        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(activity, request);
         //TODO validate auth request in OAuth2Strategy.
-        createWebView(activity, request);
+        createWebView(activity, webViewClient);
         mStartUrl = request.getAuthorizationStartUrl();
     }
 
     /**
      * Set up the web view configurations.
      * @param activity  AuthenticationActivity
-     * @param request AuthorizationRequest
+     * @param webViewClient AzureActiveDirectoryWebViewClient
      */
-    private void createWebView(final Activity activity, final AuthorizationRequest request) {
+    private void createWebView(final Activity activity, final AzureActiveDirectoryWebViewClient webViewClient) {
         // Create the Web View to show the page
         mWebView = (WebView) activity.findViewById(activity.getResources().getIdentifier("webView1", "id",
                 activity.getPackageName()));
@@ -104,7 +105,7 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
         mWebView.getSettings().setUseWideViewPort(true);
         mWebView.getSettings().setBuiltInZoomControls(true);
         mWebView.setVisibility(View.INVISIBLE);
-        mWebView.setWebViewClient(new AzureActiveDirectoryWebViewClient(activity, request));
+        mWebView.setWebViewClient(webViewClient);
     }
 
     /**
