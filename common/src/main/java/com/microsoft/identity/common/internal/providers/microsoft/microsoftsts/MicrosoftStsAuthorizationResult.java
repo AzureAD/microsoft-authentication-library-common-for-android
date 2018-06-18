@@ -36,8 +36,9 @@ public class MicrosoftStsAuthorizationResult
 
     /**
      * Constructor of {@link MicrosoftStsAuthorizationResult}.
-     * @param authStatus    {@link AuthorizationStatus}
-     * @param authResponse  {@link AuthorizationResponse}
+     *
+     * @param authStatus   {@link AuthorizationStatus}
+     * @param authResponse {@link AuthorizationResponse}
      */
     public MicrosoftStsAuthorizationResult(final AuthorizationStatus authStatus, final MicrosoftStsAuthorizationResponse authResponse) {
         super(authStatus, authResponse);
@@ -45,6 +46,7 @@ public class MicrosoftStsAuthorizationResult
 
     /**
      * Constructor of {@link MicrosoftStsAuthorizationResult}.
+     *
      * @param authStatus    {@link AuthorizationStatus}
      * @param errorResponse {@link AuthorizationErrorResponse}
      */

@@ -35,8 +35,9 @@ public class AzureActiveDirectoryAuthorizationResult
 
     /**
      * Constructor of {@link AzureActiveDirectoryAuthorizationResult}.
-     * @param authStatus    {@link AuthorizationStatus}
-     * @param authResponse  {@link AzureActiveDirectoryAuthorizationResponse}
+     *
+     * @param authStatus   {@link AuthorizationStatus}
+     * @param authResponse {@link AzureActiveDirectoryAuthorizationResponse}
      */
     public AzureActiveDirectoryAuthorizationResult(final AuthorizationStatus authStatus, final AzureActiveDirectoryAuthorizationResponse authResponse) {
         super(authStatus, authResponse);
@@ -44,8 +45,9 @@ public class AzureActiveDirectoryAuthorizationResult
 
     /**
      * Constructor of {@link AzureActiveDirectoryAuthorizationResult}.
+     *
      * @param authStatus    {@link AuthorizationStatus}
-     * @param errorResponse  {@link AzureActiveDirectoryAuthorizationErrorResponse}
+     * @param errorResponse {@link AzureActiveDirectoryAuthorizationErrorResponse}
      */
     public AzureActiveDirectoryAuthorizationResult(final AuthorizationStatus authStatus, final AzureActiveDirectoryAuthorizationErrorResponse errorResponse) {
         super(authStatus, errorResponse);

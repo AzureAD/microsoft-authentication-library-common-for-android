@@ -34,7 +34,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
@@ -46,7 +45,6 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 
 @RunWith(AndroidJUnit4.class)
@@ -64,7 +62,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
     private AuthorizationResultFactory<AzureActiveDirectoryAuthorizationResult> mAuthorizationResultFactory;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         mAuthorizationResultFactory = new AzureActiveDirectoryAuthorizationResultFactory();
     }
 
@@ -228,16 +226,16 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         bundle.putString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, responseUrl);
         bundle.putString(AuthenticationConstants.AAD.CORRELATION_ID, CORRELATION_ID);
         intent.putExtras(bundle);
-        AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+        AzureActiveDirectoryAuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
         assertNotNull(result);
         assertNull(result.getAuthorizationErrorResponse());
         assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
-        AuthorizationResponse response = result.getAuthorizationResponse();
+        AzureActiveDirectoryAuthorizationResponse response = result.getAuthorizationResponse();
         assertNotNull(response);
         assertEquals(AUTH_CODE, response.getCode());
         assertEquals(STATE, response.getState());
-        assertEquals(CORRELATION_ID, ((AzureActiveDirectoryAuthorizationResponse) response).getCorrelationId());
+        assertEquals(CORRELATION_ID, response.getCorrelationId());
     }
 
     @Test
@@ -248,16 +246,16 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
                 + ERROR_DESCRIPTION + "&error_codes=" + ERROR_CODES;
         bundle.putString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, responseUrl);
         intent.putExtras(bundle);
-        AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+        AzureActiveDirectoryAuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
-        AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
+        AzureActiveDirectoryAuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertNotNull(errorResponse);
         assertEquals(ERROR_MESSAGE, errorResponse.getError());
         assertEquals(ERROR_DESCRIPTION, errorResponse.getErrorDescription());
-        assertEquals(ERROR_CODES, ((AzureActiveDirectoryAuthorizationErrorResponse) errorResponse).getErrorCodes());
+        assertEquals(ERROR_CODES, errorResponse.getErrorCodes());
     }
 
     //TODO: Add tests to validate state once implemented
