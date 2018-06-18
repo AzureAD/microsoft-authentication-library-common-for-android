@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft;
 
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 
@@ -31,14 +29,17 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStat
  * Sub class of {@link AuthorizationResult}.
  * Encapsulates OAuth2 Authorization Response and additional Microsoft specific parameters and errors.
  */
-public class MicrosoftAuthorizationResult extends AuthorizationResult {
+public abstract class MicrosoftAuthorizationResult<
+        GenericMicrosoftAuthorizationResponse extends MicrosoftAuthorizationResponse,
+        GenericMicrosoftAuthorizationErrorResponse extends MicrosoftAuthorizationErrorResponse>
+        extends AuthorizationResult<MicrosoftAuthorizationResponse, MicrosoftAuthorizationErrorResponse> {
 
     /**
      * Constructor of {@link MicrosoftAuthorizationResult}.
      * @param authStatus    {@link AuthorizationStatus}
-     * @param authResponse  {@link AuthorizationResponse}
+     * @param authResponse  {@link MicrosoftAuthorizationResponse}
      */
-    public MicrosoftAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationResponse authResponse) {
+    public MicrosoftAuthorizationResult(final AuthorizationStatus authStatus, final GenericMicrosoftAuthorizationResponse authResponse) {
         setAuthorizationStatus(authStatus);
         setAuthorizationResponse(authResponse);
     }
@@ -46,9 +47,9 @@ public class MicrosoftAuthorizationResult extends AuthorizationResult {
     /**
      * Constructor of {@link MicrosoftAuthorizationResult}.
      * @param authStatus    {@link AuthorizationStatus}
-     * @param errorResponse {@link AuthorizationErrorResponse}
+     * @param errorResponse {@link MicrosoftAuthorizationErrorResponse}
      */
-    public MicrosoftAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationErrorResponse errorResponse) {
+    public MicrosoftAuthorizationResult(final AuthorizationStatus authStatus, final GenericMicrosoftAuthorizationErrorResponse errorResponse) {
         setAuthorizationStatus(authStatus);
         setAuthorizationErrorResponse(errorResponse);
     }

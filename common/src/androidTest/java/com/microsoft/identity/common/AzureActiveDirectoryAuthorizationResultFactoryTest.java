@@ -234,7 +234,6 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         assertNull(result.getAuthorizationErrorResponse());
         assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
         AuthorizationResponse response = result.getAuthorizationResponse();
-        assertTrue(response instanceof AzureActiveDirectoryAuthorizationResponse);
         assertNotNull(response);
         assertEquals(AUTH_CODE, response.getCode());
         assertEquals(STATE, response.getState());

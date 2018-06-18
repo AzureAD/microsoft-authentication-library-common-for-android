@@ -28,11 +28,13 @@ package com.microsoft.identity.common.internal.providers.oauth2;
  * this class should also contain the AuthorizationResponse which contains the details returned from the
  * In the case of an error/exception this class should return the associated exception
  */
-public abstract class AuthorizationResult {
+public abstract class AuthorizationResult <
+        GenericAuthorizationResponse extends AuthorizationResponse,
+        GenericAuthorizationErrorResponse extends AuthorizationErrorResponse> {
 
     private AuthorizationStatus mAuthorizationStatus;
-    private AuthorizationResponse mAuthorizationResponse;
-    private AuthorizationErrorResponse mAuthorizationErrorResponse;
+    private GenericAuthorizationResponse mAuthorizationResponse;
+    private GenericAuthorizationErrorResponse mAuthorizationErrorResponse;
 
     /**
      * @return The {@link AuthorizationStatus} indicating the auth status for the request sent to authorize endpoint.
@@ -44,22 +46,22 @@ public abstract class AuthorizationResult {
     /**
      * @return The {@link AuthorizationResponse} indicating the auth response  for the request sent to authorize endpoint.
      */
-    public AuthorizationResponse getAuthorizationResponse() {
+    public GenericAuthorizationResponse getAuthorizationResponse() {
         return mAuthorizationResponse;
     }
 
     /**
      * @return The {@link AuthorizationErrorResponse} indicating the auth error response for the request sent to authorize endpoint.
      */
-    public AuthorizationErrorResponse getAuthorizationErrorResponse() {
+    public GenericAuthorizationErrorResponse getAuthorizationErrorResponse() {
         return mAuthorizationErrorResponse;
     }
 
-    protected void setAuthorizationErrorResponse(final AuthorizationErrorResponse authErrorResponse) {
+    protected void setAuthorizationErrorResponse(final GenericAuthorizationErrorResponse authErrorResponse) {
         mAuthorizationErrorResponse = authErrorResponse;
     }
 
-    protected void setAuthorizationResponse(final AuthorizationResponse authResponse) {
+    protected void setAuthorizationResponse(final GenericAuthorizationResponse authResponse) {
         mAuthorizationResponse = authResponse;
     }
 

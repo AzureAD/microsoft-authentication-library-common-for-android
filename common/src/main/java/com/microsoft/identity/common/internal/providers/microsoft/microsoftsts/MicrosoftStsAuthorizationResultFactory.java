@@ -88,7 +88,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                                                                                        final String errorDescription) {
         Logger.info(TAG,"Error is returned from webview redirect");
         Logger.infoPII(TAG,"error: " + error + " errorDescription: " + errorDescription);
-        AuthorizationErrorResponse errorResponse = new MicrosoftStsAuthorizationErrorResponse(error, errorDescription);
+        MicrosoftStsAuthorizationErrorResponse errorResponse = new MicrosoftStsAuthorizationErrorResponse(error, errorDescription);
         return new MicrosoftStsAuthorizationResult(authStatus, errorResponse);
     }
 

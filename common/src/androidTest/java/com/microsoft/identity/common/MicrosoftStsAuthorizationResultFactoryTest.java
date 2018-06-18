@@ -168,7 +168,6 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         assertNull(result.getAuthorizationErrorResponse());
         assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
         AuthorizationResponse response = result.getAuthorizationResponse();
-        assertTrue(response instanceof MicrosoftStsAuthorizationResponse);
         assertNotNull(response);
         assertEquals(response.getCode(), MOCK_AUTH_CODE);
         assertEquals(response.getState(), MOCK_STATE);

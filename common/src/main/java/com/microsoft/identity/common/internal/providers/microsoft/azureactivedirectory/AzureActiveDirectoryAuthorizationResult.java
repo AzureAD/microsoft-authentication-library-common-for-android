@@ -23,32 +23,31 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 
 /**
  * Sub class of {@link MicrosoftAuthorizationResult}.
  * Encapsulates Microsoft Authorization Response and additional Azure Active Directory specific parameters and errors.
  */
-public class AzureActiveDirectoryAuthorizationResult extends MicrosoftAuthorizationResult {
+public class AzureActiveDirectoryAuthorizationResult
+        extends MicrosoftAuthorizationResult<AzureActiveDirectoryAuthorizationResponse, AzureActiveDirectoryAuthorizationErrorResponse> {
 
 
     /**
      * Constructor of {@link AzureActiveDirectoryAuthorizationResult}.
      * @param authStatus    {@link AuthorizationStatus}
-     * @param authResponse  {@link AuthorizationResponse}
+     * @param authResponse  {@link AzureActiveDirectoryAuthorizationResponse}
      */
-    public AzureActiveDirectoryAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationResponse authResponse) {
+    public AzureActiveDirectoryAuthorizationResult(final AuthorizationStatus authStatus, final AzureActiveDirectoryAuthorizationResponse authResponse) {
         super(authStatus, authResponse);
     }
 
     /**
      * Constructor of {@link AzureActiveDirectoryAuthorizationResult}.
      * @param authStatus    {@link AuthorizationStatus}
-     * @param errorResponse  {@link AuthorizationErrorResponse}
+     * @param errorResponse  {@link AzureActiveDirectoryAuthorizationErrorResponse}
      */
-    public AzureActiveDirectoryAuthorizationResult(final AuthorizationStatus authStatus, final AuthorizationErrorResponse errorResponse) {
+    public AzureActiveDirectoryAuthorizationResult(final AuthorizationStatus authStatus, final AzureActiveDirectoryAuthorizationErrorResponse errorResponse) {
         super(authStatus, errorResponse);
     }
 }

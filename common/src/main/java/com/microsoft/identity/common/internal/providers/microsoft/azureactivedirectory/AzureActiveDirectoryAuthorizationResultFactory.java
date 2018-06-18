@@ -116,7 +116,8 @@ public class AzureActiveDirectoryAuthorizationResultFactory extends Authorizatio
     private AzureActiveDirectoryAuthorizationResult createAuthorizationResultWithErrorResponse(final AuthorizationStatus authStatus,
                                                                                                final String error,
                                                                                                final String errorDescription) {
-        AuthorizationErrorResponse errorResponse = new AzureActiveDirectoryAuthorizationErrorResponse(error, errorDescription);
+        AzureActiveDirectoryAuthorizationErrorResponse errorResponse =
+                new AzureActiveDirectoryAuthorizationErrorResponse(error, errorDescription);
         return new AzureActiveDirectoryAuthorizationResult(authStatus, errorResponse);
     }
 
