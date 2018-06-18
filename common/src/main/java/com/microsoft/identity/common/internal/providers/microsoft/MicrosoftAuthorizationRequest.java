@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft;
 
+import android.net.UrlQuerySanitizer;
 import android.util.Base64;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -83,7 +84,6 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
      */
     private String mLibraryVersion;
 
-
     public URL getAuthority() {
         return mAuthority;
     }
@@ -140,17 +140,8 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
         mLibraryVersion = libraryVersion;
     }
 
-    /**
-     * Return the start URL to load in the web view.
-     *
-     * @return String of start URL.
-     * @throws UnsupportedEncodingException
-     * @throws ClientException
-     */
-    public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
-
     protected void appendExtraQueryParameters(final String queryParams, final Map<String, String> requestParams) throws ClientException {
-        final Map<String, String> extraQps = StringExtensions.decodeUrlToMap(queryParams, "&");
+        final Map<String, String> extraQps = StringExtensions.decodeUrlToMap(queryParams);
         final Set<Map.Entry<String, String>> extraQpEntries = extraQps.entrySet();
         for (final Map.Entry<String, String> extraQpEntry : extraQpEntries) {
             if (requestParams.containsKey(extraQpEntry.getKey())) {

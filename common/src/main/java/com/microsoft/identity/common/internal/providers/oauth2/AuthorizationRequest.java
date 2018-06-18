@@ -71,6 +71,13 @@ public abstract class AuthorizationRequest {
      */
     private Set<String> mScope;
 
+    /**
+     * Return the start URL to load in the web view.
+     *
+     * @return String of start URL.
+     * @throws UnsupportedEncodingException
+     * @throws ClientException
+     */
     public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
 
     /**

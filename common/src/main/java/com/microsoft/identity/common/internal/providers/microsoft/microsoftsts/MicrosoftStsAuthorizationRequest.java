@@ -107,6 +107,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mSliceParameters = sliceParameters;
     }
 
+    @Override
     public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
         final String authorizationUrl = StringExtensions.appendQueryParameterToUrl(
                 getAuthorizationEndpoint(), createAuthorizationRequestParameters());

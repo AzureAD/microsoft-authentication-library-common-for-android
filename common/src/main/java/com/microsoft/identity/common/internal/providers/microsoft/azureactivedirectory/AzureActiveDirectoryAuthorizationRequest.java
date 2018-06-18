@@ -83,6 +83,7 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
         mClaimsChallenge = claimsChallenge;
     }
 
+    @Override
     public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
         final String authorizationUrl = StringExtensions.appendQueryParameterToUrl(
                 getAuthorizationEndpoint(),
