@@ -25,6 +25,7 @@ package com.microsoft.identity.common.adal.internal.net;
 import android.os.Build;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
 import java.io.IOException;
 import java.net.URL;
@@ -52,6 +53,8 @@ public class WebRequestHandler implements IWebRequestHandler {
     public static final String HEADER_ACCEPT_JSON = MediaType.APPLICATION_JSON;
 
     private UUID mRequestCorrelationId = null;
+
+    private String mCurrentAdalClientVersion = "";
 
     @Override
     public HttpWebResponse sendGet(URL url, Map<String, String> headers) throws IOException {
@@ -93,5 +96,12 @@ public class WebRequestHandler implements IWebRequestHandler {
      */
     public void setRequestCorrelationId(final UUID requestCorrelationId) {
         mRequestCorrelationId = requestCorrelationId;
+    }
+
+    @Override
+    public void setAdalClientVersion(String adalClientVersion) {
+        if (!StringExtensions.isNullOrBlank(adalClientVersion)) {
+            mCurrentAdalClientVersion = adalClientVersion;
+        }
     }
 }
