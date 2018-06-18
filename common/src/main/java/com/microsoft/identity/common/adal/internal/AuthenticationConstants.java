@@ -564,6 +564,11 @@ public final class AuthenticationConstants {
         public static final String ACCOUNT_CLAIMS = "account.claims";
 
         /**
+         * Indicates whether the broker should bypass the accountmanager cache and use the refresh artiface (RT, FRT, PRT) to refresh access token.
+         */
+        public static final String BROKER_FORCE_REFRESH = "force.refresh";
+
+        /**
          * String of account login hint.
          */
         public static final String ACCOUNT_LOGIN_HINT = "account.login.hint";
@@ -739,7 +744,7 @@ public final class AuthenticationConstants {
          * Signature info for Azure authenticator app that installs authenticator
          * component.
          */
-        public static final String AZURE_AUTHENTICATOR_APP_SIGNATURE = "ho040S3ffZkmxqtQrSwpTVOn9r0=";
+        public static final String AZURE_AUTHENTICATOR_APP_SIGNATURE = "N1jdcbbnKDr0LaFZlqdhXgm2luE=";//
 
         /**
          * Azure Authenticator app signature hash.
