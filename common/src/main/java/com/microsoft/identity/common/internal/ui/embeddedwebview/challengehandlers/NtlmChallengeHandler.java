@@ -20,18 +20,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
+package com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers;
 
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+final class NtlmChallengeHandler {
 
-import java.io.UnsupportedEncodingException;
-
-/**
- * Active Directory Federation Services Authorization Request.
- */
-public class ActiveDirectoryFederationServicesAuthorizationRequest extends AuthorizationRequest {
-    public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
-        throw new UnsupportedOperationException("Not implemented");
-    }
 }
