@@ -33,6 +33,8 @@ import java.net.URL;
 import java.util.Set;
 import java.util.UUID;
 
+import java.io.UnsupportedEncodingException;
+
 /**
  * Azure Active Directory B2C Authorization Request.
  */

@@ -51,10 +51,9 @@ public abstract class AuthorizationRequest {
     private String mClientId;
 
     /**
-     * A optional value.
-     * <p>
-     * The redirect_uri of your app, where authentication responses can be sent and received by your app.
-     * It must exactly match one of the redirect_uris you registered in the portal, except it must be url encoded.
+     * Redirect URLs are a critical part of the OAuth flow. After a user successfully authorizes an
+     * application, the authorization server will redirect the user back to the application with
+     * either an authorization code or access token in the URL.
      */
     private String mRedirectUri;
 

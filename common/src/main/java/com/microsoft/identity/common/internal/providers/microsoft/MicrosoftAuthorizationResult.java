@@ -20,38 +20,40 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
+package com.microsoft.identity.common.internal.providers.microsoft;
 
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 
 /**
- * Sub class of {@link MicrosoftAuthorizationResult}.
- * Encapsulates Microsoft Authorization Response and additional MicrosoftSTS specific parameters and errors.
+ * Sub class of {@link AuthorizationResult}.
+ * Encapsulates OAuth2 Authorization Response and additional Microsoft specific parameters and errors.
  */
-public class MicrosoftStsAuthorizationResult
-        extends MicrosoftAuthorizationResult<MicrosoftStsAuthorizationResponse, MicrosoftStsAuthorizationErrorResponse> {
+public abstract class MicrosoftAuthorizationResult<
+        GenericMicrosoftAuthorizationResponse extends MicrosoftAuthorizationResponse,
+        GenericMicrosoftAuthorizationErrorResponse extends MicrosoftAuthorizationErrorResponse>
+        extends AuthorizationResult<GenericMicrosoftAuthorizationResponse, GenericMicrosoftAuthorizationErrorResponse> {
 
     /**
-     * Constructor of {@link MicrosoftStsAuthorizationResult}.
+     * Constructor of {@link MicrosoftAuthorizationResult}.
      *
      * @param authStatus   {@link AuthorizationStatus}
-     * @param authResponse {@link AuthorizationResponse}
+     * @param authResponse {@link MicrosoftAuthorizationResponse}
      */
-    public MicrosoftStsAuthorizationResult(final AuthorizationStatus authStatus, final MicrosoftStsAuthorizationResponse authResponse) {
-        super(authStatus, authResponse);
+    public MicrosoftAuthorizationResult(final AuthorizationStatus authStatus, final GenericMicrosoftAuthorizationResponse authResponse) {
+        setAuthorizationStatus(authStatus);
+        setAuthorizationResponse(authResponse);
     }
 
     /**
-     * Constructor of {@link MicrosoftStsAuthorizationResult}.
+     * Constructor of {@link MicrosoftAuthorizationResult}.
      *
      * @param authStatus    {@link AuthorizationStatus}
-     * @param errorResponse {@link AuthorizationErrorResponse}
+     * @param errorResponse {@link MicrosoftAuthorizationErrorResponse}
      */
-    public MicrosoftStsAuthorizationResult(final AuthorizationStatus authStatus, final MicrosoftStsAuthorizationErrorResponse errorResponse) {
-        super(authStatus, errorResponse);
+    public MicrosoftAuthorizationResult(final AuthorizationStatus authStatus, final GenericMicrosoftAuthorizationErrorResponse errorResponse) {
+        setAuthorizationStatus(authStatus);
+        setAuthorizationErrorResponse(errorResponse);
     }
 
 }

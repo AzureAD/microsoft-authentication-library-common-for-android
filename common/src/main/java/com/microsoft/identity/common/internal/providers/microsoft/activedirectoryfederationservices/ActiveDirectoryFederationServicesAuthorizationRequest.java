@@ -35,6 +35,8 @@ import java.net.URL;
 import java.util.Set;
 import java.util.UUID;
 
+import java.io.UnsupportedEncodingException;
+
 /**
  * Active Directory Federation Services Authorization Request.
  */
