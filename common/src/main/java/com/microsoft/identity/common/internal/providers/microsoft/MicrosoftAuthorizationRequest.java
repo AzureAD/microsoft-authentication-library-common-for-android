@@ -184,6 +184,9 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
         mLibraryVersion = libraryVersion;
     }
 
+    /**
+     * Convert the query parameters string to pair and add into the request parameters map.
+     */
     protected void appendExtraQueryParameters(final String queryParams, final Map<String, String> requestParams) throws ClientException {
         final Map<String, String> extraQps = constructQueryParamsMap(queryParams);
         final Set<Map.Entry<String, String>> extraQpEntries = extraQps.entrySet();

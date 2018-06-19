@@ -150,8 +150,11 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
         }
     }
 
+    /**
+     * Add the extra query parameters into the request parameter map.
+     * And append haschrome=1 if developer does not pass as extra qp.
+     */
     private void addExtraQueryParameters(@NonNull final Map<String, String> requestParameters) throws ClientException {
-        // Reading extra qp supplied by developer. append haschrome=1 if developer does not pass as extra qp
         if (StringExtensions.isNullOrBlank(getExtraQueryParam())
                 || !getExtraQueryParam().contains(AuthenticationConstants.OAuth2.HAS_CHROME)) {
             requestParameters.put(AuthenticationConstants.OAuth2.HAS_CHROME, "1");

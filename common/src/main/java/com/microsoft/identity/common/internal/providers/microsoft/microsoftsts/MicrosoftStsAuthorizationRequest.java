@@ -186,7 +186,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         addPromptParameter(requestParameters);
         addPkceChallengeToRequestParameters(requestParameters);
         addUserInfoParameter(requestParameters);
-        addQueryParameter(requestParameters);
+        addExtraQueryParameter(requestParameters);
 
         return requestParameters;
     }
@@ -233,11 +233,9 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     }
 
     /**
-     * Add the extra query parameters and slice parameters into the re
-     * @param requestParameters
-     * @throws ClientException
+     * Add the extra query parameters and slice parameters into the request parameter map.
      */
-    private void addQueryParameter(@NonNull final Map<String, String> requestParameters) throws ClientException {
+    private void addExtraQueryParameter(@NonNull final Map<String, String> requestParameters) throws ClientException {
         // adding extra query parameters
         if (!StringExtensions.isNullOrBlank(getExtraQueryParam())) {
             appendExtraQueryParameters(getExtraQueryParam(), requestParameters);
