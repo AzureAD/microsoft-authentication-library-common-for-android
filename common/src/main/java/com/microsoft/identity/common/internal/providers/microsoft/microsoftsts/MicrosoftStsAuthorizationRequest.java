@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
-import android.net.UrlQuerySanitizer;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
@@ -39,7 +38,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -188,7 +186,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         addPromptParameter(requestParameters);
         addPkceChallengeToRequestParameters(requestParameters);
         addUserInfoParameter(requestParameters);
-        addExtraQueryParameter(requestParameters);
+        addQueryParameter(requestParameters);
 
         return requestParameters;
     }
@@ -234,7 +232,12 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         addExtraQueryParameter(LOGIN_HINT, mDisplayableId, requestParameters);
     }
 
-    private void addExtraQueryParameter(@NonNull final Map<String, String> requestParameters) throws ClientException {
+    /**
+     * Add the extra query parameters and slice parameters into the re
+     * @param requestParameters
+     * @throws ClientException
+     */
+    private void addQueryParameter(@NonNull final Map<String, String> requestParameters) throws ClientException {
         // adding extra query parameters
         if (!StringExtensions.isNullOrBlank(getExtraQueryParam())) {
             appendExtraQueryParameters(getExtraQueryParam(), requestParameters);
