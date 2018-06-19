@@ -22,7 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.support.annotation.NonNull;
+
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
@@ -70,6 +73,23 @@ public abstract class AuthorizationRequest {
      * Scopes scopes that you want the user to consent to is required for V2 auth request.
      */
     private Set<String> mScope;
+
+    /**
+     * Constructor of AuthorizationRequest.
+     */
+    public AuthorizationRequest(final String responseType, @NonNull final String clientId,
+                                final String redirectUri, final String state, final Set<String> scope) {
+        //validate client id
+        if(StringUtil.isEmpty(clientId)) {
+            throw new IllegalArgumentException("clientId is empty.");
+        }
+
+        mResponseType = responseType;
+        mClientId = clientId;
+        mRedirectUri = redirectUri;
+        mState = state;
+        mScope = scope;
+    }
 
     /**
      * Return the start URL to load in the web view.

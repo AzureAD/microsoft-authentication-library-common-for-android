@@ -22,10 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
+import android.support.annotation.NonNull;
+
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Azure Active Directory B2C Authorization Request.
@@ -34,5 +40,21 @@ public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthor
     @Override
     public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
         throw new UnsupportedOperationException("Not implemented.");
+    }
+
+    public AzureActiveDirectoryB2CAuthorizationRequest(final String responseType,
+                                                       @NonNull final String clientId,
+                                                       final String redirectUri,
+                                                       final String state,
+                                                       final Set<String> scope,
+                                                       @NonNull final URL authority,
+                                                       @NonNull final String authorizationEndpoint,
+                                                       final String loginHint,
+                                                       final UUID correlationId,
+                                                       final PkceChallenge pkceChallenge,
+                                                       final String extraQueryParam,
+                                                       final String libraryVersion) {
+        super(responseType, clientId, redirectUri, state, scope, authority, authorizationEndpoint,
+                loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);
     }
 }

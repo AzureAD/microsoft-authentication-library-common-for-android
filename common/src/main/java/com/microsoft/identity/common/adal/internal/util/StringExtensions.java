@@ -253,42 +253,6 @@ public final class StringExtensions {
         return Base64.encodeToString(message.getBytes(Charset.forName(ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
     }
 
-
-    /**
-     * Sanitizes the query portion of a URL and convert the query parameters into a map.
-     *
-     * @param url The url to decode for.
-     * @return A map of all the query parameter pairs in the URL's query portion.
-     */
-    public static Map<String, String> decodeUrlToMap(final String url) {
-        final Map<String, String> decodedUrlMap = new HashMap<>();
-
-        if (isNullOrBlank(url)) {
-            return decodedUrlMap;
-        }
-
-        final UrlQuerySanitizer sanitizer = new UrlQuerySanitizer(url);
-
-        final List<UrlQuerySanitizer.ParameterValuePair> parameterSet = sanitizer.getParameterList();
-        if (parameterSet.size() > 1) {
-            for (UrlQuerySanitizer.ParameterValuePair para : parameterSet) {
-                try {
-                    final String key = urlFormDecode(para.mParameter);
-                    final String value = urlFormDecode(para.mValue);
-
-                    if (!isNullOrBlank(key) && !isNullOrBlank(value)) {
-                        decodedUrlMap.put(para.mParameter, para.mValue);
-                    }
-
-                } catch (final UnsupportedEncodingException e) {
-                    Logger.error(TAG, null, "URL form decode failed.", e);
-                }
-            }
-        }
-
-        return decodedUrlMap;
-    }
-
     /**
      * Append parameter to the url. If the no query parameters, return the url originally passed in.
      */

@@ -23,23 +23,33 @@
 package com.microsoft.identity.common.internal.providers.microsoft;
 
 import android.net.UrlQuerySanitizer;
+import android.support.annotation.NonNull;
 import android.util.Base64;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.UUID;
+
+import static com.microsoft.identity.common.adal.internal.util.StringExtensions.isNullOrBlank;
+import static com.microsoft.identity.common.adal.internal.util.StringExtensions.urlFormDecode;
 
 public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest {
     /* Constants */
+    private static final String TAG = MicrosoftAuthorizationRequest.class.getSimpleName();
     public static final String ENCODING_UTF8 = "UTF_8";
     public static final String CODE_CHALLENGE = "code_challenge";
     public static final String CODE_CHALLENGE_METHOD = "code_challenge_method";
@@ -83,6 +93,40 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
      * The version of the calling library.
      */
     private String mLibraryVersion;
+
+    /**
+     * Constructor of MicrosoftAuthorizationRequest.
+     */
+    public MicrosoftAuthorizationRequest(final String responseType,
+                                         @NonNull final String clientId,
+                                         @NonNull final String redirectUri,
+                                         final String state,
+                                         final Set<String> scope,
+                                         @NonNull final URL authority,
+                                         @NonNull final String authorizationEndpoint,
+                                         final String loginHint,
+                                         final UUID correlationId,
+                                         final PkceChallenge pkceChallenge,
+                                         final String extraQueryParam,
+                                         final String libraryVersion) {
+        super(responseType, clientId, redirectUri, state, scope);
+
+        if (StringUtil.isEmpty(redirectUri)) {
+            throw new IllegalArgumentException("redirect Uri is empty");
+        }
+
+        if (StringUtil.isEmpty(authorizationEndpoint)) {
+            throw new IllegalArgumentException("Authorization endpoint is empty");
+        }
+
+        mAuthority = authority;
+        mAuthorizationEndpoint = authorizationEndpoint;
+        mLoginHint = loginHint;
+        mCorrelationId = correlationId;
+        mPkceChallenge = pkceChallenge;
+        mExtraQueryParam = extraQueryParam;
+        mLibraryVersion = libraryVersion;
+    }
 
     public URL getAuthority() {
         return mAuthority;
@@ -141,7 +185,7 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
     }
 
     protected void appendExtraQueryParameters(final String queryParams, final Map<String, String> requestParams) throws ClientException {
-        final Map<String, String> extraQps = StringExtensions.decodeUrlToMap(queryParams);
+        final Map<String, String> extraQps = constructQueryParamsMap(queryParams);
         final Set<Map.Entry<String, String>> extraQpEntries = extraQps.entrySet();
         for (final Map.Entry<String, String> extraQpEntry : extraQpEntries) {
             if (requestParams.containsKey(extraQpEntry.getKey())) {
@@ -167,8 +211,47 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
     }
 
     protected void addExtraQueryParameter(final String key, final String value, final Map<String, String> requestParams) {
-        if (!StringExtensions.isNullOrBlank(key) && !StringExtensions.isNullOrBlank(value)) {
+        if (!isNullOrBlank(key) && !isNullOrBlank(value)) {
             requestParams.put(key, value);
         }
+    }
+
+
+    /**
+     * Sanitizes the query portion of a URL and convert the query parameters into a map.
+     *
+     * @param url The url to decode for.
+     * @return A map of all the query parameter pairs in the URL's query portion.
+     */
+    private static Map<String, String> constructQueryParamsMap(final String url) {
+        final Map<String, String> decodedUrlMap = new HashMap<>();
+
+        if (isNullOrBlank(url)) {
+            return decodedUrlMap;
+        }
+
+        final StringTokenizer tokenizer = new StringTokenizer(url, "&");
+        while (tokenizer.hasMoreTokens()) {
+            final String pair = tokenizer.nextToken();
+            final String[] elements = pair.split("=");
+
+            if (elements.length != 2) {
+                continue;
+            }
+
+            try {
+                final String key = urlFormDecode(elements[0]);
+                final String value = urlFormDecode(elements[1]);
+
+                if (!isNullOrBlank(key) && !isNullOrBlank(value)) {
+                    decodedUrlMap.put(key, value);
+                }
+
+            } catch (final UnsupportedEncodingException e) {
+                Logger.error(TAG, null, "Decode failed.", e);
+            }
+        }
+
+        return decodedUrlMap;
     }
 }

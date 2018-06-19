@@ -30,13 +30,17 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthorizationRequest {
-    private static final String TAG = StringExtensions.class.getSimpleName();
+    private static final String TAG = AzureActiveDirectoryAuthorizationRequest.class.getSimpleName();
 
     /* Constants */
     private static final String RESOURCE = "resource";
@@ -58,6 +62,20 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
      */
     private AzureActiveDirectoryPromptBehavior mPromptBehavior;
     private String mClaimsChallenge;
+
+    public AzureActiveDirectoryAuthorizationRequest(final String responseType, @NonNull final String clientId,
+                                                    final String redirectUri, final String state, final Set<String> scope,
+                                                    @NonNull final URL authority, @NonNull final String authorizationEndpoint,
+                                                    final String loginHint, final UUID correlationId, final PkceChallenge pkceChallenge,
+                                                    final String extraQueryParam, final String libraryVersion,
+                                                    @NonNull final String resource, final AzureActiveDirectoryPromptBehavior promptBehavior,
+                                                    final String claimsChallenge) {
+        super(responseType, clientId, redirectUri, state, scope, authority, authorizationEndpoint,
+                loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);
+        mResource = resource;
+        mPromptBehavior = promptBehavior;
+        mClaimsChallenge = claimsChallenge;
+    }
 
     public String getResource() {
         return mResource;

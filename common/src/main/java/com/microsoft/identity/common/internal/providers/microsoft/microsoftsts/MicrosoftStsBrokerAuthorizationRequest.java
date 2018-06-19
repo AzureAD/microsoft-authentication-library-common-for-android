@@ -22,15 +22,58 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import android.support.annotation.NonNull;
+
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Set;
+import java.util.UUID;
 
 public class MicrosoftStsBrokerAuthorizationRequest extends MicrosoftStsAuthorizationRequest {
     private String mCallingPackage;
     private String mSignatureDigest;
+
+    public MicrosoftStsBrokerAuthorizationRequest(final String responseType,
+                                                  @NonNull final String clientId,
+                                                  @NonNull final String redirectUri,
+                                                  final String state,
+                                                  @NonNull final Set<String> scope,
+                                                  @NonNull final URL authority,
+                                                  @NonNull final String authorizationEndpoint,
+                                                  final String loginHint,
+                                                  final UUID correlationId,
+                                                  final PkceChallenge pkceChallenge,
+                                                  final String extraQueryParam,
+                                                  final String libraryVersion,
+                                                  final MicrosoftStsPromptBehavior promptBehavior,
+                                                  final String uid,
+                                                  final String utid,
+                                                  final String displayableId,
+                                                  final String sliceParameters,
+                                                  final Set<String> extraScopesToConsent,
+                                                  @NonNull final String callingPackage,
+                                                  @NonNull final String signatureDigest) {
+        super(responseType, clientId, redirectUri, state, scope, authority, authorizationEndpoint,
+                loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion,
+                promptBehavior, uid, utid, displayableId, sliceParameters, extraScopesToConsent);
+
+        if (StringUtil.isEmpty(callingPackage)) {
+            throw new IllegalArgumentException("callingPackage is empty");
+        }
+
+        if (StringUtil.isEmpty(signatureDigest)) {
+            throw new IllegalArgumentException("signatureDigest is empty");
+        }
+
+        mCallingPackage = callingPackage;
+        mSignatureDigest = signatureDigest;
+    }
 
     public String getCallingPackage() {
         return mCallingPackage;

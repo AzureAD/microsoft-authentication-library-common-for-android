@@ -22,15 +22,46 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
+import android.support.annotation.NonNull;
+
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsPromptBehavior;
+import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Set;
+import java.util.UUID;
 
 public class AzureActiveDirectoryBrokerAuthorizationRequest extends AzureActiveDirectoryAuthorizationRequest {
     private String mCallingPackage;
     private String mSignatureDigest;
+
+    public AzureActiveDirectoryBrokerAuthorizationRequest(final String responseType,
+                                                          @NonNull final String clientId,
+                                                          final String redirectUri,
+                                                          final String state,
+                                                          final Set<String> scope,
+                                                          @NonNull final URL authority,
+                                                          @NonNull final String authorizationEndpoint,
+                                                          final String loginHint,
+                                                          final UUID correlationId,
+                                                          final PkceChallenge pkceChallenge,
+                                                          final String extraQueryParam,
+                                                          final String libraryVersion,
+                                                          @NonNull final String resource,
+                                                          final AzureActiveDirectoryPromptBehavior promptBehavior,
+                                                          final String claimsChallenge,
+                                                          final String callingPackage,
+                                                          final String signatureDigest) {
+        super(responseType, clientId, redirectUri, state, scope, authority, authorizationEndpoint,
+                loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion,
+                resource, promptBehavior, claimsChallenge);
+        mCallingPackage = callingPackage;
+        mSignatureDigest = signatureDigest;
+    }
 
     @Override
     public String getAuthorizationStartUrl() throws ClientException, UnsupportedEncodingException{

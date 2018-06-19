@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import android.net.UrlQuerySanitizer;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
@@ -34,14 +35,17 @@ import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest {
-    private static final String TAG = StringExtensions.class.getSimpleName();
+    private static final String TAG = MicrosoftStsAuthorizationRequest.class.getSimpleName();
 
     /* Constants */
     private static final String CORRELATION_ID = "correlation_id";
@@ -61,7 +65,43 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     private String mUtid;
     private String mDisplayableId;
     private String mSliceParameters;
-    private final Set<String> mExtraScopesToConsent = new HashSet<>();
+    private Set<String> mExtraScopesToConsent = new HashSet<>();
+
+    // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
+    // TODO private boolean mIsExtendedLifetimeEnabled = false;
+
+    public MicrosoftStsAuthorizationRequest(final String responseType,
+                                            @NonNull final String clientId,
+                                            @NonNull final String redirectUri,
+                                            final String state,
+                                            @NonNull final Set<String> scope,
+                                            @NonNull final URL authority,
+                                            @NonNull final String authorizationEndpoint,
+                                            final String loginHint,
+                                            final UUID correlationId,
+                                            final PkceChallenge pkceChallenge,
+                                            final String extraQueryParam,
+                                            final String libraryVersion,
+                                            @NonNull final MicrosoftStsPromptBehavior promptBehavior,
+                                            final String uid,
+                                            final String utid,
+                                            final String displayableId,
+                                            final String sliceParameters,
+                                            final Set<String> extraScopesToConsent) {
+        super(responseType, clientId, redirectUri, state, scope, authority, authorizationEndpoint,
+                loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);
+
+        if (null == scope || scope.size() < 1) {
+            throw new IllegalArgumentException("Scope is empty");
+        }
+
+        mPromptBehavior = promptBehavior;
+        mUid = uid;
+        mUtid = utid;
+        mDisplayableId = displayableId;
+        mSliceParameters = sliceParameters;
+        mExtraScopesToConsent = extraScopesToConsent;
+    }
 
     public Set<String> getExtraScopesToConsent() {
         return mExtraScopesToConsent;
@@ -111,13 +151,15 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
         final String authorizationUrl = StringExtensions.appendQueryParameterToUrl(
                 getAuthorizationEndpoint(), createAuthorizationRequestParameters());
-        Logger.infoPII(TAG, getCorrelationId().toString(), "Request uri to authorize endpoint is: " + authorizationUrl);
+        Logger.infoPII(TAG, null, "Request uri to authorize endpoint is: " + authorizationUrl);
         return authorizationUrl;
     }
 
     private String getRequestScopeString() {
         final Set<String> scopes = new HashSet<>(getScope());
-        scopes.addAll(mExtraScopesToConsent);
+        if (null != mExtraScopesToConsent) {
+            scopes.addAll(mExtraScopesToConsent);
+        }
         final Set<String> requestedScopes = getDecoratedScope(scopes);
         return StringUtil.convertSetToString(requestedScopes, " ");
     }
@@ -137,7 +179,10 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         requestParameters.put(AuthenticationConstants.OAuth2.REDIRECT_URI, getRedirectUri());
         requestParameters.put(AuthenticationConstants.OAuth2.RESPONSE_TYPE, AuthenticationConstants.OAuth2.CODE);
         requestParameters.put(AuthenticationConstants.OAuth2.STATE, encodeProtocolState());
-        requestParameters.put(CORRELATION_ID, getCorrelationId().toString());
+        //TODO Should we set correlation id as a required value?
+        if (null != getCorrelationId()) {
+            requestParameters.put(CORRELATION_ID, getCorrelationId().toString());
+        }
 
         addDiagnosticParameters(requestParameters);
         addPromptParameter(requestParameters);
@@ -150,7 +195,13 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
     private void addDiagnosticParameters(@NonNull final Map<String, String> requestParameters) {
         requestParameters.put(LIB_ID_PLATFORM, PLATFORM_VALUE);
-        requestParameters.put(LIB_ID_VERSION, getLibraryVersion());
+        requestParameters.put(LIB_ID_OS_VER, String.valueOf(Build.VERSION.SDK_INT));
+        requestParameters.put(LIB_ID_DM, Build.MODEL);
+
+        if (!StringUtil.isEmpty(getLibraryVersion())) {
+            requestParameters.put(LIB_ID_VERSION, getLibraryVersion());
+        }
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             requestParameters.put(LIB_ID_CPU, Build.CPU_ABI);
         } else {
@@ -159,8 +210,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
                 requestParameters.put(LIB_ID_CPU, supportedABIs[0]);
             }
         }
-        requestParameters.put(LIB_ID_OS_VER, String.valueOf(Build.VERSION.SDK_INT));
-        requestParameters.put(LIB_ID_DM, Build.MODEL);
     }
 
     private void addPromptParameter(@NonNull final Map<String, String> requestParameters) {
