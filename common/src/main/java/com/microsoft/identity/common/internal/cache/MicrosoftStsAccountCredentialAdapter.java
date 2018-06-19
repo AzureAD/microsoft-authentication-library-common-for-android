@@ -40,6 +40,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -96,7 +97,7 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setRealm(getRealm(strategy, response));
             accessToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
             accessToken.setClientId(request.getClientId());
-            accessToken.setTarget(request.getScope());
+            accessToken.setTarget(StringUtil.convertSetToString(request.getScope(), " "));
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
             accessToken.setExpiresOn(String.valueOf(expiresOn));
             accessToken.setSecret(response.getAccessToken());
@@ -141,7 +142,8 @@ public class MicrosoftStsAccountCredentialAdapter
             // Optional
             refreshToken.setFamilyId(response.getFamilyId());
             refreshToken.setUsername(getUsername(response));
-            refreshToken.setTarget(request.getScope());
+            //TODO the scope in MSAL is a set of String.
+            refreshToken.setTarget(StringUtil.convertSetToString(request.getScope(), " "));
             refreshToken.setClientInfo(response.getClientInfo());
 
             // TODO are these needed? Expected?

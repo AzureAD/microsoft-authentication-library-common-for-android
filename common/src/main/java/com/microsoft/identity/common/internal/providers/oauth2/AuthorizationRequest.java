@@ -22,9 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.support.annotation.NonNull;
+
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
@@ -33,17 +38,69 @@ import java.io.UnsupportedEncodingException;
  * This should provide an extension point for additional parameters to be set
  */
 public abstract class AuthorizationRequest {
-
+    /**
+     * A required value and must be set to "code".
+     */
     private String mResponseType;
+
+    /**
+     * A required value.
+     * <p>
+     * The client identifier as assigned by the authorization server, when the client was registered.
+     */
     private String mClientId;
+
     /**
      * Redirect URLs are a critical part of the OAuth flow. After a user successfully authorizes an
      * application, the authorization server will redirect the user back to the application with
      * either an authorization code or access token in the URL.
      */
     private String mRedirectUri;
-    private String mScope;
+
+    /**
+     * A recommended value.
+     * <p>
+     * A value included in the request that will also be returned in the token response.
+     * It can be a string of any content that you wish. A randomly generated unique value is
+     * typically used for preventing cross-site request forgery attacks. The value can also
+     * encode information about the user's state in the app before the authentication request
+     * occurred, such as the page or view they were on.
+     */
     private String mState;
+
+    /**
+     * Scopes scopes that you want the user to consent to is required for V2 auth request.
+     */
+    private Set<String> mScope;
+
+    /**
+     * Constructor of AuthorizationRequest.
+     */
+    public AuthorizationRequest(final String responseType,
+                                @NonNull final String clientId,
+                                final String redirectUri,
+                                final String state,
+                                final Set<String> scope) {
+        //validate client id
+        if (StringUtil.isEmpty(clientId)) {
+            throw new IllegalArgumentException("clientId is empty.");
+        }
+
+        mResponseType = responseType;
+        mClientId = clientId;
+        mRedirectUri = redirectUri;
+        mState = state;
+        mScope = scope;
+    }
+
+    /**
+     * Return the start URL to load in the web view.
+     *
+     * @return String of start URL.
+     * @throws UnsupportedEncodingException
+     * @throws ClientException
+     */
+    public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
 
     /**
      * @return mResponseType of the authorization request.
@@ -88,20 +145,6 @@ public abstract class AuthorizationRequest {
     }
 
     /**
-     * @return mScope of the authorization request.
-     */
-    public String getScope() {
-        return mScope;
-    }
-
-    /**
-     * @param scope scope of the authorization request.
-     */
-    public void setScope(final String scope) {
-        mScope = scope;
-    }
-
-    /**
      * @return mState of the authorization request.
      */
     public String getState() {
@@ -115,25 +158,11 @@ public abstract class AuthorizationRequest {
         mState = state;
     }
 
-    //CHECKSTYLE:OFF
-    @Override
-    public String toString() {
-        return "AuthorizationRequest{" +
-                "mResponseType='" + mResponseType + '\'' +
-                ", mClientId='" + mClientId + '\'' +
-                ", mRedirectUri='" + mRedirectUri + '\'' +
-                ", mScope='" + mScope + '\'' +
-                ", mState='" + mState + '\'' +
-                '}';
+    public Set<String> getScope() {
+        return mScope;
     }
-    //CHECKSTYLE:ON
 
-    /**
-     * Return the start URL to load in the web view.
-     * @return String of start URL.
-     * @throws UnsupportedEncodingException
-     * @throws ClientException
-     */
-     public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
-     //TODO this is implemented in the authorization request pull request.
+    public void setScope(final Set<String> scope) {
+        mScope = new HashSet<>(scope);
+    }
 }

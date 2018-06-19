@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
+import java.util.Iterator;
+import java.util.Set;
+
 /**
  * String utilities.
  */
@@ -39,5 +42,29 @@ public final class StringUtil {
      */
     public static boolean isEmpty(final String message) {
         return message == null || message.trim().length() == 0; //NOPMD  Suppressing PMD warning for new String creation on trim()"
+    }
+
+    /**
+     * Convert the given set of scopes into the string with the provided delimiter.
+     *
+     * @param inputSet  The Set of scopes to convert.
+     * @param delimiter The delimiter used to construct the scopes in the format of String.
+     * @return The converted scopes in the format of String.
+     */
+    public static String convertSetToString(final Set<String> inputSet, final String delimiter) {
+        if (inputSet == null || inputSet.isEmpty() || delimiter == null) {
+            return "";
+        }
+
+        final StringBuilder stringBuilder = new StringBuilder();
+        final Iterator<String> iterator = inputSet.iterator();
+        stringBuilder.append(iterator.next());
+
+        while (iterator.hasNext()) {
+            stringBuilder.append(delimiter);
+            stringBuilder.append(iterator.next());
+        }
+
+        return stringBuilder.toString();
     }
 }
