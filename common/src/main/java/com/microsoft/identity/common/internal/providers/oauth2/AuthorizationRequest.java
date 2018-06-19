@@ -77,10 +77,13 @@ public abstract class AuthorizationRequest {
     /**
      * Constructor of AuthorizationRequest.
      */
-    public AuthorizationRequest(final String responseType, @NonNull final String clientId,
-                                final String redirectUri, final String state, final Set<String> scope) {
+    public AuthorizationRequest(final String responseType,
+                                @NonNull final String clientId,
+                                final String redirectUri,
+                                final String state,
+                                final Set<String> scope) {
         //validate client id
-        if(StringUtil.isEmpty(clientId)) {
+        if (StringUtil.isEmpty(clientId)) {
             throw new IllegalArgumentException("clientId is empty.");
         }
 

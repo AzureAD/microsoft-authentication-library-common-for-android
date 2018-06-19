@@ -63,12 +63,20 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
     private AzureActiveDirectoryPromptBehavior mPromptBehavior;
     private String mClaimsChallenge;
 
-    public AzureActiveDirectoryAuthorizationRequest(final String responseType, @NonNull final String clientId,
-                                                    final String redirectUri, final String state, final Set<String> scope,
-                                                    @NonNull final URL authority, @NonNull final String authorizationEndpoint,
-                                                    final String loginHint, final UUID correlationId, final PkceChallenge pkceChallenge,
-                                                    final String extraQueryParam, final String libraryVersion,
-                                                    @NonNull final String resource, final AzureActiveDirectoryPromptBehavior promptBehavior,
+    public AzureActiveDirectoryAuthorizationRequest(final String responseType,
+                                                    @NonNull final String clientId,
+                                                    final String redirectUri,
+                                                    final String state,
+                                                    final Set<String> scope,
+                                                    @NonNull final URL authority,
+                                                    @NonNull final String authorizationEndpoint,
+                                                    final String loginHint,
+                                                    final UUID correlationId,
+                                                    final PkceChallenge pkceChallenge,
+                                                    final String extraQueryParam,
+                                                    final String libraryVersion,
+                                                    @NonNull final String resource,
+                                                    final AzureActiveDirectoryPromptBehavior promptBehavior,
                                                     final String claimsChallenge) {
         super(responseType, clientId, redirectUri, state, scope, authority, authorizationEndpoint,
                 loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);

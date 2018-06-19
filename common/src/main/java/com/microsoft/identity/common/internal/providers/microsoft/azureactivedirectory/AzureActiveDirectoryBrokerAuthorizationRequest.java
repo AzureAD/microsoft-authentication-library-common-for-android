@@ -64,7 +64,7 @@ public class AzureActiveDirectoryBrokerAuthorizationRequest extends AzureActiveD
     }
 
     @Override
-    public String getAuthorizationStartUrl() throws ClientException, UnsupportedEncodingException{
+    public String getAuthorizationStartUrl() throws ClientException, UnsupportedEncodingException {
         final String startUrl = super.getAuthorizationStartUrl();
         if (!StringExtensions.isNullOrBlank(mCallingPackage)
                 && !StringExtensions.isNullOrBlank(mSignatureDigest)) {
