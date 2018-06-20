@@ -28,7 +28,9 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationResult;
@@ -226,6 +228,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         bundle.putString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, responseUrl);
         bundle.putString(AuthenticationConstants.AAD.CORRELATION_ID, CORRELATION_ID);
         intent.putExtras(bundle);
+        intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, STATE);
         AzureActiveDirectoryAuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
         assertNotNull(result);
@@ -236,6 +239,26 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         assertEquals(AUTH_CODE, response.getCode());
         assertEquals(STATE, response.getState());
         assertEquals(CORRELATION_ID, response.getCorrelationId());
+    }
+
+    public void testUrlWithIncorrectState() {
+        Intent intent = new Intent();
+        Bundle bundle = new Bundle();
+        String responseUrl = REDIRECT_URI + "?" + AUTH_CODE_AND_STATE + "&"
+                + AuthenticationConstants.AAD.CORRELATION_ID + "=" + CORRELATION_ID;
+        bundle.putString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, responseUrl);
+        bundle.putString(AuthenticationConstants.AAD.CORRELATION_ID, CORRELATION_ID);
+        intent.putExtras(bundle);
+        intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, STATE);
+        AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+        assertNotNull(result);
+        assertNull(result.getAuthorizationResponse());
+        assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
+        AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
+        assertNotNull(errorResponse);
+        assertEquals(ErrorStrings.STATE_MISMATCH, errorResponse.getError());
+        assertEquals(MicrosoftAuthorizationErrorResponse.STATE_NOT_THE_SAME, errorResponse.getErrorDescription());
     }
 
     @Test

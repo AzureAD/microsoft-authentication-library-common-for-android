@@ -26,8 +26,9 @@ import android.content.Intent;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
@@ -43,7 +44,6 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 
 @RunWith(AndroidJUnit4.class)
@@ -162,6 +162,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     public void testUrlWithCorrectCodeAndState() {
         Intent intent = new Intent();
         intent.putExtra(MicrosoftStsAuthorizationResultFactory.MSSTS_AUTHORIZATION_FINAL_URL, REDIRECT_URI + "?" + AUTH_CODE_AND_STATE);
+        intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, MOCK_STATE);
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
         assertNotNull(result);
@@ -171,6 +172,22 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         assertNotNull(response);
         assertEquals(response.getCode(), MOCK_AUTH_CODE);
         assertEquals(response.getState(), MOCK_STATE);
+    }
+
+    @Test
+    public void testUrlWithInCorrectState() {
+        Intent intent = new Intent();
+        intent.putExtra(MicrosoftStsAuthorizationResultFactory.MSSTS_AUTHORIZATION_FINAL_URL, REDIRECT_URI + "?" + AUTH_CODE_AND_STATE);
+        intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, "incorrect_state");
+        AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+        assertNotNull(result);
+        assertNotNull(result.getAuthorizationErrorResponse());
+        assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
+        AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
+        assertNotNull(errorResponse);
+        assertEquals(ErrorStrings.STATE_MISMATCH, errorResponse.getError());
+        assertEquals(MicrosoftAuthorizationErrorResponse.STATE_NOT_THE_SAME, errorResponse.getErrorDescription());
     }
 
     @Test

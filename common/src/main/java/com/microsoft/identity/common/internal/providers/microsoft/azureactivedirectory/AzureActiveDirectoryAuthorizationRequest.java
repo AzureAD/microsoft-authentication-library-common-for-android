@@ -179,7 +179,7 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
         requestParameters.put(AuthenticationConstants.OAuth2.REDIRECT_URI, getRedirectUri());
         requestParameters.put(AuthenticationConstants.OAuth2.SCOPE, SCOPE_OPENID_VALUE);
         requestParameters.put(RESOURCE, mResource);
-        requestParameters.put(AuthenticationConstants.OAuth2.STATE, encodeProtocolState());
+        requestParameters.put(AuthenticationConstants.OAuth2.STATE, generateState());
         if (getCorrelationId() != null) {
             requestParameters.put(CLIENT_REQUEST_ID, getCorrelationId().toString());
         }
