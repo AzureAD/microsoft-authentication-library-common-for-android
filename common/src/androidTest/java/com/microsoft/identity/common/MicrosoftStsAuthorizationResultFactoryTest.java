@@ -206,7 +206,4 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         assertEquals(errorResponse.getErrorDescription(), ERROR_DESCRIPTION);
     }
 
-    //TODO: Add tests to validate state once implemented
-
-
 }

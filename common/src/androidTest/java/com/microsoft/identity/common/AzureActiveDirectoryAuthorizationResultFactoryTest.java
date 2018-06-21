@@ -281,7 +281,5 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         assertEquals(ERROR_CODES, errorResponse.getErrorCodes());
     }
 
-    //TODO: Add tests to validate state once implemented
-
 
 }
