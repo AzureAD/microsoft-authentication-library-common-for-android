@@ -67,6 +67,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
      * String of cache value separator.
      */
     public static final String CACHE_VALUE_SEPARATOR = "-";
+    private static final String FOCI_PREFIX = "foci-";
 
     private final Gson mGson;
 
@@ -144,7 +145,20 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         cacheKey = cacheKey.replace(HOME_ACCOUNT_ID, sanitizeNull(credential.getHomeAccountId()));
         cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(credential.getEnvironment()));
         cacheKey = cacheKey.replace(CREDENTIAL_TYPE, sanitizeNull(credential.getCredentialType()));
-        cacheKey = cacheKey.replace(CLIENT_ID, sanitizeNull(credential.getClientId()));
+
+        RefreshToken rt;
+        if ((credential instanceof RefreshToken)
+                && !StringExtensions.isNullOrBlank((rt = (RefreshToken) credential).getFamilyId())) {
+            String familyIdForCacheKey = rt.getFamilyId();
+
+            if (!familyIdForCacheKey.startsWith(FOCI_PREFIX)) {
+                familyIdForCacheKey = FOCI_PREFIX + familyIdForCacheKey;
+            }
+
+            cacheKey = cacheKey.replace(CLIENT_ID, familyIdForCacheKey);
+        } else {
+            cacheKey = cacheKey.replace(CLIENT_ID, sanitizeNull(credential.getClientId()));
+        }
 
         if (credential instanceof AccessToken) {
             final AccessToken accessToken = (AccessToken) credential;
