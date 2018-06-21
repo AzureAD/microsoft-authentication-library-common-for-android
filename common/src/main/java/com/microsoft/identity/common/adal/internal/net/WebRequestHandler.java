@@ -82,7 +82,7 @@ public class WebRequestHandler implements IWebRequestHandler {
 
         headers.put(AuthenticationConstants.AAD.ADAL_ID_PLATFORM, "Android");
         // TODO don't make this dependency circular
-        //headers.put(AuthenticationConstants.AAD.ADAL_ID_VERSION, AuthenticationContext.getVersionName());
+        headers.put(AuthenticationConstants.AAD.ADAL_ID_VERSION, mCurrentAdalClientVersion);
         headers.put(AuthenticationConstants.AAD.ADAL_ID_OS_VER, "" + Build.VERSION.SDK_INT);
         headers.put(AuthenticationConstants.AAD.ADAL_ID_DM, android.os.Build.MODEL);
 
@@ -104,4 +104,6 @@ public class WebRequestHandler implements IWebRequestHandler {
             mCurrentAdalClientVersion = adalClientVersion;
         }
     }
+
+
 }
