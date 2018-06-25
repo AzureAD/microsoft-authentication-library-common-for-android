@@ -507,7 +507,7 @@ public class CacheKeyValueDelegateTest {
                 + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + "foci-1" + CACHE_VALUE_SEPARATOR
+                + "1" + CACHE_VALUE_SEPARATOR
                 + CACHE_VALUE_SEPARATOR
                 + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
@@ -527,7 +527,7 @@ public class CacheKeyValueDelegateTest {
                 + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + "foci-1" + CACHE_VALUE_SEPARATOR
+                + "1" + CACHE_VALUE_SEPARATOR
                 + CACHE_VALUE_SEPARATOR
                 + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
@@ -547,7 +547,7 @@ public class CacheKeyValueDelegateTest {
                 + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + "foci-2" + CACHE_VALUE_SEPARATOR
+                + "2" + CACHE_VALUE_SEPARATOR
                 + CACHE_VALUE_SEPARATOR
                 + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
@@ -567,7 +567,7 @@ public class CacheKeyValueDelegateTest {
                 + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + "foci-2" + CACHE_VALUE_SEPARATOR
+                + "2" + CACHE_VALUE_SEPARATOR
                 + CACHE_VALUE_SEPARATOR
                 + TARGET;
         assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));

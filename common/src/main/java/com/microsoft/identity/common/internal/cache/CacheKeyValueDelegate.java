@@ -151,8 +151,8 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
                 && !StringExtensions.isNullOrBlank((rt = (RefreshToken) credential).getFamilyId())) {
             String familyIdForCacheKey = rt.getFamilyId();
 
-            if (!familyIdForCacheKey.startsWith(FOCI_PREFIX)) {
-                familyIdForCacheKey = FOCI_PREFIX + familyIdForCacheKey;
+            if (familyIdForCacheKey.startsWith(FOCI_PREFIX)) {
+                familyIdForCacheKey = familyIdForCacheKey.replace(FOCI_PREFIX, "");
             }
 
             cacheKey = cacheKey.replace(CLIENT_ID, familyIdForCacheKey);
