@@ -494,6 +494,86 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
+    public void refreshTokenCreateCacheKeyCompleteWithFoci() {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setFamilyId("1");
+        refreshToken.setTarget(TARGET);
+
+        final String expectedKey = "" // just for formatting
+                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
+                + "1" + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR
+                + TARGET;
+        assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
+    }
+
+    @Test
+    public void refreshTokenCreateCacheKeyCompleteWithFociPrefixed() {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setFamilyId("foci-1");
+        refreshToken.setTarget(TARGET);
+
+        final String expectedKey = "" // just for formatting
+                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
+                + "1" + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR
+                + TARGET;
+        assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
+    }
+
+    @Test
+    public void refreshTokenCreateCacheKeyCompleteWithFociAlternate() {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setFamilyId("2");
+        refreshToken.setTarget(TARGET);
+
+        final String expectedKey = "" // just for formatting
+                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
+                + "2" + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR
+                + TARGET;
+        assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
+    }
+
+    @Test
+    public void refreshTokenCreateCacheKeyCompleteWithFociPrefixedAlternate() {
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setFamilyId("foci-2");
+        refreshToken.setTarget(TARGET);
+
+        final String expectedKey = "" // just for formatting
+                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
+                + "2" + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR
+                + TARGET;
+        assertEquals(expectedKey, mDelegate.generateCacheKey(refreshToken));
+    }
+
+    @Test
     public void refreshTokenCreateCacheKeyNoHomeAccountId() {
         final RefreshToken refreshToken = new RefreshToken();
         refreshToken.setEnvironment(ENVIRONMENT);
