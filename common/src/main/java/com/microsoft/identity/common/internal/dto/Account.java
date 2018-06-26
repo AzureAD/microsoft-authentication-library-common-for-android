@@ -178,7 +178,7 @@ public class Account extends AccountCredentialBase implements IAccount {
     private String mUsername;
 
     /**
-     * Account’s authority type as string (ex: AAD, MSA, MSSTS, Other).
+     * Account’s authority type as string (ex: MSA, MSSTS, Other).
      * Set of account types is extensible.
      */
     @SerializedName(AUTHORITY_TYPE)

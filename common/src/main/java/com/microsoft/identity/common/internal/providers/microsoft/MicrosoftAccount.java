@@ -41,6 +41,9 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class MicrosoftAccount extends Account {
+
+    protected static final String AUTHORITY_TYPE_V1_V2 = "MSSTS";
+
     private static final String TAG = MicrosoftAccount.class.getSimpleName();
 
     private String mDisplayableId; // Legacy Identifier -  UPN (preferred) or Email
