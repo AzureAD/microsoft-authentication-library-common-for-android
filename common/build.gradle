@@ -209,6 +209,7 @@ task jacocoTestReport(type: JacocoReport, dependsOn: 'testDebugUnitTest') {
 }
 
 // For publishing to the remote maven repo.
+afterEvaluate{
 publishing {
     publications {
         adal(MavenPublication) {
@@ -220,8 +221,8 @@ publishing {
             pom.withXml {
                 def dependenciesNode = asNode().appendNode('dependencies')
 
-                //Iterate over the compile dependencies (we don't want the test ones), adding a <dependency> node for each
-                configurations.compile.allDependencies.each {
+                //Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
+                configurations.implementation.allDependencies.each {
                     if (it.group != null && it.name != null) {
                         def dependencyNode = dependenciesNode.appendNode('dependency')
                         dependencyNode.appendNode('groupId', it.group)
@@ -248,6 +249,7 @@ publishing {
             }
         }
     }
+}
 }
 
 // Repositories from which Gradle can fetch dependencies
