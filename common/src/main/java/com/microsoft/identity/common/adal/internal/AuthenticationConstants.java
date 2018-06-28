@@ -207,6 +207,11 @@ public final class AuthenticationConstants {
         public static final String ERROR = "error";
 
         /**
+         * String of suberror.
+         */
+        public static final String SUBERROR = "suberror";
+
+        /**
          * String of error description.
          */
         public static final String ERROR_DESCRIPTION = "error_description";
@@ -837,8 +842,20 @@ public final class AuthenticationConstants {
     public static final class OAuth2ErrorCode {
         /**
          * Oauth2 error code invalid_grant.
-         */
+         */       
         public static final String INVALID_GRANT = "invalid_grant";
+
+        /**
+         * Oauth2 error code unauthorized_client.
+         */
+        public static final String UNAUTHORIZED_CLIENT = "unauthorized_client";
+
+
+        /**
+         * Oauth2 suberror code for Intune App Protection Policy required.
+         */
+        public static final String PROTECTION_POLICY_REQUIRED = "protection_policy_required";
+
     }
 
     /**
