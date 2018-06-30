@@ -29,6 +29,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -64,7 +65,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE:
                 final String url = data.getStringExtra(MSSTS_AUTHORIZATION_FINAL_URL);
-                result = parseUrlAndCreateAuthorizationResponse(url);
+                result = parseUrlAndCreateAuthorizationResponse(url, data.getStringExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER));
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR:
@@ -92,7 +93,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
         return new MicrosoftStsAuthorizationResult(authStatus, errorResponse);
     }
 
-    private MicrosoftStsAuthorizationResult parseUrlAndCreateAuthorizationResponse(final String url) {
+    private MicrosoftStsAuthorizationResult parseUrlAndCreateAuthorizationResponse(final String url, final String requestStateParameter) {
         final HashMap<String, String> urlParameters = StringUtil.isEmpty(url) ? null : StringExtensions.getUrlParameters(url);
         MicrosoftStsAuthorizationResult result;
 
@@ -102,7 +103,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
         } else if (urlParameters.containsKey(CODE)) {
-            result = validateAndCreateAuthorizationResult(urlParameters.get(CODE), urlParameters.get(STATE));
+            result = validateAndCreateAuthorizationResult(urlParameters.get(CODE), urlParameters.get(STATE), requestStateParameter);
         } else if (urlParameters.containsKey(ERROR)) {
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     urlParameters.get(ERROR), urlParameters.get(ERROR_DESCRIPTION));
@@ -115,18 +116,27 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
         return result;
     }
 
-    private MicrosoftStsAuthorizationResult validateAndCreateAuthorizationResult(final String code, final String state) {
+    private MicrosoftStsAuthorizationResult validateAndCreateAuthorizationResult(final String code,
+                                                                                 final String state,
+                                                                                 final String requestStateParameter) {
+        MicrosoftStsAuthorizationResult result;
+
         if (StringUtil.isEmpty(state)) {
             Logger.warn(TAG, "State parameter is not returned from the webview redirect.");
-            return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     ErrorStrings.STATE_MISMATCH,
                     MicrosoftAuthorizationErrorResponse.STATE_NOT_RETURNED);
+        } else if (StringUtil.isEmpty(requestStateParameter) || !requestStateParameter.equals(state)) {
+            Logger.warn(TAG, "State parameter returned from the redirect is not same as the one sent in request.");
+            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                    ErrorStrings.STATE_MISMATCH, MicrosoftAuthorizationErrorResponse.STATE_NOT_THE_SAME);
         } else {
-            //TODO : validate state
             Logger.info(TAG, "Auth code is successfully returned from webview redirect.");
             MicrosoftStsAuthorizationResponse authResponse = new MicrosoftStsAuthorizationResponse(code, state);
-            return new MicrosoftStsAuthorizationResult(AuthorizationStatus.SUCCESS, authResponse);
+            result = new MicrosoftStsAuthorizationResult(AuthorizationStatus.SUCCESS, authResponse);
         }
+
+        return result;
     }
 
 }

@@ -201,17 +201,12 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
         }
     }
 
-    private String generateState() throws UnsupportedEncodingException {
-        //TODO Re-implement in the state verification task.
-        return String.format("a=%s&r=%s", StringExtensions.urlFormEncode(
-                getAuthorizationEndpoint()),
-                StringExtensions.urlFormEncode(StringUtil.convertSetToString(
-                        getScope(), " ")));
+    protected String generateState() {
+        final UUID stateUUID1 = UUID.randomUUID();
+        final UUID stateUUID2 = UUID.randomUUID();
+        return stateUUID1.toString() + "-" + stateUUID2.toString();
     }
 
-    protected String encodeProtocolState() throws UnsupportedEncodingException {
-        return Base64.encodeToString(generateState().getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE);
-    }
 
     protected void addExtraQueryParameter(final String key, final String value, final Map<String, String> requestParams) {
         if (!isNullOrBlank(key) && !isNullOrBlank(value)) {

@@ -176,7 +176,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         requestParameters.put(AuthenticationConstants.OAuth2.CLIENT_ID, getClientId());
         requestParameters.put(AuthenticationConstants.OAuth2.REDIRECT_URI, getRedirectUri());
         requestParameters.put(AuthenticationConstants.OAuth2.RESPONSE_TYPE, AuthenticationConstants.OAuth2.CODE);
-        requestParameters.put(AuthenticationConstants.OAuth2.STATE, encodeProtocolState());
+        requestParameters.put(AuthenticationConstants.OAuth2.STATE, generateState());
         //TODO Should we set correlation id as a required value?
         if (null != getCorrelationId()) {
             requestParameters.put(CORRELATION_ID, getCorrelationId().toString());
