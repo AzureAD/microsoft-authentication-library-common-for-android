@@ -104,6 +104,23 @@ public class ADALTokenCacheItem {
     }
 
 
+    public static ADALTokenCacheItem getAsMRRTTokenCacheItem(ADALTokenCacheItem originalCacheItem){
+        ADALTokenCacheItem newItem = new ADALTokenCacheItem(originalCacheItem);
+        newItem.setResource(null);
+        newItem.setAccessToken(null);
+        return newItem;
+    }
+
+    public static ADALTokenCacheItem getAsFRTTokenCacheItem(ADALTokenCacheItem originalCacheItem){
+        ADALTokenCacheItem newItem = new ADALTokenCacheItem(originalCacheItem);
+        newItem.setResource(null);
+        newItem.setAccessToken(null);
+        newItem.setClientId(null);
+        return newItem;
+    }
+
+
+
     String getSpeRing() {
         return mSpeRing;
     }

@@ -182,12 +182,12 @@ public class ADALOAuth2TokenCache
 
         if (cacheItem.getIsMultiResourceRefreshToken()) {
             Logger.info(TAG + ":" + methodName, "CacheItem is an MRRT.");
-            setItem(CacheKey.createCacheKeyForMRRT(issuer, clientId, userId), cacheItem);
+            setItem(CacheKey.createCacheKeyForMRRT(issuer, clientId, userId), ADALTokenCacheItem.getAsMRRTTokenCacheItem(cacheItem));
         }
 
         if (!StringExtensions.isNullOrBlank(cacheItem.getFamilyClientId())) {
             Logger.info(TAG + ":" + methodName, "CacheItem is an FRT.");
-            setItem(CacheKey.createCacheKeyForFRT(issuer, cacheItem.getFamilyClientId(), userId), cacheItem);
+            setItem(CacheKey.createCacheKeyForFRT(issuer, cacheItem.getFamilyClientId(), userId), ADALTokenCacheItem.getAsFRTTokenCacheItem(cacheItem));
         }
     }
 
