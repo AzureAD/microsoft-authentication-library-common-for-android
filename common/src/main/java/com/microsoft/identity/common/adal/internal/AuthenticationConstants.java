@@ -57,9 +57,6 @@ public final class AuthenticationConstants {
      */
     public static final int DEFAULT_EXPIRATION_TIME_SEC = 3600;
 
-    /** The authentication file directory */
-    public static final String AUTHENTICATION_FILE_DIRECTORY = "com.microsoft.aad.adal.authentication";
-
     /**
      * Holding all the constant value involved in the webview.
      */
@@ -835,7 +832,6 @@ public final class AuthenticationConstants {
          * The value for pkeyauth redirect.
          */
         public static final String PKEYAUTH_REDIRECT = "urn:http-auth:PKeyAuth";
-        public static final String CLIENT_TLS_REDIRECT = "urn:http-auth:PKeyAuth";
 
         /**
          * Value of pkeyauth sent in the header.

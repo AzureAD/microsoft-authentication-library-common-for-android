@@ -54,7 +54,7 @@ public class WebRequestHandler implements IWebRequestHandler {
 
     private UUID mRequestCorrelationId = null;
 
-    private String mCurrentAdalClientVersion = "";
+    private String mCurrentClientVersion = "";
 
     @Override
     public HttpWebResponse sendGet(URL url, Map<String, String> headers) throws IOException {
@@ -82,7 +82,7 @@ public class WebRequestHandler implements IWebRequestHandler {
 
         headers.put(AuthenticationConstants.AAD.ADAL_ID_PLATFORM, "Android");
         // TODO don't make this dependency circular
-        headers.put(AuthenticationConstants.AAD.ADAL_ID_VERSION, mCurrentAdalClientVersion);
+        headers.put(AuthenticationConstants.AAD.ADAL_ID_VERSION, mCurrentClientVersion);
         headers.put(AuthenticationConstants.AAD.ADAL_ID_OS_VER, "" + Build.VERSION.SDK_INT);
         headers.put(AuthenticationConstants.AAD.ADAL_ID_DM, android.os.Build.MODEL);
 
@@ -99,9 +99,9 @@ public class WebRequestHandler implements IWebRequestHandler {
     }
 
     @Override
-    public void setAdalClientVersion(String adalClientVersion) {
-        if (!StringExtensions.isNullOrBlank(adalClientVersion)) {
-            mCurrentAdalClientVersion = adalClientVersion;
+    public void setClientVersion(final String clientVersion) {
+        if (!StringExtensions.isNullOrBlank(clientVersion)) {
+            mCurrentClientVersion = clientVersion;
         }
     }
 

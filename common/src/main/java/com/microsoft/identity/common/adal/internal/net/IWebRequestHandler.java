@@ -62,8 +62,8 @@ public interface IWebRequestHandler {
     void setRequestCorrelationId(final UUID requestCorrelationId);
 
     /**
-     * Set the version name of ADAL client
-     * @param adalClientVersion the version name of ADAL client
+     * Set the version name of client
+     * @param clientVersion the version name of client
      */
-    void setAdalClientVersion(String adalClientVersion);
+    void setClientVersion(String clientVersion);
 }
