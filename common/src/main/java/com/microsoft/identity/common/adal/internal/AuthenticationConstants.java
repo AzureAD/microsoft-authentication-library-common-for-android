@@ -148,7 +148,6 @@ public final class AuthenticationConstants {
          * Waiting for broker package to be installed, and resume request in broker.
          */
         public static final int BROKER_REQUEST_RESUME = 2006;
-        public static final int BROWSER_CODE_DEVICE_REGISTER = 2006;
     }
 
     /**
@@ -372,7 +371,7 @@ public final class AuthenticationConstants {
          * String for cloud instance host name.
          */
         public static final String CLOUD_INSTANCE_HOST_NAME = "cloud_instance_host_name";
-        /** session key JWE */
+        /** session key JWE. */
         public static final String SESSION_KEY_JWE = "session_key_jwe";
     }
 
@@ -482,7 +481,7 @@ public final class AuthenticationConstants {
         public static final String REQUEST_ID_HEADER = "x-ms-request-id";
 
         /** String for the broker version. */
-        public final static String ADAL_BROKER_VERSION = "x-client-brkrver";
+        public static final String ADAL_BROKER_VERSION = "x-client-brkrver";
     }
 
     /**
@@ -491,7 +490,7 @@ public final class AuthenticationConstants {
     public static final class Broker {
 
         /**
-         * Broker feature with multi-user
+         * Broker feature with multi-user.
          */
         public static final String BROKER_FEATURE_MULTI_USER = "broker.feature.multi.user";
 
@@ -556,12 +555,12 @@ public final class AuthenticationConstants {
         public static final String BROKER_RESULT_RETURNED = "broker.result.returned";
 
         /**
-         * String of broker redirect URI
+         * String of broker redirect URI.
          */
         public static final String BROKER_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
 
         /**
-         * String of broker client ID
+         * String of broker client ID.
          */
         public static final String BROKER_CLIENT_ID = "29d9ed98-a469-4536-ade2-f981bc1d605e";
 
@@ -686,7 +685,7 @@ public final class AuthenticationConstants {
         public static final String ACCOUNT_USERINFO_USERID = "account.userinfo.userid";
 
         /**
-         * String of key for user id list
+         * String of key for user id list.
          */
         public static final String ACCOUNT_USERINFO_USERID_LIST = "account.userinfo.userid.list";
 
@@ -726,12 +725,12 @@ public final class AuthenticationConstants {
         public static final String ACCOUNT_UID_CACHES = "account.uid.caches";
 
         /**
-         * String of key for adding new account
+         * String of key for adding new account.
          */
         public static final String ACCOUNT_ADD_NEW = "account.add.new";
 
         /**
-         * String of key for resolving account interruption
+         * String of key for resolving account interruption.
          */
         public static final String ACCOUNT_RESOLVE_INTERRUPT = "account.resolve.interrupt";
 
@@ -746,17 +745,17 @@ public final class AuthenticationConstants {
         public static final String USERDATA_UID_KEY = "calling.uid.key";
 
         /**
-         * String of key for user data broker RT
+         * String of key for user data broker RT.
          */
         public static final String USERDATA_BROKER_RT = "userdata.broker.rt";
 
         /**
-         * String of key for user data broker PRT, RT
+         * String of key for user data broker PRT, RT.
          */
         public static final String USERDATA_BROKER_PRT_RT = "userdata.broker.prt.rt";
 
         /**
-         * String of key for user data broker PRT session key
+         * String of key for user data broker PRT session key.
          */
         public static final String USERDATA_BROKER_PRT_SESSION_KEY = "userdata.broker.prt.session.key";
 
@@ -864,22 +863,22 @@ public final class AuthenticationConstants {
         public static final String BROWSER_EXT_INSTALL_PREFIX = "msauth://";
 
         /**
-         * PRT nonce
+         * PRT nonce.
          */
         public static final String PRT_NONCE = "nonce";
 
         /**
-         * broker request type
+         * broker request type.
          */
         public static final String ACCOUNT_REQUEST_TYPE = "broker.request.type";
 
         /**
-         * PRT response header
+         * PRT response header.
          */
         public static final String PRT_RESPONSE_HEADER = "x-ms-RefreshTokenCredential";
 
         /**
-         * caller information UID
+         * caller information UID.
          */
         public static final String CALLER_INFO_UID = "caller.info.uid";
 
