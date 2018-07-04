@@ -22,39 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.embeddedwebview;
 
-import android.accounts.AccountManager;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
-import android.net.http.SslError;
 import android.os.Build;
-import android.security.KeyChain;
-import android.security.KeyChainAliasCallback;
-import android.security.KeyChainException;
 import android.support.annotation.NonNull;
-import android.text.TextUtils;
-import android.view.View;
-import android.webkit.ClientCertRequest;
-import android.webkit.HttpAuthHandler;
-import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeCompletionCallback;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
-import java.security.Principal;
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * For web view client, we do not distinguish V1 from V2.
@@ -66,8 +48,10 @@ import java.util.Map;
  */
 class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     //TODO Change AuthorizationRequest into MicrosoftAuthorizationRequest after merging the AuthorizationRequest PR.
-    AzureActiveDirectoryWebViewClient(@NonNull final Context context, @NonNull final AuthorizationRequest request) {
-        super(context, request);
+    AzureActiveDirectoryWebViewClient(@NonNull final Context context,
+                                      @NonNull final AuthorizationRequest request,
+                                      @NonNull final IChallengeCompletionCallback callback) {
+        super(context, request, callback);
     }
 
     @Override

@@ -35,6 +35,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeCompletionCallback;
 
 import java.io.UnsupportedEncodingException;
 
@@ -68,9 +69,10 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
      * @throws ClientException
      */
     public EmbeddedWebViewAuthorizationStrategy(@NonNull final Activity activity,
-                                                @NonNull final AuthorizationRequest request)
+                                                @NonNull final AuthorizationRequest request,
+                                                @NonNull final IChallengeCompletionCallback callback)
             throws UnsupportedEncodingException, ClientException {
-        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(activity, request);
+        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(activity, request, callback);
         //TODO validate auth request in OAuth2Strategy.
         createWebView(activity, webViewClient);
         mStartUrl = request.getAuthorizationStartUrl();
@@ -87,7 +89,6 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
                 activity.getPackageName()));
         mWebView.getSettings().setUserAgentString(
                 mWebView.getSettings().getUserAgentString() + AuthenticationConstants.Broker.USER_AGENT_VALUE_PKEY_AUTH);
-        mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.requestFocus(View.FOCUS_DOWN);
 
         // Set focus to the view for touch event
