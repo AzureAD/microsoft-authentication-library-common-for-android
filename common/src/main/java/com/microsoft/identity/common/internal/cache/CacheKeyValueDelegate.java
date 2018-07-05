@@ -133,6 +133,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         return result;
     }
 
+    @SuppressWarnings("checkstyle:innerassignment")
     @Override
     public String generateCacheKey(Credential credential) {
         String cacheKey =
