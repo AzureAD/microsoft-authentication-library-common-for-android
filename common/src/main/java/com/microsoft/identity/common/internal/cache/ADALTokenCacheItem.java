@@ -103,6 +103,12 @@ public class ADALTokenCacheItem {
         mSpeRing = (response).getSpeRing();
     }
 
+    /**
+     * Coerce the supplied {@link ADALTokenCacheItem} to an MRRT.
+     *
+     * @param originalCacheItem The ADALTokenCacheItem to transform.
+     * @return The supplied ADALTokenCacheItem as an MRRT.
+     */
     public static ADALTokenCacheItem getAsMRRTTokenCacheItem(ADALTokenCacheItem originalCacheItem) {
         ADALTokenCacheItem newItem = new ADALTokenCacheItem(originalCacheItem);
         newItem.setResource(null);
@@ -110,6 +116,12 @@ public class ADALTokenCacheItem {
         return newItem;
     }
 
+    /**
+     * Coerce the supplied {@link ADALTokenCacheItem} to an FRT.
+     *
+     * @param originalCacheItem The ADALTokenCacheItem to transform.
+     * @return The supplied ADALTokenCacheItem as an FRT.
+     */
     public static ADALTokenCacheItem getAsFRTTokenCacheItem(ADALTokenCacheItem originalCacheItem) {
         ADALTokenCacheItem newItem = new ADALTokenCacheItem(originalCacheItem);
         newItem.setResource(null);
@@ -117,7 +129,6 @@ public class ADALTokenCacheItem {
         newItem.setClientId(null);
         return newItem;
     }
-
 
 
     String getSpeRing() {
