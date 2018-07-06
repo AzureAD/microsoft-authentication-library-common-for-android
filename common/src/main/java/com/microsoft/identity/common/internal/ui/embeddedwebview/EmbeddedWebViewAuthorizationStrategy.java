@@ -32,6 +32,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
@@ -69,7 +70,7 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
      * @throws ClientException
      */
     public EmbeddedWebViewAuthorizationStrategy(@NonNull final Activity activity,
-                                                @NonNull final AuthorizationRequest request,
+                                                @NonNull final MicrosoftAuthorizationRequest request,
                                                 @NonNull final IChallengeCompletionCallback callback)
             throws UnsupportedEncodingException, ClientException {
         final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(activity, request, callback);

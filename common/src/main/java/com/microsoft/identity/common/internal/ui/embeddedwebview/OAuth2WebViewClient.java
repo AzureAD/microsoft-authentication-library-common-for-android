@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.embeddedwebview;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -47,7 +48,7 @@ public class OAuth2WebViewClient extends WebViewClient {
 
     private final IChallengeCompletionCallback mCompletionCallback;
     private final AuthorizationRequest mRequest;
-    private final Context mContext;
+    private final Activity mActivity;
 
     /**
      * @return Authorization request
@@ -59,8 +60,8 @@ public class OAuth2WebViewClient extends WebViewClient {
     /**
      * @return context
      */
-    public Context getContext() {
-        return mContext;
+    public Activity getActivity() {
+        return mActivity;
     }
 
     /**
@@ -74,15 +75,15 @@ public class OAuth2WebViewClient extends WebViewClient {
     /**
      * Constructor for the OAuth2 basic web view client.
      *
-     * @param context  app Context
+     * @param activity  app Context
      * @param request  Authorization request
      * @param callback Challenge completion callback
      */
-    OAuth2WebViewClient(@NonNull final Context context,
+    OAuth2WebViewClient(@NonNull final Activity activity,
                         @NonNull final AuthorizationRequest request,
                         @NonNull final IChallengeCompletionCallback callback) {
         //the validation of redirect url and authorization request should be in upper level before launching the webview.
-        mContext = context;
+        mActivity = activity;
         mRequest = request;
         mCompletionCallback = callback;
     }
@@ -96,7 +97,7 @@ public class OAuth2WebViewClient extends WebViewClient {
 
         //TODO TelemetryEvent.setNTLM(true); after the Telemetry is finished in common.
         final NtlmChallengeHandler ntlmChallengeHandler
-                = new NtlmChallengeHandler(view, handler, host, realm, mContext, mCompletionCallback);
+                = new NtlmChallengeHandler(view, handler, host, realm, mActivity, mCompletionCallback);
         ntlmChallengeHandler.process();
     }
 
