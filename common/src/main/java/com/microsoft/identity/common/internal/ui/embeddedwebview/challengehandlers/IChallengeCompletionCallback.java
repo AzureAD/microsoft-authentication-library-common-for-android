@@ -28,7 +28,7 @@ import android.content.Intent;
  * This is the callback interface to send the authorization challenge response
  * back to the activity which will implement this interface.
  * <p>
- * TODO AuthenticationActivity should implement the sendResponse method and call Activity.setResult() and Activity.finish() to return the UI response to the caller.
+ * TODO AuthenticationActivity should implement the onChallengeResponseReceived method and call Activity.setResult() and Activity.finish() to return the UI response to the caller.
  */
 public interface IChallengeCompletionCallback {
     /**
@@ -37,5 +37,5 @@ public interface IChallengeCompletionCallback {
      * @param returnCode     UI response code
      * @param responseIntent challenge response
      */
-    void sendResponse(int returnCode, Intent responseIntent);
+    void onChallengeResponseReceived(int returnCode, Intent responseIntent);
 }

@@ -22,5 +22,27 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers;
 
-final class ClientCertAuthChallengeHandler {
+import android.webkit.HttpAuthHandler;
+import android.webkit.WebView;
+
+/**
+ * Factory capable of producing different kinds of challenges.
+ */
+
+public final class ChallengeFactory {
+    /**
+     * Factory method to get new NtlmChallenge object.
+     *
+     * @param view    the WebView that is initiating the callback
+     * @param handler the HttpAuthHandler used to set the WebView's response
+     * @param host    the host requiring authentication
+     * @param realm   the realm for which authentication is required
+     * @return NtlmChallenge
+     */
+    public static NtlmChallenge getNtlmChallenge(final WebView view,
+                                                 final HttpAuthHandler handler,
+                                                 final String host,
+                                                 final String realm) {
+        return new NtlmChallenge(view, handler, host, realm);
+    }
 }
