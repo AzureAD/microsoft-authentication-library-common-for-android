@@ -39,6 +39,7 @@ import java.security.cert.X509Certificate;
 
 public final class ClientCertAuthChallengeHandler implements IChallengeHandler<ClientCertRequest, Void> {
     private static final String TAG = ClientCertAuthChallengeHandler.class.getSimpleName();
+    private static final String ACCEPTABLE_ISSUER = "CN=MS-Organization-Access";
     private Activity mActivity;
 
     public ClientCertAuthChallengeHandler(@NonNull final Activity activity) {
@@ -52,7 +53,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
         // When ADFS server sends null or empty issuers, we'll continue with cert prompt.
         if (acceptableCertIssuers != null) {
             for (Principal issuer : acceptableCertIssuers) {
-                if (issuer.getName().contains("CN=MS-Organization-Access")) {
+                if (issuer.getName().contains(ACCEPTABLE_ISSUER)) {
                     //Checking if received acceptable issuers contain "CN=MS-Organization-Access"
                     Logger.verbose(TAG, "Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.");
                     request.cancel();

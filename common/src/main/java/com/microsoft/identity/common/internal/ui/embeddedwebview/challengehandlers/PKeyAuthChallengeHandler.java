@@ -67,67 +67,67 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
     public Void processChallenge(final PKeyAuthChallenge pKeyAuthChallenge) {
         mWebView.stopLoading();
         mChallengeCallback.setPKeyAuthStatus(true);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    //Get no device cert response
-                    final String submitUrl = pKeyAuthChallenge.getSubmitUrl();
-                    String authorizationHeaderValue = String.format("%s Context=\"%s\",Version=\"%s\"",
-                            AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE, pKeyAuthChallenge.getContext(),
-                            pKeyAuthChallenge.getVersion());
 
-                    // If not device cert exists, alias or privatekey will not exist on the device
-                    Class<IDeviceCertificate> certClazz = (Class<IDeviceCertificate>) AuthenticationSettings.INSTANCE
-                            .getDeviceCertificateProxy();
-                    if (certClazz != null) {
+        try {
+            //Get no device cert response
+            final Map<String, String> header = getChallengeHeader(pKeyAuthChallenge);
 
-                        IDeviceCertificate deviceCertProxy = getWPJAPIInstance(certClazz);
-                        if (deviceCertProxy.isValidIssuer(pKeyAuthChallenge.getCertAuthorities())
-                                || deviceCertProxy.getThumbPrint() != null && deviceCertProxy.getThumbPrint()
-                                .equalsIgnoreCase(pKeyAuthChallenge.getThumbprint())) {
-                            RSAPrivateKey privateKey = deviceCertProxy.getRSAPrivateKey();
-                            if (privateKey == null) {
-                                throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION);
-                            }
-                            String jwt = (new JWSBuilder()).generateSignedJWT(pKeyAuthChallenge.getNonce(), pKeyAuthChallenge.getThumbprint(),
-                                    privateKey, deviceCertProxy.getRSAPublicKey(),
-                                    deviceCertProxy.getCertificate());
-                            authorizationHeaderValue = String.format(
-                                    "%s AuthToken=\"%s\",Context=\"%s\",Version=\"%s\"",
-                                    AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE, jwt,
-                                    pKeyAuthChallenge.getContext(), pKeyAuthChallenge.getVersion());
-                            Logger.verbosePII(TAG, "Receive challenge response. ",
-                                    "Challenge response:" + authorizationHeaderValue);
-                        }
-                    }
+            mWebView.post(new Runnable() {
+                @Override
+                public void run() {
+                    String loadUrl = pKeyAuthChallenge.getSubmitUrl();
+                    Logger.verbose(TAG, "Respond to pkeyAuth challenge");
+                    Logger.verbosePII(TAG, "Challenge submit url:" + pKeyAuthChallenge.getSubmitUrl());
 
-                    final Map<String, String> headers = new HashMap<>();
-                    headers.put(AuthenticationConstants.Broker.CHALLENGE_RESPONSE_HEADER,
-                           authorizationHeaderValue);
-                    mWebView.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            String loadUrl = submitUrl;
-                            Logger.verbose(TAG, "Respond to pkeyAuth challenge");
-                            Logger.verbosePII(TAG, "Challenge submit url:" + submitUrl);
-
-                            mWebView.loadUrl(loadUrl, headers);
-                        }
-                    });
-                } catch (final ClientException e) {
-                    // It should return error code and finish the
-                    // activity, so that onActivityResult implementation
-                    // returns errors to callback.
-                    Intent resultIntent = new Intent();
-                    resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, e);
-                    resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_REQUEST_INFO, mRequest);
-                    mChallengeCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
+                    mWebView.loadUrl(loadUrl, header);
                 }
-            }
-        }).start();
+            });
+        } catch (final ClientException e) {
+            // It should return error code and finish the
+            // activity, so that onActivityResult implementation
+            // returns errors to callback.
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, e);
+            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_REQUEST_INFO, mRequest);
+            mChallengeCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
+        }
 
         return null;
+    }
+
+    private Map<String, String> getChallengeHeader(final PKeyAuthChallenge pKeyAuthChallenge) throws ClientException {
+        String authorizationHeaderValue = String.format("%s Context=\"%s\",Version=\"%s\"",
+                AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE, pKeyAuthChallenge.getContext(),
+                pKeyAuthChallenge.getVersion());
+
+        // If not device cert exists, alias or privatekey will not exist on the device
+        Class<IDeviceCertificate> certClazz = (Class<IDeviceCertificate>) AuthenticationSettings.INSTANCE
+                .getDeviceCertificateProxy();
+        if (certClazz != null) {
+            IDeviceCertificate deviceCertProxy = getWPJAPIInstance(certClazz);
+            if (deviceCertProxy.isValidIssuer(pKeyAuthChallenge.getCertAuthorities())
+                    || deviceCertProxy.getThumbPrint() != null && deviceCertProxy.getThumbPrint()
+                    .equalsIgnoreCase(pKeyAuthChallenge.getThumbprint())) {
+                RSAPrivateKey privateKey = deviceCertProxy.getRSAPrivateKey();
+                if (privateKey == null) {
+                    throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION);
+                }
+                String jwt = (new JWSBuilder()).generateSignedJWT(pKeyAuthChallenge.getNonce(), pKeyAuthChallenge.getThumbprint(),
+                        privateKey, deviceCertProxy.getRSAPublicKey(),
+                        deviceCertProxy.getCertificate());
+                authorizationHeaderValue = String.format(
+                        "%s AuthToken=\"%s\",Context=\"%s\",Version=\"%s\"",
+                        AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE, jwt,
+                        pKeyAuthChallenge.getContext(), pKeyAuthChallenge.getVersion());
+                Logger.verbosePII(TAG, "Receive challenge response. ",
+                        "Challenge response:" + authorizationHeaderValue);
+            }
+        }
+
+        final Map<String, String> headers = new HashMap<>();
+        headers.put(AuthenticationConstants.Broker.CHALLENGE_RESPONSE_HEADER,
+                authorizationHeaderValue);
+        return headers;
     }
 
     private IDeviceCertificate getWPJAPIInstance(Class<IDeviceCertificate> certClazz)

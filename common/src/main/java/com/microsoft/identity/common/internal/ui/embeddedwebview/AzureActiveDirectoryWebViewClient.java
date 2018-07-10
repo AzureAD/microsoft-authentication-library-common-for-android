@@ -251,10 +251,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, errorMessage);
 
         if (getRequest() != null) {
-            if (getRequest() instanceof AzureActiveDirectoryAuthorizationRequest) {
-                resultIntent.putExtra(AuthenticationConstants.Browser.REQUEST_ID, ((AzureActiveDirectoryAuthorizationRequest) getRequest()).getCorrelationId());
-            } else if (getRequest() instanceof MicrosoftStsAuthorizationRequest) {
-                resultIntent.putExtra(AuthenticationConstants.Browser.REQUEST_ID, ((MicrosoftStsAuthorizationRequest) getRequest()).getCorrelationId());
+            if (getRequest() instanceof MicrosoftAuthorizationRequest) {
+                resultIntent.putExtra(AuthenticationConstants.Browser.REQUEST_ID, ((MicrosoftAuthorizationRequest) getRequest()).getCorrelationId());
             }
 
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_REQUEST_INFO, getRequest());
