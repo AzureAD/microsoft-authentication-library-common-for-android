@@ -27,6 +27,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.webkit.ClientCertRequest;
@@ -60,6 +61,8 @@ import java.util.Map;
 public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String TAG = AzureActiveDirectoryWebViewClient.class.getSimpleName();
     private static final String INSTALL_URL_KEY = "app_link";
+    public static final String ERROR = "error";
+    public static final String ERROR_DESCRIPTION = "error_description";
 
     AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                       @NonNull final MicrosoftAuthorizationRequest request,
@@ -154,11 +157,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean processRedirectUrl(@NonNull final WebView view, @NonNull final String url) {
         final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
-        if (!StringExtensions.isNullOrBlank(parameters.get("error"))) {
+        if (!StringExtensions.isNullOrBlank(parameters.get(ERROR))) {
             Logger.info(TAG, "Sending intent to cancel authentication activity");
             Intent resultIntent = new Intent();
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE, parameters.get("error"));
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get("error_description"));
+            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE, parameters.get(ERROR));
+            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_DESCRIPTION));
             getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
             view.stopLoading();
         } else {
@@ -197,21 +200,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Having thread sleep for 1 second for calling activity to receive the result from
         // prepareForBrokerResumeRequest, thus the receiver for listening broker result return
         // can be registered. openLinkInBrowser will launch activity for going to
-        // playstore and broker app download page which brought the calling activity down
+        // play store and broker app download page which brought the calling activity down
         // in the activity stack.
-        final int threadSleepForCallingActivity = 1000;
-        try {
-            Thread.sleep(threadSleepForCallingActivity);
-        } catch (final InterruptedException e) {
-            Logger.verbose(TAG, "Error occurred when having thread sleeping for 1 second.");
-        }
 
-        HashMap<String, String> parameters = StringExtensions.getUrlParameters(url);
-        String link = parameters.get(INSTALL_URL_KEY)
-                .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-        getActivity().getApplicationContext().startActivity(intent);
-        view.stopLoading();
+        Logger.verbose(TAG, "Error occurred when having thread sleeping for 1 second.");
+        final Handler handler = new Handler();
+        final int threadSleepForCallingActivity = 1000;
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                HashMap<String, String> parameters = StringExtensions.getUrlParameters(url);
+                String link = parameters.get(INSTALL_URL_KEY)
+                        .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
+                getActivity().getApplicationContext().startActivity(intent);
+                view.stopLoading();
+            }
+        }, threadSleepForCallingActivity);
 
         return true;
     }

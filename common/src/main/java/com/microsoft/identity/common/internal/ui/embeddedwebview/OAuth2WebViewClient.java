@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.ui.embeddedwebview;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
