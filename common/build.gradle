@@ -5,7 +5,6 @@ plugins {
 apply plugin: 'com.android.library'
 apply plugin: 'pmd'
 apply plugin: 'checkstyle'
-apply plugin: 'jacoco'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
@@ -150,26 +149,6 @@ task pmd(type: Pmd) {
     }
 }
 
-task jacocoTestReport(type: JacocoReport, dependsOn: 'testDebugUnitTest') {
-    reports {
-        xml.enabled = true
-        html.enabled = true
-    }
-
-    jacocoClasspath = configurations['jacocoAnt']
-
-    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*',]
-    def debugTree = fileTree(dir: "${buildDir}/intermediates/classes/debug", excludes: fileFilter)
-    def mainSrc = "${project.projectDir}/src/main/java"
-
-    sourceDirectories = files([mainSrc])
-    classDirectories = files([debugTree])
-    executionData = fileTree(dir: "$buildDir", includes: [
-            "jacoco/testDebugUnitTest.exec",
-            "outputs/code-coverage/connected/*coverage.ec"
-    ])
-}
-
 // For publishing to the remote maven repo.
 afterEvaluate {
     publishing {
@@ -228,7 +207,7 @@ repositories {
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
-        task.dependsOn 'lint', 'javadocJar', 'sourcesJar', 'jacocoTestReport', 'checkstyle', 'pmd'
+        task.dependsOn 'lint', 'javadocJar', 'sourcesJar', 'checkstyle', 'pmd'
     }
 }
 
