@@ -47,6 +47,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @Override
     public Void processChallenge(@NonNull final ClientCertRequest request) {
         final Principal[] acceptableCertIssuers = request.getPrincipals();
 

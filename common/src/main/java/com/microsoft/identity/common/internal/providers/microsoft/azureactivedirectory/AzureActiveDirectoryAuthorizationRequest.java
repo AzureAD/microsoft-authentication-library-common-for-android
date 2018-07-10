@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -66,7 +67,7 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
     public AzureActiveDirectoryAuthorizationRequest(final String responseType,
                                                     @NonNull final String clientId,
                                                     final String redirectUri,
-                                                    final String state,
+                                                    @Nullable final String state,
                                                     final Set<String> scope,
                                                     @NonNull final URL authority,
                                                     @NonNull final String authorizationEndpoint,
@@ -179,7 +180,7 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
         requestParameters.put(AuthenticationConstants.OAuth2.REDIRECT_URI, getRedirectUri());
         requestParameters.put(AuthenticationConstants.OAuth2.SCOPE, SCOPE_OPENID_VALUE);
         requestParameters.put(RESOURCE, mResource);
-        requestParameters.put(AuthenticationConstants.OAuth2.STATE, generateState());
+        requestParameters.put(AuthenticationConstants.OAuth2.STATE, getState());
         if (getCorrelationId() != null) {
             requestParameters.put(CLIENT_REQUEST_ID, getCorrelationId().toString());
         }
