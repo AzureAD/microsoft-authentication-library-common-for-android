@@ -35,6 +35,7 @@ import android.webkit.WebView;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
@@ -42,6 +43,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.ClientCertAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeCompletionCallback;
+import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -103,7 +105,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         if (isPkeyAuthUrl(formattedURL)) {
             Logger.verbose(TAG, "WebView detected request for pkeyauth challenge.");
-            new PKeyAuthChallengeHandler(url, view, getRequest(), getCompletionCallback()).process();
+            try {
+                final PKeyAuthChallenge pKeyAuthChallenge = new PKeyAuthChallenge(formattedURL);
+                final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getRequest(), getCompletionCallback());
+                pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
+            } catch (final ClientException exception) {
+                Logger.error(TAG, exception.getErrorCode(), null);
+                Logger.errorPII(TAG, exception.getMessage(), exception);
+                returnError(exception.getErrorCode(), exception.getMessage());
+                view.stopLoading();
+            }
             return true;
         } else if (isRedirectUrl(formattedURL)) {
             Logger.verbose(TAG, "Navigation starts with the redirect uri.");
@@ -150,7 +161,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Intent resultIntent = new Intent();
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE, parameters.get("error"));
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get("error_description"));
-            getCompletionCallback().sendResponse(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
+            getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
             view.stopLoading();
         } else {
             Logger.verbose(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
@@ -158,7 +169,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, url);
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_REQUEST_INFO,
                     getRequest());
-            getCompletionCallback().sendResponse(
+            getCompletionCallback().onChallengeResponseReceived(
                     AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE,
                     resultIntent);
             view.stopLoading();
@@ -176,14 +187,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         getActivity().getApplicationContext().startActivity(intent);
         view.stopLoading();
         Intent resultIntent = new Intent();
-        getCompletionCallback().sendResponse(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
+        getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
         return true;
     }
 
     private boolean processInstallRequest(@NonNull final WebView view, @NonNull final String url) {
         Logger.verbose(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
         final Intent resultIntent = new Intent();
-        getCompletionCallback().sendResponse(AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME, resultIntent);
+        getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME, resultIntent);
 
         // Having thread sleep for 1 second for calling activity to receive the result from
         // prepareForBrokerResumeRequest, thus the receiver for listening broker result return
@@ -193,7 +204,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final int threadSleepForCallingActivity = 1000;
         try {
             Thread.sleep(threadSleepForCallingActivity);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             Logger.verbose(TAG, "Error occurred when having thread sleeping for 1 second.");
         }
 
@@ -249,13 +260,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_REQUEST_INFO, getRequest());
         }
 
-        getCompletionCallback().sendResponse(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
+        getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public void onReceivedClientCertRequest(WebView view, final ClientCertRequest request) {
-        final ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(request, getActivity());
-        clientCertAuthChallengeHandler.process();
+    public void onReceivedClientCertRequest(WebView view, final ClientCertRequest clientCertRequest) {
+        final ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity());
+        clientCertAuthChallengeHandler.processChallenge(clientCertRequest);
     }
 }

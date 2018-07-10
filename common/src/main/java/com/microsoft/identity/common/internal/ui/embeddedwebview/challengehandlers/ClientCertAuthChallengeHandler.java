@@ -37,20 +37,17 @@ import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
-public final class ClientCertAuthChallengeHandler implements IChallengeHandler {
+public final class ClientCertAuthChallengeHandler implements IChallengeHandler<ClientCertRequest, Void> {
     private static final String TAG = ClientCertAuthChallengeHandler.class.getSimpleName();
-    private ClientCertRequest mClientCertRequest;
     private Activity mActivity;
 
-    public ClientCertAuthChallengeHandler(@NonNull final ClientCertRequest request,
-                                          @NonNull final Activity activity) {
-        mClientCertRequest = request;
+    public ClientCertAuthChallengeHandler(@NonNull final Activity activity) {
         mActivity = activity;
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public void process() {
-        final Principal[] acceptableCertIssuers = mClientCertRequest.getPrincipals();
+    public Void processChallenge(@NonNull final ClientCertRequest request) {
+        final Principal[] acceptableCertIssuers = request.getPrincipals();
 
         // When ADFS server sends null or empty issuers, we'll continue with cert prompt.
         if (acceptableCertIssuers != null) {
@@ -58,8 +55,8 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler {
                 if (issuer.getName().contains("CN=MS-Organization-Access")) {
                     //Checking if received acceptable issuers contain "CN=MS-Organization-Access"
                     Logger.verbose(TAG, "Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.");
-                    mClientCertRequest.cancel();
-                    return;
+                    request.cancel();
+                    return null;
                 }
             }
         }
@@ -69,7 +66,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler {
                     public void alias(String alias) {
                         if (alias == null) {
                             Logger.verbose(TAG, "No certificate chosen by user, cancelling the TLS request.");
-                            mClientCertRequest.cancel();
+                            request.cancel();
                             return;
                         }
 
@@ -80,7 +77,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler {
                                     mActivity, alias);
 
                             Logger.verbose(TAG, "Certificate is chosen by user, proceed with TLS request.");
-                            mClientCertRequest.proceed(privateKey, certChain);
+                            request.proceed(privateKey, certChain);
                             return;
                         } catch (final KeyChainException e) {
                             Logger.errorPII(TAG, "KeyChain exception", e);
@@ -88,13 +85,15 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler {
                             Logger.errorPII(TAG, "InterruptedException exception", e);
                         }
 
-                        mClientCertRequest.cancel();
+                        request.cancel();
                     }
                 },
-                mClientCertRequest.getKeyTypes(),
-                mClientCertRequest.getPrincipals(),
-                mClientCertRequest.getHost(),
-                mClientCertRequest.getPort(),
+                request.getKeyTypes(),
+                request.getPrincipals(),
+                request.getHost(),
+                request.getPort(),
                 null);
+
+        return null;
     }
 }

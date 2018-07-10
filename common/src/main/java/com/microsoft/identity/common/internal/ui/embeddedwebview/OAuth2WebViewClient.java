@@ -38,7 +38,10 @@ import android.webkit.WebViewClient;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.ChallengeFactory;
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeCompletionCallback;
+import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeHandler;
+import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.NtlmChallenge;
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.NtlmChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -96,9 +99,14 @@ public class OAuth2WebViewClient extends WebViewClient {
         Logger.infoPII(TAG, "Host:" + host);
 
         //TODO TelemetryEvent.setNTLM(true); after the Telemetry is finished in common.
-        final NtlmChallengeHandler ntlmChallengeHandler
-                = new NtlmChallengeHandler(view, handler, host, realm, mActivity, mCompletionCallback);
-        ntlmChallengeHandler.process();
+        // Use ChallengeFactory to produce a NtlmChallenge
+        final NtlmChallenge ntlmChallenge = ChallengeFactory.getNtlmChallenge(view, handler, host, realm);
+
+        // Init the NtlmChallengeHandler
+        final IChallengeHandler<NtlmChallenge, Void> challengeHandler = new NtlmChallengeHandler(mActivity, mCompletionCallback);
+
+        //Process the challenge through the NtlmChallengeHandler created
+        challengeHandler.processChallenge(ntlmChallenge);
     }
 
     @Override
@@ -118,7 +126,7 @@ public class OAuth2WebViewClient extends WebViewClient {
                 mRequest);
 
         // Send the result back to the calling activity
-        mCompletionCallback.sendResponse(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
+        mCompletionCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
     }
 
     @Override
@@ -139,7 +147,7 @@ public class OAuth2WebViewClient extends WebViewClient {
                 mRequest);
 
         // Send the result back to the calling activity
-        mCompletionCallback.sendResponse(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
+        mCompletionCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
     }
 
     @Override
