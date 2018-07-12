@@ -8,7 +8,7 @@ Version 0.0.1
 - Initial implementation of Strategy/Provider model for token acquisition
     * Partially complete, work-in-progress
 - New Logger implementation
-    * Uses TheadLocal mechanism to track correlationIds
+    * Uses ThreadLocal mechanism to track correlationIds
     * Supports logging arbitrary fields/JSON
     * Separate methods for PII/OII logging
 - Initial Exception model implemented
