@@ -23,7 +23,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"N1jdcbbnKDr0LaFZlqdhXgm2luE=\"")
+        }
         release {
+            buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"ho040S3ffZkmxqtQrSwpTVOn9r0=\"")
             minifyEnabled false
             debuggable false
             testCoverageEnabled false
@@ -85,27 +89,33 @@ dependencies {
     })
 }
 
-// Task to generate javadoc
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += configurations.compile
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+// Create tasks to generate javadoc
+android.libraryVariants.all { variant ->
+    task("${variant.name}Javadoc", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
+        source = variant.javaCompiler.source
 
-    options.memberLevel = JavadocMemberLevel.PUBLIC
-    options.addStringOption('Xdoclint:none', '-quiet')
+        title = "Microsoft Identity Android Common"
 
-    exclude '**/BuildConfig.Java'
-    exclude '**/R.java'
-    classpath = configurations.compile
-    destinationDir = reporting.file("$project.buildDir/outputs/jar/javadoc/")
+        // First add all of your dependencies to the classpath, then add the android jars
+        doFirst { classpath += files(variant.javaCompiler.classpath.files) }
+        classpath += files(android.getBootClasspath())
+
+        options.memberLevel = JavadocMemberLevel.PUBLIC
+        options.addStringOption('Xdoclint:none', '-quiet')
+
+        // We're excluding these generated files
+        exclude '**/R.java'
+    }
 }
 
-// Task to generate javadoc.jar
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-    destinationDir = reporting.file("$project.buildDir/outputs/jar/")
+// Create tasks to generate javadoc jar
+android.libraryVariants.all { variant ->
+    task("${variant.name}JavadocJar", type: Jar, dependsOn: "${variant.name}Javadoc") {
+        classifier = 'javadoc'
+        from tasks["${variant.name}Javadoc"].destinationDir
+    }
 }
+
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
@@ -213,8 +223,9 @@ afterEvaluate {
                 }
 
                 artifact(sourcesJar)
-                artifact(javadocJar)
+                artifact(releaseJavadocJar)
                 artifact("$buildDir/outputs/aar/common-${project.version}.aar")
+
             }
         }
 
@@ -249,4 +260,3 @@ tasks.whenTaskAdded { task ->
         task.dependsOn 'lint', 'javadocJar', 'sourcesJar', 'checkstyle', 'pmd'
     }
 }
-
