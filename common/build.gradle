@@ -1,0 +1,252 @@
+plugins {
+    id "org.sonarqube" version "2.6.2"
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'pmd'
+apply plugin: 'checkstyle'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+
+android {
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
+
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 27
+        versionCode 1
+        versionName "0.0.1"
+        project.archivesBaseName = "common"
+        project.version = android.defaultConfig.versionName
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            debuggable false
+            testCoverageEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    lintOptions {
+        abortOnError true
+        disable 'MissingPermission'
+        disable 'LongLogTag'
+        disable 'DefaultLocale'
+        disable 'UnusedResources'
+        disable 'GradleDependency'
+        disable 'GradleOverrides'
+        disable 'OldTargetApi'
+    }
+
+    testOptions {
+        unitTests.all {
+            exclude 'com/microsoft/identity/common/integration'
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'src/main/AndroidManifest.xml'
+            java.srcDirs = ['src/main/java']
+        }
+    }
+
+    libraryVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "${archivesBaseName}-${version}.aar"
+        }
+    }
+}
+
+dependencies {
+    implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '5.7'
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation "com.google.code.gson:gson:2.8.4"
+
+    // Test dependencies
+    testImplementation 'org.json:json:20160810'
+    // Needed to resolve JSONObject inside of non-instrumented tests
+    testImplementation 'junit:junit:4.12'
+    testImplementation "org.mockito:mockito-core:1.10.19"
+    testImplementation "com.google.dexmaker:dexmaker-mockito:1.2"
+    testImplementation "org.powermock:powermock-module-junit4:1.6.6"
+    testImplementation "org.powermock:powermock-module-junit4-rule:1.6.6"
+    testImplementation "org.powermock:powermock-api-mockito:1.6.6"
+    testImplementation "org.powermock:powermock-classloading-xstream:1.6.6"
+
+    // Instrumented dependencies
+    androidTestImplementation 'org.mockito:mockito-android:2.18.3'
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+}
+
+// Task to generate javadoc
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += configurations.compile
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+
+    options.memberLevel = JavadocMemberLevel.PUBLIC
+    options.addStringOption('Xdoclint:none', '-quiet')
+
+    exclude '**/BuildConfig.Java'
+    exclude '**/R.java'
+    classpath = configurations.compile
+    destinationDir = reporting.file("$project.buildDir/outputs/jar/javadoc/")
+}
+
+// Task to generate javadoc.jar
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+    destinationDir = reporting.file("$project.buildDir/outputs/jar/")
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+    destinationDir = reporting.file("$project.buildDir/outputs/jar/")
+}
+
+def configDir = new File(buildscript.sourceFile.parentFile.parentFile, 'config')
+ext.checkstyleConfigDir = "$configDir/checkstyle"
+
+checkstyle {
+    ignoreFailures = false
+    reportsDir = file("$project.buildDir/outputs/")
+}
+
+task checkstyle(type: Checkstyle) {
+    configFile file("${project.rootDir}/config/checkstyle/checkstyle.xml")
+
+    configProperties.checkstyleConfigDir = checkstyleConfigDir
+    configProperties.checkstyleSuppressionsPath = file("${project.rootDir}/config/checkstyle/suppressions.xml").absolutePath
+    source 'src'
+    include '**/*.java'
+    exclude '**/gen/**'
+    classpath = files()
+}
+
+pmd {
+    ignoreFailures = false
+    reportsDir = file("$project.buildDir/outputs/")
+}
+
+task pmd(type: Pmd) {
+    description 'Run pmd'
+    group 'verification'
+
+    ruleSets = ["java-basic", "java-braces", "java-strings", "java-unusedcode"]
+    source = fileTree('src/main/java')
+
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
+// For publishing to the remote maven repo.
+afterEvaluate {
+    publishing {
+        publications {
+            common(MavenPublication) {
+                groupId 'com.microsoft.identity'
+                artifactId 'common'
+                //Edit the 'version' here for VSTS RC build
+                version = project.version
+
+                pom.withXml {
+                    // Custom values
+
+                    // Description
+                    asNode().appendNode(
+                            'description',
+                            'This library contains code shared between the Active Directory ' +
+                                    'Authentication Library (ADAL) for Android and the Microsoft ' +
+                                    'Authentication Library (MSAL) for Android. This library ' +
+                                    'includes only internal classes and is NOT part of the ' +
+                                    'public API'
+                    )
+
+                    // Name
+                    asNode().appendNode('name', 'common')
+
+                    // Developers
+                    def developerNode = asNode().appendNode('developers').appendNode('developer')
+                    developerNode.appendNode('id', 'microsoft')
+                    developerNode.appendNode('name', 'Microsoft')
+
+                    // URL
+                    asNode().appendNode('url', 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android')
+
+                    // Licenses
+                    asNode().appendNode('licenses').appendNode('license').appendNode('name', 'MIT License')
+
+                    // Inception Year
+                    asNode().appendNode('inceptionYear', '2017')
+
+                    // SCM
+                    asNode().appendNode('scm').appendNode('url', 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master')
+
+                    // Properties
+                    def propertiesNode = asNode().appendNode('properties')
+                    propertiesNode.appendNode('branch', 'master')
+                    propertiesNode.appendNode('version', project.version)
+
+                    // Dependencies
+                    def dependenciesNode = asNode().appendNode('dependencies')
+
+                    //Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
+                    configurations.implementation.allDependencies.each {
+                        if (it.group != null && it.name != null) {
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', it.group)
+                            dependencyNode.appendNode('artifactId', it.name)
+                            dependencyNode.appendNode('version', it.version)
+                        }
+                    }
+                }
+
+                artifact(sourcesJar)
+                artifact(javadocJar)
+                artifact("$buildDir/outputs/aar/common-${project.version}.aar")
+            }
+        }
+
+        // Repositories to which Gradle can publish artifacts
+        repositories {
+            maven {
+                name "vsts-maven-adal-android"
+                url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
+                credentials {
+                    username project.findProperty("vstsUsername")
+                    password project.findProperty("vstsMavenAccessToken")
+                }
+            }
+        }
+    }
+}
+
+// Repositories from which Gradle can fetch dependencies
+repositories {
+    maven {
+        name "vsts-maven-adal-android"
+        url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
+        credentials {
+            username project.findProperty("vstsUsername")
+            password project.findProperty("vstsMavenAccessToken")
+        }
+    }
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
+        task.dependsOn 'lint', 'javadocJar', 'sourcesJar', 'checkstyle', 'pmd'
+    }
+}
+
