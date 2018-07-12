@@ -1,0 +1,16 @@
+Version 0.0.1
+--------------
+- First release: Hello, World!
+- Implementation of new unified cache schema
+    * Omits a read/deletion API, as not needed for initial release
+    * Ships with tests, unit + instrumented
+- Implementation of refactored ADAL 'classic' cache
+- Initial implementation of Strategy/Provider model for token acquisition
+    * Partially complete, work-in-progress
+- New Logger implementation
+    * Uses ThreadLocal mechanism to track correlationIds
+    * Supports logging arbitrary fields/JSON
+    * Separate methods for PII/OII logging
+- Initial Exception model implemented
+    * BaseException + Client & Service subclasses
+- Substantial portions of HTTP/S networking code migrated from ADAL & MSAL to this module
