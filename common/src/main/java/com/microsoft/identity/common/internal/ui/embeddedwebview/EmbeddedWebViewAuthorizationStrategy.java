@@ -35,6 +35,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeCompletionCallback;
 
 import java.io.UnsupportedEncodingException;
 
@@ -64,13 +65,16 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
      *
      * @param activity Authentication activity
      * @param request  Authorization request
-     * @throws UnsupportedEncodingException
-     * @throws ClientException
+     * @param callback Challenge completion callback to process the authorization result
+     * @throws UnsupportedEncodingException thrown when the Character Encoding is not supported
+     * @throws ClientException throw when error happens during the authorization
      */
     public EmbeddedWebViewAuthorizationStrategy(@NonNull final Activity activity,
-                                                @NonNull final AuthorizationRequest request)
+                                                @NonNull final AuthorizationRequest request,
+                                                @NonNull final IChallengeCompletionCallback callback)
             throws UnsupportedEncodingException, ClientException {
-        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(activity, request);
+        final OAuth2WebViewClient webViewClient =
+                new OAuth2WebViewClient(activity, request, callback);
         //TODO validate auth request in OAuth2Strategy.
         createWebView(activity, webViewClient);
         mStartUrl = request.getAuthorizationStartUrl();
@@ -81,13 +85,12 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
      * @param activity  AuthenticationActivity
      * @param webViewClient AzureActiveDirectoryWebViewClient
      */
-    private void createWebView(final Activity activity, final AzureActiveDirectoryWebViewClient webViewClient) {
+    private void createWebView(final Activity activity, final OAuth2WebViewClient webViewClient) {
         // Create the Web View to show the page
         mWebView = (WebView) activity.findViewById(activity.getResources().getIdentifier("webView1", "id",
                 activity.getPackageName()));
         mWebView.getSettings().setUserAgentString(
                 mWebView.getSettings().getUserAgentString() + AuthenticationConstants.Broker.USER_AGENT_VALUE_PKEY_AUTH);
-        mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.requestFocus(View.FOCUS_DOWN);
 
         // Set focus to the view for touch event

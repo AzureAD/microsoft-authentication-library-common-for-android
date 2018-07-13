@@ -22,6 +22,96 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers;
 
-final class NtlmChallengeHandler {
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.EditText;
 
+import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.StringUtil;
+
+/**
+ * Http authorization handler for NTLM challenge on web view.
+ */
+public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallenge, Void> {
+    private static final String TAG = NtlmChallengeHandler.class.getSimpleName();
+    private Activity mActivity;
+    private IChallengeCompletionCallback mChallengeCallback;
+
+    /**
+     * Constructor of NtlmChallengeHandler.
+     * @param activity activity to place the UI
+     * @param callback challenge completion callback which will process the challenge result.
+     */
+    public NtlmChallengeHandler(final Activity activity,
+                                final IChallengeCompletionCallback callback) {
+        mActivity = activity;
+        mChallengeCallback = callback;
+    }
+
+    /**
+     * Process the NTLM Challenge. If the credentials stored for the current host exists, use the
+     * users credentials to resolve the NTML challenge. Otherwise, show the http auth dialog on UI,
+     * user will need to type in the username and password to resolve the NTML challenge.
+     */
+    @Override
+    public Void processChallenge(final NtlmChallenge ntlmChallenge) {
+        if (ntlmChallenge.getHandler().useHttpAuthUsernamePassword()
+                && ntlmChallenge.getView() != null) {
+            final String[] haup = ntlmChallenge.getView()
+                    .getHttpAuthUsernamePassword(ntlmChallenge.getHost(), ntlmChallenge.getRealm());
+            if (haup != null && haup.length == 2) {
+                final String userName = haup[0];
+                final String password = haup[1];
+                if (!StringUtil.isEmpty(userName) && !StringUtil.isEmpty(password)) {
+                    ntlmChallenge.getHandler().proceed(userName, password);
+                }
+            }
+        } else {
+            showHttpAuthDialog(ntlmChallenge);
+        }
+
+        return null;
+    }
+
+    private void showHttpAuthDialog(final NtlmChallenge ntlmChallenge) {
+        final LayoutInflater factory = LayoutInflater.from(mActivity);
+        final View v = factory.inflate(mActivity.getResources().getLayout(R.layout.http_auth_dialog), null);
+        final EditText usernameView = (EditText) v.findViewById(R.id.editUserName);
+        final EditText passwordView = (EditText) v.findViewById(R.id.editPassword);
+        final String title = mActivity.getText(R.string.http_auth_dialog_title).toString();
+        final AlertDialog.Builder httpAuthDialog = new AlertDialog.Builder(mActivity);
+        httpAuthDialog.setTitle(title)
+                .setView(v)
+                .setPositiveButton(R.string.http_auth_dialog_login,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                ntlmChallenge.getHandler().proceed(usernameView.getText().toString(), passwordView.getText().toString());
+                            }
+                        })
+                .setNegativeButton(R.string.http_auth_dialog_cancel,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                ntlmChallenge.getHandler().cancel();
+                                cancelRequest();
+                            }
+                        })
+                .setOnCancelListener(
+                        new DialogInterface.OnCancelListener() {
+                            public void onCancel(DialogInterface dialog) {
+                                ntlmChallenge.getHandler().cancel();
+                                cancelRequest();
+                            }
+                        }).create().show();
+    }
+
+    private void cancelRequest() {
+        Logger.verbose(TAG, "Sending intent to cancel authentication activity");
+        mChallengeCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, new Intent());
+    }
 }

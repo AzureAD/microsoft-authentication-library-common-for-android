@@ -22,26 +22,36 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.embeddedwebview;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.net.http.SslError;
 import android.support.annotation.NonNull;
 import android.view.View;
-import android.webkit.ClientCertRequest;
 import android.webkit.HttpAuthHandler;
 import android.webkit.SslErrorHandler;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.ChallengeFactory;
+import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeCompletionCallback;
+import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeHandler;
+import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.NtlmChallenge;
+import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.NtlmChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
-public abstract class OAuth2WebViewClient extends WebViewClient {
+public class OAuth2WebViewClient extends WebViewClient {
+    /* constants */
+    private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
+
+    private final IChallengeCompletionCallback mCompletionCallback;
     private final AuthorizationRequest mRequest;
-    private final Context mContext;
+    private final Activity mActivity;
 
     /**
      * @return Authorization request
@@ -53,22 +63,125 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     /**
      * @return context
      */
-    public Context getContext() {
-        return mContext;
+    public Activity getActivity() {
+        return mActivity;
+    }
+
+    /**
+     *
+     * @return handler completion callback
+     */
+    IChallengeCompletionCallback getCompletionCallback() {
+        return mCompletionCallback;
     }
 
     /**
      * Constructor for the OAuth2 basic web view client.
-     * @param context app Context
-     * @param request Authorization request
+     *
+     * @param activity  app Context
+     * @param request  Authorization request
+     * @param callback Challenge completion callback
      */
-    OAuth2WebViewClient(@NonNull final Context context, @NonNull final AuthorizationRequest request) {
+    OAuth2WebViewClient(@NonNull final Activity activity,
+                        @NonNull final AuthorizationRequest request,
+                        @NonNull final IChallengeCompletionCallback callback) {
         //the validation of redirect url and authorization request should be in upper level before launching the webview.
-        if (null == context || null == request) {
-            throw new IllegalArgumentException("Null parameter to initialize OAuth2WebViewClient.");
+        mActivity = activity;
+        mRequest = request;
+        mCompletionCallback = callback;
+    }
+
+    @Override
+    public void onReceivedHttpAuthRequest(WebView view, final HttpAuthHandler handler,
+                                          String host, String realm) {
+        // Create a dialog to ask for credentials and post it to the handler.
+        Logger.info(TAG, "Receive the http auth request. Start the dialog to ask for creds. ");
+        Logger.infoPII(TAG, "Host:" + host);
+
+        //TODO TelemetryEvent.setNTLM(true); after the Telemetry is finished in common.
+        // Use ChallengeFactory to produce a NtlmChallenge
+        final NtlmChallenge ntlmChallenge = ChallengeFactory.getNtlmChallenge(view, handler, host, realm);
+
+        // Init the NtlmChallengeHandler
+        final IChallengeHandler<NtlmChallenge, Void> challengeHandler = new NtlmChallengeHandler(mActivity, mCompletionCallback);
+
+        //Process the challenge through the NtlmChallengeHandler created
+        challengeHandler.processChallenge(ntlmChallenge);
+    }
+
+    @Override
+    public void onReceivedError(final WebView view,
+                                final int errorCode,
+                                final String description,
+                                final String failingUrl) {
+        super.onReceivedError(view, errorCode, description, failingUrl);
+
+        // Create result intent when webView received an error.
+        final Intent resultIntent = new Intent();
+        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE,
+                "Error Code:" + errorCode);
+        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE,
+                description);
+        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_REQUEST_INFO,
+                mRequest);
+
+        // Send the result back to the calling activity
+        mCompletionCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
+    }
+
+    @Override
+    public void onReceivedSslError(final WebView view,
+                                   final SslErrorHandler handler,
+                                   final SslError error) {
+        // Developer does not have option to control this for now
+        super.onReceivedSslError(view, handler, error);
+        handler.cancel();
+
+        // WebView received the ssl error and create the result intent.
+        final Intent resultIntent = new Intent();
+        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE,
+                "Code:" + ERROR_FAILED_SSL_HANDSHAKE);
+        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE,
+                error.toString());
+        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_REQUEST_INFO,
+                mRequest);
+
+        // Send the result back to the calling activity
+        mCompletionCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
+    }
+
+    @Override
+    public void onPageFinished(final WebView view,
+                               final String url) {
+        super.onPageFinished(view, url);
+        // Once web view is fully loaded,set to visible
+        view.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onPageStarted(final WebView view,
+                              final String url,
+                              final Bitmap favicon) {
+        checkStartUrl(url);
+        Logger.verbose(TAG, "WebView starts loading.");
+        super.onPageStarted(view, url, favicon);
+    }
+
+    private void checkStartUrl(final String url) {
+        if (StringUtil.isEmpty(url)) {
+            Logger.verbose(TAG, "onPageStarted: Null url for page to load.");
+            return;
         }
 
-        mContext = context;
-        mRequest = request;
+        final Uri uri = Uri.parse(url);
+        if (uri.isOpaque()) {
+            Logger.verbose(TAG, "onPageStarted: Non-hierarchical loading uri.");
+            Logger.verbosePII(TAG, "start url: " + url);
+        } else if (StringUtil.isEmpty(uri.getQueryParameter(AuthenticationConstants.OAuth2.CODE))) {
+            Logger.verbosePII(TAG, "Host: " + uri.getHost() + " Path: " + uri.getPath());
+        } else {
+            Logger.verbose(TAG, "Auth code is returned for the loading url.");
+            Logger.verbosePII(TAG, "Host: " + uri.getHost() + " Path: " + uri.getPath());
+        }
     }
 }

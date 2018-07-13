@@ -27,6 +27,7 @@ import android.support.annotation.NonNull;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import java.util.Set;
@@ -37,7 +38,9 @@ import java.util.Set;
  * This should include all fo the required parameters of the authorization request for oAuth2
  * This should provide an extension point for additional parameters to be set
  */
-public abstract class AuthorizationRequest {
+public abstract class AuthorizationRequest implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     /**
      * A required value and must be set to "code".
      */

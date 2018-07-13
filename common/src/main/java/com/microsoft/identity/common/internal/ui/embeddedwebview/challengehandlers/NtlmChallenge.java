@@ -22,21 +22,38 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers;
 
-import android.os.Handler;
+import android.webkit.HttpAuthHandler;
+import android.webkit.WebView;
 
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
+public class NtlmChallenge {
+    private HttpAuthHandler mHandler;
+    private WebView mView;
+    private String mHost;
+    private String mRealm;
 
-final class PKeyAuthChallengeHandler {
-    private Handler mRefHandler; //NOPMD
-
-    private AuthorizationResponse mResponse; //NOPMD
-
-    PKeyAuthChallengeHandler(Handler ref, AuthorizationResponse response) {
-        mRefHandler = ref;
-        mResponse = response;
+    NtlmChallenge(final WebView view,
+                  final HttpAuthHandler handler,
+                  final String host,
+                  final String realm) {
+        mHandler = handler;
+        mView = view;
+        mHost = host;
+        mRealm = realm;
     }
 
-    void processPkeyAuthChallenge() {
-        //TODO
+    HttpAuthHandler getHandler() {
+        return mHandler;
+    }
+
+    WebView getView() {
+        return mView;
+    }
+
+    String getHost() {
+        return mHost;
+    }
+
+    String getRealm() {
+        return mRealm;
     }
 }
