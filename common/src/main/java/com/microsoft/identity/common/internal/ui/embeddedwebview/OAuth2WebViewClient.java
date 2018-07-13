@@ -63,7 +63,7 @@ public class OAuth2WebViewClient extends WebViewClient {
     /**
      * @return context
      */
-    public Context getActivity() {
+    public Activity getActivity() {
         return mActivity;
     }
 
@@ -167,8 +167,6 @@ public class OAuth2WebViewClient extends WebViewClient {
     }
 
     private void checkStartUrl(final String url) {
-        //TODO should it return error response when it finds the start url is invalid?
-
         if (StringUtil.isEmpty(url)) {
             Logger.verbose(TAG, "onPageStarted: Null url for page to load.");
             return;
