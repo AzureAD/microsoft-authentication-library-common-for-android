@@ -163,6 +163,7 @@ public class OAuth2WebViewClient extends WebViewClient {
                               final String url,
                               final Bitmap favicon) {
         checkStartUrl(url);
+        Logger.verbose(TAG, "WebView starts loading.");
         super.onPageStarted(view, url, favicon);
     }
 
@@ -176,11 +177,7 @@ public class OAuth2WebViewClient extends WebViewClient {
         if (uri.isOpaque()) {
             Logger.verbose(TAG, "onPageStarted: Non-hierarchical loading uri.");
             Logger.verbosePII(TAG, "start url: " + url);
-            return;
-        }
-
-        Logger.verbose(TAG, "WebView starts loading.");
-        if (StringUtil.isEmpty(uri.getQueryParameter(AuthenticationConstants.OAuth2.CODE))) {
+        } else if (StringUtil.isEmpty(uri.getQueryParameter(AuthenticationConstants.OAuth2.CODE))) {
             Logger.verbosePII(TAG, "Host: " + uri.getHost() + " Path: " + uri.getPath());
         } else {
             Logger.verbose(TAG, "Auth code is returned for the loading url.");
