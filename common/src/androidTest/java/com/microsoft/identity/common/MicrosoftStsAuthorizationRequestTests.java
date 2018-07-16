@@ -104,7 +104,7 @@ public class MicrosoftStsAuthorizationRequestTests {
         final String actualCodeRequestUrl = request.getAuthorizationStartUrl();
         assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt=consent"));
         assertTrue("Auth endpoint", actualCodeRequestUrl.contains(DEFAULT_TEST_AUTHORIZATION_ENDPOINT));
-        assertTrue("scope", actualCodeRequestUrl.contains("scope=offline_access%2Bprofile%2Bscope1%2Bopenid%2Bscope2"));
+        assertTrue("scope", actualCodeRequestUrl.contains("scope=offline_access%20profile%20scope1%20openid%20scope2"));
         assertTrue("Client id", actualCodeRequestUrl.contains("client_id=some-client-id"));
     }
 
@@ -119,8 +119,9 @@ public class MicrosoftStsAuthorizationRequestTests {
         final String actualCodeRequestUrlWithLoginHint = requestWithLoginHint.getAuthorizationStartUrl();
         assertTrue("Matching login hint", actualCodeRequestUrlWithLoginHint.contains("login_hint=someLoginHint"));
         assertTrue("Matching response type", actualCodeRequestUrlWithLoginHint.contains("response_type=code"));
-        assertTrue("Matching correlation id", actualCodeRequestUrlWithLoginHint.contains("&correlation_id=" + DEFAULT_TEST_CORRELATION_ID.toString()));
+        assertTrue("Matching correlation id", actualCodeRequestUrlWithLoginHint.contains("&client-request-id=" + DEFAULT_TEST_CORRELATION_ID.toString()));
         assertTrue("Matching library version", actualCodeRequestUrlWithLoginHint.contains("&x-client-Ver=0.1"));
+
     }
 
     @Test
