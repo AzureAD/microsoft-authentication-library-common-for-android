@@ -26,6 +26,7 @@ import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.view.MotionEvent;
 import android.view.View;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -71,25 +72,25 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
      * @throws UnsupportedEncodingException thrown when the Character Encoding is not supported
      * @throws ClientException throw when error happens during the authorization
      */
-    public EmbeddedWebViewAuthorizationStrategy(final GenericWebViewClient webViewClient)
+    public EmbeddedWebViewAuthorizationStrategy(final GenericWebViewClient webViewClient, final WebView webView)
             throws UnsupportedEncodingException, ClientException {
         //TODO validate auth request in OAuth2Strategy.
-        createWebView(webViewClient);
+        createWebView(webViewClient, webView);
         mStartUrl = webViewClient.getRequest().getAuthorizationStartUrl();
     }
 
     /**
      * Set up the web view configurations.
-     * @param activity  AuthenticationActivity
      * @param webViewClient AzureActiveDirectoryWebViewClient
      */
-    private void createWebView(final GenericWebViewClient webViewClient) {
+    private void createWebView(final GenericWebViewClient webViewClient, final WebView webView) {
         final Activity activity = webViewClient.getActivity();
         // Create the Web View to show the page
-        mWebView = (WebView) activity.findViewById(activity.getResources().getIdentifier("webView1", "id",
-                activity.getPackageName()));
+        mWebView = webView;
+        WebSettings userAgentSetting = mWebView.getSettings();
+        final String userAgent = userAgentSetting.getUserAgentString();
         mWebView.getSettings().setUserAgentString(
-                mWebView.getSettings().getUserAgentString() + AuthenticationConstants.Broker.USER_AGENT_VALUE_PKEY_AUTH);
+                userAgent + AuthenticationConstants.Broker.USER_AGENT_VALUE_PKEY_AUTH);
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.requestFocus(View.FOCUS_DOWN);
 
