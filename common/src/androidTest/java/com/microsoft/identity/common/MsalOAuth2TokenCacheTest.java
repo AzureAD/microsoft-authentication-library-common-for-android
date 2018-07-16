@@ -44,6 +44,7 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
@@ -93,7 +94,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             MicrosoftStsAuthorizationRequest,
             MicrosoftStsTokenResponse,
             MicrosoftAccount,
-            com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> mockCredentialAdapter;
+            MicrosoftRefreshToken> mockCredentialAdapter;
 
     private Account account;
     private AccessToken accessToken;
@@ -190,7 +191,6 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         keyValueDelegate = new CacheKeyValueDelegate();
 
         accountCredentialCache = new AccountCredentialCache(
-                context,
                 keyValueDelegate,
                 mSharedPreferencesFileManager
         );

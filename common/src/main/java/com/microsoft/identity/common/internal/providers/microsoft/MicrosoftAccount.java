@@ -41,6 +41,9 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class MicrosoftAccount extends Account {
+
+    protected static final String AUTHORITY_TYPE_V1_V2 = "MSSTS";
+
     private static final String TAG = MicrosoftAccount.class.getSimpleName();
 
     private String mDisplayableId; // Legacy Identifier -  UPN (preferred) or Email
@@ -114,7 +117,6 @@ public abstract class MicrosoftAccount extends Account {
 
     private String getUniqueId(final Map<String, String> claims) {
         final String methodName = "getUniqueId";
-        Logger.entering(TAG, methodName, claims);
 
         String uniqueId = null;
 
@@ -125,8 +127,6 @@ public abstract class MicrosoftAccount extends Account {
             Logger.info(TAG + ":" + methodName, "Using Subject as uniqueId");
             uniqueId = claims.get(AzureActiveDirectoryIdToken.SUBJECT);
         }
-
-        Logger.exiting(TAG, methodName, uniqueId);
 
         return uniqueId;
     }

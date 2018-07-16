@@ -45,6 +45,7 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
      */
     public MicrosoftStsAccount(IDToken idToken, String uid, final String uTid) {
         super(idToken, uid, uTid);
+        Logger.verbose(TAG, "Init: " + TAG);
     }
 
     /**
@@ -56,22 +57,17 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
      */
     public static MicrosoftStsAccount create(@NonNull final IDToken idToken,
                                              @NonNull final ClientInfo clientInfo) {
-        final String methodName = "create";
-        Logger.entering(TAG, methodName, idToken, clientInfo);
-
         final String uid = clientInfo.getUid();
         final String uTid = clientInfo.getUtid();
 
         MicrosoftStsAccount acct = new MicrosoftStsAccount(idToken, uid, uTid);
-
-        Logger.exiting(TAG, methodName, acct);
 
         return acct;
     }
 
     @Override
     public String getAuthorityType() {
-        return "MSSTS";
+        return AUTHORITY_TYPE_V1_V2;
     }
 
     @Override

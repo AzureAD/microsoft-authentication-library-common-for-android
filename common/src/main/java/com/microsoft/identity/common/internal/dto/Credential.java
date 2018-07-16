@@ -28,7 +28,6 @@ import static com.microsoft.identity.common.internal.dto.Credential.SerializedNa
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.CLIENT_ID;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.CREDENTIAL_TYPE;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.ENVIRONMENT;
-import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.SECRET;
 
@@ -122,14 +121,6 @@ public abstract class Credential extends AccountCredentialBase {
      */
     @SerializedName(CACHED_AT)
     private String mCachedAt;
-
-    /**
-     * Token expiry time. This value should be calculated based on the current UTC time measured
-     * locally and the value expires_in returned from the service. Measured in milliseconds from
-     * epoch (1970).
-     */
-    @SerializedName(EXPIRES_ON)
-    private String mExpiresOn;
 
     /**
      * Gets the home_account_id.
@@ -239,26 +230,11 @@ public abstract class Credential extends AccountCredentialBase {
         mCachedAt = cachedAt;
     }
 
-    /**
-     * Gets the expires_on.
-     *
-     * @return The expires_on to get.
-     */
-    public String getExpiresOn() {
-        return mExpiresOn;
-    }
-
-    /**
-     * Sets the expires_on.
-     *
-     * @param expiresOn The expires_on to set.
-     */
-    public void setExpiresOn(final String expiresOn) {
-        mExpiresOn = expiresOn;
-    }
-
-    @SuppressWarnings("PMD")
     //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
+    @SuppressWarnings("PMD")
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -275,13 +251,15 @@ public abstract class Credential extends AccountCredentialBase {
         if (mSecret != null ? !mSecret.equals(that.mSecret) : that.mSecret != null) return false;
         if (mHomeAccountId != null ? !mHomeAccountId.equals(that.mHomeAccountId) : that.mHomeAccountId != null)
             return false;
-        if (mCachedAt != null ? !mCachedAt.equals(that.mCachedAt) : that.mCachedAt != null)
-            return false;
-        return mExpiresOn != null ? mExpiresOn.equals(that.mExpiresOn) : that.mExpiresOn == null;
+        return mCachedAt != null ? mCachedAt.equals(that.mCachedAt) : that.mCachedAt == null;
     }
     //CHECKSTYLE:ON
 
     //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
+    @SuppressWarnings("PMD")
     @Override
     public int hashCode() {
         int result = mClientId != null ? mClientId.hashCode() : 0;
@@ -290,7 +268,6 @@ public abstract class Credential extends AccountCredentialBase {
         result = 31 * result + (mSecret != null ? mSecret.hashCode() : 0);
         result = 31 * result + (mHomeAccountId != null ? mHomeAccountId.hashCode() : 0);
         result = 31 * result + (mCachedAt != null ? mCachedAt.hashCode() : 0);
-        result = 31 * result + (mExpiresOn != null ? mExpiresOn.hashCode() : 0);
         return result;
     }
     //CHECKSTYLE:ON

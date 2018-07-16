@@ -67,6 +67,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
      * String of cache value separator.
      */
     public static final String CACHE_VALUE_SEPARATOR = "-";
+    private static final String FOCI_PREFIX = "foci-";
 
     private final Gson mGson;
 
@@ -88,21 +89,13 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
     }
 
     private static String sanitizeNull(final String input) {
-        final String methodName = "sanitizeNull";
-        Logger.entering(TAG, methodName, input);
-
         String outValue = null == input ? "" : input.toLowerCase(Locale.US).trim();
-
-        Logger.exiting(TAG, methodName, outValue);
 
         return outValue;
     }
 
     @Override
     public String generateCacheKey(Account account) {
-        final String methodName = "generateCacheKey";
-        Logger.entering(TAG, methodName, account);
-
         String cacheKey = HOME_ACCOUNT_ID
                 + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT
@@ -112,15 +105,10 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(account.getEnvironment()));
         cacheKey = cacheKey.replace(REALM, sanitizeNull(account.getRealm()));
 
-        Logger.exiting(TAG, methodName, cacheKey);
-
         return cacheKey;
     }
 
     private String generateCacheValueInternal(final Object baseObject) {
-        final String methodName = "generateCacheValueInternal";
-        Logger.entering(TAG, methodName, baseObject);
-
         JsonElement outboundElement = mGson.toJsonTree(baseObject);
         JsonObject outboundObject = outboundElement.getAsJsonObject();
 
@@ -135,28 +123,19 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
 
         final String json = mGson.toJson(outboundObject);
 
-        Logger.exiting(TAG, methodName, json);
-
         return json;
     }
 
     @Override
     public String generateCacheValue(Account account) {
-        final String methodName = "generateCacheValue";
-        Logger.entering(TAG, methodName, account);
-
         final String result = generateCacheValueInternal(account);
-
-        Logger.exiting(TAG, methodName, result);
 
         return result;
     }
 
+    @SuppressWarnings("checkstyle:innerassignment")
     @Override
     public String generateCacheKey(Credential credential) {
-        final String methodName = "generateCacheKey";
-        Logger.entering(TAG, methodName, credential);
-
         String cacheKey =
                 HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
                         + ENVIRONMENT + CACHE_VALUE_SEPARATOR
@@ -167,7 +146,20 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         cacheKey = cacheKey.replace(HOME_ACCOUNT_ID, sanitizeNull(credential.getHomeAccountId()));
         cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(credential.getEnvironment()));
         cacheKey = cacheKey.replace(CREDENTIAL_TYPE, sanitizeNull(credential.getCredentialType()));
-        cacheKey = cacheKey.replace(CLIENT_ID, sanitizeNull(credential.getClientId()));
+
+        RefreshToken rt;
+        if ((credential instanceof RefreshToken)
+                && !StringExtensions.isNullOrBlank((rt = (RefreshToken) credential).getFamilyId())) {
+            String familyIdForCacheKey = rt.getFamilyId();
+
+            if (familyIdForCacheKey.startsWith(FOCI_PREFIX)) {
+                familyIdForCacheKey = familyIdForCacheKey.replace(FOCI_PREFIX, "");
+            }
+
+            cacheKey = cacheKey.replace(CLIENT_ID, familyIdForCacheKey);
+        } else {
+            cacheKey = cacheKey.replace(CLIENT_ID, sanitizeNull(credential.getClientId()));
+        }
 
         if (credential instanceof AccessToken) {
             final AccessToken accessToken = (AccessToken) credential;
@@ -183,19 +175,12 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             cacheKey = cacheKey.replace(TARGET, "");
         }
 
-        Logger.exiting(TAG, methodName, cacheKey);
-
         return cacheKey;
     }
 
     @Override
     public String generateCacheValue(Credential credential) {
-        final String methodName = "generateCacheValue";
-        Logger.entering(TAG, methodName, credential);
-
         final String result = generateCacheValueInternal(credential);
-
-        Logger.exiting(TAG, methodName, result);
 
         return result;
     }
@@ -203,7 +188,6 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
     @Override
     public <T extends AccountCredentialBase> T fromCacheValue(String string, Class<? extends AccountCredentialBase> t) {
         final String methodName = "fromCacheValue";
-        Logger.entering(TAG, methodName, string, t);
 
         try {
             final T resultObject = (T) mGson.fromJson(string, t);
@@ -230,8 +214,6 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
                 resultObject.setAdditionalFields(additionalFields);
             }
 
-            Logger.exiting(TAG, methodName, resultObject);
-
             // return the fully-formed object
             return resultObject;
         } catch (JsonSyntaxException e) {
@@ -239,11 +221,6 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
                     TAG + ":" + methodName,
                     "Failed to parse cache value.",
                     null
-            );
-            Logger.errorPII(
-                    TAG + ":" + methodName,
-                    "Parsing failed with Exception",
-                    e
             );
             return null;
         }
@@ -257,9 +234,6 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
      * @return A Set of expected JSON values, as Strings.
      */
     private static Set<String> getExpectedJsonFields(final Class<? extends AccountCredentialBase> clazz) {
-        final String methodName = "getExpectedJsonFields";
-        Logger.entering(TAG, methodName, clazz);
-
         final Set<String> serializedNames = new HashSet<>();
         final List<Field> fieldsToInspect = getFieldsUpTo(clazz, AccountCredentialBase.class);
         final List<Field> annotatedFields = getSerializedNameAnnotatedFields(fieldsToInspect);
@@ -268,8 +242,6 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             final SerializedName serializedName = annotatedField.getAnnotation(SerializedName.class);
             serializedNames.add(serializedName.value());
         }
-
-        Logger.exiting(TAG, methodName, serializedNames);
 
         return serializedNames;
     }
@@ -281,9 +253,6 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
      * @return Those Fields which are annotated with @SerializedName.
      */
     private static List<Field> getSerializedNameAnnotatedFields(final List<Field> fieldsToInspect) {
-        final String methodName = "getSerializedNameAnnotatedFields";
-        Logger.entering(TAG, methodName, fieldsToInspect);
-
         final List<Field> annotatedFields = new ArrayList<>();
 
         for (final Field field : fieldsToInspect) {
@@ -292,8 +261,6 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
                 annotatedFields.add(field);
             }
         }
-
-        Logger.exiting(TAG, methodName, annotatedFields);
 
         return annotatedFields;
     }
@@ -309,14 +276,6 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
     private static List<Field> getFieldsUpTo(
             final Class<?> startClass,
             @Nullable Class<?> upperBound) {
-        final String methodName = "getFieldsUpTo";
-        Logger.entering(
-                TAG,
-                methodName,
-                startClass.getClass().getSimpleName(),
-                null != upperBound ? upperBound.getClass().getSimpleName() : null
-        );
-
         List<Field> currentClassFields = new ArrayList<>(Arrays.asList(startClass.getDeclaredFields()));
         Class<?> parentClass = startClass.getSuperclass();
 
@@ -324,8 +283,6 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             List<Field> parentClassFields = getFieldsUpTo(parentClass, upperBound);
             currentClassFields.addAll(parentClassFields);
         }
-
-        Logger.exiting(TAG, methodName, currentClassFields);
 
         return currentClassFields;
     }

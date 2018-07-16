@@ -224,4 +224,24 @@ public final class ErrorStrings {
      * WebView  redirect url is not SSL protected.
      */
     public static final String WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED = "The webView was redirected to an unsafe URL";
+
+    /**
+     *  Package name is not resolved.
+     */
+    public static final String PACKAGE_NAME_NOT_FOUND = "Package name is not resolved";
+
+    /**
+     * Calling app could not be verified.
+     */
+    public static final String BROKER_APP_VERIFICATION_FAILED = "Calling app could not be verified";
+
+    /**
+     * App package name is not found in the package manager.
+     */
+    public static final String APP_PACKAGE_NAME_NOT_FOUND = "App package name is not found in the package manager";
+
+    /**
+     * Signature could not be verified.
+     */
+    public static final String BROKER_VERIFICATION_FAILED = "Signature could not be verified";
 }

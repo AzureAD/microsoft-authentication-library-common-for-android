@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import android.annotation.SuppressLint;
+import android.app.Application;
 import android.content.Context;
 import android.os.Build;
 
@@ -34,17 +34,18 @@ import com.microsoft.identity.common.adal.internal.cache.CacheKey;
 import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -60,16 +61,12 @@ public class ADALOAuth2TokenCache
 
     private static final String TAG = ADALOAuth2TokenCache.class.getSimpleName();
     private static final String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
-    private static final Object LOCK = new Object();
-
-    @SuppressLint("StaticFieldLeak")
-    private static StorageHelper sHelper;
 
     private Gson mGson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new DateTimeAdapter())
             .create();
 
-    private List<IShareSingleSignOnState> mSharedSSOCaches;
+    private List<IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken>> mSharedSSOCaches;
 
     /**
      * Constructor of ADALOAuth2TokenCache.
@@ -91,19 +88,24 @@ public class ADALOAuth2TokenCache
      * @param sharedSSOCaches List<IShareSingleSignOnState>
      */
     public ADALOAuth2TokenCache(final Context context,
-                                final List<IShareSingleSignOnState> sharedSSOCaches) {
+                                final List<IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken>> sharedSSOCaches) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
+        Logger.info(TAG, "Context is an Application? [" + (context instanceof Application) + "]");
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
         mSharedSSOCaches = sharedSSOCaches;
     }
 
     protected void initializeSharedPreferencesFileManager(final String fileName) {
-        final String methodName = "initializeSharedPreferencesFileManager";
-        Logger.entering(TAG, methodName, fileName);
-        mISharedPreferencesFileManager = new SharedPreferencesFileManager(getContext(), fileName);
-        Logger.exiting(TAG, methodName);
+        Logger.verbose(TAG, "Initializing SharedPreferencesFileManager");
+        Logger.verbosePII(TAG, "Initializing with name: " + fileName);
+        mISharedPreferencesFileManager =
+                new SharedPreferencesFileManager(
+                        getContext(),
+                        fileName,
+                        new StorageHelper(getContext())
+                );
     }
 
     /**
@@ -119,14 +121,15 @@ public class ADALOAuth2TokenCache
             final AzureActiveDirectoryAuthorizationRequest request,
             final AzureActiveDirectoryTokenResponse response) {
         final String methodName = "saveTokens";
-        Logger.entering(TAG, methodName, strategy, request, response);
         Logger.info(TAG + ":" + methodName, "Saving Tokens...");
 
-        final Account account = strategy.createAccount(response);
+        final AzureActiveDirectoryAccount account = strategy.createAccount(response);
         final String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
-        final RefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
+        final AzureActiveDirectoryRefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
 
+        Logger.info(TAG, "Constructing new ADALTokenCacheItem");
         final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem(strategy, request, response);
+        logTokenCacheItem(cacheItem);
 
         //There is more than one valid user identifier for some accounts... AAD Accounts as of this writing have 3
         Logger.info(TAG + ":" + methodName, "Setting items to cache for user...");
@@ -138,7 +141,6 @@ public class ADALOAuth2TokenCache
             Logger.infoPII(TAG + ":" + methodName, "issuerCacheIdentifier: [" + issuerCacheIdentifier + "]");
             Logger.infoPII(TAG + ":" + methodName, "scope: [" + scope + "]");
             Logger.infoPII(TAG + ":" + methodName, "clientId: [" + clientId + "]");
-            Logger.infoPII(TAG + ":" + methodName, "cacheItem: [" + cacheItem + "]");
             Logger.infoPII(TAG + ":" + methodName, "cacheIdentifier: [" + cacheIdentifier + "]");
 
             setItemToCacheForUser(issuerCacheIdentifier, scope, clientId, cacheItem, cacheIdentifier);
@@ -151,14 +153,23 @@ public class ADALOAuth2TokenCache
 
         // TODO At some point, the type-safety of this call needs to get beefed-up
         Logger.info(TAG + ":" + methodName, "Syncing SSO state to caches...");
-        for (final IShareSingleSignOnState sharedSsoCache : mSharedSSOCaches) {
+        for (final IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> sharedSsoCache : mSharedSSOCaches) {
             sharedSsoCache.setSingleSignOnState(account, refreshToken);
         }
-
-        Logger.exiting(TAG, methodName);
-
     }
 
+    private static void logTokenCacheItem(final ADALTokenCacheItem tokenCacheItem) {
+        Logger.info(TAG, "Logging TokenCacheItem");
+        Logger.infoPII(TAG, "resource: [" + tokenCacheItem.getResource() + "]");
+        Logger.infoPII(TAG, "authority: [" + tokenCacheItem.getAuthority() + "]");
+        Logger.infoPII(TAG, "clientId: [" + tokenCacheItem.getClientId() + "]");
+        Logger.infoPII(TAG, "expiresOn: [" + tokenCacheItem.getExpiresOn() + "]");
+        Logger.infoPII(TAG, "isMrrt: [" + tokenCacheItem.getIsMultiResourceRefreshToken() + "]");
+        Logger.infoPII(TAG, "tenantId: [" + tokenCacheItem.getTenantId() + "]");
+        Logger.infoPII(TAG, "foci: [" + tokenCacheItem.getFamilyClientId() + "]");
+        Logger.infoPII(TAG, "extendedExpires: [" + tokenCacheItem.getExtendedExpiresOn() + "]");
+        Logger.infoPII(TAG, "speRing: [" + tokenCacheItem.getSpeRing() + "]");
+    }
 
     private void setItemToCacheForUser(final String issuer,
                                        final String resource,
@@ -166,139 +177,48 @@ public class ADALOAuth2TokenCache
                                        final ADALTokenCacheItem cacheItem,
                                        final String userId) {
         final String methodName = "setItemToCacheForUser";
-        Logger.entering(TAG, methodName, issuer, resource, clientId, cacheItem, userId);
 
+        Logger.info(TAG + ":" + methodName, "Setting cacheitem for RT entry.");
         setItem(CacheKey.createCacheKeyForRTEntry(issuer, resource, clientId, userId), cacheItem);
 
         if (cacheItem.getIsMultiResourceRefreshToken()) {
             Logger.info(TAG + ":" + methodName, "CacheItem is an MRRT.");
-            setItem(CacheKey.createCacheKeyForMRRT(issuer, clientId, userId), cacheItem);
+            setItem(CacheKey.createCacheKeyForMRRT(issuer, clientId, userId), ADALTokenCacheItem.getAsMRRTTokenCacheItem(cacheItem));
         }
 
         if (!StringExtensions.isNullOrBlank(cacheItem.getFamilyClientId())) {
             Logger.info(TAG + ":" + methodName, "CacheItem is an FRT.");
-            setItem(CacheKey.createCacheKeyForFRT(issuer, cacheItem.getFamilyClientId(), userId), cacheItem);
+            setItem(CacheKey.createCacheKeyForFRT(issuer, cacheItem.getFamilyClientId(), userId), ADALTokenCacheItem.getAsFRTTokenCacheItem(cacheItem));
         }
-
-        Logger.exiting(TAG, methodName);
     }
 
     private void setItem(final String key, final ADALTokenCacheItem cacheItem) {
-        final String methodName = "setItem";
-        Logger.entering(TAG, methodName, key, cacheItem);
-
+        Logger.info(TAG, "Setting item to cache");
         String json = mGson.toJson(cacheItem);
-        String encrypted = encrypt(json);
-
-        Logger.verbosePII(TAG + ":" + methodName, "Derived JSON: " + json);
-
-        if (encrypted != null) {
-            mISharedPreferencesFileManager.putString(key, encrypted);
-        } else {
-            Logger.error(TAG + ":" + methodName, "Encrypted output was null.", null);
-        }
-
-        Logger.exiting(TAG, methodName);
-    }
-
-
-    /**
-     * Method that allows to mock StorageHelper class and use custom encryption in UTs.
-     */
-    protected StorageHelper getStorageHelper() {
-        final String methodName = "getStorageHelper";
-        Logger.entering(TAG, methodName);
-
-        synchronized (LOCK) {
-            if (sHelper == null) {
-                Logger.verbose(TAG + ":" + methodName, "Initializing StorageHelper");
-                sHelper = new StorageHelper(getContext());
-                Logger.verbose(TAG + ":" + methodName, "Finished initializing StorageHelper");
-            }
-        }
-
-        Logger.exiting(TAG, methodName, sHelper);
-
-        return sHelper;
-    }
-
-    private String encrypt(final String value) {
-        final String methodName = "encrypt";
-        Logger.entering(TAG, methodName, value);
-
-        String encryptedResult;
-
-        try {
-            encryptedResult = getStorageHelper().encrypt(value);
-        } catch (GeneralSecurityException | IOException e) {
-            Logger.error(TAG + ":" + methodName, "Failed to encrypt input value.", null);
-            Logger.errorPII(TAG + ":" + methodName, ErrorStrings.ENCRYPTION_ERROR, e);
-            encryptedResult = null;
-        }
-
-        Logger.exiting(TAG, methodName, encryptedResult);
-
-        return encryptedResult;
-    }
-
-    private String decrypt(final String key, final String value) { //NOPMD Suppressing PMD warning for unused method
-        final String methodName = "decrypt";
-        Logger.entering(TAG, methodName, key, value);
-
-        if (StringExtensions.isNullOrBlank(key)) {
-            throw new IllegalArgumentException("encryption key is null or blank");
-        }
-
-        String decryptedResult;
-
-        try {
-            decryptedResult = getStorageHelper().decrypt(value);
-        } catch (GeneralSecurityException | IOException e) {
-            Logger.errorPII(TAG, ErrorStrings.DECRYPTION_ERROR, e);
-            decryptedResult = null;
-
-            //TODO: Implement remove item in this case... not sure I actually want to do this
-            //removeItem(key);
-        }
-
-        Logger.exiting(TAG, methodName, decryptedResult);
-
-        return decryptedResult;
+        mISharedPreferencesFileManager.putString(key, json);
     }
 
     private void validateSecretKeySetting() {
-        final String methodName = "validateSecretKeySetting";
-        Logger.entering(TAG, methodName);
-
+        Logger.verbose(TAG, "Validating secret key settings.");
         final byte[] secretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
 
         if (secretKeyData == null && Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
             throw new IllegalArgumentException("Secret key must be provided for API < 18. "
                     + "Use AuthenticationSettings.INSTANCE.setSecretKey()");
         }
-
-        Logger.exiting(TAG, methodName);
     }
 
     @Override
     public void setSingleSignOnState(final Account account, final RefreshToken refreshToken) {
-        final String methodName = "setSingleSignOnState";
-        Logger.entering(TAG, methodName, account, refreshToken);
         // Unimplemented
-
-        Logger.exiting(TAG, methodName);
+        Logger.warn(TAG, "setSingleSignOnState was called, but is not implemented.");
     }
 
     @Override
     public RefreshToken getSingleSignOnState(final Account account) {
-        final String methodName = "getSingleSignOnState";
-        Logger.entering(TAG, methodName, account);
-
         // Unimplemented
+        Logger.warn(TAG, "getSingleSignOnState was called, but is not implemented.");
         final RefreshToken refreshToken = null;
-
-        Logger.exiting(TAG, methodName, refreshToken);
-
         return refreshToken;
     }
 }

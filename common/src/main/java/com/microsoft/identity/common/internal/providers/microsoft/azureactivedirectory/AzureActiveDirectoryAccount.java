@@ -69,28 +69,22 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
      */
     public static AzureActiveDirectoryAccount create(@NonNull final IDToken idToken,
                                                      @NonNull final ClientInfo clientInfo) {
-        final String methodName = "create";
-        Logger.entering(TAG, methodName, idToken, clientInfo);
-
         final String uid = clientInfo.getUid();
         final String uTid = clientInfo.getUtid();
 
         AzureActiveDirectoryAccount acct = new AzureActiveDirectoryAccount(idToken, uid, uTid);
-
-        Logger.exiting(TAG, methodName, acct);
 
         return acct;
     }
 
     @Override
     public String getAuthorityType() {
-        return "AAD";
+        return AUTHORITY_TYPE_V1_V2;
     }
 
     @Override
     protected String getDisplayableId(Map<String, String> claims) {
         final String methodName = "getDisplayableId";
-        Logger.entering(TAG, methodName, claims);
 
         String displayableId = null;
 
@@ -101,8 +95,6 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
             Logger.info(TAG + ":" + methodName, "Returning email as displayableId");
             displayableId = claims.get(AzureActiveDirectoryIdToken.EMAIL);
         }
-
-        Logger.exiting(TAG, methodName, displayableId);
 
         return displayableId;
     }

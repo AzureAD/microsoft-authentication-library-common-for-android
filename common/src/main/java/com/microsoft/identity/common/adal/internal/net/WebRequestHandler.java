@@ -25,6 +25,7 @@ package com.microsoft.identity.common.adal.internal.net;
 import android.os.Build;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
 import java.io.IOException;
 import java.net.URL;
@@ -53,6 +54,8 @@ public class WebRequestHandler implements IWebRequestHandler {
 
     private UUID mRequestCorrelationId = null;
 
+    private String mCurrentClientVersion = "";
+
     @Override
     public HttpWebResponse sendGet(URL url, Map<String, String> headers) throws IOException {
         final HttpWebRequest request = new HttpWebRequest(url, HttpWebRequest.REQUEST_METHOD_GET, updateHeaders(headers));
@@ -79,7 +82,7 @@ public class WebRequestHandler implements IWebRequestHandler {
 
         headers.put(AuthenticationConstants.AAD.ADAL_ID_PLATFORM, "Android");
         // TODO don't make this dependency circular
-        //headers.put(AuthenticationConstants.AAD.ADAL_ID_VERSION, AuthenticationContext.getVersionName());
+        headers.put(AuthenticationConstants.AAD.ADAL_ID_VERSION, mCurrentClientVersion);
         headers.put(AuthenticationConstants.AAD.ADAL_ID_OS_VER, "" + Build.VERSION.SDK_INT);
         headers.put(AuthenticationConstants.AAD.ADAL_ID_DM, android.os.Build.MODEL);
 
@@ -94,4 +97,13 @@ public class WebRequestHandler implements IWebRequestHandler {
     public void setRequestCorrelationId(final UUID requestCorrelationId) {
         mRequestCorrelationId = requestCorrelationId;
     }
+
+    @Override
+    public void setClientVersion(final String clientVersion) {
+        if (!StringExtensions.isNullOrBlank(clientVersion)) {
+            mCurrentClientVersion = clientVersion;
+        }
+    }
+
+
 }

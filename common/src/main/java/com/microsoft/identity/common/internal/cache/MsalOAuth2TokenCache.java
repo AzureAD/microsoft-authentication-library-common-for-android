@@ -34,11 +34,11 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
-import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +51,7 @@ import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS
 
 public class MsalOAuth2TokenCache
         extends OAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse>
-        implements IShareSingleSignOnState<MicrosoftAccount, RefreshToken> {
+        implements IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> {
 
     private static final String TAG = MsalOAuth2TokenCache.class.getSimpleName();
 
@@ -63,7 +63,7 @@ public class MsalOAuth2TokenCache
             MicrosoftStsAuthorizationRequest,
             MicrosoftStsTokenResponse,
             MicrosoftAccount,
-            RefreshToken> mAccountCredentialAdapter;
+            MicrosoftRefreshToken> mAccountCredentialAdapter;
 
     /**
      * Constructor of MsalOAuth2TokenCache.
@@ -79,7 +79,7 @@ public class MsalOAuth2TokenCache
                                         MicrosoftStsAuthorizationRequest,
                                         MicrosoftStsTokenResponse,
                                         MicrosoftAccount,
-                                        RefreshToken> accountCredentialAdapter) {
+                                        MicrosoftRefreshToken> accountCredentialAdapter) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
@@ -102,7 +102,7 @@ public class MsalOAuth2TokenCache
                                         MicrosoftStsAuthorizationRequest,
                                         MicrosoftStsTokenResponse,
                                         MicrosoftAccount,
-                                        RefreshToken> accountCredentialAdapter,
+                                        MicrosoftRefreshToken> accountCredentialAdapter,
                                 final List<IShareSingleSignOnState> sharedSsoCaches) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
@@ -116,9 +116,6 @@ public class MsalOAuth2TokenCache
             final MicrosoftStsOAuth2Strategy oAuth2Strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) throws ClientException {
-        final String methodName = "saveTokensV2";
-        Logger.entering(TAG, methodName, oAuth2Strategy, request, response);
-
         // Create the Account
         final Account accountToSave =
                 mAccountCredentialAdapter.createAccount(
@@ -162,25 +159,15 @@ public class MsalOAuth2TokenCache
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
         saveCredentials(accessTokenToSave, refreshTokenToSave, idTokenToSave);
-
-        Logger.exiting(TAG, methodName);
     }
 
     private void saveAccounts(final Account... accounts) {
-        final String methodName = "saveAccounts";
-        Logger.entering(TAG, methodName, accounts);
-
         for (final Account account : accounts) {
             mAccountCredentialCache.saveAccount(account);
         }
-
-        Logger.exiting(TAG, methodName);
     }
 
     private void saveCredentials(final Credential... credentials) {
-        final String methodName = "saveCredentials";
-        Logger.entering(TAG, methodName, credentials);
-
         for (final Credential credential : credentials) {
 
             if (credential instanceof AccessToken) {
@@ -189,8 +176,6 @@ public class MsalOAuth2TokenCache
 
             mAccountCredentialCache.saveCredential(credential);
         }
-
-        Logger.exiting(TAG, methodName);
     }
 
     /**
@@ -209,9 +194,6 @@ public class MsalOAuth2TokenCache
             final AccessToken accessTokenToSave,
             @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshTokenToSave,
             @NonNull final IdToken idTokenToSave) throws ClientException {
-        final String methodName = "validateCacheArtifacts";
-        Logger.entering(TAG, methodName, accountToSave, accessTokenToSave, refreshTokenToSave, idTokenToSave);
-
         final boolean isAccountCompliant = isAccountSchemaCompliant(accountToSave);
         final boolean isAccessTokenCompliant = null == accessTokenToSave || isAccessTokenSchemaCompliant(accessTokenToSave);
         final boolean isRefreshTokenCompliant = isRefreshTokenSchemaCompliant(refreshTokenToSave);
@@ -245,15 +227,12 @@ public class MsalOAuth2TokenCache
                     nonCompliantCredentials
             );
         }
-
-        Logger.exiting(TAG, methodName);
     }
 
     private void deleteAccessTokensWithIntersectingScopes(final AccessToken referenceToken) {
         final String methodName = "deleteAccessTokensWithIntersectingScopes";
-        Logger.entering(TAG, methodName, referenceToken);
 
-        final List<Credential> accessTokens = mAccountCredentialCache.getCredentials(
+        final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 referenceToken.getHomeAccountId(),
                 referenceToken.getEnvironment(),
                 CredentialType.AccessToken,
@@ -273,13 +252,11 @@ public class MsalOAuth2TokenCache
                 mAccountCredentialCache.removeCredential(accessToken);
             }
         }
-
-        Logger.exiting(TAG, methodName);
     }
 
     private boolean scopesIntersect(final AccessToken token1, final AccessToken token2) {
         final String methodName = "scopesIntersect";
-        Logger.entering(TAG, methodName, token1, token2);
+
         final Set<String> token1Scopes = scopesAsSet(token1);
         final Set<String> token2Scopes = scopesAsSet(token2);
 
@@ -296,15 +273,10 @@ public class MsalOAuth2TokenCache
             }
         }
 
-        Logger.exiting(TAG, methodName, result);
-
         return result;
     }
 
     private Set<String> scopesAsSet(final AccessToken token) {
-        final String methodName = "scopesAsSet";
-        Logger.entering(TAG, methodName, token);
-
         final Set<String> scopeSet = new HashSet<>();
         final String scopeString = token.getTarget();
 
@@ -313,14 +285,11 @@ public class MsalOAuth2TokenCache
             scopeSet.addAll(Arrays.asList(scopeArray));
         }
 
-        Logger.exiting(TAG, methodName, scopeSet);
-
         return scopeSet;
     }
 
     private static boolean isSchemaCompliant(final Class<?> clazz, final String[][] params) {
         final String methodName = "isSchemaCompliant";
-        Logger.entering(TAG, methodName, clazz, params);
 
         boolean isCompliant = true;
         for (final String[] param : params) {
@@ -341,15 +310,10 @@ public class MsalOAuth2TokenCache
             }
         }
 
-        Logger.exiting(TAG, methodName, isCompliant);
-
         return isCompliant;
     }
 
     private static boolean isAccountSchemaCompliant(@NonNull final Account account) {
-        final String methodName = "isAccountSchemaCompliant";
-        Logger.entering(TAG, methodName, account);
-
         // Required fields...
         final String[][] params = new String[][]{
                 {Account.SerializedNames.HOME_ACCOUNT_ID, account.getHomeAccountId()},
@@ -362,15 +326,10 @@ public class MsalOAuth2TokenCache
 
         boolean isCompliant = isSchemaCompliant(account.getClass(), params);
 
-        Logger.exiting(TAG, methodName, isCompliant);
-
         return isCompliant;
     }
 
     private static boolean isAccessTokenSchemaCompliant(@NonNull final AccessToken accessToken) {
-        final String methodName = "isAccessTokenSchemaCompliant";
-        Logger.entering(TAG, methodName, accessToken);
-
         // Required fields...
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.CREDENTIAL_TYPE, accessToken.getCredentialType()},
@@ -386,16 +345,11 @@ public class MsalOAuth2TokenCache
 
         boolean isValid = isSchemaCompliant(accessToken.getClass(), params);
 
-        Logger.exiting(TAG, methodName, isValid);
-
         return isValid;
     }
 
     private static boolean isRefreshTokenSchemaCompliant(
             @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken) {
-        final String methodName = "isRefreshTokenSchemaCompliant";
-        Logger.entering(TAG, methodName, refreshToken);
-
         // Required fields...
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.CREDENTIAL_TYPE, refreshToken.getCredentialType()},
@@ -407,15 +361,10 @@ public class MsalOAuth2TokenCache
 
         boolean isValid = isSchemaCompliant(refreshToken.getClass(), params);
 
-        Logger.exiting(TAG, methodName, isValid);
-
         return isValid;
     }
 
     private static boolean isIdTokenSchemaCompliant(@NonNull final IdToken idToken) {
-        final String methodName = "isIdTokenSchemaCompliant";
-        Logger.entering(TAG, methodName, idToken);
-
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.HOME_ACCOUNT_ID, idToken.getHomeAccountId()},
                 {Credential.SerializedNames.ENVIRONMENT, idToken.getEnvironment()},
@@ -427,16 +376,13 @@ public class MsalOAuth2TokenCache
 
         boolean isValid = isSchemaCompliant(idToken.getClass(), params);
 
-        Logger.exiting(TAG, methodName, isValid);
-
         return isValid;
     }
 
     @Override
     public void setSingleSignOnState(final MicrosoftAccount account,
-                                     final RefreshToken refreshToken) {
+                                     final MicrosoftRefreshToken refreshToken) {
         final String methodName = "setSingleSignOnState";
-        Logger.entering(TAG, methodName, account, refreshToken);
 
         try {
             final Account accountDto = mAccountCredentialAdapter.asAccount(account);
@@ -454,6 +400,7 @@ public class MsalOAuth2TokenCache
             mAccountCredentialCache.saveCredential(idToken);
             mAccountCredentialCache.saveCredential(rt);
         } catch (ClientException e) {
+            // TODO how do I know that it's safe to log this Exception?
             Logger.error(
                     TAG + ":" + methodName,
                     "",
@@ -463,17 +410,13 @@ public class MsalOAuth2TokenCache
                     )
             );
         }
-
-        Logger.exiting(TAG, methodName);
     }
 
     @Override
-    public RefreshToken getSingleSignOnState(final MicrosoftAccount account) {
-        final String methodName = "getSingleSignOnState";
-        Logger.entering(TAG, methodName, account);
-        final RefreshToken result = null;
+    public MicrosoftRefreshToken getSingleSignOnState(final MicrosoftAccount account) {
+        final MicrosoftRefreshToken result = null;
         // TODO
-        Logger.exiting(TAG, methodName, result);
+
         return result;
     }
 

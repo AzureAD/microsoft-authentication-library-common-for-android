@@ -178,7 +178,7 @@ public class Account extends AccountCredentialBase implements IAccount {
     private String mUsername;
 
     /**
-     * Account’s authority type as string (ex: AAD, MSA, MSSTS, Other).
+     * Account’s authority type as string (ex: MSA, MSSTS, Other).
      * Set of account types is extensible.
      */
     @SerializedName(AUTHORITY_TYPE)
@@ -389,9 +389,12 @@ public class Account extends AccountCredentialBase implements IAccount {
         mAvatarUrl = avatarUrl;
     }
 
-
     //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
     @SuppressWarnings("PMD")
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -420,6 +423,9 @@ public class Account extends AccountCredentialBase implements IAccount {
     //CHECKSTYLE:ON
 
     //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
     @Override
     public int hashCode() {
         int result = mHomeAccountId != null ? mHomeAccountId.hashCode() : 0;
