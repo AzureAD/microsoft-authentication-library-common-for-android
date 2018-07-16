@@ -64,7 +64,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR = "error";
     public static final String ERROR_DESCRIPTION = "error_description";
 
-    AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
+    public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                       @NonNull final MicrosoftAuthorizationRequest request,
                                       @NonNull final IChallengeCompletionCallback callback) {
         super(activity, request, callback);
@@ -107,7 +107,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (isPkeyAuthUrl(formattedURL)) {
             Logger.verbose(TAG, "WebView detected request for pkeyauth challenge.");
             try {
-                final PKeyAuthChallenge pKeyAuthChallenge = new PKeyAuthChallenge(formattedURL);
+                final PKeyAuthChallenge pKeyAuthChallenge = new PKeyAuthChallenge(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getRequest(), getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
             } catch (final ClientException exception) {
@@ -119,13 +119,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return true;
         } else if (isRedirectUrl(formattedURL)) {
             Logger.verbose(TAG, "Navigation starts with the redirect uri.");
-            return processRedirectUrl(view, formattedURL);
+            return processRedirectUrl(view, url);
         } else if (isWebsiteRequestUrl(formattedURL)) {
             Logger.verbose(TAG, "It is an external website request");
-            return processWebsiteRequest(view, formattedURL);
+            return processWebsiteRequest(view, url);
         } else if (isInstallRequestUrl(formattedURL)) {
             Logger.verbose(TAG, "It is an install request");
-            return processInstallRequest(view, formattedURL);
+            return processInstallRequest(view, url);
         } else {
             Logger.verbose(TAG, "It is an invalid redirect uri.");
             return processInvalidUrl(view, url);
@@ -167,7 +167,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         } else {
             Logger.verbose(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
             Intent resultIntent = new Intent();
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, url);
+            resultIntent.putExtra(AuthenticationConstants.Browser.AUTHORIZATION_FINAL_URL, url);
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_REQUEST_INFO,
                     getRequest());
             getCompletionCallback().onChallengeResponseReceived(

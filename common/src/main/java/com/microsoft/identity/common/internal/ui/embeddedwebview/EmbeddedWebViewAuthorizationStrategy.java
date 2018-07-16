@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.embeddedwebview;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.view.MotionEvent;
@@ -59,10 +60,12 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
      * @return generic AuthorizationResult
      */
     public GenericAuthorizationResult requestAuthorization(final GenericAuthorizationRequest request) {
+        Logger.verbose(TAG, "Perform the authorization request with embedded webView.");
         loadStartUrl();
-        // TODO : Add state parameter from the AuthorizationRequest to the Intent parameter like below
-        // intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, request.getState());
-        throw new UnsupportedOperationException("Not implemented yet.");
+        // requestAuthorization could not return the authorization result
+        // The activity result is set in AuthenticationActivity.setResult()
+        // And AuthenticationActivity in ADAL/MSAL is not moved into common
+        return null;
     }
 
     /**
@@ -84,7 +87,6 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
      * @param webViewClient AzureActiveDirectoryWebViewClient
      */
     private void createWebView(final GenericWebViewClient webViewClient, final WebView webView) {
-        final Activity activity = webViewClient.getActivity();
         // Create the Web View to show the page
         mWebView = webView;
         WebSettings userAgentSetting = mWebView.getSettings();
