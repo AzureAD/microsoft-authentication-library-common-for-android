@@ -54,6 +54,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     private static final String PLATFORM_VALUE = "MSAL.Android";
     private static final String PROMPT_SELECT_ACCOUNT = "select_account";
     private static final String PROMPT_CONSENT = "consent";
+    private static final long serialVersionUID = 6545759826515911472L;
 
     /**
      * Indicates the type of user interaction that is required. The only valid values at this time are 'login', 'none', and 'consent'.
@@ -99,6 +100,13 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mDisplayableId = displayableId;
         mSliceParameters = sliceParameters;
         mExtraScopesToConsent = extraScopesToConsent;
+    }
+
+    /**
+     * Default constructor of {@link MicrosoftStsAuthorizationRequest}
+     */
+    public MicrosoftStsAuthorizationRequest() {
+        super();
     }
 
     public Set<String> getExtraScopesToConsent() {

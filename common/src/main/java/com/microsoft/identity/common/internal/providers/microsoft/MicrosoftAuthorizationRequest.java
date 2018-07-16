@@ -62,6 +62,7 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
     public static final String LIB_ID_CPU = "x-client-CPU";
     public static final String LIB_ID_OS_VER = "x-client-OS";
     public static final String LIB_ID_DM = "x-client-DM";
+    private static final long serialVersionUID = 6873634931996113294L;
 
     /**
      * Required.
@@ -127,6 +128,13 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
         mPkceChallenge = pkceChallenge;
         mExtraQueryParam = extraQueryParam;
         mLibraryVersion = libraryVersion;
+    }
+
+    /**
+     * Default constructor of {@link MicrosoftAuthorizationRequest}
+     */
+    public MicrosoftAuthorizationRequest() {
+        super();
     }
 
     public URL getAuthority() {
