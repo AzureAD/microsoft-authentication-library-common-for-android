@@ -38,4 +38,6 @@ public interface IChallengeCompletionCallback {
      * @param responseIntent challenge response
      */
     void onChallengeResponseReceived(int returnCode, Intent responseIntent);
+
+    void setPKeyAuthStatus(boolean status);
 }
