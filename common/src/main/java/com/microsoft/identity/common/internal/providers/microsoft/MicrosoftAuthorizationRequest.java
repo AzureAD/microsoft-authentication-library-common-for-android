@@ -110,6 +110,7 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
                                          final String extraQueryParam,
                                          final String libraryVersion) {
         super(responseType, clientId, redirectUri, state, scope);
+        setState(generateState());
 
         if (StringUtil.isEmpty(redirectUri)) {
             throw new IllegalArgumentException("redirect Uri is empty");

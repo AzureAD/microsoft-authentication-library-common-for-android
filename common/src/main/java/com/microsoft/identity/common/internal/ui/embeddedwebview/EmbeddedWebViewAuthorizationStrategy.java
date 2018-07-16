@@ -42,7 +42,11 @@ import java.io.UnsupportedEncodingException;
 /**
  * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
  */
-public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy {
+public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends OAuth2WebViewClient,
+        GenericAuthorizationRequest extends AuthorizationRequest,
+        GenericAuthorizationResult extends AuthorizationResult>
+        extends AuthorizationStrategy<GenericAuthorizationRequest, GenericAuthorizationResult> {
+
     private static final String TAG = StringExtensions.class.getSimpleName();
     private WebView mWebView;
     private String mStartUrl;
@@ -51,9 +55,9 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
      * Perform the authorization request in the embedded web view and return the authorization result.
      *
      * @param request authorization request
-     * @return AuthorizationResult
+     * @return generic AuthorizationResult
      */
-    public AuthorizationResult requestAuthorization(@NonNull final AuthorizationRequest request) {
+    public GenericAuthorizationResult requestAuthorization(final GenericAuthorizationRequest request) {
         loadStartUrl();
         // TODO : Add state parameter from the AuthorizationRequest to the Intent parameter like below
         // intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, request.getState());
@@ -63,21 +67,15 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
      *
-     * @param activity Authentication activity
-     * @param request  Authorization request
-     * @param callback Challenge completion callback to process the authorization result
+     * @param webViewClient Generic WebViewClient
      * @throws UnsupportedEncodingException thrown when the Character Encoding is not supported
      * @throws ClientException throw when error happens during the authorization
      */
-    public EmbeddedWebViewAuthorizationStrategy(@NonNull final Activity activity,
-                                                @NonNull final AuthorizationRequest request,
-                                                @NonNull final IChallengeCompletionCallback callback)
+    public EmbeddedWebViewAuthorizationStrategy(final GenericWebViewClient webViewClient)
             throws UnsupportedEncodingException, ClientException {
-        final OAuth2WebViewClient webViewClient =
-                new OAuth2WebViewClient(activity, request, callback);
         //TODO validate auth request in OAuth2Strategy.
-        createWebView(activity, webViewClient);
-        mStartUrl = request.getAuthorizationStartUrl();
+        createWebView(webViewClient);
+        mStartUrl = webViewClient.getRequest().getAuthorizationStartUrl();
     }
 
     /**
@@ -85,12 +83,14 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
      * @param activity  AuthenticationActivity
      * @param webViewClient AzureActiveDirectoryWebViewClient
      */
-    private void createWebView(final Activity activity, final OAuth2WebViewClient webViewClient) {
+    private void createWebView(final GenericWebViewClient webViewClient) {
+        final Activity activity = webViewClient.getActivity();
         // Create the Web View to show the page
         mWebView = (WebView) activity.findViewById(activity.getResources().getIdentifier("webView1", "id",
                 activity.getPackageName()));
         mWebView.getSettings().setUserAgentString(
                 mWebView.getSettings().getUserAgentString() + AuthenticationConstants.Broker.USER_AGENT_VALUE_PKEY_AUTH);
+        mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.requestFocus(View.FOCUS_DOWN);
 
         // Set focus to the view for touch event

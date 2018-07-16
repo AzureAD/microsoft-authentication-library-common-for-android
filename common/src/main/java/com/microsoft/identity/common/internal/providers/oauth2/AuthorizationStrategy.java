@@ -27,12 +27,13 @@ package com.microsoft.identity.common.internal.providers.oauth2;
  * and/or authentication information (OIDC)
  * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
  */
-public abstract class AuthorizationStrategy {
+public abstract class AuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest,
+                                             GenericAuthorizationResult extends AuthorizationResult> {
     /**
      * Perform the authorization request.
      *
      * @param request authorization request
      * @return AuthorizationResult
      */
-    public abstract AuthorizationResult requestAuthorization(AuthorizationRequest request);
+    public abstract GenericAuthorizationResult requestAuthorization(GenericAuthorizationRequest request);
 }

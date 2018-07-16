@@ -189,4 +189,39 @@ public final class ErrorStrings {
      * Credential is missing schema-required fields.
      */
     public static final String CREDENTIAL_IS_SCHEMA_NONCOMPLIANT = "Credential is missing schema-required fields.";
+
+    /**
+     * Device certificate request is invalid.
+     */
+    public static final String DEVICE_CERTIFICATE_REQUEST_INVALID = "Device certificate request is invalid";
+
+    /**
+     * Certificate encoding is not generated.
+     */
+    public static final String CERTIFICATE_ENCODING_ERROR = "Certificate encoding is not generated";
+
+    /**
+     * Key Chain private key exception.
+     */
+    public static final String KEY_CHAIN_PRIVATE_KEY_EXCEPTION = "Key Chain private key exception";
+
+    /**
+     * Signature exception.
+     */
+    public static final String SIGNATURE_EXCEPTION = "Signature exception";
+
+    /**
+     * Device certificate API has exception.
+     */
+    public static final String DEVICE_CERTIFICATE_API_EXCEPTION = "Device certificate API has exception";
+
+    /**
+     * The redirectUri for broker is invalid.
+     */
+    public static final String DEVELOPER_REDIRECTURI_INVALID = "The redirectUri for broker is invalid";
+
+    /**
+     * WebView  redirect url is not SSL protected.
+     */
+    public static final String WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED = "The webView was redirected to an unsafe URL";
 }
