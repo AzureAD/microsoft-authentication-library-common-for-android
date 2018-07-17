@@ -37,6 +37,7 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +112,6 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
                                          final String extraQueryParam,
                                          final String libraryVersion) {
         super(responseType, clientId, redirectUri, state, scope);
-        setState(generateState());
 
         if (StringUtil.isEmpty(redirectUri)) {
             throw new IllegalArgumentException("redirect Uri is empty");
@@ -210,10 +210,20 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
         }
     }
 
-    protected String generateState() {
+    public String generateEncodedState() throws UnsupportedEncodingException {
         final UUID stateUUID1 = UUID.randomUUID();
         final UUID stateUUID2 = UUID.randomUUID();
-        return stateUUID1.toString() + "-" + stateUUID2.toString();
+        final String state = stateUUID1.toString() + "-" + stateUUID2.toString();
+        return Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE);
+    }
+
+    public String decodeState(final String encodedState) {
+        if (StringUtil.isEmpty(encodedState)) {
+            return null;
+        }
+
+        final byte[] stateBytes = Base64.decode(encodedState, Base64.NO_PADDING | Base64.URL_SAFE);
+        return new String(stateBytes, Charset.defaultCharset());
     }
 
 
