@@ -45,6 +45,11 @@ import java.util.UUID;
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest {
     private static final String TAG = MicrosoftStsAuthorizationRequest.class.getSimpleName();
 
+    /**
+     * Serial version id.
+     */
+    private static final long serialVersionUID = 6545759826515911472L;
+
     /* Constants */
     private static final String CORRELATION_ID = "client-request-id";
     private static final String LOGIN_REQ = "login_req";
@@ -54,7 +59,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     private static final String PLATFORM_VALUE = "MSAL.Android";
     private static final String PROMPT_SELECT_ACCOUNT = "select_account";
     private static final String PROMPT_CONSENT = "consent";
-    private static final long serialVersionUID = 6545759826515911472L;
 
     /**
      * Indicates the type of user interaction that is required. The only valid values at this time are 'login', 'none', and 'consent'.

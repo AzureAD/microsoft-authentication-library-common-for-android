@@ -39,6 +39,9 @@ import java.util.Set;
  * This should provide an extension point for additional parameters to be set
  */
 public abstract class AuthorizationRequest implements Serializable {
+    /**
+     * Serial version id.
+     */
     private static final long serialVersionUID = 6171895895590170062L;
 
     /**

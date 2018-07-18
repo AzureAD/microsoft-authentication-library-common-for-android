@@ -49,6 +49,11 @@ import static com.microsoft.identity.common.adal.internal.util.StringExtensions.
 import static com.microsoft.identity.common.adal.internal.util.StringExtensions.urlFormDecode;
 
 public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest {
+    /**
+     * Serial version id.
+     */
+    private static final long serialVersionUID = 6873634931996113294L;
+
     /* Constants */
     private static final String TAG = MicrosoftAuthorizationRequest.class.getSimpleName();
     public static final String ENCODING_UTF8 = "UTF_8";
@@ -63,7 +68,6 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
     public static final String LIB_ID_CPU = "x-client-CPU";
     public static final String LIB_ID_OS_VER = "x-client-OS";
     public static final String LIB_ID_DM = "x-client-DM";
-    private static final long serialVersionUID = 6873634931996113294L;
 
     /**
      * Required.
@@ -219,6 +223,7 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
 
     public String decodeState(final String encodedState) {
         if (StringUtil.isEmpty(encodedState)) {
+            Logger.warn(TAG, "Decode state failed because the input state is empty.");
             return null;
         }
 

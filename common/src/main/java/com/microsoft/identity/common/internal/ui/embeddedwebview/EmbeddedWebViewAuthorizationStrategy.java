@@ -22,9 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.embeddedwebview;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebSettings;
@@ -59,7 +61,7 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
      * @param request authorization request
      * @return generic AuthorizationResult
      */
-    public GenericAuthorizationResult requestAuthorization(final GenericAuthorizationRequest request) {
+    public GenericAuthorizationResult requestAuthorization(@Nullable final GenericAuthorizationRequest request) {
         Logger.verbose(TAG, "Perform the authorization request with embedded webView.");
         loadStartUrl();
         // requestAuthorization could not return the authorization result
@@ -78,7 +80,7 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
     public EmbeddedWebViewAuthorizationStrategy(final GenericWebViewClient webViewClient, final WebView webView)
             throws UnsupportedEncodingException, ClientException {
         //TODO validate auth request in OAuth2Strategy.
-        createWebView(webViewClient, webView);
+        setUpWebView(webViewClient, webView);
         mStartUrl = webViewClient.getRequest().getAuthorizationStartUrl();
     }
 
@@ -86,7 +88,8 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
      * Set up the web view configurations.
      * @param webViewClient AzureActiveDirectoryWebViewClient
      */
-    private void createWebView(final GenericWebViewClient webViewClient, final WebView webView) {
+    @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
+    private void setUpWebView(final GenericWebViewClient webViewClient, final WebView webView) {
         // Create the Web View to show the page
         mWebView = webView;
         WebSettings userAgentSetting = mWebView.getSettings();
