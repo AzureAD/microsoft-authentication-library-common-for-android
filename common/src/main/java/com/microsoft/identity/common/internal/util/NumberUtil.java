@@ -23,4 +23,20 @@
 package com.microsoft.identity.common.internal.util;
 
 public class NumberUtil {
+
+    static Integer parseIntSafely(String arg) {
+        try {
+            return Integer.valueOf(arg);
+        } catch (NumberFormatException var2) {
+            return null;
+        }
+    }
+
+    static Long parseLongSafely(String arg) {
+        try {
+            return Long.valueOf(arg);
+        } catch (NumberFormatException var2) {
+            return null;
+        }
+    }
 }
