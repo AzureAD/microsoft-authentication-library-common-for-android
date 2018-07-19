@@ -23,13 +23,13 @@
 package com.microsoft.identity.common.adal.internal;
 
 /**
- * {@link AuthenticationConstants} contains all the constant value the SDK is using.
+ * {@link BaseAuthenticationConstants} contains all the constant value the SDK is using.
  */
-public class AuthenticationConstants {
+public class BaseAuthenticationConstants {
     /**
      * protected constructor to prevent an utility class from being initiated and make it still inheritable.
      */
-    protected AuthenticationConstants() {
+    protected BaseAuthenticationConstants() {
     }
 
     /**

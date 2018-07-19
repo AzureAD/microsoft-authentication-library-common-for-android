@@ -26,7 +26,7 @@ import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.BaseAuthenticationConstants;
 import com.microsoft.identity.common.exception.ErrorStrings;
 
 import java.io.UnsupportedEncodingException;
@@ -78,9 +78,9 @@ public final class StringExtensions {
             UnsupportedEncodingException {
         if (!isNullOrBlank(msg)) {
             MessageDigest digester = MessageDigest.getInstance(TOKEN_HASH_ALGORITHM);
-            final byte[] msgInBytes = msg.getBytes(AuthenticationConstants.ENCODING_UTF8);
+            final byte[] msgInBytes = msg.getBytes(BaseAuthenticationConstants.ENCODING_UTF8);
             return new String(Base64.encode(digester.digest(msgInBytes), Base64.NO_WRAP),
-                    AuthenticationConstants.ENCODING_UTF8);
+                    BaseAuthenticationConstants.ENCODING_UTF8);
         }
         return msg;
     }
@@ -120,7 +120,7 @@ public final class StringExtensions {
             throws UnsupportedEncodingException {
         return new String(
                 Base64.encode(bytes, Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE),
-                AuthenticationConstants.ENCODING_UTF8);
+                BaseAuthenticationConstants.ENCODING_UTF8);
     }
 
     /**

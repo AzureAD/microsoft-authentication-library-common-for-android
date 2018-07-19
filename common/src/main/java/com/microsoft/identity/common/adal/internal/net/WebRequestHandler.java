@@ -24,7 +24,7 @@ package com.microsoft.identity.common.adal.internal.net;
 
 import android.os.Build;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.BaseAuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
 import java.io.IOException;
@@ -32,8 +32,8 @@ import java.net.URL;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.MediaType;
+import static com.microsoft.identity.common.adal.internal.BaseAuthenticationConstants.HeaderField;
+import static com.microsoft.identity.common.adal.internal.BaseAuthenticationConstants.MediaType;
 
 /**
  * It uses one time async task. WebRequest are wrapped here to prevent multiple
@@ -77,14 +77,14 @@ public class WebRequestHandler implements IWebRequestHandler {
     private Map<String, String> updateHeaders(final Map<String, String> headers) {
 
         if (mRequestCorrelationId != null) {
-            headers.put(AuthenticationConstants.AAD.CLIENT_REQUEST_ID, mRequestCorrelationId.toString());
+            headers.put(BaseAuthenticationConstants.AAD.CLIENT_REQUEST_ID, mRequestCorrelationId.toString());
         }
 
-        headers.put(AuthenticationConstants.AAD.ADAL_ID_PLATFORM, "Android");
+        headers.put(BaseAuthenticationConstants.AAD.ADAL_ID_PLATFORM, "Android");
         // TODO don't make this dependency circular
-        headers.put(AuthenticationConstants.AAD.ADAL_ID_VERSION, mCurrentClientVersion);
-        headers.put(AuthenticationConstants.AAD.ADAL_ID_OS_VER, "" + Build.VERSION.SDK_INT);
-        headers.put(AuthenticationConstants.AAD.ADAL_ID_DM, android.os.Build.MODEL);
+        headers.put(BaseAuthenticationConstants.AAD.ADAL_ID_VERSION, mCurrentClientVersion);
+        headers.put(BaseAuthenticationConstants.AAD.ADAL_ID_OS_VER, "" + Build.VERSION.SDK_INT);
+        headers.put(BaseAuthenticationConstants.AAD.ADAL_ID_DM, android.os.Build.MODEL);
 
         return headers;
     }

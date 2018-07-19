@@ -30,7 +30,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
 import android.util.Base64;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.BaseAuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -118,7 +118,7 @@ public class BrokerValidator {
             // Check the hash for signer cert is the same as what we hardcoded.
             final String signatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
             if (mCompanyPortalSignature.equals(signatureHash)
-                    || AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_SIGNATURE.equals(signatureHash)) {
+                    || BaseAuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_SIGNATURE.equals(signatureHash)) {
                 return;
             }
         }

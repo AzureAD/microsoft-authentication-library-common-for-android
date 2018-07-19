@@ -30,7 +30,7 @@ import android.security.KeyPairGeneratorSpec;
 import android.util.Base64;
 import android.util.Log;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.BaseAuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -175,8 +175,8 @@ public class StorageHelper implements IStorageHelper {
         mHMACKey = getHMacKey(mKey);
 
         Log.v(TAG, "Encrypt version:" + mBlobVersion);
-        final byte[] blobVersion = mBlobVersion.getBytes(AuthenticationConstants.ENCODING_UTF8);
-        final byte[] bytes = clearText.getBytes(AuthenticationConstants.ENCODING_UTF8);
+        final byte[] blobVersion = mBlobVersion.getBytes(BaseAuthenticationConstants.ENCODING_UTF8);
+        final byte[] bytes = clearText.getBytes(BaseAuthenticationConstants.ENCODING_UTF8);
 
         // IV: Initialization vector that is needed to start CBC
         final byte[] iv = new byte[DATA_KEY_LENGTH];
@@ -211,7 +211,7 @@ public class StorageHelper implements IStorageHelper {
                 + encrypted.length + iv.length, macDigest.length);
 
         final String encryptedText = new String(Base64.encode(blobVerAndEncryptedDataAndIVAndMacDigest,
-                Base64.NO_WRAP), AuthenticationConstants.ENCODING_UTF8);
+                Base64.NO_WRAP), BaseAuthenticationConstants.ENCODING_UTF8);
         Log.v(TAG, "Finished encryption");
 
         return getEncodeVersionLengthPrefix() + ENCODE_VERSION + encryptedText;
@@ -244,7 +244,7 @@ public class StorageHelper implements IStorageHelper {
         // get key version used for this data. If user upgraded to different
         // API level, data needs to be updated
         final String keyVersion = new String(bytes, 0, KEY_VERSION_BLOB_LENGTH,
-                AuthenticationConstants.ENCODING_UTF8);
+                BaseAuthenticationConstants.ENCODING_UTF8);
         Log.v(TAG, "Encrypt version:" + keyVersion);
 
         final SecretKey secretKey = getKey(keyVersion);
@@ -279,7 +279,7 @@ public class StorageHelper implements IStorageHelper {
 
         // Decrypt data bytes from 0 to ivindex
         final String decrypted = new String(cipher.doFinal(bytes, KEY_VERSION_BLOB_LENGTH,
-                encryptedLength), AuthenticationConstants.ENCODING_UTF8);
+                encryptedLength), BaseAuthenticationConstants.ENCODING_UTF8);
         Log.v(TAG, "Finished decryption");
         return decrypted;
     }
