@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.util;
 
 public class NumberUtil {
 
-    static Integer parseIntSafely(String arg) {
+    public static Integer parseIntSafely(String arg) {
         try {
             return Integer.valueOf(arg);
         } catch (NumberFormatException var2) {
@@ -32,7 +32,7 @@ public class NumberUtil {
         }
     }
 
-    static Long parseLongSafely(String arg) {
+    public static Long parseLongSafely(String arg) {
         try {
             return Long.valueOf(arg);
         } catch (NumberFormatException var2) {
