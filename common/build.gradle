@@ -257,6 +257,6 @@ repositories {
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
-        task.dependsOn 'lint', 'javadocJar', 'sourcesJar', 'checkstyle', 'pmd'
+        task.dependsOn 'lint', 'sourcesJar', 'checkstyle', 'pmd'
     }
 }
