@@ -150,6 +150,11 @@ public final class AuthenticationConstants {
          * Waiting for broker package to be installed, and resume request in broker.
          */
         public static final int BROKER_REQUEST_RESUME = 2006;
+
+        /**
+         * Device registration in broker apps.
+         */
+        public static final int BROWSER_CODE_DEVICE_REGISTER = 2007;
     }
 
     /**
