@@ -45,8 +45,13 @@ import java.util.UUID;
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest {
     private static final String TAG = MicrosoftStsAuthorizationRequest.class.getSimpleName();
 
+    /**
+     * Serial version id.
+     */
+    private static final long serialVersionUID = 6545759826515911472L;
+
     /* Constants */
-    private static final String CORRELATION_ID = "correlation_id";
+    private static final String CORRELATION_ID = "client-request-id";
     private static final String LOGIN_REQ = "login_req";
     private static final String DOMAIN_REQ = "domain_req";
     private static final String SCOPE_PROFILE = "profile";
@@ -99,6 +104,13 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mDisplayableId = displayableId;
         mSliceParameters = sliceParameters;
         mExtraScopesToConsent = extraScopesToConsent;
+    }
+
+    /**
+     * Default constructor of {@link MicrosoftStsAuthorizationRequest}
+     */
+    public MicrosoftStsAuthorizationRequest() {
+        super();
     }
 
     public Set<String> getExtraScopesToConsent() {
@@ -269,7 +281,10 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     // Add PKCE Challenge
     private void addPkceChallengeToRequestParameters(@NonNull final Map<String, String> requestParameters) throws ClientException {
         // Create our Challenge
-        setPkceChallenge(PkceChallenge.newPkceChallenge());
+        if (getPkceChallenge() == null) {
+            Logger.verbose(TAG, "PKCE challenge is null. Set the PKCE challenge.");
+            setPkceChallenge(PkceChallenge.newPkceChallenge());
+        }
 
         // Add it to our Authorization request
         requestParameters.put(CODE_CHALLENGE, getPkceChallenge().getCodeChallenge());

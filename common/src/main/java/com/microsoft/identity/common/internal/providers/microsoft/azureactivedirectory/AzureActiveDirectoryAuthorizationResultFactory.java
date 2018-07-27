@@ -70,7 +70,7 @@ public class AzureActiveDirectoryAuthorizationResultFactory extends Authorizatio
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE:
-                final String url = extras.getString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, "");
+                final String url = extras.getString(AuthenticationConstants.Browser.AUTHORIZATION_FINAL_URL, "");
                 result = parseUrlAndCreateAuthorizationResult(url, data.getStringExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER));
                 break;
 

@@ -39,7 +39,10 @@ import java.util.Set;
  * This should provide an extension point for additional parameters to be set
  */
 public abstract class AuthorizationRequest implements Serializable {
-    private static final long serialVersionUID = 1L;
+    /**
+     * Serial version id.
+     */
+    private static final long serialVersionUID = 6171895895590170062L;
 
     /**
      * A required value and must be set to "code".
@@ -94,6 +97,12 @@ public abstract class AuthorizationRequest implements Serializable {
         mRedirectUri = redirectUri;
         mState = state;
         mScope = scope;
+    }
+
+    /**
+     * Default constructor of AuthorizationRequest.
+     */
+    public AuthorizationRequest() {
     }
 
     /**

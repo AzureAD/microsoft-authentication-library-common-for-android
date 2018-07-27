@@ -189,7 +189,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
     public void testUrlWithEmptyParams() {
         Intent intent = new Intent();
         Bundle bundle = new Bundle();
-        bundle.putString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, REDIRECT_URI);
+        bundle.putString(AuthenticationConstants.Browser.AUTHORIZATION_FINAL_URL, REDIRECT_URI);
         intent.putExtras(bundle);
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
@@ -206,7 +206,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
     public void testUrlWithInvalidParams() {
         Intent intent = new Intent();
         Bundle bundle = new Bundle();
-        bundle.putString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, REDIRECT_URI + "?some_random_error=accessdenied");
+        bundle.putString(AuthenticationConstants.Browser.AUTHORIZATION_FINAL_URL, REDIRECT_URI + "?some_random_error=accessdenied");
         intent.putExtras(bundle);
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
@@ -225,7 +225,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         Bundle bundle = new Bundle();
         String responseUrl = REDIRECT_URI + "?" + AUTH_CODE_AND_STATE + "&"
                 + AuthenticationConstants.AAD.CORRELATION_ID + "=" + CORRELATION_ID;
-        bundle.putString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, responseUrl);
+        bundle.putString(AuthenticationConstants.Browser.AUTHORIZATION_FINAL_URL, responseUrl);
         bundle.putString(AuthenticationConstants.AAD.CORRELATION_ID, CORRELATION_ID);
         intent.putExtras(bundle);
         intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, STATE);
@@ -246,7 +246,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         Bundle bundle = new Bundle();
         String responseUrl = REDIRECT_URI + "?" + AUTH_CODE_AND_STATE + "&"
                 + AuthenticationConstants.AAD.CORRELATION_ID + "=" + CORRELATION_ID;
-        bundle.putString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, responseUrl);
+        bundle.putString(AuthenticationConstants.Browser.AUTHORIZATION_FINAL_URL, responseUrl);
         bundle.putString(AuthenticationConstants.AAD.CORRELATION_ID, CORRELATION_ID);
         intent.putExtras(bundle);
         intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, STATE);
@@ -267,7 +267,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         Bundle bundle = new Bundle();
         String responseUrl = REDIRECT_URI + "?error=" + ERROR_MESSAGE + "&error_description="
                 + ERROR_DESCRIPTION + "&error_codes=" + ERROR_CODES;
-        bundle.putString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, responseUrl);
+        bundle.putString(AuthenticationConstants.Browser.AUTHORIZATION_FINAL_URL, responseUrl);
         intent.putExtras(bundle);
         AzureActiveDirectoryAuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);

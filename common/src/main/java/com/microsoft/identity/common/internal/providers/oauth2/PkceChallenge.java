@@ -27,6 +27,7 @@ import android.util.Base64;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -49,12 +50,13 @@ import java.security.SecureRandom;
  * @see <a href="https://tools.ietf.org/html/rfc7636#page-17">RFC-7636</a>
  */
 
-public class PkceChallenge {
+public class PkceChallenge implements Serializable {
     private static final int CODE_VERIFIER_BYTE_SIZE = 32;
     private static final int ENCODE_MASK = Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP;
     private static final String DIGEST_ALGORITHM = "SHA-256";
     private static final String ISO_8859_1 = "ISO_8859_1";
     private static final String CHALLENGE_SHA256 = "S256";
+    private static final long serialVersionUID = 8549806628675994235L;
 
     /**
      * A cryptographically random string that is used to correlate the

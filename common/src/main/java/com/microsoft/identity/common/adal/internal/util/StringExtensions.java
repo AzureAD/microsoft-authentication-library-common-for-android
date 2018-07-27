@@ -268,7 +268,7 @@ public final class StringExtensions {
 
         Uri.Builder builtUri = Uri.parse(url).buildUpon();
         for (Map.Entry<String, String> entry : requestParams.entrySet()) {
-            builtUri.appendQueryParameter(entry.getKey(), urlFormEncode(entry.getValue()));
+            builtUri.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 
         return builtUri.build().toString();

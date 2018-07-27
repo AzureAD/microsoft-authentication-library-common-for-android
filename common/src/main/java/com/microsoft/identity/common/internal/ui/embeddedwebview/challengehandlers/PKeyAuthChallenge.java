@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -12,11 +13,15 @@ import java.util.Map;
 
 import static com.microsoft.identity.common.exception.ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID;
 
-public class PKeyAuthChallenge {
+public class PKeyAuthChallenge implements Serializable {
     /**
      * Certificate authorities are passed with delimiter.
      */
     private static final String CHALLENGE_REQUEST_CERT_AUTH_DELIMITER = ";";
+    /**
+     * Serial version id.
+     */
+    private static final long serialVersionUID = 1035116074451575588L;
 
     private String mNonce = "";
 

@@ -22,10 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.embeddedwebview;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.MotionEvent;
 import android.view.View;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -57,11 +61,13 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
      * @param request authorization request
      * @return generic AuthorizationResult
      */
-    public GenericAuthorizationResult requestAuthorization(final GenericAuthorizationRequest request) {
+    public GenericAuthorizationResult requestAuthorization(@Nullable final GenericAuthorizationRequest request) {
+        Logger.verbose(TAG, "Perform the authorization request with embedded webView.");
         loadStartUrl();
-        // TODO : Add state parameter from the AuthorizationRequest to the Intent parameter like below
-        // intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, request.getState());
-        throw new UnsupportedOperationException("Not implemented yet.");
+        // requestAuthorization could not return the authorization result
+        // The activity result is set in AuthenticationActivity.setResult()
+        // And AuthenticationActivity in ADAL/MSAL is not moved into common
+        return null;
     }
 
     /**
@@ -71,25 +77,25 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
      * @throws UnsupportedEncodingException thrown when the Character Encoding is not supported
      * @throws ClientException throw when error happens during the authorization
      */
-    public EmbeddedWebViewAuthorizationStrategy(final GenericWebViewClient webViewClient)
+    public EmbeddedWebViewAuthorizationStrategy(final GenericWebViewClient webViewClient, final WebView webView)
             throws UnsupportedEncodingException, ClientException {
         //TODO validate auth request in OAuth2Strategy.
-        createWebView(webViewClient);
+        setUpWebView(webViewClient, webView);
         mStartUrl = webViewClient.getRequest().getAuthorizationStartUrl();
     }
 
     /**
      * Set up the web view configurations.
-     * @param activity  AuthenticationActivity
      * @param webViewClient AzureActiveDirectoryWebViewClient
      */
-    private void createWebView(final GenericWebViewClient webViewClient) {
-        final Activity activity = webViewClient.getActivity();
+    @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
+    private void setUpWebView(final GenericWebViewClient webViewClient, final WebView webView) {
         // Create the Web View to show the page
-        mWebView = (WebView) activity.findViewById(activity.getResources().getIdentifier("webView1", "id",
-                activity.getPackageName()));
+        mWebView = webView;
+        WebSettings userAgentSetting = mWebView.getSettings();
+        final String userAgent = userAgentSetting.getUserAgentString();
         mWebView.getSettings().setUserAgentString(
-                mWebView.getSettings().getUserAgentString() + AuthenticationConstants.Broker.USER_AGENT_VALUE_PKEY_AUTH);
+                userAgent + AuthenticationConstants.Broker.USER_AGENT_VALUE_PKEY_AUTH);
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.requestFocus(View.FOCUS_DOWN);
 
