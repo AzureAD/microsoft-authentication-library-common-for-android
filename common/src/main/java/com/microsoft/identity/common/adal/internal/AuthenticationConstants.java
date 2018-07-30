@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
+import com.microsoft.identity.common.BuildConfig;
+
 /**
  * {@link AuthenticationConstants} contains all the constant value the SDK is using.
  */
@@ -148,6 +150,11 @@ public final class AuthenticationConstants {
          * Waiting for broker package to be installed, and resume request in broker.
          */
         public static final int BROKER_REQUEST_RESUME = 2006;
+
+        /**
+         * Device registration in broker apps.
+         */
+        public static final int BROWSER_CODE_DEVICE_REGISTER = 2007;
     }
 
     /**
@@ -820,7 +827,7 @@ public final class AuthenticationConstants {
          * Signature info for Azure authenticator app that installs authenticator
          * component.
          */
-        public static final String AZURE_AUTHENTICATOR_APP_SIGNATURE = "ho040S3ffZkmxqtQrSwpTVOn9r0=";
+        public static final String AZURE_AUTHENTICATOR_APP_SIGNATURE = BuildConfig.AZURE_AUTHENTICATOR_APP_SIGNATURE;
 
         /**
          * Azure Authenticator app signature hash.
