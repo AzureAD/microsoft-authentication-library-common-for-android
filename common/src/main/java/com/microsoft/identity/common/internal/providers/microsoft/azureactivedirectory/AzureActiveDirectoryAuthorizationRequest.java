@@ -193,4 +193,10 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
 
         return requestParameters;
     }
+
+    @Override
+    public String getAuthorizationEndpoint() {
+        return null;
+    }
+
 }

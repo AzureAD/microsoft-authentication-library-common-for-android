@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.ui.embeddedwebview;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.MotionEvent;
@@ -38,10 +39,12 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFuture;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeCompletionCallback;
 
 import java.io.UnsupportedEncodingException;
+import java.util.concurrent.Future;
 
 /**
  * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
@@ -54,21 +57,7 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
     private static final String TAG = StringExtensions.class.getSimpleName();
     private WebView mWebView;
     private String mStartUrl;
-
-    /**
-     * Perform the authorization request in the embedded web view and return the authorization result.
-     *
-     * @param request authorization request
-     * @return generic AuthorizationResult
-     */
-    public GenericAuthorizationResult requestAuthorization(@Nullable final GenericAuthorizationRequest request) {
-        Logger.verbose(TAG, "Perform the authorization request with embedded webView.");
-        loadStartUrl();
-        // requestAuthorization could not return the authorization result
-        // The activity result is set in AuthenticationActivity.setResult()
-        // And AuthenticationActivity in ADAL/MSAL is not moved into common
-        return null;
-    }
+    private AuthorizationResultFuture mFuture;
 
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
@@ -133,5 +122,20 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
                 mWebView.loadUrl(mStartUrl);
             }
         });
+    }
+
+    @Override
+    public Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request) throws UnsupportedEncodingException {
+
+
+        Logger.verbose(TAG, "Perform the authorization request with embedded webView.");
+        loadStartUrl();
+        mFuture = new AuthorizationResultFuture();
+        return mFuture;
+    }
+
+    @Override
+    public void completeAuthorization(int requestCode, int resultCode, Intent data) {
+
     }
 }

@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.content.Intent;
+
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.Future;
+
 /**
  * Abstracts the behavior associated with gathering a user authorization for an access token (oAuth)
  * and/or authentication information (OIDC)
@@ -35,5 +40,8 @@ public abstract class AuthorizationStrategy <GenericAuthorizationRequest extends
      * @param request authorization request
      * @return AuthorizationResult
      */
-    public abstract GenericAuthorizationResult requestAuthorization(GenericAuthorizationRequest request);
+    public abstract Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request) throws UnsupportedEncodingException;
+
+    public abstract void completeAuthorization(int requestCode, int resultCode, final Intent data);
+
 }

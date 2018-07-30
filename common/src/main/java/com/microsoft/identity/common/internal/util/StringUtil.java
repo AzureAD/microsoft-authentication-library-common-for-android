@@ -22,8 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
+import java.util.List;
 import java.util.Iterator;
 import java.util.Set;
+
+
 
 /**
  * String utilities.
@@ -66,5 +69,16 @@ public final class StringUtil {
         }
 
         return stringBuilder.toString();
+    }
+
+    public static String join(char delimiter, List<String> toJoin){
+        StringBuilder builder = new StringBuilder();
+
+        for (String s : toJoin){
+            builder.append(s);
+            builder.append(delimiter);
+        }
+
+        return builder.toString();
     }
 }

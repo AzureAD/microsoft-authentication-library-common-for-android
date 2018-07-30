@@ -59,4 +59,10 @@ public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthor
         super(responseType, clientId, redirectUri, state, scope, authority, authorizationEndpoint,
                 loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);
     }
+
+    @Override
+    public String getAuthorizationEndpoint() {
+        return null;
+
+    }
 }

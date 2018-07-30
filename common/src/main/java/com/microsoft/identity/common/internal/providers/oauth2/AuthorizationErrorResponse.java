@@ -50,6 +50,7 @@ public class AuthorizationErrorResponse {
         return mError;
     }
 
+
     /**
      * Setter method for error.
      *
@@ -67,6 +68,7 @@ public class AuthorizationErrorResponse {
     public String getErrorDescription() {
         return mErrorDescription;
     }
+
 
     /**
      * Setter method for error description.

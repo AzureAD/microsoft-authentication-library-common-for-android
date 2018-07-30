@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
+
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
@@ -293,5 +294,12 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         // If excluded, code_challenge is assumed to be plaintext if code_challenge is included.
         // Azure AAD v2.0 supports both plain and S256.
         requestParameters.put(CODE_CHALLENGE_METHOD, getPkceChallenge().getCodeChallengeMethod());
+
+    }
+
+    @Override
+    public String getAuthorizationEndpoint(){
+        //TODO: Need to take authority aliasing via instance discovery into account here
+        return "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
     }
 }

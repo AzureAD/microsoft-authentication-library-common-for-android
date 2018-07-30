@@ -62,4 +62,10 @@ public class ActiveDirectoryFederationServicesAuthorizationRequest extends Micro
     public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
         throw new UnsupportedEncodingException("Not implemented.");
     }
+
+    @Override
+    public String getAuthorizationEndpoint() {
+        return null;
+    }
 }
+

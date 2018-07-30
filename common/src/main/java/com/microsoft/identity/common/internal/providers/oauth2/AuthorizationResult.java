@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+
 /**
  * A class to return the result of the authorization request to the calling code (ADAL or MSAL Controller classes)
  * This class should have a generic status in terms of : Cancelled, TimedOut, Error,  etc...
@@ -70,4 +71,6 @@ public abstract class AuthorizationResult<
     }
 
 
+
 }
+
