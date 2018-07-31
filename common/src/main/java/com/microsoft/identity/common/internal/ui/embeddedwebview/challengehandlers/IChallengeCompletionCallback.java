@@ -20,20 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers;
+
+import android.content.Intent;
 
 /**
- * Abstracts the behavior associated with gathering a user authorization for an access token (oAuth)
- * and/or authentication information (OIDC)
- * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
+ * This is the callback interface to send the authorization challenge response
+ * back to the activity which will implement this interface.
+ * <p>
+ * TODO AuthenticationActivity should implement the onChallengeResponseReceived method and call Activity.setResult() and Activity.finish() to return the UI response to the caller.
  */
-public abstract class AuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest,
-                                             GenericAuthorizationResult extends AuthorizationResult> {
+public interface IChallengeCompletionCallback {
     /**
-     * Perform the authorization request.
+     * Send the authorization challenge response back to the activity.
      *
-     * @param request authorization request
-     * @return AuthorizationResult
+     * @param returnCode     UI response code
+     * @param responseIntent challenge response
      */
-    public abstract GenericAuthorizationResult requestAuthorization(GenericAuthorizationRequest request);
+    void onChallengeResponseReceived(int returnCode, Intent responseIntent);
+
+    void setPKeyAuthStatus(boolean status);
 }

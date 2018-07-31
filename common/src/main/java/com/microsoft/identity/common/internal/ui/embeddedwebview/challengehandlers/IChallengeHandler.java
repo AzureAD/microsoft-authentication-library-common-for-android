@@ -20,20 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers;
 
 /**
- * Abstracts the behavior associated with gathering a user authorization for an access token (oAuth)
- * and/or authentication information (OIDC)
- * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
+ * Abstract Factory class which can be extended to process difference type of challenges.
  */
-public abstract class AuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest,
-                                             GenericAuthorizationResult extends AuthorizationResult> {
+
+public interface IChallengeHandler<GenericChallenge, GenericResponse> {
     /**
-     * Perform the authorization request.
-     *
-     * @param request authorization request
-     * @return AuthorizationResult
+     * Process difference kinds of challenge request.
+     * @param genericChallenge challenge request
+     * @return GenericResponse
      */
-    public abstract GenericAuthorizationResult requestAuthorization(GenericAuthorizationRequest request);
+    GenericResponse processChallenge(GenericChallenge genericChallenge);
 }

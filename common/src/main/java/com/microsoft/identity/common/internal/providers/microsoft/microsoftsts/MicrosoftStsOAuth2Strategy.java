@@ -56,7 +56,6 @@ public class MicrosoftStsOAuth2Strategy
                 TokenRequest,
                 MicrosoftStsTokenResponse,
                 TokenResult> {
-
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
      *

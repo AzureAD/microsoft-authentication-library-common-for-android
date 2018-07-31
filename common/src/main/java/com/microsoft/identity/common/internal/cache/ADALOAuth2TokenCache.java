@@ -44,6 +44,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -134,7 +135,7 @@ public class ADALOAuth2TokenCache
         Logger.info(TAG + ":" + methodName, "Setting items to cache for user...");
         for (final String cacheIdentifier : account.getCacheIdentifiers()) {
             //Azure AD Uses Resource and Not Scope... but we didn't override... heads up
-            final String scope = request.getScope();
+            final String scope = StringUtil.convertSetToString(request.getScope(), " ");
             final String clientId = request.getClientId();
 
             Logger.infoPII(TAG + ":" + methodName, "issuerCacheIdentifier: [" + issuerCacheIdentifier + "]");
@@ -148,7 +149,7 @@ public class ADALOAuth2TokenCache
         //For legacy reasons creating a cache entry where the userid is null
         //ADAL supported a single user mode where it was not necessary for the developer to provide the user id
         //on calls to acquireTokenSilentAsync
-        setItemToCacheForUser(issuerCacheIdentifier, request.getScope(), request.getClientId(), cacheItem, null);
+        setItemToCacheForUser(issuerCacheIdentifier, StringUtil.convertSetToString(request.getScope(), " "), request.getClientId(), cacheItem, null);
 
         // TODO At some point, the type-safety of this call needs to get beefed-up
         Logger.info(TAG + ":" + methodName, "Syncing SSO state to caches...");

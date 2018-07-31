@@ -23,17 +23,27 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 /**
- * Abstracts the behavior associated with gathering a user authorization for an access token (oAuth)
- * and/or authentication information (OIDC)
- * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
+ * Enum for representing different authorization status values.
  */
-public abstract class AuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest,
-                                             GenericAuthorizationResult extends AuthorizationResult> {
+public enum AuthorizationStatus {
     /**
-     * Perform the authorization request.
-     *
-     * @param request authorization request
-     * @return AuthorizationResult
+     * Code is successfully returned.
      */
-    public abstract GenericAuthorizationResult requestAuthorization(GenericAuthorizationRequest request);
+    SUCCESS,
+
+    /**
+     * User press device back button.
+     */
+    USER_CANCEL,
+
+    /**
+     * Returned URI contains error.
+     */
+    FAIL,
+
+    /**
+     * AuthenticationActivity detects the invalid request.
+     */
+    INVALID_REQUEST
+    //TODO:  Investigate how chrome tab returns http timeout error
 }

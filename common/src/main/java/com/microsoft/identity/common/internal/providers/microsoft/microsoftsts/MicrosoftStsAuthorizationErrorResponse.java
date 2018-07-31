@@ -20,20 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
+
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 
 /**
- * Abstracts the behavior associated with gathering a user authorization for an access token (oAuth)
- * and/or authentication information (OIDC)
- * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
+ * Sub class of {@link MicrosoftAuthorizationErrorResponse}.
+ * Encapsulates Microsoft STS specific Authorization Result errors in addition to Microsoft error parameters.
  */
-public abstract class AuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest,
-                                             GenericAuthorizationResult extends AuthorizationResult> {
+public class MicrosoftStsAuthorizationErrorResponse extends MicrosoftAuthorizationErrorResponse {
+
     /**
-     * Perform the authorization request.
+     * Constructor of {@link MicrosoftStsAuthorizationErrorResponse}.
      *
-     * @param request authorization request
-     * @return AuthorizationResult
+     * @param error            Error string returned from the Authorization Server.
+     * @param errorDescription Description string of the error.
      */
-    public abstract GenericAuthorizationResult requestAuthorization(GenericAuthorizationRequest request);
+    public MicrosoftStsAuthorizationErrorResponse(final String error, final String errorDescription) {
+        super(error, errorDescription);
+    }
+
 }

@@ -22,18 +22,29 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.content.Intent;
+
 /**
- * Abstracts the behavior associated with gathering a user authorization for an access token (oAuth)
- * and/or authentication information (OIDC)
- * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
+ * Abstract Factory class which can be extended to construct provider specific {@link AuthorizationResult}.
  */
-public abstract class AuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest,
-                                             GenericAuthorizationResult extends AuthorizationResult> {
+
+public abstract class AuthorizationResultFactory<GenericAuthorizationResult extends AuthorizationResult> {
+
+    /* Authorization Response Constants */
+    protected static final String CODE = "code";
+    protected static final String STATE = "state";
+    protected static final String ERROR = "error";
+    protected static final String ERROR_CODE = "error_code";
+    protected static final String ERROR_DESCRIPTION = "error_description";
+
     /**
-     * Perform the authorization request.
+     * Factory method which can implemented to construct provider specific {@link AuthorizationResult}.
      *
-     * @param request authorization request
-     * @return AuthorizationResult
+     * @param resultCode Result code from the calling Activity.
+     * @param data       Intent data from the calling Activity.
+     * @return {@link AuthorizationResult}
      */
-    public abstract GenericAuthorizationResult requestAuthorization(GenericAuthorizationRequest request);
+    public abstract GenericAuthorizationResult createAuthorizationResult(final int resultCode, final Intent data);
+
+
 }

@@ -23,11 +23,13 @@
 package com.microsoft.identity.common.adal.internal.util;
 
 import android.net.Uri;
+import android.net.UrlQuerySanitizer;
 import android.util.Base64;
 import android.util.Log;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -39,12 +41,15 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 public final class StringExtensions {
     /**
-     * The Constant ENCODING_UTF8.
+     * The constant ENCODING_UTF8.
      */
     public static final String ENCODING_UTF8 = "UTF_8";
 
@@ -78,9 +83,9 @@ public final class StringExtensions {
             UnsupportedEncodingException {
         if (!isNullOrBlank(msg)) {
             MessageDigest digester = MessageDigest.getInstance(TOKEN_HASH_ALGORITHM);
-            final byte[] msgInBytes = msg.getBytes(AuthenticationConstants.ENCODING_UTF8);
+            final byte[] msgInBytes = msg.getBytes(ENCODING_UTF8);
             return new String(Base64.encode(digester.digest(msgInBytes), Base64.NO_WRAP),
-                    AuthenticationConstants.ENCODING_UTF8);
+                    ENCODING_UTF8);
         }
         return msg;
     }
@@ -120,7 +125,7 @@ public final class StringExtensions {
             throws UnsupportedEncodingException {
         return new String(
                 Base64.encode(bytes, Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE),
-                AuthenticationConstants.ENCODING_UTF8);
+                ENCODING_UTF8);
     }
 
     /**
@@ -246,5 +251,26 @@ public final class StringExtensions {
      */
     public static String base64UrlEncodeToString(final String message) {
         return Base64.encodeToString(message.getBytes(Charset.forName(ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
+    }
+
+    /**
+     * Append parameter to the url. If the no query parameters, return the url originally passed in.
+     */
+    public static String appendQueryParameterToUrl(final String url, final Map<String, String> requestParams)
+            throws UnsupportedEncodingException {
+        if (isNullOrBlank(url)) {
+            throw new IllegalArgumentException("Empty authority endpoint parameter.");
+        }
+
+        if (requestParams.isEmpty()) {
+            return url;
+        }
+
+        Uri.Builder builtUri = Uri.parse(url).buildUpon();
+        for (Map.Entry<String, String> entry : requestParams.entrySet()) {
+            builtUri.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
+
+        return builtUri.build().toString();
     }
 }
