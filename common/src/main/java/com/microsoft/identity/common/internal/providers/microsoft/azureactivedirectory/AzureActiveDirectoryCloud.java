@@ -32,7 +32,7 @@ import java.util.List;
  * as a service is available in multiple clouds.  World wide is the default; however their are sovereign clouds
  * available for Germany, China, etc....
  */
-public class git commAzureActiveDirectoryCloud {
+public class AzureActiveDirectoryCloud {
 
     @SerializedName("preferred_network")
     private final String mPreferredNetworkHostName;
