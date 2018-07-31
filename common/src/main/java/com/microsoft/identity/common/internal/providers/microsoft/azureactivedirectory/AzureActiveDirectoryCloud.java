@@ -45,7 +45,7 @@ public class AzureActiveDirectoryCloud {
 
     private boolean mIsValidated;
 
-    AzureActiveDirectoryCloud(boolean isValidated) {
+    public AzureActiveDirectoryCloud(boolean isValidated) {
         mIsValidated = isValidated;
 
         mPreferredNetworkHostName = null;
