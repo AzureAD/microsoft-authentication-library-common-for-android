@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import android.support.annotation.VisibleForTesting;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -76,7 +74,6 @@ public class AzureActiveDirectory
      * @param host  String
      * @param cloud AzureActiveDirectoryCloud
      */
-    @VisibleForTesting
     public static void putCloud(final String host, final AzureActiveDirectoryCloud cloud) {
         sAadClouds.put(host.toLowerCase(Locale.US), cloud);
     }
