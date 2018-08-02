@@ -237,8 +237,8 @@ afterEvaluate {
                 name "vsts-maven-adal-android"
                 url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
                 credentials {
-                    username System.getenv("ENV_VSTS_MVN_ANDROIDADAL_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDADAL_USERNAME") : project.findProperty("vstsUsername")
-                    password System.getenv("ENV_VSTS_MVN_ANDROIDADAL_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDADAL_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+                    username System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
+                    password System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
                 }
             }
         }
@@ -251,8 +251,8 @@ repositories {
         name "vsts-maven-adal-android"
         url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
         credentials {
-            username System.getenv("ENV_VSTS_MVN_ANDROIDADAL_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDADAL_USERNAME") : project.findProperty("vstsUsername")
-            password System.getenv("ENV_VSTS_MVN_ANDROIDADAL_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDADAL_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+            username System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
+            password System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
         }
     }
 }
