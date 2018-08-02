@@ -16,8 +16,8 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 27
-        versionCode 1
-        versionName "0.0.1"
+        versionCode getAppVersionCode()
+        versionName getAppVersionName()
         project.archivesBaseName = "common"
         project.version = android.defaultConfig.versionName
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
