@@ -67,37 +67,37 @@ public final class AuthenticationConstants {
         /**
          * Represents the request object used to construct request sent to authorize endpoint.
          */
-        public static final String REQUEST_MESSAGE = "com.microsoft.identity.browser.request.message";
+        public static final String REQUEST_MESSAGE = "com.microsoft.aad.adal:BrowserRequestMessage";
 
         /**
          * Represents the request object returned from webview.
          */
-        public static final String RESPONSE_REQUEST_INFO = "com.microsoft.identity.browser.request.info";
+        public static final String RESPONSE_REQUEST_INFO = "com.microsoft.aad.adal:BrowserRequestInfo";
 
         /**
          * Represents the error code returned from webview.
          */
-        public static final String RESPONSE_ERROR_CODE = "com.microsoft.identity.browser.error.code";
+        public static final String RESPONSE_ERROR_CODE = "com.microsoft.aad.adal:BrowserErrorCode";
 
         /**
          * Represents the error message returned from webview.
          */
-        public static final String RESPONSE_ERROR_MESSAGE = "com.microsoft.identity.browser.error.message";
+        public static final String RESPONSE_ERROR_MESSAGE = "com.microsoft.aad.adal:BrowserErrorMessage";
 
         /**
          * Represents the exception returned from webview.
          */
-        public static final String RESPONSE_AUTHENTICATION_EXCEPTION = "com.microsoft.identity.authorization.exception";
+        public static final String RESPONSE_AUTHENTICATION_EXCEPTION = "com.microsoft.aad.adal:AuthenticationException";
 
         /**
          * Represents the final url that webview receives.
          */
-        public static final String AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
+        public static final String RESPONSE_FINAL_URL = "com.microsoft.aad.adal:BrowserFinalUrl";
 
         /**
          * Represents the response returned from broker.
          */
-        public static final String RESPONSE = "com.microsoft.identity.broker.response";
+        public static final String RESPONSE = "com.microsoft.aad.adal:BrokerResponse";
 
         /**
          * Represent the error code of invalid request returned from webview.
@@ -107,12 +107,12 @@ public final class AuthenticationConstants {
         /**
          * Used by LocalBroadcastReceivers to filter the intent string of request cancellation.
          */
-        public static final String ACTION_CANCEL = "com.microsoft.identity.browser.cancel";
+        public static final String ACTION_CANCEL = "com.microsoft.aad.adal:BrowserCancel";
 
         /**
          * Used as the key to send back request id.
          */
-        public static final String REQUEST_ID = "com.microsoft.identity.request.id";
+        public static final String REQUEST_ID = "com.microsoft.aad.adal:RequestId";
     }
 
     /**
@@ -779,7 +779,7 @@ public final class AuthenticationConstants {
         /**
          * String for pkeyauth sent in user agent string.
          */
-        public static final String USER_AGENT_VALUE_PKEY_AUTH = " PKeyAuth/1.0";
+        public static final String CLIENT_TLS_NOT_SUPPORTED = " PKeyAuth/1.0";
 
         /**
          * String of challenge request header.
@@ -940,7 +940,7 @@ public final class AuthenticationConstants {
     public static final class OAuth2ErrorCode {
         /**
          * Oauth2 error code invalid_grant.
-         */       
+         */
         public static final String INVALID_GRANT = "invalid_grant";
 
         /**
