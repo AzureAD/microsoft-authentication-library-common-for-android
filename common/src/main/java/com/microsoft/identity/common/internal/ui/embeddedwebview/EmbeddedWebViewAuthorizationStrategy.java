@@ -23,9 +23,6 @@
 package com.microsoft.identity.common.internal.ui.embeddedwebview;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.MotionEvent;
 import android.view.View;
@@ -39,7 +36,6 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeCompletionCallback;
 
 import java.io.UnsupportedEncodingException;
 
@@ -95,7 +91,7 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
         WebSettings userAgentSetting = mWebView.getSettings();
         final String userAgent = userAgentSetting.getUserAgentString();
         mWebView.getSettings().setUserAgentString(
-                userAgent + AuthenticationConstants.Broker.USER_AGENT_VALUE_PKEY_AUTH);
+                userAgent + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.requestFocus(View.FOCUS_DOWN);
 
