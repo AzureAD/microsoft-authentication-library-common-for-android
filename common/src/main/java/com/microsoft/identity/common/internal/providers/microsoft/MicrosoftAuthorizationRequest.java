@@ -117,9 +117,11 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
                                          final String libraryVersion) {
         super(responseType, clientId, redirectUri, state, scope);
 
+        //TODO : Refactor to move the validation logic of all NonNull values before the request is constructed.
+/*      Commenting out redirect URI validation to resolve IllegalArgumentException for ADAL acquireTokenSync calls with empty redirect url
         if (StringUtil.isEmpty(redirectUri)) {
             throw new IllegalArgumentException("redirect Uri is empty");
-        }
+        }*/
 
         if (StringUtil.isEmpty(authorizationEndpoint)) {
             throw new IllegalArgumentException("Authorization endpoint is empty");
