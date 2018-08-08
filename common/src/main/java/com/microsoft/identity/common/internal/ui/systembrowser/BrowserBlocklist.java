@@ -22,16 +22,39 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.systembrowser;
 
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import android.support.annotation.NonNull;
 
-public class SystemBrowserAuthorizationStrategy extends AuthorizationStrategy {
-    // 1. Initial
-    // 2. Select the browser
-    // 3.a. If custom tab enabled, use bind custom tab session
-    // 3.b. If custom tab disabled, launch the url with browser
-    public AuthorizationResult requestAuthorization(AuthorizationRequest request) {
-        return null;
+import com.microsoft.identity.common.internal.logging.Logger;
+
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * A blocked list of browsers. This will reject a match for any browser on the list, and permit
+ * all others.
+ */
+public class BrowserBlocklist {
+    private static final String TAG = BrowserBlocklist.class.getSimpleName();
+    private List<Browser> mBrowsers;
+
+    /**
+     * Create a block list from given set of browsers.
+     */
+    public BrowserBlocklist(Browser... browsers) {
+        mBrowsers = Arrays.asList(browsers);
+    }
+
+    /**
+     * @return true if the browser is in the block list.
+     */
+    public boolean matches(@NonNull Browser targetBrowser) {
+        for (Browser browser : mBrowsers) {
+            if (browser.equals(targetBrowser)) {
+                Logger.verbose(TAG, "The target browser is in the block list.");
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -22,16 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.systembrowser;
 
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import java.util.List;
 
-public class SystemBrowserAuthorizationStrategy extends AuthorizationStrategy {
-    // 1. Initial
-    // 2. Select the browser
-    // 3.a. If custom tab enabled, use bind custom tab session
-    // 3.b. If custom tab disabled, launch the url with browser
-    public AuthorizationResult requestAuthorization(AuthorizationRequest request) {
+public class BrowserSelector {
+    public static Browser select() {
+        return null;
+    }
+
+    public static List<Browser> getAllBrowsers() {
         return null;
     }
 }
