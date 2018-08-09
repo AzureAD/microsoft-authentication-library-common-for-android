@@ -92,7 +92,7 @@ public final class AuthenticationConstants {
         /**
          * Represents the final url that webview receives.
          */
-        public static final String AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
+        public static final String RESPONSE_FINAL_URL = "com.microsoft.identity.client.final.url";
 
         /**
          * Represents the response returned from broker.
