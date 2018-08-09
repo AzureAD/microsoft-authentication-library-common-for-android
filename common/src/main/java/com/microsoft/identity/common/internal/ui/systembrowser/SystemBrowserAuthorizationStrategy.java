@@ -29,6 +29,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStra
 public class SystemBrowserAuthorizationStrategy extends AuthorizationStrategy {
     // 1. Initial
     // 2. Select the browser
+    // mBrowser = BrowserSelector.select(mActivityRef.get().getApplicationContext());
     // 3.a. If custom tab enabled, use bind custom tab session
     // 3.b. If custom tab disabled, launch the url with browser
     public AuthorizationResult requestAuthorization(AuthorizationRequest request) {

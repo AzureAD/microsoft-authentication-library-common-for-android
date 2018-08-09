@@ -54,6 +54,8 @@ public class Browser {
      */
     private final String mVersion;
 
+    private final Boolean mIsCustomTabsServiceSupported;
+
     /**
      * Creates a browser object from a {@link PackageInfo} object returned from the
      * {@link android.content.pm.PackageManager}. The object is expected to include the
@@ -62,7 +64,7 @@ public class Browser {
      * calling {@link android.content.pm.PackageManager#getPackageInfo(String, int)}.
      */
     public Browser(@NonNull PackageInfo packageInfo) {
-        this(packageInfo.packageName, generateSignatureHashes(packageInfo.signatures), packageInfo.versionName);
+        this(packageInfo.packageName, generateSignatureHashes(packageInfo.signatures), packageInfo.versionName, false);
     }
 
     /**
@@ -72,10 +74,15 @@ public class Browser {
      * @param signatureHashes The set of SHA-512, Base64 url safe encoded signatures for the app.
      * @param version         The version name of the browser.
      */
-    public Browser(@NonNull String packageName, @NonNull Set<String> signatureHashes, @NonNull String version) {
+    public Browser(@NonNull String packageName, @NonNull Set<String> signatureHashes, @NonNull String version, boolean isCustomTabsServiceSupported) {
         mPackageName = packageName;
         mSignatureHashes = signatureHashes;
         mVersion = version;
+        mIsCustomTabsServiceSupported = isCustomTabsServiceSupported;
+    }
+
+    public Browser setCustomTabsServiceSupported(final Boolean isCustomTabsServiceSupported) {
+        return new Browser(mPackageName, mSignatureHashes, mVersion, isCustomTabsServiceSupported);
     }
 
     /**
