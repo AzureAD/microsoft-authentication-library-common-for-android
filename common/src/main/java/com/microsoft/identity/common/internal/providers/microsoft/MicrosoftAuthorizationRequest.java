@@ -117,9 +117,8 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
                                          final String libraryVersion) {
         super(responseType, clientId, redirectUri, state, scope);
 
-        if (StringUtil.isEmpty(redirectUri)) {
-            throw new IllegalArgumentException("redirect Uri is empty");
-        }
+        //TODO : Refactor to move the validation logic of all NonNull values before the request is constructed.
+        // Validation logic for redirect URI needs to be added as a part of refactor as well as it's a NonNull value
 
         if (StringUtil.isEmpty(authorizationEndpoint)) {
             throw new IllegalArgumentException("Authorization endpoint is empty");
