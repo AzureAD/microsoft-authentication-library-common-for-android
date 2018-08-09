@@ -161,6 +161,10 @@ public class MsalOAuth2TokenCache
         saveCredentials(accessTokenToSave, refreshTokenToSave, idTokenToSave);
     }
 
+    public IAccountCredentialCache getAccountCredentialCache() {
+        return mAccountCredentialCache;
+    }
+
     private void saveAccounts(final Account... accounts) {
         for (final Account account : accounts) {
             mAccountCredentialCache.saveAccount(account);
