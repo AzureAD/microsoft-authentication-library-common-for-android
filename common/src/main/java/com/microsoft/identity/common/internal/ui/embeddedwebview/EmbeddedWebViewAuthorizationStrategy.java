@@ -32,10 +32,13 @@ import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
@@ -46,8 +49,7 @@ import java.io.UnsupportedEncodingException;
 /**
  * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
  */
-public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends OAuth2WebViewClient,
-        GenericAuthorizationRequest extends AuthorizationRequest,
+public class EmbeddedWebViewAuthorizationStrategy<GenericAuthorizationRequest extends AuthorizationRequest,
         GenericAuthorizationResult extends AuthorizationResult>
         extends AuthorizationStrategy<GenericAuthorizationRequest, GenericAuthorizationResult> {
 
@@ -73,23 +75,29 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
      *
-     * @param webViewClient Generic WebViewClient
      * @throws UnsupportedEncodingException thrown when the Character Encoding is not supported
-     * @throws ClientException throw when error happens during the authorization
+     * @throws ClientException              throw when error happens during the authorization
      */
-    public EmbeddedWebViewAuthorizationStrategy(final GenericWebViewClient webViewClient, final WebView webView)
+    public EmbeddedWebViewAuthorizationStrategy(@NonNull final Activity activity,
+                                                @NonNull GenericAuthorizationRequest authorizationRequest,
+                                                IChallengeCompletionCallback callback)
             throws UnsupportedEncodingException, ClientException {
-        //TODO validate auth request in OAuth2Strategy.
+        AzureActiveDirectoryWebViewClient webViewClient
+                = new AzureActiveDirectoryWebViewClient(activity,
+                authorizationRequest,
+                callback);
+        final WebView webView = activity.findViewById(R.id.webview);
         setUpWebView(webViewClient, webView);
         mStartUrl = webViewClient.getRequest().getAuthorizationStartUrl();
     }
 
     /**
      * Set up the web view configurations.
+     *
      * @param webViewClient AzureActiveDirectoryWebViewClient
      */
     @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
-    private void setUpWebView(final GenericWebViewClient webViewClient, final WebView webView) {
+    private void setUpWebView(final AzureActiveDirectoryWebViewClient webViewClient, final WebView webView) {
         // Create the Web View to show the page
         mWebView = webView;
         WebSettings userAgentSetting = mWebView.getSettings();

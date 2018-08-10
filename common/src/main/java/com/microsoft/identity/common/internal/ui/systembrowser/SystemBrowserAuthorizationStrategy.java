@@ -22,11 +22,31 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.systembrowser;
 
+import android.app.Activity;
+import android.support.annotation.NonNull;
+
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeCompletionCallback;
 
-public class SystemBrowserAuthorizationStrategy extends AuthorizationStrategy {
+public class SystemBrowserAuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy {
+
+    private final GenericAuthorizationRequest mAuthorizationRequest; //NOPMD //TODO Heidi
+    private final Activity mActivity; //NOPMD
+    private final AuthorizationConfiguration mAuthorizationConfiguration; //NOPMD //TODO Heidi
+
+
+    public SystemBrowserAuthorizationStrategy(@NonNull final Activity activity,
+                                              @NonNull GenericAuthorizationRequest authorizationRequest,
+                                              @NonNull AuthorizationConfiguration configuration) {
+        mActivity = activity;
+        mAuthorizationRequest = authorizationRequest;
+        mAuthorizationConfiguration = configuration;
+    }
+
     // 1. Initial
     // 2. Select the browser
     // mBrowser = BrowserSelector.select(mActivityRef.get().getApplicationContext());

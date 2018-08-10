@@ -36,4 +36,8 @@ public abstract class AuthorizationStrategy <GenericAuthorizationRequest extends
      * @return AuthorizationResult
      */
     public abstract GenericAuthorizationResult requestAuthorization(GenericAuthorizationRequest request);
+
+    public void dispose() {
+        //TODO
+    }
 }
