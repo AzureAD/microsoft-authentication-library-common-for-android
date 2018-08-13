@@ -41,7 +41,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFuture;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeCompletionCallback;
 
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.Future;
@@ -84,7 +83,7 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
         WebSettings userAgentSetting = mWebView.getSettings();
         final String userAgent = userAgentSetting.getUserAgentString();
         mWebView.getSettings().setUserAgentString(
-                userAgent + AuthenticationConstants.Broker.USER_AGENT_VALUE_PKEY_AUTH);
+                userAgent + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.requestFocus(View.FOCUS_DOWN);
 
