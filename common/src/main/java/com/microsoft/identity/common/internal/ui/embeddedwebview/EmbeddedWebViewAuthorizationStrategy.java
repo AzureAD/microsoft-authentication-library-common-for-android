@@ -23,11 +23,7 @@
 package com.microsoft.identity.common.internal.ui.embeddedwebview;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.Intent;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebSettings;
@@ -48,7 +44,7 @@ import java.util.concurrent.Future;
 /**
  * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
  */
-public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends OAuth2WebViewClient,
+public class EmbeddedWebViewAuthorizationStrategy<GenericWebViewClient extends OAuth2WebViewClient,
         GenericAuthorizationRequest extends AuthorizationRequest,
         GenericAuthorizationResult extends AuthorizationResult>
         extends AuthorizationStrategy<GenericAuthorizationRequest, GenericAuthorizationResult> {
@@ -56,14 +52,14 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
     private static final String TAG = StringExtensions.class.getSimpleName();
     private WebView mWebView;
     private String mStartUrl;
-    private AuthorizationResultFuture mFuture;
+    private AuthorizationResultFuture<GenericAuthorizationResult> mFuture;
 
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
      *
      * @param webViewClient Generic WebViewClient
      * @throws UnsupportedEncodingException thrown when the Character Encoding is not supported
-     * @throws ClientException throw when error happens during the authorization
+     * @throws ClientException              throw when error happens during the authorization
      */
     public EmbeddedWebViewAuthorizationStrategy(final GenericWebViewClient webViewClient, final WebView webView)
             throws UnsupportedEncodingException, ClientException {
@@ -74,6 +70,7 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
 
     /**
      * Set up the web view configurations.
+     *
      * @param webViewClient AzureActiveDirectoryWebViewClient
      */
     @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
@@ -124,7 +121,7 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
     }
 
     @Override
-    public Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request) throws UnsupportedEncodingException {
+    public Future<GenericAuthorizationResult> requestAuthorization(GenericAuthorizationRequest request) {
 
 
         Logger.verbose(TAG, "Perform the authorization request with embedded webView.");

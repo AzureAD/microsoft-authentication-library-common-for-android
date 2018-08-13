@@ -46,6 +46,7 @@ public abstract class OAuth2Strategy
         <GenericAccessToken extends AccessToken,
                 GenericAccount extends Account,
                 GenericAuthorizationRequest extends AuthorizationRequest,
+                GenericAuthorizationResponse extends AuthorizationResponse,
                 GenericAuthorizationStrategy extends AuthorizationStrategy,
                 GenericOAuth2Configuration extends OAuth2Configuration,
                 GenericRefreshToken extends RefreshToken,
@@ -74,12 +75,12 @@ public abstract class OAuth2Strategy
      * @param authorizationStrategy generic authorization strategy.
      * @return GenericAuthorizationResponse
      */
-    public Future<AuthorizationResult> requestAuthorization(
+    public Future<GenericAuthorizationResponse> requestAuthorization(
             final GenericAuthorizationRequest request,
             final GenericAuthorizationStrategy authorizationStrategy) {
         validateAuthorizationRequest(request);
 
-        Future<AuthorizationResult> future = null;
+        Future<GenericAuthorizationResponse> future = null;
 
         try {
             future = authorizationStrategy.requestAuthorization(request); //NOPMD Suppressing PMD warning for unused variable
