@@ -67,9 +67,8 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
                                                     @NonNull final String clientId,
                                                     final String redirectUri,
                                                     final String state,
-                                                    final Set<String> scope,
+                                                    final String scope,
                                                     @NonNull final URL authority,
-                                                    @NonNull final String authorizationEndpoint,
                                                     final String loginHint,
                                                     final UUID correlationId,
                                                     final PkceChallenge pkceChallenge,
@@ -78,7 +77,7 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
                                                     @NonNull final String resource,
                                                     final AzureActiveDirectoryPromptBehavior promptBehavior,
                                                     final String claimsChallenge) {
-        super(responseType, clientId, redirectUri, state, scope, authority, authorizationEndpoint,
+        super(responseType, clientId, redirectUri, state, scope, authority,
                 loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);
         mResource = resource;
         mPromptBehavior = promptBehavior;

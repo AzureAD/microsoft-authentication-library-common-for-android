@@ -73,12 +73,7 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
      * Required.
      */
     private URL mAuthority;
-    /**
-     * Required value.
-     * <p>
-     * Passed in from ADAL/MSAL after authority verification.
-     */
-    private String mAuthorizationEndpoint;
+
     /**
      * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
      */
@@ -107,9 +102,8 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
                                          @NonNull final String clientId,
                                          @NonNull final String redirectUri,
                                          final String state,
-                                         final Set<String> scope,
+                                         final String scope,
                                          @NonNull final URL authority,
-                                         @NonNull final String authorizationEndpoint,
                                          final String loginHint,
                                          final UUID correlationId,
                                          final PkceChallenge pkceChallenge,
@@ -121,12 +115,7 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
             throw new IllegalArgumentException("redirect Uri is empty");
         }
 
-        if (StringUtil.isEmpty(authorizationEndpoint)) {
-            throw new IllegalArgumentException("Authorization endpoint is empty");
-        }
-
         mAuthority = authority;
-        mAuthorizationEndpoint = authorizationEndpoint;
         mLoginHint = loginHint;
         mCorrelationId = correlationId;
         mPkceChallenge = pkceChallenge;
@@ -147,14 +136,6 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
 
     public void setAuthority(final URL authority) {
         mAuthority = authority;
-    }
-
-    public String getAuthorizationEndpoint() {
-        return mAuthorizationEndpoint;
-    }
-
-    public void setAuthorizationEndpoint(final String authorizationEndpoint) {
-        mAuthorizationEndpoint = authorizationEndpoint;
     }
 
     public String getLoginHint() {

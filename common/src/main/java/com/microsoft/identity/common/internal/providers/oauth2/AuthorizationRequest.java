@@ -93,7 +93,7 @@ public abstract class AuthorizationRequest implements Serializable {
     /**
      * Scopes scopes that you want the user to consent to is required for V2 auth request.
      */
-    private Set<String> mScope;
+    private String mScope;
 
     /**
      * Constructor of AuthorizationRequest.
@@ -102,7 +102,7 @@ public abstract class AuthorizationRequest implements Serializable {
                                 @NonNull final String clientId,
                                 final String redirectUri,
                                 final String state,
-                                final Set<String> scope) {
+                                final String scope) {
         //validate client id
         if (StringUtil.isEmpty(clientId)) {
             throw new IllegalArgumentException("clientId is empty.");
@@ -227,11 +227,11 @@ public abstract class AuthorizationRequest implements Serializable {
     }
 
 
-    public void setScope(final Set<String> scope) {
-        mScope = new HashSet<>(scope);
+    public void setScope(final String scope) {
+        mScope = scope;
     }
 
-    public Set<String> getScope() {
+    public String getScope() {
         return mScope;
     }
 

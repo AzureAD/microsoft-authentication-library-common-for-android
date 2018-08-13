@@ -45,15 +45,14 @@ public class ActiveDirectoryFederationServicesAuthorizationRequest extends Micro
                                                                  @NonNull final String clientId,
                                                                  final String redirectUri,
                                                                  final String state,
-                                                                 final Set<String> scope,
+                                                                 final String scope,
                                                                  @NonNull final URL authority,
-                                                                 @NonNull final String authorizationEndpoint,
                                                                  final String loginHint,
                                                                  final UUID correlationId,
                                                                  final PkceChallenge pkceChallenge,
                                                                  final String extraQueryParam,
                                                                  final String libraryVersion) {
-        super(responseType, clientId, redirectUri, state, scope, authority, authorizationEndpoint,
+        super(responseType, clientId, redirectUri, state, scope, authority,
                 loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);
 
     }
