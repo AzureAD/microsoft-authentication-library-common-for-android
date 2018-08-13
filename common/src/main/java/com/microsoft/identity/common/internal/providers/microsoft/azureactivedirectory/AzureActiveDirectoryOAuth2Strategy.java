@@ -30,6 +30,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -47,6 +48,7 @@ public class AzureActiveDirectoryOAuth2Strategy
         AzureActiveDirectoryAccessToken,
         AzureActiveDirectoryAccount,
         AzureActiveDirectoryAuthorizationRequest,
+        AuthorizationResponse,
         AuthorizationStrategy,
         AzureActiveDirectoryOAuth2Configuration,
         AzureActiveDirectoryRefreshToken,
