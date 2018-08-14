@@ -45,7 +45,7 @@ import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandle
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.NtlmChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
-public abstract class OAuth2WebViewClient extends WebViewClient {
+public class OAuth2WebViewClient extends WebViewClient {
     /* constants */
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
 

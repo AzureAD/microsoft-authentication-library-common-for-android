@@ -37,6 +37,7 @@ import java.util.Set;
  */
 public class Browser {
     private static final String DIGEST_SHA_512 = "SHA-512";
+    private static final int PRIME_HASH_FACTOR = 92821;
 
     /**
      * The package name of the browser app.
@@ -54,7 +55,7 @@ public class Browser {
      */
     private final String mVersion;
 
-    private final Boolean mIsCustomTabsServiceSupported;
+    private final Boolean mIsCustomTabsServiceSupported; //NOPMD
 
     /**
      * Creates a browser object from a {@link PackageInfo} object returned from the
@@ -147,5 +148,19 @@ public class Browser {
         return mPackageName.equals(other.getPackageName())
                 && mVersion.equals(other.getVersion())
                 && mSignatureHashes.equals(other.getSignatureHashes());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = mPackageName.hashCode();
+
+        hash = PRIME_HASH_FACTOR * hash + mVersion.hashCode();
+        hash = PRIME_HASH_FACTOR * hash + (mIsCustomTabsServiceSupported ? 1 : 0);
+
+        for (String signatureHash : mSignatureHashes) {
+            hash = PRIME_HASH_FACTOR * hash + signatureHash.hashCode();
+        }
+
+        return hash;
     }
 }

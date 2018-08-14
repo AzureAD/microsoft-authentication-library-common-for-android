@@ -34,12 +34,14 @@ import android.webkit.ClientCertRequest;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
+import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.ClientCertAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeCompletionCallback;
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.PKeyAuthChallenge;
@@ -58,16 +60,17 @@ import java.util.Map;
  * 1. on the start url construction, which is handled in the Authorization request classes.
  * 2. the auth result is handled in the Authorization result classes.
  */
-public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
+public class AzureActiveDirectoryWebViewClient <GenericAuthorizationRequest extends AuthorizationRequest> extends OAuth2WebViewClient {
     private static final String TAG = AzureActiveDirectoryWebViewClient.class.getSimpleName();
     private static final String INSTALL_URL_KEY = "app_link";
     public static final String ERROR = "error";
     public static final String ERROR_DESCRIPTION = "error_description";
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
-                                      @NonNull final MicrosoftAuthorizationRequest request,
+                                      @NonNull final GenericAuthorizationRequest request,
                                       @NonNull final IChallengeCompletionCallback callback) {
         super(activity, request, callback);
+        activity.setContentView(R.layout.activity_authentication);
     }
 
     /**

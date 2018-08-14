@@ -40,8 +40,11 @@ public abstract class AuthorizationStrategy <GenericAuthorizationRequest extends
      * @param request authorization request
      * @return AuthorizationResult
      */
-    public abstract Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request) throws UnsupportedEncodingException;
+    public abstract Future<GenericAuthorizationResult> requestAuthorization(GenericAuthorizationRequest request);
 
     public abstract void completeAuthorization(int requestCode, int resultCode, final Intent data);
 
+    public void dispose() {
+        //TODO
+    }
 }
