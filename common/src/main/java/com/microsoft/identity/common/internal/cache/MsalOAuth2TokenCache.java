@@ -290,6 +290,7 @@ public class MsalOAuth2TokenCache
                 {"Id tokens", String.valueOf(idsRemoved)},
                 {"Accounts", accountRemoved ? "1" : "0"}
         };
+
         for (final String[] tuple : logInfo) {
             com.microsoft.identity.common.internal.logging.Logger.info(
                     TAG + methodName,
