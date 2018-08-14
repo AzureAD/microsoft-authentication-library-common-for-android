@@ -88,7 +88,6 @@ public abstract class OAuth2Strategy
         }
 
         return future;
-
     }
 
     /**

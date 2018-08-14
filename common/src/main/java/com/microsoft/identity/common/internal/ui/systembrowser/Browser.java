@@ -134,6 +134,10 @@ public class Browser {
         return signatureHashes;
     }
 
+    public boolean isCustomTabsServiceSupported() {
+        return mIsCustomTabsServiceSupported;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
