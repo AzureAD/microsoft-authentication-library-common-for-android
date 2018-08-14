@@ -6,10 +6,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class AuthorizationResultFuture implements Future<AuthorizationResult> {
+public class AuthorizationResultFuture<GenericAuthorizationResult extends AuthorizationResult> implements Future<GenericAuthorizationResult> {
 
     private final CountDownLatch mCountDownLatch = new CountDownLatch(1);
-    private AuthorizationResult mAuthorizationResult;
+    private GenericAuthorizationResult mAuthorizationResult;
 
     @Override
     public boolean cancel(boolean b) {
@@ -27,22 +27,22 @@ public class AuthorizationResultFuture implements Future<AuthorizationResult> {
     }
 
     @Override
-    public AuthorizationResult get() throws InterruptedException, ExecutionException {
+    public GenericAuthorizationResult get() throws InterruptedException, ExecutionException {
         mCountDownLatch.await();
         return mAuthorizationResult;
     }
 
     @Override
-    public AuthorizationResult get(long l, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
-        if(mCountDownLatch.await(l, timeUnit)){
+    public GenericAuthorizationResult get(long l, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
+        if (mCountDownLatch.await(l, timeUnit)) {
             return mAuthorizationResult;
-        }else {
+        } else {
             throw new TimeoutException();
         }
 
     }
 
-    public void setAuthorizationResult(AuthorizationResult result){
+    public void setAuthorizationResult(GenericAuthorizationResult result) {
         mAuthorizationResult = result;
         mCountDownLatch.countDown();
     }
