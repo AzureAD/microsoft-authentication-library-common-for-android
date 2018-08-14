@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
@@ -31,6 +32,13 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import java.util.Set;
+
+import android.app.Activity;
+import android.content.Context;
+
+import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.net.ObjectMapper;
+
 
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
@@ -47,6 +55,7 @@ public abstract class AuthorizationRequest implements Serializable {
     /**
      * A required value and must be set to "code".
      */
+    @SerializedName("response_type")
     private String mResponseType;
 
     /**
@@ -54,6 +63,7 @@ public abstract class AuthorizationRequest implements Serializable {
      * <p>
      * The client identifier as assigned by the authorization server, when the client was registered.
      */
+    @SerializedName("client_id")
     private String mClientId;
 
     /**
@@ -61,6 +71,7 @@ public abstract class AuthorizationRequest implements Serializable {
      * application, the authorization server will redirect the user back to the application with
      * either an authorization code or access token in the URL.
      */
+    @SerializedName("redirect_uri")
     private String mRedirectUri;
 
     /**
@@ -72,12 +83,17 @@ public abstract class AuthorizationRequest implements Serializable {
      * encode information about the user's state in the app before the authentication request
      * occurred, such as the page or view they were on.
      */
+    @SerializedName("state")
     private String mState;
+
+    //Marking as transient to avoid these values being serialized by GSON or other Java Serialization
+    private transient Activity mActivity;
+    private transient Context mContext;
 
     /**
      * Scopes scopes that you want the user to consent to is required for V2 auth request.
      */
-    private Set<String> mScope;
+    private String mScope;
 
     /**
      * Constructor of AuthorizationRequest.
@@ -86,7 +102,7 @@ public abstract class AuthorizationRequest implements Serializable {
                                 @NonNull final String clientId,
                                 final String redirectUri,
                                 final String state,
-                                final Set<String> scope) {
+                                final String scope) {
         //validate client id
         if (StringUtil.isEmpty(clientId)) {
             throw new IllegalArgumentException("clientId is empty.");
@@ -170,11 +186,62 @@ public abstract class AuthorizationRequest implements Serializable {
         mState = state;
     }
 
-    public Set<String> getScope() {
+    /**
+     * @return mActivity of the authorization request.
+     */
+    public Activity getActivity() {
+        return mActivity;
+    }
+
+    /**
+     * @param activity of the authorization request.
+     */
+    public void setActivity(final Activity activity) {
+        mActivity = activity;
+    }
+
+    /**
+     * @return mContext of the authorization request.
+     */
+    public Context getContext() {
+        return mContext;
+    }
+
+    /**
+     * @param context of the authorization request.
+     */
+    public void setContext(final Context context) {
+        mContext = context;
+    }
+
+    //CHECKSTYLE:OFF
+    @Override
+    public String toString() {
+        return "AuthorizationRequest{" +
+                "mResponseType='" + mResponseType + '\'' +
+                ", mClientId='" + mClientId + '\'' +
+                ", mRedirectUri='" + mRedirectUri + '\'' +
+                ", mScope='" + mScope + '\'' +
+                ", mState='" + mState + '\'' +
+                '}';
+    }
+
+
+    public void setScope(final String scope) {
+        mScope = scope;
+    }
+
+    public String getScope() {
         return mScope;
     }
 
-    public void setScope(final Set<String> scope) {
-        mScope = new HashSet<>(scope);
+    public abstract String getAuthorizationEndpoint();
+
+    public String getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
+
+        String queryStringParameters = ObjectMapper.serializeObjectToFormUrlEncoded(this);
+        return getAuthorizationEndpoint() + '?' + queryStringParameters;
+
     }
+
 }

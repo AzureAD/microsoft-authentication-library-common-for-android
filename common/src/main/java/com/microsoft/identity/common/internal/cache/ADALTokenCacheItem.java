@@ -90,7 +90,7 @@ public class ADALTokenCacheItem {
         RefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
 
         mAuthority = issuerCacheIdentifier;
-        mResource = StringUtil.convertSetToString(request.getScope(), " ");
+        mResource = request.getScope();
         mClientId = request.getClientId();
         mAccessToken = accessToken.getAccessToken();
         mRefreshtoken = refreshToken.getRefreshToken();

@@ -88,7 +88,7 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setRealm(getRealm(strategy, response));
             accessToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
             accessToken.setClientId(request.getClientId());
-            accessToken.setTarget(StringUtil.convertSetToString(request.getScope(), " "));
+            accessToken.setTarget(request.getScope());
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
             accessToken.setExpiresOn(String.valueOf(expiresOn));
             accessToken.setSecret(response.getAccessToken());
@@ -126,7 +126,7 @@ public class MicrosoftStsAccountCredentialAdapter
 
             // Optional
             refreshToken.setFamilyId(response.getFamilyId());
-            refreshToken.setTarget(StringUtil.convertSetToString(request.getScope(), " "));
+            refreshToken.setTarget(request.getScope());
             refreshToken.setClientInfo(response.getClientInfo());
 
             // TODO are these needed? Expected?

@@ -30,10 +30,12 @@ import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.Future;
 
 
 /**
@@ -44,7 +46,6 @@ public abstract class OAuth2Strategy
         <GenericAccessToken extends AccessToken,
                 GenericAccount extends Account,
                 GenericAuthorizationRequest extends AuthorizationRequest,
-                GenericAuthorizationResponse extends AuthorizationResponse,
                 GenericAuthorizationStrategy extends AuthorizationStrategy,
                 GenericOAuth2Configuration extends OAuth2Configuration,
                 GenericRefreshToken extends RefreshToken,
@@ -55,7 +56,6 @@ public abstract class OAuth2Strategy
 
     private final GenericOAuth2Configuration mConfig;
     private String mTokenEndpoint;
-    private String mAuthorizationEndpoint;
     private Uri mIssuer;
 
     /**
@@ -74,15 +74,21 @@ public abstract class OAuth2Strategy
      * @param authorizationStrategy generic authorization strategy.
      * @return GenericAuthorizationResponse
      */
-    public GenericAuthorizationResponse requestAuthorization(
+    public Future<AuthorizationResult> requestAuthorization(
             final GenericAuthorizationRequest request,
             final GenericAuthorizationStrategy authorizationStrategy) {
         validateAuthorizationRequest(request);
-        Uri authorizationUri = createAuthorizationUri(); //NOPMD Suppressing PMD warning for unused variable
-        AuthorizationResult result = authorizationStrategy.requestAuthorization(request); //NOPMD Suppressing PMD warning for unused variable
-        //TODO: Reconcile authorization result and response
-        AuthorizationResponse response = new AuthorizationResponse("");
-        return (GenericAuthorizationResponse) response;
+
+        Future<AuthorizationResult> future = null;
+
+        try {
+            future = authorizationStrategy.requestAuthorization(request); //NOPMD Suppressing PMD warning for unused variable
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        return future;
+
     }
 
     /**
@@ -109,32 +115,6 @@ public abstract class OAuth2Strategy
                 requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
                 TOKEN_REQUEST_CONTENT_TYPE
         );
-    }
-
-
-    /**
-     * Construct the authorization endpoint URI based on issuer and path to the authorization endpoint.
-     * NOTE: We could look at basing this on the contents returned from the OpenID Configuration document
-     *
-     * @return URI
-     */
-    protected Uri createAuthorizationUri() {
-        //final Uri.Builder builder = new Uri.Builder().scheme(originalAuthority.getProtocol()).authority(host).appendPath(path);
-        Uri authorizationUri = Uri.withAppendedPath(mIssuer, mAuthorizationEndpoint);
-        return authorizationUri;
-    }
-
-    /**
-     * Gets the authorization endpoint used by this strategy.
-     *
-     * @return The authorization endpoint to use.
-     */
-    public String getAuthorizationEndpoint() {
-        return mAuthorizationEndpoint;
-    }
-
-    protected String getTokenEndpoint() {
-        return mTokenEndpoint;
     }
 
     protected final void setTokenEndpoint(final String tokenEndpoint) {

@@ -43,9 +43,8 @@ public class AzureActiveDirectoryBrokerAuthorizationRequest extends AzureActiveD
                                                           @NonNull final String clientId,
                                                           final String redirectUri,
                                                           final String state,
-                                                          final Set<String> scope,
+                                                          final String scope,
                                                           @NonNull final URL authority,
-                                                          @NonNull final String authorizationEndpoint,
                                                           final String loginHint,
                                                           final UUID correlationId,
                                                           final PkceChallenge pkceChallenge,
@@ -56,7 +55,7 @@ public class AzureActiveDirectoryBrokerAuthorizationRequest extends AzureActiveD
                                                           final String claimsChallenge,
                                                           final String callingPackage,
                                                           final String signatureDigest) {
-        super(responseType, clientId, redirectUri, state, scope, authority, authorizationEndpoint,
+        super(responseType, clientId, redirectUri, state, scope, authority,
                 loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion,
                 resource, promptBehavior, claimsChallenge);
         mCallingPackage = callingPackage;

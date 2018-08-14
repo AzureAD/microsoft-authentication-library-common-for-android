@@ -75,7 +75,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     private static final String MOCK_UID = "mock_uid";
     private static final String MOCK_UTID = "mock_utid";
     private static final String MOCK_CLIENT_INFO = createRawClientInfo(MOCK_UID, MOCK_UTID);
-    private static final Set<String> MOCK_SCOPE = Sets.newHashSet("user.read");
+    private static final String MOCK_SCOPE = "user.read";
     private static final String MOCK_FAMILY_ID = "1";
     private static final long MOCK_EXPIRES_IN = 3600L;
     private static final Date MOCK_EXPIRES_ON = new GregorianCalendar() {{
@@ -142,7 +142,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     public void createAccessToken() {
         final AccessToken accessToken = mAccountCredentialAdapter.createAccessToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(accessToken);
-        assertEquals(StringUtil.convertSetToString(MOCK_SCOPE, " "), accessToken.getTarget());
+        assertEquals(MOCK_SCOPE, accessToken.getTarget());
         assertNotNull(accessToken.getCachedAt());
         assertNotNull(accessToken.getExpiresOn());
         assertNotNull(accessToken.getExpiresOn());
@@ -157,7 +157,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     public void createRefreshToken() {
         final RefreshToken refreshToken = mAccountCredentialAdapter.createRefreshToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(refreshToken);
-        assertEquals(StringUtil.convertSetToString(MOCK_SCOPE, " "), refreshToken.getTarget());
+        assertEquals(MOCK_SCOPE, refreshToken.getTarget());
         assertNotNull(refreshToken.getCachedAt());
         assertEquals(MOCK_CLIENT_INFO, refreshToken.getClientInfo());
         assertEquals(MOCK_FAMILY_ID, refreshToken.getFamilyId());
