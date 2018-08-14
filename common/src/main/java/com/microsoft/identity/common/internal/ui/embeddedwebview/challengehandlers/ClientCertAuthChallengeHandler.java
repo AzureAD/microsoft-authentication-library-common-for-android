@@ -63,7 +63,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             }
         }
 
-        KeyChain.choosePrivateKeyAlias(mActivity, new KeyChainAliasCallback() {
+        KeyChain.choosePrivateKeyAlias((Activity) mActivity.getApplicationContext(), new KeyChainAliasCallback() {
                     @Override
                     public void alias(String alias) {
                         if (alias == null) {

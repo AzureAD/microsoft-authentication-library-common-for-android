@@ -44,7 +44,6 @@ import java.util.Map;
 public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAuthChallenge, Void> {
     private static final String TAG = PKeyAuthChallengeHandler.class.getSimpleName();
     private WebView mWebView;
-    private AuthorizationRequest mRequest;
     private IChallengeCompletionCallback mChallengeCallback;
 
     /**
@@ -52,10 +51,8 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
      * @param completionCallback
      */
     public PKeyAuthChallengeHandler(@NonNull final WebView view,
-                                    @NonNull final AuthorizationRequest request,
                                     @NonNull IChallengeCompletionCallback completionCallback) {
         mWebView = view;
-        mRequest = request;
         mChallengeCallback = completionCallback;
     }
 
@@ -84,7 +81,6 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
             // returns errors to callback.
             Intent resultIntent = new Intent();
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, e);
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_REQUEST_INFO, mRequest);
             mChallengeCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
         }
 

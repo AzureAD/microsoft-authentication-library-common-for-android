@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.ui.systembrowser;
 import android.app.Activity;
 import android.support.annotation.NonNull;
 
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -32,18 +33,16 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeCompletionCallback;
 
-public class SystemBrowserAuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy {
+public class SystemBrowserAuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy <GenericAuthorizationRequest> {
 
-    private final GenericAuthorizationRequest mAuthorizationRequest; //NOPMD //TODO Heidi
     private final Activity mActivity; //NOPMD
     private final AuthorizationConfiguration mAuthorizationConfiguration; //NOPMD //TODO Heidi
+    private CustomTabManager mCustomTabManager;
 
 
     public SystemBrowserAuthorizationStrategy(@NonNull final Activity activity,
-                                              @NonNull GenericAuthorizationRequest authorizationRequest,
                                               @NonNull AuthorizationConfiguration configuration) {
         mActivity = activity;
-        mAuthorizationRequest = authorizationRequest;
         mAuthorizationConfiguration = configuration;
     }
 
@@ -52,7 +51,17 @@ public class SystemBrowserAuthorizationStrategy <GenericAuthorizationRequest ext
     // mBrowser = BrowserSelector.select(mActivityRef.get().getApplicationContext());
     // 3.a. If custom tab enabled, use bind custom tab session
     // 3.b. If custom tab disabled, launch the url with browser
-    public AuthorizationResult requestAuthorization(AuthorizationRequest request) {
-        return null;
+    public void performAuthorizationRequest(GenericAuthorizationRequest request) throws ClientException {
+        //TODO
+        final Browser browser = BrowserSelector.select(mActivity.getApplicationContext());
+        if (browser.isCustomTabsServiceSupported()) {
+            mCustomTabManager = new CustomTabManager(mActivity);
+            mCustomTabManager.bind(browser.getPackageName());
+
+        } else {
+
+        }
+
+
     }
 }
