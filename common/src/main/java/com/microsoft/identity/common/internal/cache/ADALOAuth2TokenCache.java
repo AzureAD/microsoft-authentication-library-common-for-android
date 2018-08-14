@@ -44,7 +44,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -156,6 +155,32 @@ public class ADALOAuth2TokenCache
         for (final IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> sharedSsoCache : mSharedSSOCaches) {
             sharedSsoCache.setSingleSignOnState(account, refreshToken);
         }
+    }
+
+    @Override
+    public com.microsoft.identity.common.internal.dto.Account getAccount(final String environment,
+                                                                         final String clientId,
+                                                                         final String homeAccountId) {
+        throw new UnsupportedOperationException(
+                "This method is unsupported by the ADALOAuth2TokenCache"
+        );
+    }
+
+    @Override
+    public List<com.microsoft.identity.common.internal.dto.Account> getAccounts(final String environment,
+                                                                                final String clientId) {
+        throw new UnsupportedOperationException(
+                "This method is unsupported by the ADALOAuth2TokenCache"
+        );
+    }
+
+    @Override
+    public boolean removeAccount(final String environment,
+                                 final String clientId,
+                                 final String homeAccountId) {
+        throw new UnsupportedOperationException(
+                "This method is unsupported by the ADALOAuth2TokenCache"
+        );
     }
 
     private static void logTokenCacheItem(final ADALTokenCacheItem tokenCacheItem) {

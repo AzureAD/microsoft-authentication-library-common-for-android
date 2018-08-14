@@ -42,6 +42,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -159,6 +160,178 @@ public class MsalOAuth2TokenCache
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
         saveCredentials(accessTokenToSave, refreshTokenToSave, idTokenToSave);
+    }
+
+    @Override
+    public Account getAccount(final String environment,
+                              final String clientId,
+                              final String homeAccountId) {
+        final List<Account> allAccounts = getAccounts(environment, clientId);
+
+        for (final Account account : allAccounts) {
+            if (homeAccountId.equals(account.getHomeAccountId())) {
+                return account;
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public List<Account> getAccounts(final String environment,
+                                     final String clientId) {
+        final List<Account> accountsForThisApp = new ArrayList<>();
+
+        // Get all of the Accounts for this environment
+        final List<Account> accountsForEnvironment =
+                mAccountCredentialCache.getAccountsFilteredBy(
+                        null, // wildcard (*) homeAccountId
+                        environment,
+                        null // wildcard (*) realm
+                );
+
+        // Declare a List to hold the MicrosoftStsAccounts
+        final List<Account> microsoftStsAccounts = new ArrayList<>();
+
+        for (final Account account : accountsForEnvironment) {
+            if (MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(account.getAuthorityType())) {
+                microsoftStsAccounts.add(account);
+            }
+        }
+
+        // Grab the Credentials for this app...
+        final List<Credential> appCredentials =
+                mAccountCredentialCache.getCredentialsFilteredBy(
+                        null, // homeAccountId
+                        environment,
+                        CredentialType.RefreshToken,
+                        clientId,
+                        null, // realm
+                        null // target
+                );
+        // For each Account with an associated RT, add it to the result List...
+        for (final Account account : microsoftStsAccounts) {
+            if (accountHasToken(account, appCredentials)) {
+                accountsForThisApp.add(account);
+            }
+        }
+
+        return Collections.unmodifiableList(accountsForThisApp);
+
+    }
+
+    /**
+     * Evaluates the supplied list of app credentials. Returns true if he provided Account
+     * 'owns' any one of these tokens.
+     *
+     * @param account        The Account whose credential ownership should be evaluated.
+     * @param appCredentials The Credentials to evaluate.
+     * @return True, if this Account has Credentials. False otherwise.
+     */
+    private boolean accountHasToken(final Account account,
+                                    final List<Credential> appCredentials) {
+        final String accountHomeId = account.getHomeAccountId();
+        final String accountEnvironment = account.getEnvironment();
+
+        for (final Credential credential : appCredentials) {
+            if (accountHomeId.equals(credential.getHomeAccountId())
+                    && accountEnvironment.equals(credential.getEnvironment())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean removeAccount(final String environment,
+                                 final String clientId,
+                                 final String homeAccountId) {
+        final String methodName = ":removeAccount";
+
+        final Account targetAccount;
+        if (null == environment
+                || null == clientId
+                || null == homeAccountId
+                || null == (targetAccount =
+                getAccount(
+                        environment,
+                        clientId,
+                        homeAccountId
+                ))) {
+            return false;
+        }
+
+        // Remove this user's AccessToken, RefreshToken, IdToken, and Account entries
+        int atsRemoved = removeCredentialsOfTypeForAccount(
+                environment,
+                clientId,
+                CredentialType.AccessToken,
+                targetAccount
+        );
+        int rtsRemoved = removeCredentialsOfTypeForAccount(
+                environment,
+                clientId,
+                CredentialType.RefreshToken,
+                targetAccount
+        );
+        int idsRemoved = removeCredentialsOfTypeForAccount(
+                environment,
+                clientId,
+                CredentialType.IdToken,
+                targetAccount
+        );
+
+        final boolean accountRemoved = mAccountCredentialCache.removeAccount(targetAccount);
+
+        final String[][] logInfo = new String[][]{
+                {"Access tokens", String.valueOf(atsRemoved)},
+                {"Refresh tokens", String.valueOf(rtsRemoved)},
+                {"Id tokens", String.valueOf(idsRemoved)},
+                {"Accounts", accountRemoved ? "1" : "0"}
+        };
+        for (final String[] tuple : logInfo) {
+            com.microsoft.identity.common.internal.logging.Logger.info(
+                    TAG + methodName,
+                    tuple[0] + " removed: [" + tuple[1] + "]"
+            );
+        }
+
+        return accountRemoved;
+    }
+
+    /**
+     * Removes Credentials of the supplied type for the supplied Account.
+     *
+     * @param credentialType The type of Credential to remove.
+     * @param targetAccount  The target Account whose Credentials should be removed.
+     * @return The number of Credentials removed.
+     */
+    private int removeCredentialsOfTypeForAccount(
+            @NonNull final String environment, // 'authority host'
+            @NonNull final String clientId,
+            @NonNull final CredentialType credentialType,
+            @NonNull final Account targetAccount) {
+        int credentialsRemoved = 0;
+
+        // Query it for Credentials matching the supplied targetAccount
+        final List<Credential> credentialsToRemove =
+                mAccountCredentialCache.getCredentialsFilteredBy(
+                        targetAccount.getHomeAccountId(),
+                        environment,
+                        credentialType,
+                        clientId,
+                        null, // wildcard (*) realm
+                        null // wildcard (*) target
+                );
+
+        for (final Credential credentialToRemove : credentialsToRemove) {
+            if (mAccountCredentialCache.removeCredential(credentialToRemove)) {
+                credentialsRemoved++;
+            }
+        }
+
+        return credentialsRemoved;
     }
 
     private void saveAccounts(final Account... accounts) {
