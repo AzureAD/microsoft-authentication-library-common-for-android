@@ -168,6 +168,7 @@ public class MsalOAuth2TokenCache
                               final String homeAccountId) {
         final List<Account> allAccounts = getAccounts(environment, clientId);
 
+        // Return the sought Account matching the supplied homeAccountId
         for (final Account account : allAccounts) {
             if (homeAccountId.equals(account.getHomeAccountId())) {
                 return account;
