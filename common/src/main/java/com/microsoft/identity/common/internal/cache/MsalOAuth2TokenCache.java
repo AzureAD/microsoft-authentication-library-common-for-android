@@ -211,6 +211,7 @@ public class MsalOAuth2TokenCache
                         null, // realm
                         null // target
                 );
+
         // For each Account with an associated RT, add it to the result List...
         for (final Account account : microsoftStsAccounts) {
             if (accountHasToken(account, appCredentials)) {
