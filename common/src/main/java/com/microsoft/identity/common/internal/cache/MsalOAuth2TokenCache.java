@@ -194,6 +194,7 @@ public class MsalOAuth2TokenCache
         // Declare a List to hold the MicrosoftStsAccounts
         final List<Account> microsoftStsAccounts = new ArrayList<>();
 
+        // Grab all of the Accounts supplied by either the v1 or v2 endpoint
         for (final Account account : accountsForEnvironment) {
             if (MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(account.getAuthorityType())) {
                 microsoftStsAccounts.add(account);
