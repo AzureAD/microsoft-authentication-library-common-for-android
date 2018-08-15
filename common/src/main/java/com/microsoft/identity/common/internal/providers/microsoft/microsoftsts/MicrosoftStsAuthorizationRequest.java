@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
+
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
@@ -54,8 +55,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     private static final String CORRELATION_ID = "client-request-id";
     private static final String LOGIN_REQ = "login_req";
     private static final String DOMAIN_REQ = "domain_req";
-    private static final String SCOPE_PROFILE = "profile";
-    private static final String[] RESERVED_SCOPES = {"openid", SCOPE_PROFILE, "offline_access"};
+    //TODO: Should this be in the request or in the oAuth strategy?
+    //private static final String[] RESERVED_SCOPES = {"openid", SCOPE_PROFILE, "offline_access"};
     private static final String PLATFORM_VALUE = "MSAL.Android";
     private static final String PROMPT_SELECT_ACCOUNT = "select_account";
     private static final String PROMPT_CONSENT = "consent";
@@ -68,7 +69,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     private String mUtid;
     private String mDisplayableId;
     private String mSliceParameters;
-    private Set<String> mExtraScopesToConsent = new HashSet<>();
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
     // TODO private boolean mIsExtendedLifetimeEnabled = false;
@@ -77,9 +77,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
                                             @NonNull final String clientId,
                                             @NonNull final String redirectUri,
                                             final String state,
-                                            @NonNull final Set<String> scope,
+                                            @NonNull final String scope,
                                             @NonNull final URL authority,
-                                            @NonNull final String authorizationEndpoint,
                                             final String loginHint,
                                             final UUID correlationId,
                                             final PkceChallenge pkceChallenge,
@@ -89,21 +88,16 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
                                             final String uid,
                                             final String utid,
                                             final String displayableId,
-                                            final String sliceParameters,
-                                            final Set<String> extraScopesToConsent) {
-        super(responseType, clientId, redirectUri, state, scope, authority, authorizationEndpoint,
+                                            final String sliceParameters
+                                            ) {
+        super(responseType, clientId, redirectUri, state, scope, authority,
                 loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);
-
-        if (null == scope || scope.size() < 1) {
-            throw new IllegalArgumentException("Scope is empty");
-        }
 
         mPromptBehavior = promptBehavior;
         mUid = uid;
         mUtid = utid;
         mDisplayableId = displayableId;
         mSliceParameters = sliceParameters;
-        mExtraScopesToConsent = extraScopesToConsent;
     }
 
     /**
@@ -111,10 +105,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
      */
     public MicrosoftStsAuthorizationRequest() {
         super();
-    }
-
-    public Set<String> getExtraScopesToConsent() {
-        return mExtraScopesToConsent;
     }
 
     public String getUid() {
@@ -165,14 +155,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         return authorizationUrl;
     }
 
-    private String getRequestScopeString() {
-        final Set<String> scopes = new HashSet<>(getScope());
-        if (null != mExtraScopesToConsent) {
-            scopes.addAll(mExtraScopesToConsent);
-        }
-        final Set<String> requestedScopes = getDecoratedScope(scopes);
-        return StringUtil.convertSetToString(requestedScopes, " ");
-    }
 
     /**
      * Generate the authorization request parameters.
@@ -184,7 +166,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     private Map<String, String> createAuthorizationRequestParameters() throws UnsupportedEncodingException, ClientException {
         final Map<String, String> requestParameters = new HashMap<>();
 
-        requestParameters.put(AuthenticationConstants.OAuth2.SCOPE, getRequestScopeString());
+        requestParameters.put(AuthenticationConstants.OAuth2.SCOPE, getScope());
         requestParameters.put(AuthenticationConstants.OAuth2.CLIENT_ID, getClientId());
         requestParameters.put(AuthenticationConstants.OAuth2.REDIRECT_URI, getRedirectUri());
         requestParameters.put(AuthenticationConstants.OAuth2.RESPONSE_TYPE, AuthenticationConstants.OAuth2.CODE);
@@ -258,26 +240,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
     }
 
-    /**
-     * Get the decorated scopes. Will combine the input scope and the reserved scope. If client id is provided as scope,
-     * it will be removed from the combined scopes.
-     *
-     * @param inputScopes The input scopes to decorate.
-     * @return The combined scopes.
-     */
-    private Set<String> getDecoratedScope(final Set<String> inputScopes) {
-        final Set<String> scopes = new HashSet<>(inputScopes);
-        final Set<String> reservedScopes = getReservedScopesAsSet();
-        scopes.addAll(reservedScopes);
-        scopes.remove(getClientId());
-
-        return scopes;
-    }
-
-    private Set<String> getReservedScopesAsSet() {
-        return new HashSet<>(Arrays.asList(RESERVED_SCOPES));
-    }
-
     // Add PKCE Challenge
     private void addPkceChallengeToRequestParameters(@NonNull final Map<String, String> requestParameters) throws ClientException {
         // Create our Challenge
@@ -293,5 +255,12 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         // If excluded, code_challenge is assumed to be plaintext if code_challenge is included.
         // Azure AAD v2.0 supports both plain and S256.
         requestParameters.put(CODE_CHALLENGE_METHOD, getPkceChallenge().getCodeChallengeMethod());
+
+    }
+
+    @Override
+    public String getAuthorizationEndpoint(){
+        //TODO: Need to take authority aliasing via instance discovery into account here
+        return "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
     }
 }

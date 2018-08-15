@@ -32,7 +32,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftToken
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -49,7 +48,6 @@ public class MicrosoftStsOAuth2Strategy
         <MicrosoftStsAccessToken,
                 MicrosoftStsAccount,
                 MicrosoftStsAuthorizationRequest,
-                AuthorizationResponse,
                 AuthorizationStrategy,
                 MicrosoftStsOAuth2Configuration,
                 MicrosoftStsRefreshToken,

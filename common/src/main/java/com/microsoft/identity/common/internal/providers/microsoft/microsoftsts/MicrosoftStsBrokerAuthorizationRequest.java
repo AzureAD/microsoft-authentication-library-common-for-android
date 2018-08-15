@@ -43,9 +43,8 @@ public class MicrosoftStsBrokerAuthorizationRequest extends MicrosoftStsAuthoriz
                                                   @NonNull final String clientId,
                                                   @NonNull final String redirectUri,
                                                   final String state,
-                                                  @NonNull final Set<String> scope,
+                                                  @NonNull final String scope,
                                                   @NonNull final URL authority,
-                                                  @NonNull final String authorizationEndpoint,
                                                   final String loginHint,
                                                   final UUID correlationId,
                                                   final PkceChallenge pkceChallenge,
@@ -56,12 +55,11 @@ public class MicrosoftStsBrokerAuthorizationRequest extends MicrosoftStsAuthoriz
                                                   final String utid,
                                                   final String displayableId,
                                                   final String sliceParameters,
-                                                  final Set<String> extraScopesToConsent,
                                                   @NonNull final String callingPackage,
                                                   @NonNull final String signatureDigest) {
-        super(responseType, clientId, redirectUri, state, scope, authority, authorizationEndpoint,
+        super(responseType, clientId, redirectUri, state, scope, authority,
                 loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion,
-                promptBehavior, uid, utid, displayableId, sliceParameters, extraScopesToConsent);
+                promptBehavior, uid, utid, displayableId, sliceParameters);
 
         if (StringUtil.isEmpty(callingPackage)) {
             throw new IllegalArgumentException("callingPackage is empty");
