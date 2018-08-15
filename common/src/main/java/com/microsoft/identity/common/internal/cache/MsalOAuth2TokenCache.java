@@ -163,9 +163,9 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public Account getAccount(final String environment,
-                              final String clientId,
-                              final String homeAccountId) {
+    public Account getAccount(@NonNull final String environment,
+                              @NonNull final String clientId,
+                              @NonNull final String homeAccountId) {
         final List<Account> allAccounts = getAccounts(environment, clientId);
 
         // Return the sought Account matching the supplied homeAccountId
@@ -179,8 +179,8 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public List<Account> getAccounts(final String environment,
-                                     final String clientId) {
+    public List<Account> getAccounts(@NonNull final String environment,
+                                     @NonNull final String clientId) {
         final List<Account> accountsForThisApp = new ArrayList<>();
 
         // Get all of the Accounts for this environment
@@ -231,8 +231,8 @@ public class MsalOAuth2TokenCache
      * @param appCredentials The Credentials to evaluate.
      * @return True, if this Account has Credentials. False otherwise.
      */
-    private boolean accountHasToken(final Account account,
-                                    final List<Credential> appCredentials) {
+    private boolean accountHasToken(@NonNull final Account account,
+                                    @NonNull final List<Credential> appCredentials) {
         final String accountHomeId = account.getHomeAccountId();
         final String accountEnvironment = account.getEnvironment();
 
