@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.content.Intent;
 
+import com.microsoft.identity.common.exception.ClientException;
+
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.Future;
 
@@ -32,16 +34,19 @@ import java.util.concurrent.Future;
  * and/or authentication information (OIDC)
  * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
  */
-public abstract class AuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest,
-                                             GenericAuthorizationResult extends AuthorizationResult> {
+public abstract class AuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest> {
     /**
      * Perform the authorization request.
      *
      * @param request authorization request
      * @return AuthorizationResult
      */
-    public abstract Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request) throws UnsupportedEncodingException;
+    public abstract void requestAuthorization(GenericAuthorizationRequest request) throws UnsupportedEncodingException, ClientException;
 
-    public abstract void completeAuthorization(int requestCode, int resultCode, final Intent data);
+    //public abstract void completeAuthorization(int requestCode, int resultCode, final Intent data);
+
+    public void dispose() {
+        //TODO
+    }
 
 }
