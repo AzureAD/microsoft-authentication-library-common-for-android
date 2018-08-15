@@ -20,24 +20,40 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.content.Intent;
+import android.webkit.HttpAuthHandler;
+import android.webkit.WebView;
 
-/**
- * This is the callback interface to send the authorization challenge response
- * back to the activity which will implement this interface.
- * <p>
- * TODO AuthenticationActivity should implement the onChallengeResponseReceived method and call Activity.setResult() and Activity.finish() to return the UI response to the caller.
- */
-public interface IChallengeCompletionCallback {
-    /**
-     * Send the authorization challenge response back to the activity.
-     *
-     * @param returnCode     UI response code
-     * @param responseIntent challenge response
-     */
-    void onChallengeResponseReceived(int returnCode, Intent responseIntent);
+public class NtlmChallenge {
+    private HttpAuthHandler mHandler;
+    private WebView mView;
+    private String mHost;
+    private String mRealm;
 
-    void setPKeyAuthStatus(boolean status);
+    NtlmChallenge(final WebView view,
+                  final HttpAuthHandler handler,
+                  final String host,
+                  final String realm) {
+        mHandler = handler;
+        mView = view;
+        mHost = host;
+        mRealm = realm;
+    }
+
+    HttpAuthHandler getHandler() {
+        return mHandler;
+    }
+
+    WebView getView() {
+        return mView;
+    }
+
+    String getHost() {
+        return mHost;
+    }
+
+    String getRealm() {
+        return mRealm;
+    }
 }

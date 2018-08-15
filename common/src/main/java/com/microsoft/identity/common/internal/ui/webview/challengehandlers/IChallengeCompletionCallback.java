@@ -20,17 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+
+import android.content.Intent;
 
 /**
- * Abstract Factory class which can be extended to process difference type of challenges.
+ * This is the callback interface to send the authorization challenge response
+ * back to the activity which will implement this interface.
+ * <p>
+ * TODO AuthenticationActivity should implement the onChallengeResponseReceived method and call Activity.setResult() and Activity.finish() to return the UI response to the caller.
  */
-
-public interface IChallengeHandler<GenericChallenge, GenericResponse> {
+public interface IChallengeCompletionCallback {
     /**
-     * Process difference kinds of challenge request.
-     * @param genericChallenge challenge request
-     * @return GenericResponse
+     * Send the authorization challenge response back to the activity.
+     *
+     * @param returnCode     UI response code
+     * @param responseIntent challenge response
      */
-    GenericResponse processChallenge(GenericChallenge genericChallenge);
+    void onChallengeResponseReceived(int returnCode, Intent responseIntent);
+
+    void setPKeyAuthStatus(boolean status);
 }
