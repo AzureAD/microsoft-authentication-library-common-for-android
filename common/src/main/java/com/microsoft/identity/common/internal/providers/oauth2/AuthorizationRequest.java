@@ -86,10 +86,6 @@ public abstract class AuthorizationRequest implements Serializable {
     @SerializedName("state")
     private String mState;
 
-    //Marking as transient to avoid these values being serialized by GSON or other Java Serialization
-    private transient Activity mActivity;
-    private transient Context mContext;
-
     /**
      * Scopes scopes that you want the user to consent to is required for V2 auth request.
      */
@@ -184,34 +180,6 @@ public abstract class AuthorizationRequest implements Serializable {
      */
     public void setState(final String state) {
         mState = state;
-    }
-
-    /**
-     * @return mActivity of the authorization request.
-     */
-    public Activity getActivity() {
-        return mActivity;
-    }
-
-    /**
-     * @param activity of the authorization request.
-     */
-    public void setActivity(final Activity activity) {
-        mActivity = activity;
-    }
-
-    /**
-     * @return mContext of the authorization request.
-     */
-    public Context getContext() {
-        return mContext;
-    }
-
-    /**
-     * @param context of the authorization request.
-     */
-    public void setContext(final Context context) {
-        mContext = context;
     }
 
     //CHECKSTYLE:OFF

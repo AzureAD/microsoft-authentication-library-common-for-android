@@ -37,6 +37,7 @@ public abstract class MicrosoftAuthorizationResult<
 
     public static final String REQUEST_STATE_PARAMETER = "request_state_parameter";
 
+
     /**
      * Constructor of {@link MicrosoftAuthorizationResult}.
      *

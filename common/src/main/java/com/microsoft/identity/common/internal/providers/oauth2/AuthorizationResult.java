@@ -23,6 +23,12 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 
+import android.net.Uri;
+
+import com.microsoft.identity.common.internal.logging.Logger;
+
+import java.util.Set;
+
 /**
  * A class to return the result of the authorization request to the calling code (ADAL or MSAL Controller classes)
  * This class should have a generic status in terms of : Cancelled, TimedOut, Error,  etc...
@@ -36,6 +42,30 @@ public abstract class AuthorizationResult<
     private AuthorizationStatus mAuthorizationStatus;
     private GenericAuthorizationResponse mAuthorizationResponse;
     private GenericAuthorizationErrorResponse mAuthorizationErrorResponse;
+    private boolean mSuccess = false;
+
+    public AuthorizationResult(final GenericAuthorizationResponse response, final GenericAuthorizationErrorResponse errorResponse) {
+
+        this.mAuthorizationResponse = response;
+        this.mAuthorizationErrorResponse = errorResponse;
+
+        if (response != null) {
+            mSuccess = true;
+        }
+    }
+
+    public AuthorizationResult(final AuthorizationStatus status){
+        this.mAuthorizationStatus = status;
+    }
+
+    /**
+     * Returns whether the authorization request was successful or not.
+     *
+     * @return boolean
+     */
+    public boolean getSuccess() {
+        return mSuccess;
+    }
 
     /**
      * @return The {@link AuthorizationStatus} indicating the auth status for the request sent to authorize endpoint.
@@ -70,7 +100,7 @@ public abstract class AuthorizationResult<
         mAuthorizationStatus = authStatus;
     }
 
-
+    protected abstract AuthorizationResult getAuthorizationResultFromResponseUri(String redirectUri);
 
 }
 

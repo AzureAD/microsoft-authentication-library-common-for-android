@@ -172,4 +172,10 @@ public class TokenRequest {
     public void setScope(final String scope) {
         mScope = scope;
     }
+
+
+    public static class GrantTypes {
+        public final static String AUTHORIZATION_CODE = "code";
+    }
+
 }
