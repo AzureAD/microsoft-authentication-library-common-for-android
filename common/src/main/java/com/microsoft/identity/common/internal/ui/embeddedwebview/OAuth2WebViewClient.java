@@ -45,20 +45,12 @@ import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandle
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.NtlmChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
-public abstract class OAuth2WebViewClient extends WebViewClient {
+public class OAuth2WebViewClient extends WebViewClient {
     /* constants */
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
 
     private final IChallengeCompletionCallback mCompletionCallback;
-    private final AuthorizationRequest mRequest;
     private final Activity mActivity;
-
-    /**
-     * @return Authorization request
-     */
-    public AuthorizationRequest getRequest() {
-        return mRequest;
-    }
 
     /**
      * @return context
@@ -79,15 +71,12 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * Constructor for the OAuth2 basic web view client.
      *
      * @param activity  app Context
-     * @param request  Authorization request
      * @param callback Challenge completion callback
      */
     OAuth2WebViewClient(@NonNull final Activity activity,
-                        @NonNull final AuthorizationRequest request,
                         @NonNull final IChallengeCompletionCallback callback) {
         //the validation of redirect url and authorization request should be in upper level before launching the webview.
         mActivity = activity;
-        mRequest = request;
         mCompletionCallback = callback;
     }
 
@@ -122,8 +111,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                 "Error Code:" + errorCode);
         resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE,
                 description);
-        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_REQUEST_INFO,
-                mRequest);
 
         // Send the result back to the calling activity
         mCompletionCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
@@ -143,8 +130,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                 "Code:" + ERROR_FAILED_SSL_HANDSHAKE);
         resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE,
                 error.toString());
-        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_REQUEST_INFO,
-                mRequest);
 
         // Send the result back to the calling activity
         mCompletionCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);

@@ -34,12 +34,14 @@ import android.webkit.ClientCertRequest;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
+import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.ClientCertAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.IChallengeCompletionCallback;
 import com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers.PKeyAuthChallenge;
@@ -64,10 +66,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR = "error";
     public static final String ERROR_DESCRIPTION = "error_description";
 
+    private final String mRedirectUrl;
+
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
-                                      @NonNull final MicrosoftAuthorizationRequest request,
-                                      @NonNull final IChallengeCompletionCallback callback) {
-        super(activity, request, callback);
+                                             @NonNull final IChallengeCompletionCallback callback,
+                                             @NonNull final String redirectUrl) {
+        super(activity, callback);
+        getActivity().setContentView(R.layout.activity_authentication);
+        mRedirectUrl = redirectUrl;
     }
 
     /**
@@ -108,7 +114,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.verbose(TAG, "WebView detected request for pkeyauth challenge.");
             try {
                 final PKeyAuthChallenge pKeyAuthChallenge = new PKeyAuthChallenge(url);
-                final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getRequest(), getCompletionCallback());
+                final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
             } catch (final ClientException exception) {
                 Logger.error(TAG, exception.getErrorCode(), null);
@@ -137,7 +143,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean isRedirectUrl(@NonNull final String url) {
-        return url.startsWith(getRequest().getRedirectUri().toLowerCase(Locale.US));
+        return url.startsWith(mRedirectUrl.toLowerCase(Locale.US));
     }
 
     private boolean isWebsiteRequestUrl(@NonNull final String url) {
@@ -168,8 +174,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.verbose(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
             Intent resultIntent = new Intent();
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, url);
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_REQUEST_INFO,
-                    getRequest());
             getCompletionCallback().onChallengeResponseReceived(
                     AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE,
                     resultIntent);
@@ -225,10 +229,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (isBrokerRequest(getActivity().getIntent())
                 && url.startsWith(AuthenticationConstants.Broker.REDIRECT_PREFIX)) {
             Logger.error(TAG, "The RedirectUri is not as expected.", null);
-            Logger.errorPII(TAG, String.format("Received %s and expected %s", url, getRequest().getRedirectUri()), null);
+            Logger.errorPII(TAG, String.format("Received %s and expected %s", url, mRedirectUrl), null);
             returnError(ErrorStrings.DEVELOPER_REDIRECTURI_INVALID,
                     String.format("The RedirectUri is not as expected. Received %s and expected %s", url,
-                            getRequest().getRedirectUri()));
+                            mRedirectUrl));
             view.stopLoading();
             return true;
         }
@@ -252,15 +256,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Intent resultIntent = new Intent();
         resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE, errorCode);
         resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, errorMessage);
-
-        if (getRequest() != null) {
-            if (getRequest() instanceof MicrosoftAuthorizationRequest) {
-                resultIntent.putExtra(AuthenticationConstants.Browser.REQUEST_ID, ((MicrosoftAuthorizationRequest) getRequest()).getCorrelationId());
-            }
-
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_REQUEST_INFO, getRequest());
-        }
-
         getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
     }
 

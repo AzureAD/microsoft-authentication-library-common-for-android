@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.ui.embeddedwebview;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -33,6 +32,7 @@ import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
@@ -48,36 +48,54 @@ import java.util.concurrent.Future;
 /**
  * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
  */
-public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends OAuth2WebViewClient,
-        GenericAuthorizationRequest extends AuthorizationRequest,
-        GenericAuthorizationResult extends AuthorizationResult>
-        extends AuthorizationStrategy<GenericAuthorizationRequest, GenericAuthorizationResult> {
+public class EmbeddedWebViewAuthorizationStrategy<GenericAuthorizationRequest extends AuthorizationRequest>
+        extends AuthorizationStrategy<GenericAuthorizationRequest> {
 
     private static final String TAG = StringExtensions.class.getSimpleName();
+    private Activity mActivity;
+    private IChallengeCompletionCallback mCallback;
     private WebView mWebView;
     private String mStartUrl;
     private AuthorizationResultFuture mFuture;
 
     /**
-     * Constructor of EmbeddedWebViewAuthorizationStrategy.
+     * Perform the authorization request in the embedded web view.
      *
-     * @param webViewClient Generic WebViewClient
+     * @param request authorization request
+     *
      * @throws UnsupportedEncodingException thrown when the Character Encoding is not supported
-     * @throws ClientException throw when error happens during the authorization
+     * @throws ClientException              throw when error happens during the authorization
      */
-    public EmbeddedWebViewAuthorizationStrategy(final GenericWebViewClient webViewClient, final WebView webView)
+    public void performAuthorizationRequest(@Nullable final GenericAuthorizationRequest request)
             throws UnsupportedEncodingException, ClientException {
-        //TODO validate auth request in OAuth2Strategy.
+        Logger.verbose(TAG, "Perform the authorization request with embedded webView.");
+
+        final AzureActiveDirectoryWebViewClient webViewClient
+                = new AzureActiveDirectoryWebViewClient(mActivity, mCallback, request.getRedirectUri());
+        final WebView webView = mActivity.findViewById(R.id.webview);
         setUpWebView(webViewClient, webView);
-        mStartUrl = webViewClient.getRequest().getAuthorizationStartUrl();
+        loadStartUrl(request.getAuthorizationStartUrl());
+        // requestAuthorization could not return the authorization result
+        // The activity result is set in AuthenticationActivity.setResult()
+        // And AuthenticationActivity in ADAL/MSAL is not moved into common
+    }
+
+    /**
+     * Constructor of EmbeddedWebViewAuthorizationStrategy.
+     */
+    public EmbeddedWebViewAuthorizationStrategy(@NonNull final Activity activity,
+                                                @NonNull IChallengeCompletionCallback callback) {
+        mActivity = activity;
+        mCallback = callback;
     }
 
     /**
      * Set up the web view configurations.
+     *
      * @param webViewClient AzureActiveDirectoryWebViewClient
      */
     @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
-    private void setUpWebView(final GenericWebViewClient webViewClient, final WebView webView) {
+    private void setUpWebView(final AzureActiveDirectoryWebViewClient webViewClient, final WebView webView) {
         // Create the Web View to show the page
         mWebView = webView;
         WebSettings userAgentSetting = mWebView.getSettings();
@@ -110,15 +128,15 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericWebViewClient extends 
     /**
      * Load the start url for auth grant flow. It will load the black page first to avoid error for not loading web view.
      */
-    private void loadStartUrl() {
+    private void loadStartUrl(final String startUrl) {
         mWebView.post(new Runnable() {
             @Override
             public void run() {
                 // load blank first to avoid error for not loading webview
                 mWebView.loadUrl("about:blank");
                 Logger.verbose(TAG, "Launching embedded WebView for acquiring auth code.");
-                Logger.verbosePII(TAG, "The start url is" + mStartUrl);
-                mWebView.loadUrl(mStartUrl);
+                Logger.verbosePII(TAG, "The start url is" + startUrl);
+                mWebView.loadUrl(startUrl);
             }
         });
     }
