@@ -18,10 +18,10 @@ public class AuthorizationStrategyFactory <GenericAuthorizationStrategy extends 
 
     public GenericAuthorizationStrategy getAuthorizationStrategy(@NonNull final Activity activity,
                                                                  @NonNull AuthorizationConfiguration configuration,
-                                                                 IChallengeCompletionCallback callback) throws UnsupportedEncodingException, ClientException {
+                                                                 IChallengeCompletionCallback callback) {
         if (configuration.getWebViewType() == AuthorizationAgent.WEBVIEW) {
             Logger.info(TAG, "Use webView for authorization.");
-            return (GenericAuthorizationStrategy)(new EmbeddedWebViewAuthorizationStrategy(activity, callback));
+            return (GenericAuthorizationStrategy)(new EmbeddedWebViewAuthorizationStrategy(activity, configuration, callback));
         }
 
         /*if (configuration.getWebViewType() == WebViewType.SYSTEM_BROWSER) {

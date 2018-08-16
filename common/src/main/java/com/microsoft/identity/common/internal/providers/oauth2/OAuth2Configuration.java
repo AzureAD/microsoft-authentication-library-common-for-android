@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 
+import android.content.Context;
+
 /**
  * Configuration class for OAuth2Settings
  * Settings include things like:
@@ -33,4 +35,15 @@ package com.microsoft.identity.common.internal.providers.oauth2;
  * - etc...
  */
 public class OAuth2Configuration {
+    private Context mContext;
+
+    public Context getContext() {
+        return mContext;
+    }
+
+    public void setContext(Context mContext) {
+        this.mContext = mContext;
+    }
+
+
 }

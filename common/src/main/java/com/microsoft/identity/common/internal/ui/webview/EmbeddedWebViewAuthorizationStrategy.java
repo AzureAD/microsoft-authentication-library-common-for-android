@@ -38,35 +38,49 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFuture;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeCompletionCallback;
 
 import java.io.UnsupportedEncodingException;
-import java.util.concurrent.Future;
 
 /**
  * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
  */
-public class EmbeddedWebViewAuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest,
-        GenericAuthorizationResult extends AuthorizationResult>
-        extends AuthorizationStrategy<GenericAuthorizationRequest, GenericAuthorizationResult> {
+public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy {
 
     private static final String TAG = StringExtensions.class.getSimpleName();
     private Activity mActivity;
     private IChallengeCompletionCallback mCallback;
+    private AuthorizationConfiguration mConfiguration;
     private WebView mWebView;
-    private AuthorizationResultFuture mFuture;
 
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
      */
     public EmbeddedWebViewAuthorizationStrategy(@NonNull final Activity activity,
+                                                @NonNull final AuthorizationConfiguration configuration,
                                                 @NonNull IChallengeCompletionCallback callback) {
         mActivity = activity;
+        mConfiguration = configuration;
         mCallback = callback;
+    }
+
+    /**
+     * RequestAuthorization could not return the authorization result.
+     * The activity result is set in Authorization.setResult() and passed to the onActivityResult() of the calling activity.
+     *
+     * @param requestUrl authorization request url
+     */
+    @Override
+    public void requestAuthorization(final String requestUrl) {
+        Logger.verbose(TAG, "Perform the authorization request with embedded webView.");
+        final AzureActiveDirectoryWebViewClient webViewClient
+                = new AzureActiveDirectoryWebViewClient(mActivity, mCallback, mConfiguration.getRedirectUrl());
+        final WebView webView = mActivity.findViewById(R.id.webview);
+        setUpWebView(webViewClient, webView);
+        loadStartUrl(requestUrl);
     }
 
     /**
@@ -118,26 +132,5 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericAuthorizationRequest e
                 mWebView.loadUrl(startUrl);
             }
         });
-    }
-
-    public void requestAuthorization(@Nullable final GenericAuthorizationRequest request) throws UnsupportedEncodingException, ClientException {
-        Logger.verbose(TAG, "Perform the authorization request with embedded webView.");
-
-        final AzureActiveDirectoryWebViewClient webViewClient
-                = new AzureActiveDirectoryWebViewClient(mActivity, mCallback, request.getRedirectUri());
-        final WebView webView = mActivity.findViewById(R.id.webview);
-        setUpWebView(webViewClient, webView);
-        loadStartUrl(request.getAuthorizationStartUrl());
-        // requestAuthorization could not return the authorization result
-        // The activity result is set in AuthenticationActivity.setResult()
-        // And AuthenticationActivity in ADAL/MSAL is not moved into common
-
-        Logger.verbose(TAG, "Perform the authorization request with embedded webView.");
-        loadStartUrl(request.getAuthorizationStartUrl());
-    }
-
-    @Override
-    public void completeAuthorization(int requestCode, int resultCode, Intent data) {
-
     }
 }

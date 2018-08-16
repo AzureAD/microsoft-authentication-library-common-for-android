@@ -28,6 +28,7 @@ import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -79,13 +80,22 @@ public abstract class OAuth2Strategy
             final GenericAuthorizationStrategy authorizationStrategy) {
         validateAuthorizationRequest(request);
 
-        Future<AuthorizationResult> future = null;
+        /*
+        TODO GenericAuthorizationStrategy cannot be passed as a para here.
+        Because webview of EmbeddedWebviewAuthorizationStrategy needs to be initialized inside AuthorizationActivity.
+         */
 
-        try {
+        //mConfig.getContext().startActivity(AuthorizationActivity.createStartIntent(mConfig.getContext(), request, mConfig);
+        Future<AuthorizationResult> future = null;
+        /*try {
             future = authorizationStrategy.requestAuthorization(request); //NOPMD Suppressing PMD warning for unused variable
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
-        }
+        }*/
+
+
+        // AuthorizationResult will be set in PublicClientApplication.handleInteractiveRequestRedirect(int requestCode, int resultCode, final Intent data)
+        // which is called in myApp.AppCompatActivity.onActivityResult()
 
         return future;
 

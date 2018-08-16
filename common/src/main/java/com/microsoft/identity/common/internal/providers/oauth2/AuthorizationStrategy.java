@@ -34,14 +34,14 @@ import java.util.concurrent.Future;
  * and/or authentication information (OIDC)
  * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
  */
-public abstract class AuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest> {
+public abstract class AuthorizationStrategy {
+
     /**
      * Perform the authorization request.
      *
-     * @param request authorization request
-     * @return AuthorizationResult
+     * @param requestUrl authorization request url
      */
-    public abstract void requestAuthorization(GenericAuthorizationRequest request) throws UnsupportedEncodingException, ClientException;
+    public abstract void requestAuthorization(final String requestUrl) throws ClientException;
 
     //public abstract void completeAuthorization(int requestCode, int resultCode, final Intent data);
 

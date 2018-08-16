@@ -30,7 +30,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConf
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 
-public class BrowserAuthorizationStrategy <GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy <GenericAuthorizationRequest> {
+public class BrowserAuthorizationStrategy extends AuthorizationStrategy {
 
     private final Activity mActivity; //NOPMD
     private final AuthorizationConfiguration mAuthorizationConfiguration; //NOPMD //TODO Heidi
@@ -48,7 +48,7 @@ public class BrowserAuthorizationStrategy <GenericAuthorizationRequest extends A
     // 3.a. If custom tab enabled, use bind custom tab session
     // 3.b. If custom tab disabled, launch the url with browser
     @Override
-    public void requestAuthorization(GenericAuthorizationRequest request) throws ClientException {
+    public void requestAuthorization(final String requestUrl) throws ClientException {
         //TODO
         final Browser browser = BrowserSelector.select(mActivity.getApplicationContext());
         if (browser.isCustomTabsServiceSupported()) {
