@@ -563,6 +563,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertEquals(defaultTestBundle.mGeneratedIdToken, secondaryLoad.getIdToken());
     }
 
+    @Test
     public void removeIdToken() throws ClientException {
         // Save an Account into the cache
         final ISaveTokenResult result = mOauth2TokenCache.saveTokens(
