@@ -197,7 +197,7 @@ public class MsalOAuth2TokenCache
         final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
                 account.getEnvironment(),
-                CredentialType.RefreshToken,
+                CredentialType.IdToken,
                 clientId,
                 account.getRealm(),
                 null // wildcard (*)

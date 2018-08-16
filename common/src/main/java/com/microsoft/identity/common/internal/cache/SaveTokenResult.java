@@ -69,4 +69,42 @@ class SaveTokenResult implements ISaveTokenResult {
     public IdToken getIdToken() {
         return mIdToken;
     }
+
+    //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
+    @SuppressWarnings("PMD")
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SaveTokenResult that = (SaveTokenResult) o;
+
+        if (mAccount != null ? !mAccount.equals(that.mAccount) : that.mAccount != null)
+            return false;
+        if (mAccessToken != null ? !mAccessToken.equals(that.mAccessToken) : that.mAccessToken != null)
+            return false;
+        if (mRefreshToken != null ? !mRefreshToken.equals(that.mRefreshToken) : that.mRefreshToken != null)
+            return false;
+        return mIdToken != null ? mIdToken.equals(that.mIdToken) : that.mIdToken == null;
+    }
+    //CHECKSTYLE:ON
+
+    //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
+    @SuppressWarnings("PMD")
+    @Override
+    public int hashCode() {
+        int result = mAccount != null ? mAccount.hashCode() : 0;
+        result = 31 * result + (mAccessToken != null ? mAccessToken.hashCode() : 0);
+        result = 31 * result + (mRefreshToken != null ? mRefreshToken.hashCode() : 0);
+        result = 31 * result + (mIdToken != null ? mIdToken.hashCode() : 0);
+        return result;
+    }
+    //CHECKSTYLE:ON
+
 }
