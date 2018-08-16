@@ -1,8 +1,11 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -22,37 +25,68 @@ public final class AuthorizationActivity <GenericAuthorizationStrategy extends A
     static final String KEY_AUTH_INTENT = "authIntent";
 
     @VisibleForTesting
-    static final String KEY_AUTH_REQUEST = "authRequest";
+    static final String KEY_AUTHORIZATION_STARTED = "authStarted";
 
     @VisibleForTesting
-    static final String KEY_AUTHORIZATION_STARTED = "authStarted";
+    static final String KEY_PKEYAUTH_STATUS = "pkeyAuthStatus";
+
+    @VisibleForTesting
+    static final String KEY_AUTH_REQUEST_URL = "authRequestUrl";
+
+    @VisibleForTesting
+    static final String KEY_AUTH_CONFIGURATION = "authConfiguration";
+
+    static final String CUSTOM_TAB_REDIRECT = "com.microsoft.identity.customtab.redirect";
 
     private static final String TAG = AuthorizationActivity.class.getSimpleName();
 
     private boolean mAuthorizationStarted = false;
 
-    private GenericAuthorizationRequest mAuthorizationRequest;
+    private boolean mPkeyAuthStatus = false; //NOPMD //TODO Will finish the implementation in Phase 1 (broker is ready).
+
+    private String mAuthorizationRequestUrl;
     private GenericAuthorizationStrategy mAuthorizationStrategy;
     private AuthorizationConfiguration mAuthorizationConfiguration;
-    private ChallengeCompletionCallback mChallengeCompletionCallback;
+
+    public static Intent createStartIntent(final Context context,
+                                           final String requestUrl,
+                                           final AuthorizationConfiguration configuration) {
+        final Intent intent = new Intent(context, AuthorizationActivity.class);
+        intent.putExtra(KEY_AUTH_REQUEST_URL, requestUrl);
+        intent.putExtra(KEY_AUTH_CONFIGURATION, configuration);
+        return intent;
+    }
+
+    private void extractState(final Bundle state) {
+        if (state == null) {
+            Logger.warn(TAG,"No stored state. Unable to handle response");
+            finish();
+            return;
+        }
+
+        mAuthorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false);
+        mPkeyAuthStatus = state.getBoolean(KEY_PKEYAUTH_STATUS, false);
+        mAuthorizationRequestUrl = state.getString(KEY_AUTH_REQUEST_URL);
+        mAuthorizationConfiguration = (AuthorizationConfiguration)state.getSerializable(KEY_AUTH_CONFIGURATION);
+    }
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //0. Set telemetry if savedInstanceState.
-
-        //0.5 check getIntent null
-        // If activity is killed by the os, savedInstance will be the saved bundle.
-        if (savedInstanceState != null) {
-            Logger.verbose(TAG, null, "AuthenticationActivity is re-created after killed by the os.");
-            //extractState(savedInstanceState)
-            mAuthorizationStarted = true;
-            return;
+        if(savedInstanceState == null) {
+            extractState(getIntent().getExtras());
+        } else {
+            extractState(savedInstanceState);
         }
 
-        //1. Get the auth request from the bundle.
-
-        //2. Launch webView
+        //Initialize the authorization strategy if the auth have not started
+        if(!mAuthorizationStarted) {
+            mAuthorizationStrategy
+                    = (GenericAuthorizationStrategy) new AuthorizationStrategyFactory().getAuthorizationStrategy(
+                    this,
+                    mAuthorizationConfiguration,
+                    new ChallengeCompletionCallback());
+        }
     }
 
     /**
@@ -67,24 +101,28 @@ public final class AuthorizationActivity <GenericAuthorizationStrategy extends A
     @Override
     protected void onResume() {
         super.onResume();
+
+        /*
+         * If this is the first run of the activity, start the authorization request.
+         */
         if(!mAuthorizationStarted) {
-            //request auth code by calling authorizationStrategy.requestAuthCode();
+            mAuthorizationStarted = true;
             try {
-                mAuthorizationStrategy
-                        = (GenericAuthorizationStrategy) new AuthorizationStrategyFactory().getAuthorizationStrategy(
-                        this,
-                        mAuthorizationConfiguration,
-                        mChallengeCompletionCallback);
-                //mAuthorizationStrategy.requestAuthorization();
-            } catch (final UnsupportedEncodingException | ClientException exception) {
+                mAuthorizationStrategy.requestAuthorization(mAuthorizationRequestUrl);
+            } catch (ClientException exception) {
                 //TODO
             }
-            mAuthorizationStarted = true;
             return;
         }
 
         if(getIntent().getData()!= null) {
-            //received redirect from system browser
+            /*Logger.info(TAG, null, "onNewIntent is called, received redirect from system webview.");
+            final String url = intent.getStringExtra(CUSTOM_TAB_REDIRECT);
+
+            final Intent resultIntent = new Intent();
+            resultIntent.putExtra(Constants.AUTHORIZATION_FINAL_URL, url);
+            returnToCaller(Constants.UIResponse.AUTH_CODE_COMPLETE,
+                    resultIntent);*/
         } else {
             //cancel request
         }
@@ -99,35 +137,23 @@ public final class AuthorizationActivity <GenericAuthorizationStrategy extends A
     @Override
     protected void onSaveInstanceState(final Bundle outState) {
         super.onSaveInstanceState(outState);
-        /*
         outState.putBoolean(KEY_AUTHORIZATION_STARTED, mAuthorizationStarted);
-        outState.putParcelable(KEY_AUTH_INTENT, mAuthIntent);
-        outState.putString(KEY_AUTH_REQUEST, mAuthRequest.jsonSerializeString());
-         */
+        outState.putBoolean(KEY_PKEYAUTH_STATUS, mPkeyAuthStatus);
+        outState.putSerializable(KEY_AUTH_CONFIGURATION, mAuthorizationConfiguration);
+        outState.putString(KEY_AUTH_REQUEST_URL, mAuthorizationRequestUrl);
     }
 
     class ChallengeCompletionCallback implements IChallengeCompletionCallback {
         @Override
         public void onChallengeResponseReceived(final int returnCode, final Intent responseIntent) {
             Logger.verbose(TAG, null, "onChallengeResponseReceived:" + returnCode);
-
-            if (mAuthorizationRequest == null) {
-                Logger.warn(TAG, null, "Request object is null");
-            } else {
-                // set request id related to this response to send the delegateId
-                //Logger.verbose(TAG, null,
-                //        "Set request id related to response. "
-                //                + "REQUEST_ID for caller returned to:" + mAuthorizationRequest.getCorrelationId());
-                //responseIntent.putExtra(AuthenticationConstants.Browser.REQUEST_ID, mAuthorizationRequest.getCorrelationId());
-                //TODO
-            }
-
             setResult(returnCode, responseIntent);
             finish();
         }
 
         @Override
         public void setPKeyAuthStatus(final boolean status) {
+            mPkeyAuthStatus = status;
             Logger.verbose(TAG, null, "setPKeyAuthStatus:" + status);
         }
     }
