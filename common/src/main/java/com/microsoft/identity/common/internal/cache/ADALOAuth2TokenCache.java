@@ -162,7 +162,9 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public ISaveTokenResult loadTokens(com.microsoft.identity.common.internal.dto.Account account) {
+    public ISaveTokenResult loadTokens(
+            final String clientId,
+            final com.microsoft.identity.common.internal.dto.Account account) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );

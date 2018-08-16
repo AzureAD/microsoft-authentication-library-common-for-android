@@ -64,10 +64,11 @@ public abstract class OAuth2TokenCache
     /**
      * Loads the tokens for the supplied Account into the result {@link ISaveTokenResult}.
      *
-     * @param account The Account whose Credentials should be loaded.
+     * @param clientId The ClientId of the current app.
+     * @param account  The Account whose Credentials should be loaded.
      * @return The resulting ISaveTokenResult. Entries may be empty if not present in the cache.
      */
-    public abstract ISaveTokenResult loadTokens(final Account account);
+    public abstract ISaveTokenResult loadTokens(final String clientId, final Account account);
 
     /**
      * Removes the supplied Credential from the cache.

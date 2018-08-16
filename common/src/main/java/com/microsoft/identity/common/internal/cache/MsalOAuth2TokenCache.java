@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
+import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -171,15 +172,90 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public ISaveTokenResult loadTokens(Account account) {
-        // TODO
-        throw new UnsupportedOperationException("Not yet implemented");
+    public ISaveTokenResult loadTokens(final String clientId, final Account account) {
+        // Load the AccessTokens
+        final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                account.getHomeAccountId(),
+                account.getEnvironment(),
+                CredentialType.AccessToken,
+                clientId,
+                account.getRealm(),
+                null // wildcard (*)
+        );
+
+        // Load the RefreshTokens
+        final List<Credential> refreshTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                account.getHomeAccountId(),
+                account.getEnvironment(),
+                CredentialType.RefreshToken,
+                clientId,
+                account.getRealm(),
+                null // wildcard (*)
+        );
+
+        // Load the IdTokens
+        final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                account.getHomeAccountId(),
+                account.getEnvironment(),
+                CredentialType.RefreshToken,
+                clientId,
+                account.getRealm(),
+                null // wildcard (*)
+        );
+
+        // Check that there was only 1 result for each of these
+        final List<List<Credential>> credentialLists = new ArrayList<>();
+        credentialLists.add(accessTokens);
+        credentialLists.add(refreshTokens);
+        credentialLists.add(idTokens);
+
+        AccessToken accessToken = null;
+        RefreshToken refreshToken = null;
+        IdToken idToken = null;
+
+        for (int ii = 0; ii < credentialLists.size(); ii++) {
+            final List<Credential> credentials = credentialLists.get(ii);
+
+            if (credentials.isEmpty()) {
+                Logger.warn(TAG, "Empty List<Credential> @ index [" + ii + "]");
+            } else if (credentials.size() > 1) {
+                // TODO throw a ClientException?
+            } else {
+                final Credential currentCredential = credentials.get(0);
+                final CredentialType currentCredentialType = CredentialType.fromString(
+                        currentCredential.getCredentialType()
+                );
+
+                if (null == currentCredentialType) {
+                    Logger.warn(TAG, "Unrecognized Credential type: skipping.");
+                    continue;
+                }
+
+                switch (currentCredentialType) {
+                    case AccessToken:
+                        accessToken = (AccessToken) currentCredential;
+                        continue;
+                    case RefreshToken:
+                        refreshToken = (RefreshToken) currentCredential;
+                        continue;
+                    case IdToken:
+                        idToken = (IdToken) currentCredential;
+                }
+            }
+        }
+
+        final SaveTokenResult result = new SaveTokenResult();
+        result.setAccount(account);
+        result.setAccessToken(accessToken);
+        result.setRefreshToken(refreshToken);
+        result.setIdToken(idToken);
+
+        return result;
     }
 
     @Override
     public boolean removeCredential(Credential credential) {
-        // TODO
-        throw new UnsupportedOperationException("Not yet implemented");
+        return mAccountCredentialCache.removeCredential(credential);
     }
 
     @Override
