@@ -113,7 +113,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public void saveTokens(
+    public ISaveTokenResult saveTokens(
             final MicrosoftStsOAuth2Strategy oAuth2Strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) throws ClientException {
@@ -160,6 +160,26 @@ public class MsalOAuth2TokenCache
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
         saveCredentials(accessTokenToSave, refreshTokenToSave, idTokenToSave);
+
+        final SaveTokenResult result = new SaveTokenResult();
+        result.setAccount(accountToSave);
+        result.setAccessToken(accessTokenToSave);
+        result.setRefreshToken(refreshTokenToSave);
+        result.setIdToken(idTokenToSave);
+
+        return result;
+    }
+
+    @Override
+    public ISaveTokenResult loadTokens(Account account) {
+        // TODO
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    @Override
+    public boolean removeCredential(Credential credential) {
+        // TODO
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override

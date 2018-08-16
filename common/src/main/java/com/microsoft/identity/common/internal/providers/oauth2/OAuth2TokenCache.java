@@ -25,7 +25,9 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.content.Context;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.cache.ISaveTokenResult;
 import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.Credential;
 
 import java.util.List;
 
@@ -52,11 +54,28 @@ public abstract class OAuth2TokenCache
      * @param oAuth2Strategy The strategy used to create the token request.
      * @param request        The request used to acquire tokens and credentials.
      * @param response       The response received from the IdP/STS.
+     * @return The {@link ISaveTokenResult} containing the Account + Credentials saved to the cache.
      * @throws ClientException If tokens cannot be successfully saved.
      */
-    public abstract void saveTokens(final T oAuth2Strategy,
-                                    final U request,
-                                    final V response) throws ClientException;
+    public abstract ISaveTokenResult saveTokens(final T oAuth2Strategy,
+                                                final U request,
+                                                final V response) throws ClientException;
+
+    /**
+     * Loads the tokens for the supplied Account into the result {@link ISaveTokenResult}.
+     *
+     * @param account The Account whose Credentials should be loaded.
+     * @return The resulting ISaveTokenResult. Entries may be empty if not present in the cache.
+     */
+    public abstract ISaveTokenResult loadTokens(final Account account);
+
+    /**
+     * Removes the supplied Credential from the cache.
+     *
+     * @param credential The Credential to remove.
+     * @return True, if the Credential was removed. False otherwise.
+     */
+    public abstract boolean removeCredential(final Credential credential);
 
     /**
      * Returns the IAccount matching the supplied criteria.
@@ -92,6 +111,11 @@ public abstract class OAuth2TokenCache
                                           final String clientId,
                                           final String homeAccountId);
 
+    /**
+     * Gets the Context used to initialize this OAuth2TokenCache.
+     *
+     * @return The Context.
+     */
     protected final Context getContext() {
         return mContext;
     }

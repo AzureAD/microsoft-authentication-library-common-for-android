@@ -34,6 +34,7 @@ import com.microsoft.identity.common.adal.internal.cache.CacheKey;
 import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -56,6 +57,7 @@ import java.util.List;
 public class ADALOAuth2TokenCache
         extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
         implements IShareSingleSignOnState {
+    private static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported by the ADALOAuth2TokenCache";
     private ISharedPreferencesFileManager mISharedPreferencesFileManager;
 
     private static final String TAG = ADALOAuth2TokenCache.class.getSimpleName();
@@ -115,7 +117,7 @@ public class ADALOAuth2TokenCache
      * @param response
      */
     @Override
-    public void saveTokens(
+    public ISaveTokenResult saveTokens(
             final AzureActiveDirectoryOAuth2Strategy strategy,
             final AzureActiveDirectoryAuthorizationRequest request,
             final AzureActiveDirectoryTokenResponse response) {
@@ -155,6 +157,22 @@ public class ADALOAuth2TokenCache
         for (final IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> sharedSsoCache : mSharedSSOCaches) {
             sharedSsoCache.setSingleSignOnState(account, refreshToken);
         }
+
+        return null; // Returning null, since the ADAL cache's schema doesn't support this return type.
+    }
+
+    @Override
+    public ISaveTokenResult loadTokens(com.microsoft.identity.common.internal.dto.Account account) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public boolean removeCredential(Credential credential) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
     }
 
     @Override
@@ -162,7 +180,7 @@ public class ADALOAuth2TokenCache
                                                                          final String clientId,
                                                                          final String homeAccountId) {
         throw new UnsupportedOperationException(
-                "This method is unsupported by the ADALOAuth2TokenCache"
+                ERR_UNSUPPORTED_OPERATION
         );
     }
 
@@ -170,7 +188,7 @@ public class ADALOAuth2TokenCache
     public List<com.microsoft.identity.common.internal.dto.Account> getAccounts(final String environment,
                                                                                 final String clientId) {
         throw new UnsupportedOperationException(
-                "This method is unsupported by the ADALOAuth2TokenCache"
+                ERR_UNSUPPORTED_OPERATION
         );
     }
 
@@ -179,7 +197,7 @@ public class ADALOAuth2TokenCache
                                  final String clientId,
                                  final String homeAccountId) {
         throw new UnsupportedOperationException(
-                "This method is unsupported by the ADALOAuth2TokenCache"
+                ERR_UNSUPPORTED_OPERATION
         );
     }
 
