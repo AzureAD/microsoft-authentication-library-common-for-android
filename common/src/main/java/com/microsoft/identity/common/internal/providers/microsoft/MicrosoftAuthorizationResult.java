@@ -60,4 +60,6 @@ public abstract class MicrosoftAuthorizationResult<
         setAuthorizationErrorResponse(errorResponse);
     }
 
+
+
 }

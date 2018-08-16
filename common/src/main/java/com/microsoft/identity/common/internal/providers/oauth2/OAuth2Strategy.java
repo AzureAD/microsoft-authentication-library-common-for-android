@@ -92,6 +92,8 @@ public abstract class OAuth2Strategy
 
     }
 
+    public abstract AuthorizationResultFactory getAuthorizationResultFactory();
+
     /**
      * @param request generic token request.
      * @return GenericTokenResult

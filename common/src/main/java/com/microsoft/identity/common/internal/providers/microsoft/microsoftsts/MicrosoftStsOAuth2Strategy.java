@@ -36,6 +36,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -67,7 +68,12 @@ public class MicrosoftStsOAuth2Strategy
      */
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config) {
         super(config);
-        setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oAuth2/v2.0/token");
+        setTokenEndpoint("https://login.microsoftonline.com/common/oAuth2/v2.0/token");
+    }
+
+    @Override
+    public AuthorizationResultFactory getAuthorizationResultFactory() {
+        return new MicrosoftStsAuthorizationResultFactory();
     }
 
     @Override

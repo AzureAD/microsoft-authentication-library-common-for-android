@@ -59,23 +59,4 @@ public class MicrosoftStsAuthorizationResult
         super(authStatus, errorResponse);
     }
 
-
-    @Override
-    protected MicrosoftStsAuthorizationResult getAuthorizationResultFromResponseUri(String redirectUri) {
-        AuthorizationResponse authorizationResponse = null;
-        AuthorizationErrorResponse authorizationErrorResponse = null;
-
-        Uri response = Uri.parse(redirectUri);
-        Set<String> queryParameterNames = response.getQueryParameterNames();
-
-        if(queryParameterNames.contains(AuthorizationErrorResponse.Fields.ERROR)){
-            authorizationErrorResponse.setError(response.getQueryParameter(AuthorizationErrorResponse.Fields.ERROR));
-            authorizationErrorResponse.setErrorDescription(response.getQueryParameter(AuthorizationErrorResponse.Fields.ERROR_DESCRIPTION));
-        }else{
-            authorizationResponse.setCode(response.getQueryParameter(AuthorizationResponse.Fields.CODE));
-            authorizationResponse.setState(response.getQueryParameter(AuthorizationResponse.Fields.STATE));
-        }
-
-        return new MicrosoftStsAuthorizationResult(authorizationResponse, authorizationErrorResponse);
-    }
 }

@@ -29,6 +29,7 @@ import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -58,6 +59,11 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     @Override
     public Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy) {
         return super.requestAuthorization(request, authorizationStrategy);
+    }
+
+    @Override
+    public AuthorizationResultFactory getAuthorizationResultFactory() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -89,6 +89,7 @@ public abstract class AuthorizationRequest implements Serializable {
     /**
      * Scopes scopes that you want the user to consent to is required for V2 auth request.
      */
+    @SerializedName("scope")
     private String mScope;
 
     /**
@@ -210,6 +211,10 @@ public abstract class AuthorizationRequest implements Serializable {
         String queryStringParameters = ObjectMapper.serializeObjectToFormUrlEncoded(this);
         return getAuthorizationEndpoint() + '?' + queryStringParameters;
 
+    }
+
+    public static class ResponseTypes {
+        public static final String CODE = "code";
     }
 
 }

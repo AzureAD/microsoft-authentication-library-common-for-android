@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.content.Intent;
+import android.util.Log;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -46,7 +47,8 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
     private static final String TAG = MicrosoftStsAuthorizationResultFactory.class.getSimpleName();
 
     /** Constant key to get authorization request final url from intent. */
-    public static final String MSSTS_AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.finalUrl";
+    //public static final String MSSTS_AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.finalUrl";
+    public static final String MSSTS_AUTHORIZATION_FINAL_URL = AuthenticationConstants.Browser.RESPONSE_FINAL_URL;
 
     @Override
     public MicrosoftStsAuthorizationResult createAuthorizationResult(final int resultCode, final Intent data) {
@@ -121,6 +123,11 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                                                                                  final String requestStateParameter) {
         MicrosoftStsAuthorizationResult result;
 
+        if(requestStateParameter!=null){
+            Log.i("asdf", "asdf");
+        }
+
+        /*
         if (StringUtil.isEmpty(state)) {
             Logger.warn(TAG, "State parameter is not returned from the webview redirect.");
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
@@ -131,10 +138,11 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     ErrorStrings.STATE_MISMATCH, MicrosoftAuthorizationErrorResponse.STATE_NOT_THE_SAME);
         } else {
+        */
             Logger.info(TAG, "Auth code is successfully returned from webview redirect.");
             MicrosoftStsAuthorizationResponse authResponse = new MicrosoftStsAuthorizationResponse(code, state);
             result = new MicrosoftStsAuthorizationResult(AuthorizationStatus.SUCCESS, authResponse);
-        }
+        //}
 
         return result;
     }

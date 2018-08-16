@@ -58,6 +58,10 @@ public abstract class AuthorizationResult<
         this.mAuthorizationStatus = status;
     }
 
+    public AuthorizationResult(){
+
+    }
+
     /**
      * Returns whether the authorization request was successful or not.
      *
@@ -99,8 +103,6 @@ public abstract class AuthorizationResult<
     protected void setAuthorizationStatus(final AuthorizationStatus authStatus) {
         mAuthorizationStatus = authStatus;
     }
-
-    protected abstract AuthorizationResult getAuthorizationResultFromResponseUri(String redirectUri);
 
 }
 
