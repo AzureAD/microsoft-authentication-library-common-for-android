@@ -1,26 +1,23 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
+import android.view.MotionEvent;
+import android.view.View;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 
+import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.ui.AuthorizationStrategyFactory;
+import com.microsoft.identity.common.internal.ui.webview.OAuth2WebViewClient;
+import com.microsoft.identity.common.internal.ui.webview.WebViewClientFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeCompletionCallback;
 
-import java.io.UnsupportedEncodingException;
-
-
-public final class AuthorizationActivity <GenericAuthorizationStrategy extends AuthorizationStrategy,
-        GenericAuthorizationRequest extends MicrosoftAuthorizationRequest>
-        extends Activity {
+public final class AuthorizationActivity <GenericOAuth2WebViewClient extends OAuth2WebViewClient> extends Activity {
     @VisibleForTesting
     static final String KEY_AUTH_INTENT = "authIntent";
 
@@ -42,16 +39,20 @@ public final class AuthorizationActivity <GenericAuthorizationStrategy extends A
 
     private boolean mAuthorizationStarted = false;
 
+    private WebView mWebView;
+
+    private Intent mAuthIntent;
+
     private boolean mPkeyAuthStatus = false; //NOPMD //TODO Will finish the implementation in Phase 1 (broker is ready).
 
     private String mAuthorizationRequestUrl;
-    private GenericAuthorizationStrategy mAuthorizationStrategy;
     private AuthorizationConfiguration mAuthorizationConfiguration;
 
-    public static Intent createStartIntent(final Context context,
+    public static Intent createStartIntent(final Intent authIntent,
                                            final String requestUrl,
                                            final AuthorizationConfiguration configuration) {
-        final Intent intent = new Intent(context, AuthorizationActivity.class);
+        final Intent intent = new Intent(configuration.getContext(), AuthorizationActivity.class);
+        intent.putExtra(KEY_AUTH_INTENT, authIntent);
         intent.putExtra(KEY_AUTH_REQUEST_URL, requestUrl);
         intent.putExtra(KEY_AUTH_CONFIGURATION, configuration);
         return intent;
@@ -64,6 +65,7 @@ public final class AuthorizationActivity <GenericAuthorizationStrategy extends A
             return;
         }
 
+        mAuthIntent = state.getParcelable(KEY_AUTH_INTENT);
         mAuthorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false);
         mPkeyAuthStatus = state.getBoolean(KEY_PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(KEY_AUTH_REQUEST_URL);
@@ -79,13 +81,24 @@ public final class AuthorizationActivity <GenericAuthorizationStrategy extends A
             extractState(savedInstanceState);
         }
 
-        //Initialize the authorization strategy if the auth have not started
-        if(!mAuthorizationStarted) {
-            mAuthorizationStrategy
-                    = (GenericAuthorizationStrategy) new AuthorizationStrategyFactory().getAuthorizationStrategy(
+        if(mAuthorizationConfiguration.getIdpType().equals("Microsoft") && !mAuthorizationStarted) {
+            GenericOAuth2WebViewClient webViewClient
+                    = (GenericOAuth2WebViewClient)WebViewClientFactory.getInstance().getWebViewClient(
+                            mAuthorizationConfiguration,
                     this,
-                    mAuthorizationConfiguration,
-                    new ChallengeCompletionCallback());
+                            new ChallengeCompletionCallback());
+            setUpWebView(webViewClient);
+            mAuthorizationStarted = true;
+            mWebView.post(new Runnable() {
+                @Override
+                public void run() {
+                    // load blank first to avoid error for not loading webview
+                    mWebView.loadUrl("about:blank");
+                    Logger.verbose(TAG, "Launching embedded WebView for acquiring auth code.");
+                    Logger.verbosePII(TAG, "The start url is" + mAuthorizationRequestUrl);
+                    mWebView.loadUrl(mAuthorizationRequestUrl);
+                }
+            });
         }
     }
 
@@ -107,31 +120,29 @@ public final class AuthorizationActivity <GenericAuthorizationStrategy extends A
          */
         if(!mAuthorizationStarted) {
             mAuthorizationStarted = true;
-            try {
-                mAuthorizationStrategy.requestAuthorization(mAuthorizationRequestUrl);
-            } catch (ClientException exception) {
-                //TODO
-            }
+            startActivity(mAuthIntent);
             return;
         }
 
         if(getIntent().getData()!= null) {
-            /*Logger.info(TAG, null, "onNewIntent is called, received redirect from system webview.");
-            final String url = intent.getStringExtra(CUSTOM_TAB_REDIRECT);
+            Logger.info(TAG, null, "onNewIntent is called, received redirect from system webview.");
+            final String url = getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
 
             final Intent resultIntent = new Intent();
-            resultIntent.putExtra(Constants.AUTHORIZATION_FINAL_URL, url);
-            returnToCaller(Constants.UIResponse.AUTH_CODE_COMPLETE,
-                    resultIntent);*/
+            resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
+            setResult(AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE,
+                    resultIntent);
+            finish();
         } else {
-            //cancel request
+            setResult(AuthorizationStrategy.UIResponse.CANCEL, new Intent());
+            finish();
         }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        mAuthorizationStrategy.dispose(); //TODO to unbind the custom tabs service if needed
+        //mAuthorizationStrategy.dispose(); //TODO to unbind the custom tabs service if needed
     }
 
     @Override
@@ -141,6 +152,41 @@ public final class AuthorizationActivity <GenericAuthorizationStrategy extends A
         outState.putBoolean(KEY_PKEYAUTH_STATUS, mPkeyAuthStatus);
         outState.putSerializable(KEY_AUTH_CONFIGURATION, mAuthorizationConfiguration);
         outState.putString(KEY_AUTH_REQUEST_URL, mAuthorizationRequestUrl);
+    }
+
+    /**
+     * Set up the web view configurations.
+     * @param webViewClient AzureActiveDirectoryWebViewClient
+     */
+    @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
+    private void setUpWebView(final GenericOAuth2WebViewClient webViewClient) {
+        // Create the Web View to show the page
+        mWebView =  this.findViewById(R.id.webview);
+        WebSettings userAgentSetting = mWebView.getSettings();
+        final String userAgent = userAgentSetting.getUserAgentString();
+        mWebView.getSettings().setUserAgentString(
+                userAgent + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
+        mWebView.getSettings().setJavaScriptEnabled(true);
+        mWebView.requestFocus(View.FOCUS_DOWN);
+
+        // Set focus to the view for touch event
+        mWebView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(final View view, final MotionEvent event) {
+                int action = event.getAction();
+                if ((action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_UP) && !view.hasFocus()) {
+                    view.requestFocus();
+                }
+                return false;
+            }
+        });
+
+        mWebView.getSettings().setLoadWithOverviewMode(true);
+        mWebView.getSettings().setDomStorageEnabled(true);
+        mWebView.getSettings().setUseWideViewPort(true);
+        mWebView.getSettings().setBuiltInZoomControls(true);
+        mWebView.setVisibility(View.INVISIBLE);
+        mWebView.setWebViewClient(webViewClient);
     }
 
     class ChallengeCompletionCallback implements IChallengeCompletionCallback {
