@@ -251,7 +251,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void saveTokens() throws Exception {
-        mOauth2TokenCache.saveTokens(
+        mOauth2TokenCache.save(
                 mockStrategy,
                 mockRequest,
                 mockResponse
@@ -307,7 +307,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         // Set the wider target on the new AT to write...
         defaultTestBundle.mGeneratedAccessToken.setTarget(extendedScopes);
 
-        mOauth2TokenCache.saveTokens(
+        mOauth2TokenCache.save(
                 mockStrategy,
                 mockRequest,
                 mockResponse
@@ -344,7 +344,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void getAccount() throws ClientException {
         // Save an Account into the cache
-        mOauth2TokenCache.saveTokens(
+        mOauth2TokenCache.save(
                 mockStrategy,
                 mockRequest,
                 mockResponse
@@ -434,7 +434,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                     )
             ).thenReturn(testBundles.get(i).mGeneratedIdToken);
 
-            mOauth2TokenCache.saveTokens(
+            mOauth2TokenCache.save(
                     mockStrategy,
                     mockRequest,
                     mockResponse
@@ -465,7 +465,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void removeAccount() throws ClientException {
         // Save an Account into the cache
-        mOauth2TokenCache.saveTokens(
+        mOauth2TokenCache.save(
                 mockStrategy,
                 mockRequest,
                 mockResponse
@@ -477,7 +477,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void removeAccountNoMatch() throws ClientException {
         // Save an Account into the cache
-        mOauth2TokenCache.saveTokens(
+        mOauth2TokenCache.save(
                 mockStrategy,
                 mockRequest,
                 mockResponse
@@ -500,7 +500,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void loadTokens() throws ClientException {
         // Save an Account into the cache
-        final ICacheRecord result = mOauth2TokenCache.saveTokens(
+        final ICacheRecord result = mOauth2TokenCache.save(
                 mockStrategy,
                 mockRequest,
                 mockResponse
@@ -522,7 +522,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void removeAccessToken() throws ClientException {
         // Save an Account into the cache
-        final ICacheRecord result = mOauth2TokenCache.saveTokens(
+        final ICacheRecord result = mOauth2TokenCache.save(
                 mockStrategy,
                 mockRequest,
                 mockResponse
@@ -544,7 +544,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void removeRefreshToken() throws ClientException {
         // Save an Account into the cache
-        final ICacheRecord result = mOauth2TokenCache.saveTokens(
+        final ICacheRecord result = mOauth2TokenCache.save(
                 mockStrategy,
                 mockRequest,
                 mockResponse
@@ -566,7 +566,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void removeIdToken() throws ClientException {
         // Save an Account into the cache
-        final ICacheRecord result = mOauth2TokenCache.saveTokens(
+        final ICacheRecord result = mOauth2TokenCache.save(
                 mockStrategy,
                 mockRequest,
                 mockResponse

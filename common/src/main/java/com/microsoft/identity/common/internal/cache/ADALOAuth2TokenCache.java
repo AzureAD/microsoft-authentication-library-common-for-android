@@ -117,11 +117,11 @@ public class ADALOAuth2TokenCache
      * @param response
      */
     @Override
-    public ICacheRecord saveTokens(
+    public ICacheRecord save(
             final AzureActiveDirectoryOAuth2Strategy strategy,
             final AzureActiveDirectoryAuthorizationRequest request,
             final AzureActiveDirectoryTokenResponse response) {
-        final String methodName = "saveTokens";
+        final String methodName = "save";
         Logger.info(TAG + ":" + methodName, "Saving Tokens...");
 
         final AzureActiveDirectoryAccount account = strategy.createAccount(response);

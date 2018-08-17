@@ -114,7 +114,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public ICacheRecord saveTokens(
+    public ICacheRecord save(
             final MicrosoftStsOAuth2Strategy oAuth2Strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) throws ClientException {

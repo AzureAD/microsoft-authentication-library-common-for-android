@@ -57,9 +57,9 @@ public abstract class OAuth2TokenCache
      * @return The {@link ICacheRecord} containing the Account + Credentials saved to the cache.
      * @throws ClientException If tokens cannot be successfully saved.
      */
-    public abstract ICacheRecord saveTokens(final T oAuth2Strategy,
-                                            final U request,
-                                            final V response) throws ClientException;
+    public abstract ICacheRecord save(final T oAuth2Strategy,
+                                      final U request,
+                                      final V response) throws ClientException;
 
     /**
      * Loads the tokens for the supplied Account into the result {@link ICacheRecord}.
