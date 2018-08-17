@@ -127,7 +127,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
             Log.i("asdf", "asdf");
         }
 
-        /*
+
         if (StringUtil.isEmpty(state)) {
             Logger.warn(TAG, "State parameter is not returned from the webview redirect.");
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
@@ -138,11 +138,11 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     ErrorStrings.STATE_MISMATCH, MicrosoftAuthorizationErrorResponse.STATE_NOT_THE_SAME);
         } else {
-        */
+
             Logger.info(TAG, "Auth code is successfully returned from webview redirect.");
             MicrosoftStsAuthorizationResponse authResponse = new MicrosoftStsAuthorizationResponse(code, state);
             result = new MicrosoftStsAuthorizationResult(AuthorizationStatus.SUCCESS, authResponse);
-        //}
+        }
 
         return result;
     }
