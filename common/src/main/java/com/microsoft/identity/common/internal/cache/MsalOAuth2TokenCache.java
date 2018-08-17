@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
+import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -113,7 +114,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public void saveTokens(
+    public ICacheRecord saveTokens(
             final MicrosoftStsOAuth2Strategy oAuth2Strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) throws ClientException {
@@ -160,6 +161,60 @@ public class MsalOAuth2TokenCache
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
         saveCredentials(accessTokenToSave, refreshTokenToSave, idTokenToSave);
+
+        final CacheRecord result = new CacheRecord();
+        result.setAccount(accountToSave);
+        result.setAccessToken(accessTokenToSave);
+        result.setRefreshToken(refreshTokenToSave);
+        result.setIdToken(idTokenToSave);
+
+        return result;
+    }
+
+    @Override
+    public ICacheRecord loadTokens(final String clientId, final Account account) {
+        // Load the AccessTokens
+        final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                account.getHomeAccountId(),
+                account.getEnvironment(),
+                CredentialType.AccessToken,
+                clientId,
+                account.getRealm(),
+                null // wildcard (*)
+        );
+
+        // Load the RefreshTokens
+        final List<Credential> refreshTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                account.getHomeAccountId(),
+                account.getEnvironment(),
+                CredentialType.RefreshToken,
+                clientId,
+                account.getRealm(),
+                null // wildcard (*)
+        );
+
+        // Load the IdTokens
+        final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                account.getHomeAccountId(),
+                account.getEnvironment(),
+                CredentialType.IdToken,
+                clientId,
+                account.getRealm(),
+                null // wildcard (*)
+        );
+
+        final CacheRecord result = new CacheRecord();
+        result.setAccount(account);
+        result.setAccessToken(accessTokens.isEmpty() ? null : (AccessToken) accessTokens.get(0));
+        result.setRefreshToken(refreshTokens.isEmpty() ? null : (RefreshToken) refreshTokens.get(0));
+        result.setIdToken(idTokens.isEmpty() ? null : (IdToken) idTokens.get(0));
+
+        return result;
+    }
+
+    @Override
+    public boolean removeCredential(Credential credential) {
+        return mAccountCredentialCache.removeCredential(credential);
     }
 
     @Override

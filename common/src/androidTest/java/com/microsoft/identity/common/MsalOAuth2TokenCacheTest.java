@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.IShareSingleSignOnState;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
@@ -494,6 +495,94 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void removeAccountCacheEmpty() {
         assertFalse(mOauth2TokenCache.removeAccount(ENVIRONMENT, CLIENT_ID, HOME_ACCOUNT_ID));
+    }
+
+    @Test
+    public void loadTokens() throws ClientException {
+        // Save an Account into the cache
+        final ICacheRecord result = mOauth2TokenCache.saveTokens(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        assertEquals(defaultTestBundle.mGeneratedAccount, result.getAccount());
+        assertEquals(defaultTestBundle.mGeneratedAccessToken, result.getAccessToken());
+        assertEquals(defaultTestBundle.mGeneratedRefreshToken, result.getRefreshToken());
+        assertEquals(defaultTestBundle.mGeneratedIdToken, result.getIdToken());
+
+        final ICacheRecord secondaryLoad = mOauth2TokenCache.loadTokens(
+                CLIENT_ID,
+                defaultTestBundle.mGeneratedAccount
+        );
+
+        assertEquals(result, secondaryLoad);
+    }
+
+    @Test
+    public void removeAccessToken() throws ClientException {
+        // Save an Account into the cache
+        final ICacheRecord result = mOauth2TokenCache.saveTokens(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        mOauth2TokenCache.removeCredential(result.getAccessToken());
+
+        final ICacheRecord secondaryLoad = mOauth2TokenCache.loadTokens(
+                CLIENT_ID,
+                defaultTestBundle.mGeneratedAccount
+        );
+
+        assertEquals(defaultTestBundle.mGeneratedAccount, secondaryLoad.getAccount());
+        assertNull(secondaryLoad.getAccessToken());
+        assertEquals(defaultTestBundle.mGeneratedRefreshToken, secondaryLoad.getRefreshToken());
+        assertEquals(defaultTestBundle.mGeneratedIdToken, secondaryLoad.getIdToken());
+    }
+
+    @Test
+    public void removeRefreshToken() throws ClientException {
+        // Save an Account into the cache
+        final ICacheRecord result = mOauth2TokenCache.saveTokens(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        mOauth2TokenCache.removeCredential(result.getRefreshToken());
+
+        final ICacheRecord secondaryLoad = mOauth2TokenCache.loadTokens(
+                CLIENT_ID,
+                defaultTestBundle.mGeneratedAccount
+        );
+
+        assertEquals(defaultTestBundle.mGeneratedAccount, secondaryLoad.getAccount());
+        assertEquals(defaultTestBundle.mGeneratedAccessToken, secondaryLoad.getAccessToken());
+        assertNull(secondaryLoad.getRefreshToken());
+        assertEquals(defaultTestBundle.mGeneratedIdToken, secondaryLoad.getIdToken());
+    }
+
+    @Test
+    public void removeIdToken() throws ClientException {
+        // Save an Account into the cache
+        final ICacheRecord result = mOauth2TokenCache.saveTokens(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        mOauth2TokenCache.removeCredential(result.getIdToken());
+
+        final ICacheRecord secondaryLoad = mOauth2TokenCache.loadTokens(
+                CLIENT_ID,
+                defaultTestBundle.mGeneratedAccount
+        );
+
+        assertEquals(defaultTestBundle.mGeneratedAccount, secondaryLoad.getAccount());
+        assertEquals(defaultTestBundle.mGeneratedAccessToken, secondaryLoad.getAccessToken());
+        assertEquals(defaultTestBundle.mGeneratedRefreshToken, secondaryLoad.getRefreshToken());
+        assertNull(secondaryLoad.getIdToken());
     }
 
 }
