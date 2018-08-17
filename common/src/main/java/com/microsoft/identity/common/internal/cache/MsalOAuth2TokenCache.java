@@ -246,16 +246,6 @@ public class MsalOAuth2TokenCache
                         null // wildcard (*) realm
                 );
 
-        // Declare a List to hold the MicrosoftStsAccounts
-        final List<Account> microsoftStsAccounts = new ArrayList<>();
-
-        // Grab all of the Accounts supplied by either the v1 or v2 endpoint
-        for (final Account account : accountsForEnvironment) {
-            if (MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(account.getAuthorityType())) {
-                microsoftStsAccounts.add(account);
-            }
-        }
-
         // Grab the Credentials for this app...
         final List<Credential> appCredentials =
                 mAccountCredentialCache.getCredentialsFilteredBy(
@@ -268,7 +258,7 @@ public class MsalOAuth2TokenCache
                 );
 
         // For each Account with an associated RT, add it to the result List...
-        for (final Account account : microsoftStsAccounts) {
+        for (final Account account : accountsForEnvironment) {
             if (accountHasCredential(account, appCredentials)) {
                 accountsForThisApp.add(account);
             }
