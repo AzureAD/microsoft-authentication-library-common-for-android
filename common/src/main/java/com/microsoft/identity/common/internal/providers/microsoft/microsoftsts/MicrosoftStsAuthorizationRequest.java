@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
