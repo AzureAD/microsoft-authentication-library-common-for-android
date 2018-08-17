@@ -41,6 +41,11 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class CustomTabsManager {
     private static final String TAG = CustomTabsManager.class.getSimpleName();
+
+    public CustomTabsIntent getCustomTabsIntent() {
+        return mCustomTabsIntent;
+    }
+
     private CustomTabsIntent mCustomTabsIntent;
     private CustomTabsServiceConnection mCustomTabsServiceConnection;
     private final WeakReference<Activity> mActivityRef;

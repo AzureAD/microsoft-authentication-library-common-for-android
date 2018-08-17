@@ -22,28 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.view.MotionEvent;
-import android.view.View;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-
-import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResultFactory;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConfiguration;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFuture;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeCompletionCallback;
-
-import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
+import java.util.concurrent.Future;
 
 /**
  * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
@@ -51,20 +43,18 @@ import java.io.UnsupportedEncodingException;
 public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy {
 
     private static final String TAG = StringExtensions.class.getSimpleName();
-    private Activity mActivity;
-    private IChallengeCompletionCallback mCallback;
     private AuthorizationConfiguration mConfiguration;
-    private WebView mWebView;
+    private WeakReference<Activity> mReferencedActivity;
+    private AuthorizationResultFuture mAuthorizationResultFuture;
 
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
+     *
+     * @param activity The app activity which invoke the interactive auth request.
      */
-    public EmbeddedWebViewAuthorizationStrategy(@NonNull final Activity activity,
-                                                @NonNull final AuthorizationConfiguration configuration,
-                                                @NonNull IChallengeCompletionCallback callback) {
-        mActivity = activity;
+    public EmbeddedWebViewAuthorizationStrategy(Activity activity, @NonNull final AuthorizationConfiguration configuration) {
         mConfiguration = configuration;
-        mCallback = callback;
+        mReferencedActivity =  new WeakReference<>(activity);
     }
 
     /**
@@ -74,63 +64,21 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
      * @param requestUrl authorization request url
      */
     @Override
-    public void requestAuthorization(final String requestUrl) {
+    public Future<AuthorizationResult> requestAuthorization(final Uri requestUrl) {
+        mAuthorizationResultFuture = new AuthorizationResultFuture();
         Logger.verbose(TAG, "Perform the authorization request with embedded webView.");
-        final AzureActiveDirectoryWebViewClient webViewClient
-                = new AzureActiveDirectoryWebViewClient(mActivity, mCallback, mConfiguration.getRedirectUrl());
-        final WebView webView = mActivity.findViewById(R.id.webview);
-        setUpWebView(webViewClient, webView);
-        loadStartUrl(requestUrl);
+        final Intent authIntent = AuthorizationActivity.createStartIntent(null, requestUrl.toString(), mConfiguration);
+        mReferencedActivity.get().startActivityForResult(authIntent, BROWSER_FLOW);
+        return mAuthorizationResultFuture;
     }
 
-    /**
-     * Set up the web view configurations.
-     * @param webViewClient AzureActiveDirectoryWebViewClient
-     */
-    @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
-    private void setUpWebView(final AzureActiveDirectoryWebViewClient webViewClient, final WebView webView) {
-        // Create the Web View to show the page
-        mWebView = webView;
-        WebSettings userAgentSetting = mWebView.getSettings();
-        final String userAgent = userAgentSetting.getUserAgentString();
-        mWebView.getSettings().setUserAgentString(
-                userAgent + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
-        mWebView.getSettings().setJavaScriptEnabled(true);
-        mWebView.requestFocus(View.FOCUS_DOWN);
-
-        // Set focus to the view for touch event
-        mWebView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(final View view, final MotionEvent event) {
-                int action = event.getAction();
-                if ((action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_UP) && !view.hasFocus()) {
-                    view.requestFocus();
-                }
-                return false;
-            }
-        });
-
-        mWebView.getSettings().setLoadWithOverviewMode(true);
-        mWebView.getSettings().setDomStorageEnabled(true);
-        mWebView.getSettings().setUseWideViewPort(true);
-        mWebView.getSettings().setBuiltInZoomControls(true);
-        mWebView.setVisibility(View.INVISIBLE);
-        mWebView.setWebViewClient(webViewClient);
-    }
-
-    /**
-     * Load the start url for auth grant flow. It will load the black page first to avoid error for not loading web view.
-     */
-    private void loadStartUrl(final String startUrl) {
-        mWebView.post(new Runnable() {
-            @Override
-            public void run() {
-                // load blank first to avoid error for not loading webview
-                mWebView.loadUrl("about:blank");
-                Logger.verbose(TAG, "Launching embedded WebView for acquiring auth code.");
-                Logger.verbosePII(TAG, "The start url is" + startUrl);
-                mWebView.loadUrl(startUrl);
-            }
-        });
+    @Override
+    public void completeAuthorization(int requestCode, int resultCode, Intent data) {
+        if (requestCode != BROWSER_FLOW) {
+            throw new IllegalStateException("Unknown request code");
+        }
+        //TODO need to implement OAuth2StrategyFactory.getByType().getAuthorizationResult();
+        final AuthorizationResult result = new MicrosoftStsAuthorizationResultFactory().createAuthorizationResult(resultCode, data);
+        mAuthorizationResultFuture.setAuthorizationResult(result);
     }
 }

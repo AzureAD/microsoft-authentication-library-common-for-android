@@ -16,22 +16,22 @@ import java.io.UnsupportedEncodingException;
 public class AuthorizationStrategyFactory <GenericAuthorizationStrategy extends AuthorizationStrategy> {
     private static final String TAG = AuthorizationStrategyFactory.class.getSimpleName();
 
-    public GenericAuthorizationStrategy getAuthorizationStrategy(@NonNull final Activity activity,
-                                                                 @NonNull AuthorizationConfiguration configuration,
-                                                                 IChallengeCompletionCallback callback) {
-        if (configuration.getWebViewType() == AuthorizationAgent.WEBVIEW) {
+    private static AuthorizationStrategyFactory sInstance = null;
+
+    public AuthorizationStrategyFactory getInstance() {
+        if (sInstance == null) {
+            sInstance = new AuthorizationStrategyFactory();
+        }
+        return sInstance;
+    }
+
+    public GenericAuthorizationStrategy getAuthorizationStrategy(Activity activity, @NonNull AuthorizationConfiguration configuration) {
+        if (configuration.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW) {
             Logger.info(TAG, "Use webView for authorization.");
-            return (GenericAuthorizationStrategy)(new EmbeddedWebViewAuthorizationStrategy(activity, configuration, callback));
+            return (GenericAuthorizationStrategy)(new EmbeddedWebViewAuthorizationStrategy(activity, configuration));
         }
 
-        /*if (configuration.getWebViewType() == WebViewType.SYSTEM_BROWSER) {
-            return (GenericAuthorizationStrategy)(new SystemBrowserAuthorizationStrategy(activity, authorizationRequest, configuration));
-        }
-
-        Logger.error(TAG, "Invalid webView type.", null);
-        throw new ClientException(TAG, "Invalid webView type. " + "WebViewType = " + configuration.getWebViewType());*/
-
-        // SystemBrowserAuthorizationStrategy as default.
+        // Use device browser auth flow as default.
         Logger.info(TAG, "Use browser for authorization.");
         return (GenericAuthorizationStrategy)(new BrowserAuthorizationStrategy(activity, configuration));
     }

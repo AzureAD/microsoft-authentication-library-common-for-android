@@ -23,39 +23,86 @@
 package com.microsoft.identity.common.internal.ui.browser;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResultFactory;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConfiguration;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFuture;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 
+import java.lang.ref.WeakReference;
+import java.util.concurrent.Future;
+
 public class BrowserAuthorizationStrategy extends AuthorizationStrategy {
-
-    private final Activity mActivity; //NOPMD
-    private final AuthorizationConfiguration mAuthorizationConfiguration; //NOPMD //TODO Heidi
+    private final AuthorizationConfiguration mConfiguration;
     private CustomTabsManager mCustomTabManager;
+    private WeakReference<Activity> mReferencedActivity;
+    private AuthorizationResultFuture mAuthorizationResultFuture;
+    private boolean mDisposed;
 
-    public BrowserAuthorizationStrategy(@NonNull final Activity activity,
-                                              @NonNull AuthorizationConfiguration configuration) {
-        mActivity = activity;
-        mAuthorizationConfiguration = configuration;
+    public BrowserAuthorizationStrategy(Activity activity, @NonNull AuthorizationConfiguration configuration) {
+        mConfiguration = configuration;
+        mReferencedActivity =  new WeakReference<>(activity);
     }
 
-    // 1. Initial
-    // 2. Select the browser
-    // mBrowser = BrowserSelector.select(mActivityRef.get().getApplicationContext());
-    // 3.a. If custom tab enabled, use bind custom tab session
-    // 3.b. If custom tab disabled, launch the url with browser
     @Override
-    public void requestAuthorization(final String requestUrl) throws ClientException {
-        //TODO
-        final Browser browser = BrowserSelector.select(mActivity.getApplicationContext());
-        if (browser.isCustomTabsServiceSupported()) {
-            mCustomTabManager = new CustomTabsManager(mActivity);
-            mCustomTabManager.bind(browser.getPackageName());
-        } else {
+    public Future<AuthorizationResult> requestAuthorization(final Uri requestUrl) throws ClientException {
+        checkNotDisposed();
+        mAuthorizationResultFuture = new AuthorizationResultFuture();
+        final Browser browser = BrowserSelector.select(mReferencedActivity.get().getApplicationContext());
 
+        //ClientException will be thrown if no browser found.
+        Intent authIntent;
+        if (browser.isCustomTabsServiceSupported()) {
+            //create customTabsIntent
+            mCustomTabManager = new CustomTabsManager(mReferencedActivity.get());
+            mCustomTabManager.bind(browser.getPackageName());
+            authIntent = mCustomTabManager.getCustomTabsIntent().intent;
+        } else {
+            //create browser auth intent
+            authIntent = new Intent(Intent.ACTION_VIEW);
         }
+
+        authIntent.setPackage(browser.getPackageName());
+        authIntent.setData(requestUrl);
+        mReferencedActivity.get().startActivityForResult(AuthorizationActivity.createStartIntent(authIntent, requestUrl.toString(), mConfiguration),BROWSER_FLOW);
+
+        return mAuthorizationResultFuture;
+    }
+
+    private void checkNotDisposed() {
+        if (mDisposed) {
+            throw new IllegalStateException("Service has been disposed and rendered inoperable");
+        }
+    }
+
+
+    @Override
+    public void completeAuthorization(int requestCode, int resultCode, Intent data) {
+        if (requestCode != BROWSER_FLOW) {
+            throw new IllegalStateException("Unknown request code");
+        }
+        //TODO need to implement OAuth2StrategyFactory.getByType().getAuthorizationResult();
+        dispose();
+        final AuthorizationResult result = new MicrosoftStsAuthorizationResultFactory().createAuthorizationResult(resultCode, data);
+        mAuthorizationResultFuture.setAuthorizationResult(result);
+    }
+
+    /**
+     * Disposes state that will not normally be handled by garbage collection. This should be
+     * called when the authorization service is no longer required, including when any owning
+     * activity is paused or destroyed (i.e. in {@link android.app.Activity#onStop()}).
+     */
+    public void dispose() {
+        if (mDisposed) {
+            return;
+        }
+        mCustomTabManager.unbind();
+        mDisposed = true;
     }
 }
