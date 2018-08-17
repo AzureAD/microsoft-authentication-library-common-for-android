@@ -269,7 +269,7 @@ public class MsalOAuth2TokenCache
 
         // For each Account with an associated RT, add it to the result List...
         for (final Account account : microsoftStsAccounts) {
-            if (accountHasToken(account, appCredentials)) {
+            if (accountHasCredential(account, appCredentials)) {
                 accountsForThisApp.add(account);
             }
         }
@@ -286,8 +286,8 @@ public class MsalOAuth2TokenCache
      * @param appCredentials The Credentials to evaluate.
      * @return True, if this Account has Credentials. False otherwise.
      */
-    private boolean accountHasToken(@NonNull final Account account,
-                                    @NonNull final List<Credential> appCredentials) {
+    private boolean accountHasCredential(@NonNull final Account account,
+                                         @NonNull final List<Credential> appCredentials) {
         final String accountHomeId = account.getHomeAccountId();
         final String accountEnvironment = account.getEnvironment();
 
