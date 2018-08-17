@@ -1,5 +1,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.content.Context;
+
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
 import java.io.Serializable;
@@ -12,12 +14,20 @@ public class AuthorizationConfiguration implements Serializable {
 
     private static AuthorizationConfiguration sInstance = null;
 
-    private final AuthorizationAgent mWebViewType;
+    private final AuthorizationAgent mAuthorizationAgent;
 
     private String mRedirectUrl;
 
+    private Context mContext;
+
+    public String getIdpType() {
+        return mIdpType;
+    }
+
+    private String mIdpType = "Microsoft";
+
     private AuthorizationConfiguration() {
-        mWebViewType = AuthorizationAgent.BROWSER;
+        mAuthorizationAgent = AuthorizationAgent.BROWSER;
     }
 
     public static AuthorizationConfiguration getInstance() {
@@ -35,7 +45,15 @@ public class AuthorizationConfiguration implements Serializable {
         return mRedirectUrl;
     }
 
-    public AuthorizationAgent getWebViewType() {
-        return mWebViewType;
+    public AuthorizationAgent getAuthorizationAgent() {
+        return mAuthorizationAgent;
+    }
+
+    public Context getContext() {
+        return mContext;
+    }
+
+    public void setContext(Context context) {
+        mContext = context;
     }
 }
