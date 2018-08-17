@@ -203,52 +203,11 @@ public class MsalOAuth2TokenCache
                 null // wildcard (*)
         );
 
-        // Check that there was only 1 result for each of these
-        final List<List<Credential>> credentialLists = new ArrayList<>();
-        credentialLists.add(accessTokens);
-        credentialLists.add(refreshTokens);
-        credentialLists.add(idTokens);
-
-        AccessToken accessToken = null;
-        RefreshToken refreshToken = null;
-        IdToken idToken = null;
-
-        for (int ii = 0; ii < credentialLists.size(); ii++) {
-            final List<Credential> credentials = credentialLists.get(ii);
-
-            if (credentials.isEmpty()) {
-                Logger.warn(TAG, "Empty List<Credential> @ index [" + ii + "]");
-            } else if (credentials.size() > 1) {
-                // TODO throw a ClientException?
-            } else {
-                final Credential currentCredential = credentials.get(0);
-                final CredentialType currentCredentialType = CredentialType.fromString(
-                        currentCredential.getCredentialType()
-                );
-
-                if (null == currentCredentialType) {
-                    Logger.warn(TAG, "Unrecognized Credential type: skipping.");
-                    continue;
-                }
-
-                switch (currentCredentialType) {
-                    case AccessToken:
-                        accessToken = (AccessToken) currentCredential;
-                        continue;
-                    case RefreshToken:
-                        refreshToken = (RefreshToken) currentCredential;
-                        continue;
-                    case IdToken:
-                        idToken = (IdToken) currentCredential;
-                }
-            }
-        }
-
         final CacheRecord result = new CacheRecord();
         result.setAccount(account);
-        result.setAccessToken(accessToken);
-        result.setRefreshToken(refreshToken);
-        result.setIdToken(idToken);
+        result.setAccessToken(accessTokens.isEmpty() ? null : (AccessToken) accessTokens.get(0));
+        result.setRefreshToken(refreshTokens.isEmpty() ? null : (RefreshToken) refreshTokens.get(0));
+        result.setIdToken(idTokens.isEmpty() ? null : (IdToken) idTokens.get(0));
 
         return result;
     }
