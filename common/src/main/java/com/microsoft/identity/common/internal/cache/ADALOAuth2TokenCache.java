@@ -162,7 +162,7 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public ICacheRecord loadTokens(
+    public ICacheRecord load(
             final String clientId,
             final com.microsoft.identity.common.internal.dto.Account account) {
         throw new UnsupportedOperationException(

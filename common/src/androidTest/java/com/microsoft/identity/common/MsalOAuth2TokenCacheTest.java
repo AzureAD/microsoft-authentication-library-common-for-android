@@ -511,7 +511,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertEquals(defaultTestBundle.mGeneratedRefreshToken, result.getRefreshToken());
         assertEquals(defaultTestBundle.mGeneratedIdToken, result.getIdToken());
 
-        final ICacheRecord secondaryLoad = mOauth2TokenCache.loadTokens(
+        final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 defaultTestBundle.mGeneratedAccount
         );
@@ -530,7 +530,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mOauth2TokenCache.removeCredential(result.getAccessToken());
 
-        final ICacheRecord secondaryLoad = mOauth2TokenCache.loadTokens(
+        final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 defaultTestBundle.mGeneratedAccount
         );
@@ -552,7 +552,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mOauth2TokenCache.removeCredential(result.getRefreshToken());
 
-        final ICacheRecord secondaryLoad = mOauth2TokenCache.loadTokens(
+        final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 defaultTestBundle.mGeneratedAccount
         );
@@ -574,7 +574,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mOauth2TokenCache.removeCredential(result.getIdToken());
 
-        final ICacheRecord secondaryLoad = mOauth2TokenCache.loadTokens(
+        final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 defaultTestBundle.mGeneratedAccount
         );

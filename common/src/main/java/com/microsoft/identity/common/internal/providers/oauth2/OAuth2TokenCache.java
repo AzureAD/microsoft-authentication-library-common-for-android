@@ -68,7 +68,7 @@ public abstract class OAuth2TokenCache
      * @param account  The Account whose Credentials should be loaded.
      * @return The resulting ICacheRecord. Entries may be empty if not present in the cache.
      */
-    public abstract ICacheRecord loadTokens(final String clientId, final Account account);
+    public abstract ICacheRecord load(final String clientId, final Account account);
 
     /**
      * Removes the supplied Credential from the cache.

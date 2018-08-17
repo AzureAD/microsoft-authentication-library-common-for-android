@@ -172,7 +172,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public ICacheRecord loadTokens(final String clientId, final Account account) {
+    public ICacheRecord load(final String clientId, final Account account) {
         // Load the AccessTokens
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
