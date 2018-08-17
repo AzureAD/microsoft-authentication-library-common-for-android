@@ -117,7 +117,7 @@ public class ADALOAuth2TokenCache
      * @param response
      */
     @Override
-    public ISaveTokenResult saveTokens(
+    public ICacheRecord saveTokens(
             final AzureActiveDirectoryOAuth2Strategy strategy,
             final AzureActiveDirectoryAuthorizationRequest request,
             final AzureActiveDirectoryTokenResponse response) {
@@ -162,7 +162,7 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public ISaveTokenResult loadTokens(
+    public ICacheRecord loadTokens(
             final String clientId,
             final com.microsoft.identity.common.internal.dto.Account account) {
         throw new UnsupportedOperationException(

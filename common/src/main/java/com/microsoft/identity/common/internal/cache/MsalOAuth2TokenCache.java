@@ -114,7 +114,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public ISaveTokenResult saveTokens(
+    public ICacheRecord saveTokens(
             final MicrosoftStsOAuth2Strategy oAuth2Strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) throws ClientException {
@@ -162,7 +162,7 @@ public class MsalOAuth2TokenCache
         saveAccounts(accountToSave);
         saveCredentials(accessTokenToSave, refreshTokenToSave, idTokenToSave);
 
-        final SaveTokenResult result = new SaveTokenResult();
+        final CacheRecord result = new CacheRecord();
         result.setAccount(accountToSave);
         result.setAccessToken(accessTokenToSave);
         result.setRefreshToken(refreshTokenToSave);
@@ -172,7 +172,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public ISaveTokenResult loadTokens(final String clientId, final Account account) {
+    public ICacheRecord loadTokens(final String clientId, final Account account) {
         // Load the AccessTokens
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
@@ -244,7 +244,7 @@ public class MsalOAuth2TokenCache
             }
         }
 
-        final SaveTokenResult result = new SaveTokenResult();
+        final CacheRecord result = new CacheRecord();
         result.setAccount(account);
         result.setAccessToken(accessToken);
         result.setRefreshToken(refreshToken);

@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.content.Context;
 
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.cache.ISaveTokenResult;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 
@@ -54,21 +54,21 @@ public abstract class OAuth2TokenCache
      * @param oAuth2Strategy The strategy used to create the token request.
      * @param request        The request used to acquire tokens and credentials.
      * @param response       The response received from the IdP/STS.
-     * @return The {@link ISaveTokenResult} containing the Account + Credentials saved to the cache.
+     * @return The {@link ICacheRecord} containing the Account + Credentials saved to the cache.
      * @throws ClientException If tokens cannot be successfully saved.
      */
-    public abstract ISaveTokenResult saveTokens(final T oAuth2Strategy,
-                                                final U request,
-                                                final V response) throws ClientException;
+    public abstract ICacheRecord saveTokens(final T oAuth2Strategy,
+                                            final U request,
+                                            final V response) throws ClientException;
 
     /**
-     * Loads the tokens for the supplied Account into the result {@link ISaveTokenResult}.
+     * Loads the tokens for the supplied Account into the result {@link ICacheRecord}.
      *
      * @param clientId The ClientId of the current app.
      * @param account  The Account whose Credentials should be loaded.
-     * @return The resulting ISaveTokenResult. Entries may be empty if not present in the cache.
+     * @return The resulting ICacheRecord. Entries may be empty if not present in the cache.
      */
-    public abstract ISaveTokenResult loadTokens(final String clientId, final Account account);
+    public abstract ICacheRecord loadTokens(final String clientId, final Account account);
 
     /**
      * Removes the supplied Credential from the cache.

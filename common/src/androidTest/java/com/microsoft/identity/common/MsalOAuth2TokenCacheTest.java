@@ -34,7 +34,7 @@ import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
-import com.microsoft.identity.common.internal.cache.ISaveTokenResult;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.IShareSingleSignOnState;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
@@ -500,7 +500,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void loadTokens() throws ClientException {
         // Save an Account into the cache
-        final ISaveTokenResult result = mOauth2TokenCache.saveTokens(
+        final ICacheRecord result = mOauth2TokenCache.saveTokens(
                 mockStrategy,
                 mockRequest,
                 mockResponse
@@ -511,7 +511,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertEquals(defaultTestBundle.mGeneratedRefreshToken, result.getRefreshToken());
         assertEquals(defaultTestBundle.mGeneratedIdToken, result.getIdToken());
 
-        final ISaveTokenResult secondaryLoad = mOauth2TokenCache.loadTokens(
+        final ICacheRecord secondaryLoad = mOauth2TokenCache.loadTokens(
                 CLIENT_ID,
                 defaultTestBundle.mGeneratedAccount
         );
@@ -522,7 +522,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void removeAccessToken() throws ClientException {
         // Save an Account into the cache
-        final ISaveTokenResult result = mOauth2TokenCache.saveTokens(
+        final ICacheRecord result = mOauth2TokenCache.saveTokens(
                 mockStrategy,
                 mockRequest,
                 mockResponse
@@ -530,7 +530,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mOauth2TokenCache.removeCredential(result.getAccessToken());
 
-        final ISaveTokenResult secondaryLoad = mOauth2TokenCache.loadTokens(
+        final ICacheRecord secondaryLoad = mOauth2TokenCache.loadTokens(
                 CLIENT_ID,
                 defaultTestBundle.mGeneratedAccount
         );
@@ -544,7 +544,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void removeRefreshToken() throws ClientException {
         // Save an Account into the cache
-        final ISaveTokenResult result = mOauth2TokenCache.saveTokens(
+        final ICacheRecord result = mOauth2TokenCache.saveTokens(
                 mockStrategy,
                 mockRequest,
                 mockResponse
@@ -552,7 +552,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mOauth2TokenCache.removeCredential(result.getRefreshToken());
 
-        final ISaveTokenResult secondaryLoad = mOauth2TokenCache.loadTokens(
+        final ICacheRecord secondaryLoad = mOauth2TokenCache.loadTokens(
                 CLIENT_ID,
                 defaultTestBundle.mGeneratedAccount
         );
@@ -566,7 +566,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void removeIdToken() throws ClientException {
         // Save an Account into the cache
-        final ISaveTokenResult result = mOauth2TokenCache.saveTokens(
+        final ICacheRecord result = mOauth2TokenCache.saveTokens(
                 mockStrategy,
                 mockRequest,
                 mockResponse
@@ -574,7 +574,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mOauth2TokenCache.removeCredential(result.getIdToken());
 
-        final ISaveTokenResult secondaryLoad = mOauth2TokenCache.loadTokens(
+        final ICacheRecord secondaryLoad = mOauth2TokenCache.loadTokens(
                 CLIENT_ID,
                 defaultTestBundle.mGeneratedAccount
         );

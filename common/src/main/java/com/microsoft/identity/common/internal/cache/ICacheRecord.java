@@ -30,7 +30,7 @@ import com.microsoft.identity.common.internal.dto.RefreshToken;
 /**
  * Result container for Account and Credential - usually the result of a save or load operation.
  */
-public interface ISaveTokenResult {
+public interface ICacheRecord {
 
     /**
      * Gets the {@link Account}.

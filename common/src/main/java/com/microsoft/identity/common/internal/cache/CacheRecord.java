@@ -27,7 +27,7 @@ import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
-class SaveTokenResult implements ISaveTokenResult {
+class CacheRecord implements ICacheRecord {
 
     private Account mAccount;
     private AccessToken mAccessToken;
@@ -80,7 +80,7 @@ class SaveTokenResult implements ISaveTokenResult {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        SaveTokenResult that = (SaveTokenResult) o;
+        CacheRecord that = (CacheRecord) o;
 
         if (mAccount != null ? !mAccount.equals(that.mAccount) : that.mAccount != null)
             return false;
