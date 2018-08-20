@@ -22,13 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
+import android.net.Uri;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.net.HttpRequest;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
 
 import org.json.JSONException;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.util.List;
@@ -43,9 +48,15 @@ import java.util.concurrent.ConcurrentMap;
 public class AzureActiveDirectory
         extends IdentityProvider<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryOAuth2Configuration> {
 
+
     // Constants used to parse cloud discovery document metadata
     private static final String TENANT_DISCOVERY_ENDPOINT = "tenant_discovery_endpoint";
     private static final String METADATA = "metadata";
+    private static final String AAD_INSTANCE_DISCOVERY_ENDPOINT = "https://login.microsoftonline.com/common/discovery/instance";
+    private static final String API_VERSION = "api-version";
+    private static final String API_VERSION_VALUE = "1.0";
+    private static final String AUTHORIZATION_ENDPOINT = "authorization_endpoint";
+    private static final String AUTHORIZATION_ENDPOINT_VALUE = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
 
@@ -107,6 +118,40 @@ public class AzureActiveDirectory
                 sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
             }
         }
+    }
+
+    public static void performInstanceDiscovery(){
+
+        Uri instanceDiscoveryRequestUri = Uri.parse(AAD_INSTANCE_DISCOVERY_ENDPOINT);
+
+        instanceDiscoveryRequestUri = instanceDiscoveryRequestUri
+                .buildUpon()
+                .appendQueryParameter(API_VERSION, API_VERSION_VALUE)
+                .appendQueryParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
+                .build();
+
+        try {
+            HttpResponse response = HttpRequest.sendGet(new URL(instanceDiscoveryRequestUri.toString()), null);
+        } catch (IOException e) {
+            //TODO: Adding logging, but this shouldn't happen
+            e.printStackTrace();
+        }
+
+
+
+                /*
+
+                 oauth2Client.addQueryParameter(API_VERSION, API_VERSION_VALUE);
+        oauth2Client.addQueryParameter(AUTHORIZATION_ENDPOINT, mAuthorityUrl.toString() + DEFAULT_AUTHORIZE_ENDPOINT);
+        oauth2Client.addHeader(OauthConstants.OauthHeader.CORRELATION_ID, requestContext.getCorrelationId().toString());
+
+        // send instance discovery request
+        final InstanceDiscoveryResponse response;
+        try {
+            response = oauth2Client.discoveryAADInstance(new URL(AAD_INSTANCE_DISCOVERY_ENDPOINT));
+
+                 */
+
     }
 
     /**
