@@ -35,7 +35,6 @@ import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.cache.IShareSingleSignOnState;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
@@ -83,7 +82,12 @@ import static org.mockito.Mockito.when;
 @RunWith(AndroidJUnit4.class)
 public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
-    private MsalOAuth2TokenCache mOauth2TokenCache;
+    private MsalOAuth2TokenCache<
+            MicrosoftStsOAuth2Strategy,
+            MicrosoftStsAuthorizationRequest,
+            MicrosoftStsTokenResponse,
+            MicrosoftAccount,
+            MicrosoftRefreshToken> mOauth2TokenCache;
     private ISharedPreferencesFileManager mSharedPreferencesFileManager;
 
     @Mock
@@ -104,7 +108,6 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             MicrosoftRefreshToken> mockCredentialAdapter;
 
     private AccountCredentialTestBundle defaultTestBundle;
-    private ICacheKeyValueDelegate keyValueDelegate;
     private IAccountCredentialCache accountCredentialCache;
 
     static class AccountCredentialTestBundle {
@@ -229,18 +232,17 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 new StorageHelper(context)
         );
 
-        keyValueDelegate = new CacheKeyValueDelegate();
+        final ICacheKeyValueDelegate keyValueDelegate = new CacheKeyValueDelegate();
 
         accountCredentialCache = new AccountCredentialCache(
                 keyValueDelegate,
                 mSharedPreferencesFileManager
         );
 
-        mOauth2TokenCache = new MsalOAuth2TokenCache(
+        mOauth2TokenCache = new MsalOAuth2TokenCache<>(
                 context,
                 accountCredentialCache,
-                mockCredentialAdapter,
-                new ArrayList<IShareSingleSignOnState>()
+                mockCredentialAdapter
         );
     }
 

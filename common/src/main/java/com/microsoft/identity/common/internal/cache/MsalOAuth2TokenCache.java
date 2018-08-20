@@ -34,12 +34,10 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,20 +50,24 @@ import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SC
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 
 public class MsalOAuth2TokenCache
-        extends OAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse>
-        implements IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> {
+        <GenericOAuth2Strategy extends OAuth2Strategy,
+                GenericAuthorizationRequest extends AuthorizationRequest,
+                GenericTokenResponse extends TokenResponse,
+                GenericAccount extends com.microsoft.identity.common.Account,
+                GenericRefreshToken extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken>
+        extends OAuth2TokenCache<GenericOAuth2Strategy, GenericAuthorizationRequest, GenericTokenResponse>
+        implements IShareSingleSignOnState<GenericAccount, GenericRefreshToken> {
 
     private static final String TAG = MsalOAuth2TokenCache.class.getSimpleName();
 
-    private List<IShareSingleSignOnState> mSharedSsoCaches; //NOPMD Suppressing PMD warning for unused variable
     private IAccountCredentialCache mAccountCredentialCache;
 
-    private IAccountCredentialAdapter<
-            MicrosoftStsOAuth2Strategy,
-            MicrosoftStsAuthorizationRequest,
-            MicrosoftStsTokenResponse,
-            MicrosoftAccount,
-            MicrosoftRefreshToken> mAccountCredentialAdapter;
+    private final IAccountCredentialAdapter<
+            GenericOAuth2Strategy,
+            GenericAuthorizationRequest,
+            GenericTokenResponse,
+            GenericAccount,
+            GenericRefreshToken> mAccountCredentialAdapter;
 
     /**
      * Constructor of MsalOAuth2TokenCache.
@@ -77,47 +79,21 @@ public class MsalOAuth2TokenCache
     public MsalOAuth2TokenCache(final Context context,
                                 final IAccountCredentialCache accountCredentialCache,
                                 final IAccountCredentialAdapter<
-                                        MicrosoftStsOAuth2Strategy,
-                                        MicrosoftStsAuthorizationRequest,
-                                        MicrosoftStsTokenResponse,
-                                        MicrosoftAccount,
-                                        MicrosoftRefreshToken> accountCredentialAdapter) {
+                                        GenericOAuth2Strategy,
+                                        GenericAuthorizationRequest,
+                                        GenericTokenResponse,
+                                        GenericAccount,
+                                        GenericRefreshToken> accountCredentialAdapter) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
-        mSharedSsoCaches = new ArrayList<>();
-        mAccountCredentialAdapter = accountCredentialAdapter;
-    }
-
-    /**
-     * Constructor of MsalOAuth2TokenCache.
-     *
-     * @param context                  Context
-     * @param accountCredentialCache   IAccountCredentialCache
-     * @param accountCredentialAdapter IAccountCredentialAdapter
-     * @param sharedSsoCaches          List<IShareSingleSignOnState>
-     */
-    public MsalOAuth2TokenCache(final Context context,
-                                final IAccountCredentialCache accountCredentialCache,
-                                final IAccountCredentialAdapter<
-                                        MicrosoftStsOAuth2Strategy,
-                                        MicrosoftStsAuthorizationRequest,
-                                        MicrosoftStsTokenResponse,
-                                        MicrosoftAccount,
-                                        MicrosoftRefreshToken> accountCredentialAdapter,
-                                final List<IShareSingleSignOnState> sharedSsoCaches) {
-        super(context);
-        Logger.verbose(TAG, "Init: " + TAG);
-        mAccountCredentialCache = accountCredentialCache;
-        mSharedSsoCaches = sharedSsoCaches;
         mAccountCredentialAdapter = accountCredentialAdapter;
     }
 
     @Override
-    public ICacheRecord save(
-            final MicrosoftStsOAuth2Strategy oAuth2Strategy,
-            final MicrosoftStsAuthorizationRequest request,
-            final MicrosoftStsTokenResponse response) throws ClientException {
+    public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
+                             @NonNull final GenericAuthorizationRequest request,
+                             @NonNull final GenericTokenResponse response) throws ClientException {
         // Create the Account
         final Account accountToSave =
                 mAccountCredentialAdapter.createAccount(
@@ -265,7 +241,6 @@ public class MsalOAuth2TokenCache
         }
 
         return Collections.unmodifiableList(accountsForThisApp);
-
     }
 
     /**
@@ -383,13 +358,13 @@ public class MsalOAuth2TokenCache
         return credentialsRemoved;
     }
 
-    private void saveAccounts(final Account... accounts) {
+    void saveAccounts(final Account... accounts) {
         for (final Account account : accounts) {
             mAccountCredentialCache.saveAccount(account);
         }
     }
 
-    private void saveCredentials(final Credential... credentials) {
+    void saveCredentials(final Credential... credentials) {
         for (final Credential credential : credentials) {
 
             if (credential instanceof AccessToken) {
@@ -411,7 +386,7 @@ public class MsalOAuth2TokenCache
      * @param idTokenToSave      The {@link IdToken} to save.
      * @throws ClientException If any of the supplied artifacts are non schema-compliant.
      */
-    private void validateCacheArtifacts(
+    void validateCacheArtifacts(
             @NonNull final Account accountToSave,
             final AccessToken accessTokenToSave,
             @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshTokenToSave,
@@ -535,7 +510,7 @@ public class MsalOAuth2TokenCache
         return isCompliant;
     }
 
-    private static boolean isAccountSchemaCompliant(@NonNull final Account account) {
+    boolean isAccountSchemaCompliant(@NonNull final Account account) {
         // Required fields...
         final String[][] params = new String[][]{
                 {Account.SerializedNames.HOME_ACCOUNT_ID, account.getHomeAccountId()},
@@ -551,7 +526,7 @@ public class MsalOAuth2TokenCache
         return isCompliant;
     }
 
-    private static boolean isAccessTokenSchemaCompliant(@NonNull final AccessToken accessToken) {
+    boolean isAccessTokenSchemaCompliant(@NonNull final AccessToken accessToken) {
         // Required fields...
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.CREDENTIAL_TYPE, accessToken.getCredentialType()},
@@ -570,7 +545,7 @@ public class MsalOAuth2TokenCache
         return isValid;
     }
 
-    private static boolean isRefreshTokenSchemaCompliant(
+    boolean isRefreshTokenSchemaCompliant(
             @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken) {
         // Required fields...
         final String[][] params = new String[][]{
@@ -586,7 +561,7 @@ public class MsalOAuth2TokenCache
         return isValid;
     }
 
-    private static boolean isIdTokenSchemaCompliant(@NonNull final IdToken idToken) {
+    boolean isIdTokenSchemaCompliant(@NonNull final IdToken idToken) {
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.HOME_ACCOUNT_ID, idToken.getHomeAccountId()},
                 {Credential.SerializedNames.ENVIRONMENT, idToken.getEnvironment()},
@@ -602,8 +577,8 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public void setSingleSignOnState(final MicrosoftAccount account,
-                                     final MicrosoftRefreshToken refreshToken) {
+    public void setSingleSignOnState(final GenericAccount account,
+                                     final GenericRefreshToken refreshToken) {
         final String methodName = "setSingleSignOnState";
 
         try {
@@ -635,11 +610,8 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public MicrosoftRefreshToken getSingleSignOnState(final MicrosoftAccount account) {
-        final MicrosoftRefreshToken result = null;
-        // TODO
-
-        return result;
+    public GenericRefreshToken getSingleSignOnState(final GenericAccount account) {
+        throw new UnsupportedOperationException("Unimplemented!");
     }
 
 }
