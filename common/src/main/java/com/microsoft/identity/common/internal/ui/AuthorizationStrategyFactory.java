@@ -18,7 +18,7 @@ public class AuthorizationStrategyFactory <GenericAuthorizationStrategy extends 
 
     private static AuthorizationStrategyFactory sInstance = null;
 
-    public AuthorizationStrategyFactory getInstance() {
+    public static AuthorizationStrategyFactory getInstance() {
         if (sInstance == null) {
             sInstance = new AuthorizationStrategyFactory();
         }

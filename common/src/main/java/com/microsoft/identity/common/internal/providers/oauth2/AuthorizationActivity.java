@@ -2,7 +2,9 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 import android.view.MotionEvent;
@@ -13,6 +15,8 @@ import android.webkit.WebView;
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
+import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.OAuth2WebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.WebViewClientFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeCompletionCallback;
@@ -33,8 +37,6 @@ public final class AuthorizationActivity <GenericOAuth2WebViewClient extends OAu
     @VisibleForTesting
     static final String KEY_AUTH_CONFIGURATION = "authConfiguration";
 
-    static final String CUSTOM_TAB_REDIRECT = "com.microsoft.identity.customtab.redirect";
-
     private static final String TAG = AuthorizationActivity.class.getSimpleName();
 
     private boolean mAuthorizationStarted = false;
@@ -48,19 +50,35 @@ public final class AuthorizationActivity <GenericOAuth2WebViewClient extends OAu
     private String mAuthorizationRequestUrl;
     private AuthorizationConfiguration mAuthorizationConfiguration;
 
-    public static Intent createStartIntent(final Intent authIntent,
+    public static Intent createStartIntent(final Context context,
+                                           final Intent authIntent,
                                            final String requestUrl,
                                            final AuthorizationConfiguration configuration) {
-        final Intent intent = new Intent(configuration.getContext(), AuthorizationActivity.class);
+        final Intent intent = new Intent(context, AuthorizationActivity.class);
         intent.putExtra(KEY_AUTH_INTENT, authIntent);
         intent.putExtra(KEY_AUTH_REQUEST_URL, requestUrl);
         intent.putExtra(KEY_AUTH_CONFIGURATION, configuration);
         return intent;
     }
 
+    /**
+     * Creates an intent to handle the completion of an authorization flow with browser. This restores
+     * the original AuthorizationActivity that was created at the start of the flow.
+     *
+     * @param context     the package context for the app.
+     * @param responseUri the response URI, which carries the parameters describing the response.
+     */
+    public static Intent createCustomTabResponseIntent(final Context context,
+                                                       final Uri responseUri) {
+        final Intent intent = new Intent(context, AuthorizationActivity.class);
+        intent.putExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT, responseUri);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        return intent;
+    }
+
     private void extractState(final Bundle state) {
         if (state == null) {
-            Logger.warn(TAG,"No stored state. Unable to handle response");
+            Logger.warn(TAG, "No stored state. Unable to handle response");
             finish();
             return;
         }
@@ -69,36 +87,16 @@ public final class AuthorizationActivity <GenericOAuth2WebViewClient extends OAu
         mAuthorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false);
         mPkeyAuthStatus = state.getBoolean(KEY_PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(KEY_AUTH_REQUEST_URL);
-        mAuthorizationConfiguration = (AuthorizationConfiguration)state.getSerializable(KEY_AUTH_CONFIGURATION);
+        mAuthorizationConfiguration = (AuthorizationConfiguration) state.getSerializable(KEY_AUTH_CONFIGURATION);
     }
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(savedInstanceState == null) {
+        if (savedInstanceState == null) {
             extractState(getIntent().getExtras());
         } else {
             extractState(savedInstanceState);
-        }
-
-        if(mAuthorizationConfiguration.getIdpType().equals("Microsoft") && !mAuthorizationStarted) {
-            GenericOAuth2WebViewClient webViewClient
-                    = (GenericOAuth2WebViewClient)WebViewClientFactory.getInstance().getWebViewClient(
-                            mAuthorizationConfiguration,
-                    this,
-                            new ChallengeCompletionCallback());
-            setUpWebView(webViewClient);
-            mAuthorizationStarted = true;
-            mWebView.post(new Runnable() {
-                @Override
-                public void run() {
-                    // load blank first to avoid error for not loading webview
-                    mWebView.loadUrl("about:blank");
-                    Logger.verbose(TAG, "Launching embedded WebView for acquiring auth code.");
-                    Logger.verbosePII(TAG, "The start url is" + mAuthorizationRequestUrl);
-                    mWebView.loadUrl(mAuthorizationRequestUrl);
-                }
-            });
         }
     }
 
@@ -118,16 +116,36 @@ public final class AuthorizationActivity <GenericOAuth2WebViewClient extends OAu
         /*
          * If this is the first run of the activity, start the authorization request.
          */
-        if(!mAuthorizationStarted) {
+        if (!mAuthorizationStarted) {
             mAuthorizationStarted = true;
-            startActivity(mAuthIntent);
+            if (mAuthorizationConfiguration != null
+                    && mAuthorizationConfiguration.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW) {
+                AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(this, new ChallengeCompletionCallback(), mAuthorizationConfiguration.getRedirectUrl());
+            /*GenericOAuth2WebViewClient webViewClient
+                    = (GenericOAuth2WebViewClient)WebViewClientFactory.getInstance().getWebViewClient(
+                            mAuthorizationConfiguration,
+                    this,
+                            new ChallengeCompletionCallback());*/
+                setUpWebView(webViewClient);
+                mWebView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // load blank first to avoid error for not loading webview
+                        mWebView.loadUrl("about:blank");
+                        Logger.verbose(TAG, "Launching embedded WebView for acquiring auth code.");
+                        Logger.verbosePII(TAG, "The start url is " + mAuthorizationRequestUrl);
+                        mWebView.loadUrl(mAuthorizationRequestUrl);
+                    }
+                });
+            } else {
+                startActivity(mAuthIntent);
+            }
             return;
         }
 
-        if(getIntent().getData()!= null) {
+        if (getIntent().getData() != null) {
             Logger.info(TAG, null, "onNewIntent is called, received redirect from system webview.");
             final String url = getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
-
             final Intent resultIntent = new Intent();
             resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
             setResult(AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE,
@@ -156,12 +174,13 @@ public final class AuthorizationActivity <GenericOAuth2WebViewClient extends OAu
 
     /**
      * Set up the web view configurations.
+     *
      * @param webViewClient AzureActiveDirectoryWebViewClient
      */
     @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
-    private void setUpWebView(final GenericOAuth2WebViewClient webViewClient) {
+    private void setUpWebView(final AzureActiveDirectoryWebViewClient webViewClient) {
         // Create the Web View to show the page
-        mWebView =  this.findViewById(R.id.webview);
+        mWebView = this.findViewById(R.id.webview);
         WebSettings userAgentSetting = mWebView.getSettings();
         final String userAgent = userAgentSetting.getUserAgentString();
         mWebView.getSettings().setUserAgentString(

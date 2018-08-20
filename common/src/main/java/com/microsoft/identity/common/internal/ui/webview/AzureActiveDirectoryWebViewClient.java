@@ -40,6 +40,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeCompletionCallback;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
@@ -170,10 +171,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         } else {
             Logger.verbose(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
             Intent resultIntent = new Intent();
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, url);
+            resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
             //TODO log request info
             getCompletionCallback().onChallengeResponseReceived(
-                    AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE,
+                    AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE,
                     resultIntent);
             view.stopLoading();
             //the TokenTask should be processed at after the authorization process in the upper calling layer.
