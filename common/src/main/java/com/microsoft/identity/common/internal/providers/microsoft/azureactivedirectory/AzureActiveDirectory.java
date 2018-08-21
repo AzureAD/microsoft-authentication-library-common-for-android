@@ -23,19 +23,24 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import android.net.Uri;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
+import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -54,7 +59,7 @@ public class AzureActiveDirectory
     private static final String METADATA = "metadata";
     private static final String AAD_INSTANCE_DISCOVERY_ENDPOINT = "https://login.microsoftonline.com/common/discovery/instance";
     private static final String API_VERSION = "api-version";
-    private static final String API_VERSION_VALUE = "1.0";
+    private static final String API_VERSION_VALUE = "1.1";
     private static final String AUTHORIZATION_ENDPOINT = "authorization_endpoint";
     private static final String AUTHORIZATION_ENDPOINT_VALUE = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
 
@@ -120,7 +125,7 @@ public class AzureActiveDirectory
         }
     }
 
-    public static void performInstanceDiscovery(){
+    public static void performCloudDiscovery(){
 
         Uri instanceDiscoveryRequestUri = Uri.parse(AAD_INSTANCE_DISCOVERY_ENDPOINT);
 
@@ -131,26 +136,25 @@ public class AzureActiveDirectory
                 .build();
 
         try {
-            HttpResponse response = HttpRequest.sendGet(new URL(instanceDiscoveryRequestUri.toString()), null);
+            HttpResponse response = HttpRequest.sendGet(new URL(instanceDiscoveryRequestUri.toString()),new HashMap<String, String>());
+
+            if(response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST){
+                Log.d("Discovery", "Error getting cloud information");
+            }else{
+
+                AzureActiveDirectoryInstanceResponse instanceResponse =  ObjectMapper.deserializeJsonStringToObject(response.getBody(), AzureActiveDirectoryInstanceResponse.class);
+
+                for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
+                    cloud.setIsValidated(true); // Mark the deserialized Clouds as validated
+                    for (final String alias : cloud.getHostAliases()) {
+                        sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
+                    }
+                }
+            }
         } catch (IOException e) {
             //TODO: Adding logging, but this shouldn't happen
             e.printStackTrace();
         }
-
-
-
-                /*
-
-                 oauth2Client.addQueryParameter(API_VERSION, API_VERSION_VALUE);
-        oauth2Client.addQueryParameter(AUTHORIZATION_ENDPOINT, mAuthorityUrl.toString() + DEFAULT_AUTHORIZE_ENDPOINT);
-        oauth2Client.addHeader(OauthConstants.OauthHeader.CORRELATION_ID, requestContext.getCorrelationId().toString());
-
-        // send instance discovery request
-        final InstanceDiscoveryResponse response;
-        try {
-            response = oauth2Client.discoveryAADInstance(new URL(AAD_INSTANCE_DISCOVERY_ENDPOINT));
-
-                 */
 
     }
 
