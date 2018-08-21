@@ -28,6 +28,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConfiguration;
@@ -39,6 +40,8 @@ import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
 
 public class BrowserAuthorizationStrategy extends AuthorizationStrategy {
+    private final static String TAG = BrowserAuthorizationStrategy.class.getSimpleName();
+
     private final AuthorizationConfiguration mConfiguration;
     private CustomTabsManager mCustomTabManager;
     private WeakReference<Activity> mReferencedActivity;
@@ -84,13 +87,14 @@ public class BrowserAuthorizationStrategy extends AuthorizationStrategy {
 
     @Override
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
-        if (requestCode != BROWSER_FLOW) {
-            throw new IllegalStateException("Unknown request code");
+        if (requestCode == BROWSER_FLOW) {
+            //TODO need to implement OAuth2StrategyFactory.getByType().getAuthorizationResult();
+            dispose();
+            final AuthorizationResult result = new MicrosoftStsAuthorizationResultFactory().createAuthorizationResult(resultCode, data);
+            mAuthorizationResultFuture.setAuthorizationResult(result);
+        } else {
+            Logger.warnPII(TAG, "Unknown request code " + requestCode);
         }
-        //TODO need to implement OAuth2StrategyFactory.getByType().getAuthorizationResult();
-        dispose();
-        final AuthorizationResult result = new MicrosoftStsAuthorizationResultFactory().createAuthorizationResult(resultCode, data);
-        mAuthorizationResultFuture.setAuthorizationResult(result);
     }
 
     /**

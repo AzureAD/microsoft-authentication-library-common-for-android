@@ -42,7 +42,7 @@ import java.util.concurrent.Future;
  */
 public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy {
 
-    private static final String TAG = StringExtensions.class.getSimpleName();
+    private static final String TAG = EmbeddedWebViewAuthorizationStrategy.class.getSimpleName();
     private AuthorizationConfiguration mConfiguration;
     private WeakReference<Activity> mReferencedActivity;
     private AuthorizationResultFuture mAuthorizationResultFuture;
@@ -78,11 +78,11 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
 
     @Override
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
-        if (requestCode != BROWSER_FLOW) {
-            throw new IllegalStateException("Unknown request code");
+        if (requestCode == BROWSER_FLOW) {
+            final AuthorizationResult result = new MicrosoftStsAuthorizationResultFactory().createAuthorizationResult(resultCode, data);
+            mAuthorizationResultFuture.setAuthorizationResult(result);
+        } else {
+            Logger.warnPII(TAG, "Unknown request code " + requestCode);
         }
-
-        final AuthorizationResult result = new MicrosoftStsAuthorizationResultFactory().createAuthorizationResult(resultCode, data);
-        mAuthorizationResultFuture.setAuthorizationResult(result);
     }
 }
