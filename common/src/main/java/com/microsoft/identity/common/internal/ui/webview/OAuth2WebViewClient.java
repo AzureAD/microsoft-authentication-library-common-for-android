@@ -38,6 +38,7 @@ import android.webkit.WebViewClient;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeCompletionCallback;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
@@ -132,7 +133,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                 error.toString());
 
         // Send the result back to the calling activity
-        mCompletionCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
+        mCompletionCallback.onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_ERROR, resultIntent);
     }
 
     @Override

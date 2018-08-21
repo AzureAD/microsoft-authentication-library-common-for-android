@@ -166,7 +166,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Intent resultIntent = new Intent();
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE, parameters.get(ERROR));
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_DESCRIPTION));
-            getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
+            getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
             view.stopLoading();
         } else {
             Logger.verbose(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
@@ -191,14 +191,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         getActivity().getApplicationContext().startActivity(intent);
         view.stopLoading();
         Intent resultIntent = new Intent();
-        getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
+        getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
         return true;
     }
 
     private boolean processInstallRequest(@NonNull final WebView view, @NonNull final String url) {
         Logger.verbose(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
         final Intent resultIntent = new Intent();
-        getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME, resultIntent);
+        getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.BROKER_REQUEST_RESUME, resultIntent);
 
         // Having thread sleep for 1 second for calling activity to receive the result from
         // prepareForBrokerResumeRequest, thus the receiver for listening broker result return
@@ -256,7 +256,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE, errorCode);
         resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, errorMessage);
         //TODO log request info
-        getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
+        getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_ERROR, resultIntent);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)

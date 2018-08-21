@@ -67,7 +67,7 @@ public final class AuthorizationActivity extends Activity {
      * @param responseUri the response URI, which carries the parameters describing the response.
      */
     public static Intent createCustomTabResponseIntent(final Context context,
-                                                       final Uri responseUri) {
+                                                       final String responseUri) {
         final Intent intent = new Intent(context, AuthorizationActivity.class);
         intent.putExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT, responseUri);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -137,8 +137,8 @@ public final class AuthorizationActivity extends Activity {
             return;
         }
 
-        if (getIntent().getData() != null) {
-            Logger.info(TAG, null, "onNewIntent is called, received redirect from system webview.");
+        if (getIntent() != null) {
+            Logger.info(TAG, null, "Received redirect from system webview.");
             final String url = getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
             final Intent resultIntent = new Intent();
             resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
@@ -146,7 +146,7 @@ public final class AuthorizationActivity extends Activity {
                     resultIntent);
             finish();
         } else {
-            setResult(AuthorizationStrategy.UIResponse.CANCEL, new Intent());
+            setResult(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, new Intent());
             finish();
         }
     }

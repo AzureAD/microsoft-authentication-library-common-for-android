@@ -12,7 +12,7 @@ public class AuthorizationConfiguration implements Serializable {
 
     private static AuthorizationConfiguration sInstance = null;
 
-    private final AuthorizationAgent mAuthorizationAgent;
+    private AuthorizationAgent mAuthorizationAgent;
 
     private String mRedirectUrl;
 
@@ -26,6 +26,17 @@ public class AuthorizationConfiguration implements Serializable {
         }
 
         return sInstance;
+    }
+
+    /**
+     * If the dev wants to specify the ui flow to use embedded webView.
+     * you need to call AuthorizationConfiguration.getInstance().setAuthorizationAgent(AuthorizationAgent.WEBVIEW);
+     * before initializing the authorization strategy. Otherwise, browser flow will be used as default.
+     *
+     * @param authorizationAgent AuthorizationAgent
+     */
+    public void setAuthorizationAgent(final AuthorizationAgent authorizationAgent) {
+        mAuthorizationAgent = authorizationAgent;
     }
 
     public void setRedirectUrl(final String redirectUrl) {

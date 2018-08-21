@@ -46,11 +46,41 @@ public abstract class AuthorizationStrategy {
     public static final String AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
 
     public static final class UIResponse {
-        public static final int CANCEL = 2001;
+        /**
+         * Represents that user cancelled the flow.
+         */
+        public static final int AUTH_CODE_CANCEL = 2001;
 
+        /**
+         * Represents that browser error is returned.
+         */
         public static final int AUTH_CODE_ERROR = 2002;
 
+        /**
+         * Represents that the authorization code is returned successfully.
+         */
         public static final int AUTH_CODE_COMPLETE = 2003;
+
+        /**
+         * Represents that broker successfully returns the response.
+         */
+        public static final int TOKEN_BROKER_RESPONSE = 2004;
+
+        /**
+         * Webview throws Authentication exception. It needs to be send to callback.
+         */
+        public static final int BROWSER_CODE_AUTHENTICATION_EXCEPTION = 2005;
+
+        /**
+         * CA flow, device doesn't have company portal or azure authenticator installed.
+         * Waiting for broker package to be installed, and resume request in broker.
+         */
+        public static final int BROKER_REQUEST_RESUME = 2006;
+
+        /**
+         * Device registration in broker apps.
+         */
+        public static final int BROWSER_CODE_DEVICE_REGISTER = 2007;
 
         public static final String ERROR_CODE = "error_code";
 
