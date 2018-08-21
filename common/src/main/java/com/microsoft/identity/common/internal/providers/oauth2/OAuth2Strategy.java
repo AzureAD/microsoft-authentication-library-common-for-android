@@ -25,9 +25,11 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -79,17 +81,14 @@ public abstract class OAuth2Strategy
             final GenericAuthorizationRequest request,
             final GenericAuthorizationStrategy authorizationStrategy) {
         validateAuthorizationRequest(request);
-
         Future<AuthorizationResult> future = null;
-
         try {
-            future = authorizationStrategy.requestAuthorization(request); //NOPMD Suppressing PMD warning for unused variable
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            future = authorizationStrategy.requestAuthorization(request.getAuthorizationRequestAsHttpRequest());
+        } catch (final UnsupportedEncodingException | ClientException exc) {
+            //TODO
         }
 
         return future;
-
     }
 
     public abstract AuthorizationResultFactory getAuthorizationResultFactory();

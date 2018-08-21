@@ -20,17 +20,41 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.embeddedwebview.challengehandlers;
+package com.microsoft.identity.common.internal.ui.browser;
+
+import android.support.annotation.NonNull;
+
+import com.microsoft.identity.common.internal.logging.Logger;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
- * Abstract Factory class which can be extended to process difference type of challenges.
+ * A blocked list of browsers. This will reject a match for any browser on the list, and permit
+ * all others.
  */
+public class BrowserBlocklist {
+    private static final String TAG = BrowserBlocklist.class.getSimpleName();
+    private List<Browser> mBrowsers;
 
-public interface IChallengeHandler<GenericChallenge, GenericResponse> {
     /**
-     * Process difference kinds of challenge request.
-     * @param genericChallenge challenge request
-     * @return GenericResponse
+     * Create a block list from given set of browsers.
      */
-    GenericResponse processChallenge(GenericChallenge genericChallenge);
+    public BrowserBlocklist(Browser... browsers) {
+        mBrowsers = Arrays.asList(browsers);
+    }
+
+    /**
+     * @return true if the browser is in the block list.
+     */
+    public boolean matches(@NonNull Browser targetBrowser) {
+        for (Browser browser : mBrowsers) {
+            if (browser.equals(targetBrowser)) {
+                Logger.verbose(TAG, "The target browser is in the block list.");
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
