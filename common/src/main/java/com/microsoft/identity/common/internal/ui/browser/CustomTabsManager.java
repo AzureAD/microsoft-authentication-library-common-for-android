@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.browser;
 
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsClient;
 import android.support.customtabs.CustomTabsIntent;
@@ -50,6 +51,7 @@ public class CustomTabsManager {
     private CustomTabsServiceConnection mCustomTabsServiceConnection;
     private final WeakReference<Activity> mActivityRef;
     private final AtomicReference<CustomTabsClient> mCustomTabsClient;
+    private boolean mCustomTabsServiceIsBound;
     private final CountDownLatch mClientLatch;
 
     /**
@@ -81,6 +83,7 @@ public class CustomTabsManager {
             public void onCustomTabsServiceConnected(ComponentName name, CustomTabsClient client) {
                 Logger.info(TAG, "CustomTabsService is connected");
                 client.warmup(0L);
+                mCustomTabsServiceIsBound = true;
                 mCustomTabsClient.set(client);
                 mClientLatch.countDown();
             }
@@ -88,6 +91,7 @@ public class CustomTabsManager {
             @Override
             public void onServiceDisconnected(ComponentName name) {
                 Logger.info(TAG, "CustomTabsService is disconnected");
+                mCustomTabsServiceIsBound = false;
                 mCustomTabsClient.set(null);
                 //mClientLatch.countDown();
             }
@@ -130,10 +134,11 @@ public class CustomTabsManager {
             return;
         }
 
-        if (mActivityRef.get() != null) {
-            mActivityRef.get().getApplicationContext().unbindService(mCustomTabsServiceConnection);
+        if (mActivityRef.get() != null && mCustomTabsServiceIsBound) {
+            mActivityRef.get().unbindService(mCustomTabsServiceConnection);
         }
 
+        mCustomTabsServiceIsBound = false;
         mCustomTabsClient.set(null);
 
         Logger.info(TAG, "CustomTabsService is unbound.");

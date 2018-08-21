@@ -101,9 +101,9 @@ public class BrowserSelector {
                 //TODO if the browser is in the block list, do not add it into the return browserList.
                 if (isCustomTabsServiceSupported(context, packageInfo)) {
                     //if the browser has custom tab enabled, set the custom tab support as true.
-                    browserList.add(new Browser(packageInfo).setCustomTabsServiceSupported(true));
+                    browserList.add(new Browser(packageInfo, true));
                 } else {
-                    browserList.add(new Browser(packageInfo).setCustomTabsServiceSupported(false));
+                    browserList.add(new Browser(packageInfo, false));
                 }
             } catch (PackageManager.NameNotFoundException e) {
                 // a browser cannot be generated without the package info

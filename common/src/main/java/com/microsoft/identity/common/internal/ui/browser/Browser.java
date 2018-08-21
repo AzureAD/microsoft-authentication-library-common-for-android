@@ -68,6 +68,10 @@ public class Browser {
         this(packageInfo.packageName, generateSignatureHashes(packageInfo.signatures), packageInfo.versionName, false);
     }
 
+    public Browser(@NonNull PackageInfo packageInfo, final Boolean isCustomTabsServiceSupported) {
+        this(packageInfo.packageName, generateSignatureHashes(packageInfo.signatures), packageInfo.versionName, isCustomTabsServiceSupported);
+    }
+
     /**
      * Creates a browser object with the core properties.
      *
@@ -80,10 +84,6 @@ public class Browser {
         mSignatureHashes = signatureHashes;
         mVersion = version;
         mIsCustomTabsServiceSupported = isCustomTabsServiceSupported;
-    }
-
-    public Browser setCustomTabsServiceSupported(final Boolean isCustomTabsServiceSupported) {
-        return new Browser(mPackageName, mSignatureHashes, mVersion, isCustomTabsServiceSupported);
     }
 
     /**

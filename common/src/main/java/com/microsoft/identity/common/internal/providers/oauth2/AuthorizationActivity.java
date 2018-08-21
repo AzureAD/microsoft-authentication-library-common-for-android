@@ -17,8 +17,6 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
-import com.microsoft.identity.common.internal.ui.webview.OAuth2WebViewClient;
-import com.microsoft.identity.common.internal.ui.webview.WebViewClientFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeCompletionCallback;
 
 public final class AuthorizationActivity extends Activity {

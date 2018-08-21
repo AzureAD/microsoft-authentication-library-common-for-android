@@ -16,12 +16,6 @@ public class AuthorizationConfiguration implements Serializable {
 
     private String mRedirectUrl;
 
-    public String getIdpType() {
-        return mIdpType;
-    }
-
-    private String mIdpType = "Microsoft";
-
     private AuthorizationConfiguration() {
         mAuthorizationAgent = AuthorizationAgent.BROWSER;
     }
