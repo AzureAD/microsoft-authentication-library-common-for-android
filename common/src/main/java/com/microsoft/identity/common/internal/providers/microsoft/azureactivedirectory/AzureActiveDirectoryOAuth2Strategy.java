@@ -30,6 +30,8 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -52,7 +54,8 @@ public class AzureActiveDirectoryOAuth2Strategy
         AzureActiveDirectoryRefreshToken,
         AzureActiveDirectoryTokenRequest,
         AzureActiveDirectoryTokenResponse,
-        TokenResult> {
+        TokenResult,
+        AuthorizationResult> {
 
     private static final String TAG = AzureActiveDirectoryOAuth2Strategy.class.getSimpleName();
 
@@ -65,6 +68,11 @@ public class AzureActiveDirectoryOAuth2Strategy
         super(config);
         Logger.verbose(TAG, "Init: " + TAG);
         setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oauth2/token");
+    }
+
+    @Override
+    public AuthorizationResultFactory getAuthorizationResultFactory() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

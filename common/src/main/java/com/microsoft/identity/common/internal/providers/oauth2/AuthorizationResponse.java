@@ -104,4 +104,9 @@ public class AuthorizationResponse {
     public void setState(String state) {
         mState = state;
     }
+
+    public static class Fields {
+        public static final String CODE = "code";
+        public static final String STATE = "state";
+    }
 }

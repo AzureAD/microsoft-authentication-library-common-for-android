@@ -78,4 +78,9 @@ public class AuthorizationErrorResponse {
     public void setErrorDescription(final String errorDescription) {
         mErrorDescription = errorDescription;
     }
+
+    public static class Fields {
+        public final static String ERROR = "error";
+        public final static String ERROR_DESCRIPTION = "error_description";
+    }
 }
