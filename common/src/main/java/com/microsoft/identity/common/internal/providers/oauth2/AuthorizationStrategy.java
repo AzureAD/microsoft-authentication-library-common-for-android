@@ -62,7 +62,7 @@ public abstract class AuthorizationStrategy {
      *
      * @param requestUrl authorization request url
      */
-    public abstract Future<AuthorizationResult> requestAuthorization(final Uri requestUrl) throws ClientException;
+    public abstract void requestAuthorization(final Uri requestUrl) throws ClientException;
 
     public abstract void completeAuthorization(int requestCode, int resultCode, final Intent data);
 }

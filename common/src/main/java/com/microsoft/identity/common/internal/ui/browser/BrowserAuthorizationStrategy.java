@@ -51,9 +51,9 @@ public class BrowserAuthorizationStrategy extends AuthorizationStrategy {
     }
 
     @Override
-    public Future<AuthorizationResult> requestAuthorization(final Uri requestUrl) throws ClientException {
+    public void requestAuthorization(final Uri requestUrl) throws ClientException {
         checkNotDisposed();
-        mAuthorizationResultFuture = new AuthorizationResultFuture();
+        //mAuthorizationResultFuture = new AuthorizationResultFuture();
         final Browser browser = BrowserSelector.select(mReferencedActivity.get().getApplicationContext());
 
         //ClientException will be thrown if no browser found.
@@ -70,9 +70,9 @@ public class BrowserAuthorizationStrategy extends AuthorizationStrategy {
 
         authIntent.setPackage(browser.getPackageName());
         authIntent.setData(requestUrl);
-        mReferencedActivity.get().startActivityForResult(AuthorizationActivity.createStartIntent(authIntent, requestUrl.toString(), mConfiguration),BROWSER_FLOW);
+        mReferencedActivity.get().startActivityForResult(AuthorizationActivity.createStartIntent(mReferencedActivity.get().getApplicationContext(),authIntent, requestUrl.toString(), mConfiguration),BROWSER_FLOW);
 
-        return mAuthorizationResultFuture;
+        //return mAuthorizationResultFuture;
     }
 
     private void checkNotDisposed() {

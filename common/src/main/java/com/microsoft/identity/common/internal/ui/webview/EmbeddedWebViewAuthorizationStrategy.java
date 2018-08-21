@@ -64,12 +64,16 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
      * @param requestUrl authorization request url
      */
     @Override
-    public Future<AuthorizationResult> requestAuthorization(final Uri requestUrl) {
-        mAuthorizationResultFuture = new AuthorizationResultFuture();
+    public void requestAuthorization(final Uri requestUrl) {
+        //mAuthorizationResultFuture = new AuthorizationResultFuture();
         Logger.verbose(TAG, "Perform the authorization request with embedded webView.");
-        final Intent authIntent = AuthorizationActivity.createStartIntent(null, requestUrl.toString(), mConfiguration);
+        final Intent authIntent = AuthorizationActivity.createStartIntent(
+                mReferencedActivity.get().getApplicationContext(),
+                null,
+                requestUrl.toString(),
+                mConfiguration);
         mReferencedActivity.get().startActivityForResult(authIntent, BROWSER_FLOW);
-        return mAuthorizationResultFuture;
+        //return mAuthorizationResultFuture;
     }
 
     @Override
