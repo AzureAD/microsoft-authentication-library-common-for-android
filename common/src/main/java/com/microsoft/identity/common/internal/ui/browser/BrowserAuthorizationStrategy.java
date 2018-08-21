@@ -53,7 +53,7 @@ public class BrowserAuthorizationStrategy extends AuthorizationStrategy {
     @Override
     public Future<AuthorizationResult> requestAuthorization(final Uri requestUrl) throws ClientException {
         checkNotDisposed();
-        //mAuthorizationResultFuture = new AuthorizationResultFuture();
+        mAuthorizationResultFuture = new AuthorizationResultFuture();
         final Browser browser = BrowserSelector.select(mReferencedActivity.get().getApplicationContext());
 
         //ClientException will be thrown if no browser found.
