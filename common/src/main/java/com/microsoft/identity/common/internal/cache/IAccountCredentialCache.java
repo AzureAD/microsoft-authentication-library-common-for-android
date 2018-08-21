@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.dto.Account;
@@ -82,7 +83,7 @@ public interface IAccountCredentialCache {
      */
     List<Account> getAccountsFilteredBy(
             @Nullable final String homeAccountId,
-            final String environment,
+            @NonNull final String environment,
             @Nullable final String realm
     );
 
@@ -106,9 +107,9 @@ public interface IAccountCredentialCache {
      */
     List<Credential> getCredentialsFilteredBy(
             @Nullable final String homeAccountId,
-            final String environment,
-            final CredentialType credentialType,
-            final String clientId,
+            @NonNull final String environment,
+            @NonNull final CredentialType credentialType,
+            @NonNull final String clientId,
             @Nullable final String realm,
             @Nullable final String target
     );

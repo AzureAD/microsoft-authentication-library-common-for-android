@@ -53,7 +53,8 @@ public abstract class OAuth2Strategy
                 GenericRefreshToken extends RefreshToken,
                 GenericTokenRequest extends TokenRequest,
                 GenericTokenResponse extends TokenResponse,
-                GenericTokenResult extends TokenResult> {
+                GenericTokenResult extends TokenResult,
+                GenericAuthorizationResult extends AuthorizationResult> {
     protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
     private final GenericOAuth2Configuration mConfig;
@@ -89,6 +90,8 @@ public abstract class OAuth2Strategy
 
         return future;
     }
+
+    public abstract AuthorizationResultFactory getAuthorizationResultFactory();
 
     /**
      * @param request generic token request.
@@ -187,7 +190,7 @@ public abstract class OAuth2Strategy
      */
     protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response);
 
-    // TODO
+   // TODO
 //    protected abstract void validateAuthorizationResponse(GenericAuthorizationResponse response);
 
 //    protected abstract void validateTokenResponse(GenericTokenResponse response);

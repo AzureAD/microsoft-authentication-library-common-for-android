@@ -42,7 +42,7 @@ import java.util.Map;
 
 public abstract class MicrosoftAccount extends Account {
 
-    protected static final String AUTHORITY_TYPE_V1_V2 = "MSSTS";
+    public static final String AUTHORITY_TYPE_V1_V2 = "MSSTS";
 
     private static final String TAG = MicrosoftAccount.class.getSimpleName();
 

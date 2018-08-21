@@ -42,7 +42,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.concurrent.TimeUnit;
 
@@ -55,9 +54,6 @@ public class MicrosoftStsAccountCredentialAdapter
                 MicrosoftRefreshToken> {
 
     private static final String TAG = MicrosoftStsAccountCredentialAdapter.class.getSimpleName();
-
-    // TODO move me!
-    private static final String BEARER = "Bearer";
 
     @Override
     public Account createAccount(
@@ -97,7 +93,7 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setExtendedExpiresOn(getExtendedExpiresOn(strategy, response));
             accessToken.setAuthority(request.getAuthority().toString());
             accessToken.setClientInfo(response.getClientInfo());
-            accessToken.setAccessTokenType(BEARER); // TODO Don't hardcode this value.
+            accessToken.setAccessTokenType(response.getTokenType());
 
             return accessToken;
         } catch (ServiceException e) {

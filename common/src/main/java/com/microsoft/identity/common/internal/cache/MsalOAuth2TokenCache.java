@@ -32,16 +32,16 @@ import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
+import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,20 +50,24 @@ import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SC
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 
 public class MsalOAuth2TokenCache
-        extends OAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse>
-        implements IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> {
+        <GenericOAuth2Strategy extends OAuth2Strategy,
+                GenericAuthorizationRequest extends AuthorizationRequest,
+                GenericTokenResponse extends TokenResponse,
+                GenericAccount extends com.microsoft.identity.common.Account,
+                GenericRefreshToken extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken>
+        extends OAuth2TokenCache<GenericOAuth2Strategy, GenericAuthorizationRequest, GenericTokenResponse>
+        implements IShareSingleSignOnState<GenericAccount, GenericRefreshToken> {
 
     private static final String TAG = MsalOAuth2TokenCache.class.getSimpleName();
 
-    private List<IShareSingleSignOnState> mSharedSsoCaches; //NOPMD Suppressing PMD warning for unused variable
     private IAccountCredentialCache mAccountCredentialCache;
 
-    private IAccountCredentialAdapter<
-            MicrosoftStsOAuth2Strategy,
-            MicrosoftStsAuthorizationRequest,
-            MicrosoftStsTokenResponse,
-            MicrosoftAccount,
-            MicrosoftRefreshToken> mAccountCredentialAdapter;
+    private final IAccountCredentialAdapter<
+            GenericOAuth2Strategy,
+            GenericAuthorizationRequest,
+            GenericTokenResponse,
+            GenericAccount,
+            GenericRefreshToken> mAccountCredentialAdapter;
 
     /**
      * Constructor of MsalOAuth2TokenCache.
@@ -75,47 +79,21 @@ public class MsalOAuth2TokenCache
     public MsalOAuth2TokenCache(final Context context,
                                 final IAccountCredentialCache accountCredentialCache,
                                 final IAccountCredentialAdapter<
-                                        MicrosoftStsOAuth2Strategy,
-                                        MicrosoftStsAuthorizationRequest,
-                                        MicrosoftStsTokenResponse,
-                                        MicrosoftAccount,
-                                        MicrosoftRefreshToken> accountCredentialAdapter) {
+                                        GenericOAuth2Strategy,
+                                        GenericAuthorizationRequest,
+                                        GenericTokenResponse,
+                                        GenericAccount,
+                                        GenericRefreshToken> accountCredentialAdapter) {
         super(context);
         Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
-        mSharedSsoCaches = new ArrayList<>();
-        mAccountCredentialAdapter = accountCredentialAdapter;
-    }
-
-    /**
-     * Constructor of MsalOAuth2TokenCache.
-     *
-     * @param context                  Context
-     * @param accountCredentialCache   IAccountCredentialCache
-     * @param accountCredentialAdapter IAccountCredentialAdapter
-     * @param sharedSsoCaches          List<IShareSingleSignOnState>
-     */
-    public MsalOAuth2TokenCache(final Context context,
-                                final IAccountCredentialCache accountCredentialCache,
-                                final IAccountCredentialAdapter<
-                                        MicrosoftStsOAuth2Strategy,
-                                        MicrosoftStsAuthorizationRequest,
-                                        MicrosoftStsTokenResponse,
-                                        MicrosoftAccount,
-                                        MicrosoftRefreshToken> accountCredentialAdapter,
-                                final List<IShareSingleSignOnState> sharedSsoCaches) {
-        super(context);
-        Logger.verbose(TAG, "Init: " + TAG);
-        mAccountCredentialCache = accountCredentialCache;
-        mSharedSsoCaches = sharedSsoCaches;
         mAccountCredentialAdapter = accountCredentialAdapter;
     }
 
     @Override
-    public void saveTokens(
-            final MicrosoftStsOAuth2Strategy oAuth2Strategy,
-            final MicrosoftStsAuthorizationRequest request,
-            final MicrosoftStsTokenResponse response) throws ClientException {
+    public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
+                             @NonNull final GenericAuthorizationRequest request,
+                             @NonNull final GenericTokenResponse response) throws ClientException {
         // Create the Account
         final Account accountToSave =
                 mAccountCredentialAdapter.createAccount(
@@ -159,15 +137,234 @@ public class MsalOAuth2TokenCache
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
         saveCredentials(accessTokenToSave, refreshTokenToSave, idTokenToSave);
+
+        final CacheRecord result = new CacheRecord();
+        result.setAccount(accountToSave);
+        result.setAccessToken(accessTokenToSave);
+        result.setRefreshToken(refreshTokenToSave);
+        result.setIdToken(idTokenToSave);
+
+        return result;
     }
 
-    private void saveAccounts(final Account... accounts) {
+    @Override
+    public ICacheRecord load(final String clientId, final Account account) {
+        // Load the AccessTokens
+        final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                account.getHomeAccountId(),
+                account.getEnvironment(),
+                CredentialType.AccessToken,
+                clientId,
+                account.getRealm(),
+                null // wildcard (*)
+        );
+
+        // Load the RefreshTokens
+        final List<Credential> refreshTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                account.getHomeAccountId(),
+                account.getEnvironment(),
+                CredentialType.RefreshToken,
+                clientId,
+                account.getRealm(),
+                null // wildcard (*)
+        );
+
+        // Load the IdTokens
+        final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                account.getHomeAccountId(),
+                account.getEnvironment(),
+                CredentialType.IdToken,
+                clientId,
+                account.getRealm(),
+                null // wildcard (*)
+        );
+
+        final CacheRecord result = new CacheRecord();
+        result.setAccount(account);
+        result.setAccessToken(accessTokens.isEmpty() ? null : (AccessToken) accessTokens.get(0));
+        result.setRefreshToken(refreshTokens.isEmpty() ? null : (RefreshToken) refreshTokens.get(0));
+        result.setIdToken(idTokens.isEmpty() ? null : (IdToken) idTokens.get(0));
+
+        return result;
+    }
+
+    @Override
+    public boolean removeCredential(Credential credential) {
+        return mAccountCredentialCache.removeCredential(credential);
+    }
+
+    @Override
+    public Account getAccount(@NonNull final String environment,
+                              @NonNull final String clientId,
+                              @NonNull final String homeAccountId) {
+        final List<Account> allAccounts = getAccounts(environment, clientId);
+
+        // Return the sought Account matching the supplied homeAccountId
+        for (final Account account : allAccounts) {
+            if (homeAccountId.equals(account.getHomeAccountId())) {
+                return account;
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public List<Account> getAccounts(@NonNull final String environment,
+                                     @NonNull final String clientId) {
+        final List<Account> accountsForThisApp = new ArrayList<>();
+
+        // Get all of the Accounts for this environment
+        final List<Account> accountsForEnvironment =
+                mAccountCredentialCache.getAccountsFilteredBy(
+                        null, // wildcard (*) homeAccountId
+                        environment,
+                        null // wildcard (*) realm
+                );
+
+        // Grab the Credentials for this app...
+        final List<Credential> appCredentials =
+                mAccountCredentialCache.getCredentialsFilteredBy(
+                        null, // homeAccountId
+                        environment,
+                        CredentialType.RefreshToken,
+                        clientId,
+                        null, // realm
+                        null // target
+                );
+
+        // For each Account with an associated RT, add it to the result List...
+        for (final Account account : accountsForEnvironment) {
+            if (accountHasCredential(account, appCredentials)) {
+                accountsForThisApp.add(account);
+            }
+        }
+
+        return Collections.unmodifiableList(accountsForThisApp);
+    }
+
+    /**
+     * Evaluates the supplied list of app credentials. Returns true if he provided Account
+     * 'owns' any one of these tokens.
+     *
+     * @param account        The Account whose credential ownership should be evaluated.
+     * @param appCredentials The Credentials to evaluate.
+     * @return True, if this Account has Credentials. False otherwise.
+     */
+    private boolean accountHasCredential(@NonNull final Account account,
+                                         @NonNull final List<Credential> appCredentials) {
+        final String accountHomeId = account.getHomeAccountId();
+        final String accountEnvironment = account.getEnvironment();
+
+        for (final Credential credential : appCredentials) {
+            if (accountHomeId.equals(credential.getHomeAccountId())
+                    && accountEnvironment.equals(credential.getEnvironment())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean removeAccount(final String environment,
+                                 final String clientId,
+                                 final String homeAccountId) {
+        final String methodName = ":removeAccount";
+
+        final Account targetAccount;
+        if (null == environment
+                || null == clientId
+                || null == homeAccountId
+                || null == (targetAccount =
+                getAccount(
+                        environment,
+                        clientId,
+                        homeAccountId
+                ))) {
+            return false;
+        }
+
+        // Remove this user's AccessToken, RefreshToken, IdToken, and Account entries
+        int atsRemoved = removeCredentialsOfTypeForAccount(
+                environment,
+                clientId,
+                CredentialType.AccessToken,
+                targetAccount
+        );
+        int rtsRemoved = removeCredentialsOfTypeForAccount(
+                environment,
+                clientId,
+                CredentialType.RefreshToken,
+                targetAccount
+        );
+        int idsRemoved = removeCredentialsOfTypeForAccount(
+                environment,
+                clientId,
+                CredentialType.IdToken,
+                targetAccount
+        );
+
+        final boolean accountRemoved = mAccountCredentialCache.removeAccount(targetAccount);
+
+        final String[][] logInfo = new String[][]{
+                {"Access tokens", String.valueOf(atsRemoved)},
+                {"Refresh tokens", String.valueOf(rtsRemoved)},
+                {"Id tokens", String.valueOf(idsRemoved)},
+                {"Accounts", accountRemoved ? "1" : "0"}
+        };
+
+        for (final String[] tuple : logInfo) {
+            com.microsoft.identity.common.internal.logging.Logger.info(
+                    TAG + methodName,
+                    tuple[0] + " removed: [" + tuple[1] + "]"
+            );
+        }
+
+        return accountRemoved;
+    }
+
+    /**
+     * Removes Credentials of the supplied type for the supplied Account.
+     *
+     * @param credentialType The type of Credential to remove.
+     * @param targetAccount  The target Account whose Credentials should be removed.
+     * @return The number of Credentials removed.
+     */
+    private int removeCredentialsOfTypeForAccount(
+            @NonNull final String environment, // 'authority host'
+            @NonNull final String clientId,
+            @NonNull final CredentialType credentialType,
+            @NonNull final Account targetAccount) {
+        int credentialsRemoved = 0;
+
+        // Query it for Credentials matching the supplied targetAccount
+        final List<Credential> credentialsToRemove =
+                mAccountCredentialCache.getCredentialsFilteredBy(
+                        targetAccount.getHomeAccountId(),
+                        environment,
+                        credentialType,
+                        clientId,
+                        null, // wildcard (*) realm
+                        null // wildcard (*) target
+                );
+
+        for (final Credential credentialToRemove : credentialsToRemove) {
+            if (mAccountCredentialCache.removeCredential(credentialToRemove)) {
+                credentialsRemoved++;
+            }
+        }
+
+        return credentialsRemoved;
+    }
+
+    void saveAccounts(final Account... accounts) {
         for (final Account account : accounts) {
             mAccountCredentialCache.saveAccount(account);
         }
     }
 
-    private void saveCredentials(final Credential... credentials) {
+    void saveCredentials(final Credential... credentials) {
         for (final Credential credential : credentials) {
 
             if (credential instanceof AccessToken) {
@@ -189,7 +386,7 @@ public class MsalOAuth2TokenCache
      * @param idTokenToSave      The {@link IdToken} to save.
      * @throws ClientException If any of the supplied artifacts are non schema-compliant.
      */
-    private void validateCacheArtifacts(
+    void validateCacheArtifacts(
             @NonNull final Account accountToSave,
             final AccessToken accessTokenToSave,
             @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshTokenToSave,
@@ -313,7 +510,7 @@ public class MsalOAuth2TokenCache
         return isCompliant;
     }
 
-    private static boolean isAccountSchemaCompliant(@NonNull final Account account) {
+    boolean isAccountSchemaCompliant(@NonNull final Account account) {
         // Required fields...
         final String[][] params = new String[][]{
                 {Account.SerializedNames.HOME_ACCOUNT_ID, account.getHomeAccountId()},
@@ -329,7 +526,7 @@ public class MsalOAuth2TokenCache
         return isCompliant;
     }
 
-    private static boolean isAccessTokenSchemaCompliant(@NonNull final AccessToken accessToken) {
+    boolean isAccessTokenSchemaCompliant(@NonNull final AccessToken accessToken) {
         // Required fields...
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.CREDENTIAL_TYPE, accessToken.getCredentialType()},
@@ -348,7 +545,7 @@ public class MsalOAuth2TokenCache
         return isValid;
     }
 
-    private static boolean isRefreshTokenSchemaCompliant(
+    boolean isRefreshTokenSchemaCompliant(
             @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken) {
         // Required fields...
         final String[][] params = new String[][]{
@@ -364,7 +561,7 @@ public class MsalOAuth2TokenCache
         return isValid;
     }
 
-    private static boolean isIdTokenSchemaCompliant(@NonNull final IdToken idToken) {
+    boolean isIdTokenSchemaCompliant(@NonNull final IdToken idToken) {
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.HOME_ACCOUNT_ID, idToken.getHomeAccountId()},
                 {Credential.SerializedNames.ENVIRONMENT, idToken.getEnvironment()},
@@ -380,8 +577,8 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public void setSingleSignOnState(final MicrosoftAccount account,
-                                     final MicrosoftRefreshToken refreshToken) {
+    public void setSingleSignOnState(final GenericAccount account,
+                                     final GenericRefreshToken refreshToken) {
         final String methodName = "setSingleSignOnState";
 
         try {
@@ -413,11 +610,8 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public MicrosoftRefreshToken getSingleSignOnState(final MicrosoftAccount account) {
-        final MicrosoftRefreshToken result = null;
-        // TODO
-
-        return result;
+    public GenericRefreshToken getSingleSignOnState(final GenericAccount account) {
+        throw new UnsupportedOperationException("Unimplemented!");
     }
 
 }
