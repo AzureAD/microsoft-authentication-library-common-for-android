@@ -21,7 +21,7 @@ import com.microsoft.identity.common.internal.ui.webview.OAuth2WebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.WebViewClientFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeCompletionCallback;
 
-public final class AuthorizationActivity <GenericOAuth2WebViewClient extends OAuth2WebViewClient> extends Activity {
+public final class AuthorizationActivity extends Activity {
     @VisibleForTesting
     static final String KEY_AUTH_INTENT = "authIntent";
 
@@ -120,12 +120,8 @@ public final class AuthorizationActivity <GenericOAuth2WebViewClient extends OAu
             mAuthorizationStarted = true;
             if (mAuthorizationConfiguration != null
                     && mAuthorizationConfiguration.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW) {
+                //TODO Replace AzureActiveDirectoryWebViewClient with GenericOAuth2WebViewClient once OAuth2Strategy get integrated.
                 AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(this, new ChallengeCompletionCallback(), mAuthorizationConfiguration.getRedirectUrl());
-            /*GenericOAuth2WebViewClient webViewClient
-                    = (GenericOAuth2WebViewClient)WebViewClientFactory.getInstance().getWebViewClient(
-                            mAuthorizationConfiguration,
-                    this,
-                            new ChallengeCompletionCallback());*/
                 setUpWebView(webViewClient);
                 mWebView.post(new Runnable() {
                     @Override
@@ -160,7 +156,6 @@ public final class AuthorizationActivity <GenericOAuth2WebViewClient extends OAu
     @Override
     protected void onStop() {
         super.onStop();
-        //mAuthorizationStrategy.dispose(); //TODO to unbind the custom tabs service if needed
     }
 
     @Override

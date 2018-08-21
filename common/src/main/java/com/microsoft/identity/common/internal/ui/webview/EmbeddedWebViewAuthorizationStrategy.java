@@ -64,8 +64,8 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
      * @param requestUrl authorization request url
      */
     @Override
-    public void requestAuthorization(final Uri requestUrl) {
-        //mAuthorizationResultFuture = new AuthorizationResultFuture();
+    public Future<AuthorizationResult> requestAuthorization(final Uri requestUrl) {
+        mAuthorizationResultFuture = new AuthorizationResultFuture();
         Logger.verbose(TAG, "Perform the authorization request with embedded webView.");
         final Intent authIntent = AuthorizationActivity.createStartIntent(
                 mReferencedActivity.get().getApplicationContext(),
@@ -73,7 +73,7 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
                 requestUrl.toString(),
                 mConfiguration);
         mReferencedActivity.get().startActivityForResult(authIntent, BROWSER_FLOW);
-        //return mAuthorizationResultFuture;
+        return mAuthorizationResultFuture;
     }
 
     @Override
@@ -81,7 +81,7 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
         if (requestCode != BROWSER_FLOW) {
             throw new IllegalStateException("Unknown request code");
         }
-        //TODO need to implement OAuth2StrategyFactory.getByType().getAuthorizationResult();
+
         final AuthorizationResult result = new MicrosoftStsAuthorizationResultFactory().createAuthorizationResult(resultCode, data);
         mAuthorizationResultFuture.setAuthorizationResult(result);
     }

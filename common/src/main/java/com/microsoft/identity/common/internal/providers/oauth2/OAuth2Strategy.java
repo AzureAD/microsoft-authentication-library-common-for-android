@@ -81,11 +81,11 @@ public abstract class OAuth2Strategy
             final GenericAuthorizationStrategy authorizationStrategy) {
         validateAuthorizationRequest(request);
         Future<AuthorizationResult> future = null;
-//        try {
-//            future = authorizationStrategy.requestAuthorization(request.getAuthorizationRequestAsHttpRequest());
-//        } catch (final UnsupportedEncodingException | ClientException exc) {
-//            //TODO
-//        }
+        try {
+            future = authorizationStrategy.requestAuthorization(request.getAuthorizationRequestAsHttpRequest());
+        } catch (final UnsupportedEncodingException | ClientException exc) {
+            //TODO
+        }
 
         return future;
     }
