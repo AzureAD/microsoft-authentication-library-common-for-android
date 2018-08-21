@@ -123,11 +123,6 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                                                                                  final String requestStateParameter) {
         MicrosoftStsAuthorizationResult result;
 
-        if(requestStateParameter!=null){
-            Log.i("asdf", "asdf");
-        }
-
-
         if (StringUtil.isEmpty(state)) {
             Logger.warn(TAG, "State parameter is not returned from the webview redirect.");
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
