@@ -315,10 +315,10 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             if (mustMatchOnTarget) {
                 if (credential instanceof AccessToken) {
                     final AccessToken accessToken = (AccessToken) credential;
-                    matches = matches && target.equalsIgnoreCase(accessToken.getTarget());
+                    matches = matches && targetsIntersect(target, accessToken.getTarget());
                 } else if (credential instanceof RefreshToken) {
                     final RefreshToken refreshToken = (RefreshToken) credential;
-                    matches = matches && target.equalsIgnoreCase(refreshToken.getTarget());
+                    matches = matches && targetsIntersect(target, refreshToken.getTarget());
                 } else {
                     Logger.warn(TAG, "Query specified target-match, but no target to match.");
                 }
@@ -332,6 +332,30 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         Logger.info(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
 
         return matchingCredentials;
+    }
+
+    private boolean targetsIntersect(final String soughtTarget, final String credentialTarget) {
+        // The credentialTarget must contain all of the scopes in the soughtTarget
+        // It may contain more, but it must contain minimally those
+        // Matching is case-insensitive
+        final String splitCriteria = "\\s+";
+        final String[] soughtTargetArray = soughtTarget.split(splitCriteria);
+        final String[] credentialTargetArray = credentialTarget.split(splitCriteria);
+
+        // Declare Sets to contain these scopes
+        final Set<String> soughtTargetSet = new HashSet<>();
+        final Set<String> credentialTargetSet = new HashSet<>();
+
+        // Add the array values to these sets, lowercasing them
+        for (final String target : soughtTargetArray) {
+            soughtTargetSet.add(target.toLowerCase());
+        }
+
+        for (final String target : credentialTargetArray) {
+            credentialTargetSet.add(target.toLowerCase());
+        }
+
+        return credentialTargetSet.containsAll(soughtTargetSet);
     }
 
     @Override
