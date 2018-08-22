@@ -334,12 +334,20 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         return matchingCredentials;
     }
 
-    private boolean targetsIntersect(final String soughtTarget, final String credentialTarget) {
-        // The credentialTarget must contain all of the scopes in the soughtTarget
+    /**
+     * Examines the intersections of the provided targets (scopes).
+     *
+     * @param targetToMatch    The target value[s] our cache-query is looking for.
+     * @param credentialTarget The target against which our sought value will be compared.
+     * @return True, if the credentialTarget contains all of the targets (scopes) declared by
+     * targetToMatch. False otherwise.
+     */
+    private boolean targetsIntersect(final String targetToMatch, final String credentialTarget) {
+        // The credentialTarget must contain all of the scopes in the targetToMatch
         // It may contain more, but it must contain minimally those
         // Matching is case-insensitive
         final String splitCriteria = "\\s+";
-        final String[] soughtTargetArray = soughtTarget.split(splitCriteria);
+        final String[] targetToMatchArray = targetToMatch.split(splitCriteria);
         final String[] credentialTargetArray = credentialTarget.split(splitCriteria);
 
         // Declare Sets to contain these scopes
@@ -347,7 +355,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         final Set<String> credentialTargetSet = new HashSet<>();
 
         // Add the array values to these sets, lowercasing them
-        for (final String target : soughtTargetArray) {
+        for (final String target : targetToMatchArray) {
             soughtTargetSet.add(target.toLowerCase());
         }
 
