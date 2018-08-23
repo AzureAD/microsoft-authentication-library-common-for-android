@@ -733,6 +733,153 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
+    public void getCredentialsCaseInsensitive() {
+        // Uppercase the value we're filtering on to assert
+        // that the match is case insensitive
+        final String searchTarget = TARGET.toUpperCase();
+
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setSecret(SECRET);
+        refreshToken.setTarget(TARGET);
+
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(SECRET);
+
+        // Save the Credentials
+        mAccountCredentialCache.saveCredential(refreshToken);
+        mAccountCredentialCache.saveCredential(accessToken);
+
+        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+                HOME_ACCOUNT_ID,
+                ENVIRONMENT,
+                CredentialType.RefreshToken,
+                CLIENT_ID,
+                REALM,
+                searchTarget
+        );
+        assertEquals(1, credentials.size());
+        final Credential retrievedCredential = credentials.get(0);
+        assertEquals(
+                CredentialType.RefreshToken.name(),
+                retrievedCredential.getCredentialType()
+        );
+    }
+
+    @Test
+    public void getCredentialsPartialMatch() {
+        final String[] targetScopes = TARGET.split("\\s+");
+
+        // Just in case this value changes on us, just assert that it take the expected format
+        assertEquals(3, targetScopes.length);
+
+        // Let's grab a subset of these in a different order and make sure we still get the right
+        // results back
+        final String searchTarget = targetScopes[2] + " " + targetScopes[0];
+
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setSecret(SECRET);
+        refreshToken.setTarget(TARGET);
+
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(SECRET);
+
+        // Save the Credentials
+        mAccountCredentialCache.saveCredential(refreshToken);
+        mAccountCredentialCache.saveCredential(accessToken);
+
+        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+                HOME_ACCOUNT_ID,
+                ENVIRONMENT,
+                CredentialType.RefreshToken,
+                CLIENT_ID,
+                REALM,
+                searchTarget
+        );
+        assertEquals(1, credentials.size());
+        final Credential retrievedCredential = credentials.get(0);
+        assertEquals(
+                CredentialType.RefreshToken.name(),
+                retrievedCredential.getCredentialType()
+        );
+    }
+
+    @Test
+    public void getCredentialsPartialMatchWithCapitalization() {
+        final String[] targetScopes = TARGET.split("\\s+");
+
+        // Just in case this value changes on us, just assert that it take the expected format
+        assertEquals(3, targetScopes.length);
+
+        // Let's grab a subset of these in a different order and make sure we still get the right
+        // results back
+        final String searchTarget = targetScopes[2].toUpperCase()
+                + " "
+                + targetScopes[0].toUpperCase();
+
+        final RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setSecret(SECRET);
+        refreshToken.setTarget(TARGET);
+
+        final AccessToken accessToken = new AccessToken();
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(SECRET);
+
+        // Save the Credentials
+        mAccountCredentialCache.saveCredential(refreshToken);
+        mAccountCredentialCache.saveCredential(accessToken);
+
+        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+                HOME_ACCOUNT_ID,
+                ENVIRONMENT,
+                CredentialType.RefreshToken,
+                CLIENT_ID,
+                REALM,
+                searchTarget
+        );
+        assertEquals(1, credentials.size());
+        final Credential retrievedCredential = credentials.get(0);
+        assertEquals(
+                CredentialType.RefreshToken.name(),
+                retrievedCredential.getCredentialType()
+        );
+    }
+
+    @Test
     public void getCredentialsNoHomeAccountId() {
         final RefreshToken refreshToken = new RefreshToken();
         refreshToken.setSecret(SECRET);

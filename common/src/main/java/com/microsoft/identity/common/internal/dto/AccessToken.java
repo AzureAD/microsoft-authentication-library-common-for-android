@@ -23,6 +23,10 @@
 package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
+
+import java.util.Calendar;
+import java.util.Date;
 
 import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.ACCESS_TOKEN_TYPE;
 import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.AUTHORITY;
@@ -240,5 +244,17 @@ public class AccessToken extends Credential {
      */
     public void setExpiresOn(final String expiresOn) {
         mExpiresOn = expiresOn;
+    }
+
+    @Override
+    public boolean isExpired() {
+        // Init a Calendar for the current time/date
+        final Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.SECOND, AuthenticationSettings.INSTANCE.getExpirationBuffer());
+        final Date validity = calendar.getTime();
+        // Init a Date for the accessToken's expiry
+        long epoch = Long.valueOf(getExpiresOn());
+        final Date expiresOn = new Date(epoch * 1000);
+        return expiresOn.before(validity);
     }
 }
