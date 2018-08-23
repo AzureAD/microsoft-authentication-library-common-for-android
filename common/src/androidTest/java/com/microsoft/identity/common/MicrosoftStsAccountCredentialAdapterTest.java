@@ -94,6 +94,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
             // Create HMAC signer
             final JWSSigner signer = new MACSigner(sharedSecret);
 
+            // Create/populate claims for the JWT
             final JWTClaimsSet claimsSet =
                     new JWTClaimsSet.Builder()
                             .issuer(MOCK_AUTHORITY)
@@ -109,8 +110,13 @@ public class MicrosoftStsAccountCredentialAdapterTest {
                             .claim("middle_name", MOCK_MIDDLE_NAME)
                             .build();
 
+            // Create the JWT
             final SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claimsSet);
+
+            // Sign it
             signedJWT.sign(signer);
+
+            // Stringify it for testing
             idTokenWithClaims = signedJWT.serialize();
 
         } catch (JOSEException e) {
