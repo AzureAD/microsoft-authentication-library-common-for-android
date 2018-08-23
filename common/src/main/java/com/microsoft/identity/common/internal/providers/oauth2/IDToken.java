@@ -22,17 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import android.util.Base64;
-
-import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 
-import org.json.JSONException;
-
-import java.nio.charset.Charset;
+import java.text.ParseException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -220,26 +218,27 @@ public class IDToken {
     }
 
     private Map<String, String> parseJWT(final String idToken) throws ServiceException {
-        final String idTokenBody = extractJWTBody(idToken);
-        final byte[] data = Base64.decode(idTokenBody, Base64.URL_SAFE);
-
         try {
-            final String decodedBody = new String(data, Charset.forName(StringExtensions.ENCODING_UTF8));
-            return JsonExtensions.extractJsonObjectIntoMap(decodedBody);
-        } catch (final JSONException e) {
+            // Create a SignedJWT from the input token String
+            final SignedJWT signedJWT = SignedJWT.parse(idToken);
+
+            // Grab the claims and put them in a Map
+            final JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+            final Map<String, Object> claimsMap = claimsSet.getClaims();
+
+            // Convert that Map<String, Object> into Map<String, String>
+            final Map<String, String> claimsMapStr = new HashMap<>();
+
+            for (final Map.Entry<String, Object> entry : claimsMap.entrySet()) {
+                claimsMapStr.put(entry.getKey(), entry.getValue().toString());
+            }
+
+            // Return our result
+            return claimsMapStr;
+        } catch (ParseException e) {
+            e.printStackTrace();
             throw new ServiceException("", ErrorStrings.INVALID_JWT, e);
         }
     }
 
-    private String extractJWTBody(final String idToken) {
-        final int firstDot = idToken.indexOf('.');
-        final int secondDot = idToken.indexOf('.', firstDot + 1);
-        final int invalidDot = idToken.indexOf('.', secondDot + 1);
-
-        if (invalidDot == -1 && firstDot > 0 && secondDot > 0) {
-            return idToken.substring(firstDot + 1, secondDot);
-        } else {
-            throw new IllegalArgumentException("Invalid ID token format.");
-        }
-    }
 }
