@@ -217,7 +217,7 @@ public class IDToken {
         return Collections.unmodifiableMap(mTokenClaims);
     }
 
-    private Map<String, String> parseJWT(final String idToken) throws ServiceException {
+    public static Map<String, String> parseJWT(final String idToken) throws ServiceException {
         try {
             // Create a SignedJWT from the input token String
             final SignedJWT signedJWT = SignedJWT.parse(idToken);
@@ -236,8 +236,7 @@ public class IDToken {
             // Return our result
             return claimsMapStr;
         } catch (ParseException e) {
-            e.printStackTrace();
-            throw new ServiceException("", ErrorStrings.INVALID_JWT, e);
+            throw new ServiceException("Failed to parse JWT", ErrorStrings.INVALID_JWT, null);
         }
     }
 
