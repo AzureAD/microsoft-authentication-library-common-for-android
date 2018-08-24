@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.customtabs.CustomTabsIntent;
 
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -31,6 +32,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -43,7 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest {
+public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
     private static final String TAG = MicrosoftStsAuthorizationRequest.class.getSimpleName();
 
     /**
@@ -58,13 +60,11 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     //TODO: Should this be in the request or in the oAuth strategy?
     //private static final String[] RESERVED_SCOPES = {"openid", SCOPE_PROFILE, "offline_access"};
     private static final String PLATFORM_VALUE = "MSAL.Android";
-    private static final String PROMPT_SELECT_ACCOUNT = "select_account";
-    private static final String PROMPT_CONSENT = "consent";
 
     /**
      * Indicates the type of user interaction that is required. The only valid values at this time are 'login', 'none', and 'consent'.
      */
-    private MicrosoftStsPromptBehavior mPromptBehavior;
+    private String mPrompt;
     private String mUid;
     private String mUtid;
     private String mDisplayableId;
@@ -73,78 +73,104 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
     // TODO private boolean mIsExtendedLifetimeEnabled = false;
 
-    public MicrosoftStsAuthorizationRequest(final String responseType,
-                                            @NonNull final String clientId,
-                                            @NonNull final String redirectUri,
-                                            final String state,
-                                            @NonNull final String scope,
-                                            @NonNull final URL authority,
-                                            final String loginHint,
-                                            final UUID correlationId,
-                                            final PkceChallenge pkceChallenge,
-                                            final String extraQueryParam,
-                                            final String libraryVersion,
-                                            @NonNull final MicrosoftStsPromptBehavior promptBehavior,
-                                            final String uid,
-                                            final String utid,
-                                            final String displayableId,
-                                            final String sliceParameters
-                                            ) {
-        super(responseType, clientId, redirectUri, state, scope, authority,
-                loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);
+    public static final class Prompt {
+        /**
+         * AcquireToken will send prompt=select_account to the authorize endpoint. Shows a list of users from which can be
+         * selected for authentication.
+         */
+        public static final String SELECT_ACCOUNT = "select_account";
 
-        mPromptBehavior = promptBehavior;
-        mUid = uid;
-        mUtid = utid;
-        mDisplayableId = displayableId;
-        mSliceParameters = sliceParameters;
+        /**
+         * AcquireToken will send prompt=login to the authorize endpoint.  The user will always be prompted for credentials by the service.
+         */
+        public static final String FORCE_LOGIN = "login";
+
+        /**
+         * AcquireToken will send prompt=consent to the authorize endpoint.  The user will be prompted to consent even if consent was granted before.
+         */
+        public static final String CONSENT = "consent";
     }
 
-    /**
-     * Default constructor of {@link MicrosoftStsAuthorizationRequest}
-     */
-    public MicrosoftStsAuthorizationRequest() {
-        super();
+
+    private MicrosoftStsAuthorizationRequest(final Builder builder) {
+        super(builder);
+
+        mPrompt = builder.mPrompt;
+        mUid = builder.mUid;
+        mUtid = builder.mUtid;
+        mDisplayableId = builder.mDisplayableId;
+        mSliceParameters = builder.mSliceParameters;
+    }
+
+    public static final class Builder extends MicrosoftAuthorizationRequest.Builder {
+        private String mPrompt;
+        private String mUid;
+        private String mUtid;
+        private String mDisplayableId;
+        private String mSliceParameters;
+
+        public Builder(@NonNull final String clientId,
+                       @NonNull final String redirectUri,
+                       @NonNull final URL authority,
+                       @NonNull final String scope,
+                       @NonNull final String prompt,
+                       @NonNull final PkceChallenge pkceChallenge, //pkceChallenge is required for v2 request.
+                       @NonNull final String state) {
+            super(clientId, redirectUri, authority);
+            setScope(scope);
+            setPrompt(prompt);
+            setPkceChallenge(pkceChallenge);
+            setState(state);
+        }
+
+        public Builder setPrompt(String prompt) {
+            mPrompt = prompt;
+            return this;
+        }
+
+        public Builder setUid(String uid) {
+            mUid = uid;
+            return this;
+        }
+
+        public Builder setUtid(String utid) {
+            mUtid = utid;
+            return this;
+        }
+
+        public Builder setDisplayableId(String displayableId) {
+            mDisplayableId = displayableId;
+            return this;
+        }
+
+        public Builder setSliceParameters(String sliceParameters) {
+            mSliceParameters = sliceParameters;
+            return this;
+        }
+
+        public MicrosoftStsAuthorizationRequest build() {
+            return new MicrosoftStsAuthorizationRequest(this);
+        }
     }
 
     public String getUid() {
         return mUid;
     }
 
-    public void setUid(final String uid) {
-        mUid = uid;
-    }
-
     public String getUtid() {
         return mUtid;
-    }
-
-    public void setUtid(final String utid) {
-        mUtid = utid;
     }
 
     public String getDisplayableId() {
         return mDisplayableId;
     }
 
-    public void setDisplayableId(final String displayableId) {
-        mDisplayableId = displayableId;
-    }
-
-    public MicrosoftStsPromptBehavior getPromptBehavior() {
-        return mPromptBehavior;
-    }
-
-    public void setPromptBehavior(final MicrosoftStsPromptBehavior promptBehavior) {
-        mPromptBehavior = promptBehavior;
+    public String getPrompt() {
+        return mPrompt;
     }
 
     public String getSliceParameters() {
         return mSliceParameters;
-    }
-
-    public void setSliceParameters(final String sliceParameters) {
-        mSliceParameters = sliceParameters;
     }
 
     @Override
@@ -154,7 +180,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         Logger.infoPII(TAG, null, "Request uri to authorize endpoint is: " + authorizationUrl);
         return authorizationUrl;
     }
-
 
     /**
      * Generate the authorization request parameters.
@@ -177,7 +202,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
 
         addDiagnosticParameters(requestParameters);
-        addPromptParameter(requestParameters);
+        //addPromptParameter(requestParameters);
         addPkceChallengeToRequestParameters(requestParameters);
         addUserInfoParameter(requestParameters);
         addExtraQueryParameter(requestParameters);
@@ -201,16 +226,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             if (supportedABIs != null && supportedABIs.length > 0) {
                 requestParameters.put(LIB_ID_CPU, supportedABIs[0]);
             }
-        }
-    }
-
-    private void addPromptParameter(@NonNull final Map<String, String> requestParameters) {
-        if (mPromptBehavior == MicrosoftStsPromptBehavior.FORCE_LOGIN) {
-            requestParameters.put(QUERY_PROMPT, QUERY_PROMPT_VALUE);
-        } else if (mPromptBehavior == MicrosoftStsPromptBehavior.SELECT_ACCOUNT) {
-            requestParameters.put(QUERY_PROMPT, PROMPT_SELECT_ACCOUNT);
-        } else if (mPromptBehavior == MicrosoftStsPromptBehavior.CONSENT) {
-            requestParameters.put(QUERY_PROMPT, PROMPT_CONSENT);
         }
     }
 
@@ -243,10 +258,10 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     // Add PKCE Challenge
     private void addPkceChallengeToRequestParameters(@NonNull final Map<String, String> requestParameters) throws ClientException {
         // Create our Challenge
-        if (getPkceChallenge() == null) {
-            Logger.verbose(TAG, "PKCE challenge is null. Set the PKCE challenge.");
-            setPkceChallenge(PkceChallenge.newPkceChallenge());
-        }
+//        if (getPkceChallenge() == null) {
+//            Logger.verbose(TAG, "PKCE challenge is null. Set the PKCE challenge.");
+//            setPkceChallenge(PkceChallenge.newPkceChallenge());
+//        }
 
         // Add it to our Authorization request
         requestParameters.put(CODE_CHALLENGE, getPkceChallenge().getCodeChallenge());
@@ -259,7 +274,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     }
 
     @Override
-    public String getAuthorizationEndpoint(){
+    public String getAuthorizationEndpoint() {
         //TODO: Need to take authority aliasing via instance discovery into account here
         return "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
     }

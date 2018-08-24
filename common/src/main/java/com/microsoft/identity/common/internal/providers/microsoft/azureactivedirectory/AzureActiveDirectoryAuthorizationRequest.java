@@ -60,52 +60,105 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
     /**
      * Optional. Indicate the type of user interaction that is required.
      */
-    private AzureActiveDirectoryPromptBehavior mPromptBehavior;
+    private String mPrompt;
+
     private String mClaimsChallenge;
 
-    public AzureActiveDirectoryAuthorizationRequest(final String responseType,
-                                                    @NonNull final String clientId,
-                                                    final String redirectUri,
-                                                    final String state,
-                                                    final String scope,
-                                                    @NonNull final URL authority,
-                                                    final String loginHint,
-                                                    final UUID correlationId,
-                                                    final PkceChallenge pkceChallenge,
-                                                    final String extraQueryParam,
-                                                    final String libraryVersion,
-                                                    @NonNull final String resource,
-                                                    final AzureActiveDirectoryPromptBehavior promptBehavior,
-                                                    final String claimsChallenge) {
-        super(responseType, clientId, redirectUri, state, scope, authority,
-                loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);
-        mResource = resource;
-        mPromptBehavior = promptBehavior;
-        mClaimsChallenge = claimsChallenge;
+    public static final class Prompt {
+        /**
+         * Acquire token will prompt the user for credentials only when necessary.
+         */
+        public static final String AUTO = "";
+
+        /**
+         * The user will be prompted for credentials even if it is available in the
+         * cache or in the form of refresh token. New acquired access token and
+         * refresh token will be used to replace previous value. If Settings
+         * switched to Auto, new request will use this latest token from cache.
+         */
+        public static final String ALWAYS = "login";
+
+        /**
+         * Re-authorizes (through displaying webview) the resource usage, making
+         * sure that the resulting access token contains the updated claims. If user
+         * logon cookies are available, the user will not be asked for credentials
+         * again and the logon dialog will dismiss automatically. This is equivalent
+         * to passing prompt=refresh_session as an extra query parameter during
+         * the authorization.
+         */
+        public static final String REFRESH_SESSION = "refresh_session";
+
+        /**
+         * If Azure Authenticator or Company Portal is installed, this flag will have
+         * the broker app force the prompt behavior, otherwise it will be same as Always.
+         * If using embedded flow, please keep using Always, if FORCE_PROMPT is set for
+         * embedded flow, the sdk will re-intepret it to Always.
+         */
+        public static final String FORCE_PROMPT = "login";
+    }
+
+    private AzureActiveDirectoryAuthorizationRequest(final Builder builder) {
+        super(builder);
+        mResource = builder.mResource;
+        mPrompt = builder.mPrompt;
+        mClaimsChallenge = builder.mClaimsChallenge;
+    }
+
+    public static final class Builder extends MicrosoftAuthorizationRequest.Builder {
+        /**
+         * The App ID URI of the target web API.
+         * This is required in one of either the authorization or token requests.
+         * To ensure fewer authentication prompts place it in the authorization request to
+         * ensure consent is received from the user.
+         */
+        private String mResource;
+
+        //TODO The microsoft doc is different with V1 has currently.
+        /**
+         * Optional. Indicate the type of user interaction that is required.
+         */
+        private String mPrompt;
+
+        private String mClaimsChallenge;
+
+        public Builder(@NonNull final String clientId,
+                       @NonNull final String redirectUri,
+                       @NonNull final URL authority,
+                       @NonNull final String resource) {
+            super(clientId, redirectUri, authority);
+            setResource(resource);
+        }
+
+        public Builder setResource(final String resource) {
+            mResource = resource;
+            return this;
+        }
+
+        public Builder setPrompt(final String prompt) {
+            mPrompt = prompt;
+            return this;
+        }
+
+        public Builder setClaimsChallenge(final String claimsChallenge) {
+            mClaimsChallenge = claimsChallenge;
+            return this;
+        }
+
+        public AzureActiveDirectoryAuthorizationRequest build() {
+            return new AzureActiveDirectoryAuthorizationRequest(this);
+        }
     }
 
     public String getResource() {
         return mResource;
     }
 
-    public void setResource(final String resource) {
-        mResource = resource;
-    }
-
-    public AzureActiveDirectoryPromptBehavior getPromptBehavior() {
-        return mPromptBehavior;
-    }
-
-    public void setPromptBehavior(final AzureActiveDirectoryPromptBehavior promptBehavior) {
-        mPromptBehavior = promptBehavior;
+    public String getPrompt() {
+        return mPrompt;
     }
 
     public String getClaimsChallenge() {
         return mClaimsChallenge;
-    }
-
-    public void setClaimsChallenge(final String claimsChallenge) {
-        mClaimsChallenge = claimsChallenge;
     }
 
     @Override
@@ -125,15 +178,15 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
         requestParameters.put(LIB_ID_DM, android.os.Build.MODEL);
     }
 
-    private void addPromptParameter(@NonNull final Map<String, String> requestParameters) {
-        // Setting prompt behavior to always will skip the cookies for webview.
-        // It is added to authorization url.
-        if (mPromptBehavior == AzureActiveDirectoryPromptBehavior.ALWAYS) {
-            requestParameters.put(QUERY_PROMPT, QUERY_PROMPT_VALUE);
-        } else if (mPromptBehavior == AzureActiveDirectoryPromptBehavior.REFRESH_SESSION) {
-            requestParameters.put(QUERY_PROMPT, QUERY_PROMPT_REFRESH_SESSION_VALUE);
-        }
-    }
+//    private void addPromptParameter(@NonNull final Map<String, String> requestParameters) {
+//        // Setting prompt behavior to always will skip the cookies for webview.
+//        // It is added to authorization url.
+//        if (mPromptBehavior == AzureActiveDirectoryPromptBehavior.ALWAYS) {
+//            requestParameters.put(QUERY_PROMPT, QUERY_PROMPT_VALUE);
+//        } else if (mPromptBehavior == AzureActiveDirectoryPromptBehavior.REFRESH_SESSION) {
+//            requestParameters.put(QUERY_PROMPT, QUERY_PROMPT_REFRESH_SESSION_VALUE);
+//        }
+//    }
 
     private void addUserInfoParameter(@NonNull final Map<String, String> requestParameters) {
         if (!StringExtensions.isNullOrBlank(getLoginHint())) {
@@ -184,7 +237,7 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
         }
 
         addDiagnosticParameters(requestParameters);
-        addPromptParameter(requestParameters);
+        //addPromptParameter(requestParameters);
         addUserInfoParameter(requestParameters);
         addPkceChallengeParameters(requestParameters);
         addExtraQueryParameters(requestParameters);

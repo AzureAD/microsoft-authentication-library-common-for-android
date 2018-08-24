@@ -26,6 +26,7 @@ import android.net.UrlQuerySanitizer;
 import android.support.annotation.NonNull;
 import android.util.Base64;
 
+import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -48,7 +49,7 @@ import java.util.UUID;
 import static com.microsoft.identity.common.adal.internal.util.StringExtensions.isNullOrBlank;
 import static com.microsoft.identity.common.adal.internal.util.StringExtensions.urlFormDecode;
 
-public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest {
+public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthorizationRequest<T>> extends AuthorizationRequest<T> {
     /**
      * Serial version id.
      */
@@ -56,6 +57,8 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
 
     /* Constants */
     private static final String TAG = MicrosoftAuthorizationRequest.class.getSimpleName();
+
+
     public static final String ENCODING_UTF8 = "UTF_8";
     public static final String CODE_CHALLENGE = "code_challenge";
     public static final String CODE_CHALLENGE_METHOD = "code_challenge_method";
@@ -81,6 +84,7 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
     /**
      * Correlation ID.
      */
+    @SerializedName("")
     private UUID mCorrelationId;
     /**
      * Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
@@ -98,83 +102,105 @@ public abstract class MicrosoftAuthorizationRequest extends AuthorizationRequest
     /**
      * Constructor of MicrosoftAuthorizationRequest.
      */
-    public MicrosoftAuthorizationRequest(final String responseType,
-                                         @NonNull final String clientId,
-                                         @NonNull final String redirectUri,
-                                         final String state,
-                                         final String scope,
-                                         @NonNull final URL authority,
-                                         final String loginHint,
-                                         final UUID correlationId,
-                                         final PkceChallenge pkceChallenge,
-                                         final String extraQueryParam,
-                                         final String libraryVersion) {
-        super(responseType, clientId, redirectUri, state, scope);
-
-        //TODO : Refactor to move the validation logic of all NonNull values before the request is constructed.
-        // Validation logic for redirect URI needs to be added as a part of refactor as well as it's a NonNull value
-
-        mAuthority = authority;
-        mLoginHint = loginHint;
-        mCorrelationId = correlationId;
-        mPkceChallenge = pkceChallenge;
-        mExtraQueryParam = extraQueryParam;
-        mLibraryVersion = libraryVersion;
+    protected MicrosoftAuthorizationRequest(final Builder builder) {
+        super(builder);
+        mAuthority = builder.mAuthority;
+        mLoginHint = builder.mLoginHint;
+        mCorrelationId = builder.mCorrelationId;
+        mPkceChallenge = builder.mPkceChallenge;
+        mExtraQueryParam = builder.mExtraQueryParam;
+        mLibraryVersion = builder.mLibraryVersion;
     }
 
-    /**
-     * Default constructor of {@link MicrosoftAuthorizationRequest}
-     */
-    public MicrosoftAuthorizationRequest() {
-        super();
+    public static abstract class Builder<T extends MicrosoftAuthorizationRequest> extends AuthorizationRequest.Builder<MicrosoftAuthorizationRequest> {
+        /**
+         * Required.
+         */
+        private URL mAuthority;
+
+        /**
+         * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
+         */
+        private String mLoginHint;
+        /**
+         * Correlation ID.
+         */
+        private UUID mCorrelationId;
+        /**
+         * Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
+         */
+        private PkceChallenge mPkceChallenge;
+        /**
+         * Extra query parameters.
+         */
+        private String mExtraQueryParam;
+        /**
+         * The version of the calling library.
+         */
+        private String mLibraryVersion;
+
+        public Builder(@NonNull final String clientId,
+                       @NonNull final String redirectUri,
+                       @NonNull final URL authority) {
+            super(clientId, redirectUri);
+            setAuthority(authority);
+        }
+
+        public Builder setAuthority(URL authority) {
+            mAuthority = authority;
+            return this;
+        }
+
+        public Builder setLoginHint(String loginHint) {
+            mLoginHint = loginHint;
+            return this;
+        }
+
+        public Builder setCorrelationId(UUID correlationId) {
+            mCorrelationId = correlationId;
+            return this;
+        }
+
+        public Builder setPkceChallenge(PkceChallenge pkceChallenge) {
+            mPkceChallenge = pkceChallenge;
+            return this;
+        }
+
+        public Builder setExtraQueryParam(String extraQueryParam) {
+            mExtraQueryParam = extraQueryParam;
+            return this;
+        }
+
+        public Builder setLibraryVersion(String libraryVersion) {
+            mLibraryVersion = libraryVersion;
+            return this;
+        }
+
+        public abstract T build();
     }
 
     public URL getAuthority() {
         return mAuthority;
     }
 
-    public void setAuthority(final URL authority) {
-        mAuthority = authority;
-    }
-
     public String getLoginHint() {
         return mLoginHint;
-    }
-
-    public void setLoginHint(final String loginHint) {
-        mLoginHint = loginHint;
     }
 
     public UUID getCorrelationId() {
         return mCorrelationId;
     }
 
-    public void setCorrelationId(final UUID correlationId) {
-        mCorrelationId = correlationId;
-    }
-
     public PkceChallenge getPkceChallenge() {
         return mPkceChallenge;
-    }
-
-    public void setPkceChallenge(final PkceChallenge pkceChallenge) {
-        mPkceChallenge = pkceChallenge;
     }
 
     public String getExtraQueryParam() {
         return mExtraQueryParam;
     }
 
-    public void setExtraQueryParam(final String extraQueryParam) {
-        mExtraQueryParam = extraQueryParam;
-    }
-
     public String getLibraryVersion() {
         return mLibraryVersion;
-    }
-
-    public void setLibraryVersion(final String libraryVersion) {
-        mLibraryVersion = libraryVersion;
     }
 
     /**

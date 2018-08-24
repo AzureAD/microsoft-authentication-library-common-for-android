@@ -47,7 +47,7 @@ import com.microsoft.identity.common.internal.net.ObjectMapper;
  * This should include all fo the required parameters of the authorization request for oAuth2
  * This should provide an extension point for additional parameters to be set
  */
-public abstract class AuthorizationRequest implements Serializable {
+public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> implements Serializable {
     /**
      * Serial version id.
      */
@@ -93,30 +93,61 @@ public abstract class AuthorizationRequest implements Serializable {
     @SerializedName("scope")
     private String mScope;
 
+
     /**
      * Constructor of AuthorizationRequest.
      */
-    public AuthorizationRequest(final String responseType,
-                                @NonNull final String clientId,
-                                final String redirectUri,
-                                final String state,
-                                final String scope) {
-        //validate client id
-        if (StringUtil.isEmpty(clientId)) {
-            throw new IllegalArgumentException("clientId is empty.");
-        }
-
-        mResponseType = responseType;
-        mClientId = clientId;
-        mRedirectUri = redirectUri;
-        mState = state;
-        mScope = scope;
+    protected AuthorizationRequest(final Builder builder) {
+        mResponseType = builder.mResponseType;
+        mClientId = builder.mClientId;
+        mRedirectUri = builder.mRedirectUri;
+        mState = builder.mState;
+        mScope = builder.mScope;
     }
 
-    /**
-     * Default constructor of AuthorizationRequest.
-     */
-    public AuthorizationRequest() {
+    public static final class ResponseType {
+        public static final String CODE = "code";
+    }
+
+    public static abstract class Builder<T> {
+        private String mResponseType = ResponseType.CODE; //ResponseType.CODE as default.
+        private String mClientId;
+        private String mRedirectUri;
+        private String mState;
+        private String mScope;
+
+        public Builder(@NonNull final String clientId,
+                       @NonNull final String redirectUri) {
+            setClientId(clientId);
+            setRedirectUri(redirectUri);
+        }
+
+        public Builder setResponseType(String responseType) {
+            mResponseType = responseType;
+            return this;
+        }
+
+        public Builder setClientId(String clientId) {
+            mClientId = clientId;
+            return this;
+        }
+
+        public Builder setRedirectUri(String redirectUri) {
+            mRedirectUri = redirectUri;
+            return this;
+        }
+
+        public Builder setState(String state) {
+            mState = state;
+            return this;
+        }
+
+        public Builder setScope(String scope) {
+            mScope = scope;
+            return this;
+        }
+
+        public abstract T build();
     }
 
     /**
@@ -136,24 +167,10 @@ public abstract class AuthorizationRequest implements Serializable {
     }
 
     /**
-     * @param responseType response type of the authorization request.
-     */
-    public void setResponseType(final String responseType) {
-        mResponseType = responseType;
-    }
-
-    /**
      * @return mClientId of the authorization request.
      */
     public String getClientId() {
         return mClientId;
-    }
-
-    /**
-     * @param clientId client ID of the authorization request.
-     */
-    public void setClientId(final String clientId) {
-        mClientId = clientId;
     }
 
     /**
@@ -164,24 +181,10 @@ public abstract class AuthorizationRequest implements Serializable {
     }
 
     /**
-     * @param redirectUri redirect URI of the authorization request.
-     */
-    public void setRedirectUri(final String redirectUri) {
-        mRedirectUri = redirectUri;
-    }
-
-    /**
      * @return mState of the authorization request.
      */
     public String getState() {
         return mState;
-    }
-
-    /**
-     * @param state state of the authorization request.
-     */
-    public void setState(final String state) {
-        mState = state;
     }
 
     //CHECKSTYLE:OFF
@@ -196,11 +199,6 @@ public abstract class AuthorizationRequest implements Serializable {
                 '}';
     }
 
-
-    public void setScope(final String scope) {
-        mScope = scope;
-    }
-
     public String getScope() {
         return mScope;
     }
@@ -210,13 +208,8 @@ public abstract class AuthorizationRequest implements Serializable {
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
 
         String queryStringParameters = ObjectMapper.serializeObjectToFormUrlEncoded(this);
-        Uri.Builder uriBuilder =  Uri.parse(getAuthorizationEndpoint()).buildUpon().appendPath(queryStringParameters);
+        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon().appendPath(queryStringParameters);
 
         return uriBuilder.build();
     }
-
-    public static class ResponseTypes {
-        public static final String CODE = "code";
-    }
-
 }
