@@ -218,26 +218,28 @@ public class IDToken {
     }
 
     public static Map<String, String> parseJWT(final String idToken) throws ServiceException {
+        final JWTClaimsSet claimsSet;
         try {
             // Create a SignedJWT from the input token String
             final SignedJWT signedJWT = SignedJWT.parse(idToken);
-
-            // Grab the claims and put them in a Map
-            final JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
-            final Map<String, Object> claimsMap = claimsSet.getClaims();
-
-            // Convert that Map<String, Object> into Map<String, String>
-            final Map<String, String> claimsMapStr = new HashMap<>();
-
-            for (final Map.Entry<String, Object> entry : claimsMap.entrySet()) {
-                claimsMapStr.put(entry.getKey(), entry.getValue().toString());
-            }
-
-            // Return our result
-            return claimsMapStr;
+            claimsSet = signedJWT.getJWTClaimsSet();
         } catch (ParseException e) {
-            throw new ServiceException("Failed to parse JWT", ErrorStrings.INVALID_JWT, null);
+            throw new ServiceException("Failed to parse JWT", ErrorStrings.INVALID_JWT, e);
         }
+
+        // Grab the claims and stick them into a Map<String, Object>
+        final Map<String, Object> claimsMap = claimsSet.getClaims();
+
+        // Convert that Map<String, Object> into Map<String, String>
+        final Map<String, String> claimsMapStr = new HashMap<>();
+
+        for (final Map.Entry<String, Object> entry : claimsMap.entrySet()) {
+            claimsMapStr.put(entry.getKey(), entry.getValue().toString());
+        }
+
+        // Return our result
+        return claimsMapStr;
+
     }
 
 }
