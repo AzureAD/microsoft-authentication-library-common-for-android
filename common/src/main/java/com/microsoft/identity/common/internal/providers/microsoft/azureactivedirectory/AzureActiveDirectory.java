@@ -62,6 +62,7 @@ public class AzureActiveDirectory
     private static final String API_VERSION_VALUE = "1.1";
     private static final String AUTHORIZATION_ENDPOINT = "authorization_endpoint";
     private static final String AUTHORIZATION_ENDPOINT_VALUE = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+    public static final String DEFAULT_CLOUD_URL = "https://login.microsoftonline.com";
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
 
