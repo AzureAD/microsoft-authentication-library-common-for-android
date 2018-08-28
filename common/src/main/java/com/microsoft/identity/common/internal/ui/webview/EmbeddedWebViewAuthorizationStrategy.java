@@ -31,21 +31,28 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConfiguration;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFuture;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
 
 /**
  * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
  */
-public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy {
+public class EmbeddedWebViewAuthorizationStrategy <GenericOAuth2Strategy extends OAuth2Strategy,
+        GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy <GenericOAuth2Strategy, GenericAuthorizationRequest> {
 
     private static final String TAG = EmbeddedWebViewAuthorizationStrategy.class.getSimpleName();
     private AuthorizationConfiguration mConfiguration;
     private WeakReference<Activity> mReferencedActivity;
     private AuthorizationResultFuture mAuthorizationResultFuture;
+    private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
+    private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
     /**
      * Constructor of EmbeddedWebViewAuthorizationStrategy.
@@ -60,13 +67,15 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
     /**
      * RequestAuthorization could not return the authorization result.
      * The activity result is set in Authorization.setResult() and passed to the onActivityResult() of the calling activity.
-     *
-     * @param requestUrl authorization request url
      */
     @Override
-    public Future<AuthorizationResult> requestAuthorization(final Uri requestUrl) {
+    public Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
+                                                            GenericOAuth2Strategy oAuth2Strategy) throws UnsupportedEncodingException{
         mAuthorizationResultFuture = new AuthorizationResultFuture();
+        mOAuth2Strategy = oAuth2Strategy;
+        mAuthorizationRequest = authorizationRequest;
         Logger.verbose(TAG, "Perform the authorization request with embedded webView.");
+        final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
         final Intent authIntent = AuthorizationActivity.createStartIntent(
                 mReferencedActivity.get().getApplicationContext(),
                 null,
@@ -79,6 +88,7 @@ public class EmbeddedWebViewAuthorizationStrategy extends AuthorizationStrategy 
     @Override
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == BROWSER_FLOW) {
+            //TODO apply mOAuth2Strategy and mAuthorizationRequest.getState()
             final AuthorizationResult result = new MicrosoftStsAuthorizationResultFactory().createAuthorizationResult(resultCode, data);
             mAuthorizationResultFuture.setAuthorizationResult(result);
         } else {

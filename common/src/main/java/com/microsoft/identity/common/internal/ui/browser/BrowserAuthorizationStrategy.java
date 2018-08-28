@@ -32,14 +32,18 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConfiguration;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFuture;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
 
-public class BrowserAuthorizationStrategy extends AuthorizationStrategy {
+public class BrowserAuthorizationStrategy <GenericOAuth2Strategy extends OAuth2Strategy,
+        GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy <GenericOAuth2Strategy, GenericAuthorizationRequest> {
     private final static String TAG = BrowserAuthorizationStrategy.class.getSimpleName();
 
     private final AuthorizationConfiguration mConfiguration;
@@ -47,6 +51,8 @@ public class BrowserAuthorizationStrategy extends AuthorizationStrategy {
     private WeakReference<Activity> mReferencedActivity;
     private AuthorizationResultFuture mAuthorizationResultFuture;
     private boolean mDisposed;
+    private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
+    private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
     public BrowserAuthorizationStrategy(Activity activity, @NonNull AuthorizationConfiguration configuration) {
         mConfiguration = configuration;
@@ -54,8 +60,13 @@ public class BrowserAuthorizationStrategy extends AuthorizationStrategy {
     }
 
     @Override
-    public Future<AuthorizationResult> requestAuthorization(final Uri requestUrl) throws ClientException {
+    public Future<AuthorizationResult> requestAuthorization(
+            GenericAuthorizationRequest authorizationRequest,
+            GenericOAuth2Strategy oAuth2Strategy)
+            throws ClientException, UnsupportedEncodingException {
         checkNotDisposed();
+        mOAuth2Strategy = oAuth2Strategy;
+        mAuthorizationRequest = authorizationRequest;
         mAuthorizationResultFuture = new AuthorizationResultFuture();
         final Browser browser = BrowserSelector.select(mReferencedActivity.get().getApplicationContext());
 
@@ -72,6 +83,7 @@ public class BrowserAuthorizationStrategy extends AuthorizationStrategy {
         }
 
         authIntent.setPackage(browser.getPackageName());
+        final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
         authIntent.setData(requestUrl);
         mReferencedActivity.get().startActivityForResult(AuthorizationActivity.createStartIntent(mReferencedActivity.get().getApplicationContext(),authIntent, requestUrl.toString(), mConfiguration),BROWSER_FLOW);
 
@@ -84,12 +96,12 @@ public class BrowserAuthorizationStrategy extends AuthorizationStrategy {
         }
     }
 
-
     @Override
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == BROWSER_FLOW) {
             //TODO need to implement OAuth2StrategyFactory.getByType().getAuthorizationResult();
             dispose();
+            //TODO apply mOAuth2Strategy and mAuthorizationRequest.getState()
             final AuthorizationResult result = new MicrosoftStsAuthorizationResultFactory().createAuthorizationResult(resultCode, data);
             mAuthorizationResultFuture.setAuthorizationResult(result);
         } else {
