@@ -56,6 +56,11 @@ public final class ErrorStrings {
     public static final String IO_ERROR = "io_error";
 
     /**
+     * SocketTimeoutException happened, connection flow timed out, stalled or broken.
+     */
+    public static final String SOCKET_TIMEOUT = "socket_timeout";
+
+    /**
      * The url is malformed.  Likely caused when constructing the auth request, authority, or redirect URI.
      */
     public static final String MALFORMED_URL = "malformed_url";
