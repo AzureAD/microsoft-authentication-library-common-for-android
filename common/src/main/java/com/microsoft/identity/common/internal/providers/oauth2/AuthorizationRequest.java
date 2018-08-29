@@ -25,16 +25,8 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.util.StringUtil;
-
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.util.HashSet;
-import java.util.Set;
-
-import android.app.Activity;
-import android.content.Context;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.net.ObjectMapper;

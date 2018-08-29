@@ -22,23 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import android.os.Build;
 import android.support.annotation.NonNull;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
-
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthorizationRequest {
     /**

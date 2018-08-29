@@ -23,18 +23,13 @@
 package com.microsoft.identity.common.internal.providers.microsoft;
 
 import android.net.Uri;
-import android.net.UrlQuerySanitizer;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Base64;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -42,15 +37,8 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.UUID;
-
-import static com.microsoft.identity.common.adal.internal.util.StringExtensions.isNullOrBlank;
-import static com.microsoft.identity.common.adal.internal.util.StringExtensions.urlFormDecode;
 
 public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthorizationRequest<T>> extends AuthorizationRequest<T> {
     /**
