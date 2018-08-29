@@ -203,14 +203,13 @@ public class MicrosoftStsAuthorizationRequestTests {
     }
 
     @Test
-    public void testGetCodeRequestUrlWithResponseMode() throws MalformedURLException, UnsupportedEncodingException, ClientException {
+    public void testGetCodeRequestUrlWithResponseType() throws MalformedURLException, UnsupportedEncodingException, ClientException {
         final MicrosoftStsAuthorizationRequest request = createAuthenticationRequest(DEFAULT_TEST_RESPONSETYPE,
                 null, DEFAULT_TEST_REDIRECT_URI, null, null,
                 getValidRequestUrl(), DEFAULT_TEST_LOGIN_HINT,
                 DEFAULT_TEST_CORRELATION_ID, null, DEFAULT_TEST_EXTRA_QP, DEFAULT_TEST_VERSION,
                 DEFAULT_TEST_PROMPT, null, null, null, DEFAULT_TEST_SLICE_PARAMETER, DEFAULT_TEST_LIBRARY_NAME);
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
-        assertTrue("Response mode", actualCodeRequestUrl.contains("&response_mode=" + AuthorizationRequest.ResponseMode.QUERY));
         assertTrue("Response type", actualCodeRequestUrl.contains("&response_type=" + AuthorizationRequest.ResponseType.CODE));
     }
 }

@@ -85,13 +85,6 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     private String mScope;
 
     /**
-     * Specifies the method that should be used to send the resulting token back to your app.
-     * Can be query, fragment, or form_post. query provides the code as a query string parameter on your redirect URI.
-     */
-    @SerializedName("response_mode")
-    private String mResponseMode;
-
-    /**
      * Constructor of AuthorizationRequest.
      */
     protected AuthorizationRequest(final Builder builder) {
@@ -100,24 +93,14 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mRedirectUri = builder.mRedirectUri;
         mState = builder.mState;
         mScope = builder.mScope;
-        mResponseMode = builder.mResponseMode;
     }
 
     public static final class ResponseType {
         public static final String CODE = "code";
     }
 
-    public static final class ResponseMode {
-        public static final String QUERY = "query";
-
-        public static final String FRAGMENT = "fragment";
-
-        public static final String FORM_POST = "form_post";
-    }
-
     public static abstract class Builder<T> {
         private String mResponseType = ResponseType.CODE; //ResponseType.CODE as default.
-        private String mResponseMode = ResponseMode.QUERY; //ResponseMode.QUERY as default.
         private String mClientId;
         private String mRedirectUri;
         private String mState;
@@ -131,11 +114,6 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
         public Builder setResponseType(String responseType) {
             mResponseType = responseType;
-            return this;
-        }
-
-        public Builder setResponseMode(String responseMode) {
-            mResponseMode = responseMode;
             return this;
         }
 
@@ -176,13 +154,6 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      */
     public String getResponseType() {
         return mResponseType;
-    }
-
-    /**
-     * @return Response mode of the authorization request.
-     */
-    public String getResponseMode() {
-        return mResponseMode;
     }
 
     /**
