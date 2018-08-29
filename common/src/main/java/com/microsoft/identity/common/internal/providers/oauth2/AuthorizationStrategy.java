@@ -27,6 +27,7 @@ import android.net.Uri;
 
 import com.microsoft.identity.common.exception.ClientException;
 
+import java.io.UnsupportedEncodingException;
 import java.util.concurrent.Future;
 
 /**
@@ -34,7 +35,8 @@ import java.util.concurrent.Future;
  * and/or authentication information (OIDC)
  * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
  */
-public abstract class AuthorizationStrategy {
+public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
+        GenericAuthorizationRequest extends AuthorizationRequest> {
     public static final int BROWSER_FLOW = 1001;
 
     public static final String REQUEST_URL_KEY = "com.microsoft.identity.request.url.key";
@@ -89,10 +91,10 @@ public abstract class AuthorizationStrategy {
 
     /**
      * Perform the authorization request.
-     *
-     * @param requestUrl authorization request url
      */
-    public abstract Future<AuthorizationResult> requestAuthorization(final Uri requestUrl) throws ClientException;
+    public abstract Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
+                                                                     GenericOAuth2Strategy oAuth2Strategy)
+            throws ClientException, UnsupportedEncodingException;
 
     public abstract void completeAuthorization(int requestCode, int resultCode, final Intent data);
 }
