@@ -83,7 +83,7 @@ public abstract class OAuth2Strategy
         validateAuthorizationRequest(request);
         Future<AuthorizationResult> future = null;
         try {
-            future = authorizationStrategy.requestAuthorization(request.getAuthorizationRequestAsHttpRequest());
+            future = authorizationStrategy.requestAuthorization(request, this);
         } catch (final UnsupportedEncodingException | ClientException exc) {
             //TODO
         }
