@@ -31,6 +31,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsPromptBehavior;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -198,5 +199,18 @@ public class MicrosoftStsAuthorizationRequestTests {
                 DEFAULT_TEST_PROMPT, null, null, null, DEFAULT_TEST_SLICE_PARAMETER, DEFAULT_TEST_LIBRARY_NAME);
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
         assertTrue("State", actualCodeRequestUrl.contains("&state=" + URLEncoder.encode(state,"UTF-8")));
+        assertTrue("Response Mode", actualCodeRequestUrl.contains("&state=" + URLEncoder.encode(state,"UTF-8")));
+    }
+
+    @Test
+    public void testGetCodeRequestUrlWithResponseMode() throws MalformedURLException, UnsupportedEncodingException, ClientException {
+        final MicrosoftStsAuthorizationRequest request = createAuthenticationRequest(DEFAULT_TEST_RESPONSETYPE,
+                null, DEFAULT_TEST_REDIRECT_URI, null, null,
+                getValidRequestUrl(), DEFAULT_TEST_LOGIN_HINT,
+                DEFAULT_TEST_CORRELATION_ID, null, DEFAULT_TEST_EXTRA_QP, DEFAULT_TEST_VERSION,
+                DEFAULT_TEST_PROMPT, null, null, null, DEFAULT_TEST_SLICE_PARAMETER, DEFAULT_TEST_LIBRARY_NAME);
+        final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
+        assertTrue("Response mode", actualCodeRequestUrl.contains("&response_mode=" + AuthorizationRequest.ResponseMode.QUERY));
+        assertTrue("Response type", actualCodeRequestUrl.contains("&response_type=" + AuthorizationRequest.ResponseType.CODE));
     }
 }
