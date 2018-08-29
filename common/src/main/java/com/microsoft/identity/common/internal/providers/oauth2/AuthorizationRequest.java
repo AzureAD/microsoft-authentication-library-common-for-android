@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
@@ -206,11 +207,12 @@ public abstract class AuthorizationRequest implements Serializable {
 
     public abstract String getAuthorizationEndpoint();
 
-    public String getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
+    public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
 
         String queryStringParameters = ObjectMapper.serializeObjectToFormUrlEncoded(this);
-        return getAuthorizationEndpoint() + '?' + queryStringParameters;
+        Uri.Builder uriBuilder =  Uri.parse(getAuthorizationEndpoint()).buildUpon().appendPath(queryStringParameters);
 
+        return uriBuilder.build();
     }
 
     public static class ResponseTypes {
