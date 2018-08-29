@@ -170,5 +170,4 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
     public String getAuthorizationEndpoint() {
         return null;
     }
-
 }

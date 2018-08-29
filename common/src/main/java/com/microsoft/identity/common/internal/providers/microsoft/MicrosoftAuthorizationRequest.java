@@ -66,6 +66,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     /**
      * Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
      */
+    @SerializedName("pkceChallenge")
     private PkceChallenge mPkceChallenge;
     /**
      * Extra query parameters.

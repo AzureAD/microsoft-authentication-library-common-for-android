@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.net;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
@@ -103,30 +104,49 @@ public final class ObjectMapper {
         return builder.toString();
     }
 
-    public static Map<String, String> serializeObjectHashMap(final Object object) {
-        final Map<String, String> objectMap = new HashMap<>();
+    /**
+     * Method to serialize the object into a map.
+     *
+     * @param object Object
+     * @return Map<String, String>
+     */
+    public static Map<String, String> serializeObjectHashMap(final Object object) throws UnsupportedEncodingException{
         String json = ObjectMapper.serializeObjectToJsonString(object);
-        Type stringMap = new TypeToken<TreeMap<String, String>>() {
+        return serializeNestedJsonToMap(json);
+    }
+
+    public static Map<String, String> serializeNestedJsonToMap(final String jsonString) throws UnsupportedEncodingException {
+        if(StringUtil.isEmpty(jsonString)) {
+            return null;
+        }
+
+        final Map<String, String> objectMap = new HashMap<>();
+        Type stringMap = new TypeToken<TreeMap<String, Object>>() {
         }.getType();
-        TreeMap<String, String> fields = new Gson().fromJson(json, stringMap);
-        Iterator<TreeMap.Entry<String, String>> iterator = fields.entrySet().iterator();
+        TreeMap<String, Object> fields = new Gson().fromJson(jsonString, stringMap);
+        Iterator<TreeMap.Entry<String, Object>> iterator = fields.entrySet().iterator();
 
         while (iterator.hasNext()) {
-            TreeMap.Entry<String, String> entry = iterator.next();
-            try {
-                final String key = URLDecoder.decode(entry.getKey(), ENCODING_SCHEME);
-                final String value = URLDecoder.decode(entry.getValue(), ENCODING_SCHEME);
-
-                if (!StringUtil.isEmpty(key) && !StringUtil.isEmpty(value)) {
-                    objectMap.put(key, value);
-                }
-            } catch (final UnsupportedEncodingException e) {
-                Logger.error(TAG, null, "Decode failed.", e);
+            TreeMap.Entry<String, Object> entry = iterator.next();
+            if (entry.getValue() instanceof String
+                    && !StringUtil.isEmpty(entry.getKey())
+                    && !StringUtil.isEmpty((String)entry.getValue())) {
+                objectMap.put(URLDecoder.decode(entry.getKey(), ENCODING_SCHEME), URLDecoder.decode((String)entry.getValue(), ENCODING_SCHEME));
+            } else {
+                objectMap.putAll(serializeNestedJsonToMap(entry.getValue().toString()));
             }
         }
+
         return objectMap;
     }
 
+
+    /**
+     * Method to deserialize the query string into a map.
+     *
+     * @param queryString String
+     * @return Map<String, String>
+     */
     public static Map<String, String> deserializeQueryStringToMap(final String queryString) {
         final Map<String, String> decodedUrlMap = new HashMap<>();
 

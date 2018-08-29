@@ -28,6 +28,7 @@ import android.support.annotation.NonNull;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsPromptBehavior;
 import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
@@ -38,6 +39,8 @@ import org.junit.Test;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -86,7 +89,8 @@ public class MicrosoftStsAuthorizationRequestTests {
                                                                         final String displayableId,
                                                                         final String sliceParameters,
                                                                         final String libraryName) {
-        MicrosoftStsAuthorizationRequest.Builder builder = new MicrosoftStsAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest>(clientId, redirectUri, authority, scope, promptBehavior, pkceChallenge, state);
+        MicrosoftStsAuthorizationRequest.Builder builder =
+                new MicrosoftStsAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest>(clientId, redirectUri, authority, scope, promptBehavior, pkceChallenge, state);
         builder.setLoginHint(loginHint);
         builder.setCorrelationId(correlationId);
         builder.setExtraQueryParam(extraQueryParam);
@@ -169,5 +173,30 @@ public class MicrosoftStsAuthorizationRequestTests {
             assertTrue(exception instanceof IllegalArgumentException);
             assertTrue(exception.getMessage().contains("clientId is empty"));
         }
+    }
+
+    @Test
+    public void testGetCodeRequestUrlWithPckeChallenge() throws MalformedURLException, UnsupportedEncodingException, ClientException {
+        final PkceChallenge challenge = PkceChallenge.newPkceChallenge();
+        final MicrosoftStsAuthorizationRequest request = createAuthenticationRequest(DEFAULT_TEST_RESPONSETYPE,
+                null, DEFAULT_TEST_REDIRECT_URI, null, null,
+                getValidRequestUrl(), DEFAULT_TEST_LOGIN_HINT,
+                DEFAULT_TEST_CORRELATION_ID, challenge, DEFAULT_TEST_EXTRA_QP, DEFAULT_TEST_VERSION,
+                DEFAULT_TEST_PROMPT, null, null, null, DEFAULT_TEST_SLICE_PARAMETER, DEFAULT_TEST_LIBRARY_NAME);
+        final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
+        assertTrue("Code challenge method", actualCodeRequestUrl.contains("&code_challenge_method=" + challenge.getCodeChallengeMethod()));
+        assertTrue("Code challenge", actualCodeRequestUrl.contains("&code_challenge=" + challenge.getCodeChallenge()));
+    }
+
+    @Test
+    public void testGetCodeRequestUrlWithState() throws MalformedURLException, UnsupportedEncodingException, ClientException {
+        final String state = MicrosoftAuthorizationRequest.generateEncodedState();
+        final MicrosoftStsAuthorizationRequest request = createAuthenticationRequest(DEFAULT_TEST_RESPONSETYPE,
+                null, DEFAULT_TEST_REDIRECT_URI, state, null,
+                getValidRequestUrl(), DEFAULT_TEST_LOGIN_HINT,
+                DEFAULT_TEST_CORRELATION_ID, null, DEFAULT_TEST_EXTRA_QP, DEFAULT_TEST_VERSION,
+                DEFAULT_TEST_PROMPT, null, null, null, DEFAULT_TEST_SLICE_PARAMETER, DEFAULT_TEST_LIBRARY_NAME);
+        final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
+        assertTrue("State", actualCodeRequestUrl.contains("&state=" + URLEncoder.encode(state,"UTF-8")));
     }
 }

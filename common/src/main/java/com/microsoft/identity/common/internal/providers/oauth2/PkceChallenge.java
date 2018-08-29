@@ -51,7 +51,7 @@ import java.security.SecureRandom;
  * @see <a href="https://tools.ietf.org/html/rfc7636#page-17">RFC-7636</a>
  */
 
-public class PkceChallenge implements Serializable {
+public final class PkceChallenge implements Serializable {
     private static final int CODE_VERIFIER_BYTE_SIZE = 32;
     private static final int ENCODE_MASK = Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP;
     private static final String DIGEST_ALGORITHM = "SHA-256";
