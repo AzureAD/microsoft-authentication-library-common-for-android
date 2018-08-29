@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.util.Base64;
 
+import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 
@@ -74,8 +75,10 @@ public class PkceChallenge implements Serializable {
      * A challenge derived from the code verifier that is sent in the
      * authorization request, to be verified against later.
      */
+    @SerializedName("code_challenge")
     private final String mCodeChallenge;
 
+    @SerializedName("code_challenge_method")
     private final String mCodeChallengeMethod = CHALLENGE_SHA256;
 
     private PkceChallenge(final String codeVerifier, final String codeChallenge) {

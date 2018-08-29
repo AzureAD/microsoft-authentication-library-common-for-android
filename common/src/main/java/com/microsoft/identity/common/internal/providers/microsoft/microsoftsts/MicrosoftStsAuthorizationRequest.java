@@ -22,53 +22,36 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
-import android.os.Build;
+import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.support.customtabs.CustomTabsIntent;
 
-
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
-    private static final String TAG = MicrosoftStsAuthorizationRequest.class.getSimpleName();
-
     /**
      * Serial version id.
      */
     private static final long serialVersionUID = 6545759826515911472L;
-
-    /* Constants */
-    private static final String CORRELATION_ID = "client-request-id";
-    private static final String LOGIN_REQ = "login_req";
-    private static final String DOMAIN_REQ = "domain_req";
-    //TODO: Should this be in the request or in the oAuth strategy?
-    //private static final String[] RESERVED_SCOPES = {"openid", SCOPE_PROFILE, "offline_access"};
-    private static final String PLATFORM_VALUE = "MSAL.Android";
-
     /**
      * Indicates the type of user interaction that is required. The only valid values at this time are 'login', 'none', and 'consent'.
      */
+    @SerializedName("Prompt")
     private String mPrompt;
+    @SerializedName("login_req")
     private String mUid;
+    @SerializedName("domain_req")
     private String mUtid;
+    @SerializedName("login_hint")
     private String mDisplayableId;
-    private String mSliceParameters;
+
+    private String mSliceParameters; //TODO need valid the format and append it into the start url
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
     // TODO private boolean mIsExtendedLifetimeEnabled = false;
@@ -92,7 +75,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     }
 
 
-    private MicrosoftStsAuthorizationRequest(final Builder builder) {
+    protected MicrosoftStsAuthorizationRequest(final Builder builder) {
         super(builder);
 
         mPrompt = builder.mPrompt;
@@ -102,7 +85,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mSliceParameters = builder.mSliceParameters;
     }
 
-    public static final class Builder extends MicrosoftAuthorizationRequest.Builder {
+    public static class Builder<T extends MicrosoftStsAuthorizationRequest>
+            extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest> {
         private String mPrompt;
         private String mUid;
         private String mUtid;
@@ -148,8 +132,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             return this;
         }
 
-        public MicrosoftStsAuthorizationRequest build() {
-            return new MicrosoftStsAuthorizationRequest(this);
+        public T build() {
+            return (T) new MicrosoftStsAuthorizationRequest(this);
         }
     }
 
@@ -174,103 +158,20 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     }
 
     @Override
-    public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
-        final String authorizationUrl = StringExtensions.appendQueryParameterToUrl(
-                getAuthorizationEndpoint(), createAuthorizationRequestParameters());
-        Logger.infoPII(TAG, null, "Request uri to authorize endpoint is: " + authorizationUrl);
-        return authorizationUrl;
-    }
+    public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
+        String queryStringParameters = ObjectMapper.serializeObjectToFormUrlEncoded(this);
+        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon()
+                .appendPath(queryStringParameters);
 
-    /**
-     * Generate the authorization request parameters.
-     *
-     * @return key value pairs of the authorization request parameters.
-     * @throws UnsupportedEncodingException
-     * @throws ClientException
-     */
-    private Map<String, String> createAuthorizationRequestParameters() throws UnsupportedEncodingException, ClientException {
-        final Map<String, String> requestParameters = new HashMap<>();
-
-        requestParameters.put(AuthenticationConstants.OAuth2.SCOPE, getScope());
-        requestParameters.put(AuthenticationConstants.OAuth2.CLIENT_ID, getClientId());
-        requestParameters.put(AuthenticationConstants.OAuth2.REDIRECT_URI, getRedirectUri());
-        requestParameters.put(AuthenticationConstants.OAuth2.RESPONSE_TYPE, AuthenticationConstants.OAuth2.CODE);
-        requestParameters.put(AuthenticationConstants.OAuth2.STATE, getState());
-        //TODO Should we set correlation id as a required value?
-        if (null != getCorrelationId()) {
-            requestParameters.put(CORRELATION_ID, getCorrelationId().toString());
+        for (Map.Entry<String, String> entry : ObjectMapper.extraQueryString(getExtraQueryParam()).entrySet()) {
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 
-        addDiagnosticParameters(requestParameters);
-        //addPromptParameter(requestParameters);
-        addPkceChallengeToRequestParameters(requestParameters);
-        addUserInfoParameter(requestParameters);
-        addExtraQueryParameter(requestParameters);
-
-        return requestParameters;
-    }
-
-    private void addDiagnosticParameters(@NonNull final Map<String, String> requestParameters) {
-        requestParameters.put(LIB_ID_PLATFORM, PLATFORM_VALUE);
-        requestParameters.put(LIB_ID_OS_VER, String.valueOf(Build.VERSION.SDK_INT));
-        requestParameters.put(LIB_ID_DM, Build.MODEL);
-
-        if (!StringUtil.isEmpty(getLibraryVersion())) {
-            requestParameters.put(LIB_ID_VERSION, getLibraryVersion());
+        for (Map.Entry<String, String> entry : ObjectMapper.extraQueryString(mSliceParameters).entrySet()) {
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            requestParameters.put(LIB_ID_CPU, Build.CPU_ABI);
-        } else {
-            final String[] supportedABIs = Build.SUPPORTED_ABIS;
-            if (supportedABIs != null && supportedABIs.length > 0) {
-                requestParameters.put(LIB_ID_CPU, supportedABIs[0]);
-            }
-        }
-    }
-
-    private void addUserInfoParameter(@NonNull final Map<String, String> requestParameters) {
-        if (!StringExtensions.isNullOrBlank(getLoginHint())) {
-            requestParameters.put(LOGIN_HINT, getLoginHint());
-        }
-
-        // Enforce session continuation if user is provided in the API request
-        //TODO can wrap the user info into User class object.
-        addExtraQueryParameter(LOGIN_REQ, mUid, requestParameters);
-        addExtraQueryParameter(DOMAIN_REQ, mUtid, requestParameters);
-        addExtraQueryParameter(LOGIN_HINT, mDisplayableId, requestParameters);
-    }
-
-    /**
-     * Add the extra query parameters and slice parameters into the request parameter map.
-     */
-    private void addExtraQueryParameter(@NonNull final Map<String, String> requestParameters) throws ClientException {
-        // adding extra query parameters
-        if (!StringExtensions.isNullOrBlank(getExtraQueryParam())) {
-            appendExtraQueryParameters(getExtraQueryParam(), requestParameters);
-        }
-        // adding slice parameters
-        if (!StringExtensions.isNullOrBlank(mSliceParameters)) {
-            appendExtraQueryParameters(mSliceParameters, requestParameters);
-        }
-    }
-
-    // Add PKCE Challenge
-    private void addPkceChallengeToRequestParameters(@NonNull final Map<String, String> requestParameters) throws ClientException {
-        // Create our Challenge
-//        if (getPkceChallenge() == null) {
-//            Logger.verbose(TAG, "PKCE challenge is null. Set the PKCE challenge.");
-//            setPkceChallenge(PkceChallenge.newPkceChallenge());
-//        }
-
-        // Add it to our Authorization request
-        requestParameters.put(CODE_CHALLENGE, getPkceChallenge().getCodeChallenge());
-        // The method used to encode the code_verifier for the code_challenge parameter.
-        // Can be one of plain or S256.
-        // If excluded, code_challenge is assumed to be plaintext if code_challenge is included.
-        // Azure AAD v2.0 supports both plain and S256.
-        requestParameters.put(CODE_CHALLENGE_METHOD, getPkceChallenge().getCodeChallengeMethod());
-
+        return uriBuilder.build();
     }
 
     @Override

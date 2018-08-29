@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
@@ -39,7 +38,6 @@ import android.content.Context;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
-
 
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
@@ -149,15 +147,15 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
         public abstract T build();
     }
-
-    /**
-     * Return the start URL to load in the web view.
-     *
-     * @return String of start URL.
-     * @throws UnsupportedEncodingException
-     * @throws ClientException
-     */
-    public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
+//
+//    /**
+//     * Return the start URL to load in the web view.
+//     *
+//     * @return String of start URL.
+//     * @throws UnsupportedEncodingException
+//     * @throws ClientException
+//     */
+//    public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
 
     /**
      * @return mResponseType of the authorization request.
@@ -208,7 +206,8 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
 
         String queryStringParameters = ObjectMapper.serializeObjectToFormUrlEncoded(this);
-        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon().appendPath(queryStringParameters);
+        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon()
+                .appendPath(queryStringParameters);
 
         return uriBuilder.build();
     }

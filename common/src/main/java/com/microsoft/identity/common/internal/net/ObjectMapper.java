@@ -24,11 +24,17 @@ package com.microsoft.identity.common.internal.net;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
 
 public final class ObjectMapper {
@@ -37,6 +43,7 @@ public final class ObjectMapper {
      * Encoding scheme.
      */
     public static final String ENCODING_SCHEME = "UTF-8";
+    public static final String TAG = ObjectMapper.class.getSimpleName();
 
     private ObjectMapper() {
         // Utility class.
@@ -96,4 +103,34 @@ public final class ObjectMapper {
         return builder.toString();
     }
 
+    public static Map<String, String> extraQueryString(final String extraQueryString) {
+        final Map<String, String> decodedUrlMap = new HashMap<>();
+
+        if (StringUtil.isEmpty(extraQueryString)) {
+            return decodedUrlMap;
+        }
+
+        final StringTokenizer tokenizer = new StringTokenizer(extraQueryString, "&");
+        while (tokenizer.hasMoreTokens()) {
+            final String pair = tokenizer.nextToken();
+            final String[] elements = pair.split("=");
+
+            if (elements.length != 2) {
+                continue;
+            }
+
+            try {
+                final String key = URLDecoder.decode(elements[0], ENCODING_SCHEME);
+                final String value = URLDecoder.decode(elements[1], ENCODING_SCHEME);
+
+                if (!StringUtil.isEmpty(key) && !StringUtil.isEmpty(value)) {
+                    decodedUrlMap.put(key, value);
+                }
+            } catch (final UnsupportedEncodingException e) {
+                Logger.error(TAG, null, "Decode failed.", e);
+            }
+        }
+
+        return decodedUrlMap;
+    }
 }
