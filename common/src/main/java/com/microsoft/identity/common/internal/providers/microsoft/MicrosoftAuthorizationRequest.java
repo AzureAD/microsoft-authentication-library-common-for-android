@@ -51,7 +51,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     /**
      * Required.
      */
-    private URL mAuthority; //Not going to be serialized into request url parameters
+    private transient URL mAuthority; //Not going to be serialized into request url parameters
 
     /**
      * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
@@ -70,7 +70,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     /**
      * Extra query parameters.
      */
-    private String mExtraQueryParam; //TODO need valid the format and append it into the start url
+    private transient String mExtraQueryParam; //TODO need valid the format and append it into the start url
     /**
      * The version of the calling library.
      */
@@ -251,11 +251,12 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
-        String queryStringParameters = ObjectMapper.serializeObjectToFormUrlEncoded(this);
-        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon()
-                .appendPath(queryStringParameters);
+        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
+        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()){
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
 
-        for (Map.Entry<String, String> entry : ObjectMapper.extraQueryString(mExtraQueryParam).entrySet()) {
+        for (Map.Entry<String, String> entry : ObjectMapper.deserializeQueryStringToMap(getExtraQueryParam()).entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 

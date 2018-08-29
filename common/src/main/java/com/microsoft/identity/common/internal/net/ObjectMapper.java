@@ -103,14 +103,38 @@ public final class ObjectMapper {
         return builder.toString();
     }
 
-    public static Map<String, String> extraQueryString(final String extraQueryString) {
+    public static Map<String, String> serializeObjectHashMap(final Object object) {
+        final Map<String, String> objectMap = new HashMap<>();
+        String json = ObjectMapper.serializeObjectToJsonString(object);
+        Type stringMap = new TypeToken<TreeMap<String, String>>() {
+        }.getType();
+        TreeMap<String, String> fields = new Gson().fromJson(json, stringMap);
+        Iterator<TreeMap.Entry<String, String>> iterator = fields.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            TreeMap.Entry<String, String> entry = iterator.next();
+            try {
+                final String key = URLDecoder.decode(entry.getKey(), ENCODING_SCHEME);
+                final String value = URLDecoder.decode(entry.getValue(), ENCODING_SCHEME);
+
+                if (!StringUtil.isEmpty(key) && !StringUtil.isEmpty(value)) {
+                    objectMap.put(key, value);
+                }
+            } catch (final UnsupportedEncodingException e) {
+                Logger.error(TAG, null, "Decode failed.", e);
+            }
+        }
+        return objectMap;
+    }
+
+    public static Map<String, String> deserializeQueryStringToMap(final String queryString) {
         final Map<String, String> decodedUrlMap = new HashMap<>();
 
-        if (StringUtil.isEmpty(extraQueryString)) {
+        if (StringUtil.isEmpty(queryString)) {
             return decodedUrlMap;
         }
 
-        final StringTokenizer tokenizer = new StringTokenizer(extraQueryString, "&");
+        final StringTokenizer tokenizer = new StringTokenizer(queryString, "&");
         while (tokenizer.hasMoreTokens()) {
             final String pair = tokenizer.nextToken();
             final String[] elements = pair.split("=");

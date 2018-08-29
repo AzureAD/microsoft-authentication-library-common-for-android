@@ -69,7 +69,7 @@ public class PkceChallenge implements Serializable {
      * ALPHA = %x41-5A / %x61-7A
      * DIGIT = %x30-39
      */
-    private final String mCodeVerifier;
+    private final transient String mCodeVerifier;
 
     /**
      * A challenge derived from the code verifier that is sent in the

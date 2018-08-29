@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -56,12 +57,13 @@ public class MicrosoftStsAuthorizationRequestTests {
     private static final UUID DEFAULT_TEST_CORRELATION_ID = UUID.randomUUID();
     private static final String DEFAULT_TEST_EXTRA_QP = "extra=1&haschrome=1";
     private static final String DEFAULT_TEST_VERSION = "0.1";
-    private static final MicrosoftStsPromptBehavior DEFAULT_TEST_PROMPT = MicrosoftStsPromptBehavior.CONSENT;
+    private static final String DEFAULT_TEST_PROMPT = MicrosoftStsAuthorizationRequest.Prompt.CONSENT;
     private static final String DEFAULT_TEST_UID = "1";
     private static final String DEFAULT_TEST_UTID = "1234-5678-90abcdefg";
     private static final String DEFAULT_TEST_DISPLAYABLEID = "user@contoso.com";
     private static final String DEFAULT_TEST_SLICE_PARAMETER = "slice=myslice";
     private static final String DEFAULT_TEST_AUTHORITY_STRING = "https://login.microsoftonline.com/common";
+    private static final String DEFAULT_TEST_LIBRARY_NAME = "some_library_name";
 
     static URL getValidRequestUrl() throws MalformedURLException {
         return new URL(DEFAULT_TEST_AUTHORITY_STRING);
@@ -78,15 +80,24 @@ public class MicrosoftStsAuthorizationRequestTests {
                                                                         final PkceChallenge pkceChallenge,
                                                                         final String extraQueryParam,
                                                                         final String libraryVersion,
-                                                                        @NonNull final MicrosoftStsPromptBehavior promptBehavior,
+                                                                        @NonNull final String promptBehavior,
                                                                         final String uid,
                                                                         final String utid,
                                                                         final String displayableId,
-                                                                        final String sliceParameters) {
+                                                                        final String sliceParameters,
+                                                                        final String libraryName) {
+        MicrosoftStsAuthorizationRequest.Builder builder = new MicrosoftStsAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest>(clientId, redirectUri, authority, scope, promptBehavior, pkceChallenge, state);
+        builder.setLoginHint(loginHint);
+        builder.setCorrelationId(correlationId);
+        builder.setExtraQueryParam(extraQueryParam);
+        builder.setLibraryVersion(libraryVersion);
+        builder.setUid(uid);
+        builder.setUtid(utid);
+        builder.setDisplayableId(displayableId);
+        builder.setSliceParameters(sliceParameters);
+        builder.setLibraryName(libraryName);
 
-        return new MicrosoftStsAuthorizationRequest("code", clientId, redirectUri, state, scope, authority,
-                 loginHint, correlationId, null, extraQueryParam, libraryVersion,
-                promptBehavior, uid, utid, displayableId, sliceParameters);
+        return builder.build();
     }
 
 
@@ -97,12 +108,12 @@ public class MicrosoftStsAuthorizationRequestTests {
                 DEFAULT_TEST_CLIENT_ID, DEFAULT_TEST_REDIRECT_URI, null, DEFAULT_TEST_SCOPE,
                 getValidRequestUrl(), DEFAULT_TEST_LOGIN_HINT,
                 DEFAULT_TEST_CORRELATION_ID, null, null, DEFAULT_TEST_VERSION,
-                DEFAULT_TEST_PROMPT, null, null, null, null);
-        final String actualCodeRequestUrlWithLoginHint = requestWithLoginHint.getAuthorizationStartUrl();
-        assertTrue("Matching login hint", actualCodeRequestUrlWithLoginHint.contains("login_hint=someLoginHint"));
+                DEFAULT_TEST_PROMPT, null, null, null, null, DEFAULT_TEST_LIBRARY_NAME);
+        final String actualCodeRequestUrlWithLoginHint = requestWithLoginHint.getAuthorizationRequestAsHttpRequest().toString();
+        assertTrue("Matching login hint", actualCodeRequestUrlWithLoginHint.contains("login_hint="+DEFAULT_TEST_LOGIN_HINT));
         assertTrue("Matching response type", actualCodeRequestUrlWithLoginHint.contains("response_type=code"));
         assertTrue("Matching correlation id", actualCodeRequestUrlWithLoginHint.contains("&client-request-id=" + DEFAULT_TEST_CORRELATION_ID.toString()));
-        assertTrue("Matching library version", actualCodeRequestUrlWithLoginHint.contains("&x-client-Ver=0.1"));
+        assertTrue("Matching library version", actualCodeRequestUrlWithLoginHint.contains("&x-client-Ver="+DEFAULT_TEST_VERSION));
 
     }
 
@@ -112,9 +123,9 @@ public class MicrosoftStsAuthorizationRequestTests {
                 DEFAULT_TEST_CLIENT_ID, DEFAULT_TEST_REDIRECT_URI, null, DEFAULT_TEST_SCOPE,
                 getValidRequestUrl(), DEFAULT_TEST_LOGIN_HINT,
                 DEFAULT_TEST_CORRELATION_ID, null, null, DEFAULT_TEST_VERSION,
-                MicrosoftStsPromptBehavior.FORCE_LOGIN, null, null, null, null);
-        final String actualCodeRequestUrl = request.getAuthorizationStartUrl();
-        assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt=login"));
+                MicrosoftStsAuthorizationRequest.Prompt.FORCE_LOGIN, null, null, null, null, DEFAULT_TEST_LIBRARY_NAME);
+        final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
+        assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt="+MicrosoftStsAuthorizationRequest.Prompt.FORCE_LOGIN));
     }
 
     @Test
@@ -123,13 +134,13 @@ public class MicrosoftStsAuthorizationRequestTests {
                 DEFAULT_TEST_CLIENT_ID, DEFAULT_TEST_REDIRECT_URI, null, DEFAULT_TEST_SCOPE,
                 getValidRequestUrl(), DEFAULT_TEST_LOGIN_HINT,
                 DEFAULT_TEST_CORRELATION_ID, null, null, DEFAULT_TEST_VERSION,
-                MicrosoftStsPromptBehavior.SELECT_ACCOUNT, null, null, null, null);
-        final String actualCodeRequestUrl = request.getAuthorizationStartUrl();
-        assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt=select_account"));
+                MicrosoftStsAuthorizationRequest.Prompt.SELECT_ACCOUNT, null, null, null, null, DEFAULT_TEST_LIBRARY_NAME);
+        final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
+        assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt="+MicrosoftStsAuthorizationRequest.Prompt.SELECT_ACCOUNT));
         assertTrue("Matching message",
-                actualCodeRequestUrl.contains("&x-client-SKU=MSAL.Android"));
+                actualCodeRequestUrl.contains("&x-client-SKU="+DEFAULT_TEST_LIBRARY_NAME));
         assertTrue("Matching message",
-                actualCodeRequestUrl.contains("&x-client-Ver=0.1"));
+                actualCodeRequestUrl.contains("&x-client-Ver="+DEFAULT_TEST_VERSION));
     }
 
     @Test
@@ -138,8 +149,8 @@ public class MicrosoftStsAuthorizationRequestTests {
                 DEFAULT_TEST_CLIENT_ID, DEFAULT_TEST_REDIRECT_URI, null, DEFAULT_TEST_SCOPE,
                 getValidRequestUrl(), DEFAULT_TEST_LOGIN_HINT,
                 DEFAULT_TEST_CORRELATION_ID, null, DEFAULT_TEST_EXTRA_QP, DEFAULT_TEST_VERSION,
-                DEFAULT_TEST_PROMPT, null, null, null, DEFAULT_TEST_SLICE_PARAMETER);
-        final String actualCodeRequestUrl = request.getAuthorizationStartUrl();
+                DEFAULT_TEST_PROMPT, null, null, null, DEFAULT_TEST_SLICE_PARAMETER, DEFAULT_TEST_LIBRARY_NAME);
+        final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
         assertTrue("Extra parameters 1", actualCodeRequestUrl.contains("&extra=1"));
         assertTrue("Extra parameters 2", actualCodeRequestUrl.contains("&haschrome=1"));
         assertTrue("Slice parameters 2", actualCodeRequestUrl.contains("&slice=myslice"));
@@ -153,7 +164,7 @@ public class MicrosoftStsAuthorizationRequestTests {
                     null, DEFAULT_TEST_REDIRECT_URI, null, null,
                     getValidRequestUrl(), DEFAULT_TEST_LOGIN_HINT,
                     DEFAULT_TEST_CORRELATION_ID, null, DEFAULT_TEST_EXTRA_QP, DEFAULT_TEST_VERSION,
-                    DEFAULT_TEST_PROMPT, null, null, null, DEFAULT_TEST_SLICE_PARAMETER);
+                    DEFAULT_TEST_PROMPT, null, null, null, DEFAULT_TEST_SLICE_PARAMETER, DEFAULT_TEST_LIBRARY_NAME);
         } catch (final Exception exception) {
             assertTrue(exception instanceof IllegalArgumentException);
             assertTrue(exception.getMessage().contains("clientId is empty"));

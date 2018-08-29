@@ -42,16 +42,16 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     /**
      * Indicates the type of user interaction that is required. The only valid values at this time are 'login', 'none', and 'consent'.
      */
-    @SerializedName("Prompt")
+    @SerializedName("prompt")
     private String mPrompt;
     @SerializedName("login_req")
     private String mUid;
     @SerializedName("domain_req")
     private String mUtid;
-    @SerializedName("login_hint")
-    private String mDisplayableId;
+    //@SerializedName("login_hint")
+    private transient String mDisplayableId;
 
-    private String mSliceParameters; //TODO need valid the format and append it into the start url
+    private transient String mSliceParameters;
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
     // TODO private boolean mIsExtendedLifetimeEnabled = false;
@@ -159,15 +159,16 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
-        String queryStringParameters = ObjectMapper.serializeObjectToFormUrlEncoded(this);
-        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon()
-                .appendPath(queryStringParameters);
-
-        for (Map.Entry<String, String> entry : ObjectMapper.extraQueryString(getExtraQueryParam()).entrySet()) {
+        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
+        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()){
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 
-        for (Map.Entry<String, String> entry : ObjectMapper.extraQueryString(mSliceParameters).entrySet()) {
+        for (Map.Entry<String, String> entry : ObjectMapper.deserializeQueryStringToMap(getExtraQueryParam()).entrySet()) {
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
+
+        for (Map.Entry<String, String> entry : ObjectMapper.deserializeQueryStringToMap(mSliceParameters).entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 

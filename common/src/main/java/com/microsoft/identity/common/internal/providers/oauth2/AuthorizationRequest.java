@@ -27,6 +27,7 @@ import android.support.annotation.NonNull;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.Map;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -196,10 +197,10 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     public abstract String getAuthorizationEndpoint();
 
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
-
-        String queryStringParameters = ObjectMapper.serializeObjectToFormUrlEncoded(this);
-        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon()
-                .appendPath(queryStringParameters);
+        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
+        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()){
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
 
         return uriBuilder.build();
     }
