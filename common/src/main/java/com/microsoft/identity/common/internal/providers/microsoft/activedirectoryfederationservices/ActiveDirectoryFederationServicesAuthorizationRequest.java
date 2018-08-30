@@ -24,47 +24,33 @@ package com.microsoft.identity.common.internal.providers.microsoft.activedirecto
 
 import android.support.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryPromptBehavior;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.util.Set;
-import java.util.UUID;
-
-import java.io.UnsupportedEncodingException;
 
 /**
  * Active Directory Federation Services Authorization Request.
  */
-public class ActiveDirectoryFederationServicesAuthorizationRequest extends MicrosoftAuthorizationRequest {
-    public ActiveDirectoryFederationServicesAuthorizationRequest(final String responseType,
-                                                                 @NonNull final String clientId,
-                                                                 final String redirectUri,
-                                                                 final String state,
-                                                                 final String scope,
-                                                                 @NonNull final URL authority,
-                                                                 final String loginHint,
-                                                                 final UUID correlationId,
-                                                                 final PkceChallenge pkceChallenge,
-                                                                 final String extraQueryParam,
-                                                                 final String libraryVersion) {
-        super(responseType, clientId, redirectUri, state, scope, authority,
-                loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);
-
+public class ActiveDirectoryFederationServicesAuthorizationRequest extends MicrosoftAuthorizationRequest<ActiveDirectoryFederationServicesAuthorizationRequest> {
+    private ActiveDirectoryFederationServicesAuthorizationRequest(final Builder builder) {
+        super(builder);
     }
 
-    @Override
-    public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
-        throw new UnsupportedEncodingException("Not implemented.");
+    public static final class Builder extends MicrosoftAuthorizationRequest.Builder {
+        public Builder(@NonNull final String clientId,
+                       @NonNull final String redirectUri,
+                       @NonNull final URL authority) {
+            super(clientId, redirectUri, authority);
+        }
+
+        public ActiveDirectoryFederationServicesAuthorizationRequest build() {
+            return new ActiveDirectoryFederationServicesAuthorizationRequest(this);
+        }
     }
 
     @Override
     public String getAuthorizationEndpoint() {
-        return null;
+        throw new UnsupportedOperationException("Not implemented.");
     }
 }
 

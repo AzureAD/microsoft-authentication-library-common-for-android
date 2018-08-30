@@ -22,244 +22,161 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
-import android.os.Build;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 
-
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
-public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest {
-    private static final String TAG = MicrosoftStsAuthorizationRequest.class.getSimpleName();
-
+public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
     /**
      * Serial version id.
      */
     private static final long serialVersionUID = 6545759826515911472L;
-
-    /* Constants */
-    private static final String CORRELATION_ID = "client-request-id";
-    private static final String LOGIN_REQ = "login_req";
-    private static final String DOMAIN_REQ = "domain_req";
-    //TODO: Should this be in the request or in the oAuth strategy?
-    //private static final String[] RESERVED_SCOPES = {"openid", SCOPE_PROFILE, "offline_access"};
-    private static final String PLATFORM_VALUE = "MSAL.Android";
-    private static final String PROMPT_SELECT_ACCOUNT = "select_account";
-    private static final String PROMPT_CONSENT = "consent";
-
     /**
      * Indicates the type of user interaction that is required. The only valid values at this time are 'login', 'none', and 'consent'.
      */
-    private MicrosoftStsPromptBehavior mPromptBehavior;
+    @SerializedName("prompt")
+    private String mPrompt;
+    @SerializedName("login_req")
     private String mUid;
+    @SerializedName("domain_req")
     private String mUtid;
-    private String mDisplayableId;
-    private String mSliceParameters;
+    //@SerializedName("login_hint")
+    private transient String mDisplayableId;
+
+    private transient String mSliceParameters;
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
     // TODO private boolean mIsExtendedLifetimeEnabled = false;
 
-    public MicrosoftStsAuthorizationRequest(final String responseType,
-                                            @NonNull final String clientId,
-                                            @NonNull final String redirectUri,
-                                            final String state,
-                                            @NonNull final String scope,
-                                            @NonNull final URL authority,
-                                            final String loginHint,
-                                            final UUID correlationId,
-                                            final PkceChallenge pkceChallenge,
-                                            final String extraQueryParam,
-                                            final String libraryVersion,
-                                            @NonNull final MicrosoftStsPromptBehavior promptBehavior,
-                                            final String uid,
-                                            final String utid,
-                                            final String displayableId,
-                                            final String sliceParameters
-                                            ) {
-        super(responseType, clientId, redirectUri, state, scope, authority,
-                loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);
+    public static final class Prompt {
+        /**
+         * AcquireToken will send prompt=select_account to the authorize endpoint. Shows a list of users from which can be
+         * selected for authentication.
+         */
+        public static final String SELECT_ACCOUNT = "select_account";
 
-        mPromptBehavior = promptBehavior;
-        mUid = uid;
-        mUtid = utid;
-        mDisplayableId = displayableId;
-        mSliceParameters = sliceParameters;
+        /**
+         * AcquireToken will send prompt=login to the authorize endpoint.  The user will always be prompted for credentials by the service.
+         */
+        public static final String FORCE_LOGIN = "login";
+
+        /**
+         * AcquireToken will send prompt=consent to the authorize endpoint.  The user will be prompted to consent even if consent was granted before.
+         */
+        public static final String CONSENT = "consent";
     }
 
-    /**
-     * Default constructor of {@link MicrosoftStsAuthorizationRequest}
-     */
-    public MicrosoftStsAuthorizationRequest() {
-        super();
+
+    protected MicrosoftStsAuthorizationRequest(final Builder builder) {
+        super(builder);
+
+        mPrompt = builder.mPrompt;
+        mUid = builder.mUid;
+        mUtid = builder.mUtid;
+        mDisplayableId = builder.mDisplayableId;
+        mSliceParameters = builder.mSliceParameters;
+    }
+
+    public static class Builder<T extends MicrosoftStsAuthorizationRequest>
+            extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest> {
+        private String mPrompt;
+        private String mUid;
+        private String mUtid;
+        private String mDisplayableId;
+        private String mSliceParameters;
+
+        public Builder(@NonNull final String clientId,
+                       @NonNull final String redirectUri,
+                       @NonNull final URL authority,
+                       @NonNull final String scope,
+                       @NonNull final String prompt,
+                       @NonNull final PkceChallenge pkceChallenge, //pkceChallenge is required for v2 request.
+                       @NonNull final String state) {
+            super(clientId, redirectUri, authority);
+            setScope(scope);
+            setPrompt(prompt);
+            setPkceChallenge(pkceChallenge);
+            setState(state);
+        }
+
+        public Builder setPrompt(String prompt) {
+            mPrompt = prompt;
+            return this;
+        }
+
+        public Builder setUid(String uid) {
+            mUid = uid;
+            return this;
+        }
+
+        public Builder setUtid(String utid) {
+            mUtid = utid;
+            return this;
+        }
+
+        public Builder setDisplayableId(String displayableId) {
+            mDisplayableId = displayableId;
+            return this;
+        }
+
+        public Builder setSliceParameters(String sliceParameters) {
+            mSliceParameters = sliceParameters;
+            return this;
+        }
+
+        public T build() {
+            return (T) new MicrosoftStsAuthorizationRequest(this);
+        }
     }
 
     public String getUid() {
         return mUid;
     }
 
-    public void setUid(final String uid) {
-        mUid = uid;
-    }
-
     public String getUtid() {
         return mUtid;
-    }
-
-    public void setUtid(final String utid) {
-        mUtid = utid;
     }
 
     public String getDisplayableId() {
         return mDisplayableId;
     }
 
-    public void setDisplayableId(final String displayableId) {
-        mDisplayableId = displayableId;
-    }
-
-    public MicrosoftStsPromptBehavior getPromptBehavior() {
-        return mPromptBehavior;
-    }
-
-    public void setPromptBehavior(final MicrosoftStsPromptBehavior promptBehavior) {
-        mPromptBehavior = promptBehavior;
+    public String getPrompt() {
+        return mPrompt;
     }
 
     public String getSliceParameters() {
         return mSliceParameters;
     }
 
-    public void setSliceParameters(final String sliceParameters) {
-        mSliceParameters = sliceParameters;
+    @Override
+    public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
+        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
+        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()){
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
+
+        for (Map.Entry<String, String> entry : ObjectMapper.deserializeQueryStringToMap(getExtraQueryParam()).entrySet()) {
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
+
+        for (Map.Entry<String, String> entry : ObjectMapper.deserializeQueryStringToMap(mSliceParameters).entrySet()) {
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
+
+        return uriBuilder.build();
     }
 
     @Override
-    public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
-        final String authorizationUrl = StringExtensions.appendQueryParameterToUrl(
-                getAuthorizationEndpoint(), createAuthorizationRequestParameters());
-        Logger.infoPII(TAG, null, "Request uri to authorize endpoint is: " + authorizationUrl);
-        return authorizationUrl;
-    }
-
-
-    /**
-     * Generate the authorization request parameters.
-     *
-     * @return key value pairs of the authorization request parameters.
-     * @throws UnsupportedEncodingException
-     * @throws ClientException
-     */
-    private Map<String, String> createAuthorizationRequestParameters() throws UnsupportedEncodingException, ClientException {
-        final Map<String, String> requestParameters = new HashMap<>();
-
-        requestParameters.put(AuthenticationConstants.OAuth2.SCOPE, getScope());
-        requestParameters.put(AuthenticationConstants.OAuth2.CLIENT_ID, getClientId());
-        requestParameters.put(AuthenticationConstants.OAuth2.REDIRECT_URI, getRedirectUri());
-        requestParameters.put(AuthenticationConstants.OAuth2.RESPONSE_TYPE, AuthenticationConstants.OAuth2.CODE);
-        requestParameters.put(AuthenticationConstants.OAuth2.STATE, getState());
-        //TODO Should we set correlation id as a required value?
-        if (null != getCorrelationId()) {
-            requestParameters.put(CORRELATION_ID, getCorrelationId().toString());
-        }
-
-        addDiagnosticParameters(requestParameters);
-        addPromptParameter(requestParameters);
-        addPkceChallengeToRequestParameters(requestParameters);
-        addUserInfoParameter(requestParameters);
-        addExtraQueryParameter(requestParameters);
-
-        return requestParameters;
-    }
-
-    private void addDiagnosticParameters(@NonNull final Map<String, String> requestParameters) {
-        requestParameters.put(LIB_ID_PLATFORM, PLATFORM_VALUE);
-        requestParameters.put(LIB_ID_OS_VER, String.valueOf(Build.VERSION.SDK_INT));
-        requestParameters.put(LIB_ID_DM, Build.MODEL);
-
-        if (!StringUtil.isEmpty(getLibraryVersion())) {
-            requestParameters.put(LIB_ID_VERSION, getLibraryVersion());
-        }
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            requestParameters.put(LIB_ID_CPU, Build.CPU_ABI);
-        } else {
-            final String[] supportedABIs = Build.SUPPORTED_ABIS;
-            if (supportedABIs != null && supportedABIs.length > 0) {
-                requestParameters.put(LIB_ID_CPU, supportedABIs[0]);
-            }
-        }
-    }
-
-    private void addPromptParameter(@NonNull final Map<String, String> requestParameters) {
-        if (mPromptBehavior == MicrosoftStsPromptBehavior.FORCE_LOGIN) {
-            requestParameters.put(QUERY_PROMPT, QUERY_PROMPT_VALUE);
-        } else if (mPromptBehavior == MicrosoftStsPromptBehavior.SELECT_ACCOUNT) {
-            requestParameters.put(QUERY_PROMPT, PROMPT_SELECT_ACCOUNT);
-        } else if (mPromptBehavior == MicrosoftStsPromptBehavior.CONSENT) {
-            requestParameters.put(QUERY_PROMPT, PROMPT_CONSENT);
-        }
-    }
-
-    private void addUserInfoParameter(@NonNull final Map<String, String> requestParameters) {
-        if (!StringExtensions.isNullOrBlank(getLoginHint())) {
-            requestParameters.put(LOGIN_HINT, getLoginHint());
-        }
-
-        // Enforce session continuation if user is provided in the API request
-        //TODO can wrap the user info into User class object.
-        addExtraQueryParameter(LOGIN_REQ, mUid, requestParameters);
-        addExtraQueryParameter(DOMAIN_REQ, mUtid, requestParameters);
-        addExtraQueryParameter(LOGIN_HINT, mDisplayableId, requestParameters);
-    }
-
-    /**
-     * Add the extra query parameters and slice parameters into the request parameter map.
-     */
-    private void addExtraQueryParameter(@NonNull final Map<String, String> requestParameters) throws ClientException {
-        // adding extra query parameters
-        if (!StringExtensions.isNullOrBlank(getExtraQueryParam())) {
-            appendExtraQueryParameters(getExtraQueryParam(), requestParameters);
-        }
-        // adding slice parameters
-        if (!StringExtensions.isNullOrBlank(mSliceParameters)) {
-            appendExtraQueryParameters(mSliceParameters, requestParameters);
-        }
-    }
-
-    // Add PKCE Challenge
-    private void addPkceChallengeToRequestParameters(@NonNull final Map<String, String> requestParameters) throws ClientException {
-        // Create our Challenge
-        if (getPkceChallenge() == null) {
-            Logger.verbose(TAG, "PKCE challenge is null. Set the PKCE challenge.");
-            setPkceChallenge(PkceChallenge.newPkceChallenge());
-        }
-
-        // Add it to our Authorization request
-        requestParameters.put(CODE_CHALLENGE, getPkceChallenge().getCodeChallenge());
-        // The method used to encode the code_verifier for the code_challenge parameter.
-        // Can be one of plain or S256.
-        // If excluded, code_challenge is assumed to be plaintext if code_challenge is included.
-        // Azure AAD v2.0 supports both plain and S256.
-        requestParameters.put(CODE_CHALLENGE_METHOD, getPkceChallenge().getCodeChallengeMethod());
-
-    }
-
-    @Override
-    public String getAuthorizationEndpoint(){
+    public String getAuthorizationEndpoint() {
         //TODO: Need to take authority aliasing via instance discovery into account here
         return "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
     }

@@ -24,55 +24,45 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import android.support.annotation.NonNull;
 
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsPromptBehavior;
-import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
-
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.util.Set;
-import java.util.UUID;
 
 public class AzureActiveDirectoryBrokerAuthorizationRequest extends AzureActiveDirectoryAuthorizationRequest {
     private String mCallingPackage;
     private String mSignatureDigest;
 
-    public AzureActiveDirectoryBrokerAuthorizationRequest(final String responseType,
-                                                          @NonNull final String clientId,
-                                                          final String redirectUri,
-                                                          final String state,
-                                                          final String scope,
-                                                          @NonNull final URL authority,
-                                                          final String loginHint,
-                                                          final UUID correlationId,
-                                                          final PkceChallenge pkceChallenge,
-                                                          final String extraQueryParam,
-                                                          final String libraryVersion,
-                                                          @NonNull final String resource,
-                                                          final AzureActiveDirectoryPromptBehavior promptBehavior,
-                                                          final String claimsChallenge,
-                                                          final String callingPackage,
-                                                          final String signatureDigest) {
-        super(responseType, clientId, redirectUri, state, scope, authority,
-                loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion,
-                resource, promptBehavior, claimsChallenge);
-        mCallingPackage = callingPackage;
-        mSignatureDigest = signatureDigest;
+    public AzureActiveDirectoryBrokerAuthorizationRequest(final Builder builder) {
+        super(builder);
+        mCallingPackage = builder.mCallingPackage;
+        mSignatureDigest = builder.mSignatureDigest;
     }
 
-    @Override
-    public String getAuthorizationStartUrl() throws ClientException, UnsupportedEncodingException {
-        final String startUrl = super.getAuthorizationStartUrl();
-        if (!StringExtensions.isNullOrBlank(mCallingPackage)
-                && !StringExtensions.isNullOrBlank(mSignatureDigest)) {
-            return startUrl + "&package_name="
-                    + URLEncoder.encode(mCallingPackage, ENCODING_UTF8)
-                    + "&signature="
-                    + URLEncoder.encode(mSignatureDigest, ENCODING_UTF8);
+    public String getCallingPackage() {
+        return mCallingPackage;
+    }
+
+    public String getSignatureDigest() {
+        return mSignatureDigest;
+    }
+
+    public static class Builder extends AzureActiveDirectoryAuthorizationRequest.Builder<AzureActiveDirectoryBrokerAuthorizationRequest> {
+        private String mCallingPackage;
+        private String mSignatureDigest;
+
+        public Builder(@NonNull final String clientId,
+                       @NonNull final String redirectUri,
+                       @NonNull final URL authority,
+                       @NonNull final String resource) {
+            super(clientId, redirectUri, authority, resource);
         }
 
-        return startUrl;
+        public Builder setCallingPackage(final String callingPackage) {
+            mCallingPackage = callingPackage;
+            return this;
+        }
+
+        public Builder setSignatureDigest(final String signatureDigest) {
+            mSignatureDigest = signatureDigest;
+            return this;
+        }
     }
 }

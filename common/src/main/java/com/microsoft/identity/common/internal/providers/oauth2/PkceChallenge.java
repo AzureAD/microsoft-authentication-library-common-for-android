@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.util.Base64;
 
+import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 
@@ -50,7 +51,7 @@ import java.security.SecureRandom;
  * @see <a href="https://tools.ietf.org/html/rfc7636#page-17">RFC-7636</a>
  */
 
-public class PkceChallenge implements Serializable {
+public final class PkceChallenge implements Serializable {
     private static final int CODE_VERIFIER_BYTE_SIZE = 32;
     private static final int ENCODE_MASK = Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP;
     private static final String DIGEST_ALGORITHM = "SHA-256";
@@ -68,14 +69,16 @@ public class PkceChallenge implements Serializable {
      * ALPHA = %x41-5A / %x61-7A
      * DIGIT = %x30-39
      */
-    private final String mCodeVerifier;
+    private final transient String mCodeVerifier;
 
     /**
      * A challenge derived from the code verifier that is sent in the
      * authorization request, to be verified against later.
      */
+    @SerializedName("code_challenge")
     private final String mCodeChallenge;
 
+    @SerializedName("code_challenge_method")
     private final String mCodeChallengeMethod = CHALLENGE_SHA256;
 
     private PkceChallenge(final String codeVerifier, final String codeChallenge) {

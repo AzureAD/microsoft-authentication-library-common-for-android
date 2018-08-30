@@ -24,44 +24,54 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import android.support.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.util.Set;
-import java.util.UUID;
-
-import java.io.UnsupportedEncodingException;
 
 /**
  * Azure Active Directory B2C Authorization Request.
  */
-public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthorizationRequest {
-    @Override
-    public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
-        throw new UnsupportedOperationException("Not implemented.");
+public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthorizationRequest<AzureActiveDirectoryB2CAuthorizationRequest> {
+    private String mPrompt;
+
+    private AzureActiveDirectoryB2CAuthorizationRequest(final Builder builder) {
+        super(builder);
     }
 
-    public AzureActiveDirectoryB2CAuthorizationRequest(final String responseType,
-                                                       @NonNull final String clientId,
-                                                       final String redirectUri,
-                                                       final String state,
-                                                       final String scope,
-                                                       @NonNull final URL authority,
-                                                       final String loginHint,
-                                                       final UUID correlationId,
-                                                       final PkceChallenge pkceChallenge,
-                                                       final String extraQueryParam,
-                                                       final String libraryVersion) {
-        super(responseType, clientId, redirectUri, state, scope, authority,
-                loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);
+    public static final class Builder extends MicrosoftAuthorizationRequest.Builder {
+        private String mPrompt;
+
+        public Builder(@NonNull final String clientId,
+                       @NonNull final String redirectUri,
+                       @NonNull final URL authority,
+                       @NonNull final String scope,
+                       @NonNull final String prompt,
+                       @NonNull final PkceChallenge pkceChallenge, //pkceChallenge is required for v2 request.
+                       @NonNull final String state) {
+            super(clientId, redirectUri, authority);
+            setScope(scope);
+            setPrompt(prompt);
+            setPkceChallenge(pkceChallenge);
+            setState(state);
+        }
+
+        public Builder setPrompt(String prompt) {
+            mPrompt = prompt;
+            return this;
+        }
+
+        public AzureActiveDirectoryB2CAuthorizationRequest build() {
+            return new AzureActiveDirectoryB2CAuthorizationRequest(this);
+        }
+    }
+
+    public String getPrompt() {
+        return mPrompt;
     }
 
     @Override
     public String getAuthorizationEndpoint() {
-        return null;
-
+        throw new UnsupportedOperationException("Not implemented.");
     }
 }
