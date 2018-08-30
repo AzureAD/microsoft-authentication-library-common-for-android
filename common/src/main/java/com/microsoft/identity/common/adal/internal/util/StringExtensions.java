@@ -23,13 +23,10 @@
 package com.microsoft.identity.common.adal.internal.util;
 
 import android.net.Uri;
-import android.net.UrlQuerySanitizer;
 import android.util.Base64;
 import android.util.Log;
 
 import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -41,10 +38,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 
 public final class StringExtensions {
