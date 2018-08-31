@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftToken
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
@@ -111,6 +112,11 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return MicrosoftStsAccount.create(idToken, clientInfo);
+    }
+
+    @Override
+    protected AuthorizationRequest createAuthorizationRequest() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

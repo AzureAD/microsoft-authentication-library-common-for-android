@@ -95,16 +95,15 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
         public Builder(@NonNull final String clientId,
                        @NonNull final String redirectUri,
-                       @NonNull final URL authority,
-                       @NonNull final String scope,
-                       @NonNull final String prompt,
-                       @NonNull final PkceChallenge pkceChallenge, //pkceChallenge is required for v2 request.
-                       @NonNull final String state) {
-            super(clientId, redirectUri, authority);
+                       @NonNull final String scope){
+                       //@NonNull final String prompt,
+                       //@NonNull final PkceChallenge pkceChallenge, //pkceChallenge is required for v2 request.
+                       //@NonNull final String state) {
+            super(clientId, redirectUri);
             setScope(scope);
-            setPrompt(prompt);
-            setPkceChallenge(pkceChallenge);
-            setState(state);
+            //setPrompt(prompt);
+            //setPkceChallenge(pkceChallenge);
+            //setState(state);
         }
 
         public Builder setPrompt(String prompt) {

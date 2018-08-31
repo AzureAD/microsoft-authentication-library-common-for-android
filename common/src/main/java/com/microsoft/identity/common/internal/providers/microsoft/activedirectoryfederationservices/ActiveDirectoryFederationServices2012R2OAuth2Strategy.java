@@ -89,6 +89,11 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
     }
 
     @Override
+    protected AuthorizationRequest createAuthorizationRequest() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     protected void validateAuthorizationRequest(AuthorizationRequest request) {
     }
 

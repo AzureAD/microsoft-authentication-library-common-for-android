@@ -53,12 +53,8 @@ public class MicrosoftStsBrokerAuthorizationRequest extends MicrosoftStsAuthoriz
 
         public Builder(@NonNull final String clientId,
                        @NonNull final String redirectUri,
-                       @NonNull final URL authority,
-                       @NonNull final String scope,
-                       @NonNull final String prompt,
-                       @NonNull final PkceChallenge pkceChallenge, //pkceChallenge is required for v2 request.
-                       @NonNull final String state) {
-            super(clientId, redirectUri, authority, scope, prompt, pkceChallenge, state);
+                       @NonNull final String scope) {
+            super(clientId, redirectUri, scope);
         }
 
         public Builder setCallingPackage(final String callingPackage) {

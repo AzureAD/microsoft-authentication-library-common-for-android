@@ -44,12 +44,11 @@ public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthor
 
         public Builder(@NonNull final String clientId,
                        @NonNull final String redirectUri,
-                       @NonNull final URL authority,
                        @NonNull final String scope,
                        @NonNull final String prompt,
                        @NonNull final PkceChallenge pkceChallenge, //pkceChallenge is required for v2 request.
                        @NonNull final String state) {
-            super(clientId, redirectUri, authority);
+            super(clientId, redirectUri);
             setScope(scope);
             setPrompt(prompt);
             setPkceChallenge(pkceChallenge);

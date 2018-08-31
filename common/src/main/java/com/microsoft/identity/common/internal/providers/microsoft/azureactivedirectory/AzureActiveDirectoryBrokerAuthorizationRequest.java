@@ -50,9 +50,8 @@ public class AzureActiveDirectoryBrokerAuthorizationRequest extends AzureActiveD
 
         public Builder(@NonNull final String clientId,
                        @NonNull final String redirectUri,
-                       @NonNull final URL authority,
                        @NonNull final String resource) {
-            super(clientId, redirectUri, authority, resource);
+            super(clientId, redirectUri,resource);
         }
 
         public Builder setCallingPackage(final String callingPackage) {

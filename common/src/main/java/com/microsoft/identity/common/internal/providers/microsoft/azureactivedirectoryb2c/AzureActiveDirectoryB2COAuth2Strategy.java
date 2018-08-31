@@ -87,6 +87,11 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
+    protected AuthorizationRequest createAuthorizationRequest() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
 
     protected void validateAuthorizationRequest(AuthorizationRequest request) {
     }

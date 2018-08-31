@@ -30,6 +30,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
@@ -159,6 +160,11 @@ public class AzureActiveDirectoryOAuth2Strategy
         Logger.infoPII(TAG, account.toString());
 
         return account;
+    }
+
+    @Override
+    protected AuthorizationRequest createAuthorizationRequest() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

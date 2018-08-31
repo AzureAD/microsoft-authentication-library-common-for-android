@@ -76,7 +76,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      * occurred, such as the page or view they were on.
      */
     @SerializedName("state")
-    private String mState;
+    protected String mState;
 
     /**
      * Scopes scopes that you want the user to consent to is required for V2 auth request.

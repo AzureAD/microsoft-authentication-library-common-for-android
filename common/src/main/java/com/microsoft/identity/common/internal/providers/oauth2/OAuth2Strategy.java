@@ -168,6 +168,13 @@ public abstract class OAuth2Strategy
     public abstract GenericAccount createAccount(GenericTokenResponse response);
 
     /**
+     * Abstract method for creating the authorization request.  In the case of AAD this is the method
+     *
+     * @return AuthorizationRequest.
+     */
+    protected abstract AuthorizationRequest createAuthorizationRequest();
+
+    /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method
      * from which the details of the authorization request including authority validation would occur (preferred network and preferred cache)
      *

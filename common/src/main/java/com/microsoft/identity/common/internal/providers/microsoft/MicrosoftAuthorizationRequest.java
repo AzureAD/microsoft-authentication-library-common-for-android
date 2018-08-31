@@ -90,6 +90,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @SerializedName("x-client-DM")
     private String mDiagnosticDM;
 
+
     /**
      * Constructor of MicrosoftAuthorizationRequest.
      */
@@ -98,8 +99,10 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mAuthority = builder.mAuthority;
         mLoginHint = builder.mLoginHint;
         mCorrelationId = builder.mCorrelationId;
-        mPkceChallenge = builder.mPkceChallenge;
+
         mExtraQueryParam = builder.mExtraQueryParam;
+        mPkceChallenge = PkceChallenge.newPkceChallenge();
+        mState = generateEncodedState();
 
         //Initialize the diagnostic properties.
         mLibraryVersion = builder.mLibraryVersion;
@@ -149,10 +152,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         private String mLibraryName;
 
         public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri,
-                       @NonNull final URL authority) {
+                       @NonNull final String redirectUri) {
             super(clientId, redirectUri);
-            setAuthority(authority);
         }
 
         public Builder setAuthority(URL authority) {
@@ -233,11 +234,21 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         return mDiagnosticDM;
     }
 
-    public static String generateEncodedState() throws UnsupportedEncodingException {
+    public static String generateEncodedState() {
         final UUID stateUUID1 = UUID.randomUUID();
         final UUID stateUUID2 = UUID.randomUUID();
         final String state = stateUUID1.toString() + "-" + stateUUID2.toString();
-        return Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE);
+
+        String encodedState;
+
+        try {
+            encodedState = Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE);
+        }catch (Exception e) {
+            throw new IllegalStateException("Error generating encoded state parameter for Authorization Request", e);
+        }
+
+        return encodedState;
+
     }
 
     public static String decodeState(final String encodedState) {

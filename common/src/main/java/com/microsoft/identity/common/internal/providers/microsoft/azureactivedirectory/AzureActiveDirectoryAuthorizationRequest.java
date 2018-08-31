@@ -127,9 +127,8 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
 
         public Builder(@NonNull final String clientId,
                        @NonNull final String redirectUri,
-                       @NonNull final URL authority,
                        @NonNull final String resource) {
-            super(clientId, redirectUri, authority);
+            super(clientId, redirectUri);
             setResource(resource);
             setScope(SCOPE_OPENID_VALUE);
         }
