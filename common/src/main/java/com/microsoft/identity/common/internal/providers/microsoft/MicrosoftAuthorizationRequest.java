@@ -119,7 +119,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         }
     }
 
-    public static abstract class Builder<T extends MicrosoftAuthorizationRequest> extends AuthorizationRequest.Builder<MicrosoftAuthorizationRequest> {
+
+    public abstract static class Builder<MicrosoftAuthorizationRequest> extends AuthorizationRequest.Builder {
         /**
          * Required.
          */
@@ -151,9 +152,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
          */
         private String mLibraryName;
 
-        public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri) {
-            super(clientId, redirectUri);
+        public Builder() {
         }
 
         public Builder setAuthority(URL authority) {
@@ -191,7 +190,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
             return this;
         }
 
-        public abstract T build();
     }
 
     public URL getAuthority() {
@@ -242,7 +240,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         String encodedState;
 
         try {
-            encodedState = Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE);
+            encodedState = Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP);
         }catch (Exception e) {
             throw new IllegalStateException("Error generating encoded state parameter for Authorization Request", e);
         }

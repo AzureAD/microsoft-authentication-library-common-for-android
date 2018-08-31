@@ -51,10 +51,8 @@ public class MicrosoftStsBrokerAuthorizationRequest extends MicrosoftStsAuthoriz
         private String mCallingPackage;
         private String mSignatureDigest;
 
-        public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri,
-                       @NonNull final String scope) {
-            super(clientId, redirectUri, scope);
+        public Builder() {
+
         }
 
         public Builder setCallingPackage(final String callingPackage) {

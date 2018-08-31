@@ -48,10 +48,7 @@ public class AzureActiveDirectoryBrokerAuthorizationRequest extends AzureActiveD
         private String mCallingPackage;
         private String mSignatureDigest;
 
-        public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri,
-                       @NonNull final String resource) {
-            super(clientId, redirectUri,resource);
+        public Builder() {
         }
 
         public Builder setCallingPackage(final String callingPackage) {

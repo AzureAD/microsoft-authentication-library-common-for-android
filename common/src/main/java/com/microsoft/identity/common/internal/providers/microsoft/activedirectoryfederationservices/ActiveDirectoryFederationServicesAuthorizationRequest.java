@@ -37,9 +37,7 @@ public class ActiveDirectoryFederationServicesAuthorizationRequest extends Micro
     }
 
     public static final class Builder extends MicrosoftAuthorizationRequest.Builder {
-        public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri) {
-            super(clientId, redirectUri);
+        public Builder() {
         }
 
         public ActiveDirectoryFederationServicesAuthorizationRequest build() {

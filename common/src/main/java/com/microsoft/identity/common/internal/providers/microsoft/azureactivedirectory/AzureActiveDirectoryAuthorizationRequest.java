@@ -123,14 +123,7 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
 
         private String mClaimsChallenge;
 
-        private static final String SCOPE_OPENID_VALUE = "openid";
-
-        public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri,
-                       @NonNull final String resource) {
-            super(clientId, redirectUri);
-            setResource(resource);
-            setScope(SCOPE_OPENID_VALUE);
+        public Builder() {
         }
 
         public Builder setResource(final String resource) {

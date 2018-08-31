@@ -88,8 +88,7 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericOAuth2Strategy extends
     @Override
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == BROWSER_FLOW) {
-            //TODO apply mOAuth2Strategy and mAuthorizationRequest.getState()
-            final AuthorizationResult result = new MicrosoftStsAuthorizationResultFactory().createAuthorizationResult(resultCode, data);
+            final AuthorizationResult result = mOAuth2Strategy.getAuthorizationResultFactory().createAuthorizationResult(resultCode, data, mAuthorizationRequest);
             mAuthorizationResultFuture.setAuthorizationResult(result);
         } else {
             Logger.warnPII(TAG, "Unknown request code " + requestCode);

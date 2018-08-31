@@ -44,14 +44,28 @@ import java.net.HttpURLConnection;
 
 /**
  * The Azure Active Directory OAuth 2.0 Strategy.
+ * <MicrosoftStsAccessToken,
+ MicrosoftStsAccount,
+ MicrosoftStsAuthorizationRequest,
+ MicrosoftStsAuthorizationRequest.Builder,
+ AuthorizationStrategy,
+ MicrosoftStsOAuth2Configuration,
+ MicrosoftStsAuthorizationResponse,
+ MicrosoftStsRefreshToken,
+ MicrosoftStsTokenRequest,
+ MicrosoftStsTokenResponse,
+ TokenResult,
+ AuthorizationResult>
  */
 public class AzureActiveDirectoryOAuth2Strategy
         extends OAuth2Strategy<
         AzureActiveDirectoryAccessToken,
         AzureActiveDirectoryAccount,
         AzureActiveDirectoryAuthorizationRequest,
+        AzureActiveDirectoryAuthorizationRequest.Builder,
         AuthorizationStrategy,
         AzureActiveDirectoryOAuth2Configuration,
+        AzureActiveDirectoryAuthorizationResponse,
         AzureActiveDirectoryRefreshToken,
         AzureActiveDirectoryTokenRequest,
         AzureActiveDirectoryTokenResponse,
@@ -163,8 +177,13 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    protected AuthorizationRequest createAuthorizationRequest() {
-        throw new UnsupportedOperationException();
+    public AzureActiveDirectoryAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
+        return new AzureActiveDirectoryAuthorizationRequest.Builder();
+    }
+
+    @Override
+    public AzureActiveDirectoryTokenRequest createTokenRequest(AzureActiveDirectoryAuthorizationRequest request, AzureActiveDirectoryAuthorizationResponse response) {
+        return null;
     }
 
     @Override

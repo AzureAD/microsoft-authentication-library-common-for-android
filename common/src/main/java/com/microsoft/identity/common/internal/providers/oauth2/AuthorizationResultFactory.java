@@ -28,7 +28,10 @@ import android.content.Intent;
  * Abstract Factory class which can be extended to construct provider specific {@link AuthorizationResult}.
  */
 
-public abstract class AuthorizationResultFactory<GenericAuthorizationResult extends AuthorizationResult> {
+public abstract class AuthorizationResultFactory<
+            GenericAuthorizationResult extends AuthorizationResult,
+            GenericAuthorizationRequest extends AuthorizationRequest
+        > {
 
     /* Authorization Response Constants */
     protected static final String CODE = "code";
@@ -44,7 +47,7 @@ public abstract class AuthorizationResultFactory<GenericAuthorizationResult exte
      * @param data       Intent data from the calling Activity.
      * @return {@link AuthorizationResult}
      */
-    public abstract GenericAuthorizationResult createAuthorizationResult(final int resultCode, final Intent data);
+    public abstract GenericAuthorizationResult createAuthorizationResult(final int resultCode, final Intent data, final GenericAuthorizationRequest request);
 
 
 }

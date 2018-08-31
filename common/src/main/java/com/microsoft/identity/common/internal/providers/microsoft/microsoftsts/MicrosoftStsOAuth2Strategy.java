@@ -32,14 +32,12 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftToken
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
@@ -51,10 +49,12 @@ public class MicrosoftStsOAuth2Strategy
         <MicrosoftStsAccessToken,
                 MicrosoftStsAccount,
                 MicrosoftStsAuthorizationRequest,
+                MicrosoftStsAuthorizationRequest.Builder,
                 AuthorizationStrategy,
                 MicrosoftStsOAuth2Configuration,
+                MicrosoftStsAuthorizationResponse,
                 MicrosoftStsRefreshToken,
-                TokenRequest,
+                MicrosoftStsTokenRequest,
                 MicrosoftStsTokenResponse,
                 TokenResult,
                 AuthorizationResult> {
@@ -115,8 +115,19 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    protected AuthorizationRequest createAuthorizationRequest() {
-        throw new UnsupportedOperationException();
+    public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
+        return new MicrosoftStsAuthorizationRequest.Builder();
+    }
+
+
+    @Override
+    public MicrosoftStsTokenRequest createTokenRequest(MicrosoftStsAuthorizationRequest request, MicrosoftStsAuthorizationResponse response) {
+        MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
+        tokenRequest.setCodeVerifier(request.getPkceChallenge().getCodeVerifier());
+        tokenRequest.setCode(response.getCode());
+        tokenRequest.setRedirectUri(request.getRedirectUri());
+        tokenRequest.setClientId(request.getClientId());
+        return tokenRequest;
     }
 
     @Override
@@ -126,8 +137,8 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    protected void validateTokenRequest(final TokenRequest request) {
-        // TODO implement
+    protected void validateTokenRequest(MicrosoftStsTokenRequest request) {
+
     }
 
     @Override

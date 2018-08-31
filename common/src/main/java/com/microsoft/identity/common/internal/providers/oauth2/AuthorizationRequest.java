@@ -99,17 +99,14 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         public static final String CODE = "code";
     }
 
-    public static abstract class Builder<T> {
+    public static abstract class Builder<GenericAuthorizationRequest extends AuthorizationRequest> {
         private String mResponseType = ResponseType.CODE; //ResponseType.CODE as default.
         private String mClientId;
         private String mRedirectUri;
         private String mState;
         private String mScope;
 
-        public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri) {
-            setClientId(clientId);
-            setRedirectUri(redirectUri);
+        public Builder() {
         }
 
         public Builder setResponseType(String responseType) {
@@ -137,7 +134,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return this;
         }
 
-        public abstract T build();
+        public abstract GenericAuthorizationRequest build();
     }
 //
 //    /**

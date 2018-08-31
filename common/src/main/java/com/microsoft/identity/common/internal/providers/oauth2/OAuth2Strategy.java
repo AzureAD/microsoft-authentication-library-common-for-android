@@ -48,8 +48,10 @@ public abstract class OAuth2Strategy
         <GenericAccessToken extends AccessToken,
                 GenericAccount extends Account,
                 GenericAuthorizationRequest extends AuthorizationRequest,
+                GenericAuthorizationRequestBuilder extends AuthorizationRequest.Builder,
                 GenericAuthorizationStrategy extends AuthorizationStrategy,
                 GenericOAuth2Configuration extends OAuth2Configuration,
+                GenericAuthorizationResponse extends AuthorizationResponse,
                 GenericRefreshToken extends RefreshToken,
                 GenericTokenRequest extends TokenRequest,
                 GenericTokenResponse extends TokenResponse,
@@ -172,7 +174,14 @@ public abstract class OAuth2Strategy
      *
      * @return AuthorizationRequest.
      */
-    protected abstract AuthorizationRequest createAuthorizationRequest();
+    public abstract GenericAuthorizationRequestBuilder createAuthorizationRequestBuilder();
+
+    /**
+     * Abstract method for creating the token request.  In the case of AAD this is the method
+     *
+     * @return TokenRequest.
+     */
+    public abstract GenericTokenRequest createTokenRequest(GenericAuthorizationRequest request, GenericAuthorizationResponse response);
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method

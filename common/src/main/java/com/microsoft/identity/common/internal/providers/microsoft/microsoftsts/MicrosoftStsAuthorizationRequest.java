@@ -93,17 +93,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         private String mDisplayableId;
         private String mSliceParameters;
 
-        public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri,
-                       @NonNull final String scope){
-                       //@NonNull final String prompt,
-                       //@NonNull final PkceChallenge pkceChallenge, //pkceChallenge is required for v2 request.
-                       //@NonNull final String state) {
-            super(clientId, redirectUri);
-            setScope(scope);
-            //setPrompt(prompt);
-            //setPkceChallenge(pkceChallenge);
-            //setState(state);
+        public Builder(){
         }
 
         public Builder setPrompt(String prompt) {
