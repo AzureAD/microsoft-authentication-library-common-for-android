@@ -16,7 +16,7 @@ android {
     buildToolsVersion '27.0.3'
 
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 16
         targetSdkVersion 27
         versionCode getAppVersionCode()
         versionName getAppVersionName()
@@ -71,13 +71,14 @@ android {
 }
 
 dependencies {
-    implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '5.7'
+    implementation 'com.nimbusds:nimbus-jose-jwt:5.7'
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation "com.google.code.gson:gson:2.8.4"
+    implementation "com.android.support:customtabs:27.1.1"
 
     // Test dependencies
-    testImplementation 'org.json:json:20160810'
     // Needed to resolve JSONObject inside of non-instrumented tests
+    testImplementation 'org.json:json:20160810'
     testImplementation 'junit:junit:4.12'
     testImplementation "org.mockito:mockito-core:1.10.19"
     testImplementation "com.google.dexmaker:dexmaker-mockito:1.2"

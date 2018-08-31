@@ -22,23 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-
+import android.net.Uri;
 import android.support.annotation.NonNull;
-
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.util.HashSet;
-import java.util.Set;
-
-import android.app.Activity;
-import android.content.Context;
+import java.util.Map;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
-
 
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
@@ -46,7 +38,7 @@ import com.microsoft.identity.common.internal.net.ObjectMapper;
  * This should include all fo the required parameters of the authorization request for oAuth2
  * This should provide an extension point for additional parameters to be set
  */
-public abstract class AuthorizationRequest implements Serializable {
+public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> implements Serializable {
     /**
      * Serial version id.
      */
@@ -95,50 +87,73 @@ public abstract class AuthorizationRequest implements Serializable {
     /**
      * Constructor of AuthorizationRequest.
      */
-    public AuthorizationRequest(final String responseType,
-                                @NonNull final String clientId,
-                                final String redirectUri,
-                                final String state,
-                                final String scope) {
-        //validate client id
-        if (StringUtil.isEmpty(clientId)) {
-            throw new IllegalArgumentException("clientId is empty.");
+    protected AuthorizationRequest(final Builder builder) {
+        mResponseType = builder.mResponseType;
+        mClientId = builder.mClientId;
+        mRedirectUri = builder.mRedirectUri;
+        mState = builder.mState;
+        mScope = builder.mScope;
+    }
+
+    public static final class ResponseType {
+        public static final String CODE = "code";
+    }
+
+    public static abstract class Builder<T> {
+        private String mResponseType = ResponseType.CODE; //ResponseType.CODE as default.
+        private String mClientId;
+        private String mRedirectUri;
+        private String mState;
+        private String mScope;
+
+        public Builder(@NonNull final String clientId,
+                       @NonNull final String redirectUri) {
+            setClientId(clientId);
+            setRedirectUri(redirectUri);
         }
 
-        mResponseType = responseType;
-        mClientId = clientId;
-        mRedirectUri = redirectUri;
-        mState = state;
-        mScope = scope;
+        public Builder setResponseType(String responseType) {
+            mResponseType = responseType;
+            return this;
+        }
+
+        public Builder setClientId(String clientId) {
+            mClientId = clientId;
+            return this;
+        }
+
+        public Builder setRedirectUri(String redirectUri) {
+            mRedirectUri = redirectUri;
+            return this;
+        }
+
+        public Builder setState(String state) {
+            mState = state;
+            return this;
+        }
+
+        public Builder setScope(String scope) {
+            mScope = scope;
+            return this;
+        }
+
+        public abstract T build();
     }
+//
+//    /**
+//     * Return the start URL to load in the web view.
+//     *
+//     * @return String of start URL.
+//     * @throws UnsupportedEncodingException
+//     * @throws ClientException
+//     */
+//    public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
 
     /**
-     * Default constructor of AuthorizationRequest.
-     */
-    public AuthorizationRequest() {
-    }
-
-    /**
-     * Return the start URL to load in the web view.
-     *
-     * @return String of start URL.
-     * @throws UnsupportedEncodingException
-     * @throws ClientException
-     */
-    public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
-
-    /**
-     * @return mResponseType of the authorization request.
+     * @return Response type of the authorization request.
      */
     public String getResponseType() {
         return mResponseType;
-    }
-
-    /**
-     * @param responseType response type of the authorization request.
-     */
-    public void setResponseType(final String responseType) {
-        mResponseType = responseType;
     }
 
     /**
@@ -149,13 +164,6 @@ public abstract class AuthorizationRequest implements Serializable {
     }
 
     /**
-     * @param clientId client ID of the authorization request.
-     */
-    public void setClientId(final String clientId) {
-        mClientId = clientId;
-    }
-
-    /**
      * @return mRedirectUri of the authorization request.
      */
     public String getRedirectUri() {
@@ -163,24 +171,10 @@ public abstract class AuthorizationRequest implements Serializable {
     }
 
     /**
-     * @param redirectUri redirect URI of the authorization request.
-     */
-    public void setRedirectUri(final String redirectUri) {
-        mRedirectUri = redirectUri;
-    }
-
-    /**
      * @return mState of the authorization request.
      */
     public String getState() {
         return mState;
-    }
-
-    /**
-     * @param state state of the authorization request.
-     */
-    public void setState(final String state) {
-        mState = state;
     }
 
     //CHECKSTYLE:OFF
@@ -195,26 +189,18 @@ public abstract class AuthorizationRequest implements Serializable {
                 '}';
     }
 
-
-    public void setScope(final String scope) {
-        mScope = scope;
-    }
-
     public String getScope() {
         return mScope;
     }
 
     public abstract String getAuthorizationEndpoint();
 
-    public String getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
+    public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
+        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
+        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()){
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
 
-        String queryStringParameters = ObjectMapper.serializeObjectToFormUrlEncoded(this);
-        return getAuthorizationEndpoint() + '?' + queryStringParameters;
-
+        return uriBuilder.build();
     }
-
-    public static class ResponseTypes {
-        public static final String CODE = "code";
-    }
-
 }

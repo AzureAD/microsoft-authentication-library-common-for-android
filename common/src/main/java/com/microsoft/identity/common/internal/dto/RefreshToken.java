@@ -121,6 +121,11 @@ public class RefreshToken extends Credential {
         mFamilyId = familyId;
     }
 
+    @Override
+    public boolean isExpired() {
+        return false;
+    }
+
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the

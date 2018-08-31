@@ -22,180 +22,152 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import android.os.Build;
 import android.support.annotation.NonNull;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
-
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthorizationRequest {
-    private static final String TAG = AzureActiveDirectoryAuthorizationRequest.class.getSimpleName();
-
-    /* Constants */
-    private static final String RESOURCE = "resource";
-    private static final String CLIENT_REQUEST_ID = "client-request-id";
-    private static final String SCOPE_OPENID_VALUE = "openid";
-    private static final String PLATFORM_VALUE = "ADAL.Android";
-    private static final String QUERY_PROMPT_REFRESH_SESSION_VALUE = "refresh_session";
-
     /**
      * The App ID URI of the target web API.
      * This is required in one of either the authorization or token requests.
      * To ensure fewer authentication prompts place it in the authorization request to
      * ensure consent is received from the user.
      */
+    @SerializedName("resource")
     private String mResource;
     //TODO The microsoft doc is different with V1 has currently.
     /**
      * Optional. Indicate the type of user interaction that is required.
      */
-    private AzureActiveDirectoryPromptBehavior mPromptBehavior;
+    @SerializedName("prompt")
+    private String mPrompt;
+
+    @SerializedName("claims")
     private String mClaimsChallenge;
 
-    public AzureActiveDirectoryAuthorizationRequest(final String responseType,
-                                                    @NonNull final String clientId,
-                                                    final String redirectUri,
-                                                    final String state,
-                                                    final String scope,
-                                                    @NonNull final URL authority,
-                                                    final String loginHint,
-                                                    final UUID correlationId,
-                                                    final PkceChallenge pkceChallenge,
-                                                    final String extraQueryParam,
-                                                    final String libraryVersion,
-                                                    @NonNull final String resource,
-                                                    final AzureActiveDirectoryPromptBehavior promptBehavior,
-                                                    final String claimsChallenge) {
-        super(responseType, clientId, redirectUri, state, scope, authority,
-                loginHint, correlationId, pkceChallenge, extraQueryParam, libraryVersion);
-        mResource = resource;
-        mPromptBehavior = promptBehavior;
-        mClaimsChallenge = claimsChallenge;
+    public static final class Prompt {
+        /**
+         * Acquire token will prompt the user for credentials only when necessary.
+         */
+        public static final String AUTO = "none";
+
+        /**
+         * The user will be prompted for credentials even if it is available in the
+         * cache or in the form of refresh token. New acquired access token and
+         * refresh token will be used to replace previous value. If Settings
+         * switched to Auto, new request will use this latest token from cache.
+         */
+        public static final String ALWAYS = "login";
+
+        /**
+         * Re-authorizes (through displaying webview) the resource usage, making
+         * sure that the resulting access token contains the updated claims. If user
+         * logon cookies are available, the user will not be asked for credentials
+         * again and the logon dialog will dismiss automatically. This is equivalent
+         * to passing prompt=refresh_session as an extra query parameter during
+         * the authorization.
+         */
+        public static final String REFRESH_SESSION = "refresh_session";
+
+        /**
+         * If Azure Authenticator or Company Portal is installed, this flag will have
+         * the broker app force the prompt behavior, otherwise it will be same as Always.
+         * If using embedded flow, please keep using Always, if FORCE_PROMPT is set for
+         * embedded flow, the sdk will re-intepret it to Always.
+         */
+        public static final String FORCE_PROMPT = "login";
+
+        /**
+         * The user is prompted to select an account, interrupting single sign on.
+         * The user may select an existing signed-in account, enter their credentials for
+         * a remembered account, or choose to use a different account altogether.
+         */
+        public static final String SELECT_ACCOUNT = "select_account";
+
+        /**
+         * User consent has been granted, but needs to be updated.
+         * The user should be prompted to consent.
+         */
+        public static final String CONSENT = "consent";
+
+        /**
+         * An administrator should be prompted to consent on behalf of all users in their organization.
+         */
+        public static final String ADMIN_CONSENT = "admin_consent";
+    }
+
+    protected AzureActiveDirectoryAuthorizationRequest(final Builder builder) {
+        super(builder);
+        mResource = builder.mResource;
+        mPrompt = builder.mPrompt;
+        mClaimsChallenge = builder.mClaimsChallenge;
+    }
+
+    public static class Builder<T extends AzureActiveDirectoryAuthorizationRequest>
+            extends MicrosoftAuthorizationRequest.Builder<AzureActiveDirectoryAuthorizationRequest> {
+        /**
+         * The App ID URI of the target web API.
+         * This is required in one of either the authorization or token requests.
+         * To ensure fewer authentication prompts place it in the authorization request to
+         * ensure consent is received from the user.
+         */
+        private String mResource;
+
+        //TODO The microsoft doc is different with V1 has currently.
+        /**
+         * Optional. Indicate the type of user interaction that is required.
+         */
+        private String mPrompt;
+
+        private String mClaimsChallenge;
+
+        private static final String SCOPE_OPENID_VALUE = "openid";
+
+        public Builder(@NonNull final String clientId,
+                       @NonNull final String redirectUri,
+                       @NonNull final URL authority,
+                       @NonNull final String resource) {
+            super(clientId, redirectUri, authority);
+            setResource(resource);
+            setScope(SCOPE_OPENID_VALUE);
+        }
+
+        public Builder setResource(final String resource) {
+            mResource = resource;
+            return this;
+        }
+
+        public Builder setPrompt(final String prompt) {
+            mPrompt = prompt;
+            return this;
+        }
+
+        public Builder setClaimsChallenge(final String claimsChallenge) {
+            mClaimsChallenge = claimsChallenge;
+            return this;
+        }
+
+        public T build() {
+            return (T)new AzureActiveDirectoryAuthorizationRequest(this);
+        }
     }
 
     public String getResource() {
         return mResource;
     }
 
-    public void setResource(final String resource) {
-        mResource = resource;
-    }
-
-    public AzureActiveDirectoryPromptBehavior getPromptBehavior() {
-        return mPromptBehavior;
-    }
-
-    public void setPromptBehavior(final AzureActiveDirectoryPromptBehavior promptBehavior) {
-        mPromptBehavior = promptBehavior;
+    public String getPrompt() {
+        return mPrompt;
     }
 
     public String getClaimsChallenge() {
         return mClaimsChallenge;
     }
 
-    public void setClaimsChallenge(final String claimsChallenge) {
-        mClaimsChallenge = claimsChallenge;
-    }
-
-    @Override
-    public String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException {
-        final String authorizationUrl = StringExtensions.appendQueryParameterToUrl(
-                getAuthorizationEndpoint(),
-                createAuthorizationRequestParameters());
-        Logger.infoPII(TAG, getCorrelationId().toString(), "Request uri to authorize endpoint is: " + authorizationUrl);
-        return authorizationUrl;
-    }
-
-    private void addDiagnosticParameters(@NonNull final Map<String, String> requestParameters) {
-        // append device and platform info in the query parameters
-        requestParameters.put(LIB_ID_PLATFORM, PLATFORM_VALUE);
-        requestParameters.put(LIB_ID_VERSION, getLibraryVersion());
-        requestParameters.put(LIB_ID_OS_VER, String.valueOf(Build.VERSION.SDK_INT));
-        requestParameters.put(LIB_ID_DM, android.os.Build.MODEL);
-    }
-
-    private void addPromptParameter(@NonNull final Map<String, String> requestParameters) {
-        // Setting prompt behavior to always will skip the cookies for webview.
-        // It is added to authorization url.
-        if (mPromptBehavior == AzureActiveDirectoryPromptBehavior.ALWAYS) {
-            requestParameters.put(QUERY_PROMPT, QUERY_PROMPT_VALUE);
-        } else if (mPromptBehavior == AzureActiveDirectoryPromptBehavior.REFRESH_SESSION) {
-            requestParameters.put(QUERY_PROMPT, QUERY_PROMPT_REFRESH_SESSION_VALUE);
-        }
-    }
-
-    private void addUserInfoParameter(@NonNull final Map<String, String> requestParameters) {
-        if (!StringExtensions.isNullOrBlank(getLoginHint())) {
-            requestParameters.put(LOGIN_HINT, getLoginHint());
-        }
-    }
-
-    private void addPkceChallengeParameters(@NonNull final Map<String, String> requestParameters) {
-        if (null != getPkceChallenge()) {
-            requestParameters.put(CODE_CHALLENGE, getPkceChallenge().getCodeChallenge());
-            // The method used to encode the code_verifier for the code_challenge parameter.
-            requestParameters.put(CODE_CHALLENGE_METHOD, getPkceChallenge().getCodeChallengeMethod());
-        }
-    }
-
-    /**
-     * Add the extra query parameters into the request parameter map.
-     * And append haschrome=1 if developer does not pass as extra qp.
-     */
-    private void addExtraQueryParameters(@NonNull final Map<String, String> requestParameters) throws ClientException {
-        if (StringExtensions.isNullOrBlank(getExtraQueryParam())
-                || !getExtraQueryParam().contains(AuthenticationConstants.OAuth2.HAS_CHROME)) {
-            requestParameters.put(AuthenticationConstants.OAuth2.HAS_CHROME, "1");
-        } else {
-            appendExtraQueryParameters(getExtraQueryParam(), requestParameters);
-        }
-    }
-
-    private void addClaimsChallengeParameters(@NonNull final Map<String, String> requestParameters) throws ClientException {
-        // Claims challenge are opaque to the sdk, we're not going to do any merging if both extra qp and claims parameter
-        // contain it. Also, if developer sends it in both places, server will fail it.
-        if (!StringExtensions.isNullOrBlank(mClaimsChallenge)) {
-            requestParameters.put(AuthenticationConstants.OAuth2.CLAIMS, mClaimsChallenge);
-        }
-    }
-
-    private Map<String, String> createAuthorizationRequestParameters() throws UnsupportedEncodingException, ClientException {
-        final Map<String, String> requestParameters = new HashMap<>();
-
-        requestParameters.put(AuthenticationConstants.OAuth2.RESPONSE_TYPE, AuthenticationConstants.OAuth2.CODE);
-        requestParameters.put(AuthenticationConstants.OAuth2.CLIENT_ID, getClientId());
-        requestParameters.put(AuthenticationConstants.OAuth2.REDIRECT_URI, getRedirectUri());
-        requestParameters.put(AuthenticationConstants.OAuth2.SCOPE, SCOPE_OPENID_VALUE);
-        requestParameters.put(RESOURCE, mResource);
-        requestParameters.put(AuthenticationConstants.OAuth2.STATE, getState());
-        if (getCorrelationId() != null) {
-            requestParameters.put(CLIENT_REQUEST_ID, getCorrelationId().toString());
-        }
-
-        addDiagnosticParameters(requestParameters);
-        addPromptParameter(requestParameters);
-        addUserInfoParameter(requestParameters);
-        addPkceChallengeParameters(requestParameters);
-        addExtraQueryParameters(requestParameters);
-        addClaimsChallengeParameters(requestParameters);
-
-        return requestParameters;
-    }
-
     @Override
     public String getAuthorizationEndpoint() {
         return null;
     }
-
 }
