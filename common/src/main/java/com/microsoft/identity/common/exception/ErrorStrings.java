@@ -256,11 +256,6 @@ public final class ErrorStrings {
     public static final String BROKER_BIND_SERVICE_FAILED = "Failed to bind the service in broker app";
 
     /**
-     * Broker app got an exception.
-     */
-    public static final String BROKER_GOT_EXCEPTION = "Broker has an Exception";
-
-    /**
      * Could not retrieve capabilities from broker apps.
      */
     public static final String FAILED_TO_GET_CAPABILITIES = "Could not get the capabilities";
