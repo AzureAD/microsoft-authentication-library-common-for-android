@@ -133,7 +133,10 @@ public final class ObjectMapper {
                     && !StringUtil.isEmpty((String)entry.getValue())) {
                 objectMap.put(URLDecoder.decode(entry.getKey(), ENCODING_SCHEME), URLDecoder.decode((String)entry.getValue(), ENCODING_SCHEME));
             } else {
-                objectMap.putAll(serializeNestedJsonToMap(entry.getValue().toString()));
+                final Map<String, String> hashMap = serializeNestedJsonToMap(entry.getValue().toString());
+                if(hashMap != null) {
+                    objectMap.putAll(hashMap);
+                }
             }
         }
 

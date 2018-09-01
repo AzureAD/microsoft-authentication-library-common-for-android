@@ -60,14 +60,24 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
         MicrosoftStsAuthorizationResult result;
         switch (resultCode) {
             case AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL:
-                Logger.verbose(TAG, null, "User cancel the request in webview.");
+                Logger.verbose(TAG, null, "User cancel the authorization request in UI.");
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.USER_CANCEL,
                         MicrosoftAuthorizationErrorResponse.USER_CANCEL, MicrosoftAuthorizationErrorResponse.USER_CANCELLED_FLOW);
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE:
-                final String url = data.getStringExtra(MSSTS_AUTHORIZATION_FINAL_URL);
-                result = parseUrlAndCreateAuthorizationResponse(url, data.getStringExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER));
+
+                if(data.getExtras() != null) {
+                    final String url = data.getExtras().getString(MSSTS_AUTHORIZATION_FINAL_URL);
+                    result = parseUrlAndCreateAuthorizationResponse(url, data.getStringExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER));
+
+                } else {
+                    result = createAuthorizationResultWithErrorResponse(
+                            AuthorizationStatus.FAIL,
+                            MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
+                            MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
+                }
+
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR:
