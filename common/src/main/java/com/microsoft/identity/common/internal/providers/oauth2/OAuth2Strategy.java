@@ -29,6 +29,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
 import java.io.IOException;
@@ -112,6 +113,7 @@ public abstract class OAuth2Strategy
         Map<String, String> headers = new TreeMap<>();
         String correlationId = UUID.randomUUID().toString();
         headers.put("client-request-id", correlationId);
+        headers.putAll(Device.getPlatformIdParameters());
 
         return HttpRequest.sendPost(
                 new URL(mTokenEndpoint),
