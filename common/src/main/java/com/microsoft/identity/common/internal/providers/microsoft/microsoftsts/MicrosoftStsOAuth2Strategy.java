@@ -66,6 +66,7 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config) {
         super(config);
         setTokenEndpoint("https://login.microsoftonline.com/common/oAuth2/v2.0/token");
+
     }
 
     @Override
@@ -116,7 +117,9 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
-        return new MicrosoftStsAuthorizationRequest.Builder();
+        MicrosoftStsAuthorizationRequest.Builder builder =  new MicrosoftStsAuthorizationRequest.Builder();
+        builder.setAuthority(getOAuth2Configuration().getAuthorityUrl());
+        return builder;
     }
 
 

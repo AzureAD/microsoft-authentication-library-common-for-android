@@ -115,7 +115,7 @@ public class MicrosoftStsAccountCredentialAdapter
             refreshToken.setCredentialType(CredentialType.RefreshToken.name());
             refreshToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
             refreshToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            refreshToken.setClientId(response.getClientId());
+            refreshToken.setClientId(request.getClientId());
             refreshToken.setSecret(response.getRefreshToken());
 
             // Optional
