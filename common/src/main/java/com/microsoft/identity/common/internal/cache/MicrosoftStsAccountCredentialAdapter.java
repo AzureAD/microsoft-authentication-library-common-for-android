@@ -232,11 +232,11 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     private long getExpiresOn(final MicrosoftStsTokenResponse msTokenResponse) {
-        // Should be seconds since 1970
-        final long millisSince1970 = msTokenResponse.getExpiresOn().getTime();
-        final long secondsSince1970 = TimeUnit.MILLISECONDS.toSeconds(millisSince1970);
+        final long currentTimeMillis = System.currentTimeMillis();
+        final long currentTimeSecs = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
+        final long expiresIn = msTokenResponse.getExpiresIn();
 
-        return secondsSince1970;
+        return currentTimeSecs + expiresIn;
     }
 
 }
