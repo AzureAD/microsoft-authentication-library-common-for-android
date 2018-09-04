@@ -80,6 +80,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     private static final String MOCK_SCOPE = "user.read";
     private static final String MOCK_FAMILY_ID = "1";
     private static final long MOCK_EXPIRES_IN = 3600L;
+    private static final long MOCK_EXT_EXPIRES_IN = MOCK_EXPIRES_IN * 2;
     private static final Date MOCK_EXPIRES_ON = new GregorianCalendar() {{
         add(Calendar.SECOND, (int) MOCK_EXPIRES_IN);
     }}.getTime();
@@ -161,6 +162,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockAccount.getFamilyName()).thenReturn(MOCK_FAMILY_NAME);
         when(mockRequest.getScope()).thenReturn(MOCK_SCOPE);
         when(mockResponse.getExpiresIn()).thenReturn(MOCK_EXPIRES_IN);
+        when(mockResponse.getExtExpiresIn()).thenReturn(MOCK_EXT_EXPIRES_IN);
         when(mockResponse.getFamilyId()).thenReturn(MOCK_FAMILY_ID);
         mAccountCredentialAdapter = new MicrosoftStsAccountCredentialAdapter();
     }
@@ -194,6 +196,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_TID, accessToken.getRealm());
         assertEquals(MOCK_AUTHORITY, accessToken.getAuthority());
         assertEquals(MOCK_ENVIRONMENT, accessToken.getEnvironment());
+        assertNotNull(accessToken.getExtendedExpiresOn());
         assertEquals(MOCK_UID + "." + MOCK_UTID, accessToken.getHomeAccountId());
     }
 
