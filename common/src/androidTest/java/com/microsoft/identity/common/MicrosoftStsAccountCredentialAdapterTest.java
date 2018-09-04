@@ -162,7 +162,6 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockRequest.getScope()).thenReturn(MOCK_SCOPE);
         when(mockResponse.getExpiresIn()).thenReturn(MOCK_EXPIRES_IN);
         when(mockResponse.getFamilyId()).thenReturn(MOCK_FAMILY_ID);
-        when(mockResponse.getExpiresOn()).thenReturn(MOCK_EXPIRES_ON);
         mAccountCredentialAdapter = new MicrosoftStsAccountCredentialAdapter();
     }
 
