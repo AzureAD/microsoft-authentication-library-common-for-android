@@ -88,7 +88,7 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setSecret(response.getAccessToken());
 
             // Optional fields
-            accessToken.setExtendedExpiresOn(getExtendedExpiresOn(expiresOn, response));
+            accessToken.setExtendedExpiresOn(getExtendedExpiresOn(response));
             accessToken.setAuthority(request.getAuthority().toString());
             accessToken.setClientInfo(response.getClientInfo());
             accessToken.setAccessTokenType(response.getTokenType());
@@ -209,10 +209,12 @@ public class MicrosoftStsAccountCredentialAdapter
         return idToken;
     }
 
-    private String getExtendedExpiresOn(final long expiresOn,
-                                        final MicrosoftStsTokenResponse response) { //NOPMD (unused params - method is TODO)
+    private String getExtendedExpiresOn(final MicrosoftStsTokenResponse response) {
+        final long currentTimeMillis = System.currentTimeMillis();
+        final long currentTimeSecs = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
         final long extExpiresIn = null == response.getExtExpiresIn() ? 0 : response.getExtExpiresIn();
-        return String.valueOf(expiresOn + extExpiresIn);
+
+        return String.valueOf(currentTimeSecs + extExpiresIn);
     }
 
     private String getRealm(final MicrosoftStsOAuth2Strategy msStrategy, final MicrosoftStsTokenResponse msTokenResponse) {

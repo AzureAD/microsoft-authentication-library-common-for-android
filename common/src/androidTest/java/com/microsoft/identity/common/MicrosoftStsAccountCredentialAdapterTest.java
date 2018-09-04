@@ -196,7 +196,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_TID, accessToken.getRealm());
         assertEquals(MOCK_AUTHORITY, accessToken.getAuthority());
         assertEquals(MOCK_ENVIRONMENT, accessToken.getEnvironment());
-        assertEquals(String.valueOf(Long.valueOf(accessToken.getExpiresOn()) + MOCK_EXT_EXPIRES_IN), accessToken.getExtendedExpiresOn());
+        assertNotNull(accessToken.getExtendedExpiresOn());
         assertEquals(MOCK_UID + "." + MOCK_UTID, accessToken.getHomeAccountId());
     }
 
