@@ -24,10 +24,21 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 
+import java.util.Date;
+
 /**
  * {@link MicrosoftTokenResponse} subclass for Azure AD.
  */
 public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
+
+    /**
+     * The time when the access token expires. The date is represented as the number of seconds
+     * from 1970-01-01T0:0:0Z UTC until the expiration time. This value is used to determine the
+     * lifetime of cached tokens.
+     *
+     * @See <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code">Authorize access to web applications using OAuth 2.0 and Azure Active Directory</a>
+     */
+    private Date mExpiresOn;
 
     /**
      * The App ID URI of the web API (secured resource).
@@ -100,6 +111,24 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
         mSpeRing = speRing;
     }
 
+    /**
+     * Gets the response expires on.
+     *
+     * @return The expires on to get.
+     */
+    public Date getExpiresOn() {
+        return mExpiresOn;
+    }
+
+    /**
+     * Sets the response expires on.
+     *
+     * @param expiresOn The expires on to set.
+     */
+    public void setExpiresOn(final Date expiresOn) {
+        mExpiresOn = expiresOn;
+    }
+
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
@@ -107,7 +136,8 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
     @Override
     public String toString() {
         return "AzureActiveDirectoryTokenResponse{" +
-                "mResource='" + mResource + '\'' +
+                "mExpiresOn=" + mExpiresOn +
+                ", mResource='" + mResource + '\'' +
                 ", mNotBefore='" + mNotBefore + '\'' +
                 ", mSpeRing='" + mSpeRing + '\'' +
                 "} " + super.toString();

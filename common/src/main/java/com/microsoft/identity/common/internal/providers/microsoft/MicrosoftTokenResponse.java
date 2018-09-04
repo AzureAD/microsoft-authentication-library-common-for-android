@@ -30,15 +30,6 @@ import java.util.Date;
 public class MicrosoftTokenResponse extends TokenResponse {
 
     /**
-     * The time when the access token expires. The date is represented as the number of seconds
-     * from 1970-01-01T0:0:0Z UTC until the expiration time. This value is used to determine the
-     * lifetime of cached tokens.
-     *
-     * @See <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-protocols-oauth-code">Authorize access to web applications using OAuth 2.0 and Azure Active Directory</a>
-     */
-    private Date mExpiresOn;
-
-    /**
      * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
      * extend the valid lifetime of an access_token.
      */
@@ -104,24 +95,6 @@ public class MicrosoftTokenResponse extends TokenResponse {
     }
 
     /**
-     * Gets the response expires on.
-     *
-     * @return The expires on to get.
-     */
-    public Date getExpiresOn() {
-        return mExpiresOn;
-    }
-
-    /**
-     * Sets the response expires on.
-     *
-     * @param expiresOn The expires on to set.
-     */
-    public void setExpiresOn(final Date expiresOn) {
-        mExpiresOn = expiresOn;
-    }
-
-    /**
      * Gets the response ext expires on.
      *
      * @return The ext expires on to get.
@@ -179,8 +152,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
     @Override
     public String toString() {
         return "MicrosoftTokenResponse{" +
-                "mExpiresOn=" + mExpiresOn +
-                ", mExtExpiresOn=" + mExtExpiresOn +
+                "mExtExpiresOn=" + mExtExpiresOn +
                 ", mClientInfo='" + mClientInfo + '\'' +
                 ", mClientId='" + mClientId + '\'' +
                 ", mExtendedExpiresIn=" + mExtendedExpiresIn +
