@@ -250,6 +250,10 @@ afterEvaluate {
 
 // Repositories from which Gradle can fetch dependencies
 repositories {
+    mavenLocal()
+    jcenter()
+    google()
+    /*
     maven {
         name "vsts-maven-adal-android"
         url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
@@ -258,6 +262,7 @@ repositories {
             password project.vstsPassword
         }
     }
+    */
 }
 
 tasks.whenTaskAdded { task ->

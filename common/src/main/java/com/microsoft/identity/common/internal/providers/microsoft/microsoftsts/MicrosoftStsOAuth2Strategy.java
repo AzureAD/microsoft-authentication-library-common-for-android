@@ -150,7 +150,7 @@ public class MicrosoftStsOAuth2Strategy
             //An error occurred
             tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenErrorResponse.class);
         } else {
-            tokenResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenResponse.class);
+            tokenResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftStsTokenResponse.class);
         }
 
         return new TokenResult(tokenResponse, tokenErrorResponse);
