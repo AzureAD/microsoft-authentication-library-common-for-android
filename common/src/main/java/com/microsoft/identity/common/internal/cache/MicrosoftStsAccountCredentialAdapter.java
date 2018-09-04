@@ -40,8 +40,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.concurrent.TimeUnit;
 
@@ -90,7 +88,7 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setSecret(response.getAccessToken());
 
             // Optional fields
-            accessToken.setExtendedExpiresOn(getExtendedExpiresOn(strategy, response));
+            accessToken.setExtendedExpiresOn(getExtendedExpiresOn(response));
             accessToken.setAuthority(request.getAuthority().toString());
             accessToken.setClientInfo(response.getClientInfo());
             accessToken.setAccessTokenType(response.getTokenType());
@@ -211,12 +209,12 @@ public class MicrosoftStsAccountCredentialAdapter
         return idToken;
     }
 
-    private String getExtendedExpiresOn(final OAuth2Strategy strategy, final TokenResponse response) { //NOPMD (unused params - method is TODO)
-        // TODO It doesn't look like the v2 endpoint supports extended_expires_on claims
-        // Is this true?
-        String result = null;
+    private String getExtendedExpiresOn(final MicrosoftStsTokenResponse response) {
+        final long currentTimeMillis = System.currentTimeMillis();
+        final long currentTimeSecs = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
+        final long extExpiresIn = null == response.getExtExpiresIn() ? 0 : response.getExtExpiresIn();
 
-        return result;
+        return String.valueOf(currentTimeSecs + extExpiresIn);
     }
 
     private String getRealm(final MicrosoftStsOAuth2Strategy msStrategy, final MicrosoftStsTokenResponse msTokenResponse) {
@@ -226,9 +224,7 @@ public class MicrosoftStsAccountCredentialAdapter
 
     private long getCachedAt() {
         final long currentTimeMillis = System.currentTimeMillis();
-        final long cachedAt = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
-
-        return cachedAt;
+        return TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
     }
 
     private long getExpiresOn(final MicrosoftStsTokenResponse msTokenResponse) {
