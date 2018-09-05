@@ -249,4 +249,19 @@ public final class ErrorStrings {
      * Signature could not be verified.
      */
     public static final String BROKER_VERIFICATION_FAILED = "Signature could not be verified";
+
+    /**
+     * The broker app is not responding.
+     */
+    public static final String BROKER_APP_NOT_RESPONDING = "Broker application is not responding";
+
+    /**
+     * Failed to bind the service in broker app.
+     */
+    public static final String BROKER_BIND_SERVICE_FAILED = "Failed to bind the service in broker app";
+
+    /**
+     * Could not retrieve capabilities from broker apps.
+     */
+    public static final String FAILED_TO_GET_CAPABILITIES = "Could not get the capabilities";
 }
