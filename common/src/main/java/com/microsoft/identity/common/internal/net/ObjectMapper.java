@@ -107,7 +107,7 @@ public final class ObjectMapper {
      * Method to serialize the object into a map.
      *
      * @param object Object
-     * @return Map<String ,   String>
+     * @return Map<String                                                               ,                                                                                                                               String>
      */
     public static Map<String, String> serializeObjectHashMap(final Object object) throws UnsupportedEncodingException {
         String json = ObjectMapper.serializeObjectToJsonString(object);
@@ -144,7 +144,7 @@ public final class ObjectMapper {
      * Method to deserialize the query string into a map.
      *
      * @param queryString String
-     * @return Map<String ,   String>
+     * @return Map
      */
     public static Map<String, String> deserializeQueryStringToMap(final String queryString) {
         final Map<String, String> decodedUrlMap = new HashMap<>();
