@@ -36,12 +36,17 @@ public class ActiveDirectoryFederationServicesAuthorizationRequest extends Micro
         super(builder);
     }
 
-    public static final class Builder extends MicrosoftAuthorizationRequest.Builder {
+    public static final class Builder extends MicrosoftAuthorizationRequest.Builder<ActiveDirectoryFederationServicesAuthorizationRequest.Builder> {
         public Builder() {
         }
 
         public ActiveDirectoryFederationServicesAuthorizationRequest build() {
             return new ActiveDirectoryFederationServicesAuthorizationRequest(this);
+        }
+
+        @Override
+        public ActiveDirectoryFederationServicesAuthorizationRequest.Builder self(){
+            return this;
         }
     }
 

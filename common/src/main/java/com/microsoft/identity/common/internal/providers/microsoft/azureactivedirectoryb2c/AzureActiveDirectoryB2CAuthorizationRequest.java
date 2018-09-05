@@ -39,7 +39,7 @@ public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthor
         super(builder);
     }
 
-    public static final class Builder extends MicrosoftAuthorizationRequest.Builder {
+    public static final class Builder extends MicrosoftAuthorizationRequest.Builder<AzureActiveDirectoryB2CAuthorizationRequest.Builder> {
         private String mPrompt;
 
         public Builder() {
@@ -53,6 +53,13 @@ public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthor
         public AzureActiveDirectoryB2CAuthorizationRequest build() {
             return new AzureActiveDirectoryB2CAuthorizationRequest(this);
         }
+
+        @Override
+        public AzureActiveDirectoryB2CAuthorizationRequest.Builder self(){
+            return this;
+        }
+
+
     }
 
     public String getPrompt() {

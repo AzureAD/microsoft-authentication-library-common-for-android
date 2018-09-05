@@ -123,7 +123,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     }
 
 
-    public abstract static class Builder<MicrosoftAuthorizationRequest> extends AuthorizationRequest.Builder {
+    public abstract static class Builder<B extends MicrosoftAuthorizationRequest.Builder<B>> extends AuthorizationRequest.Builder<B> {
         /**
          * Required.
          */
@@ -158,40 +158,42 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         public Builder() {
         }
 
-        public Builder setAuthority(URL authority) {
+        public B setAuthority(URL authority) {
             mAuthority = authority;
-            return this;
+            return self();
         }
 
-        public Builder setLoginHint(String loginHint) {
+        public B setLoginHint(String loginHint) {
             mLoginHint = loginHint;
-            return this;
+            return self();
         }
 
-        public Builder setCorrelationId(UUID correlationId) {
+        public B setCorrelationId(UUID correlationId) {
             mCorrelationId = correlationId;
-            return this;
+            return self();
         }
 
-        public Builder setPkceChallenge(PkceChallenge pkceChallenge) {
+        public B setPkceChallenge(PkceChallenge pkceChallenge) {
             mPkceChallenge = pkceChallenge;
-            return this;
+            return self();
         }
 
-        public Builder setExtraQueryParam(String extraQueryParam) {
+        public B setExtraQueryParam(String extraQueryParam) {
             mExtraQueryParam = extraQueryParam;
-            return this;
+            return self();
         }
 
-        public Builder setLibraryVersion(String libraryVersion) {
+        public B setLibraryVersion(String libraryVersion) {
             mLibraryVersion = libraryVersion;
-            return this;
+            return self();
         }
 
-        public Builder setLibraryName(String libraryName) {
+        public B setLibraryName(String libraryName) {
             mLibraryName = libraryName;
-            return this;
+            return self();
         }
+
+        public abstract B self();
 
     }
 

@@ -99,42 +99,42 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         public static final String CODE = "code";
     }
 
-    public static abstract class Builder<GenericAuthorizationRequest extends AuthorizationRequest> {
+    public static abstract class Builder<B extends AuthorizationRequest.Builder<B>> {
         private String mResponseType = ResponseType.CODE; //ResponseType.CODE as default.
         private String mClientId;
         private String mRedirectUri;
         private String mState;
         private String mScope;
 
-        public Builder() {
-        }
-
-        public Builder setResponseType(String responseType) {
+        public B setResponseType(String responseType) {
             mResponseType = responseType;
-            return this;
+            return self();
         }
 
-        public Builder setClientId(String clientId) {
+        public B setClientId(String clientId) {
             mClientId = clientId;
-            return this;
+            return self();
         }
 
-        public Builder setRedirectUri(String redirectUri) {
+        public B setRedirectUri(String redirectUri) {
             mRedirectUri = redirectUri;
-            return this;
+            return self();
         }
 
-        public Builder setState(String state) {
+        public B setState(String state) {
             mState = state;
-            return this;
+            return self();
         }
 
-        public Builder setScope(String scope) {
+        public B setScope(String scope) {
             mScope = scope;
-            return this;
+            return self();
         }
 
-        public abstract GenericAuthorizationRequest build();
+        public abstract B self();
+
+        public abstract AuthorizationRequest build();
+
     }
 //
 //    /**

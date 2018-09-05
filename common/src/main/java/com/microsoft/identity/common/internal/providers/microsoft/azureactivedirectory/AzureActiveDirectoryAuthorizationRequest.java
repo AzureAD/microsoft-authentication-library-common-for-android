@@ -105,8 +105,7 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
         mClaimsChallenge = builder.mClaimsChallenge;
     }
 
-    public static class Builder<T extends AzureActiveDirectoryAuthorizationRequest>
-            extends MicrosoftAuthorizationRequest.Builder<AzureActiveDirectoryAuthorizationRequest> {
+    public static class Builder extends MicrosoftAuthorizationRequest.Builder<AzureActiveDirectoryAuthorizationRequest.Builder> {
         /**
          * The App ID URI of the target web API.
          * This is required in one of either the authorization or token requests.
@@ -123,8 +122,6 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
 
         private String mClaimsChallenge;
 
-        public Builder() {
-        }
 
         public Builder setResource(final String resource) {
             mResource = resource;
@@ -141,9 +138,16 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
             return this;
         }
 
-        public T build() {
-            return (T)new AzureActiveDirectoryAuthorizationRequest(this);
+        @Override
+        public Builder self() {
+            return this;
         }
+
+        public AzureActiveDirectoryAuthorizationRequest build(){
+            return new AzureActiveDirectoryAuthorizationRequest(this);
+        }
+
+
     }
 
     public String getResource() {

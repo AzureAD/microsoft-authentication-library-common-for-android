@@ -29,6 +29,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
@@ -56,18 +57,22 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     private static final String ERROR_MESSAGE = "access_denied";
     private static final String ERROR_DESCRIPTION = "access denied error description";
 
-    private AuthorizationResultFactory<MicrosoftStsAuthorizationResult> mAuthorizationResultFactory;
+    private AuthorizationResultFactory<MicrosoftStsAuthorizationResult, MicrosoftStsAuthorizationRequest> mAuthorizationResultFactory;
 
     @Before
     public void setUp(){
         mAuthorizationResultFactory = new MicrosoftStsAuthorizationResultFactory();
     }
 
+    private MicrosoftStsAuthorizationRequest getMstsAuthorizationRequest(){
+        return new MicrosoftStsAuthorizationRequest.Builder().build();
+    }
+
     @Test
     public void testBrowserCodeCancel() {
         Intent intent = new Intent();
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, intent, getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.USER_CANCEL, result.getAuthorizationStatus());
@@ -81,7 +86,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     public void testBrowserCodeError() {
         Intent intent = new Intent();
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, intent, getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -91,7 +96,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     @Test
     public void testNoMatchingResultCode() {
         Intent intent = new Intent();
-        AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(0, intent);
+        AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(0, intent, getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -104,7 +109,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     @Test
     public void testNullIntent() {
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, null);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, null, getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -118,7 +123,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     public void testNullUrl() {
         Intent intent = new Intent();
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -133,7 +138,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         Intent intent = new Intent();
         intent.putExtra(MicrosoftStsAuthorizationResultFactory.MSSTS_AUTHORIZATION_FINAL_URL, REDIRECT_URI);
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -148,7 +153,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         Intent intent = new Intent();
         intent.putExtra(MicrosoftStsAuthorizationResultFactory.MSSTS_AUTHORIZATION_FINAL_URL, REDIRECT_URI + "?some_random_error=accessdenied");
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -158,21 +163,6 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         assertEquals(MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE, errorResponse.getErrorDescription());
     }
 
-    @Test
-    public void testUrlWithCorrectCodeAndState() {
-        Intent intent = new Intent();
-        intent.putExtra(MicrosoftStsAuthorizationResultFactory.MSSTS_AUTHORIZATION_FINAL_URL, REDIRECT_URI + "?" + AUTH_CODE_AND_STATE);
-        intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, MOCK_STATE);
-        AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
-        assertNotNull(result);
-        assertNull(result.getAuthorizationErrorResponse());
-        assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
-        AuthorizationResponse response = result.getAuthorizationResponse();
-        assertNotNull(response);
-        assertEquals(response.getCode(), MOCK_AUTH_CODE);
-        assertEquals(response.getState(), MOCK_STATE);
-    }
 
     @Test
     public void testUrlWithInCorrectState() {
@@ -180,7 +170,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         intent.putExtra(MicrosoftStsAuthorizationResultFactory.MSSTS_AUTHORIZATION_FINAL_URL, REDIRECT_URI + "?" + AUTH_CODE_AND_STATE);
         intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, "incorrect_state");
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNotNull(result.getAuthorizationErrorResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -196,7 +186,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         String responseUrl = REDIRECT_URI + "?error=" + ERROR_MESSAGE + "&error_description=" + ERROR_DESCRIPTION;
         intent.putExtra(MicrosoftStsAuthorizationResultFactory.MSSTS_AUTHORIZATION_FINAL_URL, responseUrl);
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getMstsAuthorizationRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());

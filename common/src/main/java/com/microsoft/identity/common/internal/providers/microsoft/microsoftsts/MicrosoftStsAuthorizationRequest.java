@@ -85,44 +85,45 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mSliceParameters = builder.mSliceParameters;
     }
 
-    public static class Builder<T extends MicrosoftStsAuthorizationRequest>
-            extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest> {
+    public static class Builder extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest.Builder> {
         private String mPrompt;
         private String mUid;
         private String mUtid;
         private String mDisplayableId;
         private String mSliceParameters;
 
-        public Builder(){
-        }
-
-        public Builder setPrompt(String prompt) {
+        public MicrosoftStsAuthorizationRequest.Builder setPrompt(String prompt) {
             mPrompt = prompt;
-            return this;
+            return self();
         }
 
-        public Builder setUid(String uid) {
+        public MicrosoftStsAuthorizationRequest.Builder setUid(String uid) {
             mUid = uid;
-            return this;
+            return self();
         }
 
-        public Builder setUtid(String utid) {
+        public MicrosoftStsAuthorizationRequest.Builder setUtid(String utid) {
             mUtid = utid;
-            return this;
+            return self();
         }
 
-        public Builder setDisplayableId(String displayableId) {
+        public MicrosoftStsAuthorizationRequest.Builder setDisplayableId(String displayableId) {
             mDisplayableId = displayableId;
-            return this;
+            return self();
         }
 
-        public Builder setSliceParameters(String sliceParameters) {
+        public MicrosoftStsAuthorizationRequest.Builder setSliceParameters(String sliceParameters) {
             mSliceParameters = sliceParameters;
+            return self();
+        }
+
+        @Override
+        public MicrosoftStsAuthorizationRequest.Builder self(){
             return this;
         }
 
-        public T build() {
-            return (T) new MicrosoftStsAuthorizationRequest(this);
+        public MicrosoftStsAuthorizationRequest build() {
+            return new MicrosoftStsAuthorizationRequest(this);
         }
     }
 
