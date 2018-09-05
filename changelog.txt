@@ -1,5 +1,6 @@
 Version 0.0.4
 --------------
+Add authority AzureActiveDirectoryOAuth2 Configuration and Strategy for Sovereign and PPE cloud support.
 Fix for PPE Null Cloud when discovery metadata is malformed.
 
 Version 0.0.3
