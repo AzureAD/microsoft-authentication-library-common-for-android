@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.providers.microsoft;
 
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.NonNull;
 import android.util.Base64;
 
 import com.google.gson.annotations.SerializedName;
@@ -246,7 +245,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         try {
             encodedState = Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP);
-        }catch (Exception e) {
+        } catch (Exception e) {
             throw new IllegalStateException("Error generating encoded state parameter for Authorization Request", e);
         }
 
@@ -267,7 +266,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
         Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
-        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()){
+        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 

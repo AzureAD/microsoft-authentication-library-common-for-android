@@ -33,7 +33,6 @@ import com.microsoft.identity.common.adal.internal.JWSBuilder;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 
 import java.lang.reflect.Constructor;

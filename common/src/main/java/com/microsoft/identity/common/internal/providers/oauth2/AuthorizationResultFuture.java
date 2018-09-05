@@ -34,15 +34,15 @@ public class AuthorizationResultFuture implements Future<AuthorizationResult> {
 
     @Override
     public AuthorizationResult get(long l, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
-        if(mCountDownLatch.await(l, timeUnit)){
+        if (mCountDownLatch.await(l, timeUnit)) {
             return mAuthorizationResult;
-        }else {
+        } else {
             throw new TimeoutException();
         }
 
     }
 
-    public void setAuthorizationResult(AuthorizationResult result){
+    public void setAuthorizationResult(AuthorizationResult result) {
         mAuthorizationResult = result;
         mCountDownLatch.countDown();
     }

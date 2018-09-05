@@ -29,8 +29,8 @@ import android.content.Intent;
  */
 
 public abstract class AuthorizationResultFactory<
-            GenericAuthorizationResult extends AuthorizationResult,
-            GenericAuthorizationRequest extends AuthorizationRequest
+        GenericAuthorizationResult extends AuthorizationResult,
+        GenericAuthorizationRequest extends AuthorizationRequest
         > {
 
     /* Authorization Response Constants */

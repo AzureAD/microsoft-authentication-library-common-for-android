@@ -23,15 +23,12 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.util.Map;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
@@ -118,7 +115,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
 
         @Override
-        public MicrosoftStsAuthorizationRequest.Builder self(){
+        public MicrosoftStsAuthorizationRequest.Builder self() {
             return this;
         }
 
@@ -150,7 +147,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
         Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
-        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()){
+        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 

@@ -22,17 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 
 import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.UUID;
 
 import static org.junit.Assert.assertTrue;
@@ -80,10 +77,10 @@ public class MicrosoftStsAuthorizationRequestTests {
         final MicrosoftStsAuthorizationRequest requestWithLoginHint = getBaseBuilder().build();
 
         final String actualCodeRequestUrlWithLoginHint = requestWithLoginHint.getAuthorizationRequestAsHttpRequest().toString();
-        assertTrue("Matching login hint", actualCodeRequestUrlWithLoginHint.contains("login_hint="+DEFAULT_TEST_LOGIN_HINT));
+        assertTrue("Matching login hint", actualCodeRequestUrlWithLoginHint.contains("login_hint=" + DEFAULT_TEST_LOGIN_HINT));
         assertTrue("Matching response type", actualCodeRequestUrlWithLoginHint.contains("response_type=code"));
         assertTrue("Matching correlation id", actualCodeRequestUrlWithLoginHint.contains("&client-request-id=" + DEFAULT_TEST_CORRELATION_ID.toString()));
-        assertTrue("Matching library version", actualCodeRequestUrlWithLoginHint.contains("&x-client-Ver="+DEFAULT_TEST_VERSION));
+        assertTrue("Matching library version", actualCodeRequestUrlWithLoginHint.contains("&x-client-Ver=" + DEFAULT_TEST_VERSION));
 
     }
 
@@ -95,7 +92,7 @@ public class MicrosoftStsAuthorizationRequestTests {
                 .build();
 
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
-        assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt="+MicrosoftStsAuthorizationRequest.Prompt.FORCE_LOGIN));
+        assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt=" + MicrosoftStsAuthorizationRequest.Prompt.FORCE_LOGIN));
     }
 
     @Test
@@ -106,11 +103,11 @@ public class MicrosoftStsAuthorizationRequestTests {
                 .build();
 
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
-        assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt="+MicrosoftStsAuthorizationRequest.Prompt.SELECT_ACCOUNT));
+        assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt=" + MicrosoftStsAuthorizationRequest.Prompt.SELECT_ACCOUNT));
         assertTrue("Matching message",
-                actualCodeRequestUrl.contains("&x-client-SKU="+DEFAULT_TEST_LIBRARY_NAME));
+                actualCodeRequestUrl.contains("&x-client-SKU=" + DEFAULT_TEST_LIBRARY_NAME));
         assertTrue("Matching message",
-                actualCodeRequestUrl.contains("&x-client-Ver="+DEFAULT_TEST_VERSION));
+                actualCodeRequestUrl.contains("&x-client-Ver=" + DEFAULT_TEST_VERSION));
     }
 
     @Test

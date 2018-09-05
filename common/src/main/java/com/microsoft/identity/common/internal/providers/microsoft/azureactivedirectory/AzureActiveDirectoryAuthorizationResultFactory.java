@@ -32,7 +32,6 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.internal.util.StringUtil;

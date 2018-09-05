@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.ui.browser;
 
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsClient;
 import android.support.customtabs.CustomTabsIntent;
@@ -61,6 +60,7 @@ public class CustomTabsManager {
 
     /**
      * Constructor of CustomTabManager.
+     *
      * @param activity Instance of calling activity.
      */
     public CustomTabsManager(@NonNull final Activity activity) {
@@ -130,7 +130,7 @@ public class CustomTabsManager {
      * Method to unbind custom tabs service {@link android.support.customtabs.CustomTabsService}.
      */
     public synchronized void unbind() {
-        if(mCustomTabsServiceConnection == null) {
+        if (mCustomTabsServiceConnection == null) {
             return;
         }
 

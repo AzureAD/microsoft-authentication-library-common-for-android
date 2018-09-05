@@ -94,6 +94,7 @@ public enum AuthenticationSettings {
     /**
      * Get an {@link ArrayList} of bytes to derive secret key to use in encryption/decryption. used by broker only.
      * {@link Map} contains two broker app secret key to do encryption/decryption, and it's keyed by broker package name.
+     *
      * @return {@link Map} of byte[] secret key which is keyed by broker package name.
      */
     public Map<String, byte[]> getBrokerSecretKeys() {

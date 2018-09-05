@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
-import android.net.Uri;
-
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;

@@ -45,14 +45,13 @@ public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration
         mAuthorityHostValidationEnabled = authorityHostValidationEnabled;
     }
 
-    public URL getAuthorityUrl(){
+    public URL getAuthorityUrl() {
         return this.mAuthorityUrl;
     }
 
-    public void setAuthorityUrl(URL authorityUrl){
+    public void setAuthorityUrl(URL authorityUrl) {
         this.mAuthorityUrl = authorityUrl;
     }
-
 
 
 }

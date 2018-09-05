@@ -22,11 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import android.support.annotation.NonNull;
-
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import java.net.URL;
 
 public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthorizationRequest {
     /**
@@ -143,7 +140,7 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
             return this;
         }
 
-        public AzureActiveDirectoryAuthorizationRequest build(){
+        public AzureActiveDirectoryAuthorizationRequest build() {
             return new AzureActiveDirectoryAuthorizationRequest(this);
         }
 

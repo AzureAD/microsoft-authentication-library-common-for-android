@@ -28,7 +28,6 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -117,7 +116,7 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
-        MicrosoftStsAuthorizationRequest.Builder builder =  new MicrosoftStsAuthorizationRequest.Builder();
+        MicrosoftStsAuthorizationRequest.Builder builder = new MicrosoftStsAuthorizationRequest.Builder();
         builder.setAuthority(getOAuth2Configuration().getAuthorityUrl());
         return builder;
     }

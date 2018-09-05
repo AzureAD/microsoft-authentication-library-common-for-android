@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.ui.webview;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -37,7 +36,6 @@ import android.webkit.WebViewClient;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeCompletionCallback;
@@ -61,7 +59,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     }
 
     /**
-     *
      * @return handler completion callback
      */
     IChallengeCompletionCallback getCompletionCallback() {
@@ -71,7 +68,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     /**
      * Constructor for the OAuth2 basic web view client.
      *
-     * @param activity  app Context
+     * @param activity app Context
      * @param callback Challenge completion callback
      */
     OAuth2WebViewClient(@NonNull final Activity activity,

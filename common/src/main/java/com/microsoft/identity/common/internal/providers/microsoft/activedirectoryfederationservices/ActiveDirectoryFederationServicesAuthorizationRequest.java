@@ -22,11 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
-import android.support.annotation.NonNull;
-
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-
-import java.net.URL;
 
 /**
  * Active Directory Federation Services Authorization Request.
@@ -45,7 +41,7 @@ public class ActiveDirectoryFederationServicesAuthorizationRequest extends Micro
         }
 
         @Override
-        public ActiveDirectoryFederationServicesAuthorizationRequest.Builder self(){
+        public ActiveDirectoryFederationServicesAuthorizationRequest.Builder self() {
             return this;
         }
     }

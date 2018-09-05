@@ -23,12 +23,6 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 
-import android.net.Uri;
-
-import com.microsoft.identity.common.internal.logging.Logger;
-
-import java.util.Set;
-
 /**
  * A class to return the result of the authorization request to the calling code (ADAL or MSAL Controller classes)
  * This class should have a generic status in terms of : Cancelled, TimedOut, Error,  etc...
@@ -54,11 +48,11 @@ public abstract class AuthorizationResult<
         }
     }
 
-    public AuthorizationResult(final AuthorizationStatus status){
+    public AuthorizationResult(final AuthorizationStatus status) {
         this.mAuthorizationStatus = status;
     }
 
-    public AuthorizationResult(){
+    public AuthorizationResult() {
 
     }
 
