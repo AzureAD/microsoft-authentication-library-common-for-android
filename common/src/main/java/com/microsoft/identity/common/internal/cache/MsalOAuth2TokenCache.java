@@ -358,13 +358,13 @@ public class MsalOAuth2TokenCache
         return credentialsRemoved;
     }
 
-    void saveAccounts(final Account... accounts) {
+    private void saveAccounts(final Account... accounts) {
         for (final Account account : accounts) {
             mAccountCredentialCache.saveAccount(account);
         }
     }
 
-    void saveCredentials(final Credential... credentials) {
+    private void saveCredentials(final Credential... credentials) {
         for (final Credential credential : credentials) {
 
             if (credential instanceof AccessToken) {
@@ -386,7 +386,7 @@ public class MsalOAuth2TokenCache
      * @param idTokenToSave      The {@link IdToken} to save.
      * @throws ClientException If any of the supplied artifacts are non schema-compliant.
      */
-    void validateCacheArtifacts(
+    private void validateCacheArtifacts(
             @NonNull final Account accountToSave,
             final AccessToken accessTokenToSave,
             @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshTokenToSave,
@@ -510,7 +510,7 @@ public class MsalOAuth2TokenCache
         return isCompliant;
     }
 
-    boolean isAccountSchemaCompliant(@NonNull final Account account) {
+    private boolean isAccountSchemaCompliant(@NonNull final Account account) {
         // Required fields...
         final String[][] params = new String[][]{
                 {Account.SerializedNames.HOME_ACCOUNT_ID, account.getHomeAccountId()},
@@ -521,12 +521,10 @@ public class MsalOAuth2TokenCache
                 {Account.SerializedNames.AUTHORITY_TYPE, account.getAuthorityType()},
         };
 
-        boolean isCompliant = isSchemaCompliant(account.getClass(), params);
-
-        return isCompliant;
+        return isSchemaCompliant(account.getClass(), params);
     }
 
-    boolean isAccessTokenSchemaCompliant(@NonNull final AccessToken accessToken) {
+    private boolean isAccessTokenSchemaCompliant(@NonNull final AccessToken accessToken) {
         // Required fields...
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.CREDENTIAL_TYPE, accessToken.getCredentialType()},
@@ -540,12 +538,10 @@ public class MsalOAuth2TokenCache
                 {Credential.SerializedNames.SECRET, accessToken.getSecret()},
         };
 
-        boolean isValid = isSchemaCompliant(accessToken.getClass(), params);
-
-        return isValid;
+        return isSchemaCompliant(accessToken.getClass(), params);
     }
 
-    boolean isRefreshTokenSchemaCompliant(
+    private boolean isRefreshTokenSchemaCompliant(
             @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken) {
         // Required fields...
         final String[][] params = new String[][]{
@@ -556,12 +552,10 @@ public class MsalOAuth2TokenCache
                 {Credential.SerializedNames.SECRET, refreshToken.getSecret()},
         };
 
-        boolean isValid = isSchemaCompliant(refreshToken.getClass(), params);
-
-        return isValid;
+        return isSchemaCompliant(refreshToken.getClass(), params);
     }
 
-    boolean isIdTokenSchemaCompliant(@NonNull final IdToken idToken) {
+    private boolean isIdTokenSchemaCompliant(@NonNull final IdToken idToken) {
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.HOME_ACCOUNT_ID, idToken.getHomeAccountId()},
                 {Credential.SerializedNames.ENVIRONMENT, idToken.getEnvironment()},
@@ -571,9 +565,7 @@ public class MsalOAuth2TokenCache
                 {Credential.SerializedNames.SECRET, idToken.getSecret()},
         };
 
-        boolean isValid = isSchemaCompliant(idToken.getClass(), params);
-
-        return isValid;
+        return isSchemaCompliant(idToken.getClass(), params);
     }
 
     @Override
@@ -597,7 +589,6 @@ public class MsalOAuth2TokenCache
             mAccountCredentialCache.saveCredential(idToken);
             mAccountCredentialCache.saveCredential(rt);
         } catch (ClientException e) {
-            // TODO how do I know that it's safe to log this Exception?
             Logger.error(
                     TAG + ":" + methodName,
                     "",
