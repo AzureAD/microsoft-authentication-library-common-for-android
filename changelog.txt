@@ -1,3 +1,7 @@
+Version 0.0.4
+--------------
+Fix for PPE Null Cloud when discovery metadata is malformed.
+
 Version 0.0.3
 --------------
 - First release: Hello, World!
