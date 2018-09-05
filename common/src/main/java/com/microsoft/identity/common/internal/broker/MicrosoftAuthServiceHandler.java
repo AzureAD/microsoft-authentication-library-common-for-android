@@ -58,6 +58,12 @@ public class MicrosoftAuthServiceHandler {
     private ConcurrentMap<MicrosoftAuthServiceConnection, CallbackExecutor<MicrosoftAuthServiceConnection>> mPendingConnections = new ConcurrentHashMap<>();
     private static ExecutorService sThreadExecutor = Executors.newCachedThreadPool();
 
+    private static final MicrosoftAuthServiceHandler sInstance = new MicrosoftAuthServiceHandler();
+
+    public static MicrosoftAuthServiceHandler getInstance() {
+        return sInstance;
+    }
+
     /**
      * Silently acquire the token from MicrosoftAuthService
      *

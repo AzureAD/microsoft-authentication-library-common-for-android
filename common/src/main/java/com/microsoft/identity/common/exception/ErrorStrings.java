@@ -264,4 +264,9 @@ public final class ErrorStrings {
      * Could not retrieve capabilities from broker apps.
      */
     public static final String FAILED_TO_GET_CAPABILITIES = "Could not get the capabilities";
+
+    /**
+     * Empty Context.
+     */
+    public static final String EMPTY_ANDROID_CONTEXT = "Empty Android context.";
 }
