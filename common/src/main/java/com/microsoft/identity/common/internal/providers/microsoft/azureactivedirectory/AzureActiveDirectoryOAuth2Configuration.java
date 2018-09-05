@@ -42,5 +42,19 @@ public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration
 
     private boolean mAuthorityHostValidationEnabled = true;
 
-
+    /**
+     * @return The authority if configured, empty string otherwise.
+     */
+    public String getAuthority() {
+        return mAuthority;
+    }
+    
+    /**
+     * Sets an authority to use as a base for URIs as appropriate.
+     */
+    public void setAuthority(String authority) {
+        mAuthority = authority;
+    }
+    
+    private String mAuthority = "";
 }

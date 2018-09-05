@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -66,7 +67,11 @@ public class AzureActiveDirectoryOAuth2Strategy
     public AzureActiveDirectoryOAuth2Strategy(final AzureActiveDirectoryOAuth2Configuration config) {
         super(config);
         Logger.verbose(TAG, "Init: " + TAG);
-        setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oauth2/token");
+        if (TextUtils.isEmpty(config.getAuthority())) {
+            setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oauth2/token");
+        } else {
+            setTokenEndpoint(config.getAuthority() + "/oauth2/token");
+        }
     }
 
     @Override
