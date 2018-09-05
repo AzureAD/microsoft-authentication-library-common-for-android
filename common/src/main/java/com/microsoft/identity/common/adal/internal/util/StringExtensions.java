@@ -214,31 +214,6 @@ public final class StringExtensions {
     }
 
     /**
-     * Remove quote in header value.
-     *
-     * @param value String
-     * @return String
-     */
-    public static String removeQuoteInHeaderValue(String value) {
-        if (!isNullOrBlank(value)) {
-            return value.replace("\"", "");
-        }
-        return null;
-    }
-
-    /**
-     * Checks if header value has this prefix. Prefix + whitespace is acceptable.
-     *
-     * @param value  String to check.
-     * @param prefix prefix to check the above string.
-     * @return boolean true if the string starts with prefix and has some body after it.
-     */
-    public static boolean hasPrefixInHeader(final String value, final String prefix) {
-        return value.startsWith(prefix) && value.length() > prefix.length() + 2
-                && Character.isWhitespace(value.charAt(prefix.length()));
-    }
-
-    /**
      * Based64URL encode the input string.
      *
      * @param message String
@@ -246,26 +221,5 @@ public final class StringExtensions {
      */
     public static String base64UrlEncodeToString(final String message) {
         return Base64.encodeToString(message.getBytes(Charset.forName(ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
-    }
-
-    /**
-     * Append parameter to the url. If the no query parameters, return the url originally passed in.
-     */
-    public static String appendQueryParameterToUrl(final String url, final Map<String, String> requestParams)
-            throws UnsupportedEncodingException {
-        if (isNullOrBlank(url)) {
-            throw new IllegalArgumentException("Empty authority endpoint parameter.");
-        }
-
-        if (requestParams.isEmpty()) {
-            return url;
-        }
-
-        Uri.Builder builtUri = Uri.parse(url).buildUpon();
-        for (Map.Entry<String, String> entry : requestParams.entrySet()) {
-            builtUri.appendQueryParameter(entry.getKey(), entry.getValue());
-        }
-
-        return builtUri.build().toString();
     }
 }
