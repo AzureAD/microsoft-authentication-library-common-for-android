@@ -67,10 +67,10 @@ public class AzureActiveDirectoryOAuth2Strategy
     public AzureActiveDirectoryOAuth2Strategy(final AzureActiveDirectoryOAuth2Configuration config) {
         super(config);
         Logger.verbose(TAG, "Init: " + TAG);
-        if (TextUtils.isEmpty(config.getAuthority())) {
-            setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oauth2/token");
+        if (null != config.getAuthorityUrl()) {
+            setTokenEndpoint(config.getAuthorityUrl().toString() + "/oauth2/token");
         } else {
-            setTokenEndpoint(config.getAuthority() + "/oauth2/token");
+            setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oauth2/token");
         }
     }
 
