@@ -33,7 +33,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
@@ -60,11 +59,11 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     private AuthorizationResultFactory<MicrosoftStsAuthorizationResult, MicrosoftStsAuthorizationRequest> mAuthorizationResultFactory;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         mAuthorizationResultFactory = new MicrosoftStsAuthorizationResultFactory();
     }
 
-    private MicrosoftStsAuthorizationRequest getMstsAuthorizationRequest(){
+    private MicrosoftStsAuthorizationRequest getMstsAuthorizationRequest() {
         return new MicrosoftStsAuthorizationRequest.Builder().build();
     }
 

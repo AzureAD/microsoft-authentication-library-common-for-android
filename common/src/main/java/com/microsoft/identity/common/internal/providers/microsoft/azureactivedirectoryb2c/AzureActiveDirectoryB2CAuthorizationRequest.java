@@ -22,12 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
-import android.support.annotation.NonNull;
-
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
-
-import java.net.URL;
 
 /**
  * Azure Active Directory B2C Authorization Request.
@@ -55,7 +50,7 @@ public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthor
         }
 
         @Override
-        public AzureActiveDirectoryB2CAuthorizationRequest.Builder self(){
+        public AzureActiveDirectoryB2CAuthorizationRequest.Builder self() {
             return this;
         }
 

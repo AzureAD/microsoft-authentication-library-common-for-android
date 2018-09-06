@@ -69,7 +69,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         mAuthorizationResultFactory = new AzureActiveDirectoryAuthorizationResultFactory();
     }
 
-    private AzureActiveDirectoryAuthorizationRequest getAADRequest(){
+    private AzureActiveDirectoryAuthorizationRequest getAADRequest() {
         return new AzureActiveDirectoryAuthorizationRequest.Builder().build();
     }
 

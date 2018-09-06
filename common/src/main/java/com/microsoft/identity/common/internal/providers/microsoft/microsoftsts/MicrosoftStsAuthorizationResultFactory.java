@@ -23,15 +23,12 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.content.Intent;
-import android.util.Log;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -47,7 +44,9 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
 
     private static final String TAG = MicrosoftStsAuthorizationResultFactory.class.getSimpleName();
 
-    /** Constant key to get authorization request final url from intent. */
+    /**
+     * Constant key to get authorization request final url from intent.
+     */
     public static final String MSSTS_AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
 
 

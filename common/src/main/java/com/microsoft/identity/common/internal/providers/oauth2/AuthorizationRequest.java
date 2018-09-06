@@ -23,14 +23,13 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
+
+import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.net.ObjectMapper;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
-
-import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.net.ObjectMapper;
 
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
@@ -194,7 +193,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
         Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
-        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()){
+        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 

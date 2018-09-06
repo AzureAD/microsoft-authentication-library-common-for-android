@@ -42,7 +42,7 @@ public final class JsonExtensions {
      * Extract JSON Object into Map<String, String>.
      *
      * @param jsonString String
-     * @return Map<String ,   String>
+     * @return Map
      * @throws JSONException if JSON string is malformed.
      */
     public static Map<String, String> extractJsonObjectIntoMap(final String jsonString)

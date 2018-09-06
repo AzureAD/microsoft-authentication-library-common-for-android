@@ -45,6 +45,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
 
     /**
      * Constructor of NtlmChallengeHandler.
+     *
      * @param activity activity to place the UI
      * @param callback challenge completion callback which will process the challenge result.
      */

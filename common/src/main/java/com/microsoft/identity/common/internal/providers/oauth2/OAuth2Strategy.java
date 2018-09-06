@@ -30,7 +30,6 @@ import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
-import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -208,7 +207,7 @@ public abstract class OAuth2Strategy
      */
     protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response);
 
-   // TODO
+    // TODO
 //    protected abstract void validateAuthorizationResponse(GenericAuthorizationResponse response);
 
 //    protected abstract void validateTokenResponse(GenericTokenResponse response);

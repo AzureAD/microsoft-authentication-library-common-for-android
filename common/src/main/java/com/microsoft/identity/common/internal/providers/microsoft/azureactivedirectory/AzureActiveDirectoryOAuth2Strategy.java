@@ -30,7 +30,6 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
@@ -45,17 +44,17 @@ import java.net.HttpURLConnection;
 /**
  * The Azure Active Directory OAuth 2.0 Strategy.
  * <MicrosoftStsAccessToken,
- MicrosoftStsAccount,
- MicrosoftStsAuthorizationRequest,
- MicrosoftStsAuthorizationRequest.Builder,
- AuthorizationStrategy,
- MicrosoftStsOAuth2Configuration,
- MicrosoftStsAuthorizationResponse,
- MicrosoftStsRefreshToken,
- MicrosoftStsTokenRequest,
- MicrosoftStsTokenResponse,
- TokenResult,
- AuthorizationResult>
+ * MicrosoftStsAccount,
+ * MicrosoftStsAuthorizationRequest,
+ * MicrosoftStsAuthorizationRequest.Builder,
+ * AuthorizationStrategy,
+ * MicrosoftStsOAuth2Configuration,
+ * MicrosoftStsAuthorizationResponse,
+ * MicrosoftStsRefreshToken,
+ * MicrosoftStsTokenRequest,
+ * MicrosoftStsTokenResponse,
+ * TokenResult,
+ * AuthorizationResult>
  */
 public class AzureActiveDirectoryOAuth2Strategy
         extends OAuth2Strategy<

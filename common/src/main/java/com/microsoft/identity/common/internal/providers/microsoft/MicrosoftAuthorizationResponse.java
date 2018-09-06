@@ -44,6 +44,7 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
 
     /**
      * Getter method for correlation id.
+     *
      * @return correlation id of the request.
      */
     public String getCorrelationId() {
@@ -52,6 +53,7 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
 
     /**
      * Setter method for correlation id.
+     *
      * @param correlationId correlation id of the request.
      */
     public void setCorrelationId(final String correlationId) {
