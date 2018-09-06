@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -66,7 +67,11 @@ public class AzureActiveDirectoryOAuth2Strategy
     public AzureActiveDirectoryOAuth2Strategy(final AzureActiveDirectoryOAuth2Configuration config) {
         super(config);
         Logger.verbose(TAG, "Init: " + TAG);
-        setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oauth2/token");
+        if (null != config.getAuthorityUrl()) {
+            setTokenEndpoint(config.getAuthorityUrl().toString() + "/oauth2/token");
+        } else {
+            setTokenEndpoint("https://login.microsoftonline.com/microsoft.com/oauth2/token");
+        }
     }
 
     @Override
@@ -74,11 +79,21 @@ public class AzureActiveDirectoryOAuth2Strategy
         final String methodName = "getIssuerCacheIdentifier";
 
         final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
+        if (cloud == null && !getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
+            Logger.warn(TAG + ":" + methodName, "Discovery data does not include cloud authority and validation is off."
+                + " Returning passed in Authority: "
+                + authRequest.getAuthority().toString());
+            return authRequest.getAuthority().toString();
+        }
 
         if (!cloud.isValidated() && getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
             Logger.warn(TAG + ":" + methodName, "Authority host validation has been enabled. This data hasn't been validated, though.");
             // We have invalid cloud data... and authority host validation is enabled....
             // TODO: Throw an exception in this case... need to see what ADAL does in this case.
+            // If Cloud is null, e.g. Authority is PPE and AAD PE doesn't include it in the discovery data, this will similarly throw:
+            // java.lang.NullPointerException: Attempt to invoke virtual method
+            // 'boolean com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.isValidated()'
+            // on a null object reference
         }
 
         if (!cloud.isValidated() && !getOAuth2Configuration().isAuthorityHostValidationEnabled()) {

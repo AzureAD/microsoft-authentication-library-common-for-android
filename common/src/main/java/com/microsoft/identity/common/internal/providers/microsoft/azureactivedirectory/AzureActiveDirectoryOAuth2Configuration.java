@@ -24,7 +24,12 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 
+import java.net.URL;
+
 public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration {
+
+    private boolean mAuthorityHostValidationEnabled = true;
+    private URL mAuthorityUrl;
 
     /**
      * @return True if authority host validation enabled, false otherwise.
@@ -40,7 +45,17 @@ public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration
         mAuthorityHostValidationEnabled = authorityHostValidationEnabled;
     }
 
-    private boolean mAuthorityHostValidationEnabled = true;
-
-
+    /**
+     * @return The authority URL if configured, null otherwise.
+     */
+    public URL getAuthorityUrl() {
+        return this.mAuthorityUrl;
+    }
+    
+    /**
+     * Sets an authority URL to use for URIs as appropriate.
+     */
+    public void setAuthorityUrl(URL authorityUrl) {
+        this.mAuthorityUrl = authorityUrl;
+    }
 }
