@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.content.Intent;
-import android.net.Uri;
 
 import com.microsoft.identity.common.exception.ClientException;
 

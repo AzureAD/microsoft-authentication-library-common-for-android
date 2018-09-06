@@ -167,10 +167,14 @@ public final class AuthenticationConstants {
          */
         public static final int BROWSER_FLOW = 1001;
 
-        /** Represents the request of token flow. */
+        /**
+         * Represents the request of token flow.
+         */
         public static final int TOKEN_FLOW = 1002;
 
-        /** Represents the request of broker flow. */
+        /**
+         * Represents the request of broker flow.
+         */
         public static final int BROKER_FLOW = 1003;
     }
 
@@ -378,7 +382,9 @@ public final class AuthenticationConstants {
          * String for cloud instance host name.
          */
         public static final String CLOUD_INSTANCE_HOST_NAME = "cloud_instance_host_name";
-        /** session key JWE. */
+        /**
+         * session key JWE.
+         */
         public static final String SESSION_KEY_JWE = "session_key_jwe";
     }
 
@@ -487,7 +493,9 @@ public final class AuthenticationConstants {
          **/
         public static final String REQUEST_ID_HEADER = "x-ms-request-id";
 
-        /** String for the broker version. */
+        /**
+         * String for the broker version.
+         */
         public static final String ADAL_BROKER_VERSION = "x-client-brkrver";
     }
 

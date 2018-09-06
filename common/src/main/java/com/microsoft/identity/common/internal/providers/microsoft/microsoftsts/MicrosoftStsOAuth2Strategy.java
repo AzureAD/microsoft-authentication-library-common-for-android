@@ -28,7 +28,6 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -38,7 +37,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStra
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
@@ -50,10 +48,12 @@ public class MicrosoftStsOAuth2Strategy
         <MicrosoftStsAccessToken,
                 MicrosoftStsAccount,
                 MicrosoftStsAuthorizationRequest,
+                MicrosoftStsAuthorizationRequest.Builder,
                 AuthorizationStrategy,
                 MicrosoftStsOAuth2Configuration,
+                MicrosoftStsAuthorizationResponse,
                 MicrosoftStsRefreshToken,
-                TokenRequest,
+                MicrosoftStsTokenRequest,
                 MicrosoftStsTokenResponse,
                 TokenResult,
                 AuthorizationResult> {
@@ -65,6 +65,7 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config) {
         super(config);
         setTokenEndpoint("https://login.microsoftonline.com/common/oAuth2/v2.0/token");
+
     }
 
     @Override
@@ -114,14 +115,32 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
+    public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
+        MicrosoftStsAuthorizationRequest.Builder builder = new MicrosoftStsAuthorizationRequest.Builder();
+        builder.setAuthority(getOAuth2Configuration().getAuthorityUrl());
+        return builder;
+    }
+
+
+    @Override
+    public MicrosoftStsTokenRequest createTokenRequest(MicrosoftStsAuthorizationRequest request, MicrosoftStsAuthorizationResponse response) {
+        MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
+        tokenRequest.setCodeVerifier(request.getPkceChallenge().getCodeVerifier());
+        tokenRequest.setCode(response.getCode());
+        tokenRequest.setRedirectUri(request.getRedirectUri());
+        tokenRequest.setClientId(request.getClientId());
+        return tokenRequest;
+    }
+
+    @Override
     protected void validateAuthorizationRequest(final MicrosoftStsAuthorizationRequest request) {
         // TODO implement
 
     }
 
     @Override
-    protected void validateTokenRequest(final TokenRequest request) {
-        // TODO implement
+    protected void validateTokenRequest(MicrosoftStsTokenRequest request) {
+
     }
 
     @Override
@@ -133,7 +152,7 @@ public class MicrosoftStsOAuth2Strategy
             //An error occurred
             tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenErrorResponse.class);
         } else {
-            tokenResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftTokenResponse.class);
+            tokenResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), MicrosoftStsTokenResponse.class);
         }
 
         return new TokenResult(tokenResponse, tokenErrorResponse);

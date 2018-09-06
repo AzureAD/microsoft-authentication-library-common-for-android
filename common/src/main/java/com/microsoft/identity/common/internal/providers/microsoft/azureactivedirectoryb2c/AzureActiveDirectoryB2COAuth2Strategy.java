@@ -22,12 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
-import android.net.Uri;
-
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
@@ -87,7 +86,16 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
+    public AuthorizationRequest.Builder createAuthorizationRequestBuilder() {
+        return new AzureActiveDirectoryB2CAuthorizationRequest.Builder();
+    }
 
+    @Override
+    public TokenRequest createTokenRequest(AuthorizationRequest request, AuthorizationResponse response) {
+        return null;
+    }
+
+    @Override
     protected void validateAuthorizationRequest(AuthorizationRequest request) {
     }
 

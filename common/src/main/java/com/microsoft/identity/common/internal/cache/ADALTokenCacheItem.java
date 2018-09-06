@@ -30,7 +30,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.util.DateUtilities;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.Date;
 

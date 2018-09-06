@@ -29,7 +29,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
-import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
+import com.microsoft.identity.common.internal.platform.Device;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -48,8 +48,10 @@ public abstract class OAuth2Strategy
         <GenericAccessToken extends AccessToken,
                 GenericAccount extends Account,
                 GenericAuthorizationRequest extends AuthorizationRequest,
+                GenericAuthorizationRequestBuilder extends AuthorizationRequest.Builder,
                 GenericAuthorizationStrategy extends AuthorizationStrategy,
                 GenericOAuth2Configuration extends OAuth2Configuration,
+                GenericAuthorizationResponse extends AuthorizationResponse,
                 GenericRefreshToken extends RefreshToken,
                 GenericTokenRequest extends TokenRequest,
                 GenericTokenResponse extends TokenResponse,
@@ -110,6 +112,7 @@ public abstract class OAuth2Strategy
         Map<String, String> headers = new TreeMap<>();
         String correlationId = UUID.randomUUID().toString();
         headers.put("client-request-id", correlationId);
+        headers.putAll(Device.getPlatformIdParameters());
 
         return HttpRequest.sendPost(
                 new URL(mTokenEndpoint),
@@ -168,6 +171,20 @@ public abstract class OAuth2Strategy
     public abstract GenericAccount createAccount(GenericTokenResponse response);
 
     /**
+     * Abstract method for creating the authorization request.  In the case of AAD this is the method
+     *
+     * @return AuthorizationRequest.
+     */
+    public abstract GenericAuthorizationRequestBuilder createAuthorizationRequestBuilder();
+
+    /**
+     * Abstract method for creating the token request.  In the case of AAD this is the method
+     *
+     * @return TokenRequest.
+     */
+    public abstract GenericTokenRequest createTokenRequest(GenericAuthorizationRequest request, GenericAuthorizationResponse response);
+
+    /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method
      * from which the details of the authorization request including authority validation would occur (preferred network and preferred cache)
      *
@@ -190,7 +207,7 @@ public abstract class OAuth2Strategy
      */
     protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response);
 
-   // TODO
+    // TODO
 //    protected abstract void validateAuthorizationResponse(GenericAuthorizationResponse response);
 
 //    protected abstract void validateTokenResponse(GenericTokenResponse response);

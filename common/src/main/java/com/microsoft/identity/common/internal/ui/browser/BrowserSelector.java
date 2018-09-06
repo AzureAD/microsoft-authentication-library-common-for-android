@@ -53,7 +53,7 @@ public class BrowserSelector {
      * @param context {@link Context} to use for accessing {@link PackageManager}.
      * @return Browser selected to use.
      */
-    public static Browser select(final Context context) throws ClientException{
+    public static Browser select(final Context context) throws ClientException {
         final List<Browser> allBrowsers = getAllBrowsers(context);
         if (!allBrowsers.isEmpty()) {
             return allBrowsers.get(0);

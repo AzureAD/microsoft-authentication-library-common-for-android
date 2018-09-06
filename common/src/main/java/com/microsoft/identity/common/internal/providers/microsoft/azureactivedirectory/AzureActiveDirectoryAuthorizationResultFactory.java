@@ -44,14 +44,14 @@ import java.util.HashMap;
  * Encapsulates Authorization response or errors specific to Azure Active Directory in the form of
  * {@link AzureActiveDirectoryAuthorizationResult}
  */
-public class AzureActiveDirectoryAuthorizationResultFactory extends AuthorizationResultFactory<AzureActiveDirectoryAuthorizationResult> {
+public class AzureActiveDirectoryAuthorizationResultFactory extends AuthorizationResultFactory<AzureActiveDirectoryAuthorizationResult, AzureActiveDirectoryAuthorizationRequest> {
 
     private static final String TAG = AzureActiveDirectoryAuthorizationResultFactory.class.getSimpleName();
 
     private static final String ERROR_CODES = "error_codes";
 
     @Override
-    public AzureActiveDirectoryAuthorizationResult createAuthorizationResult(final int resultCode, final Intent data) {
+    public AzureActiveDirectoryAuthorizationResult createAuthorizationResult(final int resultCode, final Intent data, final AzureActiveDirectoryAuthorizationRequest request) {
         if (data == null || data.getExtras() == null) {
             return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,

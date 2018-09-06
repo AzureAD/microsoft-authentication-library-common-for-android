@@ -29,6 +29,7 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 public interface IChallengeHandler<GenericChallenge, GenericResponse> {
     /**
      * Process difference kinds of challenge request.
+     *
      * @param genericChallenge challenge request
      * @return GenericResponse
      */

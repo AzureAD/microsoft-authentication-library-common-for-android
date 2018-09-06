@@ -22,11 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import android.support.annotation.NonNull;
-
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import java.net.URL;
 
 public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthorizationRequest {
     /**
@@ -105,8 +102,7 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
         mClaimsChallenge = builder.mClaimsChallenge;
     }
 
-    public static class Builder<T extends AzureActiveDirectoryAuthorizationRequest>
-            extends MicrosoftAuthorizationRequest.Builder<AzureActiveDirectoryAuthorizationRequest> {
+    public static class Builder extends MicrosoftAuthorizationRequest.Builder<AzureActiveDirectoryAuthorizationRequest.Builder> {
         /**
          * The App ID URI of the target web API.
          * This is required in one of either the authorization or token requests.
@@ -123,16 +119,6 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
 
         private String mClaimsChallenge;
 
-        private static final String SCOPE_OPENID_VALUE = "openid";
-
-        public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri,
-                       @NonNull final URL authority,
-                       @NonNull final String resource) {
-            super(clientId, redirectUri, authority);
-            setResource(resource);
-            setScope(SCOPE_OPENID_VALUE);
-        }
 
         public Builder setResource(final String resource) {
             mResource = resource;
@@ -149,9 +135,16 @@ public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthoriza
             return this;
         }
 
-        public T build() {
-            return (T)new AzureActiveDirectoryAuthorizationRequest(this);
+        @Override
+        public Builder self() {
+            return this;
         }
+
+        public AzureActiveDirectoryAuthorizationRequest build() {
+            return new AzureActiveDirectoryAuthorizationRequest(this);
+        }
+
+
     }
 
     public String getResource() {
