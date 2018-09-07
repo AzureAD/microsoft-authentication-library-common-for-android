@@ -30,6 +30,7 @@ import com.microsoft.identity.common.internal.net.ObjectMapper;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
@@ -105,6 +106,26 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         private String mState;
         private String mScope;
 
+        /**
+         * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
+         */
+        public String mLoginHint;
+        /**
+         * Correlation ID.
+         */
+        public UUID mCorrelationId;
+        /**
+         * Extra query parameters.
+         */
+        public String mExtraQueryParam; //TODO not serializable
+
+        public String mPrompt;
+
+        public B setPrompt(String prompt) {
+            mPrompt = prompt;
+            return self();
+        }
+
         public B setResponseType(String responseType) {
             mResponseType = responseType;
             return self();
@@ -127,6 +148,21 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
         public B setScope(String scope) {
             mScope = scope;
+            return self();
+        }
+
+        public B setLoginHint(String loginHint) {
+            mLoginHint = loginHint;
+            return self();
+        }
+
+        public B setCorrelationId(UUID correlationId) {
+            mCorrelationId = correlationId;
+            return self();
+        }
+
+        public B setExtraQueryParam(String extraQueryParam) {
+            mExtraQueryParam = extraQueryParam;
             return self();
         }
 
