@@ -107,7 +107,6 @@ public abstract class OAuth2Strategy
     }
 
     protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException {
-
         String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
         Map<String, String> headers = new TreeMap<>();
         String correlationId = UUID.randomUUID().toString();

@@ -65,7 +65,6 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config) {
         super(config);
         setTokenEndpoint("https://login.microsoftonline.com/common/oAuth2/v2.0/token");
-
     }
 
     @Override
@@ -123,7 +122,8 @@ public class MicrosoftStsOAuth2Strategy
 
 
     @Override
-    public MicrosoftStsTokenRequest createTokenRequest(MicrosoftStsAuthorizationRequest request, MicrosoftStsAuthorizationResponse response) {
+    public MicrosoftStsTokenRequest createTokenRequest(@NonNull final MicrosoftStsAuthorizationRequest request,
+                                                       @NonNull final MicrosoftStsAuthorizationResponse response) {
         MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setCodeVerifier(request.getPkceChallenge().getCodeVerifier());
         tokenRequest.setCode(response.getCode());
