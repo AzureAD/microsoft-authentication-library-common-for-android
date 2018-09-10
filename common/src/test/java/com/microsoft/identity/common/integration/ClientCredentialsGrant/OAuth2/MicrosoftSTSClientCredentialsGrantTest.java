@@ -28,6 +28,7 @@ import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfigurati
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftClientAssertion;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
@@ -68,7 +69,7 @@ public class MicrosoftSTSClientCredentialsGrantTest {
 
         MicrosoftClientAssertion assertion = new MicrosoftClientAssertion(audience, credential);
 
-        TokenRequest tr = new TokenRequest();
+        TokenRequest tr = new MicrosoftStsTokenRequest();
 
         tr.setClientAssertionType(assertion.getClientAssertionType());
         tr.setClientAssertion(assertion.getClientAssertion());
