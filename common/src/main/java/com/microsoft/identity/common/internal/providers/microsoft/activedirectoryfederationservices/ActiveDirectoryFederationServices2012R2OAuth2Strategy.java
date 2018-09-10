@@ -98,6 +98,11 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
     }
 
     @Override
+    public TokenRequest createRefreshTokenRequest(com.microsoft.identity.common.internal.dto.RefreshToken refreshToken) {
+        return null;
+    }
+
+    @Override
     protected void validateAuthorizationRequest(AuthorizationRequest request) {
     }
 

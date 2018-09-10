@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
@@ -37,6 +38,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStra
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
@@ -65,7 +67,6 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config) {
         super(config);
         setTokenEndpoint("https://login.microsoftonline.com/common/oAuth2/v2.0/token");
-
     }
 
     @Override
@@ -121,15 +122,23 @@ public class MicrosoftStsOAuth2Strategy
         return builder;
     }
 
-
     @Override
-    public MicrosoftStsTokenRequest createTokenRequest(MicrosoftStsAuthorizationRequest request, MicrosoftStsAuthorizationResponse response) {
+    public MicrosoftStsTokenRequest createTokenRequest(@NonNull final MicrosoftStsAuthorizationRequest request,
+                                                       @NonNull final MicrosoftStsAuthorizationResponse response) {
         MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setCodeVerifier(request.getPkceChallenge().getCodeVerifier());
         tokenRequest.setCode(response.getCode());
         tokenRequest.setRedirectUri(request.getRedirectUri());
         tokenRequest.setClientId(request.getClientId());
         return tokenRequest;
+    }
+
+    @Override
+    public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final RefreshToken refreshToken) {
+        final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
+        request.setRefreshToken(refreshToken.getSecret());
+        request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
+        return request;
     }
 
     @Override

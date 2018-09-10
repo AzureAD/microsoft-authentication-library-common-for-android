@@ -49,7 +49,6 @@ public class TokenResult {
         if (response != null) {
             mSuccess = true;
         }
-
     }
 
     /**

@@ -107,7 +107,6 @@ public abstract class OAuth2Strategy
     }
 
     protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException {
-
         String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
         Map<String, String> headers = new TreeMap<>();
         String correlationId = UUID.randomUUID().toString();
@@ -183,6 +182,14 @@ public abstract class OAuth2Strategy
      * @return TokenRequest.
      */
     public abstract GenericTokenRequest createTokenRequest(GenericAuthorizationRequest request, GenericAuthorizationResponse response);
+
+    /**
+     * Abstract method for creating the refresh token request.
+     *
+     * @param refreshToken The refresh token to use.
+     * @return TokenRequest.
+     */
+    public abstract GenericTokenRequest createRefreshTokenRequest(final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken);
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method

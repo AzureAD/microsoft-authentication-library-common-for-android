@@ -61,6 +61,9 @@ public class TokenRequest {
     @SerializedName("scope")
     private String mScope;
 
+    @SerializedName("refresh_token")
+    private String mRefreshToken;
+
     /**
      * @return mCode of the token request.
      */
@@ -173,9 +176,27 @@ public class TokenRequest {
         mScope = scope;
     }
 
+    /**
+     * Gets the refresh_token.
+     *
+     * @return The refresh_token to get.
+     */
+    public String getRefreshToken() {
+        return mRefreshToken;
+    }
+
+    /**
+     * Sets the refresh_token.
+     *
+     * @param refreshToken The refresh_token to set.
+     */
+    public void setRefreshToken(final String refreshToken) {
+        mRefreshToken = refreshToken;
+    }
 
     public static class GrantTypes {
         public final static String AUTHORIZATION_CODE = "authorization_code";
+        public final static String REFRESH_TOKEN = "refresh_token";
     }
 
 }
