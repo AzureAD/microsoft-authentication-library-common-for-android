@@ -25,8 +25,9 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.jwt.JWTParser;
 
 import java.text.ParseException;
 import java.util.Collections;
@@ -221,8 +222,8 @@ public class IDToken {
         final JWTClaimsSet claimsSet;
         try {
             // Create a SignedJWT from the input token String
-            final SignedJWT signedJWT = SignedJWT.parse(idToken);
-            claimsSet = signedJWT.getJWTClaimsSet();
+            final JWT jwt = JWTParser.parse(idToken);
+            claimsSet = jwt.getJWTClaimsSet();
         } catch (ParseException e) {
             throw new ServiceException("Failed to parse JWT", ErrorStrings.INVALID_JWT, e);
         }
