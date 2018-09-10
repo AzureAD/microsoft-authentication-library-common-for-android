@@ -63,6 +63,7 @@ public interface IWebRequestHandler {
 
     /**
      * Set the version name of client.
+     *
      * @param clientVersion the version name of client.
      */
     void setClientVersion(String clientVersion);

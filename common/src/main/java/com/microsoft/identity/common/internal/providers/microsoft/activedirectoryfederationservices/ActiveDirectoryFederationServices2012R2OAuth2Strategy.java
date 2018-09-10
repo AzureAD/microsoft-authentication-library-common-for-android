@@ -22,12 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
-import android.net.Uri;
-
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
@@ -85,6 +84,21 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
 
     @Override
     public Account createAccount(TokenResponse response) {
+        return null;
+    }
+
+    @Override
+    public AuthorizationRequest.Builder createAuthorizationRequestBuilder() {
+        return null;
+    }
+
+    @Override
+    public TokenRequest createTokenRequest(AuthorizationRequest request, AuthorizationResponse response) {
+        return null;
+    }
+
+    @Override
+    public TokenRequest createRefreshTokenRequest(com.microsoft.identity.common.internal.dto.RefreshToken refreshToken) {
         return null;
     }
 

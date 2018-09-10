@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 import android.view.MotionEvent;
@@ -137,7 +136,7 @@ public final class AuthorizationActivity extends Activity {
             return;
         }
 
-        if (getIntent().getDataString() != null) {
+        if (getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT) != null) {
             Logger.info(TAG, null, "Received redirect from system webview.");
             final String url = getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
             final Intent resultIntent = new Intent();

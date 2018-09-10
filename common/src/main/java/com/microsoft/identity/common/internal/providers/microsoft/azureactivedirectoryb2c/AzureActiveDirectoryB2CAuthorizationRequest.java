@@ -22,12 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
-import android.support.annotation.NonNull;
-
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
-
-import java.net.URL;
 
 /**
  * Azure Active Directory B2C Authorization Request.
@@ -39,21 +34,10 @@ public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthor
         super(builder);
     }
 
-    public static final class Builder extends MicrosoftAuthorizationRequest.Builder {
+    public static final class Builder extends MicrosoftAuthorizationRequest.Builder<AzureActiveDirectoryB2CAuthorizationRequest.Builder> {
         private String mPrompt;
 
-        public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri,
-                       @NonNull final URL authority,
-                       @NonNull final String scope,
-                       @NonNull final String prompt,
-                       @NonNull final PkceChallenge pkceChallenge, //pkceChallenge is required for v2 request.
-                       @NonNull final String state) {
-            super(clientId, redirectUri, authority);
-            setScope(scope);
-            setPrompt(prompt);
-            setPkceChallenge(pkceChallenge);
-            setState(state);
+        public Builder() {
         }
 
         public Builder setPrompt(String prompt) {
@@ -64,6 +48,13 @@ public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthor
         public AzureActiveDirectoryB2CAuthorizationRequest build() {
             return new AzureActiveDirectoryB2CAuthorizationRequest(this);
         }
+
+        @Override
+        public AzureActiveDirectoryB2CAuthorizationRequest.Builder self() {
+            return this;
+        }
+
+
     }
 
     public String getPrompt() {

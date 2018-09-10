@@ -169,7 +169,7 @@ public class MicrosoftAuthServiceHandler {
     /**
      * get the capabilities of the broker app from MicrosoftAuthService
      *
-     * @param context       The application {@link Context}.
+     * @param context The application {@link Context}.
      * @return A bundle in the broker.
      */
     public Bundle getCapabilities(final Context context) throws ClientException {
@@ -359,7 +359,7 @@ public class MicrosoftAuthServiceHandler {
 
     private Intent getIntentForAuthService(final Context context) {
         String currentActiveBrokerPackageName = getCurrentActiveBrokerPackageName(context);
-        if(currentActiveBrokerPackageName == null || currentActiveBrokerPackageName.length() == 0) {
+        if (currentActiveBrokerPackageName == null || currentActiveBrokerPackageName.length() == 0) {
             return null;
         }
         final Intent authServiceToBind = new Intent(MICROSOFT_AUTH_SERVICE_INTENT_FILTER);
@@ -420,7 +420,7 @@ public class MicrosoftAuthServiceHandler {
                         try {
                             context.unbindService(MicrosoftAuthServiceConnection.this);
                         } catch (final IllegalArgumentException exception) {
-                            Logger.error(TAG, null,"Unbind threw IllegalArgumentException", exception);
+                            Logger.error(TAG, null, "Unbind threw IllegalArgumentException", exception);
                         } finally {
                             mBound = false;
                         }

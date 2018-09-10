@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.providers.microsoft;
 
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.NonNull;
 import android.util.Base64;
 
 import com.google.gson.annotations.SerializedName;
@@ -90,6 +89,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @SerializedName("x-client-DM")
     private String mDiagnosticDM;
 
+
     /**
      * Constructor of MicrosoftAuthorizationRequest.
      */
@@ -98,12 +98,17 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mAuthority = builder.mAuthority;
         mLoginHint = builder.mLoginHint;
         mCorrelationId = builder.mCorrelationId;
-        mPkceChallenge = builder.mPkceChallenge;
+
         mExtraQueryParam = builder.mExtraQueryParam;
+        mPkceChallenge = PkceChallenge.newPkceChallenge();
+        mState = generateEncodedState();
 
         //Initialize the diagnostic properties.
-        mLibraryVersion = builder.mLibraryVersion;
-        mLibraryName = builder.mLibraryName;
+
+        //TODO: Need to figure out how to flow this information down
+        //builder.setLibraryVersion(PublicClientApplication.getSdkVersion());
+        mLibraryVersion = "0.1.3";
+        mLibraryName = "MSAL.Android";
         mDiagnosticOS = String.valueOf(Build.VERSION.SDK_INT);
         mDiagnosticDM = android.os.Build.MODEL;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -116,28 +121,16 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         }
     }
 
-    public static abstract class Builder<T extends MicrosoftAuthorizationRequest> extends AuthorizationRequest.Builder<MicrosoftAuthorizationRequest> {
+
+    public abstract static class Builder<B extends MicrosoftAuthorizationRequest.Builder<B>> extends AuthorizationRequest.Builder<B> {
         /**
          * Required.
          */
         private URL mAuthority;
-
-        /**
-         * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
-         */
-        private String mLoginHint;
-        /**
-         * Correlation ID.
-         */
-        private UUID mCorrelationId;
         /**
          * Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
          */
         private PkceChallenge mPkceChallenge;
-        /**
-         * Extra query parameters.
-         */
-        private String mExtraQueryParam; //TODO not serializable
         /**
          * The version of the calling library.
          */
@@ -148,49 +141,31 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
          */
         private String mLibraryName;
 
-        public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri,
-                       @NonNull final URL authority) {
-            super(clientId, redirectUri);
-            setAuthority(authority);
+        public Builder() {
         }
 
-        public Builder setAuthority(URL authority) {
+        public B setAuthority(URL authority) {
             mAuthority = authority;
-            return this;
+            return self();
         }
 
-        public Builder setLoginHint(String loginHint) {
-            mLoginHint = loginHint;
-            return this;
-        }
-
-        public Builder setCorrelationId(UUID correlationId) {
-            mCorrelationId = correlationId;
-            return this;
-        }
-
-        public Builder setPkceChallenge(PkceChallenge pkceChallenge) {
+        public B setPkceChallenge(PkceChallenge pkceChallenge) {
             mPkceChallenge = pkceChallenge;
-            return this;
+            return self();
         }
 
-        public Builder setExtraQueryParam(String extraQueryParam) {
-            mExtraQueryParam = extraQueryParam;
-            return this;
-        }
-
-        public Builder setLibraryVersion(String libraryVersion) {
+        public B setLibraryVersion(String libraryVersion) {
             mLibraryVersion = libraryVersion;
-            return this;
+            return self();
         }
 
-        public Builder setLibraryName(String libraryName) {
+        public B setLibraryName(String libraryName) {
             mLibraryName = libraryName;
-            return this;
+            return self();
         }
 
-        public abstract T build();
+        public abstract B self();
+
     }
 
     public URL getAuthority() {
@@ -233,11 +208,21 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         return mDiagnosticDM;
     }
 
-    public static String generateEncodedState() throws UnsupportedEncodingException {
+    public static String generateEncodedState() {
         final UUID stateUUID1 = UUID.randomUUID();
         final UUID stateUUID2 = UUID.randomUUID();
         final String state = stateUUID1.toString() + "-" + stateUUID2.toString();
-        return Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE);
+
+        String encodedState;
+
+        try {
+            encodedState = Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP);
+        } catch (Exception e) {
+            throw new IllegalStateException("Error generating encoded state parameter for Authorization Request", e);
+        }
+
+        return encodedState;
+
     }
 
     public static String decodeState(final String encodedState) {
@@ -253,7 +238,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
         Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
-        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()){
+        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 

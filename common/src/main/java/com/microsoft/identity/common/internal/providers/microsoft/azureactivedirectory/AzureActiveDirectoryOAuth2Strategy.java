@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -43,14 +44,28 @@ import java.net.HttpURLConnection;
 
 /**
  * The Azure Active Directory OAuth 2.0 Strategy.
+ * <MicrosoftStsAccessToken,
+ * MicrosoftStsAccount,
+ * MicrosoftStsAuthorizationRequest,
+ * MicrosoftStsAuthorizationRequest.Builder,
+ * AuthorizationStrategy,
+ * MicrosoftStsOAuth2Configuration,
+ * MicrosoftStsAuthorizationResponse,
+ * MicrosoftStsRefreshToken,
+ * MicrosoftStsTokenRequest,
+ * MicrosoftStsTokenResponse,
+ * TokenResult,
+ * AuthorizationResult>
  */
 public class AzureActiveDirectoryOAuth2Strategy
         extends OAuth2Strategy<
         AzureActiveDirectoryAccessToken,
         AzureActiveDirectoryAccount,
         AzureActiveDirectoryAuthorizationRequest,
+        AzureActiveDirectoryAuthorizationRequest.Builder,
         AuthorizationStrategy,
         AzureActiveDirectoryOAuth2Configuration,
+        AzureActiveDirectoryAuthorizationResponse,
         AzureActiveDirectoryRefreshToken,
         AzureActiveDirectoryTokenRequest,
         AzureActiveDirectoryTokenResponse,
@@ -159,6 +174,21 @@ public class AzureActiveDirectoryOAuth2Strategy
         Logger.infoPII(TAG, account.toString());
 
         return account;
+    }
+
+    @Override
+    public AzureActiveDirectoryAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
+        return new AzureActiveDirectoryAuthorizationRequest.Builder();
+    }
+
+    @Override
+    public AzureActiveDirectoryTokenRequest createTokenRequest(AzureActiveDirectoryAuthorizationRequest request, AzureActiveDirectoryAuthorizationResponse response) {
+        return null;
+    }
+
+    @Override
+    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(RefreshToken refreshToken) {
+        return null;
     }
 
     @Override

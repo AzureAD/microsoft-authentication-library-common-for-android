@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
@@ -148,7 +149,9 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public ICacheRecord load(final String clientId, final Account account) {
+    public ICacheRecord load(@NonNull final String clientId,
+                             @Nullable final String target,
+                             @NonNull final Account account) {
         // Load the AccessTokens
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
@@ -156,7 +159,7 @@ public class MsalOAuth2TokenCache
                 CredentialType.AccessToken,
                 clientId,
                 account.getRealm(),
-                null // wildcard (*)
+                target
         );
 
         // Load the RefreshTokens
@@ -166,7 +169,7 @@ public class MsalOAuth2TokenCache
                 CredentialType.RefreshToken,
                 clientId,
                 account.getRealm(),
-                null // wildcard (*)
+                target
         );
 
         // Load the IdTokens

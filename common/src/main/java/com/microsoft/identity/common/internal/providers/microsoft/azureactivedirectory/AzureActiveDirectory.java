@@ -32,7 +32,6 @@ import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 
 import org.json.JSONException;
 
@@ -126,7 +125,7 @@ public class AzureActiveDirectory
         }
     }
 
-    public static void performCloudDiscovery(){
+    public static void performCloudDiscovery() {
 
         Uri instanceDiscoveryRequestUri = Uri.parse(AAD_INSTANCE_DISCOVERY_ENDPOINT);
 
@@ -137,13 +136,13 @@ public class AzureActiveDirectory
                 .build();
 
         try {
-            HttpResponse response = HttpRequest.sendGet(new URL(instanceDiscoveryRequestUri.toString()),new HashMap<String, String>());
+            HttpResponse response = HttpRequest.sendGet(new URL(instanceDiscoveryRequestUri.toString()), new HashMap<String, String>());
 
-            if(response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST){
+            if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
                 Log.d("Discovery", "Error getting cloud information");
-            }else{
+            } else {
 
-                AzureActiveDirectoryInstanceResponse instanceResponse =  ObjectMapper.deserializeJsonStringToObject(response.getBody(), AzureActiveDirectoryInstanceResponse.class);
+                AzureActiveDirectoryInstanceResponse instanceResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), AzureActiveDirectoryInstanceResponse.class);
 
                 for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
                     cloud.setIsValidated(true); // Mark the deserialized Clouds as validated

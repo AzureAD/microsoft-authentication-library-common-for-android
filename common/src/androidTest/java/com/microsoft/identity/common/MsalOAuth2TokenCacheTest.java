@@ -515,6 +515,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
+                TARGET,
                 defaultTestBundle.mGeneratedAccount
         );
 
@@ -534,6 +535,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
+                TARGET,
                 defaultTestBundle.mGeneratedAccount
         );
 
@@ -556,6 +558,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
+                TARGET,
                 defaultTestBundle.mGeneratedAccount
         );
 
@@ -578,6 +581,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
+                TARGET,
                 defaultTestBundle.mGeneratedAccount
         );
 

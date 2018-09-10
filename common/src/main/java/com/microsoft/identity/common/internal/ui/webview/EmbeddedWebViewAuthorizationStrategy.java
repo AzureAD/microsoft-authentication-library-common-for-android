@@ -26,9 +26,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -44,8 +43,8 @@ import java.util.concurrent.Future;
 /**
  * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
  */
-public class EmbeddedWebViewAuthorizationStrategy <GenericOAuth2Strategy extends OAuth2Strategy,
-        GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy <GenericOAuth2Strategy, GenericAuthorizationRequest> {
+public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
+        GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
 
     private static final String TAG = EmbeddedWebViewAuthorizationStrategy.class.getSimpleName();
     private AuthorizationConfiguration mConfiguration;
@@ -61,7 +60,7 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericOAuth2Strategy extends
      */
     public EmbeddedWebViewAuthorizationStrategy(Activity activity, @NonNull final AuthorizationConfiguration configuration) {
         mConfiguration = configuration;
-        mReferencedActivity =  new WeakReference<>(activity);
+        mReferencedActivity = new WeakReference<>(activity);
     }
 
     /**
@@ -70,7 +69,7 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericOAuth2Strategy extends
      */
     @Override
     public Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
-                                                            GenericOAuth2Strategy oAuth2Strategy) throws UnsupportedEncodingException{
+                                                            GenericOAuth2Strategy oAuth2Strategy) throws UnsupportedEncodingException {
         mAuthorizationResultFuture = new AuthorizationResultFuture();
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
@@ -88,8 +87,7 @@ public class EmbeddedWebViewAuthorizationStrategy <GenericOAuth2Strategy extends
     @Override
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == BROWSER_FLOW) {
-            //TODO apply mOAuth2Strategy and mAuthorizationRequest.getState()
-            final AuthorizationResult result = new MicrosoftStsAuthorizationResultFactory().createAuthorizationResult(resultCode, data);
+            final AuthorizationResult result = mOAuth2Strategy.getAuthorizationResultFactory().createAuthorizationResult(resultCode, data, mAuthorizationRequest);
             mAuthorizationResultFuture.setAuthorizationResult(result);
         } else {
             Logger.warnPII(TAG, "Unknown request code " + requestCode);

@@ -231,7 +231,7 @@ public final class ErrorStrings {
     public static final String WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED = "The webView was redirected to an unsafe URL";
 
     /**
-     *  Package name is not resolved.
+     * Package name is not resolved.
      */
     public static final String PACKAGE_NAME_NOT_FOUND = "Package name is not resolved";
 
