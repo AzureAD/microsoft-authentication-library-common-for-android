@@ -83,16 +83,12 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     }
 
     public static class Builder extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest.Builder> {
-        private String mPrompt;
+
         private String mUid;
         private String mUtid;
         private String mDisplayableId;
         private String mSliceParameters;
 
-        public MicrosoftStsAuthorizationRequest.Builder setPrompt(String prompt) {
-            mPrompt = prompt;
-            return self();
-        }
 
         public MicrosoftStsAuthorizationRequest.Builder setUid(String uid) {
             mUid = uid;

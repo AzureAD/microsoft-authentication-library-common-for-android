@@ -127,23 +127,10 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
          * Required.
          */
         private URL mAuthority;
-
-        /**
-         * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
-         */
-        private String mLoginHint;
-        /**
-         * Correlation ID.
-         */
-        private UUID mCorrelationId;
         /**
          * Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
          */
         private PkceChallenge mPkceChallenge;
-        /**
-         * Extra query parameters.
-         */
-        private String mExtraQueryParam; //TODO not serializable
         /**
          * The version of the calling library.
          */
@@ -162,23 +149,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
             return self();
         }
 
-        public B setLoginHint(String loginHint) {
-            mLoginHint = loginHint;
-            return self();
-        }
-
-        public B setCorrelationId(UUID correlationId) {
-            mCorrelationId = correlationId;
-            return self();
-        }
-
         public B setPkceChallenge(PkceChallenge pkceChallenge) {
             mPkceChallenge = pkceChallenge;
-            return self();
-        }
-
-        public B setExtraQueryParam(String extraQueryParam) {
-            mExtraQueryParam = extraQueryParam;
             return self();
         }
 
