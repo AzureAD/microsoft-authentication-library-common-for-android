@@ -815,6 +815,11 @@ public final class AuthenticationConstants {
         public static final String CHALLENGE_RESPONSE_CONTEXT = "Context";
 
         /**
+         * String of authorization code grants via Proof Key for Code Exchange (PKCE).
+         */
+        public static final String PKCE_CHALLENGE = "PkceChallenge";
+
+        /**
          * Certificate authorities are passed with delimiter.
          */
         public static final String CHALLENGE_REQUEST_CERT_AUTH_DELIMETER = ";";
@@ -912,6 +917,31 @@ public final class AuthenticationConstants {
          * Integer for token expiration buffer. see {@link AuthenticationSettings#mExpirationBuffer}
          */
         public static final String EXPIRATION_BUFFER = "expiration.buffer";
+
+        /**
+         * String for authorization scope.
+         */
+        public static final String AUTH_SCOPE = "scope";
+
+        /**
+         * String for authorization state.
+         */
+        public static final String AUTH_STATE = "state";
+
+        /**
+         * String for authorization response type.
+         */
+        public static final String AUTH_RESPONSE_TYPE = "response_type";
+
+        /**
+         * String for library name.
+         */
+        public static final String LIB_NAME = "library_name";
+
+        /**
+         * String for library version.
+         */
+        public static final String LIB_VERSION = "library_version";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.
