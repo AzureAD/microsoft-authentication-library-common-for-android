@@ -184,6 +184,14 @@ public abstract class OAuth2Strategy
     public abstract GenericTokenRequest createTokenRequest(GenericAuthorizationRequest request, GenericAuthorizationResponse response);
 
     /**
+     * Abstract method for creating the refresh token request.
+     *
+     * @param refreshToken The refresh token to use.
+     * @return TokenRequest.
+     */
+    public abstract GenericTokenRequest createRefreshTokenRequest(final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken);
+
+    /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method
      * from which the details of the authorization request including authority validation would occur (preferred network and preferred cache)
      *
