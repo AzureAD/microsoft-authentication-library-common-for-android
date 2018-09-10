@@ -148,7 +148,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public ICacheRecord load(final String clientId, final Account account) {
+    public ICacheRecord load(final String clientId, final String target, final Account account) {
         // Load the AccessTokens
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
@@ -156,7 +156,7 @@ public class MsalOAuth2TokenCache
                 CredentialType.AccessToken,
                 clientId,
                 account.getRealm(),
-                null // wildcard (*)
+                target
         );
 
         // Load the RefreshTokens
@@ -166,7 +166,7 @@ public class MsalOAuth2TokenCache
                 CredentialType.RefreshToken,
                 clientId,
                 account.getRealm(),
-                null // wildcard (*)
+                target
         );
 
         // Load the IdTokens
