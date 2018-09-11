@@ -244,6 +244,9 @@ public abstract class OAuth2Strategy
      */
     protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response);
 
+
+    public abstract boolean supportsOIDC();
+
     // TODO
 //    protected abstract void validateAuthorizationResponse(GenericAuthorizationResponse response);
 

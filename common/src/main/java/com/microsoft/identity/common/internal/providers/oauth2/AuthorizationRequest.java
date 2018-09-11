@@ -24,13 +24,17 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.net.Uri;
 import android.util.Pair;
+import android.util.Base64;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.UUID;
 
@@ -234,6 +238,33 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
     public String getScope() {
         return mScope;
+    }
+
+    public static String generateEncodedState() {
+        final UUID stateUUID1 = UUID.randomUUID();
+        final UUID stateUUID2 = UUID.randomUUID();
+        final String state = stateUUID1.toString() + "-" + stateUUID2.toString();
+
+        String encodedState;
+
+        try {
+            encodedState = Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP);
+        } catch (Exception e) {
+            throw new IllegalStateException("Error generating encoded state parameter for Authorization Request", e);
+        }
+
+        return encodedState;
+
+    }
+
+    public static String decodeState(final String encodedState) {
+        if (StringUtil.isEmpty(encodedState)) {
+            Logger.warn("", "Decode state failed because the input state is empty.");
+            return null;
+        }
+
+        final byte[] stateBytes = Base64.decode(encodedState, Base64.NO_PADDING | Base64.URL_SAFE);
+        return new String(stateBytes, Charset.defaultCharset());
     }
 
     public abstract String getAuthorizationEndpoint();
