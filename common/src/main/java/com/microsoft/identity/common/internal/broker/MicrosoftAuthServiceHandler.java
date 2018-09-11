@@ -60,6 +60,10 @@ public class MicrosoftAuthServiceHandler {
 
     private static final MicrosoftAuthServiceHandler sInstance = new MicrosoftAuthServiceHandler();
 
+    private MicrosoftAuthServiceHandler() {
+        // private constructor to make singleton
+    }
+
     public static MicrosoftAuthServiceHandler getInstance() {
         return sInstance;
     }
