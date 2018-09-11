@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
@@ -43,6 +44,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 
 public class MicrosoftStsOAuth2Strategy
@@ -66,7 +68,7 @@ public class MicrosoftStsOAuth2Strategy
      */
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config) {
         super(config);
-        setTokenEndpoint("https://login.microsoftonline.com/common/oAuth2/v2.0/token");
+        setTokenEndpoint(config.getTokenEndpoint().toString());
     }
 
     @Override
@@ -118,7 +120,7 @@ public class MicrosoftStsOAuth2Strategy
     @Override
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
         MicrosoftStsAuthorizationRequest.Builder builder = new MicrosoftStsAuthorizationRequest.Builder();
-        builder.setAuthority(getOAuth2Configuration().getAuthorityUrl());
+        builder.setAuthority(mConfig.getAuthorizationEndpoint());
         return builder;
     }
 
