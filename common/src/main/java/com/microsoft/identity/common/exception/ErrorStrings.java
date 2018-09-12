@@ -268,5 +268,5 @@ public final class ErrorStrings {
     /**
      * Empty Context.
      */
-    public static final String EMPTY_ANDROID_CONTEXT = "Empty Android context.";
+    public static final String ANDROID_CONTEXT_IS_NULL = "Android Context is null.";
 }

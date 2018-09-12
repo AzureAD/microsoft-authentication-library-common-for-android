@@ -944,6 +944,11 @@ public final class AuthenticationConstants {
         public static final String LIB_VERSION = "library_version";
 
         /**
+         * String for the package name of the client app.
+         */
+        public static final String CLIENT_APP_PACKAGE_NAME = "client_app_package_name";
+
+        /**
          * Bundle identifiers for x-ms-clitelem info.
          */
         public static final class CliTelemInfo {

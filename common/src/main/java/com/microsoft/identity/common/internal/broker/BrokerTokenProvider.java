@@ -25,20 +25,21 @@ public class BrokerTokenProvider {
         final String methodName = ":acquireTokenInteractively";
 
         if (activity == null) {
-            throw new ClientException(ErrorStrings.EMPTY_ANDROID_CONTEXT);
+            throw new ClientException(ErrorStrings.ANDROID_CONTEXT_IS_NULL);
         }
 
-        final Bundle requestBundle = getBrokerOptions(request);
+        final Bundle requestBundle = getBrokerOptions(request, activity);
         final Intent brokerIntent = MicrosoftAuthServiceHandler.getInstance().getIntentForInteractiveRequest(activity);
+
+        //TODO the following code needs an update if "getIntentForInteractiveRequest" returns an error bundle instead of null someday.
         if (brokerIntent == null) {
             ClientException exception = new ClientException(ErrorStrings.BROKER_APP_NOT_RESPONDING, "Received null intent from broker interactive request.");
             Logger.error(TAG, "Received null intent from broker interactive request.", exception);
             throw exception;
-        } else {
-            brokerIntent.putExtras(requestBundle);
-            brokerIntent.putExtra(AuthenticationConstants.Broker.BROKER_REQUEST,
-                    AuthenticationConstants.Broker.BROKER_REQUEST);
         }
+
+        brokerIntent.putExtras(requestBundle);
+        brokerIntent.putExtra(AuthenticationConstants.Broker.BROKER_REQUEST, AuthenticationConstants.Broker.BROKER_REQUEST);
 
         Logger.verbose(TAG + methodName, "Calling activity. " + "Pid:" + android.os.Process.myPid()
                 + " tid:" + android.os.Process.myTid() + "uid:" + android.os.Process.myUid());
@@ -46,11 +47,10 @@ public class BrokerTokenProvider {
     }
 
 
-    private Bundle getBrokerOptions(final MicrosoftAuthorizationRequest request) {
+    private Bundle getBrokerOptions(final MicrosoftAuthorizationRequest request, final Activity activity) {
         Bundle brokerOptions = new Bundle();
         // request needs to be parcelable to send across process
         brokerOptions.putString(AuthenticationConstants.Broker.ACCOUNT_AUTHORITY, request.getAuthority().toString());
-        brokerOptions.putString(AuthenticationConstants.Broker.ACCOUNT_RESOURCE, request.getAuthorizationEndpoint());
         brokerOptions.putString(AuthenticationConstants.Broker.ACCOUNT_REDIRECT, request.getRedirectUri());
         brokerOptions.putString(AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY, request.getClientId());
         brokerOptions.putString(AuthenticationConstants.Broker.ACCOUNT_USERINFO_USERID, request.getLoginHint());
@@ -62,6 +62,8 @@ public class BrokerTokenProvider {
         brokerOptions.putString(AuthenticationConstants.Broker.AUTH_SCOPE, request.getScope());
         brokerOptions.putString(AuthenticationConstants.Broker.LIB_NAME, request.getLibraryName());
         brokerOptions.putString(AuthenticationConstants.Broker.LIB_VERSION, request.getLibraryVersion());
+        brokerOptions.putString(AuthenticationConstants.Broker.CLIENT_APP_PACKAGE_NAME, activity.getPackageName());
+
 
         if (request.getCorrelationId() != null) {
             brokerOptions.putString(AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID,
