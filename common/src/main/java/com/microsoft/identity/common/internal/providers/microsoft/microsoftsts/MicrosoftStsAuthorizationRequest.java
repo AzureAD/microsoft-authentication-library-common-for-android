@@ -160,7 +160,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
     @Override
     public String getAuthorizationEndpoint() {
-        //TODO: Need to take authority aliasing via instance discovery into account here
-        return "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+        return getAuthority().toString();
     }
 }
