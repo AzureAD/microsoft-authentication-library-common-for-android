@@ -27,14 +27,14 @@ import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
-class CacheRecord implements ICacheRecord {
+public class CacheRecord implements ICacheRecord {
 
     private Account mAccount;
     private AccessToken mAccessToken;
     private RefreshToken mRefreshToken;
     private IdToken mIdToken;
 
-    void setAccount(final Account account) {
+    public void setAccount(final Account account) {
         mAccount = account;
     }
 
@@ -43,7 +43,7 @@ class CacheRecord implements ICacheRecord {
         return mAccount;
     }
 
-    void setAccessToken(final AccessToken accesToken) {
+    public void setAccessToken(final AccessToken accesToken) {
         mAccessToken = accesToken;
     }
 
@@ -52,7 +52,7 @@ class CacheRecord implements ICacheRecord {
         return mAccessToken;
     }
 
-    void setRefreshToken(final RefreshToken refreshToken) {
+    public void setRefreshToken(final RefreshToken refreshToken) {
         mRefreshToken = refreshToken;
     }
 
@@ -61,7 +61,7 @@ class CacheRecord implements ICacheRecord {
         return mRefreshToken;
     }
 
-    void setIdToken(final IdToken idToken) {
+    public void setIdToken(final IdToken idToken) {
         mIdToken = idToken;
     }
 
