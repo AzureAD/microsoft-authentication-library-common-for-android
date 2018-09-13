@@ -27,6 +27,7 @@ import com.microsoft.identity.common.internal.net.HttpUrlConnectionFactory;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -36,6 +37,7 @@ import java.net.HttpURLConnection;
 /**
  * Tests for {@link HttpUrlConnectionFactory}.
  */
+@Ignore
 public final class HttpUrlConnectionFactoryTest {
 
     @After
