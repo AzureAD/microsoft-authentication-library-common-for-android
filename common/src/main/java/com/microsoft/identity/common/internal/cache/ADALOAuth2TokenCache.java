@@ -124,9 +124,11 @@ public class ADALOAuth2TokenCache
         final String methodName = "save";
         Logger.info(TAG + ":" + methodName, "Saving Tokens...");
 
-        final AzureActiveDirectoryAccount account = strategy.createAccount(response);
         final String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
+        final AzureActiveDirectoryAccount account = strategy.createAccount(response);
+        account.setEnvironment(issuerCacheIdentifier);
         final AzureActiveDirectoryRefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
+        refreshToken.setEnvironment(issuerCacheIdentifier);
 
         Logger.info(TAG, "Constructing new ADALTokenCacheItem");
         final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem(strategy, request, response);
