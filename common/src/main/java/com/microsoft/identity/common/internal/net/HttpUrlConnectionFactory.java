@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
+import android.support.annotation.VisibleForTesting;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -47,14 +49,16 @@ public final class HttpUrlConnectionFactory {
      *
      * @param mockedConnection The mocked {@link HttpURLConnection} to put in the queue.
      */
-    static void addMockedConnection(final HttpURLConnection mockedConnection) {
+    @VisibleForTesting
+    public static void addMockedConnection(final HttpURLConnection mockedConnection) {
         sMockedConnectionQueue.add(mockedConnection);
     }
 
     /**
      * Used by tests to clear the mocked connection queue.
      */
-    static void clearMockedConnectionQueue() {
+    @VisibleForTesting
+    public static void clearMockedConnectionQueue() {
         sMockedConnectionQueue.clear();
     }
 
@@ -63,7 +67,8 @@ public final class HttpUrlConnectionFactory {
      *
      * @return The number of mocked connections in the queue.
      */
-    static int getMockedConnectionCountInQueue() {
+    @VisibleForTesting
+    public static int getMockedConnectionCountInQueue() {
         return sMockedConnectionQueue.size();
     }
 
@@ -74,7 +79,7 @@ public final class HttpUrlConnectionFactory {
      * @return {@link HttpURLConnection} with the provided URL.
      * @throws IOException if it fails to open connection with the provided URL.
      */
-    static HttpURLConnection createHttpURLConnection(final URL url) throws IOException {
+    public static HttpURLConnection createHttpURLConnection(final URL url) throws IOException {
         if (!sMockedConnectionQueue.isEmpty()) {
             return sMockedConnectionQueue.poll();
         }
