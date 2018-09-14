@@ -25,11 +25,14 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 
 import java.net.URL;
+import java.util.HashMap;
 
 public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration {
 
     private boolean mAuthorityHostValidationEnabled = true;
     private URL mAuthorityUrl;
+    private HashMap<String, String> mFlightParameters = new HashMap<>();
+    private AzureActiveDirectorySlice mSlice;
 
     /**
      * @return True if authority host validation enabled, false otherwise.
@@ -51,6 +54,22 @@ public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration
 
     public void setAuthorityUrl(URL authorityUrl) {
         this.mAuthorityUrl = authorityUrl;
+    }
+
+    public HashMap<String, String> getFlightParameters() {
+        return mFlightParameters;
+    }
+
+    public void setFlightParameters(HashMap<String, String> flightParameters){
+        mFlightParameters = flightParameters;
+    }
+
+    public AzureActiveDirectorySlice getSlice(){
+        return mSlice;
+    }
+
+    public void setSlice(AzureActiveDirectorySlice slice){
+        mSlice = slice;
     }
 
 

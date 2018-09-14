@@ -29,6 +29,7 @@ import android.util.Base64;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -36,6 +37,7 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -89,6 +91,9 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @SerializedName("x-client-DM")
     private String mDiagnosticDM;
 
+    private transient AzureActiveDirectorySlice mSlice;
+
+    private transient HashMap<String, String> mFlightParameters;
 
     /**
      * Constructor of MicrosoftAuthorizationRequest.
@@ -102,6 +107,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mExtraQueryParam = builder.mExtraQueryParam;
         mPkceChallenge = PkceChallenge.newPkceChallenge();
         mState = generateEncodedState();
+
+        if(builder.mSlice != null){
+            mSlice = builder.mSlice;
+        }
+        mFlightParameters = builder.mFlightParameters;
 
         //Initialize the diagnostic properties.
 
@@ -141,6 +151,10 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
          */
         private String mLibraryName;
 
+        private AzureActiveDirectorySlice mSlice;
+
+        private HashMap<String, String> mFlightParameters = new HashMap<>();
+
         public Builder() {
         }
 
@@ -161,6 +175,16 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         public B setLibraryName(String libraryName) {
             mLibraryName = libraryName;
+            return self();
+        }
+
+        public B setSlice(AzureActiveDirectorySlice slice){
+            mSlice = slice;
+            return self();
+        }
+
+        public B setFlightParameters(HashMap<String, String> flightParameters){
+            mFlightParameters = flightParameters;
             return self();
         }
 
@@ -244,6 +268,15 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         for (Map.Entry<String, String> entry : ObjectMapper.deserializeQueryStringToMap(getExtraQueryParam()).entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
+
+        for (Map.Entry<String, String> entry : mFlightParameters.entrySet()) {
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
+
+        if(mSlice != null){
+            uriBuilder.appendQueryParameter("slice", mSlice.getSlice());
+            uriBuilder.appendQueryParameter("dc", mSlice.getDC());
         }
 
         return uriBuilder.build();
