@@ -91,9 +91,9 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @SerializedName("x-client-DM")
     private String mDiagnosticDM;
 
-    private transient AzureActiveDirectorySlice mSlice;
+    protected transient AzureActiveDirectorySlice mSlice;
 
-    private transient HashMap<String, String> mFlightParameters;
+    protected transient HashMap<String, String> mFlightParameters;
 
     /**
      * Constructor of MicrosoftAuthorizationRequest.
@@ -268,15 +268,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         for (Map.Entry<String, String> entry : ObjectMapper.deserializeQueryStringToMap(getExtraQueryParam()).entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
-        }
-
-        for (Map.Entry<String, String> entry : mFlightParameters.entrySet()) {
-            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
-        }
-
-        if(mSlice != null){
-            uriBuilder.appendQueryParameter("slice", mSlice.getSlice());
-            uriBuilder.appendQueryParameter("dc", mSlice.getDC());
         }
 
         return uriBuilder.build();

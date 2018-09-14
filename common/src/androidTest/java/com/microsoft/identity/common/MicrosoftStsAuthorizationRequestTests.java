@@ -116,13 +116,11 @@ public class MicrosoftStsAuthorizationRequestTests {
         final MicrosoftStsAuthorizationRequest request = getBaseBuilder()
                 .setPrompt(DEFAULT_TEST_PROMPT)
                 .setExtraQueryParam(DEFAULT_TEST_EXTRA_QP)
-                .setSliceParameters(DEFAULT_TEST_SLICE_PARAMETER)
                 .build();
 
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
         assertTrue("Extra parameters 1", actualCodeRequestUrl.contains("&extra=1"));
         assertTrue("Extra parameters 2", actualCodeRequestUrl.contains("&haschrome=1"));
-        assertTrue("Slice parameters 2", actualCodeRequestUrl.contains("&slice=myslice"));
         assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt=consent"));
     }
 
