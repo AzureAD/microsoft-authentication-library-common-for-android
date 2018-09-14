@@ -197,7 +197,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public Account getAccount(@NonNull final String environment,
+    public Account getAccount(@Nullable final String environment,
                               @NonNull final String clientId,
                               @NonNull final String homeAccountId) {
         final List<Account> allAccounts = getAccounts(environment, clientId);
@@ -213,7 +213,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public List<Account> getAccounts(@NonNull final String environment,
+    public List<Account> getAccounts(@Nullable final String environment,
                                      @NonNull final String clientId) {
         final List<Account> accountsForThisApp = new ArrayList<>();
 
@@ -247,7 +247,7 @@ public class MsalOAuth2TokenCache
     }
 
     /**
-     * Evaluates the supplied list of app credentials. Returns true if he provided Account
+     * Evaluates the supplied list of Credentials. Returns true if he provided Account
      * 'owns' any one of these tokens.
      *
      * @param account        The Account whose credential ownership should be evaluated.
