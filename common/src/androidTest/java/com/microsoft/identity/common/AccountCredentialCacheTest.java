@@ -70,6 +70,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     static final String EXPIRES_ON = "0";
     static final String SECRET = "3642fe2f-2c46-4824-9f27-e44b0e3e1278";
 
+    private static final String ENVIRONMENT_LEGACY = "login.windows.net";
     private static final String REALM2 = "20d3e9fa-982a-40bc-bea4-26bbe3fd332e";
     private static final String REALM3 = "fc5171ec-2889-4ba6-bd1f-216fe87a8613";
 
@@ -403,12 +404,35 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getAccountsNullEnvironment() {
-        try {
-            mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, null, REALM);
-            fail();
-        } catch (IllegalArgumentException e) {
-            assertNotNull(e);
-        }
+        final com.microsoft.identity.common.internal.dto.Account account1
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account1.setHomeAccountId(HOME_ACCOUNT_ID);
+        account1.setEnvironment(ENVIRONMENT);
+        account1.setRealm(REALM);
+        account1.setLocalAccountId(LOCAL_ACCOUNT_ID);
+        account1.setUsername(USERNAME);
+        account1.setAuthorityType(AUTHORITY_TYPE);
+
+        final com.microsoft.identity.common.internal.dto.Account account2
+                = new com.microsoft.identity.common.internal.dto.Account();
+        account2.setHomeAccountId(HOME_ACCOUNT_ID);
+        account2.setEnvironment(ENVIRONMENT_LEGACY);
+        account2.setRealm(REALM);
+        account2.setLocalAccountId(LOCAL_ACCOUNT_ID);
+        account2.setUsername(USERNAME);
+        account2.setAuthorityType(AUTHORITY_TYPE);
+
+        // Save the Accounts
+        mAccountCredentialCache.saveAccount(account1);
+        mAccountCredentialCache.saveAccount(account2);
+
+        // Test retrieval
+        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(
+                HOME_ACCOUNT_ID,
+                null,
+                REALM
+        );
+        assertEquals(2, accounts.size());
     }
 
     @Test
@@ -642,19 +666,34 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getCredentialsNoEnvironment() {
-        try {
-            mAccountCredentialCache.getCredentialsFilteredBy(
-                    HOME_ACCOUNT_ID,
-                    null,
-                    CredentialType.RefreshToken,
-                    CLIENT_ID,
-                    REALM,
-                    TARGET
-            );
-            fail();
-        } catch (IllegalArgumentException e) {
-            assertNotNull(e);
-        }
+        final RefreshToken refreshToken1 = new RefreshToken();
+        refreshToken1.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken1.setEnvironment(ENVIRONMENT);
+        refreshToken1.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken1.setClientId(CLIENT_ID);
+        refreshToken1.setSecret(SECRET);
+        refreshToken1.setTarget(TARGET);
+
+        final RefreshToken refreshToken2 = new RefreshToken();
+        refreshToken2.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken2.setEnvironment(ENVIRONMENT_LEGACY);
+        refreshToken2.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken2.setClientId(CLIENT_ID);
+        refreshToken2.setSecret(SECRET);
+        refreshToken2.setTarget(TARGET);
+
+        mAccountCredentialCache.saveCredential(refreshToken1);
+        mAccountCredentialCache.saveCredential(refreshToken2);
+
+        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+                HOME_ACCOUNT_ID,
+                null, // * wildcard
+                CredentialType.RefreshToken,
+                CLIENT_ID,
+                REALM,
+                TARGET
+        );
+        assertEquals(2, credentials.size());
     }
 
     @Test

@@ -60,6 +60,7 @@ public abstract class MicrosoftAccount extends Account {
     private String mGivenName;
     private String mFamilyName;
     private String mMiddleName;
+    private String mEnvironment;
 
     /**
      * Constructor of MicrosoftAccount.
@@ -297,9 +298,13 @@ public abstract class MicrosoftAccount extends Account {
         return getUid() + "." + getUtid();
     }
 
+    public void setEnvironment(final String environment) {
+        mEnvironment = environment;
+    }
+
     @Override
     public String getEnvironment() {
-        return SchemaUtil.getEnvironment(mIDToken);
+        return mEnvironment;
     }
 
     @Override

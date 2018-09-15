@@ -32,7 +32,6 @@ import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
@@ -60,6 +59,11 @@ public class MicrosoftStsAccountCredentialAdapter
             final MicrosoftStsTokenResponse response) {
         Logger.verbose(TAG, "Creating Account");
         final Account account = new Account(strategy.createAccount(response));
+        // TODO -- Setting the environment here is a bit of a workaround...
+        // The Account created by the strategy sets the environment to get the 'iss' from the IdToken
+        // For caching purposes, this may not be the correct value due to the preferred cache identifier
+        // in the InstanceDiscoveryMetadata
+        account.setEnvironment(strategy.getIssuerCacheIdentifier(request));
 
         return account;
     }
@@ -72,7 +76,6 @@ public class MicrosoftStsAccountCredentialAdapter
         try {
             final long cachedAt = getCachedAt();
             final long expiresOn = getExpiresOn(response);
-            final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
             final AccessToken accessToken = new AccessToken();
@@ -80,7 +83,7 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setCredentialType(CredentialType.AccessToken.name());
             accessToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             accessToken.setRealm(getRealm(strategy, response));
-            accessToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
+            accessToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
             accessToken.setClientId(request.getClientId());
             accessToken.setTarget(request.getScope());
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
@@ -107,13 +110,12 @@ public class MicrosoftStsAccountCredentialAdapter
             final MicrosoftStsTokenResponse response) {
         try {
             final long cachedAt = getCachedAt();
-            final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
             final RefreshToken refreshToken = new RefreshToken();
             // Required
             refreshToken.setCredentialType(CredentialType.RefreshToken.name());
-            refreshToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
+            refreshToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
             refreshToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             refreshToken.setClientId(request.getClientId());
             refreshToken.setSecret(response.getRefreshToken());
@@ -140,12 +142,11 @@ public class MicrosoftStsAccountCredentialAdapter
             final MicrosoftStsTokenResponse response) {
         try {
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
-            final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
 
             final IdToken idToken = new IdToken();
             // Required fields
             idToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            idToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
+            idToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
             idToken.setRealm(getRealm(strategy, response));
             idToken.setCredentialType(CredentialType.IdToken.name());
             idToken.setClientId(request.getClientId());
