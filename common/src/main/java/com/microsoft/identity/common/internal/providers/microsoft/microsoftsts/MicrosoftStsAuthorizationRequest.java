@@ -27,6 +27,7 @@ import android.net.Uri;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
@@ -48,7 +49,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     //@SerializedName("login_hint")
     private transient String mDisplayableId;
 
-    private transient String mSliceParameters;
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
     // TODO private boolean mIsExtendedLifetimeEnabled = false;
@@ -79,7 +79,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mUid = builder.mUid;
         mUtid = builder.mUtid;
         mDisplayableId = builder.mDisplayableId;
-        mSliceParameters = builder.mSliceParameters;
     }
 
     public static class Builder extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest.Builder> {
@@ -87,8 +86,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         private String mUid;
         private String mUtid;
         private String mDisplayableId;
-        private String mSliceParameters;
-
 
         public MicrosoftStsAuthorizationRequest.Builder setUid(String uid) {
             mUid = uid;
@@ -102,11 +99,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
         public MicrosoftStsAuthorizationRequest.Builder setDisplayableId(String displayableId) {
             mDisplayableId = displayableId;
-            return self();
-        }
-
-        public MicrosoftStsAuthorizationRequest.Builder setSliceParameters(String sliceParameters) {
-            mSliceParameters = sliceParameters;
             return self();
         }
 
@@ -136,10 +128,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         return mPrompt;
     }
 
-    public String getSliceParameters() {
-        return mSliceParameters;
-    }
-
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
         Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
@@ -151,8 +139,13 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 
-        for (Map.Entry<String, String> entry : ObjectMapper.deserializeQueryStringToMap(mSliceParameters).entrySet()) {
+        for (Map.Entry<String, String> entry : mFlightParameters.entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
+
+        if(mSlice != null){
+            uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
+            uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDC());
         }
 
         return uriBuilder.build();
