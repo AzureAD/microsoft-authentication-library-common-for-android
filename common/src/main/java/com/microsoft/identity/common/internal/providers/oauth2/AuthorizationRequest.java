@@ -23,14 +23,14 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
+
+import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.net.ObjectMapper;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
-
-import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.net.ObjectMapper;
+import java.util.UUID;
 
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
@@ -76,7 +76,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      * occurred, such as the page or view they were on.
      */
     @SerializedName("state")
-    private String mState;
+    protected String mState;
 
     /**
      * Scopes scopes that you want the user to consent to is required for V2 auth request.
@@ -99,45 +99,77 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         public static final String CODE = "code";
     }
 
-    public static abstract class Builder<T> {
+    public static abstract class Builder<B extends AuthorizationRequest.Builder<B>> {
         private String mResponseType = ResponseType.CODE; //ResponseType.CODE as default.
         private String mClientId;
         private String mRedirectUri;
         private String mState;
         private String mScope;
 
-        public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri) {
-            setClientId(clientId);
-            setRedirectUri(redirectUri);
+        /**
+         * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
+         */
+        public String mLoginHint;
+        /**
+         * Correlation ID.
+         */
+        public UUID mCorrelationId;
+        /**
+         * Extra query parameters.
+         */
+        public String mExtraQueryParam; //TODO not serializable
+
+        public String mPrompt;
+
+        public B setPrompt(String prompt) {
+            mPrompt = prompt;
+            return self();
         }
 
-        public Builder setResponseType(String responseType) {
+        public B setResponseType(String responseType) {
             mResponseType = responseType;
-            return this;
+            return self();
         }
 
-        public Builder setClientId(String clientId) {
+        public B setClientId(String clientId) {
             mClientId = clientId;
-            return this;
+            return self();
         }
 
-        public Builder setRedirectUri(String redirectUri) {
+        public B setRedirectUri(String redirectUri) {
             mRedirectUri = redirectUri;
-            return this;
+            return self();
         }
 
-        public Builder setState(String state) {
+        public B setState(String state) {
             mState = state;
-            return this;
+            return self();
         }
 
-        public Builder setScope(String scope) {
+        public B setScope(String scope) {
             mScope = scope;
-            return this;
+            return self();
         }
 
-        public abstract T build();
+        public B setLoginHint(String loginHint) {
+            mLoginHint = loginHint;
+            return self();
+        }
+
+        public B setCorrelationId(UUID correlationId) {
+            mCorrelationId = correlationId;
+            return self();
+        }
+
+        public B setExtraQueryParam(String extraQueryParam) {
+            mExtraQueryParam = extraQueryParam;
+            return self();
+        }
+
+        public abstract B self();
+
+        public abstract AuthorizationRequest build();
+
     }
 //
 //    /**
@@ -197,7 +229,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
         Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
-        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()){
+        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 

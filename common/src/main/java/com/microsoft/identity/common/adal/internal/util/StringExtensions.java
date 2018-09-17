@@ -145,7 +145,7 @@ public final class StringExtensions {
      * Get URL parameters from final url.
      *
      * @param finalUrl String
-     * @return HashMap<String ,   String>
+     * @return HashMap
      */
     public static HashMap<String, String> getUrlParameters(String finalUrl) {
         Uri response = Uri.parse(finalUrl);

@@ -30,7 +30,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.util.DateUtilities;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.Date;
 
@@ -84,8 +83,9 @@ public class ADALTokenCacheItem {
     ADALTokenCacheItem(final AzureActiveDirectoryOAuth2Strategy strategy,
                        final AzureActiveDirectoryAuthorizationRequest request,
                        final AzureActiveDirectoryTokenResponse response) {
-        AzureActiveDirectoryAccount account = strategy.createAccount(response);
         String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
+        AzureActiveDirectoryAccount account = strategy.createAccount(response);
+        account.setEnvironment(issuerCacheIdentifier);
         AccessToken accessToken = strategy.getAccessTokenFromResponse(response);
         RefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
 

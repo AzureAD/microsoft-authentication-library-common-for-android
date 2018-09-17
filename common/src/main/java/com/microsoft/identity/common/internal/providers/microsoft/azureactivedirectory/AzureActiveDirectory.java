@@ -32,13 +32,13 @@ import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
@@ -66,17 +66,23 @@ public class AzureActiveDirectory
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
 
+    static boolean sIsInitialized = false;
+
     @Override
     public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(AzureActiveDirectoryOAuth2Configuration config) {
         return new AzureActiveDirectoryOAuth2Strategy(config);
     }
 
-    static boolean hasCloudHost(final URL authorityUrl) {
+    public static boolean hasCloudHost(final URL authorityUrl) {
         return sAadClouds.containsKey(authorityUrl.getHost().toLowerCase(Locale.US));
     }
 
     static boolean isValidCloudHost(final URL authorityUrl) {
         return hasCloudHost(authorityUrl) && getAzureActiveDirectoryCloud(authorityUrl).isValidated();
+    }
+
+    public static boolean isInitialized(){
+        return sIsInitialized;
     }
 
     /**
@@ -124,9 +130,11 @@ public class AzureActiveDirectory
                 sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
             }
         }
+
+        sIsInitialized = true;
     }
 
-    public static void performCloudDiscovery(){
+    public static void performCloudDiscovery() throws IOException {
 
         Uri instanceDiscoveryRequestUri = Uri.parse(AAD_INSTANCE_DISCOVERY_ENDPOINT);
 
@@ -136,26 +144,23 @@ public class AzureActiveDirectory
                 .appendQueryParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
                 .build();
 
-        try {
-            HttpResponse response = HttpRequest.sendGet(new URL(instanceDiscoveryRequestUri.toString()),new HashMap<String, String>());
+        HttpResponse response = HttpRequest.sendGet(new URL(instanceDiscoveryRequestUri.toString()), new HashMap<String, String>());
 
-            if(response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST){
-                Log.d("Discovery", "Error getting cloud information");
-            }else{
+        if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
+            Log.d("Discovery", "Error getting cloud information");
+        } else {
 
-                AzureActiveDirectoryInstanceResponse instanceResponse =  ObjectMapper.deserializeJsonStringToObject(response.getBody(), AzureActiveDirectoryInstanceResponse.class);
+            AzureActiveDirectoryInstanceResponse instanceResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), AzureActiveDirectoryInstanceResponse.class);
 
-                for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
-                    cloud.setIsValidated(true); // Mark the deserialized Clouds as validated
-                    for (final String alias : cloud.getHostAliases()) {
-                        sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
-                    }
+            for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
+                cloud.setIsValidated(true); // Mark the deserialized Clouds as validated
+                for (final String alias : cloud.getHostAliases()) {
+                    sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
                 }
             }
-        } catch (IOException e) {
-            //TODO: Adding logging, but this shouldn't happen
-            e.printStackTrace();
         }
+
+        sIsInitialized = true;
 
     }
 

@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
@@ -148,7 +149,9 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public ICacheRecord load(final String clientId, final Account account) {
+    public ICacheRecord load(@NonNull final String clientId,
+                             @Nullable final String target,
+                             @NonNull final Account account) {
         // Load the AccessTokens
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
@@ -156,7 +159,7 @@ public class MsalOAuth2TokenCache
                 CredentialType.AccessToken,
                 clientId,
                 account.getRealm(),
-                null // wildcard (*)
+                target
         );
 
         // Load the RefreshTokens
@@ -166,7 +169,7 @@ public class MsalOAuth2TokenCache
                 CredentialType.RefreshToken,
                 clientId,
                 account.getRealm(),
-                null // wildcard (*)
+                target
         );
 
         // Load the IdTokens
@@ -194,7 +197,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public Account getAccount(@NonNull final String environment,
+    public Account getAccount(@Nullable final String environment,
                               @NonNull final String clientId,
                               @NonNull final String homeAccountId) {
         final List<Account> allAccounts = getAccounts(environment, clientId);
@@ -210,7 +213,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public List<Account> getAccounts(@NonNull final String environment,
+    public List<Account> getAccounts(@Nullable final String environment,
                                      @NonNull final String clientId) {
         final List<Account> accountsForThisApp = new ArrayList<>();
 
@@ -244,7 +247,7 @@ public class MsalOAuth2TokenCache
     }
 
     /**
-     * Evaluates the supplied list of app credentials. Returns true if he provided Account
+     * Evaluates the supplied list of Credentials. Returns true if he provided Account
      * 'owns' any one of these tokens.
      *
      * @param account        The Account whose credential ownership should be evaluated.
@@ -358,13 +361,13 @@ public class MsalOAuth2TokenCache
         return credentialsRemoved;
     }
 
-    void saveAccounts(final Account... accounts) {
+    private void saveAccounts(final Account... accounts) {
         for (final Account account : accounts) {
             mAccountCredentialCache.saveAccount(account);
         }
     }
 
-    void saveCredentials(final Credential... credentials) {
+    private void saveCredentials(final Credential... credentials) {
         for (final Credential credential : credentials) {
 
             if (credential instanceof AccessToken) {
@@ -386,7 +389,7 @@ public class MsalOAuth2TokenCache
      * @param idTokenToSave      The {@link IdToken} to save.
      * @throws ClientException If any of the supplied artifacts are non schema-compliant.
      */
-    void validateCacheArtifacts(
+    private void validateCacheArtifacts(
             @NonNull final Account accountToSave,
             final AccessToken accessTokenToSave,
             @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshTokenToSave,
@@ -510,7 +513,7 @@ public class MsalOAuth2TokenCache
         return isCompliant;
     }
 
-    boolean isAccountSchemaCompliant(@NonNull final Account account) {
+    private boolean isAccountSchemaCompliant(@NonNull final Account account) {
         // Required fields...
         final String[][] params = new String[][]{
                 {Account.SerializedNames.HOME_ACCOUNT_ID, account.getHomeAccountId()},
@@ -521,12 +524,10 @@ public class MsalOAuth2TokenCache
                 {Account.SerializedNames.AUTHORITY_TYPE, account.getAuthorityType()},
         };
 
-        boolean isCompliant = isSchemaCompliant(account.getClass(), params);
-
-        return isCompliant;
+        return isSchemaCompliant(account.getClass(), params);
     }
 
-    boolean isAccessTokenSchemaCompliant(@NonNull final AccessToken accessToken) {
+    private boolean isAccessTokenSchemaCompliant(@NonNull final AccessToken accessToken) {
         // Required fields...
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.CREDENTIAL_TYPE, accessToken.getCredentialType()},
@@ -540,12 +541,10 @@ public class MsalOAuth2TokenCache
                 {Credential.SerializedNames.SECRET, accessToken.getSecret()},
         };
 
-        boolean isValid = isSchemaCompliant(accessToken.getClass(), params);
-
-        return isValid;
+        return isSchemaCompliant(accessToken.getClass(), params);
     }
 
-    boolean isRefreshTokenSchemaCompliant(
+    private boolean isRefreshTokenSchemaCompliant(
             @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken) {
         // Required fields...
         final String[][] params = new String[][]{
@@ -556,12 +555,10 @@ public class MsalOAuth2TokenCache
                 {Credential.SerializedNames.SECRET, refreshToken.getSecret()},
         };
 
-        boolean isValid = isSchemaCompliant(refreshToken.getClass(), params);
-
-        return isValid;
+        return isSchemaCompliant(refreshToken.getClass(), params);
     }
 
-    boolean isIdTokenSchemaCompliant(@NonNull final IdToken idToken) {
+    private boolean isIdTokenSchemaCompliant(@NonNull final IdToken idToken) {
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.HOME_ACCOUNT_ID, idToken.getHomeAccountId()},
                 {Credential.SerializedNames.ENVIRONMENT, idToken.getEnvironment()},
@@ -571,9 +568,7 @@ public class MsalOAuth2TokenCache
                 {Credential.SerializedNames.SECRET, idToken.getSecret()},
         };
 
-        boolean isValid = isSchemaCompliant(idToken.getClass(), params);
-
-        return isValid;
+        return isSchemaCompliant(idToken.getClass(), params);
     }
 
     @Override
@@ -597,7 +592,6 @@ public class MsalOAuth2TokenCache
             mAccountCredentialCache.saveCredential(idToken);
             mAccountCredentialCache.saveCredential(rt);
         } catch (ClientException e) {
-            // TODO how do I know that it's safe to log this Exception?
             Logger.error(
                     TAG + ":" + methodName,
                     "",

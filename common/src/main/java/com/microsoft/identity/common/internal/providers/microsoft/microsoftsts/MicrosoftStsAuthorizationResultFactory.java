@@ -23,14 +23,12 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.content.Intent;
-import android.util.Log;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -42,7 +40,7 @@ import java.util.HashMap;
  * Encapsulates Authorization response or errors specific to Microsoft STS in the form of
  * {@link MicrosoftStsAuthorizationResult}
  */
-public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultFactory<MicrosoftStsAuthorizationResult> {
+public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultFactory<MicrosoftStsAuthorizationResult, MicrosoftStsAuthorizationRequest> {
 
     private static final String TAG = MicrosoftStsAuthorizationResultFactory.class.getSimpleName();
 
@@ -51,7 +49,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
     public static final String MSSTS_AUTHORIZATION_FINAL_URL = AuthenticationConstants.Browser.RESPONSE_FINAL_URL;
 
     @Override
-    public MicrosoftStsAuthorizationResult createAuthorizationResult(final int resultCode, final Intent data) {
+    public MicrosoftStsAuthorizationResult createAuthorizationResult(final int resultCode, final Intent data, final MicrosoftStsAuthorizationRequest request) {
         if (data == null) {
             return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED, MicrosoftAuthorizationErrorResponse.NULL_INTENT);
@@ -66,7 +64,8 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE:
-                result = parseUrlAndCreateAuthorizationResponse(data.getStringExtra(MSSTS_AUTHORIZATION_FINAL_URL), data.getStringExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER));
+                final String url = data.getStringExtra(MSSTS_AUTHORIZATION_FINAL_URL);
+                result = parseUrlAndCreateAuthorizationResponse(url, request.getState());
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR:

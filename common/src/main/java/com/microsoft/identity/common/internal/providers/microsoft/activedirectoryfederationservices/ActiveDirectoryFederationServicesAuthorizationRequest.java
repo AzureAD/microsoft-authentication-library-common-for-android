@@ -22,11 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
-import android.support.annotation.NonNull;
-
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-
-import java.net.URL;
 
 /**
  * Active Directory Federation Services Authorization Request.
@@ -36,15 +32,17 @@ public class ActiveDirectoryFederationServicesAuthorizationRequest extends Micro
         super(builder);
     }
 
-    public static final class Builder extends MicrosoftAuthorizationRequest.Builder {
-        public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri,
-                       @NonNull final URL authority) {
-            super(clientId, redirectUri, authority);
+    public static final class Builder extends MicrosoftAuthorizationRequest.Builder<ActiveDirectoryFederationServicesAuthorizationRequest.Builder> {
+        public Builder() {
         }
 
         public ActiveDirectoryFederationServicesAuthorizationRequest build() {
             return new ActiveDirectoryFederationServicesAuthorizationRequest(this);
+        }
+
+        @Override
+        public ActiveDirectoryFederationServicesAuthorizationRequest.Builder self() {
+            return this;
         }
     }
 

@@ -167,10 +167,14 @@ public final class AuthenticationConstants {
          */
         public static final int BROWSER_FLOW = 1001;
 
-        /** Represents the request of token flow. */
+        /**
+         * Represents the request of token flow.
+         */
         public static final int TOKEN_FLOW = 1002;
 
-        /** Represents the request of broker flow. */
+        /**
+         * Represents the request of broker flow.
+         */
         public static final int BROKER_FLOW = 1003;
     }
 
@@ -378,7 +382,9 @@ public final class AuthenticationConstants {
          * String for cloud instance host name.
          */
         public static final String CLOUD_INSTANCE_HOST_NAME = "cloud_instance_host_name";
-        /** session key JWE. */
+        /**
+         * session key JWE.
+         */
         public static final String SESSION_KEY_JWE = "session_key_jwe";
     }
 
@@ -487,7 +493,9 @@ public final class AuthenticationConstants {
          **/
         public static final String REQUEST_ID_HEADER = "x-ms-request-id";
 
-        /** String for the broker version. */
+        /**
+         * String for the broker version.
+         */
         public static final String ADAL_BROKER_VERSION = "x-client-brkrver";
     }
 
@@ -807,6 +815,11 @@ public final class AuthenticationConstants {
         public static final String CHALLENGE_RESPONSE_CONTEXT = "Context";
 
         /**
+         * String of authorization code grants via Proof Key for Code Exchange (PKCE).
+         */
+        public static final String PKCE_CHALLENGE = "PkceChallenge";
+
+        /**
          * Certificate authorities are passed with delimiter.
          */
         public static final String CHALLENGE_REQUEST_CERT_AUTH_DELIMETER = ";";
@@ -904,6 +917,36 @@ public final class AuthenticationConstants {
          * Integer for token expiration buffer. see {@link AuthenticationSettings#mExpirationBuffer}
          */
         public static final String EXPIRATION_BUFFER = "expiration.buffer";
+
+        /**
+         * String for authorization scope.
+         */
+        public static final String AUTH_SCOPE = "scope";
+
+        /**
+         * String for authorization state.
+         */
+        public static final String AUTH_STATE = "state";
+
+        /**
+         * String for authorization response type.
+         */
+        public static final String AUTH_RESPONSE_TYPE = "response_type";
+
+        /**
+         * String for library name.
+         */
+        public static final String LIB_NAME = "library_name";
+
+        /**
+         * String for library version.
+         */
+        public static final String LIB_VERSION = "library_version";
+
+        /**
+         * String for the package name of the client app.
+         */
+        public static final String CLIENT_APP_PACKAGE_NAME = "client_app_package_name";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.

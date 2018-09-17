@@ -32,6 +32,7 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationResultFactory;
@@ -61,11 +62,15 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
     private static final String CORRELATION_ID = "correlationId";
     private static final String ERROR_CODES = "access_denied_error_code";
 
-    private AuthorizationResultFactory<AzureActiveDirectoryAuthorizationResult> mAuthorizationResultFactory;
+    private AuthorizationResultFactory<AzureActiveDirectoryAuthorizationResult, AzureActiveDirectoryAuthorizationRequest> mAuthorizationResultFactory;
 
     @Before
     public void setUp() {
         mAuthorizationResultFactory = new AzureActiveDirectoryAuthorizationResultFactory();
+    }
+
+    private AzureActiveDirectoryAuthorizationRequest getAADRequest() {
+        return new AzureActiveDirectoryAuthorizationRequest.Builder().build();
     }
 
     @Test
@@ -73,7 +78,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         Intent intent = new Intent();
         intent.putExtras(new Bundle());
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, intent, getAADRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.USER_CANCEL, result.getAuthorizationStatus());
@@ -87,7 +92,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
     public void testBrowserCodeError() {
         Intent intent = new Intent();
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, intent, getAADRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -99,7 +104,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         Intent intent = new Intent();
         intent.putExtras(new Bundle());
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME, intent);
+                AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME, intent, getAADRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -119,7 +124,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         bundle.putSerializable(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, exception);
         intent.putExtras(bundle);
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, intent, getAADRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -133,7 +138,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
     public void testNoMatchingResultCode() {
         Intent intent = new Intent();
         intent.putExtras(new Bundle());
-        AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(0, intent);
+        AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(0, intent, getAADRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -146,7 +151,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
     @Test
     public void testNullIntent() {
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, null);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, null, getAADRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -160,7 +165,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
     public void testNullBundle() {
         Intent intent = new Intent();
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getAADRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -175,7 +180,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         Intent intent = new Intent();
         intent.putExtras(new Bundle());
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getAADRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -192,7 +197,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         bundle.putString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, REDIRECT_URI);
         intent.putExtras(bundle);
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getAADRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -209,7 +214,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         bundle.putString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, REDIRECT_URI + "?some_random_error=accessdenied");
         intent.putExtras(bundle);
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getAADRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -230,7 +235,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         intent.putExtras(bundle);
         intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, STATE);
         AzureActiveDirectoryAuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getAADRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationErrorResponse());
         assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
@@ -251,7 +256,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         intent.putExtras(bundle);
         intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, STATE);
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getAADRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
@@ -270,7 +275,7 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         bundle.putString(AuthenticationConstants.Browser.RESPONSE_FINAL_URL, responseUrl);
         intent.putExtras(bundle);
         AzureActiveDirectoryAuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent);
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getAADRequest());
         assertNotNull(result);
         assertNull(result.getAuthorizationResponse());
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());

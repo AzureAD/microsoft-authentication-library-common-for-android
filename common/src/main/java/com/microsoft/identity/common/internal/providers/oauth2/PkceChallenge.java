@@ -25,8 +25,6 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.util.Base64;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -112,7 +110,7 @@ public final class PkceChallenge implements Serializable {
      *
      * @return the newly created Challenge
      */
-    public static PkceChallenge newPkceChallenge() throws ClientException {
+    public static PkceChallenge newPkceChallenge() {
         // Generate the code_verifier as a high-entropy cryptographic random String
         final String codeVerifier = generateCodeVerifier();
 
@@ -128,16 +126,16 @@ public final class PkceChallenge implements Serializable {
         return Base64.encodeToString(verifierBytes, ENCODE_MASK);
     }
 
-    private static String generateCodeVerifierChallenge(final String verifier) throws ClientException {
+    private static String generateCodeVerifierChallenge(final String verifier) {
         try {
             MessageDigest digester = MessageDigest.getInstance(DIGEST_ALGORITHM);
             digester.update(verifier.getBytes(ISO_8859_1));
             byte[] digestBytes = digester.digest();
             return Base64.encodeToString(digestBytes, ENCODE_MASK);
         } catch (final NoSuchAlgorithmException e) {
-            throw new ClientException(ErrorStrings.NO_SUCH_ALGORITHM, "Failed to generate the code verifier challenge", e);
+            throw new IllegalStateException("Failed to generate the code verifier challenge", e);
         } catch (final UnsupportedEncodingException e) {
-            throw new ClientException(ErrorStrings.UNSUPPORTED_ENCODING,
+            throw new IllegalStateException(
                     "Every implementation of the Java platform is required to support ISO-8859-1."
                             + "Consult the release documentation for your implementation.", e);
         }

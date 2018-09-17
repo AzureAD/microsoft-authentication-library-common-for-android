@@ -231,7 +231,7 @@ public final class ErrorStrings {
     public static final String WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED = "The webView was redirected to an unsafe URL";
 
     /**
-     *  Package name is not resolved.
+     * Package name is not resolved.
      */
     public static final String PACKAGE_NAME_NOT_FOUND = "Package name is not resolved";
 
@@ -264,4 +264,9 @@ public final class ErrorStrings {
      * Could not retrieve capabilities from broker apps.
      */
     public static final String FAILED_TO_GET_CAPABILITIES = "Could not get the capabilities";
+
+    /**
+     * Empty Context.
+     */
+    public static final String ANDROID_CONTEXT_IS_NULL = "Android Context is null.";
 }

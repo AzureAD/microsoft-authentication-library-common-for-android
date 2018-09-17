@@ -23,15 +23,13 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.util.Map;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
@@ -51,7 +49,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     //@SerializedName("login_hint")
     private transient String mDisplayableId;
 
-    private transient String mSliceParameters;
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
     // TODO private boolean mIsExtendedLifetimeEnabled = false;
@@ -82,58 +79,36 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mUid = builder.mUid;
         mUtid = builder.mUtid;
         mDisplayableId = builder.mDisplayableId;
-        mSliceParameters = builder.mSliceParameters;
     }
 
-    public static class Builder<T extends MicrosoftStsAuthorizationRequest>
-            extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest> {
-        private String mPrompt;
+    public static class Builder extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest.Builder> {
+
         private String mUid;
         private String mUtid;
         private String mDisplayableId;
-        private String mSliceParameters;
 
-        public Builder(@NonNull final String clientId,
-                       @NonNull final String redirectUri,
-                       @NonNull final URL authority,
-                       @NonNull final String scope,
-                       @NonNull final String prompt,
-                       @NonNull final PkceChallenge pkceChallenge, //pkceChallenge is required for v2 request.
-                       @NonNull final String state) {
-            super(clientId, redirectUri, authority);
-            setScope(scope);
-            setPrompt(prompt);
-            setPkceChallenge(pkceChallenge);
-            setState(state);
-        }
-
-        public Builder setPrompt(String prompt) {
-            mPrompt = prompt;
-            return this;
-        }
-
-        public Builder setUid(String uid) {
+        public MicrosoftStsAuthorizationRequest.Builder setUid(String uid) {
             mUid = uid;
-            return this;
+            return self();
         }
 
-        public Builder setUtid(String utid) {
+        public MicrosoftStsAuthorizationRequest.Builder setUtid(String utid) {
             mUtid = utid;
-            return this;
+            return self();
         }
 
-        public Builder setDisplayableId(String displayableId) {
+        public MicrosoftStsAuthorizationRequest.Builder setDisplayableId(String displayableId) {
             mDisplayableId = displayableId;
+            return self();
+        }
+
+        @Override
+        public MicrosoftStsAuthorizationRequest.Builder self() {
             return this;
         }
 
-        public Builder setSliceParameters(String sliceParameters) {
-            mSliceParameters = sliceParameters;
-            return this;
-        }
-
-        public T build() {
-            return (T) new MicrosoftStsAuthorizationRequest(this);
+        public MicrosoftStsAuthorizationRequest build() {
+            return new MicrosoftStsAuthorizationRequest(this);
         }
     }
 
@@ -153,14 +128,10 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         return mPrompt;
     }
 
-    public String getSliceParameters() {
-        return mSliceParameters;
-    }
-
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
         Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
-        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()){
+        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 
@@ -168,8 +139,13 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 
-        for (Map.Entry<String, String> entry : ObjectMapper.deserializeQueryStringToMap(mSliceParameters).entrySet()) {
+        for (Map.Entry<String, String> entry : mFlightParameters.entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
+
+        if(mSlice != null){
+            uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
+            uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDC());
         }
 
         return uriBuilder.build();
@@ -177,7 +153,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
     @Override
     public String getAuthorizationEndpoint() {
-        //TODO: Need to take authority aliasing via instance discovery into account here
-        return "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+        return getAuthority().toString();
     }
 }
