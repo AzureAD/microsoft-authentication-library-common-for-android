@@ -27,6 +27,7 @@ import android.net.Uri;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
@@ -143,8 +144,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
 
         if(mSlice != null){
-            uriBuilder.appendQueryParameter("slice", mSlice.getSlice());
-            uriBuilder.appendQueryParameter("dc", mSlice.getDC());
+            uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
+            uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDC());
         }
 
         return uriBuilder.build();

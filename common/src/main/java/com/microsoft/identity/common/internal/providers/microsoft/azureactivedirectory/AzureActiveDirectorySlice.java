@@ -4,9 +4,12 @@ import com.google.gson.annotations.SerializedName;
 
 public class AzureActiveDirectorySlice {
 
-    @SerializedName("slice")
+    public final static String SLICE_PARAMETER = "slice";
+    public final static String DC_PARAMETER = "dc";
+
+    @SerializedName(SLICE_PARAMETER)
     private String mSlice;
-    @SerializedName("dc")
+    @SerializedName(DC_PARAMETER)
     private String mDataCenter;
 
     public String getSlice() {

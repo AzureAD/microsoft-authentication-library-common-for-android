@@ -93,7 +93,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
     protected transient AzureActiveDirectorySlice mSlice;
 
-    protected transient HashMap<String, String> mFlightParameters;
+    protected transient Map<String, String> mFlightParameters;
 
     /**
      * Constructor of MicrosoftAuthorizationRequest.
@@ -153,7 +153,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         private AzureActiveDirectorySlice mSlice;
 
-        private HashMap<String, String> mFlightParameters = new HashMap<>();
+        private Map<String, String> mFlightParameters = new HashMap<>();
 
         public Builder() {
         }
@@ -183,7 +183,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
             return self();
         }
 
-        public B setFlightParameters(HashMap<String, String> flightParameters){
+        public B setFlightParameters(Map<String, String> flightParameters){
             mFlightParameters = flightParameters;
             return self();
         }

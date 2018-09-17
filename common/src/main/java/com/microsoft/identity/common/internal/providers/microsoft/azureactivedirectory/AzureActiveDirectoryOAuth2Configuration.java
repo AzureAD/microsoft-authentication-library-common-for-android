@@ -26,12 +26,13 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configurati
 
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Map;
 
 public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration {
 
     private boolean mAuthorityHostValidationEnabled = true;
     private URL mAuthorityUrl;
-    private HashMap<String, String> mFlightParameters = new HashMap<>();
+    private Map<String, String> mFlightParameters = new HashMap<>();
     private AzureActiveDirectorySlice mSlice;
 
     /**
@@ -56,11 +57,11 @@ public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration
         this.mAuthorityUrl = authorityUrl;
     }
 
-    public HashMap<String, String> getFlightParameters() {
+    public Map<String, String> getFlightParameters() {
         return mFlightParameters;
     }
 
-    public void setFlightParameters(HashMap<String, String> flightParameters){
+    public void setFlightParameters(Map<String, String> flightParameters){
         mFlightParameters = flightParameters;
     }
 
