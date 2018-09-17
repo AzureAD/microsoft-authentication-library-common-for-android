@@ -47,7 +47,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
     private static final String TAG = MicrosoftStsAuthorizationResultFactory.class.getSimpleName();
 
     /** Constant key to get authorization request final url from intent. */
-    //public static final String MSSTS_AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.finalUrl";
+    //TODO Need to unify the final_url constant value between ADAL and MSAL request.
     public static final String MSSTS_AUTHORIZATION_FINAL_URL = AuthenticationConstants.Browser.RESPONSE_FINAL_URL;
 
     @Override
@@ -66,18 +66,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE:
-
-                if(data.getExtras() != null) {
-                    final String url = data.getExtras().getString(MSSTS_AUTHORIZATION_FINAL_URL);
-                    result = parseUrlAndCreateAuthorizationResponse(url, data.getStringExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER));
-
-                } else {
-                    result = createAuthorizationResultWithErrorResponse(
-                            AuthorizationStatus.FAIL,
-                            MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
-                            MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
-                }
-
+                result = parseUrlAndCreateAuthorizationResponse(data.getStringExtra(MSSTS_AUTHORIZATION_FINAL_URL), data.getStringExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER));
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR:

@@ -138,8 +138,7 @@ public final class AuthorizationActivity extends Activity {
             return;
         }
 
-        if (getIntent().getExtras() != null
-                && !StringUtil.isEmpty(getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT))) {
+        if (!StringUtil.isEmpty(getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT))) {
             Logger.info(TAG, null, "Received redirect from system webview.");
             final String url = getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
             final Intent resultIntent = new Intent();
