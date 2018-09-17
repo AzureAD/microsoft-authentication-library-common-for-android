@@ -83,8 +83,9 @@ public class ADALTokenCacheItem {
     ADALTokenCacheItem(final AzureActiveDirectoryOAuth2Strategy strategy,
                        final AzureActiveDirectoryAuthorizationRequest request,
                        final AzureActiveDirectoryTokenResponse response) {
-        AzureActiveDirectoryAccount account = strategy.createAccount(response);
         String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
+        AzureActiveDirectoryAccount account = strategy.createAccount(response);
+        account.setEnvironment(issuerCacheIdentifier);
         AccessToken accessToken = strategy.getAccessTokenFromResponse(response);
         RefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
 

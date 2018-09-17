@@ -83,7 +83,7 @@ public interface IAccountCredentialCache {
      */
     List<Account> getAccountsFilteredBy(
             @Nullable final String homeAccountId,
-            @NonNull final String environment,
+            @Nullable final String environment,
             @Nullable final String realm
     );
 
@@ -107,7 +107,7 @@ public interface IAccountCredentialCache {
      */
     List<Credential> getCredentialsFilteredBy(
             @Nullable final String homeAccountId,
-            @NonNull final String environment,
+            @Nullable final String environment,
             @NonNull final CredentialType credentialType,
             @NonNull final String clientId,
             @Nullable final String realm,

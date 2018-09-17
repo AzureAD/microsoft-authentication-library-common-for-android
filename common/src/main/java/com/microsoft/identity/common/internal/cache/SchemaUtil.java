@@ -23,15 +23,11 @@
 package com.microsoft.identity.common.internal.cache;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.dto.Account;
-import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Map;
 
 /**
@@ -74,36 +70,6 @@ public final class SchemaUtil {
         }
 
         return issuer;
-    }
-
-    /**
-     * Returns the 'environment' for the supplied IDToken.
-     * <p>
-     * For a description of this field,
-     * see {@link Account#getEnvironment()}, {@link Credential#getEnvironment()}
-     *
-     * @param idToken The IDToken to parse.
-     * @return The environment or null if the IDToken cannot be parsed, the issuer claim is empty
-     * or contains an invalid URL.
-     */
-    public static String getEnvironment(final IDToken idToken) {
-        final String methodName = "getEnvironment";
-
-        final String issuer = getAuthority(idToken);
-        String environment = null;
-        try {
-            environment = new URL(issuer).getHost();
-        } catch (MalformedURLException e) {
-            environment = null;
-            Logger.error(
-                    TAG + ":" + methodName,
-                    "Failed to construct URL from issuer claim",
-                    null // Do not supply the Exception, as it contains PII
-            );
-            Logger.errorPII(TAG + ":" + methodName, "Failed with Exception", e);
-        }
-
-        return environment;
     }
 
     /**
