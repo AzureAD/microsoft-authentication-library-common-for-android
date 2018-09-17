@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
-import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
@@ -44,7 +43,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 
 public class MicrosoftStsOAuth2Strategy
@@ -84,7 +82,7 @@ public class MicrosoftStsOAuth2Strategy
         // This map can only be consulted if authority validation is on.
         // If the host has a hardcoded trust, we can just use the hostname.
         if (null != cloudEnv) {
-            return cloudEnv.getPreferredNetworkHostName();
+            return cloudEnv.getPreferredCacheHostName();
         }
         return authority.getHost();
     }

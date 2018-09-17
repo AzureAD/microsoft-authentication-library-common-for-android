@@ -28,17 +28,16 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
 public class MicrosoftRefreshToken extends RefreshToken {
 
     private ClientInfo mClientInfo;
-    private IDToken mIdToken;
     private String mFamilyId;
     private String mScope;
     private String mClientId;
     private boolean mIsFamilyRefreshToken;
+    private String mEnvironment;
 
     /**
      * Constructs a new MicrosoftRefreshToken instance.
@@ -49,7 +48,6 @@ public class MicrosoftRefreshToken extends RefreshToken {
         super(tokenResponse);
         try {
             mClientInfo = new ClientInfo(tokenResponse.getClientInfo());
-            mIdToken = new IDToken(tokenResponse.getIdToken());
             mFamilyId = tokenResponse.getFamilyId();
             mScope = tokenResponse.getScope();
             mClientId = tokenResponse.getClientId();
@@ -65,9 +63,13 @@ public class MicrosoftRefreshToken extends RefreshToken {
         return SchemaUtil.getHomeAccountId(mClientInfo);
     }
 
+    public void setEnvironment(final String environment) {
+        mEnvironment = environment;
+    }
+
     @Override
     public String getEnvironment() {
-        return SchemaUtil.getEnvironment(mIdToken);
+        return mEnvironment;
     }
 
     @Override

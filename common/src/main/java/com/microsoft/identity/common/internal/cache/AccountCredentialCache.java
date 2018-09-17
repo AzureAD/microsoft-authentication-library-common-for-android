@@ -191,14 +191,12 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     @NonNull
     public List<Account> getAccountsFilteredBy(
             @Nullable final String homeAccountId,
-            @NonNull final String environment,
+            @Nullable final String environment,
             @Nullable final String realm) {
         Logger.verbose(TAG, "Loading Accounts...");
-        if (StringExtensions.isNullOrBlank(environment)) {
-            throw new IllegalArgumentException("Param [environment] cannot be null.");
-        }
 
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
+        final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
 
         Logger.verbose(TAG, "Account lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]");
@@ -214,7 +212,9 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                 matches = homeAccountId.equalsIgnoreCase(account.getHomeAccountId());
             }
 
-            matches = matches && environment.equalsIgnoreCase(account.getEnvironment());
+            if (mustMatchOnEnvironment) {
+                matches = matches && environment.equalsIgnoreCase(account.getEnvironment());
+            }
 
             if (mustMatchOnRealm) {
                 matches = matches && realm.equalsIgnoreCase(account.getRealm());
@@ -266,15 +266,12 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     @NonNull
     public List<Credential> getCredentialsFilteredBy(
             @Nullable final String homeAccountId,
-            @NonNull final String environment,
+            @Nullable final String environment,
             @NonNull final CredentialType credentialType,
             @NonNull final String clientId,
             @Nullable final String realm,
             @Nullable final String target) {
         Logger.verbose(TAG, "getCredentialsFilteredBy()");
-        if (StringExtensions.isNullOrBlank(environment)) {
-            throw new IllegalArgumentException("Param [environment] cannot be null.");
-        }
 
         if (null == credentialType) {
             throw new IllegalArgumentException("Param [credentialType] cannot be null.");
@@ -284,6 +281,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             throw new IllegalArgumentException("Param [clientId] cannot be null.");
         }
 
+        final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
         final boolean mustMatchOnTarget = !StringExtensions.isNullOrBlank(target);
@@ -303,7 +301,10 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                 matches = homeAccountId.equalsIgnoreCase(credential.getHomeAccountId());
             }
 
-            matches = matches && environment.equalsIgnoreCase(credential.getEnvironment());
+            if (mustMatchOnEnvironment) {
+                matches = matches && environment.equalsIgnoreCase(credential.getEnvironment());
+            }
+
             matches = matches && credentialType.name().equalsIgnoreCase(credential.getCredentialType());
             matches = matches && clientId.equalsIgnoreCase(credential.getClientId());
 
@@ -342,7 +343,8 @@ public class AccountCredentialCache implements IAccountCredentialCache {
      * @return True, if the credentialTarget contains all of the targets (scopes) declared by
      * targetToMatch. False otherwise.
      */
-    private boolean targetsIntersect(final String targetToMatch, final String credentialTarget) {
+    private boolean targetsIntersect(@NonNull final String targetToMatch,
+                                     @NonNull final String credentialTarget) {
         // The credentialTarget must contain all of the scopes in the targetToMatch
         // It may contain more, but it must contain minimally those
         // Matching is case-insensitive
