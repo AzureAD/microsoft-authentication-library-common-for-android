@@ -64,7 +64,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE:
-                String url = data.getExtras().getString(AuthorizationStrategy.AUTHORIZATION_FINAL_URL);
+                final String url = data.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL);
                 result = parseUrlAndCreateAuthorizationResponse(url, request.getState());
                 break;
 
