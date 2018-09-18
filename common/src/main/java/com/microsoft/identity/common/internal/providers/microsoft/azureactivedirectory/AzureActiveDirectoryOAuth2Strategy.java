@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.dto.IAccount;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
@@ -179,6 +180,11 @@ public class AzureActiveDirectoryOAuth2Strategy
     @Override
     public AzureActiveDirectoryAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
         return new AzureActiveDirectoryAuthorizationRequest.Builder();
+    }
+
+    @Override
+    public AzureActiveDirectoryAuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccount account) {
+        return createAuthorizationRequestBuilder();
     }
 
     @Override
