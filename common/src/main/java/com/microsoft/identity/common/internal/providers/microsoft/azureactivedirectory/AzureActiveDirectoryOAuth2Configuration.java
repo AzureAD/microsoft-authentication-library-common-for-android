@@ -73,5 +73,4 @@ public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration
         mSlice = slice;
     }
 
-
 }
