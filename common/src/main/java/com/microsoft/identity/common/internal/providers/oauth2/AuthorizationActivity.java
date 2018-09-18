@@ -17,6 +17,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeCompletionCallback;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 public final class AuthorizationActivity extends Activity {
     @VisibleForTesting
@@ -136,9 +137,9 @@ public final class AuthorizationActivity extends Activity {
             return;
         }
 
-        if (getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT) != null) {
+        if (!StringUtil.isEmpty(getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT))) {
             Logger.info(TAG, null, "Received redirect from system webview.");
-            final String url = getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
+            final String url = getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
             final Intent resultIntent = new Intent();
             resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
             setResult(AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE,

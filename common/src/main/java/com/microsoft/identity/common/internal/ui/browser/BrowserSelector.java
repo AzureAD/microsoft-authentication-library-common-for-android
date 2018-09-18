@@ -81,7 +81,7 @@ public class BrowserSelector {
 
         int queryFlag = PackageManager.GET_RESOLVED_FILTER;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            queryFlag |= PackageManager.MATCH_ALL;
+            queryFlag |= PackageManager.MATCH_DEFAULT_ONLY;
         }
 
         List<ResolveInfo> resolvedActivityList =
