@@ -31,6 +31,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.HashMap;
@@ -44,11 +45,8 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
 
     private static final String TAG = MicrosoftStsAuthorizationResultFactory.class.getSimpleName();
 
-    /**
-     * Constant key to get authorization request final url from intent.
-     */
+    /** Constant key to get authorization request final url from intent. */
     public static final String MSSTS_AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
-
 
     @Override
     public MicrosoftStsAuthorizationResult createAuthorizationResult(final int resultCode, final Intent data, final MicrosoftStsAuthorizationRequest request) {
@@ -60,13 +58,13 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
         MicrosoftStsAuthorizationResult result;
         switch (resultCode) {
             case AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL:
-                Logger.verbose(TAG, null, "User cancel the request in webview.");
+                Logger.verbose(TAG, null, "User cancel the authorization request in UI.");
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.USER_CANCEL,
                         MicrosoftAuthorizationErrorResponse.USER_CANCEL, MicrosoftAuthorizationErrorResponse.USER_CANCELLED_FLOW);
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE:
-                final String url = data.getStringExtra(MSSTS_AUTHORIZATION_FINAL_URL);
+                final String url = data.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL);
                 result = parseUrlAndCreateAuthorizationResponse(url, request.getState());
                 break;
 

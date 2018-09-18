@@ -129,8 +129,13 @@ public final class ObjectMapper {
             TreeMap.Entry<String, Object> entry = iterator.next();
             if (entry.getValue() instanceof String
                     && !StringUtil.isEmpty(entry.getKey())
-                    && !StringUtil.isEmpty((String) entry.getValue())) {
-                objectMap.put(URLDecoder.decode(entry.getKey(), ENCODING_SCHEME), URLDecoder.decode((String) entry.getValue(), ENCODING_SCHEME));
+                    && !StringUtil.isEmpty((String)entry.getValue())) {
+                objectMap.put(URLDecoder.decode(entry.getKey(), ENCODING_SCHEME), URLDecoder.decode((String)entry.getValue(), ENCODING_SCHEME));
+            } else {
+                final Map<String, String> hashMap = serializeNestedJsonToMap(entry.getValue().toString());
+                if(hashMap != null) {
+                    objectMap.putAll(hashMap);
+                }
             }
         }
 
