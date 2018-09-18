@@ -246,15 +246,27 @@ public class AccessToken extends Credential {
         mExpiresOn = expiresOn;
     }
 
-    @Override
-    public boolean isExpired() {
+    private boolean isExpired(final String expires) {
         // Init a Calendar for the current time/date
         final Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.SECOND, AuthenticationSettings.INSTANCE.getExpirationBuffer());
         final Date validity = calendar.getTime();
         // Init a Date for the accessToken's expiry
-        long epoch = Long.valueOf(getExpiresOn());
+        long epoch = Long.valueOf(expires);
         final Date expiresOn = new Date(epoch * 1000);
         return expiresOn.before(validity);
+    }
+
+    @Override
+    public boolean isExpired() {
+        boolean isExpired = isExpired(getExpiresOn());
+
+        if (isExpired
+                && null != getExtendedExpiresOn()
+                && 0 < Long.valueOf(getExtendedExpiresOn())) {
+            isExpired = isExpired(getExtendedExpiresOn());
+        }
+
+        return isExpired;
     }
 }
