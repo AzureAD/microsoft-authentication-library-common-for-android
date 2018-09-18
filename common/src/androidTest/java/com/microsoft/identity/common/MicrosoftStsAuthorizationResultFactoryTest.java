@@ -36,6 +36,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErro
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -135,7 +136,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     @Test
     public void testUrlWithEmptyParams() {
         Intent intent = new Intent();
-        intent.putExtra(MicrosoftStsAuthorizationResultFactory.MSSTS_AUTHORIZATION_FINAL_URL, REDIRECT_URI);
+        intent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, REDIRECT_URI);
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getMstsAuthorizationRequest());
         assertNotNull(result);
@@ -150,7 +151,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     @Test
     public void testUrlWithInvalidParams() {
         Intent intent = new Intent();
-        intent.putExtra(MicrosoftStsAuthorizationResultFactory.MSSTS_AUTHORIZATION_FINAL_URL, REDIRECT_URI + "?some_random_error=accessdenied");
+        intent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, REDIRECT_URI + "?some_random_error=accessdenied");
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getMstsAuthorizationRequest());
         assertNotNull(result);
@@ -166,7 +167,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     @Test
     public void testUrlWithInCorrectState() {
         Intent intent = new Intent();
-        intent.putExtra(MicrosoftStsAuthorizationResultFactory.MSSTS_AUTHORIZATION_FINAL_URL, REDIRECT_URI + "?" + AUTH_CODE_AND_STATE);
+        intent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, REDIRECT_URI + "?" + AUTH_CODE_AND_STATE);
         intent.putExtra(MicrosoftAuthorizationResult.REQUEST_STATE_PARAMETER, "incorrect_state");
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getMstsAuthorizationRequest());
@@ -183,7 +184,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     public void testUrlWithErrorInParams() {
         Intent intent = new Intent();
         String responseUrl = REDIRECT_URI + "?error=" + ERROR_MESSAGE + "&error_description=" + ERROR_DESCRIPTION;
-        intent.putExtra(MicrosoftStsAuthorizationResultFactory.MSSTS_AUTHORIZATION_FINAL_URL, responseUrl);
+        intent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, responseUrl);
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getMstsAuthorizationRequest());
         assertNotNull(result);
