@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import android.util.Pair;
+
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 
@@ -30,6 +32,8 @@ import org.junit.Test;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.assertTrue;
@@ -44,7 +48,10 @@ public class MicrosoftStsAuthorizationRequestTests {
     private static final String DEFAULT_TEST_EXTRA_SCOPE = "scope3 scope4";
     private static final String DEFAULT_TEST_AUTHORIZATION_ENDPOINT = "https://login.microsoftonline.com/common/oauth2/authorize";
     private static final UUID DEFAULT_TEST_CORRELATION_ID = UUID.randomUUID();
-    private static final String DEFAULT_TEST_EXTRA_QP = "extra=1&haschrome=1";
+    private static final List<Pair<String, String>> DEFAULT_TEST_EXTRA_QP = new ArrayList<Pair<String, String>>() {{
+        add(new Pair<>("extra", "1"));
+        add(new Pair<>("haschrome", "1"));
+    }};
     private static final String DEFAULT_TEST_VERSION = "0.1.3";
     private static final String DEFAULT_TEST_PROMPT = MicrosoftStsAuthorizationRequest.Prompt.CONSENT;
     private static final String DEFAULT_TEST_UID = "1";
@@ -115,7 +122,7 @@ public class MicrosoftStsAuthorizationRequestTests {
 
         final MicrosoftStsAuthorizationRequest request = getBaseBuilder()
                 .setPrompt(DEFAULT_TEST_PROMPT)
-                .setExtraQueryParam(DEFAULT_TEST_EXTRA_QP)
+                .setExtraQueryParams(DEFAULT_TEST_EXTRA_QP)
                 .build();
 
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
