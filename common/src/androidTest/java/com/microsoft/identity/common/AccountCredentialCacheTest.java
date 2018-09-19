@@ -35,7 +35,7 @@ import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.IdToken;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
 import org.junit.After;
@@ -168,7 +168,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void saveIdToken() {
-        final IdToken idToken = new IdToken();
+        final IdTokenRecord idToken = new IdTokenRecord();
         idToken.setHomeAccountId(HOME_ACCOUNT_ID);
         idToken.setEnvironment(ENVIRONMENT);
         idToken.setRealm(REALM);
@@ -1390,7 +1390,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void noValueForCacheKeyIdToken() {
         assertEquals(0, mAccountCredentialCache.getCredentials().size());
-        final IdToken idToken = (IdToken) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.IdToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        final IdTokenRecord idToken = (IdTokenRecord) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.IdToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
         assertNull(idToken);
     }
 
@@ -1502,7 +1502,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void malformedJsonCacheValueForIdToken() {
-        final IdToken idToken = new IdToken();
+        final IdTokenRecord idToken = new IdTokenRecord();
         idToken.setHomeAccountId(HOME_ACCOUNT_ID);
         idToken.setEnvironment(ENVIRONMENT);
         idToken.setCredentialType(CredentialType.IdToken.name());
@@ -1513,14 +1513,14 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\"  \"not an idToken\"}");
 
-        final IdToken restoredIdToken = (IdToken) mAccountCredentialCache.getCredential(cacheKey);
+        final IdTokenRecord restoredIdToken = (IdTokenRecord) mAccountCredentialCache.getCredential(cacheKey);
         assertNull(restoredIdToken);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
 
     @Test
     public void malformedCacheValueForIdToken() {
-        final IdToken idToken = new IdToken();
+        final IdTokenRecord idToken = new IdTokenRecord();
         idToken.setHomeAccountId(HOME_ACCOUNT_ID);
         idToken.setEnvironment(ENVIRONMENT);
         idToken.setCredentialType(CredentialType.IdToken.name());
@@ -1531,7 +1531,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an idToken\"}");
 
-        final IdToken restoredIdToken = (IdToken) mAccountCredentialCache.getCredential(cacheKey);
+        final IdTokenRecord restoredIdToken = (IdTokenRecord) mAccountCredentialCache.getCredential(cacheKey);
         assertNull(restoredIdToken);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }

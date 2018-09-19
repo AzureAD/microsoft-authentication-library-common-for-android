@@ -31,7 +31,7 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.dto.IdToken;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -59,7 +59,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     private static final AccountRecord EMPTY_ACCOUNT = new AccountRecord();
     private static final AccessTokenRecord EMPTY_AT = new AccessTokenRecord();
     private static final RefreshTokenRecord EMPTY_RT = new RefreshTokenRecord();
-    private static final IdToken EMPTY_ID = new IdToken();
+    private static final IdTokenRecord EMPTY_ID = new IdTokenRecord();
 
     // SharedPreferences used to store Accounts and Credentials
     private final ISharedPreferencesFileManager mSharedPreferencesFileManager;
@@ -130,7 +130,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         } else if (CredentialType.RefreshToken == type) {
             clazz = RefreshTokenRecord.class;
         } else if (CredentialType.IdToken == type) {
-            clazz = IdToken.class;
+            clazz = IdTokenRecord.class;
         } else {
             // TODO Log a warning, throw an Exception?
             throw new RuntimeException("Credential type could not be resolved.");
@@ -144,7 +144,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         if (null == credential
                 || (AccessTokenRecord.class == clazz && EMPTY_AT.equals(credential))
                 || (RefreshTokenRecord.class == clazz && EMPTY_RT.equals(credential))
-                || (IdToken.class == clazz) && EMPTY_ID.equals(credential)) {
+                || (IdTokenRecord.class == clazz) && EMPTY_ID.equals(credential)) {
             // The returned credential came back uninitialized...
             // Remove the entry and return null...
             Logger.warn(TAG, "The returned Credential was uninitialized. Removing...");
@@ -448,7 +448,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                 credentialClass = RefreshTokenRecord.class;
                 break;
             case IdToken:
-                credentialClass = IdToken.class;
+                credentialClass = IdTokenRecord.class;
                 break;
             default:
                 Logger.warn(TAG, "Could not match CredentialType to class."

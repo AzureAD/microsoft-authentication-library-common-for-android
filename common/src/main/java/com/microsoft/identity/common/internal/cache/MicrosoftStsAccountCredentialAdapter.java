@@ -28,7 +28,7 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.IdToken;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
@@ -136,14 +136,14 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public IdToken createIdToken(
+    public IdTokenRecord createIdToken(
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
         try {
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
-            final IdToken idToken = new IdToken();
+            final IdTokenRecord idToken = new IdTokenRecord();
             // Required fields
             idToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             idToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
@@ -190,11 +190,11 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public IdToken asIdToken(MicrosoftAccount msAccount, MicrosoftRefreshToken refreshToken) {
+    public IdTokenRecord asIdToken(MicrosoftAccount msAccount, MicrosoftRefreshToken refreshToken) {
         final long cachedAt = getCachedAt();
         IDToken msIdToken = msAccount.getIDToken();
 
-        final IdToken idToken = new IdToken();
+        final IdTokenRecord idToken = new IdTokenRecord();
         // Required fields
         idToken.setHomeAccountId(refreshToken.getHomeAccountId());
         idToken.setEnvironment(refreshToken.getEnvironment());

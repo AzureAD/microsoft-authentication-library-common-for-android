@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.cache;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.IdToken;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -79,7 +79,7 @@ public interface IAccountCredentialAdapter
      * @param response The authz response.
      * @return The derived IdToken.
      */
-    IdToken createIdToken(T strategy, U request, V response);
+    IdTokenRecord createIdToken(T strategy, U request, V response);
 
     /**
      * Adapter method to turn
@@ -108,5 +108,5 @@ public interface IAccountCredentialAdapter
      * @param refreshToken The RefreshToken to read.
      * @return The newly constructed IdToken.
      */
-    IdToken asIdToken(W account, X refreshToken);
+    IdTokenRecord asIdToken(W account, X refreshToken);
 }

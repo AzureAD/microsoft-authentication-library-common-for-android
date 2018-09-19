@@ -35,7 +35,7 @@ import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
-import com.microsoft.identity.common.internal.dto.IdToken;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -169,8 +169,8 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, "");
             cacheKey = cacheKey.replace(TARGET, sanitizeNull(refreshToken.getTarget()));
-        } else if (credential instanceof IdToken) {
-            final IdToken idToken = (IdToken) credential;
+        } else if (credential instanceof IdTokenRecord) {
+            final IdTokenRecord idToken = (IdTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, sanitizeNull(idToken.getRealm()));
             cacheKey = cacheKey.replace(TARGET, "");
         }
