@@ -32,7 +32,7 @@ import com.microsoft.identity.common.internal.cache.AccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
@@ -106,8 +106,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void saveAccount() {
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -124,14 +123,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         final String accountCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Account
-        final Account restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
+        final AccountRecord restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
     }
 
     @Test
     public void saveAccountNoRealm() {
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
@@ -145,14 +143,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         final String accountCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Account
-        final Account restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
+        final AccountRecord restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
     }
 
     @Test
     public void saveAccountNoHomeAccountIdNoRealm() {
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setEnvironment(ENVIRONMENT);
         account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
@@ -165,7 +162,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         final String accountCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Account
-        final Account restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
+        final AccountRecord restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
     }
 
@@ -363,8 +360,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void getAccounts() {
         // Save an Account into the cache
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -397,15 +393,14 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(refreshToken);
 
         // Verify getAccountsFilteredBy() returns one matching element
-        final List<Account> accounts = mAccountCredentialCache.getAccounts();
+        final List<AccountRecord> accounts = mAccountCredentialCache.getAccounts();
         assertTrue(accounts.size() == 1);
         assertEquals(account, accounts.get(0));
     }
 
     @Test
     public void getAccountsNullEnvironment() {
-        final com.microsoft.identity.common.internal.dto.Account account1
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account1 = new AccountRecord();
         account1.setHomeAccountId(HOME_ACCOUNT_ID);
         account1.setEnvironment(ENVIRONMENT);
         account1.setRealm(REALM);
@@ -413,8 +408,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account1.setUsername(USERNAME);
         account1.setAuthorityType(AUTHORITY_TYPE);
 
-        final com.microsoft.identity.common.internal.dto.Account account2
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account2 = new AccountRecord();
         account2.setHomeAccountId(HOME_ACCOUNT_ID);
         account2.setEnvironment(ENVIRONMENT_LEGACY);
         account2.setRealm(REALM);
@@ -427,7 +421,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account2);
 
         // Test retrieval
-        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(
+        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(
                 HOME_ACCOUNT_ID,
                 null,
                 REALM
@@ -437,8 +431,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getAccountsComplete() {
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -450,9 +443,9 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, REALM);
+        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, REALM);
         assertEquals(1, accounts.size());
-        final Account retrievedAccount = accounts.get(0);
+        final AccountRecord retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
         assertEquals(ENVIRONMENT, retrievedAccount.getEnvironment());
         assertEquals(REALM, retrievedAccount.getRealm());
@@ -460,8 +453,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getAccountsNoHomeAccountId() {
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
@@ -473,9 +465,9 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, REALM);
+        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, REALM);
         assertEquals(1, accounts.size());
-        final Account retrievedAccount = accounts.get(0);
+        final AccountRecord retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
         assertEquals(ENVIRONMENT, retrievedAccount.getEnvironment());
         assertEquals(REALM, retrievedAccount.getRealm());
@@ -483,8 +475,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getAccountsNoHomeAccountIdNoRealm() {
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -496,9 +487,9 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, null);
+        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, null);
         assertEquals(1, accounts.size());
-        final Account retrievedAccount = accounts.get(0);
+        final AccountRecord retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
         assertEquals(ENVIRONMENT, retrievedAccount.getEnvironment());
         assertEquals(REALM, retrievedAccount.getRealm());
@@ -506,8 +497,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getAccountsNoRealm() {
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -519,9 +509,9 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, null);
+        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, null);
         assertEquals(1, accounts.size());
-        final Account retrievedAccount = accounts.get(0);
+        final AccountRecord retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
         assertEquals(ENVIRONMENT, retrievedAccount.getEnvironment());
         assertEquals(REALM, retrievedAccount.getRealm());
@@ -529,8 +519,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getAccountsWithMatchingHomeAccountIdEnvironment() {
-        final com.microsoft.identity.common.internal.dto.Account account1
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account1 = new AccountRecord();
         account1.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account1.setUsername(USERNAME);
         account1.setAuthorityType(AUTHORITY_TYPE);
@@ -538,8 +527,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account1.setEnvironment(ENVIRONMENT);
         account1.setRealm(REALM);
 
-        final com.microsoft.identity.common.internal.dto.Account account2
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account2 = new AccountRecord();
         account2.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account2.setUsername(USERNAME);
         account2.setAuthorityType(AUTHORITY_TYPE);
@@ -547,8 +535,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account2.setEnvironment(ENVIRONMENT);
         account2.setRealm(REALM2);
 
-        final com.microsoft.identity.common.internal.dto.Account account3
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account3 = new AccountRecord();
         account3.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account3.setUsername(USERNAME);
         account3.setAuthorityType(AUTHORITY_TYPE);
@@ -556,8 +543,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account3.setEnvironment(ENVIRONMENT);
         account3.setRealm(REALM3);
 
-        final com.microsoft.identity.common.internal.dto.Account account4
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account4 = new AccountRecord();
         account4.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account4.setUsername(USERNAME);
         account4.setAuthorityType(AUTHORITY_TYPE);
@@ -571,14 +557,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account3);
         mAccountCredentialCache.saveAccount(account4);
 
-        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, null);
+        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, null);
         assertEquals(3, accounts.size());
     }
 
     @Test
     public void getAccountsWithMatchingEnvironmentRealm() {
-        final com.microsoft.identity.common.internal.dto.Account account1
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account1 = new AccountRecord();
         account1.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account1.setUsername(USERNAME);
         account1.setAuthorityType(AUTHORITY_TYPE);
@@ -586,8 +571,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account1.setEnvironment(ENVIRONMENT);
         account1.setRealm(REALM);
 
-        final com.microsoft.identity.common.internal.dto.Account account2
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account2 = new AccountRecord();
         account2.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account2.setUsername(USERNAME);
         account2.setAuthorityType(AUTHORITY_TYPE);
@@ -595,8 +579,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account2.setEnvironment(ENVIRONMENT);
         account2.setRealm(REALM);
 
-        final com.microsoft.identity.common.internal.dto.Account account3
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account3 = new AccountRecord();
         account3.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account3.setUsername(USERNAME);
         account3.setAuthorityType(AUTHORITY_TYPE);
@@ -604,8 +587,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account3.setEnvironment(ENVIRONMENT);
         account3.setRealm(REALM);
 
-        final com.microsoft.identity.common.internal.dto.Account account4
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account4 = new AccountRecord();
         account4.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account4.setUsername(USERNAME);
         account4.setAuthorityType(AUTHORITY_TYPE);
@@ -619,15 +601,14 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account3);
         mAccountCredentialCache.saveAccount(account4);
 
-        final List<Account> accounts = mAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, REALM);
+        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, REALM);
         assertEquals(3, accounts.size());
     }
 
     @Test
     public void getCredentials() {
         // Save an Account into the cache
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -1246,8 +1227,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void clearAccounts() {
         // Save an Account into the cache
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -1293,8 +1273,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void clearCredentials() {
         // Save an Account into the cache
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -1340,8 +1319,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void clearAll() {
         // Save an Account into the cache
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -1391,7 +1369,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void noValueForCacheKeyAccount() {
         assertEquals(0, mAccountCredentialCache.getAccounts().size());
-        final Account account = (Account) mAccountCredentialCache.getAccount("No account");
+        final AccountRecord account = (AccountRecord) mAccountCredentialCache.getAccount("No account");
         assertNull(account);
     }
 
@@ -1418,8 +1396,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void malformedJsonCacheValueForAccount() {
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -1429,15 +1406,14 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not an account\"}");
 
-        final Account malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
+        final AccountRecord malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
         assertNull(malformedAccount);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
 
     @Test
     public void malformedCacheValueForAccount() {
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -1447,7 +1423,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an account\"}");
 
-        final Account malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
+        final AccountRecord malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
         assertNull(malformedAccount);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }

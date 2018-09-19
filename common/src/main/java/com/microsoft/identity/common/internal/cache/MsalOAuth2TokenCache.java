@@ -30,7 +30,7 @@ import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
@@ -97,7 +97,7 @@ public class MsalOAuth2TokenCache
                              @NonNull final GenericAuthorizationRequest request,
                              @NonNull final GenericTokenResponse response) throws ClientException {
         // Create the Account
-        final Account accountToSave =
+        final AccountRecord accountToSave =
                 mAccountCredentialAdapter.createAccount(
                         oAuth2Strategy,
                         request,
@@ -152,7 +152,7 @@ public class MsalOAuth2TokenCache
     @Override
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
-                             @NonNull final Account account) {
+                             @NonNull final AccountRecord account) {
         // Load the AccessTokens
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
@@ -198,13 +198,13 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public Account getAccount(@Nullable final String environment,
-                              @NonNull final String clientId,
-                              @NonNull final String homeAccountId) {
-        final List<Account> allAccounts = getAccounts(environment, clientId);
+    public AccountRecord getAccount(@Nullable final String environment,
+                                    @NonNull final String clientId,
+                                    @NonNull final String homeAccountId) {
+        final List<AccountRecord> allAccounts = getAccounts(environment, clientId);
 
         // Return the sought Account matching the supplied homeAccountId
-        for (final Account account : allAccounts) {
+        for (final AccountRecord account : allAccounts) {
             if (homeAccountId.equals(account.getHomeAccountId())) {
                 return account;
             }
@@ -214,12 +214,12 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public List<Account> getAccounts(@Nullable final String environment,
-                                     @NonNull final String clientId) {
-        final List<Account> accountsForThisApp = new ArrayList<>();
+    public List<AccountRecord> getAccounts(@Nullable final String environment,
+                                           @NonNull final String clientId) {
+        final List<AccountRecord> accountsForThisApp = new ArrayList<>();
 
         // Get all of the Accounts for this environment
-        final List<Account> accountsForEnvironment =
+        final List<AccountRecord> accountsForEnvironment =
                 mAccountCredentialCache.getAccountsFilteredBy(
                         null, // wildcard (*) homeAccountId
                         environment,
@@ -238,7 +238,7 @@ public class MsalOAuth2TokenCache
                 );
 
         // For each Account with an associated RT, add it to the result List...
-        for (final Account account : accountsForEnvironment) {
+        for (final AccountRecord account : accountsForEnvironment) {
             if (accountHasCredential(account, appCredentials)) {
                 accountsForThisApp.add(account);
             }
@@ -255,7 +255,7 @@ public class MsalOAuth2TokenCache
      * @param appCredentials The Credentials to evaluate.
      * @return True, if this Account has Credentials. False otherwise.
      */
-    private boolean accountHasCredential(@NonNull final Account account,
+    private boolean accountHasCredential(@NonNull final AccountRecord account,
                                          @NonNull final List<Credential> appCredentials) {
         final String accountHomeId = account.getHomeAccountId();
         final String accountEnvironment = account.getEnvironment();
@@ -276,7 +276,7 @@ public class MsalOAuth2TokenCache
                                  final String homeAccountId) {
         final String methodName = ":removeAccount";
 
-        final Account targetAccount;
+        final AccountRecord targetAccount;
         if (null == environment
                 || null == clientId
                 || null == homeAccountId
@@ -339,7 +339,7 @@ public class MsalOAuth2TokenCache
             @NonNull final String environment, // 'authority host'
             @NonNull final String clientId,
             @NonNull final CredentialType credentialType,
-            @NonNull final Account targetAccount) {
+            @NonNull final AccountRecord targetAccount) {
         int credentialsRemoved = 0;
 
         // Query it for Credentials matching the supplied targetAccount
@@ -362,8 +362,8 @@ public class MsalOAuth2TokenCache
         return credentialsRemoved;
     }
 
-    private void saveAccounts(final Account... accounts) {
-        for (final Account account : accounts) {
+    private void saveAccounts(final AccountRecord... accounts) {
+        for (final AccountRecord account : accounts) {
             mAccountCredentialCache.saveAccount(account);
         }
     }
@@ -382,7 +382,7 @@ public class MsalOAuth2TokenCache
     /**
      * Validates that the supplied artifacts are schema-compliant and OK to write to the cache.
      *
-     * @param accountToSave      The {@link Account} to save.
+     * @param accountToSave      The {@link AccountRecord} to save.
      * @param accessTokenToSave  The {@link AccessToken} to save or null. Null params are assumed
      *                           valid; this condition supports the SSO case.
      * @param refreshTokenToSave The {@link com.microsoft.identity.common.internal.dto.RefreshToken}
@@ -391,7 +391,7 @@ public class MsalOAuth2TokenCache
      * @throws ClientException If any of the supplied artifacts are non schema-compliant.
      */
     private void validateCacheArtifacts(
-            @NonNull final Account accountToSave,
+            @NonNull final AccountRecord accountToSave,
             final AccessToken accessTokenToSave,
             @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshTokenToSave,
             @NonNull final IdToken idTokenToSave) throws ClientException {
@@ -514,15 +514,15 @@ public class MsalOAuth2TokenCache
         return isCompliant;
     }
 
-    private boolean isAccountSchemaCompliant(@NonNull final Account account) {
+    private boolean isAccountSchemaCompliant(@NonNull final AccountRecord account) {
         // Required fields...
         final String[][] params = new String[][]{
-                {Account.SerializedNames.HOME_ACCOUNT_ID, account.getHomeAccountId()},
-                {Account.SerializedNames.ENVIRONMENT, account.getEnvironment()},
-                {Account.SerializedNames.REALM, account.getRealm()},
-                {Account.SerializedNames.LOCAL_ACCOUNT_ID, account.getLocalAccountId()},
-                {Account.SerializedNames.USERNAME, account.getUsername()},
-                {Account.SerializedNames.AUTHORITY_TYPE, account.getAuthorityType()},
+                {AccountRecord.SerializedNames.HOME_ACCOUNT_ID, account.getHomeAccountId()},
+                {AccountRecord.SerializedNames.ENVIRONMENT, account.getEnvironment()},
+                {AccountRecord.SerializedNames.REALM, account.getRealm()},
+                {AccountRecord.SerializedNames.LOCAL_ACCOUNT_ID, account.getLocalAccountId()},
+                {AccountRecord.SerializedNames.USERNAME, account.getUsername()},
+                {AccountRecord.SerializedNames.AUTHORITY_TYPE, account.getAuthorityType()},
         };
 
         return isSchemaCompliant(account.getClass(), params);
@@ -578,7 +578,7 @@ public class MsalOAuth2TokenCache
         final String methodName = "setSingleSignOnState";
 
         try {
-            final Account accountDto = mAccountCredentialAdapter.asAccount(account);
+            final AccountRecord accountDto = mAccountCredentialAdapter.asAccount(account);
             final com.microsoft.identity.common.internal.dto.RefreshToken rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
             final IdToken idToken = mAccountCredentialAdapter.asIdToken(account, refreshToken);
 

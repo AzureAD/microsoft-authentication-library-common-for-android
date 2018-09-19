@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.text.TextUtils;
 
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.IAccount;
@@ -103,8 +102,8 @@ public class AzureActiveDirectoryOAuth2Strategy
         final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
         if (cloud == null && !getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
             Logger.warn(TAG + ":" + methodName, "Discovery data does not include cloud authority and validation is off."
-                + " Returning passed in Authority: "
-                + authRequest.getAuthority().toString());
+                    + " Returning passed in Authority: "
+                    + authRequest.getAuthority().toString());
             return authRequest.getAuthority().toString();
         }
 

@@ -26,7 +26,7 @@ import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
@@ -53,12 +53,12 @@ public class MicrosoftStsAccountCredentialAdapter
     private static final String TAG = MicrosoftStsAccountCredentialAdapter.class.getSimpleName();
 
     @Override
-    public Account createAccount(
+    public AccountRecord createAccount(
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
         Logger.verbose(TAG, "Creating Account");
-        final Account account = new Account(strategy.createAccount(response));
+        final AccountRecord account = new AccountRecord(strategy.createAccount(response));
         // TODO -- Setting the environment here is a bit of a workaround...
         // The Account created by the strategy sets the environment to get the 'iss' from the IdToken
         // For caching purposes, this may not be the correct value due to the preferred cache identifier
@@ -183,8 +183,8 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public Account asAccount(MicrosoftAccount account) {
-        Account acct = new Account(account);
+    public AccountRecord asAccount(MicrosoftAccount account) {
+        AccountRecord acct = new AccountRecord(account);
 
         return acct;
     }

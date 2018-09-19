@@ -27,7 +27,7 @@ import android.util.Base64;
 
 import com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -171,7 +171,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     @Test
     public void createAccount() {
         // This test is now basically a copy-constructor test
-        final Account account = mAccountCredentialAdapter.createAccount(mockStrategy, mockRequest, mockResponse);
+        final AccountRecord account = mAccountCredentialAdapter.createAccount(mockStrategy, mockRequest, mockResponse);
         assertNotNull(account);
         assertEquals(MOCK_UID + "." + MOCK_UTID, account.getHomeAccountId());
         assertEquals(MOCK_ENVIRONMENT, account.getEnvironment());

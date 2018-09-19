@@ -39,7 +39,7 @@ import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManage
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
@@ -112,7 +112,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
     static class AccountCredentialTestBundle {
 
-        final Account mGeneratedAccount;
+        final AccountRecord mGeneratedAccount;
         final AccessToken mGeneratedAccessToken;
         final RefreshToken mGeneratedRefreshToken;
         final IdToken mGeneratedIdToken;
@@ -130,7 +130,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                                     final String clientId, //guid
                                     final String rtSecret,
                                     final String idTokenSecret) {
-            mGeneratedAccount = new Account();
+            mGeneratedAccount = new AccountRecord();
             mGeneratedAccount.setAuthorityType(authorityType);
             mGeneratedAccount.setLocalAccountId(localAccountId);
             mGeneratedAccount.setUsername(username);
@@ -259,7 +259,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        final List<Account> accounts = accountCredentialCache.getAccounts();
+        final List<AccountRecord> accounts = accountCredentialCache.getAccounts();
         assertEquals(1, accounts.size());
         assertEquals(defaultTestBundle.mGeneratedAccount, accounts.get(0));
 
@@ -315,7 +315,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        final List<Account> accounts = accountCredentialCache.getAccounts();
+        final List<AccountRecord> accounts = accountCredentialCache.getAccounts();
         assertEquals(1, accounts.size());
         assertEquals(defaultTestBundle.mGeneratedAccount, accounts.get(0));
 
@@ -352,7 +352,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        final Account account = mOauth2TokenCache.getAccount(
+        final AccountRecord account = mOauth2TokenCache.getAccount(
                 ENVIRONMENT,
                 CLIENT_ID,
                 HOME_ACCOUNT_ID
@@ -369,7 +369,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getAccountCacheEmpty() {
-        final Account account = mOauth2TokenCache.getAccount(
+        final AccountRecord account = mOauth2TokenCache.getAccount(
                 ENVIRONMENT,
                 CLIENT_ID,
                 HOME_ACCOUNT_ID
@@ -443,7 +443,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             );
         }
 
-        final List<Account> accounts = mOauth2TokenCache.getAccounts(
+        final List<AccountRecord> accounts = mOauth2TokenCache.getAccounts(
                 ENVIRONMENT,
                 CLIENT_ID
         );
@@ -456,7 +456,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getAccountsCacheEmpty() {
-        final List<Account> accounts = mOauth2TokenCache.getAccounts(
+        final List<AccountRecord> accounts = mOauth2TokenCache.getAccounts(
                 ENVIRONMENT,
                 CLIENT_ID
         );

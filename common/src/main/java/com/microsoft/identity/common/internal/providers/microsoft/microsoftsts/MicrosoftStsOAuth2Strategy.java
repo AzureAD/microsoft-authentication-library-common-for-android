@@ -122,7 +122,7 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
         MicrosoftStsAuthorizationRequest.Builder builder = new MicrosoftStsAuthorizationRequest.Builder();
         builder.setAuthority(mConfig.getAuthorizationEndpoint());
-        if(mConfig.getSlice() != null){
+        if (mConfig.getSlice() != null) {
             builder.setSlice(mConfig.getSlice());
         }
         builder.setFlightParameters(mConfig.getFlightParameters());

@@ -23,23 +23,23 @@
 package com.microsoft.identity.common.internal.cache;
 
 import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
 public class CacheRecord implements ICacheRecord {
 
-    private Account mAccount;
+    private AccountRecord mAccount;
     private AccessToken mAccessToken;
     private RefreshToken mRefreshToken;
     private IdToken mIdToken;
 
-    public void setAccount(final Account account) {
+    public void setAccount(final AccountRecord account) {
         mAccount = account;
     }
 
     @Override
-    public Account getAccount() {
+    public AccountRecord getAccount() {
         return mAccount;
     }
 

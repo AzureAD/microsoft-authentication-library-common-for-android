@@ -32,8 +32,8 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
@@ -95,7 +95,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
     }
 
     @Override
-    public String generateCacheKey(Account account) {
+    public String generateCacheKey(AccountRecord account) {
         String cacheKey = HOME_ACCOUNT_ID
                 + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT
@@ -127,7 +127,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
     }
 
     @Override
-    public String generateCacheValue(Account account) {
+    public String generateCacheValue(AccountRecord account) {
         final String result = generateCacheValueInternal(account);
 
         return result;

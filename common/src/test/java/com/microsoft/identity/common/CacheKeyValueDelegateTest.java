@@ -29,6 +29,7 @@ import com.google.gson.JsonPrimitive;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
@@ -295,7 +296,7 @@ public class CacheKeyValueDelegateTest {
     // Accounts
     @Test
     public void accountCreateCacheKeyComplete() {
-        final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -310,7 +311,7 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accountCreateCacheKeyCompleteNoHomeAccountId() {
-        final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
 
@@ -324,7 +325,7 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accountCreateCacheKeyCompleteNoRealm() {
-        final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
 
@@ -337,7 +338,7 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accountCreateCacheKeyCompleteNoHomeAccountIdNoRealm() {
-        final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setEnvironment(ENVIRONMENT);
 
         final String expectedKey = ""
@@ -349,7 +350,7 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accountCreateCacheValue() throws JSONException {
-        final com.microsoft.identity.common.internal.dto.Account account = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -363,9 +364,9 @@ public class CacheKeyValueDelegateTest {
         final String serializedValue = mDelegate.generateCacheValue(account);
 
         final JSONObject jsonObject = new JSONObject(serializedValue);
-        assertEquals(HOME_ACCOUNT_ID, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.HOME_ACCOUNT_ID));
-        assertEquals(ENVIRONMENT, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT));
-        assertEquals(REALM, jsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM));
+        assertEquals(HOME_ACCOUNT_ID, jsonObject.getString(AccountRecord.SerializedNames.HOME_ACCOUNT_ID));
+        assertEquals(ENVIRONMENT, jsonObject.getString(AccountRecord.SerializedNames.ENVIRONMENT));
+        assertEquals(REALM, jsonObject.getString(AccountRecord.SerializedNames.REALM));
         assertEquals(LOCAL_ACCOUNT_ID, jsonObject.getString("local_account_id"));
         assertEquals(AUTHORITY_TYPE, jsonObject.getString("authority_type"));
         assertEquals(ALTERNATIVE_ACCOUNT_ID, jsonObject.getString("alternative_account_id"));
@@ -376,8 +377,8 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accountExtraValueSerialization() throws JSONException {
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account
+                = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -407,9 +408,9 @@ public class CacheKeyValueDelegateTest {
 
         String serializedValue = mDelegate.generateCacheValue(account);
         JSONObject derivedCacheValueJsonObject = new JSONObject(serializedValue);
-        assertEquals(HOME_ACCOUNT_ID, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.HOME_ACCOUNT_ID));
-        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT));
-        assertEquals(REALM, derivedCacheValueJsonObject.getString(com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM));
+        assertEquals(HOME_ACCOUNT_ID, derivedCacheValueJsonObject.getString(AccountRecord.SerializedNames.HOME_ACCOUNT_ID));
+        assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(AccountRecord.SerializedNames.ENVIRONMENT));
+        assertEquals(REALM, derivedCacheValueJsonObject.getString(AccountRecord.SerializedNames.REALM));
         assertEquals(LOCAL_ACCOUNT_ID, derivedCacheValueJsonObject.get("local_account_id"));
         assertEquals(AUTHORITY_TYPE, derivedCacheValueJsonObject.get("authority_type"));
         assertEquals(ALTERNATIVE_ACCOUNT_ID, derivedCacheValueJsonObject.get("alternative_account_id"));
@@ -427,8 +428,8 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accountExtraValueDeserialization() throws JSONException {
-        final com.microsoft.identity.common.internal.dto.Account account
-                = new com.microsoft.identity.common.internal.dto.Account();
+        final AccountRecord account
+                = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
         account.setEnvironment(ENVIRONMENT);
         account.setRealm(REALM);
@@ -454,10 +455,10 @@ public class CacheKeyValueDelegateTest {
 
         serializedValue = jsonObject.toString();
 
-        final com.microsoft.identity.common.internal.dto.Account deserializedValue
-                = mDelegate.fromCacheValue(serializedValue, com.microsoft.identity.common.internal.dto.Account.class);
+        final AccountRecord deserializedValue
+                = mDelegate.fromCacheValue(serializedValue, AccountRecord.class);
         assertNotNull(deserializedValue);
-        assertNull(deserializedValue.getAdditionalFields().get(com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT));
+        assertNull(deserializedValue.getAdditionalFields().get(AccountRecord.SerializedNames.ENVIRONMENT));
         assertEquals(HOME_ACCOUNT_ID, deserializedValue.getHomeAccountId());
         assertEquals(ENVIRONMENT, deserializedValue.getEnvironment());
         assertEquals(REALM, deserializedValue.getRealm());

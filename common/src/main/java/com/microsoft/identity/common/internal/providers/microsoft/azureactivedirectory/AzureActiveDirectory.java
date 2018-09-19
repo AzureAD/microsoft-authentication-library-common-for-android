@@ -38,7 +38,6 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
@@ -81,7 +80,7 @@ public class AzureActiveDirectory
         return hasCloudHost(authorityUrl) && getAzureActiveDirectoryCloud(authorityUrl).isValidated();
     }
 
-    public static boolean isInitialized(){
+    public static boolean isInitialized() {
         return sIsInitialized;
     }
 

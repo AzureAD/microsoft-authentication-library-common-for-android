@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.cache;
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -49,7 +49,7 @@ public interface IAccountCredentialAdapter
      * @param response The authz response.
      * @return The derived Account.
      */
-    Account createAccount(T strategy, U request, V response);
+    AccountRecord createAccount(T strategy, U request, V response);
 
     /**
      * Constructs an AccessToken.
@@ -93,12 +93,12 @@ public interface IAccountCredentialAdapter
 
     /**
      * Adapter method to turn {@link BaseAccount} instances into
-     * {@link Account} instances.
+     * {@link AccountRecord} instances.
      *
      * @param account The Account to adapt.
      * @return The adapted Account.
      */
-    Account asAccount(W account);
+    AccountRecord asAccount(W account);
 
     /**
      * Constructs IdToken instances from {@link BaseAccount} and

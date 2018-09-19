@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.cache;
 
 import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 
@@ -33,11 +33,11 @@ import com.microsoft.identity.common.internal.dto.RefreshToken;
 public interface ICacheRecord {
 
     /**
-     * Gets the {@link Account}.
+     * Gets the {@link AccountRecord}.
      *
      * @return The Account to get.
      */
-    Account getAccount();
+    AccountRecord getAccount();
 
     /**
      * Gets the {@link AccessToken}.
