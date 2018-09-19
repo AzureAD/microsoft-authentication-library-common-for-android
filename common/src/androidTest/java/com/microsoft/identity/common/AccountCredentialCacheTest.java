@@ -36,7 +36,7 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
 import org.junit.After;
 import org.junit.Before;
@@ -193,7 +193,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void saveCredential() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -214,7 +214,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void saveCredentialNoTarget() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -278,7 +278,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void saveCredentialNoHomeAccountId() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setClientId(CLIENT_ID);
@@ -317,7 +317,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void saveCredentialNoHomeAccountIdNoTarget() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setClientId(CLIENT_ID);
@@ -383,7 +383,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(accessToken);
 
         // Save a RefreshToken into the cache
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -631,7 +631,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(accessToken);
 
         // Save a RefreshToken into the cache
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -647,7 +647,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getCredentialsNoEnvironment() {
-        final RefreshToken refreshToken1 = new RefreshToken();
+        final RefreshTokenRecord refreshToken1 = new RefreshTokenRecord();
         refreshToken1.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken1.setEnvironment(ENVIRONMENT);
         refreshToken1.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -655,7 +655,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken1.setSecret(SECRET);
         refreshToken1.setTarget(TARGET);
 
-        final RefreshToken refreshToken2 = new RefreshToken();
+        final RefreshTokenRecord refreshToken2 = new RefreshTokenRecord();
         refreshToken2.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken2.setEnvironment(ENVIRONMENT_LEGACY);
         refreshToken2.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -713,7 +713,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getCredentialsComplete() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -758,7 +758,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         // that the match is case insensitive
         final String searchTarget = TARGET.toUpperCase();
 
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -808,7 +808,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         // results back
         final String searchTarget = targetScopes[2] + " " + targetScopes[0];
 
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -860,7 +860,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
                 + " "
                 + targetScopes[0].toUpperCase();
 
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -901,7 +901,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getCredentialsNoHomeAccountId() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
         refreshToken.setHomeAccountId("Foo");
@@ -938,7 +938,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getCredentialsNoHomeAccountIdNoRealm() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setSecret(SECRET);
         refreshToken.setHomeAccountId("Foo");
         refreshToken.setEnvironment(ENVIRONMENT);
@@ -986,7 +986,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getCredentialsNoHomeAccountIdNoRealmNoTarget() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setSecret(SECRET);
         refreshToken.setHomeAccountId("Foo");
         refreshToken.setEnvironment(ENVIRONMENT);
@@ -1034,7 +1034,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getCredentialsNoTarget() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setSecret(SECRET);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
@@ -1082,7 +1082,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getCredentialsNoRealm() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setSecret(SECRET);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
@@ -1130,7 +1130,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getCredentialsNoRealmNoTarget() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -1178,7 +1178,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getCredentialsNoHomeAccountIdNoTarget() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -1250,7 +1250,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(accessToken);
 
         // Save a RefreshToken into the cache
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -1296,7 +1296,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(accessToken);
 
         // Save a RefreshToken into the cache
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
@@ -1342,7 +1342,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveCredential(accessToken);
 
         // Save a RefreshToken into the cache
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -1383,7 +1383,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void noValueForCacheKeyRefreshToken() {
         assertEquals(0, mAccountCredentialCache.getCredentials().size());
-        final RefreshToken refreshToken = (RefreshToken) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.RefreshToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        final RefreshTokenRecord refreshToken = (RefreshTokenRecord) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.RefreshToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
         assertNull(refreshToken);
     }
 
@@ -1466,7 +1466,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void malformedJsonCacheValueForRefreshToken() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.AccessToken.name());
@@ -1477,14 +1477,14 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not a refreshToken\"}");
 
-        final RefreshToken malformedRefreshToken = (RefreshToken) mAccountCredentialCache.getCredential(cacheKey);
+        final RefreshTokenRecord malformedRefreshToken = (RefreshTokenRecord) mAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedRefreshToken);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
 
     @Test
     public void malformedCacheValueForRefreshToken() {
-        final RefreshToken refreshToken = new RefreshToken();
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
         refreshToken.setCredentialType(CredentialType.AccessToken.name());
@@ -1495,7 +1495,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not a refreshToken\"}");
 
-        final RefreshToken malformedRefreshToken = (RefreshToken) mAccountCredentialCache.getCredential(cacheKey);
+        final RefreshTokenRecord malformedRefreshToken = (RefreshTokenRecord) mAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedRefreshToken);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }

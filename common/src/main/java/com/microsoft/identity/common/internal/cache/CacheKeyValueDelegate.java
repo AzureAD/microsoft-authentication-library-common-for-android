@@ -36,7 +36,7 @@ import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdToken;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.lang.reflect.Field;
@@ -147,9 +147,9 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(credential.getEnvironment()));
         cacheKey = cacheKey.replace(CREDENTIAL_TYPE, sanitizeNull(credential.getCredentialType()));
 
-        RefreshToken rt;
-        if ((credential instanceof RefreshToken)
-                && !StringExtensions.isNullOrBlank((rt = (RefreshToken) credential).getFamilyId())) {
+        RefreshTokenRecord rt;
+        if ((credential instanceof RefreshTokenRecord)
+                && !StringExtensions.isNullOrBlank((rt = (RefreshTokenRecord) credential).getFamilyId())) {
             String familyIdForCacheKey = rt.getFamilyId();
 
             if (familyIdForCacheKey.startsWith(FOCI_PREFIX)) {
@@ -165,8 +165,8 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             final AccessToken accessToken = (AccessToken) credential;
             cacheKey = cacheKey.replace(REALM, sanitizeNull(accessToken.getRealm()));
             cacheKey = cacheKey.replace(TARGET, sanitizeNull(accessToken.getTarget()));
-        } else if (credential instanceof RefreshToken) {
-            final RefreshToken refreshToken = (RefreshToken) credential;
+        } else if (credential instanceof RefreshTokenRecord) {
+            final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, "");
             cacheKey = cacheKey.replace(TARGET, sanitizeNull(refreshToken.getTarget()));
         } else if (credential instanceof IdToken) {

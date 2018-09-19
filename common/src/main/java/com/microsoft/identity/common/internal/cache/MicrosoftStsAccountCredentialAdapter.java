@@ -29,7 +29,7 @@ import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -104,7 +104,7 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public RefreshToken createRefreshToken(
+    public RefreshTokenRecord createRefreshToken(
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
@@ -112,7 +112,7 @@ public class MicrosoftStsAccountCredentialAdapter
             final long cachedAt = getCachedAt();
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
-            final RefreshToken refreshToken = new RefreshToken();
+            final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
             // Required
             refreshToken.setCredentialType(CredentialType.RefreshToken.name());
             refreshToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
@@ -163,8 +163,8 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public RefreshToken asRefreshToken(@NonNull final MicrosoftRefreshToken refreshTokenIn) {
-        final RefreshToken refreshTokenOut = new RefreshToken();
+    public RefreshTokenRecord asRefreshToken(@NonNull final MicrosoftRefreshToken refreshTokenIn) {
+        final RefreshTokenRecord refreshTokenOut = new RefreshTokenRecord();
 
         // Required fields
         refreshTokenOut.setHomeAccountId(refreshTokenIn.getHomeAccountId());

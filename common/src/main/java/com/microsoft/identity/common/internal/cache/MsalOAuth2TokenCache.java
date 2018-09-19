@@ -34,7 +34,7 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -113,7 +113,7 @@ public class MsalOAuth2TokenCache
                 );
 
         // Create the RefreshToken
-        final com.microsoft.identity.common.internal.dto.RefreshToken refreshTokenToSave =
+        final RefreshTokenRecord refreshTokenToSave =
                 mAccountCredentialAdapter.createRefreshToken(
                         oAuth2Strategy,
                         request,
@@ -186,7 +186,7 @@ public class MsalOAuth2TokenCache
         final CacheRecord result = new CacheRecord();
         result.setAccount(account);
         result.setAccessToken(accessTokens.isEmpty() ? null : (AccessToken) accessTokens.get(0));
-        result.setRefreshToken(refreshTokens.isEmpty() ? null : (RefreshToken) refreshTokens.get(0));
+        result.setRefreshToken(refreshTokens.isEmpty() ? null : (RefreshTokenRecord) refreshTokens.get(0));
         result.setIdToken(idTokens.isEmpty() ? null : (IdToken) idTokens.get(0));
 
         return result;
@@ -385,7 +385,7 @@ public class MsalOAuth2TokenCache
      * @param accountToSave      The {@link AccountRecord} to save.
      * @param accessTokenToSave  The {@link AccessToken} to save or null. Null params are assumed
      *                           valid; this condition supports the SSO case.
-     * @param refreshTokenToSave The {@link com.microsoft.identity.common.internal.dto.RefreshToken}
+     * @param refreshTokenToSave The {@link RefreshTokenRecord}
      *                           to save.
      * @param idTokenToSave      The {@link IdToken} to save.
      * @throws ClientException If any of the supplied artifacts are non schema-compliant.
@@ -393,7 +393,7 @@ public class MsalOAuth2TokenCache
     private void validateCacheArtifacts(
             @NonNull final AccountRecord accountToSave,
             final AccessToken accessTokenToSave,
-            @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshTokenToSave,
+            @NonNull final RefreshTokenRecord refreshTokenToSave,
             @NonNull final IdToken idTokenToSave) throws ClientException {
         final boolean isAccountCompliant = isAccountSchemaCompliant(accountToSave);
         final boolean isAccessTokenCompliant = null == accessTokenToSave || isAccessTokenSchemaCompliant(accessTokenToSave);
@@ -546,7 +546,7 @@ public class MsalOAuth2TokenCache
     }
 
     private boolean isRefreshTokenSchemaCompliant(
-            @NonNull final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken) {
+            @NonNull final RefreshTokenRecord refreshToken) {
         // Required fields...
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.CREDENTIAL_TYPE, refreshToken.getCredentialType()},
@@ -579,7 +579,7 @@ public class MsalOAuth2TokenCache
 
         try {
             final AccountRecord accountDto = mAccountCredentialAdapter.asAccount(account);
-            final com.microsoft.identity.common.internal.dto.RefreshToken rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
+            final RefreshTokenRecord rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
             final IdToken idToken = mAccountCredentialAdapter.asIdToken(account, refreshToken);
 
             validateCacheArtifacts(

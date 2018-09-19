@@ -28,7 +28,7 @@ import android.support.annotation.Nullable;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
@@ -166,7 +166,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final RefreshToken refreshToken) {
+    public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final RefreshTokenRecord refreshToken) {
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setRefreshToken(refreshToken.getSecret());
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);

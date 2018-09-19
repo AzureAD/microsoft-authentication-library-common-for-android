@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.dto;
 /**
  * Interface for schema-necessary fields for RefreshTokens.
  */
-public interface IRefreshToken {
+public interface IRefreshTokenRecord {
 
     /**
      * Gets the home_account_id.

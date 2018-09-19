@@ -26,7 +26,7 @@ import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdToken;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
@@ -69,7 +69,7 @@ public interface IAccountCredentialAdapter
      * @param response The authz response.
      * @return The derived RefreshToken.
      */
-    RefreshToken createRefreshToken(T strategy, U request, V response);
+    RefreshTokenRecord createRefreshToken(T strategy, U request, V response);
 
     /**
      * Constructs an IdToken.
@@ -84,12 +84,12 @@ public interface IAccountCredentialAdapter
     /**
      * Adapter method to turn
      * {@link com.microsoft.identity.common.internal.providers.oauth2.RefreshToken} instances into
-     * {@link RefreshToken}.
+     * {@link RefreshTokenRecord}.
      *
      * @param refreshToken The RefreshToken to adapt.
      * @return The adapted RefreshToken.
      */
-    RefreshToken asRefreshToken(X refreshToken);
+    RefreshTokenRecord asRefreshToken(X refreshToken);
 
     /**
      * Adapter method to turn {@link BaseAccount} instances into

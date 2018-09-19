@@ -43,7 +43,7 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -114,7 +114,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final AccountRecord mGeneratedAccount;
         final AccessToken mGeneratedAccessToken;
-        final RefreshToken mGeneratedRefreshToken;
+        final RefreshTokenRecord mGeneratedRefreshToken;
         final IdToken mGeneratedIdToken;
 
         AccountCredentialTestBundle(final String authorityType,
@@ -149,7 +149,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             mGeneratedAccessToken.setCredentialType(CredentialType.AccessToken.name());
             mGeneratedAccessToken.setClientId(clientId);
 
-            mGeneratedRefreshToken = new RefreshToken();
+            mGeneratedRefreshToken = new RefreshTokenRecord();
             mGeneratedRefreshToken.setSecret(rtSecret);
             mGeneratedRefreshToken.setTarget(target);
             mGeneratedRefreshToken.setHomeAccountId(homeAccountId);

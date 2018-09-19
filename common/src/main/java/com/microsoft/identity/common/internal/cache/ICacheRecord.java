@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.cache;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdToken;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
 /**
  * Result container for Account and Credential - usually the result of a save or load operation.
@@ -47,11 +47,11 @@ public interface ICacheRecord {
     AccessToken getAccessToken();
 
     /**
-     * Gets the {@link RefreshToken}.
+     * Gets the {@link RefreshTokenRecord}.
      *
      * @return The RefreshToken to get.
      */
-    RefreshToken getRefreshToken();
+    RefreshTokenRecord getRefreshToken();
 
     /**
      * Gets the {@link IdToken}.

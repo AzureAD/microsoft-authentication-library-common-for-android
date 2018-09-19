@@ -27,6 +27,7 @@ import android.net.Uri;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -203,7 +204,7 @@ public abstract class OAuth2Strategy
      * @param refreshToken The refresh token to use.
      * @return TokenRequest.
      */
-    public abstract GenericTokenRequest createRefreshTokenRequest(final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken);
+    public abstract GenericTokenRequest createRefreshTokenRequest(final RefreshTokenRecord refreshToken);
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method

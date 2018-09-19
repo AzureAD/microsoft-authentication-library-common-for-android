@@ -32,7 +32,7 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.dto.IdToken;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.util.ArrayList;
@@ -58,7 +58,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
     private static final AccountRecord EMPTY_ACCOUNT = new AccountRecord();
     private static final AccessToken EMPTY_AT = new AccessToken();
-    private static final RefreshToken EMPTY_RT = new RefreshToken();
+    private static final RefreshTokenRecord EMPTY_RT = new RefreshTokenRecord();
     private static final IdToken EMPTY_ID = new IdToken();
 
     // SharedPreferences used to store Accounts and Credentials
@@ -128,7 +128,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         if (CredentialType.AccessToken == type) {
             clazz = AccessToken.class;
         } else if (CredentialType.RefreshToken == type) {
-            clazz = RefreshToken.class;
+            clazz = RefreshTokenRecord.class;
         } else if (CredentialType.IdToken == type) {
             clazz = IdToken.class;
         } else {
@@ -143,7 +143,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
         if (null == credential
                 || (AccessToken.class == clazz && EMPTY_AT.equals(credential))
-                || (RefreshToken.class == clazz && EMPTY_RT.equals(credential))
+                || (RefreshTokenRecord.class == clazz && EMPTY_RT.equals(credential))
                 || (IdToken.class == clazz) && EMPTY_ID.equals(credential)) {
             // The returned credential came back uninitialized...
             // Remove the entry and return null...
@@ -317,8 +317,8 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                 if (credential instanceof AccessToken) {
                     final AccessToken accessToken = (AccessToken) credential;
                     matches = matches && targetsIntersect(target, accessToken.getTarget());
-                } else if (credential instanceof RefreshToken) {
-                    final RefreshToken refreshToken = (RefreshToken) credential;
+                } else if (credential instanceof RefreshTokenRecord) {
+                    final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
                     matches = matches && targetsIntersect(target, refreshToken.getTarget());
                 } else {
                     Logger.warn(TAG, "Query specified target-match, but no target to match.");
@@ -445,7 +445,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
                 credentialClass = AccessToken.class;
                 break;
             case RefreshToken:
-                credentialClass = RefreshToken.class;
+                credentialClass = RefreshTokenRecord.class;
                 break;
             case IdToken:
                 credentialClass = IdToken.class;

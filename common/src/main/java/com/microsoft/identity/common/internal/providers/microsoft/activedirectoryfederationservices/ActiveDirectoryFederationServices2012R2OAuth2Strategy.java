@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.activedirecto
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -104,7 +105,7 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
     }
 
     @Override
-    public TokenRequest createRefreshTokenRequest(com.microsoft.identity.common.internal.dto.RefreshToken refreshToken) {
+    public TokenRequest createRefreshTokenRequest(RefreshTokenRecord refreshToken) {
         return null;
     }
 
