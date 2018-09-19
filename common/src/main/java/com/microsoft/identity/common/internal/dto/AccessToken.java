@@ -23,10 +23,10 @@
 package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.ACCESS_TOKEN_TYPE;
 import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.AUTHORITY;
@@ -246,15 +246,28 @@ public class AccessToken extends Credential {
         mExpiresOn = expiresOn;
     }
 
-    @Override
-    public boolean isExpired() {
+    private boolean isExpired(final String expires) {
         // Init a Calendar for the current time/date
         final Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.SECOND, AuthenticationSettings.INSTANCE.getExpirationBuffer());
         final Date validity = calendar.getTime();
         // Init a Date for the accessToken's expiry
-        long epoch = Long.valueOf(getExpiresOn());
-        final Date expiresOn = new Date(epoch * 1000);
+        long epoch = Long.valueOf(expires);
+        final Date expiresOn = new Date(
+                TimeUnit.SECONDS.toMillis(epoch)
+        );
         return expiresOn.before(validity);
+    }
+
+    @Override
+    public boolean isExpired() {
+        boolean isExpired = isExpired(getExpiresOn());
+
+        if (isExpired
+                && null != getExtendedExpiresOn()
+                && 0 < Long.valueOf(getExtendedExpiresOn())) {
+            isExpired = isExpired(getExtendedExpiresOn());
+        }
+
+        return isExpired;
     }
 }
