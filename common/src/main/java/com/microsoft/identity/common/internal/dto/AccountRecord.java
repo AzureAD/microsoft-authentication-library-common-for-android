@@ -44,7 +44,7 @@ import static com.microsoft.identity.common.internal.dto.AccountRecord.Serialize
  * Account schema only needs to be present, if there's a user available. For scenarios, where
  * there's no user present (e.g. client credential grant), only credential schema is necessary.
  */
-public class AccountRecord extends AccountCredentialBase implements IAccount {
+public class AccountRecord extends AccountCredentialBase implements IAccountRecord {
 
     /**
      * String name list for Account object serialization.
@@ -123,7 +123,7 @@ public class AccountRecord extends AccountCredentialBase implements IAccount {
      *
      * @param copy IAccount
      */
-    public AccountRecord(final IAccount copy) {
+    public AccountRecord(final IAccountRecord copy) {
         // Required
         setHomeAccountId(copy.getHomeAccountId());
         setEnvironment(copy.getEnvironment());

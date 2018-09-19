@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import com.microsoft.identity.common.internal.dto.IAccount;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
 
 import java.util.List;
 
@@ -32,7 +32,7 @@ import java.util.List;
  * UserInfo shouldn't be used in common since it collides with the OIDC spec
  * This class contains information about the user/account associated with the authenticated subject/principal
  */
-public abstract class BaseAccount implements IAccount {
+public abstract class BaseAccount implements IAccountRecord {
 
     /**
      * Not all IDPs will have the same unique identifier for a user

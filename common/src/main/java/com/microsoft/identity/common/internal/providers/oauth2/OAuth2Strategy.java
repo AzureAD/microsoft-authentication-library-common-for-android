@@ -26,7 +26,7 @@ import android.net.Uri;
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.dto.IAccount;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -188,7 +188,7 @@ public abstract class OAuth2Strategy
      * @param account The IAccount available to this strategy.
      * @return AuthorizationRequest.
      */
-    public abstract GenericAuthorizationRequestBuilder createAuthorizationRequestBuilder(IAccount account);
+    public abstract GenericAuthorizationRequestBuilder createAuthorizationRequestBuilder(IAccountRecord account);
 
     /**
      * Abstract method for creating the token request.  In the case of AAD this is the method

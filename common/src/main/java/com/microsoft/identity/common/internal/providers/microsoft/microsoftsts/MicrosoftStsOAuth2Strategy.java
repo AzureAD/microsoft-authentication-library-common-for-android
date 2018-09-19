@@ -27,7 +27,7 @@ import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.internal.dto.IAccount;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -130,7 +130,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder(@Nullable final IAccount account) {
+    public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder(@Nullable final IAccountRecord account) {
         final MicrosoftStsAuthorizationRequest.Builder builder = createAuthorizationRequestBuilder();
 
         if (null != account) {

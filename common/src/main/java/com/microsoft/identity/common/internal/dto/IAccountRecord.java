@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.dto;
 
-public interface IAccount {
+public interface IAccountRecord {
 
     /**
      * Gets the home_account_id.

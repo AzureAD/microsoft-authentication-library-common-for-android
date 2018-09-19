@@ -30,7 +30,7 @@ import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.IAccount;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -382,7 +382,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         boolean accountRemoved = false;
         for (final Map.Entry<String, AccountRecord> entry : accounts.entrySet()) {
             Logger.infoPII(TAG, "Inspecting: [" + entry.getKey() + "]");
-            final IAccount currentAccount = entry.getValue();
+            final IAccountRecord currentAccount = entry.getValue();
 
             if (currentAccount.equals(accountToRemove)) {
                 mSharedPreferencesFileManager.remove(entry.getKey());
