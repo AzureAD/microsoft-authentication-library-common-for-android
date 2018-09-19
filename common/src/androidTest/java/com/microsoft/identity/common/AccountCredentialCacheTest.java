@@ -31,7 +31,7 @@ import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.AccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
@@ -234,7 +234,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void saveCredentialNoRealmNoTarget() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
         accessToken.setSecret(SECRET);
@@ -256,7 +256,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void saveCredentialNoHomeAccountIdNoRealmNoTarget() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
@@ -298,7 +298,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void saveCredentialNoHomeAccountIdNoRealm() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
@@ -336,7 +336,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void saveCredentialNoRealm() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
@@ -370,7 +370,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Save an AccessToken into the cache
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setRealm("Foo");
@@ -618,7 +618,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Save an AccessToken into the cache
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setRealm("Foo");
@@ -721,7 +721,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
 
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setRealm(REALM);
@@ -766,7 +766,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
 
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setRealm(REALM);
@@ -816,7 +816,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
 
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setRealm(REALM);
@@ -868,7 +868,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
 
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setRealm(REALM);
@@ -910,7 +910,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setTarget(TARGET);
 
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
         accessToken.setSecret(SECRET);
@@ -946,7 +946,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setTarget(TARGET);
 
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
         accessToken.setSecret(SECRET);
@@ -957,7 +957,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setClientId(CLIENT_ID);
         accessToken.setTarget(TARGET);
 
-        final AccessToken accessToken2 = new AccessToken();
+        final AccessTokenRecord accessToken2 = new AccessTokenRecord();
         accessToken2.setCachedAt(CACHED_AT);
         accessToken2.setExpiresOn(EXPIRES_ON);
         accessToken2.setSecret(SECRET);
@@ -994,7 +994,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setTarget(TARGET);
 
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
         accessToken.setSecret(SECRET);
@@ -1005,7 +1005,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setClientId(CLIENT_ID);
         accessToken.setTarget(TARGET);
 
-        final AccessToken accessToken2 = new AccessToken();
+        final AccessTokenRecord accessToken2 = new AccessTokenRecord();
         accessToken2.setCachedAt(CACHED_AT);
         accessToken2.setExpiresOn(EXPIRES_ON);
         accessToken2.setSecret(SECRET);
@@ -1042,7 +1042,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setTarget(TARGET);
 
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
         accessToken.setSecret(SECRET);
@@ -1053,7 +1053,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setClientId(CLIENT_ID);
         accessToken.setTarget(TARGET);
 
-        final AccessToken accessToken2 = new AccessToken();
+        final AccessTokenRecord accessToken2 = new AccessTokenRecord();
         accessToken2.setCachedAt(CACHED_AT);
         accessToken2.setExpiresOn(EXPIRES_ON);
         accessToken2.setSecret(SECRET);
@@ -1090,7 +1090,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setTarget(TARGET);
 
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
         accessToken.setSecret(SECRET);
@@ -1101,7 +1101,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setClientId(CLIENT_ID);
         accessToken.setTarget(TARGET);
 
-        final AccessToken accessToken2 = new AccessToken();
+        final AccessTokenRecord accessToken2 = new AccessTokenRecord();
         accessToken2.setCachedAt(CACHED_AT);
         accessToken2.setExpiresOn(EXPIRES_ON);
         accessToken2.setSecret(SECRET);
@@ -1138,7 +1138,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
 
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setRealm("Foo");
@@ -1149,7 +1149,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setExpiresOn(EXPIRES_ON);
         accessToken.setSecret(SECRET);
 
-        final AccessToken accessToken2 = new AccessToken();
+        final AccessTokenRecord accessToken2 = new AccessTokenRecord();
         accessToken2.setCredentialType(CredentialType.AccessToken.name());
         accessToken2.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken2.setRealm("Bar");
@@ -1186,7 +1186,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
 
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
         accessToken.setSecret(SECRET);
@@ -1197,7 +1197,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setClientId(CLIENT_ID);
         accessToken.setTarget(TARGET);
 
-        final AccessToken accessToken2 = new AccessToken();
+        final AccessTokenRecord accessToken2 = new AccessTokenRecord();
         accessToken2.setCachedAt(CACHED_AT);
         accessToken2.setExpiresOn(EXPIRES_ON);
         accessToken2.setSecret(SECRET);
@@ -1237,7 +1237,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Save an AccessToken into the cache
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setRealm(REALM);
@@ -1283,7 +1283,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Save an AccessToken into the cache
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setRealm(REALM);
         accessToken.setTarget(TARGET);
         accessToken.setExpiresOn(EXPIRES_ON);
@@ -1329,7 +1329,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         mAccountCredentialCache.saveAccount(account);
 
         // Save an AccessToken into the cache
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setRealm("Foo");
@@ -1376,7 +1376,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void noValueForCacheKeyAccessToken() {
         assertEquals(0, mAccountCredentialCache.getCredentials().size());
-        final AccessToken accessToken = (AccessToken) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.AccessToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        final AccessTokenRecord accessToken = (AccessTokenRecord) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.AccessToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
         assertNull(accessToken);
     }
 
@@ -1430,7 +1430,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void malformedJsonCacheValueForAccessToken() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
@@ -1441,14 +1441,14 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not an accessToken\"}");
 
-        final AccessToken malformedAccessToken = (AccessToken) mAccountCredentialCache.getCredential(cacheKey);
+        final AccessTokenRecord malformedAccessToken = (AccessTokenRecord) mAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedAccessToken);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
 
     @Test
     public void malformedCacheValueForAccessToken() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
@@ -1459,7 +1459,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an accessToken\"}");
 
-        final AccessToken malformedAccessToken = (AccessToken) mAccountCredentialCache.getCredential(cacheKey);
+        final AccessTokenRecord malformedAccessToken = (AccessTokenRecord) mAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedAccessToken);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }

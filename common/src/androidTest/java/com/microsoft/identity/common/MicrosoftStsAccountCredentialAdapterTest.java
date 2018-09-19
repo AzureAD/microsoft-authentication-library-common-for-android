@@ -26,7 +26,7 @@ import android.support.test.runner.AndroidJUnit4;
 import android.util.Base64;
 
 import com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter;
-import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
@@ -187,7 +187,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
 
     @Test
     public void createAccessToken() {
-        final AccessToken accessToken = mAccountCredentialAdapter.createAccessToken(mockStrategy, mockRequest, mockResponse);
+        final AccessTokenRecord accessToken = mAccountCredentialAdapter.createAccessToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(accessToken);
         assertEquals(MOCK_SCOPE, accessToken.getTarget());
         assertNotNull(accessToken.getCachedAt());

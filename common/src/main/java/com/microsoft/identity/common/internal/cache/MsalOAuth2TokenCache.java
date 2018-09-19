@@ -29,7 +29,7 @@ import android.support.annotation.Nullable;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
@@ -105,7 +105,7 @@ public class MsalOAuth2TokenCache
                 );
 
         // Create the AccessToken
-        final AccessToken accessTokenToSave =
+        final AccessTokenRecord accessTokenToSave =
                 mAccountCredentialAdapter.createAccessToken(
                         oAuth2Strategy,
                         request,
@@ -185,7 +185,7 @@ public class MsalOAuth2TokenCache
 
         final CacheRecord result = new CacheRecord();
         result.setAccount(account);
-        result.setAccessToken(accessTokens.isEmpty() ? null : (AccessToken) accessTokens.get(0));
+        result.setAccessToken(accessTokens.isEmpty() ? null : (AccessTokenRecord) accessTokens.get(0));
         result.setRefreshToken(refreshTokens.isEmpty() ? null : (RefreshTokenRecord) refreshTokens.get(0));
         result.setIdToken(idTokens.isEmpty() ? null : (IdToken) idTokens.get(0));
 
@@ -371,8 +371,8 @@ public class MsalOAuth2TokenCache
     private void saveCredentials(final Credential... credentials) {
         for (final Credential credential : credentials) {
 
-            if (credential instanceof AccessToken) {
-                deleteAccessTokensWithIntersectingScopes((AccessToken) credential);
+            if (credential instanceof AccessTokenRecord) {
+                deleteAccessTokensWithIntersectingScopes((AccessTokenRecord) credential);
             }
 
             mAccountCredentialCache.saveCredential(credential);
@@ -383,7 +383,7 @@ public class MsalOAuth2TokenCache
      * Validates that the supplied artifacts are schema-compliant and OK to write to the cache.
      *
      * @param accountToSave      The {@link AccountRecord} to save.
-     * @param accessTokenToSave  The {@link AccessToken} to save or null. Null params are assumed
+     * @param accessTokenToSave  The {@link AccessTokenRecord} to save or null. Null params are assumed
      *                           valid; this condition supports the SSO case.
      * @param refreshTokenToSave The {@link RefreshTokenRecord}
      *                           to save.
@@ -392,7 +392,7 @@ public class MsalOAuth2TokenCache
      */
     private void validateCacheArtifacts(
             @NonNull final AccountRecord accountToSave,
-            final AccessToken accessTokenToSave,
+            final AccessTokenRecord accessTokenToSave,
             @NonNull final RefreshTokenRecord refreshTokenToSave,
             @NonNull final IdToken idTokenToSave) throws ClientException {
         final boolean isAccountCompliant = isAccountSchemaCompliant(accountToSave);
@@ -430,7 +430,7 @@ public class MsalOAuth2TokenCache
         }
     }
 
-    private void deleteAccessTokensWithIntersectingScopes(final AccessToken referenceToken) {
+    private void deleteAccessTokensWithIntersectingScopes(final AccessTokenRecord referenceToken) {
         final String methodName = "deleteAccessTokensWithIntersectingScopes";
 
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
@@ -448,14 +448,14 @@ public class MsalOAuth2TokenCache
         );
 
         for (final Credential accessToken : accessTokens) {
-            if (scopesIntersect(referenceToken, (AccessToken) accessToken)) {
+            if (scopesIntersect(referenceToken, (AccessTokenRecord) accessToken)) {
                 Logger.infoPII(TAG + ":" + methodName, "Removing credential: " + accessToken);
                 mAccountCredentialCache.removeCredential(accessToken);
             }
         }
     }
 
-    private boolean scopesIntersect(final AccessToken token1, final AccessToken token2) {
+    private boolean scopesIntersect(final AccessTokenRecord token1, final AccessTokenRecord token2) {
         final String methodName = "scopesIntersect";
 
         final Set<String> token1Scopes = scopesAsSet(token1);
@@ -477,7 +477,7 @@ public class MsalOAuth2TokenCache
         return result;
     }
 
-    private Set<String> scopesAsSet(final AccessToken token) {
+    private Set<String> scopesAsSet(final AccessTokenRecord token) {
         final Set<String> scopeSet = new HashSet<>();
         final String scopeString = token.getTarget();
 
@@ -528,15 +528,15 @@ public class MsalOAuth2TokenCache
         return isSchemaCompliant(account.getClass(), params);
     }
 
-    private boolean isAccessTokenSchemaCompliant(@NonNull final AccessToken accessToken) {
+    private boolean isAccessTokenSchemaCompliant(@NonNull final AccessTokenRecord accessToken) {
         // Required fields...
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.CREDENTIAL_TYPE, accessToken.getCredentialType()},
                 {Credential.SerializedNames.HOME_ACCOUNT_ID, accessToken.getHomeAccountId()},
-                {AccessToken.SerializedNames.REALM, accessToken.getRealm()},
+                {AccessTokenRecord.SerializedNames.REALM, accessToken.getRealm()},
                 {Credential.SerializedNames.ENVIRONMENT, accessToken.getEnvironment()},
                 {Credential.SerializedNames.CLIENT_ID, accessToken.getClientId()},
-                {AccessToken.SerializedNames.TARGET, accessToken.getTarget()},
+                {AccessTokenRecord.SerializedNames.TARGET, accessToken.getTarget()},
                 {Credential.SerializedNames.CACHED_AT, accessToken.getCachedAt()},
                 {Credential.SerializedNames.EXPIRES_ON, accessToken.getExpiresOn()},
                 {Credential.SerializedNames.SECRET, accessToken.getSecret()},

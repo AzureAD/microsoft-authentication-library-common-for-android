@@ -31,7 +31,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -161,8 +161,8 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             cacheKey = cacheKey.replace(CLIENT_ID, sanitizeNull(credential.getClientId()));
         }
 
-        if (credential instanceof AccessToken) {
-            final AccessToken accessToken = (AccessToken) credential;
+        if (credential instanceof AccessTokenRecord) {
+            final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, sanitizeNull(accessToken.getRealm()));
             cacheKey = cacheKey.replace(TARGET, sanitizeNull(accessToken.getTarget()));
         } else if (credential instanceof RefreshTokenRecord) {

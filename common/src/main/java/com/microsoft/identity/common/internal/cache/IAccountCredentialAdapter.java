@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.cache;
 
 import com.microsoft.identity.common.BaseAccount;
-import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
@@ -59,7 +59,7 @@ public interface IAccountCredentialAdapter
      * @param response The authz response.
      * @return The derived AccessToken.
      */
-    AccessToken createAccessToken(T strategy, U request, V response);
+    AccessTokenRecord createAccessToken(T strategy, U request, V response);
 
     /**
      * Constructs a RefreshToken.

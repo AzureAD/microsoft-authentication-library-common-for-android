@@ -38,7 +38,7 @@ import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
@@ -113,7 +113,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     static class AccountCredentialTestBundle {
 
         final AccountRecord mGeneratedAccount;
-        final AccessToken mGeneratedAccessToken;
+        final AccessTokenRecord mGeneratedAccessToken;
         final RefreshTokenRecord mGeneratedRefreshToken;
         final IdToken mGeneratedIdToken;
 
@@ -138,7 +138,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             mGeneratedAccount.setEnvironment(environment);
             mGeneratedAccount.setRealm(realm);
 
-            mGeneratedAccessToken = new AccessToken();
+            mGeneratedAccessToken = new AccessTokenRecord();
             mGeneratedAccessToken.setRealm(realm);
             mGeneratedAccessToken.setTarget(target);
             mGeneratedAccessToken.setCachedAt(cacheAt);
@@ -292,7 +292,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         // Manually insert an AT with a ltd scope into the cache
         final String extendedScopes = "calendar.modify user.read user.write https://graph.windows.net";
 
-        AccessToken accessTokenToClear = new AccessToken();
+        AccessTokenRecord accessTokenToClear = new AccessTokenRecord();
         accessTokenToClear.setRealm(REALM);
         accessTokenToClear.setCachedAt(CACHED_AT);
         accessTokenToClear.setExpiresOn(EXPIRES_ON);

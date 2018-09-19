@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.cache;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdToken;
@@ -69,7 +69,7 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public AccessToken createAccessToken(
+    public AccessTokenRecord createAccessToken(
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
@@ -78,7 +78,7 @@ public class MicrosoftStsAccountCredentialAdapter
             final long expiresOn = getExpiresOn(response);
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
-            final AccessToken accessToken = new AccessToken();
+            final AccessTokenRecord accessToken = new AccessTokenRecord();
             // Required fields
             accessToken.setCredentialType(CredentialType.AccessToken.name());
             accessToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));

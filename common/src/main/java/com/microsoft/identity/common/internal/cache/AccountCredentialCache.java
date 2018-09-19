@@ -26,7 +26,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
@@ -57,7 +57,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             "com.microsoft.identity.client.account_credential_cache";
 
     private static final AccountRecord EMPTY_ACCOUNT = new AccountRecord();
-    private static final AccessToken EMPTY_AT = new AccessToken();
+    private static final AccessTokenRecord EMPTY_AT = new AccessTokenRecord();
     private static final RefreshTokenRecord EMPTY_RT = new RefreshTokenRecord();
     private static final IdToken EMPTY_ID = new IdToken();
 
@@ -126,7 +126,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         final CredentialType type = getCredentialTypeForCredentialCacheKey(cacheKey);
         final Class<? extends Credential> clazz;
         if (CredentialType.AccessToken == type) {
-            clazz = AccessToken.class;
+            clazz = AccessTokenRecord.class;
         } else if (CredentialType.RefreshToken == type) {
             clazz = RefreshTokenRecord.class;
         } else if (CredentialType.IdToken == type) {
@@ -142,7 +142,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         );
 
         if (null == credential
-                || (AccessToken.class == clazz && EMPTY_AT.equals(credential))
+                || (AccessTokenRecord.class == clazz && EMPTY_AT.equals(credential))
                 || (RefreshTokenRecord.class == clazz && EMPTY_RT.equals(credential))
                 || (IdToken.class == clazz) && EMPTY_ID.equals(credential)) {
             // The returned credential came back uninitialized...
@@ -308,14 +308,14 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             matches = matches && credentialType.name().equalsIgnoreCase(credential.getCredentialType());
             matches = matches && clientId.equalsIgnoreCase(credential.getClientId());
 
-            if (mustMatchOnRealm && credential instanceof AccessToken) {
-                final AccessToken accessToken = (AccessToken) credential;
+            if (mustMatchOnRealm && credential instanceof AccessTokenRecord) {
+                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
                 matches = matches && realm.equalsIgnoreCase(accessToken.getRealm());
             }
 
             if (mustMatchOnTarget) {
-                if (credential instanceof AccessToken) {
-                    final AccessToken accessToken = (AccessToken) credential;
+                if (credential instanceof AccessTokenRecord) {
+                    final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
                     matches = matches && targetsIntersect(target, accessToken.getTarget());
                 } else if (credential instanceof RefreshTokenRecord) {
                     final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
@@ -442,7 +442,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
         Class<? extends Credential> credentialClass = null;
         switch (targetType) {
             case AccessToken:
-                credentialClass = AccessToken.class;
+                credentialClass = AccessTokenRecord.class;
                 break;
             case RefreshToken:
                 credentialClass = RefreshTokenRecord.class;

@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdToken;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
@@ -30,7 +30,7 @@ import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 public class CacheRecord implements ICacheRecord {
 
     private AccountRecord mAccount;
-    private AccessToken mAccessToken;
+    private AccessTokenRecord mAccessToken;
     private RefreshTokenRecord mRefreshToken;
     private IdToken mIdToken;
 
@@ -43,12 +43,12 @@ public class CacheRecord implements ICacheRecord {
         return mAccount;
     }
 
-    public void setAccessToken(final AccessToken accesToken) {
+    public void setAccessToken(final AccessTokenRecord accesToken) {
         mAccessToken = accesToken;
     }
 
     @Override
-    public AccessToken getAccessToken() {
+    public AccessTokenRecord getAccessToken() {
         return mAccessToken;
     }
 

@@ -28,7 +28,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
-import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
@@ -77,7 +77,7 @@ public class CacheKeyValueDelegateTest {
     // AccessTokens
     @Test
     public void accessTokenCreateCacheKeyComplete() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
@@ -97,7 +97,7 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accessTokenCreateCacheKeyNoHomeAccountId() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
@@ -116,7 +116,7 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accessTokenCreateCacheKeyNoRealm() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
@@ -135,7 +135,7 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accessTokenCreateCacheKeyNoTarget() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
@@ -154,7 +154,7 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accessTokenCreateCacheKeyNoHomeAccountIdNoRealmNoTarget() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
@@ -171,7 +171,7 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accessTokenCreateCacheKeyNoRealmNoTarget() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name());
@@ -189,7 +189,7 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accessTokenCreateCacheValue() throws JSONException {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name().toLowerCase(Locale.US));
@@ -205,13 +205,13 @@ public class CacheKeyValueDelegateTest {
         assertEquals(ENVIRONMENT, jsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
         assertEquals(CLIENT_ID, jsonObject.getString(Credential.SerializedNames.CLIENT_ID));
-        assertEquals(REALM, jsonObject.getString(AccessToken.SerializedNames.REALM));
-        assertEquals(TARGET, jsonObject.getString(AccessToken.SerializedNames.TARGET));
+        assertEquals(REALM, jsonObject.getString(AccessTokenRecord.SerializedNames.REALM));
+        assertEquals(TARGET, jsonObject.getString(AccessTokenRecord.SerializedNames.TARGET));
     }
 
     @Test
     public void accessTokenExtraValueSerialization() throws JSONException {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name().toLowerCase(Locale.US));
@@ -242,8 +242,8 @@ public class CacheKeyValueDelegateTest {
         assertEquals(ENVIRONMENT, derivedCacheValueJsonObject.getString(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(CredentialType.AccessToken.name().toLowerCase(Locale.US), derivedCacheValueJsonObject.getString("credential_type"));
         assertEquals(CLIENT_ID, derivedCacheValueJsonObject.getString(Credential.SerializedNames.CLIENT_ID));
-        assertEquals(REALM, derivedCacheValueJsonObject.getString(AccessToken.SerializedNames.REALM));
-        assertEquals(TARGET, derivedCacheValueJsonObject.getString(AccessToken.SerializedNames.TARGET));
+        assertEquals(REALM, derivedCacheValueJsonObject.getString(AccessTokenRecord.SerializedNames.REALM));
+        assertEquals(TARGET, derivedCacheValueJsonObject.getString(AccessTokenRecord.SerializedNames.TARGET));
         assertEquals("bar", derivedCacheValueJsonObject.getString("foo"));
 
         final JSONArray jsonArr = derivedCacheValueJsonObject.getJSONArray("numbers");
@@ -255,7 +255,7 @@ public class CacheKeyValueDelegateTest {
 
     @Test
     public void accessTokenExtraValueDeserialization() throws JSONException {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
         accessToken.setEnvironment(ENVIRONMENT);
         accessToken.setCredentialType(CredentialType.AccessToken.name().toLowerCase(Locale.US));
@@ -278,7 +278,7 @@ public class CacheKeyValueDelegateTest {
 
         serializedValue = jsonObject.toString();
 
-        final AccessToken deserializedValue = mDelegate.fromCacheValue(serializedValue, AccessToken.class);
+        final AccessTokenRecord deserializedValue = mDelegate.fromCacheValue(serializedValue, AccessTokenRecord.class);
         assertNotNull(deserializedValue);
         assertNull(deserializedValue.getAdditionalFields().get(Credential.SerializedNames.ENVIRONMENT));
         assertEquals(HOME_ACCOUNT_ID, deserializedValue.getHomeAccountId());
