@@ -159,7 +159,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 .getStringExtra(AuthenticationConstants.Broker.BROKER_REQUEST));
     }
 
-    private boolean processRedirectUrl(@NonNull final WebView view, @NonNull final String url) {
+    // This function is only called when the client received a redirect that starts with the apps
+    // redirect uri.
+    protected boolean processRedirectUrl(@NonNull final WebView view, @NonNull final String url) {
         final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
         if (!StringExtensions.isNullOrBlank(parameters.get(ERROR))) {
             Logger.info(TAG, "Sending intent to cancel authentication activity");
