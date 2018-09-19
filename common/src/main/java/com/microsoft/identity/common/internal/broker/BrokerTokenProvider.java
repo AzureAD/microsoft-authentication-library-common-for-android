@@ -11,7 +11,6 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 
 
-
 public class BrokerTokenProvider {
 
     private static final String TAG = BrokerTokenProvider.class.getSimpleName();
@@ -56,14 +55,14 @@ public class BrokerTokenProvider {
         brokerOptions.putString(AuthenticationConstants.Broker.ACCOUNT_USERINFO_USERID, request.getLoginHint());
         brokerOptions.putString(AuthenticationConstants.Broker.ACCOUNT_LOGIN_HINT, request.getLoginHint());
         brokerOptions.putString(AuthenticationConstants.Broker.ACCOUNT_NAME, request.getLoginHint());
-        brokerOptions.putString(AuthenticationConstants.Broker.ACCOUNT_EXTRA_QUERY_PARAM, request.getExtraQueryParam());
+        // TODO uncomment the line below when broker support is added...
+        //brokerOptions.putString(AuthenticationConstants.Broker.ACCOUNT_EXTRA_QUERY_PARAM, request.getExtraQueryParam());
         brokerOptions.putString(AuthenticationConstants.Broker.AUTH_RESPONSE_TYPE, request.getResponseType());
         brokerOptions.putString(AuthenticationConstants.Broker.AUTH_STATE, request.getState());
         brokerOptions.putString(AuthenticationConstants.Broker.AUTH_SCOPE, request.getScope());
         brokerOptions.putString(AuthenticationConstants.Broker.LIB_NAME, request.getLibraryName());
         brokerOptions.putString(AuthenticationConstants.Broker.LIB_VERSION, request.getLibraryVersion());
         brokerOptions.putString(AuthenticationConstants.Broker.CLIENT_APP_PACKAGE_NAME, activity.getPackageName());
-
 
         if (request.getCorrelationId() != null) {
             brokerOptions.putString(AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID,
