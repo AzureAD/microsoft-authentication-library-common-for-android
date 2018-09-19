@@ -26,6 +26,7 @@ import android.net.Uri;
 
 import com.microsoft.identity.common.Account;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.dto.IAccount;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -126,7 +127,7 @@ public abstract class OAuth2Strategy
         mTokenEndpoint = tokenEndpoint;
     }
 
-    protected final void setAuthorizationEndpoint(final String authorizationEndpoint){
+    protected final void setAuthorizationEndpoint(final String authorizationEndpoint) {
         mAuthorizationEndpoint = authorizationEndpoint;
     }
 
@@ -175,11 +176,19 @@ public abstract class OAuth2Strategy
     public abstract GenericAccount createAccount(GenericTokenResponse response);
 
     /**
-     * Abstract method for creating the authorization request.  In the case of AAD this is the method
+     * Abstract method for creating the authorization request.
      *
      * @return AuthorizationRequest.
      */
     public abstract GenericAuthorizationRequestBuilder createAuthorizationRequestBuilder();
+
+    /**
+     * Abstract method for creating the authorization request.
+     *
+     * @param account The IAccount available to this strategy.
+     * @return AuthorizationRequest.
+     */
+    public abstract GenericAuthorizationRequestBuilder createAuthorizationRequestBuilder(IAccount account);
 
     /**
      * Abstract method for creating the token request.  In the case of AAD this is the method

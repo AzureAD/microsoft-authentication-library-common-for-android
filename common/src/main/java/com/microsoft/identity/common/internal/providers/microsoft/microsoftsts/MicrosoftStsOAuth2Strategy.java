@@ -23,8 +23,11 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.dto.IAccount;
 import com.microsoft.identity.common.internal.dto.RefreshToken;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -123,6 +126,31 @@ public class MicrosoftStsOAuth2Strategy
             builder.setSlice(mConfig.getSlice());
         }
         builder.setFlightParameters(mConfig.getFlightParameters());
+        return builder;
+    }
+
+    @Override
+    public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder(@Nullable final IAccount account) {
+        final MicrosoftStsAuthorizationRequest.Builder builder = createAuthorizationRequestBuilder();
+
+        if (null != account) {
+            final String homeAccountId = account.getHomeAccountId();
+
+            // Split this value by its parts... <uid>.<utid>
+            final int EXPECTED_LENGTH = 2;
+            final int INDEX_UID = 0;
+            final int INDEX_UTID = 1;
+
+            final String[] uidUtidPair = homeAccountId.split("\\.");
+
+            if (EXPECTED_LENGTH == uidUtidPair.length
+                    && !StringExtensions.isNullOrBlank(uidUtidPair[INDEX_UID])
+                    && !StringExtensions.isNullOrBlank(uidUtidPair[INDEX_UTID])) {
+                builder.setUid(uidUtidPair[INDEX_UID]);
+                builder.setUtid(uidUtidPair[INDEX_UTID]);
+            }
+        }
+
         return builder;
     }
 
