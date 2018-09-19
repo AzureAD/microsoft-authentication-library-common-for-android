@@ -32,7 +32,7 @@ import java.util.List;
  * UserInfo shouldn't be used in common since it collides with the OIDC spec
  * This class contains information about the user/account associated with the authenticated subject/principal
  */
-public abstract class Account implements IAccount {
+public abstract class BaseAccount implements IAccount {
 
     /**
      * Not all IDPs will have the same unique identifier for a user

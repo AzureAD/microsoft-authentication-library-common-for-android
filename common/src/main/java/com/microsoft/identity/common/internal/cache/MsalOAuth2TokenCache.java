@@ -26,6 +26,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccessToken;
@@ -54,7 +55,7 @@ public class MsalOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,
                 GenericTokenResponse extends TokenResponse,
-                GenericAccount extends com.microsoft.identity.common.Account,
+                GenericAccount extends BaseAccount,
                 GenericRefreshToken extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken>
         extends OAuth2TokenCache<GenericOAuth2Strategy, GenericAuthorizationRequest, GenericTokenResponse>
         implements IShareSingleSignOnState<GenericAccount, GenericRefreshToken> {

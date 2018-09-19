@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.internal.dto.AccessToken;
 import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.IdToken;
@@ -37,7 +38,7 @@ public interface IAccountCredentialAdapter
         <T extends OAuth2Strategy,
                 U extends AuthorizationRequest,
                 V extends TokenResponse,
-                W extends com.microsoft.identity.common.Account,
+                W extends BaseAccount,
                 X extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> {
 
     /**
@@ -91,7 +92,7 @@ public interface IAccountCredentialAdapter
     RefreshToken asRefreshToken(X refreshToken);
 
     /**
-     * Adapter method to turn {@link com.microsoft.identity.common.Account} instances into
+     * Adapter method to turn {@link BaseAccount} instances into
      * {@link Account} instances.
      *
      * @param account The Account to adapt.
@@ -100,7 +101,7 @@ public interface IAccountCredentialAdapter
     Account asAccount(W account);
 
     /**
-     * Constructs IdToken instances from {@link com.microsoft.identity.common.Account} and
+     * Constructs IdToken instances from {@link BaseAccount} and
      * {@link com.microsoft.identity.common.internal.providers.oauth2.RefreshToken} instances.
      *
      * @param account      The Account to read.
