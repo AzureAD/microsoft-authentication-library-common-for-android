@@ -26,6 +26,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.ACCESS_TOKEN_TYPE;
 import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.AUTHORITY;
@@ -251,7 +252,9 @@ public class AccessToken extends Credential {
         final Date validity = calendar.getTime();
         // Init a Date for the accessToken's expiry
         long epoch = Long.valueOf(expires);
-        final Date expiresOn = new Date(epoch * 1000);
+        final Date expiresOn = new Date(
+                TimeUnit.SECONDS.toMillis(epoch)
+        );
         return expiresOn.before(validity);
     }
 
