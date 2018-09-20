@@ -26,7 +26,6 @@ import android.app.Activity;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
@@ -43,14 +42,14 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
         return sInstance;
     }
 
-    public GenericAuthorizationStrategy getAuthorizationStrategy(Activity activity, @NonNull AuthorizationConfiguration configuration) {
-        if (configuration.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW) {
+    public GenericAuthorizationStrategy getAuthorizationStrategy(Activity activity, @NonNull AuthorizationAgent authorizationAgent) {
+        if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
             Logger.info(TAG, "Use webView for authorization.");
-            return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(activity, configuration));
+            return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(activity));
         }
 
         // Use device browser auth flow as default.
         Logger.info(TAG, "Use browser for authorization.");
-        return (GenericAuthorizationStrategy) (new BrowserAuthorizationStrategy(activity, configuration));
+        return (GenericAuthorizationStrategy) (new BrowserAuthorizationStrategy(activity));
     }
 }

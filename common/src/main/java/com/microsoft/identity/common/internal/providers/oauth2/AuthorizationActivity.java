@@ -33,7 +33,10 @@ public final class AuthorizationActivity extends Activity {
     static final String KEY_AUTH_REQUEST_URL = "authRequestUrl";
 
     @VisibleForTesting
-    static final String KEY_AUTH_CONFIGURATION = "authConfiguration";
+    static final String KEY_AUTH_REDIRECT_URI = "authRedirectUri";
+
+    @VisibleForTesting
+    static final String KEY_AUTH_AUTHORIZATION_AGENT = "authorizationAgent";
 
     private static final String TAG = AuthorizationActivity.class.getSimpleName();
 
@@ -46,16 +49,21 @@ public final class AuthorizationActivity extends Activity {
     private boolean mPkeyAuthStatus = false; //NOPMD //TODO Will finish the implementation in Phase 1 (broker is ready).
 
     private String mAuthorizationRequestUrl;
-    private AuthorizationConfiguration mAuthorizationConfiguration;
+
+    private String mRedirectUri;
+
+    private AuthorizationAgent mAuthorizationAgent;
 
     public static Intent createStartIntent(final Context context,
                                            final Intent authIntent,
                                            final String requestUrl,
-                                           final AuthorizationConfiguration configuration) {
+                                           final String redirectUri,
+                                           final AuthorizationAgent authorizationAgent) {
         final Intent intent = new Intent(context, AuthorizationActivity.class);
         intent.putExtra(KEY_AUTH_INTENT, authIntent);
         intent.putExtra(KEY_AUTH_REQUEST_URL, requestUrl);
-        intent.putExtra(KEY_AUTH_CONFIGURATION, configuration);
+        intent.putExtra(KEY_AUTH_REDIRECT_URI, redirectUri);
+        intent.putExtra(KEY_AUTH_AUTHORIZATION_AGENT, authorizationAgent);
         return intent;
     }
 
@@ -85,7 +93,8 @@ public final class AuthorizationActivity extends Activity {
         mAuthorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false);
         mPkeyAuthStatus = state.getBoolean(KEY_PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(KEY_AUTH_REQUEST_URL);
-        mAuthorizationConfiguration = (AuthorizationConfiguration) state.getSerializable(KEY_AUTH_CONFIGURATION);
+        mRedirectUri = state.getString(KEY_AUTH_REDIRECT_URI);
+        mAuthorizationAgent = (AuthorizationAgent)state.getSerializable(KEY_AUTH_AUTHORIZATION_AGENT);
     }
 
     @Override
@@ -116,10 +125,9 @@ public final class AuthorizationActivity extends Activity {
          */
         if (!mAuthorizationStarted) {
             mAuthorizationStarted = true;
-            if (mAuthorizationConfiguration != null
-                    && mAuthorizationConfiguration.getAuthorizationAgent() == AuthorizationAgent.WEBVIEW) {
+            if (mAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
                 //TODO Replace AzureActiveDirectoryWebViewClient with GenericOAuth2WebViewClient once OAuth2Strategy get integrated.
-                AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(this, new ChallengeCompletionCallback(), mAuthorizationConfiguration.getRedirectUrl());
+                AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(this, new ChallengeCompletionCallback(), mRedirectUri);
                 setUpWebView(webViewClient);
                 mWebView.post(new Runnable() {
                     @Override
@@ -161,7 +169,8 @@ public final class AuthorizationActivity extends Activity {
         super.onSaveInstanceState(outState);
         outState.putBoolean(KEY_AUTHORIZATION_STARTED, mAuthorizationStarted);
         outState.putBoolean(KEY_PKEYAUTH_STATUS, mPkeyAuthStatus);
-        outState.putSerializable(KEY_AUTH_CONFIGURATION, mAuthorizationConfiguration);
+        outState.putSerializable(KEY_AUTH_AUTHORIZATION_AGENT, mAuthorizationAgent);
+        outState.putString(KEY_AUTH_REDIRECT_URI, mRedirectUri);
         outState.putString(KEY_AUTH_REQUEST_URL, mAuthorizationRequestUrl);
     }
 

@@ -25,17 +25,16 @@ package com.microsoft.identity.common.internal.ui.browser;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFuture;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
@@ -45,7 +44,6 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
     private final static String TAG = BrowserAuthorizationStrategy.class.getSimpleName();
 
-    private final AuthorizationConfiguration mConfiguration;
     private CustomTabsManager mCustomTabManager;
     private WeakReference<Activity> mReferencedActivity;
     private AuthorizationResultFuture mAuthorizationResultFuture;
@@ -53,8 +51,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
-    public BrowserAuthorizationStrategy(Activity activity, @NonNull AuthorizationConfiguration configuration) {
-        mConfiguration = configuration;
+    public BrowserAuthorizationStrategy(Activity activity) {
         mReferencedActivity = new WeakReference<>(activity);
     }
 
@@ -84,7 +81,14 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         authIntent.setPackage(browser.getPackageName());
         final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
         authIntent.setData(requestUrl);
-        mReferencedActivity.get().startActivityForResult(AuthorizationActivity.createStartIntent(mReferencedActivity.get().getApplicationContext(), authIntent, requestUrl.toString(), mConfiguration), BROWSER_FLOW);
+        mReferencedActivity.get().startActivityForResult(
+                AuthorizationActivity.createStartIntent(
+                        mReferencedActivity.get().getApplicationContext(),
+                        authIntent,
+                        requestUrl.toString(),
+                        mAuthorizationRequest.getRedirectUri(),
+                        AuthorizationAgent.BROWSER),
+                BROWSER_FLOW);
 
         return mAuthorizationResultFuture;
     }

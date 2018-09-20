@@ -25,16 +25,15 @@ package com.microsoft.identity.common.internal.ui.webview;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFuture;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
@@ -47,7 +46,6 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
 
     private static final String TAG = EmbeddedWebViewAuthorizationStrategy.class.getSimpleName();
-    private AuthorizationConfiguration mConfiguration;
     private WeakReference<Activity> mReferencedActivity;
     private AuthorizationResultFuture mAuthorizationResultFuture;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
@@ -58,8 +56,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      *
      * @param activity The app activity which invoke the interactive auth request.
      */
-    public EmbeddedWebViewAuthorizationStrategy(Activity activity, @NonNull final AuthorizationConfiguration configuration) {
-        mConfiguration = configuration;
+    public EmbeddedWebViewAuthorizationStrategy(Activity activity) {
         mReferencedActivity = new WeakReference<>(activity);
     }
 
@@ -79,7 +76,8 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                 mReferencedActivity.get().getApplicationContext(),
                 null,
                 requestUrl.toString(),
-                mConfiguration);
+                mAuthorizationRequest.getRedirectUri(),
+                AuthorizationAgent.WEBVIEW);
         mReferencedActivity.get().startActivityForResult(authIntent, BROWSER_FLOW);
         return mAuthorizationResultFuture;
     }
