@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
+import android.util.Pair;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -37,15 +38,19 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
      * Serial version id.
      */
     private static final long serialVersionUID = 6545759826515911472L;
+
     /**
      * Indicates the type of user interaction that is required. The only valid values at this time are 'login', 'none', and 'consent'.
      */
     @SerializedName("prompt")
     private String mPrompt;
+
     @SerializedName("login_req")
     private String mUid;
+
     @SerializedName("domain_req")
     private String mUtid;
+
     //@SerializedName("login_hint")
     private transient String mDisplayableId;
 
@@ -135,15 +140,18 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 
-        for (Map.Entry<String, String> entry : ObjectMapper.deserializeQueryStringToMap(getExtraQueryParam()).entrySet()) {
-            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        // Add extra qp, if present...
+        if (null != getExtraQueryParams() && !getExtraQueryParams().isEmpty()) {
+            for (final Pair<String, String> queryParam : getExtraQueryParams()) {
+                uriBuilder.appendQueryParameter(queryParam.first, queryParam.second);
+            }
         }
 
         for (Map.Entry<String, String> entry : mFlightParameters.entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 
-        if(mSlice != null){
+        if (mSlice != null) {
             uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
             uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDC());
         }

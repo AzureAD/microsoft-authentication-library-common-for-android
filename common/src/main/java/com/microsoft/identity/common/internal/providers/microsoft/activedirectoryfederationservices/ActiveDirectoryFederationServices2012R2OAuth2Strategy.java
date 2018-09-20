@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.internal.dto.IAccount;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -90,6 +91,11 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
     @Override
     public AuthorizationRequest.Builder createAuthorizationRequestBuilder() {
         return null;
+    }
+
+    @Override
+    public AuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccount account) {
+        return createAuthorizationRequestBuilder();
     }
 
     @Override

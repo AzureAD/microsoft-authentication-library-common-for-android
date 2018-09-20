@@ -23,12 +23,14 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.net.Uri;
+import android.util.Pair;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -84,6 +86,8 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     @SerializedName("scope")
     private String mScope;
 
+    private transient List<Pair<String, String>> mExtraQueryParams;
+
     /**
      * Constructor of AuthorizationRequest.
      */
@@ -93,6 +97,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mRedirectUri = builder.mRedirectUri;
         mState = builder.mState;
         mScope = builder.mScope;
+        mExtraQueryParams = builder.mExtraQueryParams;
     }
 
     public static final class ResponseType {
@@ -110,14 +115,16 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
          * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
          */
         public String mLoginHint;
+
         /**
          * Correlation ID.
          */
         public UUID mCorrelationId;
+
         /**
          * Extra query parameters.
          */
-        public String mExtraQueryParam; //TODO not serializable
+        public List<Pair<String, String>> mExtraQueryParams;
 
         public String mPrompt;
 
@@ -161,8 +168,8 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return self();
         }
 
-        public B setExtraQueryParam(String extraQueryParam) {
-            mExtraQueryParam = extraQueryParam;
+        public B setExtraQueryParams(List<Pair<String, String>> extraQueryParams) {
+            mExtraQueryParams = extraQueryParams;
             return self();
         }
 
@@ -186,6 +193,10 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      */
     public String getResponseType() {
         return mResponseType;
+    }
+
+    public List<Pair<String, String>> getExtraQueryParams() {
+        return mExtraQueryParams;
     }
 
     /**
@@ -229,8 +240,16 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
         Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
+
         for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
+
+        // Add extra qp, if present...
+        if (null != mExtraQueryParams && !mExtraQueryParams.isEmpty()) {
+            for (final Pair<String, String> queryParam : mExtraQueryParams) {
+                uriBuilder.appendQueryParameter(queryParam.first, queryParam.second);
+            }
         }
 
         return uriBuilder.build();

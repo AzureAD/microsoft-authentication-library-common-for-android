@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
 import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.internal.dto.IAccount;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -88,6 +89,11 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     @Override
     public AuthorizationRequest.Builder createAuthorizationRequestBuilder() {
         return new AzureActiveDirectoryB2CAuthorizationRequest.Builder();
+    }
+
+    @Override
+    public AuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccount account) {
+        return createAuthorizationRequestBuilder();
     }
 
     @Override

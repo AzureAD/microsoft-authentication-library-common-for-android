@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Base64;
+import android.util.Pair;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -59,20 +60,19 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
      */
     @SerializedName("login_hint")
     private String mLoginHint;
+
     /**
      * Correlation ID.
      */
     @SerializedName("client-request-id")
     private UUID mCorrelationId;
+
     /**
      * Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
      */
     @SerializedName("pkceChallenge")
     private PkceChallenge mPkceChallenge;
-    /**
-     * Extra query parameters.
-     */
-    private transient String mExtraQueryParam; //TODO need valid the format and append it into the start url
+
     /**
      * The version of the calling library.
      */
@@ -104,11 +104,10 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mLoginHint = builder.mLoginHint;
         mCorrelationId = builder.mCorrelationId;
 
-        mExtraQueryParam = builder.mExtraQueryParam;
         mPkceChallenge = PkceChallenge.newPkceChallenge();
         mState = generateEncodedState();
 
-        if(builder.mSlice != null){
+        if (builder.mSlice != null) {
             mSlice = builder.mSlice;
         }
         mFlightParameters = builder.mFlightParameters;
@@ -178,12 +177,12 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
             return self();
         }
 
-        public B setSlice(AzureActiveDirectorySlice slice){
+        public B setSlice(AzureActiveDirectorySlice slice) {
             mSlice = slice;
             return self();
         }
 
-        public B setFlightParameters(Map<String, String> flightParameters){
+        public B setFlightParameters(Map<String, String> flightParameters) {
             mFlightParameters = flightParameters;
             return self();
         }
@@ -206,10 +205,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
     public PkceChallenge getPkceChallenge() {
         return mPkceChallenge;
-    }
-
-    public String getExtraQueryParam() {
-        return mExtraQueryParam;
     }
 
     public String getLibraryVersion() {
@@ -266,8 +261,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 
-        for (Map.Entry<String, String> entry : ObjectMapper.deserializeQueryStringToMap(getExtraQueryParam()).entrySet()) {
-            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        // Add extra qp, if present...
+        if (null != getExtraQueryParams() && !getExtraQueryParams().isEmpty()) {
+            for (final Pair<String, String> queryParam : getExtraQueryParams()) {
+                uriBuilder.appendQueryParameter(queryParam.first, queryParam.second);
+            }
         }
 
         return uriBuilder.build();
