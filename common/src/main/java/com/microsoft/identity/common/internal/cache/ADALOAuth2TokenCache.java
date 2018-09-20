@@ -28,12 +28,13 @@ import android.os.Build;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.CacheKey;
 import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
@@ -167,7 +168,7 @@ public class ADALOAuth2TokenCache
     public ICacheRecord load(
             final String clientId,
             final String target,
-            final com.microsoft.identity.common.internal.dto.Account account) {
+            final AccountRecord account) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
@@ -181,17 +182,17 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public com.microsoft.identity.common.internal.dto.Account getAccount(final String environment,
-                                                                         final String clientId,
-                                                                         final String homeAccountId) {
+    public AccountRecord getAccount(final String environment,
+                                    final String clientId,
+                                    final String homeAccountId) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
     }
 
     @Override
-    public List<com.microsoft.identity.common.internal.dto.Account> getAccounts(final String environment,
-                                                                                final String clientId) {
+    public List<AccountRecord> getAccounts(final String environment,
+                                           final String clientId) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
@@ -257,13 +258,13 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public void setSingleSignOnState(final Account account, final RefreshToken refreshToken) {
+    public void setSingleSignOnState(final BaseAccount account, final RefreshToken refreshToken) {
         // Unimplemented
         Logger.warn(TAG, "setSingleSignOnState was called, but is not implemented.");
     }
 
     @Override
-    public RefreshToken getSingleSignOnState(final Account account) {
+    public RefreshToken getSingleSignOnState(final BaseAccount account) {
         // Unimplemented
         Logger.warn(TAG, "getSingleSignOnState was called, but is not implemented.");
         final RefreshToken refreshToken = null;

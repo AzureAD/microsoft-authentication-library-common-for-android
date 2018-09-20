@@ -26,9 +26,9 @@ import android.support.test.runner.AndroidJUnit4;
 import android.util.Base64;
 
 import com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter;
-import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
@@ -171,7 +171,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     @Test
     public void createAccount() {
         // This test is now basically a copy-constructor test
-        final Account account = mAccountCredentialAdapter.createAccount(mockStrategy, mockRequest, mockResponse);
+        final AccountRecord account = mAccountCredentialAdapter.createAccount(mockStrategy, mockRequest, mockResponse);
         assertNotNull(account);
         assertEquals(MOCK_UID + "." + MOCK_UTID, account.getHomeAccountId());
         assertEquals(MOCK_ENVIRONMENT, account.getEnvironment());
@@ -187,7 +187,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
 
     @Test
     public void createAccessToken() {
-        final AccessToken accessToken = mAccountCredentialAdapter.createAccessToken(mockStrategy, mockRequest, mockResponse);
+        final AccessTokenRecord accessToken = mAccountCredentialAdapter.createAccessToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(accessToken);
         assertEquals(MOCK_SCOPE, accessToken.getTarget());
         assertNotNull(accessToken.getCachedAt());
@@ -203,7 +203,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
 
     @Test
     public void createRefreshToken() {
-        final RefreshToken refreshToken = mAccountCredentialAdapter.createRefreshToken(mockStrategy, mockRequest, mockResponse);
+        final RefreshTokenRecord refreshToken = mAccountCredentialAdapter.createRefreshToken(mockStrategy, mockRequest, mockResponse);
         assertNotNull(refreshToken);
         assertEquals(MOCK_SCOPE, refreshToken.getTarget());
         assertNotNull(refreshToken.getCachedAt());

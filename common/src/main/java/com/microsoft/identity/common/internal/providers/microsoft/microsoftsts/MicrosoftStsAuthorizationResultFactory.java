@@ -45,7 +45,9 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
 
     private static final String TAG = MicrosoftStsAuthorizationResultFactory.class.getSimpleName();
 
-    /** Constant key to get authorization request final url from intent. */
+    /**
+     * Constant key to get authorization request final url from intent.
+     */
     public static final String MSSTS_AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
 
     @Override

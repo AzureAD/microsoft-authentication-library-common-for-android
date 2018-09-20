@@ -22,8 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
-import com.microsoft.identity.common.Account;
-import com.microsoft.identity.common.internal.dto.IAccount;
+import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -81,7 +82,7 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
     }
 
     @Override
-    public Account createAccount(TokenResponse response) {
+    public BaseAccount createAccount(TokenResponse response) {
         return null;
     }
 
@@ -91,7 +92,7 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
     }
 
     @Override
-    public AuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccount account) {
+    public AuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccountRecord account) {
         return null;
     }
 
@@ -101,7 +102,7 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
     }
 
     @Override
-    public TokenRequest createRefreshTokenRequest(com.microsoft.identity.common.internal.dto.RefreshToken refreshToken) {
+    public TokenRequest createRefreshTokenRequest(RefreshTokenRecord refreshToken) {
         return null;
     }
 

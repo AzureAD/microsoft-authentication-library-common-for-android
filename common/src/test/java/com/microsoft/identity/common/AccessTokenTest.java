@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import com.microsoft.identity.common.internal.dto.AccessToken;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 
 import junit.framework.Assert;
 
@@ -36,14 +36,14 @@ public class AccessTokenTest {
 
     @Test
     public void testExpiry() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setExpiresOn(getCurrentTimeStr());
         Assert.assertTrue(accessToken.isExpired());
     }
 
     @Test
     public void testExpiryWithExtExpiresOn() {
-        final AccessToken accessToken = new AccessToken();
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
         final String currentTime = getCurrentTimeStr();
         final String currentTimePlus5Min = String.valueOf(Long.valueOf(currentTime) + (5 * ONE_MINUTE));
         accessToken.setExpiresOn(currentTime);

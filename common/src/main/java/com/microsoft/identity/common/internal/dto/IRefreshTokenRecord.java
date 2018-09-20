@@ -22,7 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.dto;
 
-public interface IAccount {
+/**
+ * Interface for schema-necessary fields for RefreshTokens.
+ */
+public interface IRefreshTokenRecord {
 
     /**
      * Gets the home_account_id.
@@ -39,72 +42,31 @@ public interface IAccount {
     String getEnvironment();
 
     /**
-     * Gets the realm.
+     * Gets the clientId.
      *
-     * @return The realm to get.
+     * @return The clientId to get.
      */
-    String getRealm();
+    String getClientId();
 
     /**
-     * Gets the local_account_id.
+     * Gets the secret.
      *
-     * @return The local_account_id to get.
+     * @return The secret to get.
      */
-    String getLocalAccountId();
+    String getSecret();
 
     /**
-     * Gets the username.
+     * Gets the target.
      *
-     * @return The username to get.
+     * @return The target to get.
      */
-    String getUsername();
+    String getTarget();
 
     /**
-     * Gets the authority_type.
+     * Gets the family_id.
      *
-     * @return The authority_type to get.
+     * @return The family_id to get.
      */
-    String getAuthorityType();
+    String getFamilyId();
 
-    /**
-     * Gets the alternative_account_id.
-     *
-     * @return The alternative_account_id to get.
-     */
-    String getAlternativeAccountId();
-
-    /**
-     * Gets the first_name.
-     *
-     * @return The first_name to get.
-     */
-    String getFirstName();
-
-    /**
-     * Gets the family_name.
-     *
-     * @return The family_name to get.
-     */
-    String getFamilyName();
-
-    /**
-     * Gets the middle_name.
-     *
-     * @return The middle_name to get.
-     */
-    String getMiddleName();
-
-    /**
-     * Gets the name.
-     *
-     * @return The name to get.
-     */
-    String getName();
-
-    /**
-     * Gets the avatar_url.
-     *
-     * @return The avatar_url to get.
-     */
-    String getAvatarUrl();
 }

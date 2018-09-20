@@ -107,7 +107,7 @@ public final class ObjectMapper {
      * Method to serialize the object into a map.
      *
      * @param object Object
-     * @return Map<String                                                               ,                                                                                                                               String>
+     * @return Map<String                                                                                                                               ,                                                                                                                                                                                                                                                               String>
      */
     public static Map<String, String> serializeObjectHashMap(final Object object) throws UnsupportedEncodingException {
         String json = ObjectMapper.serializeObjectToJsonString(object);
@@ -129,11 +129,11 @@ public final class ObjectMapper {
             TreeMap.Entry<String, Object> entry = iterator.next();
             if (entry.getValue() instanceof String
                     && !StringUtil.isEmpty(entry.getKey())
-                    && !StringUtil.isEmpty((String)entry.getValue())) {
-                objectMap.put(URLDecoder.decode(entry.getKey(), ENCODING_SCHEME), URLDecoder.decode((String)entry.getValue(), ENCODING_SCHEME));
+                    && !StringUtil.isEmpty((String) entry.getValue())) {
+                objectMap.put(URLDecoder.decode(entry.getKey(), ENCODING_SCHEME), URLDecoder.decode((String) entry.getValue(), ENCODING_SCHEME));
             } else {
                 final Map<String, String> hashMap = serializeNestedJsonToMap(entry.getValue().toString());
-                if(hashMap != null) {
+                if (hashMap != null) {
                     objectMap.putAll(hashMap);
                 }
             }

@@ -22,8 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
-import com.microsoft.identity.common.Account;
-import com.microsoft.identity.common.internal.dto.IAccount;
+import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -82,7 +83,7 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    public Account createAccount(TokenResponse response) {
+    public BaseAccount createAccount(TokenResponse response) {
         return null;
     }
 
@@ -92,7 +93,7 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    public AuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccount account) {
+    public AuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccountRecord account) {
         return createAuthorizationRequestBuilder();
     }
 
@@ -103,7 +104,7 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
 
 
     @Override
-    public TokenRequest createRefreshTokenRequest(com.microsoft.identity.common.internal.dto.RefreshToken refreshToken) {
+    public TokenRequest createRefreshTokenRequest(RefreshTokenRecord refreshToken) {
         return null;
     }
 

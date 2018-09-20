@@ -26,7 +26,7 @@ import android.content.Context;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 
 import java.util.List;
@@ -72,7 +72,7 @@ public abstract class OAuth2TokenCache
     public abstract ICacheRecord load(
             final String clientId,
             final String target,
-            final Account account
+            final AccountRecord account
     );
 
     /**
@@ -91,9 +91,9 @@ public abstract class OAuth2TokenCache
      * @param homeAccountId The homeAccountId of the sought IAccount.
      * @return The sought IAccount or null if it cannot be found.
      */
-    public abstract Account getAccount(final String environment,
-                                       final String clientId,
-                                       final String homeAccountId
+    public abstract AccountRecord getAccount(final String environment,
+                                             final String clientId,
+                                             final String homeAccountId
     );
 
     /**
@@ -103,7 +103,7 @@ public abstract class OAuth2TokenCache
      * @param environment The current environment.
      * @return An immutable List of IAccounts.
      */
-    public abstract List<Account> getAccounts(final String environment, final String clientId);
+    public abstract List<AccountRecord> getAccounts(final String environment, final String clientId);
 
     /**
      * Removes the Account (and its associated Credentials) matching the supplied criteria.

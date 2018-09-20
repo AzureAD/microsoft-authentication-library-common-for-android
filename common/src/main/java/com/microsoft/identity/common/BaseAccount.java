@@ -20,53 +20,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.dto;
+package com.microsoft.identity.common;
+
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
+
+import java.util.List;
 
 /**
- * Interface for schema-necessary fields for RefreshTokens.
+ * In MSAL we have user... in ADAL we have userinfo
+ * Users are human or software agents.... humans and software agents have accounts
+ * UserInfo shouldn't be used in common since it collides with the OIDC spec
+ * This class contains information about the user/account associated with the authenticated subject/principal
  */
-public interface IRefreshToken {
+public abstract class BaseAccount implements IAccountRecord {
 
     /**
-     * Gets the home_account_id.
+     * Not all IDPs will have the same unique identifier for a user
+     * Per the OIDC spec the unique identifier is subject... or the sub claim; however AAD and other
+     * IDPs have their own unique identifiers for users
+     * <p>
+     * Let the IDP give us the representation of the user/account based on the token response
      *
-     * @return The home_account_id to get.
+     * @return String of unique identifier
      */
-    String getHomeAccountId();
+    public abstract String getUniqueIdentifier();
 
     /**
-     * Gets the environment.
-     *
-     * @return The environment to get.
+     * @return cache identifiers in List<String>
      */
-    String getEnvironment();
-
-    /**
-     * Gets the clientId.
-     *
-     * @return The clientId to get.
-     */
-    String getClientId();
-
-    /**
-     * Gets the secret.
-     *
-     * @return The secret to get.
-     */
-    String getSecret();
-
-    /**
-     * Gets the target.
-     *
-     * @return The target to get.
-     */
-    String getTarget();
-
-    /**
-     * Gets the family_id.
-     *
-     * @return The family_id to get.
-     */
-    String getFamilyId();
+    public abstract List<String> getCacheIdentifiers();
 
 }
