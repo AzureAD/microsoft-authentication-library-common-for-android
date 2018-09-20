@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
-import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.BaseAccount;
 
 import java.util.List;
 
@@ -30,7 +30,7 @@ import java.util.List;
  * The ADFS 2016 Account Object.
  */
 @SuppressWarnings("PMD") // Suppressing PMD warning for multiple usages of the String "Method stub!"
-public class ActiveDirectoryFederationServices2016Account extends Account {
+public class ActiveDirectoryFederationServices2016Account extends BaseAccount {
 
     @Override
     public String getUniqueIdentifier() {

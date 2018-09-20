@@ -31,12 +31,12 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
-import com.microsoft.identity.common.internal.dto.IdToken;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.lang.reflect.Field;
@@ -95,7 +95,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
     }
 
     @Override
-    public String generateCacheKey(Account account) {
+    public String generateCacheKey(AccountRecord account) {
         String cacheKey = HOME_ACCOUNT_ID
                 + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT
@@ -127,7 +127,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
     }
 
     @Override
-    public String generateCacheValue(Account account) {
+    public String generateCacheValue(AccountRecord account) {
         final String result = generateCacheValueInternal(account);
 
         return result;
@@ -147,9 +147,9 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(credential.getEnvironment()));
         cacheKey = cacheKey.replace(CREDENTIAL_TYPE, sanitizeNull(credential.getCredentialType()));
 
-        RefreshToken rt;
-        if ((credential instanceof RefreshToken)
-                && !StringExtensions.isNullOrBlank((rt = (RefreshToken) credential).getFamilyId())) {
+        RefreshTokenRecord rt;
+        if ((credential instanceof RefreshTokenRecord)
+                && !StringExtensions.isNullOrBlank((rt = (RefreshTokenRecord) credential).getFamilyId())) {
             String familyIdForCacheKey = rt.getFamilyId();
 
             if (familyIdForCacheKey.startsWith(FOCI_PREFIX)) {
@@ -161,16 +161,16 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             cacheKey = cacheKey.replace(CLIENT_ID, sanitizeNull(credential.getClientId()));
         }
 
-        if (credential instanceof AccessToken) {
-            final AccessToken accessToken = (AccessToken) credential;
+        if (credential instanceof AccessTokenRecord) {
+            final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, sanitizeNull(accessToken.getRealm()));
             cacheKey = cacheKey.replace(TARGET, sanitizeNull(accessToken.getTarget()));
-        } else if (credential instanceof RefreshToken) {
-            final RefreshToken refreshToken = (RefreshToken) credential;
+        } else if (credential instanceof RefreshTokenRecord) {
+            final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, "");
             cacheKey = cacheKey.replace(TARGET, sanitizeNull(refreshToken.getTarget()));
-        } else if (credential instanceof IdToken) {
-            final IdToken idToken = (IdToken) credential;
+        } else if (credential instanceof IdTokenRecord) {
+            final IdTokenRecord idToken = (IdTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, sanitizeNull(idToken.getRealm()));
             cacheKey = cacheKey.replace(TARGET, "");
         }

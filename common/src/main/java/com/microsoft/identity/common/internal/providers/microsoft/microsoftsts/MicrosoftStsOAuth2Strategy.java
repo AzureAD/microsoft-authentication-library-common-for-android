@@ -27,8 +27,8 @@ import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.internal.dto.IAccount;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
@@ -122,7 +122,7 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
         MicrosoftStsAuthorizationRequest.Builder builder = new MicrosoftStsAuthorizationRequest.Builder();
         builder.setAuthority(mConfig.getAuthorizationEndpoint());
-        if(mConfig.getSlice() != null){
+        if (mConfig.getSlice() != null) {
             builder.setSlice(mConfig.getSlice());
         }
         builder.setFlightParameters(mConfig.getFlightParameters());
@@ -130,7 +130,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder(@Nullable final IAccount account) {
+    public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder(@Nullable final IAccountRecord account) {
         final MicrosoftStsAuthorizationRequest.Builder builder = createAuthorizationRequestBuilder();
 
         if (null != account) {
@@ -166,7 +166,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final RefreshToken refreshToken) {
+    public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final RefreshTokenRecord refreshToken) {
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setRefreshToken(refreshToken.getSecret());
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);

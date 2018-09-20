@@ -61,15 +61,15 @@ public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration
         return mFlightParameters;
     }
 
-    public void setFlightParameters(Map<String, String> flightParameters){
+    public void setFlightParameters(Map<String, String> flightParameters) {
         mFlightParameters = flightParameters;
     }
 
-    public AzureActiveDirectorySlice getSlice(){
+    public AzureActiveDirectorySlice getSlice() {
         return mSlice;
     }
 
-    public void setSlice(AzureActiveDirectorySlice slice){
+    public void setSlice(AzureActiveDirectorySlice slice) {
         mSlice = slice;
     }
 

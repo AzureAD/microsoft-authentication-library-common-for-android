@@ -25,11 +25,11 @@ package com.microsoft.identity.common.internal.cache;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.IdToken;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -53,12 +53,12 @@ public class MicrosoftStsAccountCredentialAdapter
     private static final String TAG = MicrosoftStsAccountCredentialAdapter.class.getSimpleName();
 
     @Override
-    public Account createAccount(
+    public AccountRecord createAccount(
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
         Logger.verbose(TAG, "Creating Account");
-        final Account account = new Account(strategy.createAccount(response));
+        final AccountRecord account = new AccountRecord(strategy.createAccount(response));
         // TODO -- Setting the environment here is a bit of a workaround...
         // The Account created by the strategy sets the environment to get the 'iss' from the IdToken
         // For caching purposes, this may not be the correct value due to the preferred cache identifier
@@ -69,7 +69,7 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public AccessToken createAccessToken(
+    public AccessTokenRecord createAccessToken(
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
@@ -78,7 +78,7 @@ public class MicrosoftStsAccountCredentialAdapter
             final long expiresOn = getExpiresOn(response);
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
-            final AccessToken accessToken = new AccessToken();
+            final AccessTokenRecord accessToken = new AccessTokenRecord();
             // Required fields
             accessToken.setCredentialType(CredentialType.AccessToken.name());
             accessToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
@@ -104,7 +104,7 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public RefreshToken createRefreshToken(
+    public RefreshTokenRecord createRefreshToken(
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
@@ -112,7 +112,7 @@ public class MicrosoftStsAccountCredentialAdapter
             final long cachedAt = getCachedAt();
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
-            final RefreshToken refreshToken = new RefreshToken();
+            final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
             // Required
             refreshToken.setCredentialType(CredentialType.RefreshToken.name());
             refreshToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
@@ -136,14 +136,14 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public IdToken createIdToken(
+    public IdTokenRecord createIdToken(
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
         try {
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
-            final IdToken idToken = new IdToken();
+            final IdTokenRecord idToken = new IdTokenRecord();
             // Required fields
             idToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             idToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
@@ -163,8 +163,8 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public RefreshToken asRefreshToken(@NonNull final MicrosoftRefreshToken refreshTokenIn) {
-        final RefreshToken refreshTokenOut = new RefreshToken();
+    public RefreshTokenRecord asRefreshToken(@NonNull final MicrosoftRefreshToken refreshTokenIn) {
+        final RefreshTokenRecord refreshTokenOut = new RefreshTokenRecord();
 
         // Required fields
         refreshTokenOut.setHomeAccountId(refreshTokenIn.getHomeAccountId());
@@ -183,18 +183,18 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public Account asAccount(MicrosoftAccount account) {
-        Account acct = new Account(account);
+    public AccountRecord asAccount(MicrosoftAccount account) {
+        AccountRecord acct = new AccountRecord(account);
 
         return acct;
     }
 
     @Override
-    public IdToken asIdToken(MicrosoftAccount msAccount, MicrosoftRefreshToken refreshToken) {
+    public IdTokenRecord asIdToken(MicrosoftAccount msAccount, MicrosoftRefreshToken refreshToken) {
         final long cachedAt = getCachedAt();
         IDToken msIdToken = msAccount.getIDToken();
 
-        final IdToken idToken = new IdToken();
+        final IdTokenRecord idToken = new IdTokenRecord();
         // Required fields
         idToken.setHomeAccountId(refreshToken.getHomeAccountId());
         idToken.setEnvironment(refreshToken.getEnvironment());

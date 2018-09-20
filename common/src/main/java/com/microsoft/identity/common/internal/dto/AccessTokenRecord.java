@@ -28,15 +28,15 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.ACCESS_TOKEN_TYPE;
-import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.AUTHORITY;
-import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.CLIENT_INFO;
-import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.EXTENDED_EXPIRES_ON;
-import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.REALM;
-import static com.microsoft.identity.common.internal.dto.AccessToken.SerializedNames.TARGET;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.ACCESS_TOKEN_TYPE;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.AUTHORITY;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.CLIENT_INFO;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.EXTENDED_EXPIRES_ON;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REALM;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TARGET;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
 
-public class AccessToken extends Credential {
+public class AccessTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
         /**

@@ -24,7 +24,7 @@ public class AzureActiveDirectorySlice {
         mSlice = slice;
     }
 
-    public void setDataCenter(String dc){
+    public void setDataCenter(String dc) {
         mDataCenter = dc;
     }
 

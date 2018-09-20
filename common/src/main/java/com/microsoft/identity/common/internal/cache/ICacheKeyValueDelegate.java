@@ -22,8 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import com.microsoft.identity.common.internal.dto.Account;
 import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 
 public interface ICacheKeyValueDelegate {
@@ -33,7 +33,7 @@ public interface ICacheKeyValueDelegate {
      * @param account Account
      * @return String
      */
-    String generateCacheKey(final Account account);
+    String generateCacheKey(final AccountRecord account);
 
     /**
      * Generate cache value for a specific account.
@@ -41,7 +41,7 @@ public interface ICacheKeyValueDelegate {
      * @param account Account
      * @return String
      */
-    String generateCacheValue(final Account account);
+    String generateCacheValue(final AccountRecord account);
 
     /**
      * Generate cache key from the credential.

@@ -24,11 +24,10 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.text.TextUtils;
 
 import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.internal.dto.IAccount;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -103,8 +102,8 @@ public class AzureActiveDirectoryOAuth2Strategy
         final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
         if (cloud == null && !getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
             Logger.warn(TAG + ":" + methodName, "Discovery data does not include cloud authority and validation is off."
-                + " Returning passed in Authority: "
-                + authRequest.getAuthority().toString());
+                    + " Returning passed in Authority: "
+                    + authRequest.getAuthority().toString());
             return authRequest.getAuthority().toString();
         }
 
@@ -198,7 +197,7 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public AzureActiveDirectoryAuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccount account) {
+    public AzureActiveDirectoryAuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccountRecord account) {
         return createAuthorizationRequestBuilder();
     }
 
@@ -208,7 +207,7 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(RefreshToken refreshToken) {
+    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(RefreshTokenRecord refreshToken) {
         return null;
     }
 

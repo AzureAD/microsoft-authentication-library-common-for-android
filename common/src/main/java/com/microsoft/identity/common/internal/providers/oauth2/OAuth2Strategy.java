@@ -24,9 +24,10 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.net.Uri;
 
-import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.dto.IAccount;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -47,7 +48,7 @@ import java.util.concurrent.Future;
  */
 public abstract class OAuth2Strategy
         <GenericAccessToken extends AccessToken,
-                GenericAccount extends Account,
+                GenericAccount extends BaseAccount,
                 GenericAuthorizationRequest extends AuthorizationRequest,
                 GenericAuthorizationRequestBuilder extends AuthorizationRequest.Builder,
                 GenericAuthorizationStrategy extends AuthorizationStrategy,
@@ -188,7 +189,7 @@ public abstract class OAuth2Strategy
      * @param account The IAccount available to this strategy.
      * @return AuthorizationRequest.
      */
-    public abstract GenericAuthorizationRequestBuilder createAuthorizationRequestBuilder(IAccount account);
+    public abstract GenericAuthorizationRequestBuilder createAuthorizationRequestBuilder(IAccountRecord account);
 
     /**
      * Abstract method for creating the token request.  In the case of AAD this is the method
@@ -203,7 +204,7 @@ public abstract class OAuth2Strategy
      * @param refreshToken The refresh token to use.
      * @return TokenRequest.
      */
-    public abstract GenericTokenRequest createRefreshTokenRequest(final com.microsoft.identity.common.internal.dto.RefreshToken refreshToken);
+    public abstract GenericTokenRequest createRefreshTokenRequest(final RefreshTokenRecord refreshToken);
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method

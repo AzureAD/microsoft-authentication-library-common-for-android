@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
-import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
@@ -40,7 +40,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 
-public abstract class MicrosoftAccount extends Account {
+public abstract class MicrosoftAccount extends BaseAccount {
 
     public static final String AUTHORITY_TYPE_V1_V2 = "MSSTS";
 

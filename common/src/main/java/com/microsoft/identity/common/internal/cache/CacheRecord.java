@@ -22,51 +22,51 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
-import com.microsoft.identity.common.internal.dto.IdToken;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
 public class CacheRecord implements ICacheRecord {
 
-    private Account mAccount;
-    private AccessToken mAccessToken;
-    private RefreshToken mRefreshToken;
-    private IdToken mIdToken;
+    private AccountRecord mAccount;
+    private AccessTokenRecord mAccessToken;
+    private RefreshTokenRecord mRefreshToken;
+    private IdTokenRecord mIdToken;
 
-    public void setAccount(final Account account) {
+    public void setAccount(final AccountRecord account) {
         mAccount = account;
     }
 
     @Override
-    public Account getAccount() {
+    public AccountRecord getAccount() {
         return mAccount;
     }
 
-    public void setAccessToken(final AccessToken accesToken) {
+    public void setAccessToken(final AccessTokenRecord accesToken) {
         mAccessToken = accesToken;
     }
 
     @Override
-    public AccessToken getAccessToken() {
+    public AccessTokenRecord getAccessToken() {
         return mAccessToken;
     }
 
-    public void setRefreshToken(final RefreshToken refreshToken) {
+    public void setRefreshToken(final RefreshTokenRecord refreshToken) {
         mRefreshToken = refreshToken;
     }
 
     @Override
-    public RefreshToken getRefreshToken() {
+    public RefreshTokenRecord getRefreshToken() {
         return mRefreshToken;
     }
 
-    public void setIdToken(final IdToken idToken) {
+    public void setIdToken(final IdTokenRecord idToken) {
         mIdToken = idToken;
     }
 
     @Override
-    public IdToken getIdToken() {
+    public IdTokenRecord getIdToken() {
         return mIdToken;
     }
 
