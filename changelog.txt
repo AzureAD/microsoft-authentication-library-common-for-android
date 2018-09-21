@@ -5,6 +5,8 @@ Updates for supporting authority aliasing
 Added new grant_type: refresh_token
 Updated authorization request base builder to include all MSAL public API properties
 Change from SignedJWT to JWT to support v1
+Internal class renaming for improved IntelliSense support
+Access token expiry calculation now supports ext_expires_on
 
 Version 0.0.4
 --------------
