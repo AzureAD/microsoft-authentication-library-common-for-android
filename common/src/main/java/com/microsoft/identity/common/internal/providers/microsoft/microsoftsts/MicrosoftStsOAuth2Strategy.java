@@ -121,7 +121,7 @@ public class MicrosoftStsOAuth2Strategy
     @Override
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
         MicrosoftStsAuthorizationRequest.Builder builder = new MicrosoftStsAuthorizationRequest.Builder();
-        builder.setAuthority(mConfig.getAuthorizationEndpoint());
+        builder.setAuthority(mConfig.getAuthorityUrl());
         if (mConfig.getSlice() != null) {
             builder.setSlice(mConfig.getSlice());
         }
