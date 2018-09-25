@@ -73,9 +73,14 @@ public final class StringUtil {
     public static String join(char delimiter, List<String> toJoin) {
         StringBuilder builder = new StringBuilder();
 
+        char tempDelimiter = Character.MIN_VALUE;
+
         for (String s : toJoin) {
+            if(tempDelimiter != Character.MIN_VALUE) {
+                builder.append(tempDelimiter);
+            }
+            tempDelimiter = delimiter;
             builder.append(s);
-            builder.append(delimiter);
         }
 
         return builder.toString();
