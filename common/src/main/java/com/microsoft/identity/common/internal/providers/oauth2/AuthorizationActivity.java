@@ -103,6 +103,7 @@ public final class AuthorizationActivity extends Activity {
         if (savedInstanceState == null) {
             extractState(getIntent().getExtras());
         } else {
+            // If activity is killed by the os, savedInstance will be the saved bundle.
             extractState(savedInstanceState);
         }
     }
@@ -167,6 +168,7 @@ public final class AuthorizationActivity extends Activity {
     @Override
     protected void onSaveInstanceState(final Bundle outState) {
         super.onSaveInstanceState(outState);
+        outState.putParcelable(KEY_AUTH_INTENT, mAuthIntent);
         outState.putBoolean(KEY_AUTHORIZATION_STARTED, mAuthorizationStarted);
         outState.putBoolean(KEY_PKEYAUTH_STATUS, mPkeyAuthStatus);
         outState.putSerializable(KEY_AUTH_AUTHORIZATION_AGENT, mAuthorizationAgent);

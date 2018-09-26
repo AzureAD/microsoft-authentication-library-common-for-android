@@ -110,7 +110,7 @@ public class BrowserSelector {
             }
         }
 
-        Logger.verbose(TAG, null, "Heidi: found " + browserList.size() + " browsers.");
+        Logger.verbose(TAG, null, "Found " + browserList.size() + " browsers.");
         return browserList;
     }
 

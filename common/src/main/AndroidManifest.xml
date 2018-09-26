@@ -13,7 +13,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name="com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:launchMode="singleTop"/>
         <!-- Activity declarations, etc. -->
 
     </application>
