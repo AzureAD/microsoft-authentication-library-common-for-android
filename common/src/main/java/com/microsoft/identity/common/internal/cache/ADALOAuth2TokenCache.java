@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.app.Application;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 
 import com.google.gson.Gson;
@@ -127,9 +128,10 @@ public class ADALOAuth2TokenCache
 
         final String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
         final AzureActiveDirectoryAccount account = strategy.createAccount(response);
-        account.setEnvironment(issuerCacheIdentifier);
+        final String msalEnvironment = Uri.parse(issuerCacheIdentifier).getAuthority();
+        account.setEnvironment(msalEnvironment);
         final AzureActiveDirectoryRefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
-        refreshToken.setEnvironment(issuerCacheIdentifier);
+        refreshToken.setEnvironment(msalEnvironment);
 
         Logger.info(TAG, "Constructing new ADALTokenCacheItem");
         final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem(strategy, request, response);
