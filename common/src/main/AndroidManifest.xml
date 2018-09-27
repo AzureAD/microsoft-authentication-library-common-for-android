@@ -13,8 +13,9 @@
         android:theme="@style/AppTheme">
         <activity
             android:name="com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize" />
-        <!-- Activity declarations, etc. -->
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:launchMode="singleTask"/>
+        <!-- singleTask launchMode is required for the authorization redirect. -->
 
     </application>
 

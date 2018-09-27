@@ -119,7 +119,9 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         if (mDisposed) {
             return;
         }
-        mCustomTabManager.unbind();
+        if (mCustomTabManager != null) {
+            mCustomTabManager.unbind();
+        }
         mDisposed = true;
     }
 }

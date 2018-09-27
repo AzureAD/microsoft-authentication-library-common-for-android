@@ -13,6 +13,8 @@ import android.webkit.WebView;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
@@ -103,6 +105,7 @@ public final class AuthorizationActivity extends Activity {
         if (savedInstanceState == null) {
             extractState(getIntent().getExtras());
         } else {
+            // If activity is killed by the os, savedInstance will be the saved bundle.
             extractState(savedInstanceState);
         }
     }
@@ -140,7 +143,14 @@ public final class AuthorizationActivity extends Activity {
                     }
                 });
             } else {
-                startActivity(mAuthIntent);
+                if (mAuthIntent != null) {
+                    startActivity(mAuthIntent);
+                } else {
+                    final Intent resultIntent = new Intent();
+                    resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, new ClientException(ErrorStrings.AUTHORIZATION_INTENT_IS_NULL));
+                    setResult(AuthorizationStrategy.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
+                    finish();
+                }
             }
             return;
         }
@@ -167,6 +177,7 @@ public final class AuthorizationActivity extends Activity {
     @Override
     protected void onSaveInstanceState(final Bundle outState) {
         super.onSaveInstanceState(outState);
+        outState.putParcelable(KEY_AUTH_INTENT, mAuthIntent);
         outState.putBoolean(KEY_AUTHORIZATION_STARTED, mAuthorizationStarted);
         outState.putBoolean(KEY_PKEYAUTH_STATUS, mPkeyAuthStatus);
         outState.putSerializable(KEY_AUTH_AUTHORIZATION_AGENT, mAuthorizationAgent);

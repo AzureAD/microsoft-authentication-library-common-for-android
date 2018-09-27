@@ -32,6 +32,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.util.ArrayList;
@@ -56,10 +57,12 @@ public class BrowserSelector {
     public static Browser select(final Context context) throws ClientException {
         final List<Browser> allBrowsers = getAllBrowsers(context);
         if (!allBrowsers.isEmpty()) {
+            Logger.verbose(TAG, "Select the browser to launch.");
+            Logger.verbosePII(TAG, "Browser's package name: " + allBrowsers.get(0).getPackageName() + " version: " + allBrowsers.get(0).getVersion());
             return allBrowsers.get(0);
         } else {
             Logger.error(TAG, "No available browser installed on the device.", null);
-            throw new ClientException(TAG, "No available browser installed on the device.");
+            throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
         }
     }
 
@@ -110,7 +113,7 @@ public class BrowserSelector {
             }
         }
 
-        Logger.verbose(TAG, null, "Heidi: found " + browserList.size() + " browsers.");
+        Logger.verbose(TAG, null, "Found " + browserList.size() + " browsers.");
         return browserList;
     }
 

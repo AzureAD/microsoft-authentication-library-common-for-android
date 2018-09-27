@@ -23,11 +23,14 @@
 package com.microsoft.identity.common.internal.ui;
 
 import android.app.Activity;
+import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
+import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
 
 public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends AuthorizationStrategy> {
@@ -43,7 +46,10 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
     }
 
     public GenericAuthorizationStrategy getAuthorizationStrategy(Activity activity, @NonNull AuthorizationAgent authorizationAgent) {
-        if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
+        //Valid if available browser installed. Will fallback to embedded webView if no browser available.
+        final AuthorizationAgent validatedAuthorizationAgent = validAuthorizationAgent(authorizationAgent, activity.getApplicationContext());
+
+        if (validatedAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
             Logger.info(TAG, "Use webView for authorization.");
             return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(activity));
         }
@@ -51,5 +57,16 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
         // Use device browser auth flow as default.
         Logger.info(TAG, "Use browser for authorization.");
         return (GenericAuthorizationStrategy) (new BrowserAuthorizationStrategy(activity));
+    }
+
+    private AuthorizationAgent validAuthorizationAgent(final AuthorizationAgent agent, final Context context) {
+        if (agent != AuthorizationAgent.WEBVIEW
+                && BrowserSelector.getAllBrowsers(context).isEmpty()) {
+            Logger.verbose(TAG, "Unable to use browser to do the authorization because "
+                    + ErrorStrings.NO_AVAILABLE_BROWSER_FOUND + " Use embedded webView instead.");
+            return AuthorizationAgent.WEBVIEW;
+        } else {
+            return agent;
+        }
     }
 }
