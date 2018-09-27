@@ -269,4 +269,14 @@ public final class ErrorStrings {
      * Empty Context.
      */
     public static final String ANDROID_CONTEXT_IS_NULL = "Android Context is null.";
+
+    /**
+     * Empty Authorization Intent.
+     */
+    public static final String AUTHORIZATION_INTENT_IS_NULL = "Authorization intent is null.";
+
+    /**
+     * No available browser installed on the device.
+     */
+    public static final String NO_AVAILABLE_BROWSER_FOUND = "No available browser installed on the device.";
 }
