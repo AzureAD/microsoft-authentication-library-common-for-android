@@ -36,6 +36,7 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
@@ -153,6 +154,10 @@ public class MsalOAuth2TokenCache
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
                              @NonNull final AccountRecord account) {
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+                account.getAuthorityType()
+        );
+
         // Load the AccessTokens
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
@@ -169,8 +174,12 @@ public class MsalOAuth2TokenCache
                 account.getEnvironment(),
                 CredentialType.RefreshToken,
                 clientId,
-                account.getRealm(),
-                target
+                isMultiResourceCapable
+                        ? null // wildcard (*)
+                        : account.getRealm(),
+                isMultiResourceCapable
+                        ? null // wildcard (*)
+                        : target
         );
 
         // Load the IdTokens
