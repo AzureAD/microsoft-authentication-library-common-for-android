@@ -15,7 +15,7 @@
             android:name="com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:launchMode="singleTask"/>
-        <!-- Activity declarations, etc. -->
+        <!-- singleTask launchMode is required for the authorization redirect. -->
 
     </application>
 
