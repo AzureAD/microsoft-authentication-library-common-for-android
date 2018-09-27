@@ -13,6 +13,8 @@ import android.webkit.WebView;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
@@ -141,7 +143,14 @@ public final class AuthorizationActivity extends Activity {
                     }
                 });
             } else {
-                startActivity(mAuthIntent);
+                if (mAuthIntent != null) {
+                    startActivity(mAuthIntent);
+                } else {
+                    final Intent resultIntent = new Intent();
+                    resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, new ClientException(ErrorStrings.AUTHORIZATION_INTENT_IS_NULL));
+                    setResult(AuthorizationStrategy.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
+                    finish();
+                }
             }
             return;
         }
