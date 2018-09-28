@@ -36,6 +36,7 @@ import com.microsoft.identity.common.internal.platform.Device;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -204,7 +205,7 @@ public abstract class OAuth2Strategy
      * @param refreshToken The refresh token to use.
      * @return TokenRequest.
      */
-    public abstract GenericTokenRequest createRefreshTokenRequest(final RefreshTokenRecord refreshToken);
+    public abstract GenericTokenRequest createRefreshTokenRequest(final RefreshTokenRecord refreshToken, final List<String> scopes);
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method

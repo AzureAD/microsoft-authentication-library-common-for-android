@@ -44,9 +44,11 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorRespons
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 public class MicrosoftStsOAuth2Strategy
         extends OAuth2Strategy
@@ -166,10 +168,12 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final RefreshTokenRecord refreshToken) {
+    public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final RefreshTokenRecord refreshToken,
+                                                              @NonNull final List<String> scopes) {
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setRefreshToken(refreshToken.getSecret());
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
+        request.setScope(StringUtil.join(' ', scopes));
         return request;
     }
 

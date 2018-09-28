@@ -36,6 +36,7 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
@@ -96,6 +97,7 @@ public class MsalOAuth2TokenCache
     public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
                              @NonNull final GenericAuthorizationRequest request,
                              @NonNull final GenericTokenResponse response) throws ClientException {
+        final String methodName = ":save";
         // Create the Account
         final AccountRecord accountToSave =
                 mAccountCredentialAdapter.createAccount(
@@ -136,6 +138,41 @@ public class MsalOAuth2TokenCache
                 idTokenToSave
         );
 
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+                accountToSave.getAuthorityType()
+        );
+
+        Logger.info(
+                TAG + methodName,
+                "isMultiResourceCapable? [" + isMultiResourceCapable + "]"
+        );
+
+        if (isMultiResourceCapable) {
+            // AAD v1 & v2 support multi-resource refresh tokens, allowing us to use
+            // a single refresh token to service all of an account's requests.
+            // To ensure that only one refresh token is maintained for an account,
+            // refresh tokens are cleared from the cache for the account which is about to be
+            // saved (in the event that there was already a refresh token in the cache)
+            final int refreshTokensRemoved = removeCredentialsOfTypeForAccount(
+                    accountToSave.getEnvironment(),
+                    refreshTokenToSave.getClientId(),
+                    CredentialType.RefreshToken,
+                    accountToSave
+            );
+
+            Logger.info(
+                    TAG + methodName,
+                    "Refresh tokens removed: [" + refreshTokensRemoved + "]"
+            );
+
+            if (refreshTokensRemoved > 1) {
+                Logger.warn(
+                        TAG + methodName,
+                        "Multiple refresh tokens found for Account."
+                );
+            }
+        }
+
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
         saveCredentials(accessTokenToSave, refreshTokenToSave, idTokenToSave);
@@ -153,6 +190,10 @@ public class MsalOAuth2TokenCache
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
                              @NonNull final AccountRecord account) {
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+                account.getAuthorityType()
+        );
+
         // Load the AccessTokens
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
@@ -169,8 +210,12 @@ public class MsalOAuth2TokenCache
                 account.getEnvironment(),
                 CredentialType.RefreshToken,
                 clientId,
-                account.getRealm(),
-                target
+                isMultiResourceCapable
+                        ? null // wildcard (*)
+                        : account.getRealm(),
+                isMultiResourceCapable
+                        ? null // wildcard (*)
+                        : target
         );
 
         // Load the IdTokens
