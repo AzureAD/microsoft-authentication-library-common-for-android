@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
@@ -227,7 +226,7 @@ public class MicrosoftStsOAuth2Strategy
         tokenRequest.setRedirectUri(request.getRedirectUri());
         tokenRequest.setClientId(request.getClientId());
         try {
-            tokenRequest.setCorrelationId(UUID.fromString(DiagnosticContext.getRequestContext().get(AuthenticationConstants.AAD.CORRELATION_ID)));
+            tokenRequest.setCorrelationId(UUID.fromString(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID)));
         } catch (IllegalArgumentException ex) {
             //We're not setting the correlation id if we can't parse it from the diagnostic context
             Logger.error("MicrosoftSTSOAuth2Strategy", "Correlation id on diagnostic context is not a UUID.", ex);
