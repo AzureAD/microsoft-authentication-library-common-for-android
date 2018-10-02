@@ -52,6 +52,7 @@ import java.util.Set;
 import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class MsalOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,
@@ -238,7 +239,36 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public boolean removeCredential(Credential credential) {
+    public boolean removeCredential(final Credential credential) {
+        final String methodName = ":removeCredential";
+        Logger.info(
+                TAG + methodName,
+                "Removing credential..."
+        );
+        Logger.infoPII(
+                TAG + methodName,
+                "ClientId: [" + credential.getClientId() + "]"
+        );
+        Logger.infoPII(
+                TAG + methodName,
+                "CredentialType: [" + credential.getCredentialType() + "]"
+        );
+        Logger.infoPII(
+                TAG + methodName,
+                "CachedAt: [" + credential.getCachedAt() + "]"
+        );
+        Logger.infoPII(
+                TAG + methodName,
+                "Environment: [" + credential.getEnvironment() + "]"
+        );
+        Logger.infoPII(
+                TAG + methodName,
+                "HomeAccountId: [" + credential.getHomeAccountId() + "]"
+        );
+        Logger.infoPII(
+                TAG + methodName,
+                "IsExpired?: [" + credential.isExpired() + "]"
+        );
         return mAccountCredentialCache.removeCredential(credential);
     }
 
@@ -246,7 +276,29 @@ public class MsalOAuth2TokenCache
     public AccountRecord getAccount(@Nullable final String environment,
                                     @NonNull final String clientId,
                                     @NonNull final String homeAccountId) {
+        final String methodName = ":getAccount";
+
+        Logger.infoPII(
+                TAG + methodName,
+                "Environment: [" + environment + "]"
+        );
+
+        Logger.infoPII(
+                TAG + methodName,
+                "ClientId: [" + clientId + "]"
+        );
+
+        Logger.infoPII(
+                TAG + methodName,
+                "HomeAccountId: [" + homeAccountId + "]"
+        );
+
         final List<AccountRecord> allAccounts = getAccounts(environment, clientId);
+
+        Logger.info(
+                TAG + methodName,
+                "Found " + allAccounts.size() + " accounts"
+        );
 
         // Return the sought Account matching the supplied homeAccountId
         for (final AccountRecord account : allAccounts) {
@@ -255,12 +307,29 @@ public class MsalOAuth2TokenCache
             }
         }
 
+        Logger.warn(
+                TAG + methodName,
+                "No matching account found."
+        );
+
         return null;
     }
 
     @Override
     public List<AccountRecord> getAccounts(@Nullable final String environment,
                                            @NonNull final String clientId) {
+        final String methodName = ":getAccounts";
+
+        Logger.infoPII(
+                TAG + methodName,
+                "Environment: [" + environment + "]"
+        );
+
+        Logger.infoPII(
+                TAG + methodName,
+                "ClientId: [" + clientId + "]"
+        );
+
         final List<AccountRecord> accountsForThisApp = new ArrayList<>();
 
         // Get all of the Accounts for this environment
@@ -270,6 +339,11 @@ public class MsalOAuth2TokenCache
                         environment,
                         null // wildcard (*) realm
                 );
+
+        Logger.info(
+                TAG + methodName,
+                "Found " + accountsForEnvironment.size() + " accounts for this environment"
+        );
 
         // Grab the Credentials for this app...
         final List<Credential> appCredentials =
@@ -289,6 +363,11 @@ public class MsalOAuth2TokenCache
             }
         }
 
+        Logger.info(
+                TAG + methodName,
+                "Found " + accountsForThisApp.size() + " accounts for this clientId"
+        );
+
         return Collections.unmodifiableList(accountsForThisApp);
     }
 
@@ -302,12 +381,28 @@ public class MsalOAuth2TokenCache
      */
     private boolean accountHasCredential(@NonNull final AccountRecord account,
                                          @NonNull final List<Credential> appCredentials) {
+        final String methodName = ":accountHasCredential";
+
         final String accountHomeId = account.getHomeAccountId();
         final String accountEnvironment = account.getEnvironment();
+
+        Logger.infoPII(
+                TAG + methodName,
+                "HomeAccountId: [" + accountHomeId + "]"
+        );
+
+        Logger.infoPII(
+                TAG + methodName,
+                "Environment: [" + accountEnvironment + "]"
+        );
 
         for (final Credential credential : appCredentials) {
             if (accountHomeId.equals(credential.getHomeAccountId())
                     && accountEnvironment.equals(credential.getEnvironment())) {
+                Logger.info(
+                        TAG + methodName,
+                        "Credentials located for account."
+                );
                 return true;
             }
         }
@@ -320,6 +415,21 @@ public class MsalOAuth2TokenCache
                                  final String clientId,
                                  final String homeAccountId) {
         final String methodName = ":removeAccount";
+
+        Logger.infoPII(
+                TAG + methodName,
+                "Environment: [" + environment + "]"
+        );
+
+        Logger.infoPII(
+                TAG + methodName,
+                "ClientId: [" + clientId + "]"
+        );
+
+        Logger.infoPII(
+                TAG + methodName,
+                "HomeAccountId: [" + homeAccountId + "]"
+        );
 
         final AccountRecord targetAccount;
         if (null == environment
@@ -440,6 +550,12 @@ public class MsalOAuth2TokenCache
             final AccessTokenRecord accessTokenToSave,
             @NonNull final RefreshTokenRecord refreshTokenToSave,
             @NonNull final IdTokenRecord idTokenToSave) throws ClientException {
+        final String methodName = ":validateCacheArtifacts";
+        Logger.info(
+                TAG + methodName,
+                "Validating cache artifacts..."
+        );
+
         final boolean isAccountCompliant = isAccountSchemaCompliant(accountToSave);
         final boolean isAccessTokenCompliant = null == accessTokenToSave || isAccessTokenSchemaCompliant(accessTokenToSave);
         final boolean isRefreshTokenCompliant = isRefreshTokenSchemaCompliant(refreshTokenToSave);

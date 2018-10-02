@@ -28,6 +28,7 @@ import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -60,6 +61,9 @@ public abstract class OAuth2Strategy
                 GenericTokenResponse extends TokenResponse,
                 GenericTokenResult extends TokenResult,
                 GenericAuthorizationResult extends AuthorizationResult> {
+
+    private static final String TAG = OAuth2Strategy.class.getSimpleName();
+
     protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
     protected final GenericOAuth2Configuration mConfig;
@@ -105,12 +109,22 @@ public abstract class OAuth2Strategy
      * @throws IOException thrown when failed or interrupted I/O operations occur.
      */
     public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException {
+        final String methodName = ":requestToken";
+        Logger.verbose(
+                TAG + methodName,
+                "Requesting token..."
+        );
         validateTokenRequest(request);
         HttpResponse response = performTokenRequest(request);
         return getTokenResultFromHttpResponse(response);
     }
 
     protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException {
+        final String methodName = ":performTokenRequest";
+        Logger.verbose(
+                TAG + methodName,
+                "Performing token request..."
+        );
         String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
         Map<String, String> headers = new TreeMap<>();
         String correlationId = UUID.randomUUID().toString();
