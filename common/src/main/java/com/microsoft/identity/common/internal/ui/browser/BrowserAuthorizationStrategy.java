@@ -60,6 +60,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
             GenericAuthorizationRequest authorizationRequest,
             GenericOAuth2Strategy oAuth2Strategy)
             throws ClientException, UnsupportedEncodingException {
+        final String methodName = ":requestAuthorization";
         checkNotDisposed();
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
@@ -69,11 +70,19 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         //ClientException will be thrown if no browser found.
         Intent authIntent;
         if (browser.isCustomTabsServiceSupported()) {
+            Logger.info(
+                    TAG + methodName,
+                    "CustomTabsService is supported."
+            );
             //create customTabsIntent
             mCustomTabManager = new CustomTabsManager(mReferencedActivity.get());
             mCustomTabManager.bind(browser.getPackageName());
             authIntent = mCustomTabManager.getCustomTabsIntent().intent;
         } else {
+            Logger.warn(
+                    TAG + methodName,
+                    "CustomTabsService is NOT supported"
+            );
             //create browser auth intent
             authIntent = new Intent(Intent.ACTION_VIEW);
         }

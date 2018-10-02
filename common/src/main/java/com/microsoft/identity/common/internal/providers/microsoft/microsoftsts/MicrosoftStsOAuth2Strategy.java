@@ -68,6 +68,9 @@ public class MicrosoftStsOAuth2Strategy
                 MicrosoftStsTokenResponse,
                 TokenResult,
                 AuthorizationResult> {
+
+    private static final String TAG = MicrosoftStsOAuth2Strategy.class.getSimpleName();
+
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
      *
@@ -85,13 +88,24 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     public String getIssuerCacheIdentifier(MicrosoftStsAuthorizationRequest request) {
+        final String methodName = ":getIssuerCacheIdentifier";
+
         final URL authority = request.getAuthority();
         // TODO I don't think this is right... This is probably not the correct authority cache to consult...
         final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
         // This map can only be consulted if authority validation is on.
         // If the host has a hardcoded trust, we can just use the hostname.
         if (null != cloudEnv) {
-            return cloudEnv.getPreferredCacheHostName();
+            final String preferredCacheHostName = cloudEnv.getPreferredCacheHostName();
+            Logger.info(
+                    TAG + methodName,
+                    "Using preferred cache host name..."
+            );
+            Logger.infoPII(
+                    TAG + methodName,
+                    "Preferred cache hostname: [" + preferredCacheHostName + "]"
+            );
+            return preferredCacheHostName;
         }
         return authority.getHost();
     }
@@ -99,18 +113,33 @@ public class MicrosoftStsOAuth2Strategy
     @Override
     public MicrosoftStsAccessToken getAccessTokenFromResponse(
             @NonNull final MicrosoftStsTokenResponse response) {
+        final String methodName = ":getAccessTokenFromResponse";
+        Logger.verbose(
+                TAG + methodName,
+                "Getting AT from TokenResponse..."
+        );
         return new MicrosoftStsAccessToken(response);
     }
 
     @Override
     public MicrosoftStsRefreshToken getRefreshTokenFromResponse(
             @NonNull final MicrosoftStsTokenResponse response) {
+        final String methodName = ":getRefreshTokenFromResponse";
+        Logger.verbose(
+                TAG + methodName,
+                "Getting RT from TokenResponse..."
+        );
         return new MicrosoftStsRefreshToken(response);
     }
 
     @Override
     public MicrosoftStsAccount createAccount(
             @NonNull final MicrosoftStsTokenResponse response) {
+        final String methodName = ":createAccount";
+        Logger.verbose(
+                TAG + methodName,
+                "Creating account from TokenResponse..."
+        );
         IDToken idToken = null;
         ClientInfo clientInfo = null;
         try {
@@ -126,9 +155,18 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
+        final String methodName = ":createAuthorizationRequestBuilder";
+        Logger.verbose(
+                TAG + methodName,
+                "Creating AuthorizationRequestBuilder..."
+        );
         MicrosoftStsAuthorizationRequest.Builder builder = new MicrosoftStsAuthorizationRequest.Builder();
         builder.setAuthority(mConfig.getAuthorityUrl());
         if (mConfig.getSlice() != null) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Setting slice params..."
+            );
             builder.setSlice(mConfig.getSlice());
         }
         builder.setFlightParameters(mConfig.getFlightParameters());
@@ -137,6 +175,11 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder(@Nullable final IAccountRecord account) {
+        final String methodName = ":createAuthorizationRequestBuilder";
+        Logger.verbose(
+                TAG + methodName,
+                "Creating AuthorizationRequestBuilder"
+        );
         final MicrosoftStsAuthorizationRequest.Builder builder = createAuthorizationRequestBuilder();
 
         if (null != account) {
@@ -154,6 +197,16 @@ public class MicrosoftStsOAuth2Strategy
                     && !StringExtensions.isNullOrBlank(uidUtidPair[INDEX_UTID])) {
                 builder.setUid(uidUtidPair[INDEX_UID]);
                 builder.setUtid(uidUtidPair[INDEX_UTID]);
+
+                Logger.verbosePII(
+                        TAG + methodName,
+                        "Builder w/ uid: [" + uidUtidPair[INDEX_UID] + "]"
+                );
+
+                Logger.verbosePII(
+                        TAG + methodName,
+                        "Builder w/ utid: [" + uidUtidPair[INDEX_UTID] + "]"
+                );
             }
         }
 
@@ -163,6 +216,11 @@ public class MicrosoftStsOAuth2Strategy
     @Override
     public MicrosoftStsTokenRequest createTokenRequest(@NonNull final MicrosoftStsAuthorizationRequest request,
                                                        @NonNull final MicrosoftStsAuthorizationResponse response) {
+        final String methodName = ":createTokenRequest";
+        Logger.verbose(
+                TAG + methodName,
+                "Creating TokenRequest..."
+        );
         MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setCodeVerifier(request.getPkceChallenge().getCodeVerifier());
         tokenRequest.setCode(response.getCode());
@@ -170,7 +228,7 @@ public class MicrosoftStsOAuth2Strategy
         tokenRequest.setClientId(request.getClientId());
         try {
             tokenRequest.setCorrelationId(UUID.fromString(DiagnosticContext.getRequestContext().get(AuthenticationConstants.AAD.CORRELATION_ID)));
-        }catch (IllegalArgumentException ex){
+        } catch (IllegalArgumentException ex) {
             //We're not setting the correlation id if we can't parse it from the diagnostic context
             Logger.error("MicrosoftSTSOAuth2Strategy", "Correlation id on diagnostic context is not a UUID.", ex);
         }
@@ -180,10 +238,24 @@ public class MicrosoftStsOAuth2Strategy
     @Override
     public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final RefreshTokenRecord refreshToken,
                                                               @NonNull final List<String> scopes) {
+        final String methodName = ":createRefreshTokenRequest";
+        Logger.verbose(
+                TAG + methodName,
+                "Creating refresh token request"
+        );
+
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setRefreshToken(refreshToken.getSecret());
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
         request.setScope(StringUtil.join(' ', scopes));
+
+        if (null != request.getScope()) {
+            Logger.verbosePII(
+                    TAG + methodName,
+                    "Scopes: [" + request.getScope() + "]"
+            );
+        }
+
         return request;
     }
 
@@ -200,6 +272,11 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     protected TokenResult getTokenResultFromHttpResponse(final HttpResponse response) {
+        final String methodName = ":getTokenResultFromHttpResponse";
+        Logger.verbose(
+                TAG + methodName,
+                "Getting TokenResult from HttpResponse..."
+        );
         TokenResponse tokenResponse = null;
         TokenErrorResponse tokenErrorResponse = null;
 
