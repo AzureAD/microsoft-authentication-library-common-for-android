@@ -120,7 +120,7 @@ public final class HashMapExtensions {
      * @return HashMap
      * @throws JSONException
      */
-    static HashMap<String, String> getJsonResponse(HttpWebResponse webResponse) throws JSONException {
+    public static HashMap<String, String> getJsonResponse(HttpWebResponse webResponse) throws JSONException {
         final HashMap<String, String> response = new HashMap<>();
         if (webResponse != null && !TextUtils.isEmpty(webResponse.getBody())) {
             JSONObject jsonObject = new JSONObject(webResponse.getBody());
