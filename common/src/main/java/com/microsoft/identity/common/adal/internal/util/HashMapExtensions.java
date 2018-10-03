@@ -137,7 +137,7 @@ public final class HashMapExtensions {
      * Parse json String into HashMap<String, String>.
      *
      * @param jsonString
-     * @return HashMap<String                                                               ,                                                                                                                               String>
+     * @return HashMap
      * @throws JSONException
      */
     static HashMap<String, String> jsonStringAsMap(String jsonString) throws JSONException {
@@ -158,7 +158,7 @@ public final class HashMapExtensions {
      * Parse json String into HashMap<String, List<String>>.
      *
      * @param jsonString
-     * @return HashMap<String                                                               ,                                                                                                                               List                                                               <                                                               String>>
+     * @return HashMap
      * @throws JSONException
      */
     static HashMap<String, List<String>> jsonStringAsMapList(String jsonString) throws JSONException {
