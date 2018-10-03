@@ -73,8 +73,8 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
             case AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR:
                 // This is purely client side error, possible return could be chrome_not_installed or the request intent is
                 // not resolvable
-                final String error = data.getStringExtra(ERROR_CODE);
-                final String errorDescription = data.getStringExtra(ERROR_DESCRIPTION);
+                final String error = data.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE);
+                final String errorDescription = data.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE);
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL, error, errorDescription);
                 break;
 

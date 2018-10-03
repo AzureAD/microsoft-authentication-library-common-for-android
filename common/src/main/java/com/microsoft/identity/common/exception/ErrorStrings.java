@@ -228,7 +228,7 @@ public final class ErrorStrings {
     /**
      * WebView  redirect url is not SSL protected.
      */
-    public static final String WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED = "The webView was redirected to an unsafe URL";
+    public static final String WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED = "Redirect url scheme not SSL protected";
 
     /**
      * Package name is not resolved.
