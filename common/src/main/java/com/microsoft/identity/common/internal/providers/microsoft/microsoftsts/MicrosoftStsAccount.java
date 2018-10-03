@@ -78,6 +78,8 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
             return claims.get(MicrosoftStsIdToken.EMAIL);
         }
 
+        Logger.warn(TAG, "The preferred username is not returned from the IdToken.");
+
         return null;
     }
 

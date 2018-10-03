@@ -682,7 +682,8 @@ public class MsalOAuth2TokenCache
                 {AccountRecord.SerializedNames.ENVIRONMENT, account.getEnvironment()},
                 {AccountRecord.SerializedNames.REALM, account.getRealm()},
                 {AccountRecord.SerializedNames.LOCAL_ACCOUNT_ID, account.getLocalAccountId()},
-                {AccountRecord.SerializedNames.USERNAME, account.getUsername()},
+                //TODO MSA server side will fix the bug where username is not returned in the id token.
+                //{AccountRecord.SerializedNames.USERNAME, account.getUsername()},
                 {AccountRecord.SerializedNames.AUTHORITY_TYPE, account.getAuthorityType()},
         };
 
