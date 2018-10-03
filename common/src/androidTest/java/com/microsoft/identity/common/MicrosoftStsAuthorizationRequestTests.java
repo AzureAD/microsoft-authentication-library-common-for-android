@@ -52,14 +52,12 @@ public class MicrosoftStsAuthorizationRequestTests {
         add(new Pair<>("extra", "1"));
         add(new Pair<>("haschrome", "1"));
     }};
-    private static final String DEFAULT_TEST_VERSION = "test.version";
     private static final String DEFAULT_TEST_PROMPT = MicrosoftStsAuthorizationRequest.Prompt.CONSENT;
     private static final String DEFAULT_TEST_UID = "1";
     private static final String DEFAULT_TEST_UTID = "1234-5678-90abcdefg";
     private static final String DEFAULT_TEST_DISPLAYABLEID = "user@contoso.com";
     private static final String DEFAULT_TEST_SLICE_PARAMETER = "slice=myslice";
     private static final String DEFAULT_TEST_AUTHORITY_STRING = "https://login.microsoftonline.com/common";
-    private static final String DEFAULT_TEST_LIBRARY_NAME = "Test.Android";
 
     static URL getValidRequestUrl() throws MalformedURLException {
         return new URL(DEFAULT_TEST_AUTHORITY_STRING);
@@ -73,9 +71,7 @@ public class MicrosoftStsAuthorizationRequestTests {
                 .setAuthority(getValidRequestUrl())
                 .setScope(DEFAULT_TEST_SCOPE)
                 .setLoginHint(DEFAULT_TEST_LOGIN_HINT)
-                .setCorrelationId(DEFAULT_TEST_CORRELATION_ID)
-                .setLibraryVersion(DEFAULT_TEST_VERSION)
-                .setLibraryName(DEFAULT_TEST_LIBRARY_NAME);
+                .setCorrelationId(DEFAULT_TEST_CORRELATION_ID);
     }
 
 
@@ -88,7 +84,6 @@ public class MicrosoftStsAuthorizationRequestTests {
         assertTrue("Matching login hint", actualCodeRequestUrlWithLoginHint.contains("login_hint=" + DEFAULT_TEST_LOGIN_HINT));
         assertTrue("Matching response type", actualCodeRequestUrlWithLoginHint.contains("response_type=code"));
         assertTrue("Matching correlation id", actualCodeRequestUrlWithLoginHint.contains("&client-request-id=" + DEFAULT_TEST_CORRELATION_ID.toString()));
-        assertTrue("Matching library version", actualCodeRequestUrlWithLoginHint.contains("&x-client-Ver=" + DEFAULT_TEST_VERSION));
 
     }
 
@@ -112,10 +107,6 @@ public class MicrosoftStsAuthorizationRequestTests {
 
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
         assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt=" + MicrosoftStsAuthorizationRequest.Prompt.SELECT_ACCOUNT));
-        assertTrue("Matching message",
-                actualCodeRequestUrl.contains("&x-client-SKU=" + DEFAULT_TEST_LIBRARY_NAME));
-        assertTrue("Matching message",
-                actualCodeRequestUrl.contains("&x-client-Ver=" + DEFAULT_TEST_VERSION));
     }
 
     @Test
