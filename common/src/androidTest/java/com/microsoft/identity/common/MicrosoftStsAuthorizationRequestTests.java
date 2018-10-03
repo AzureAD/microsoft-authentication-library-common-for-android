@@ -59,7 +59,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     private static final String DEFAULT_TEST_DISPLAYABLEID = "user@contoso.com";
     private static final String DEFAULT_TEST_SLICE_PARAMETER = "slice=myslice";
     private static final String DEFAULT_TEST_AUTHORITY_STRING = "https://login.microsoftonline.com/common";
-    private static final String DEFAULT_TEST_LIBRARY_NAME = "MSAL.Android";
+    private static final String DEFAULT_TEST_LIBRARY_NAME = "Test.Android";
 
     static URL getValidRequestUrl() throws MalformedURLException {
         return new URL(DEFAULT_TEST_AUTHORITY_STRING);
@@ -73,8 +73,9 @@ public class MicrosoftStsAuthorizationRequestTests {
                 .setAuthority(getValidRequestUrl())
                 .setScope(DEFAULT_TEST_SCOPE)
                 .setLoginHint(DEFAULT_TEST_LOGIN_HINT)
-                .setCorrelationId(DEFAULT_TEST_CORRELATION_ID);
-
+                .setCorrelationId(DEFAULT_TEST_CORRELATION_ID)
+                .setLibraryVersion(DEFAULT_TEST_VERSION)
+                .setLibraryName(DEFAULT_TEST_LIBRARY_NAME);
     }
 
 
