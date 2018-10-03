@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -90,7 +91,15 @@ public abstract class MicrosoftAccount extends BaseAccount {
         mGivenName = claims.get(AzureActiveDirectoryIdToken.GIVEN_NAME);
         mFamilyName = claims.get(AzureActiveDirectoryIdToken.FAMILY_NAME);
         mMiddleName = claims.get(AzureActiveDirectoryIdToken.MIDDLE_NAME);
-        mTenantId = claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
+        if (!StringUtil.isEmpty(claims.get(AzureActiveDirectoryIdToken.TENANT_ID))) {
+            mTenantId = claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
+        } else {
+            // This if-else check will be removed this after the server
+            // test slice goes to production. Use a placeholder for the
+            // tid now.
+            Logger.warn(TAG, "TenantID is not returned from server.");
+            mTenantId = "tid not return from server";
+        }
         mUid = uid;
         mUtid = utid;
 

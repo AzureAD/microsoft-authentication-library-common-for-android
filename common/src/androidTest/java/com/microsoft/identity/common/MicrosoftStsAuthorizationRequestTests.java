@@ -52,7 +52,7 @@ public class MicrosoftStsAuthorizationRequestTests {
         add(new Pair<>("extra", "1"));
         add(new Pair<>("haschrome", "1"));
     }};
-    private static final String DEFAULT_TEST_VERSION = "0.2.0";
+    private static final String DEFAULT_TEST_VERSION = "test.version";
     private static final String DEFAULT_TEST_PROMPT = MicrosoftStsAuthorizationRequest.Prompt.CONSENT;
     private static final String DEFAULT_TEST_UID = "1";
     private static final String DEFAULT_TEST_UTID = "1234-5678-90abcdefg";

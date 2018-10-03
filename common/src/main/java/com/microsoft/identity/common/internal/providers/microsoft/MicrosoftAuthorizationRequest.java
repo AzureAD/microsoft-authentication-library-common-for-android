@@ -116,8 +116,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         //TODO: Need to figure out how to flow this information down
         //builder.setLibraryVersion(PublicClientApplication.getSdkVersion());
-        mLibraryVersion = "0.2.0";
-        mLibraryName = "Common.Android";
+        mLibraryVersion = "0.1.3";
+        mLibraryName = "MSAL.Android";
         mDiagnosticOS = String.valueOf(Build.VERSION.SDK_INT);
         mDiagnosticDM = android.os.Build.MODEL;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
