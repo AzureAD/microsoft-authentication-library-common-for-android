@@ -140,7 +140,7 @@ public final class HashMapExtensions {
      * @return HashMap
      * @throws JSONException
      */
-    static HashMap<String, String> jsonStringAsMap(String jsonString) throws JSONException {
+    public static HashMap<String, String> jsonStringAsMap(String jsonString) throws JSONException {
         final HashMap<String, String> responseItems = new HashMap<>();
         if (!StringExtensions.isNullOrBlank(jsonString)) {
             JSONObject jsonObject = new JSONObject(jsonString);
