@@ -23,22 +23,24 @@
 package com.microsoft.identity.common.adal.internal.util;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
+import com.microsoft.identity.common.internal.logging.Logger;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import java.util.StringTokenizer;
 
 public final class HashMapExtensions {
 
-    private static final String TAG = "HashMapExtensions";
+    private static final String TAG = HashMapExtensions.class.getSimpleName();
 
     private HashMapExtensions() {
         // Intentionally left blank
@@ -48,7 +50,7 @@ public final class HashMapExtensions {
      * decode url string into a key value pairs with default query delimiter.
      *
      * @param parameters URL query parameter
-     * @return key value pairs.
+     * @return key value pairs
      */
     static HashMap<String, String> urlFormDecode(String parameters) {
         return urlFormDecodeData(parameters, "&");
@@ -60,9 +62,10 @@ public final class HashMapExtensions {
      *
      * @param parameters URL parameter to be decoded
      * @param delimiter  query delimiter
-     * @return Map key value pairs.
+     * @return Map key value pairs
      */
     static HashMap<String, String> urlFormDecodeData(String parameters, String delimiter) {
+        final String methodName = ":urlFormDecodeData";
         final HashMap<String, String> result = new HashMap<>();
 
         if (!StringExtensions.isNullOrBlank(parameters)) {
@@ -71,21 +74,37 @@ public final class HashMapExtensions {
             while (parameterTokenizer.hasMoreTokens()) {
                 String pair = parameterTokenizer.nextToken();
                 String[] elements = pair.split("=");
+                String value = null;
+                String key = null;
 
                 if (elements.length == 2) {
-                    String key = null;
-                    String value = null;
                     try {
                         key = StringExtensions.urlFormDecode(elements[0].trim());
                         value = StringExtensions.urlFormDecode(elements[1].trim());
                     } catch (UnsupportedEncodingException e) {
-                        Log.d(TAG, e.getMessage());
+                        Logger.error(
+                                TAG + methodName,
+                                "Encoding format is not supported",
+                                e
+                        );
+                        continue;
                     }
+                } else if (elements.length == 1) {
+                    try {
+                        key = StringExtensions.urlFormDecode(elements[0].trim());
+                        value = "";
+                    } catch (UnsupportedEncodingException e) {
+                        Logger.error(
+                                TAG + methodName,
+                                "Encoding format is not supported",
+                                e
+                        );
+                        continue;
+                    }
+                }
 
-                    if (!StringExtensions.isNullOrBlank(key)
-                            && !StringExtensions.isNullOrBlank(value)) {
-                        result.put(key, value);
-                    }
+                if (!StringExtensions.isNullOrBlank(key)) {
+                    result.put(key, value);
                 }
             }
         }
@@ -98,11 +117,11 @@ public final class HashMapExtensions {
      * get key value pairs from response.
      *
      * @param webResponse HttpWebResponse to convert to a map
-     * @return Map
-     * @throws JSONException if JSON string is malformed.
+     * @return HashMap
+     * @throws JSONException
      */
-    public static Map<String, String> getJsonResponse(HttpWebResponse webResponse) throws JSONException {
-        final Map<String, String> response = new HashMap<>();
+    static HashMap<String, String> getJsonResponse(HttpWebResponse webResponse) throws JSONException {
+        final HashMap<String, String> response = new HashMap<>();
         if (webResponse != null && !TextUtils.isEmpty(webResponse.getBody())) {
             JSONObject jsonObject = new JSONObject(webResponse.getBody());
             Iterator<?> i = jsonObject.keys();
@@ -114,4 +133,50 @@ public final class HashMapExtensions {
         return response;
     }
 
+    /**
+     * Parse json String into HashMap<String, String>.
+     *
+     * @param jsonString
+     * @return HashMap<String                                                               ,                                                                                                                               String>
+     * @throws JSONException
+     */
+    static HashMap<String, String> jsonStringAsMap(String jsonString) throws JSONException {
+        final HashMap<String, String> responseItems = new HashMap<>();
+        if (!StringExtensions.isNullOrBlank(jsonString)) {
+            JSONObject jsonObject = new JSONObject(jsonString);
+            Iterator<?> i = jsonObject.keys();
+            while (i.hasNext()) {
+                final String key = (String) i.next();
+                responseItems.put(key, jsonObject.getString(key));
+            }
+        }
+
+        return responseItems;
+    }
+
+    /**
+     * Parse json String into HashMap<String, List<String>>.
+     *
+     * @param jsonString
+     * @return HashMap<String                                                               ,                                                                                                                               List                                                               <                                                               String>>
+     * @throws JSONException
+     */
+    static HashMap<String, List<String>> jsonStringAsMapList(String jsonString) throws JSONException {
+        final HashMap<String, List<String>> responseItems = new HashMap<>();
+        if (!StringExtensions.isNullOrBlank(jsonString)) {
+            JSONObject jsonObject = new JSONObject(jsonString);
+            Iterator<?> i = jsonObject.keys();
+            while (i.hasNext()) {
+                final String key = (String) i.next();
+                final List<String> list = new ArrayList<>();
+                final JSONArray json = new JSONArray(jsonObject.getString(key));
+                for (int index = 0; index < json.length(); index++) {
+                    list.add(json.get(index).toString());
+                }
+                responseItems.put(key, list);
+            }
+        }
+
+        return responseItems;
+    }
 }
