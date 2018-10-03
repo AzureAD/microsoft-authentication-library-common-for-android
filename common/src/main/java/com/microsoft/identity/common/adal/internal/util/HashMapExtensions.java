@@ -82,7 +82,7 @@ public final class HashMapExtensions {
                         key = StringExtensions.urlFormDecode(elements[0].trim());
                         value = StringExtensions.urlFormDecode(elements[1].trim());
                     } catch (UnsupportedEncodingException e) {
-                        Logger.error(
+                        Logger.errorPII(
                                 TAG + methodName,
                                 "Encoding format is not supported",
                                 e
@@ -94,7 +94,7 @@ public final class HashMapExtensions {
                         key = StringExtensions.urlFormDecode(elements[0].trim());
                         value = "";
                     } catch (UnsupportedEncodingException e) {
-                        Logger.error(
+                        Logger.errorPII(
                                 TAG + methodName,
                                 "Encoding format is not supported",
                                 e
