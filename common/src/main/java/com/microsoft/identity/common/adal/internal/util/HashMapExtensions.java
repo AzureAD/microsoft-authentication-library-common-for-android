@@ -52,7 +52,7 @@ public final class HashMapExtensions {
      * @param parameters URL query parameter
      * @return key value pairs
      */
-    static HashMap<String, String> urlFormDecode(String parameters) {
+    public static HashMap<String, String> urlFormDecode(String parameters) {
         return urlFormDecodeData(parameters, "&");
     }
 
@@ -161,7 +161,7 @@ public final class HashMapExtensions {
      * @return HashMap
      * @throws JSONException
      */
-    static HashMap<String, List<String>> jsonStringAsMapList(String jsonString) throws JSONException {
+    public static HashMap<String, List<String>> jsonStringAsMapList(String jsonString) throws JSONException {
         final HashMap<String, List<String>> responseItems = new HashMap<>();
         if (!StringExtensions.isNullOrBlank(jsonString)) {
             JSONObject jsonObject = new JSONObject(jsonString);
