@@ -22,10 +22,33 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 
 /**
  * Active Directory Federation Services Authorization Request.
  */
-public class ActiveDirectoryFederationServicesAuthorizationRequest extends AuthorizationRequest {
+public class ActiveDirectoryFederationServicesAuthorizationRequest extends MicrosoftAuthorizationRequest<ActiveDirectoryFederationServicesAuthorizationRequest> {
+    private ActiveDirectoryFederationServicesAuthorizationRequest(final Builder builder) {
+        super(builder);
+    }
+
+    public static final class Builder extends MicrosoftAuthorizationRequest.Builder<ActiveDirectoryFederationServicesAuthorizationRequest.Builder> {
+        public Builder() {
+        }
+
+        public ActiveDirectoryFederationServicesAuthorizationRequest build() {
+            return new ActiveDirectoryFederationServicesAuthorizationRequest(this);
+        }
+
+        @Override
+        public ActiveDirectoryFederationServicesAuthorizationRequest.Builder self() {
+            return this;
+        }
+    }
+
+    @Override
+    public String getAuthorizationEndpoint() {
+        throw new UnsupportedOperationException("Not implemented.");
+    }
 }
+

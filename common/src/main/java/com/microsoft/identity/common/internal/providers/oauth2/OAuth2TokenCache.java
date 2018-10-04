@@ -25,6 +25,11 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.content.Context;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.internal.dto.Credential;
+
+import java.util.List;
 
 /**
  * Class for managing the tokens saved locally on a device.
@@ -49,12 +54,74 @@ public abstract class OAuth2TokenCache
      * @param oAuth2Strategy The strategy used to create the token request.
      * @param request        The request used to acquire tokens and credentials.
      * @param response       The response received from the IdP/STS.
+     * @return The {@link ICacheRecord} containing the Account + Credentials saved to the cache.
      * @throws ClientException If tokens cannot be successfully saved.
      */
-    public abstract void saveTokens(final T oAuth2Strategy,
-                                    final U request,
-                                    final V response) throws ClientException;
+    public abstract ICacheRecord save(final T oAuth2Strategy,
+                                      final U request,
+                                      final V response) throws ClientException;
 
+    /**
+     * Loads the tokens for the supplied Account into the result {@link ICacheRecord}.
+     *
+     * @param clientId The ClientId of the current app.
+     * @param target   The 'target' (scopes) the requested token should contain.
+     * @param account  The Account whose Credentials should be loaded.
+     * @return The resulting ICacheRecord. Entries may be empty if not present in the cache.
+     */
+    public abstract ICacheRecord load(
+            final String clientId,
+            final String target,
+            final AccountRecord account
+    );
+
+    /**
+     * Removes the supplied Credential from the cache.
+     *
+     * @param credential The Credential to remove.
+     * @return True, if the Credential was removed. False otherwise.
+     */
+    public abstract boolean removeCredential(final Credential credential);
+
+    /**
+     * Returns the IAccount matching the supplied criteria.
+     *
+     * @param environment   The environment to which the sought IAccount is associated.
+     * @param clientId      The clientId to which the sought IAccouct is associated.
+     * @param homeAccountId The homeAccountId of the sought IAccount.
+     * @return The sought IAccount or null if it cannot be found.
+     */
+    public abstract AccountRecord getAccount(final String environment,
+                                             final String clientId,
+                                             final String homeAccountId
+    );
+
+    /**
+     * Gets an immutable List of IAccounts for this app which have RefreshTokens in the cache.
+     *
+     * @param clientId    The current application.
+     * @param environment The current environment.
+     * @return An immutable List of IAccounts.
+     */
+    public abstract List<AccountRecord> getAccounts(final String environment, final String clientId);
+
+    /**
+     * Removes the Account (and its associated Credentials) matching the supplied criteria.
+     *
+     * @param environment   The environment to which the targeted Account is associated.
+     * @param clientId      The clientId of this current app.
+     * @param homeAccountId The homeAccountId of the Account targeted for deletion.
+     * @return True, if the Account was deleted. False otherwise.
+     */
+    public abstract boolean removeAccount(final String environment,
+                                          final String clientId,
+                                          final String homeAccountId);
+
+    /**
+     * Gets the Context used to initialize this OAuth2TokenCache.
+     *
+     * @return The Context.
+     */
     protected final Context getContext() {
         return mContext;
     }

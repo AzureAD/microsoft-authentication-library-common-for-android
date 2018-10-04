@@ -25,13 +25,14 @@ package com.microsoft.identity.common.internal.providers.microsoft;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
-import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -40,9 +41,9 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 
-public abstract class MicrosoftAccount extends Account {
+public abstract class MicrosoftAccount extends BaseAccount {
 
-    protected static final String AUTHORITY_TYPE_V1_V2 = "MSSTS";
+    public static final String AUTHORITY_TYPE_V1_V2 = "MSSTS";
 
     private static final String TAG = MicrosoftAccount.class.getSimpleName();
 
@@ -60,6 +61,7 @@ public abstract class MicrosoftAccount extends Account {
     private String mGivenName;
     private String mFamilyName;
     private String mMiddleName;
+    private String mEnvironment;
 
     /**
      * Constructor of MicrosoftAccount.
@@ -89,7 +91,18 @@ public abstract class MicrosoftAccount extends Account {
         mGivenName = claims.get(AzureActiveDirectoryIdToken.GIVEN_NAME);
         mFamilyName = claims.get(AzureActiveDirectoryIdToken.FAMILY_NAME);
         mMiddleName = claims.get(AzureActiveDirectoryIdToken.MIDDLE_NAME);
-        mTenantId = claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
+        if (!StringUtil.isEmpty(claims.get(AzureActiveDirectoryIdToken.TENANT_ID))) {
+            mTenantId = claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
+        } else if (!StringUtil.isEmpty(utid)) {
+            Logger.warnPII(TAG, "realm is not returned from server. Use utid as realm.");
+            mTenantId = utid;
+        } else {
+            // According to the spec, full tenant or organizational identifier that account belongs to.
+            // Can be an empty string for non-AAD scenarios.
+            Logger.warnPII(TAG, "realm and utid is not returned from server. Use empty string as default tid.");
+            mTenantId = "";
+        }
+
         mUid = uid;
         mUtid = utid;
 
@@ -297,9 +310,13 @@ public abstract class MicrosoftAccount extends Account {
         return getUid() + "." + getUtid();
     }
 
+    public void setEnvironment(final String environment) {
+        mEnvironment = environment;
+    }
+
     @Override
     public String getEnvironment() {
-        return SchemaUtil.getEnvironment(mIDToken);
+        return mEnvironment;
     }
 
     @Override

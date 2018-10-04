@@ -24,16 +24,19 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.app.Application;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.CacheKey;
 import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -56,6 +59,7 @@ import java.util.List;
 public class ADALOAuth2TokenCache
         extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
         implements IShareSingleSignOnState {
+    private static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported by the ADALOAuth2TokenCache";
     private ISharedPreferencesFileManager mISharedPreferencesFileManager;
 
     private static final String TAG = ADALOAuth2TokenCache.class.getSimpleName();
@@ -115,16 +119,19 @@ public class ADALOAuth2TokenCache
      * @param response
      */
     @Override
-    public void saveTokens(
+    public ICacheRecord save(
             final AzureActiveDirectoryOAuth2Strategy strategy,
             final AzureActiveDirectoryAuthorizationRequest request,
             final AzureActiveDirectoryTokenResponse response) {
-        final String methodName = "saveTokens";
+        final String methodName = "save";
         Logger.info(TAG + ":" + methodName, "Saving Tokens...");
 
-        final AzureActiveDirectoryAccount account = strategy.createAccount(response);
         final String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
+        final AzureActiveDirectoryAccount account = strategy.createAccount(response);
+        final String msalEnvironment = Uri.parse(issuerCacheIdentifier).getAuthority();
+        account.setEnvironment(msalEnvironment);
         final AzureActiveDirectoryRefreshToken refreshToken = strategy.getRefreshTokenFromResponse(response);
+        refreshToken.setEnvironment(msalEnvironment);
 
         Logger.info(TAG, "Constructing new ADALTokenCacheItem");
         final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem(strategy, request, response);
@@ -155,6 +162,51 @@ public class ADALOAuth2TokenCache
         for (final IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> sharedSsoCache : mSharedSSOCaches) {
             sharedSsoCache.setSingleSignOnState(account, refreshToken);
         }
+
+        return null; // Returning null, since the ADAL cache's schema doesn't support this return type.
+    }
+
+    @Override
+    public ICacheRecord load(
+            final String clientId,
+            final String target,
+            final AccountRecord account) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public boolean removeCredential(Credential credential) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public AccountRecord getAccount(final String environment,
+                                    final String clientId,
+                                    final String homeAccountId) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public List<AccountRecord> getAccounts(final String environment,
+                                           final String clientId) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public boolean removeAccount(final String environment,
+                                 final String clientId,
+                                 final String homeAccountId) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
     }
 
     private static void logTokenCacheItem(final ADALTokenCacheItem tokenCacheItem) {
@@ -208,13 +260,13 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public void setSingleSignOnState(final Account account, final RefreshToken refreshToken) {
+    public void setSingleSignOnState(final BaseAccount account, final RefreshToken refreshToken) {
         // Unimplemented
         Logger.warn(TAG, "setSingleSignOnState was called, but is not implemented.");
     }
 
     @Override
-    public RefreshToken getSingleSignOnState(final Account account) {
+    public RefreshToken getSingleSignOnState(final BaseAccount account) {
         // Unimplemented
         Logger.warn(TAG, "getSingleSignOnState was called, but is not implemented.");
         final RefreshToken refreshToken = null;

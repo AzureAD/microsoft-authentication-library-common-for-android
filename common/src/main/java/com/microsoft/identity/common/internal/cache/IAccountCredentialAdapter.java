@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
-import com.microsoft.identity.common.internal.dto.IdToken;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
@@ -37,7 +38,7 @@ public interface IAccountCredentialAdapter
         <T extends OAuth2Strategy,
                 U extends AuthorizationRequest,
                 V extends TokenResponse,
-                W extends com.microsoft.identity.common.Account,
+                W extends BaseAccount,
                 X extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> {
 
     /**
@@ -48,7 +49,7 @@ public interface IAccountCredentialAdapter
      * @param response The authz response.
      * @return The derived Account.
      */
-    Account createAccount(T strategy, U request, V response);
+    AccountRecord createAccount(T strategy, U request, V response);
 
     /**
      * Constructs an AccessToken.
@@ -58,7 +59,7 @@ public interface IAccountCredentialAdapter
      * @param response The authz response.
      * @return The derived AccessToken.
      */
-    AccessToken createAccessToken(T strategy, U request, V response);
+    AccessTokenRecord createAccessToken(T strategy, U request, V response);
 
     /**
      * Constructs a RefreshToken.
@@ -68,7 +69,7 @@ public interface IAccountCredentialAdapter
      * @param response The authz response.
      * @return The derived RefreshToken.
      */
-    RefreshToken createRefreshToken(T strategy, U request, V response);
+    RefreshTokenRecord createRefreshToken(T strategy, U request, V response);
 
     /**
      * Constructs an IdToken.
@@ -78,34 +79,34 @@ public interface IAccountCredentialAdapter
      * @param response The authz response.
      * @return The derived IdToken.
      */
-    IdToken createIdToken(T strategy, U request, V response);
+    IdTokenRecord createIdToken(T strategy, U request, V response);
 
     /**
      * Adapter method to turn
      * {@link com.microsoft.identity.common.internal.providers.oauth2.RefreshToken} instances into
-     * {@link RefreshToken}.
+     * {@link RefreshTokenRecord}.
      *
      * @param refreshToken The RefreshToken to adapt.
      * @return The adapted RefreshToken.
      */
-    RefreshToken asRefreshToken(X refreshToken);
+    RefreshTokenRecord asRefreshToken(X refreshToken);
 
     /**
-     * Adapter method to turn {@link com.microsoft.identity.common.Account} instances into
-     * {@link Account} instances.
+     * Adapter method to turn {@link BaseAccount} instances into
+     * {@link AccountRecord} instances.
      *
      * @param account The Account to adapt.
      * @return The adapted Account.
      */
-    Account asAccount(W account);
+    AccountRecord asAccount(W account);
 
     /**
-     * Constructs IdToken instances from {@link com.microsoft.identity.common.Account} and
+     * Constructs IdToken instances from {@link BaseAccount} and
      * {@link com.microsoft.identity.common.internal.providers.oauth2.RefreshToken} instances.
      *
      * @param account      The Account to read.
      * @param refreshToken The RefreshToken to read.
      * @return The newly constructed IdToken.
      */
-    IdToken asIdToken(W account, X refreshToken);
+    IdTokenRecord asIdToken(W account, X refreshToken);
 }

@@ -22,32 +22,181 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.net.Uri;
+import android.util.Pair;
+
+import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.net.ObjectMapper;
+
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
  * https://tools.ietf.org/html/rfc6749#section-4.1.1
  * This should include all fo the required parameters of the authorization request for oAuth2
  * This should provide an extension point for additional parameters to be set
  */
-public class AuthorizationRequest {
-
-    private String mResponseType;
-    private String mClientId;
-    private String mRedirectUri;
-    private String mScope;
-    private String mState;
+public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> implements Serializable {
+    /**
+     * Serial version id.
+     */
+    private static final long serialVersionUID = 6171895895590170062L;
 
     /**
-     * @return mResponseType of the authorization request.
+     * A required value and must be set to "code".
+     */
+    @SerializedName("response_type")
+    private String mResponseType;
+
+    /**
+     * A required value.
+     * <p>
+     * The client identifier as assigned by the authorization server, when the client was registered.
+     */
+    @SerializedName("client_id")
+    private String mClientId;
+
+    /**
+     * Redirect URLs are a critical part of the OAuth flow. After a user successfully authorizes an
+     * application, the authorization server will redirect the user back to the application with
+     * either an authorization code or access token in the URL.
+     */
+    @SerializedName("redirect_uri")
+    private String mRedirectUri;
+
+    /**
+     * A recommended value.
+     * <p>
+     * A value included in the request that will also be returned in the token response.
+     * It can be a string of any content that you wish. A randomly generated unique value is
+     * typically used for preventing cross-site request forgery attacks. The value can also
+     * encode information about the user's state in the app before the authentication request
+     * occurred, such as the page or view they were on.
+     */
+    @SerializedName("state")
+    protected String mState;
+
+    /**
+     * Scopes scopes that you want the user to consent to is required for V2 auth request.
+     */
+    @SerializedName("scope")
+    private String mScope;
+
+    private transient List<Pair<String, String>> mExtraQueryParams;
+
+    /**
+     * Constructor of AuthorizationRequest.
+     */
+    protected AuthorizationRequest(final Builder builder) {
+        mResponseType = builder.mResponseType;
+        mClientId = builder.mClientId;
+        mRedirectUri = builder.mRedirectUri;
+        mState = builder.mState;
+        mScope = builder.mScope;
+        mExtraQueryParams = builder.mExtraQueryParams;
+    }
+
+    public static final class ResponseType {
+        public static final String CODE = "code";
+    }
+
+    public static abstract class Builder<B extends AuthorizationRequest.Builder<B>> {
+        private String mResponseType = ResponseType.CODE; //ResponseType.CODE as default.
+        private String mClientId;
+        private String mRedirectUri;
+        private String mState;
+        private String mScope;
+
+        /**
+         * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
+         */
+        public String mLoginHint;
+
+        /**
+         * Correlation ID.
+         */
+        public UUID mCorrelationId;
+
+        /**
+         * Extra query parameters.
+         */
+        public List<Pair<String, String>> mExtraQueryParams;
+
+        public String mPrompt;
+
+        public B setPrompt(String prompt) {
+            mPrompt = prompt;
+            return self();
+        }
+
+        public B setResponseType(String responseType) {
+            mResponseType = responseType;
+            return self();
+        }
+
+        public B setClientId(String clientId) {
+            mClientId = clientId;
+            return self();
+        }
+
+        public B setRedirectUri(String redirectUri) {
+            mRedirectUri = redirectUri;
+            return self();
+        }
+
+        public B setState(String state) {
+            mState = state;
+            return self();
+        }
+
+        public B setScope(String scope) {
+            mScope = scope;
+            return self();
+        }
+
+        public B setLoginHint(String loginHint) {
+            mLoginHint = loginHint;
+            return self();
+        }
+
+        public B setCorrelationId(UUID correlationId) {
+            mCorrelationId = correlationId;
+            return self();
+        }
+
+        public B setExtraQueryParams(List<Pair<String, String>> extraQueryParams) {
+            mExtraQueryParams = extraQueryParams;
+            return self();
+        }
+
+        public abstract B self();
+
+        public abstract AuthorizationRequest build();
+
+    }
+//
+//    /**
+//     * Return the start URL to load in the web view.
+//     *
+//     * @return String of start URL.
+//     * @throws UnsupportedEncodingException
+//     * @throws ClientException
+//     */
+//    public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
+
+    /**
+     * @return Response type of the authorization request.
      */
     public String getResponseType() {
         return mResponseType;
     }
 
-    /**
-     * @param responseType response type of the authorization request.
-     */
-    public void setResponseType(final String responseType) {
-        mResponseType = responseType;
+    public List<Pair<String, String>> getExtraQueryParams() {
+        return mExtraQueryParams;
     }
 
     /**
@@ -58,13 +207,6 @@ public class AuthorizationRequest {
     }
 
     /**
-     * @param clientId client ID of the authorization request.
-     */
-    public void setClientId(final String clientId) {
-        mClientId = clientId;
-    }
-
-    /**
      * @return mRedirectUri of the authorization request.
      */
     public String getRedirectUri() {
@@ -72,38 +214,10 @@ public class AuthorizationRequest {
     }
 
     /**
-     * @param redirectUri redirect URI of the authorization request.
-     */
-    public void setRedirectUri(final String redirectUri) {
-        mRedirectUri = redirectUri;
-    }
-
-    /**
-     * @return mScope of the authorization request.
-     */
-    public String getScope() {
-        return mScope;
-    }
-
-    /**
-     * @param scope scope of the authorization request.
-     */
-    public void setScope(final String scope) {
-        mScope = scope;
-    }
-
-    /**
      * @return mState of the authorization request.
      */
     public String getState() {
         return mState;
-    }
-
-    /**
-     * @param state state of the authorization request.
-     */
-    public void setState(final String state) {
-        mState = state;
     }
 
     //CHECKSTYLE:OFF
@@ -117,6 +231,27 @@ public class AuthorizationRequest {
                 ", mState='" + mState + '\'' +
                 '}';
     }
-    //CHECKSTYLE:ON
 
+    public String getScope() {
+        return mScope;
+    }
+
+    public abstract String getAuthorizationEndpoint();
+
+    public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
+        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
+
+        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
+
+        // Add extra qp, if present...
+        if (null != mExtraQueryParams && !mExtraQueryParams.isEmpty()) {
+            for (final Pair<String, String> queryParam : mExtraQueryParams) {
+                uriBuilder.appendQueryParameter(queryParam.first, queryParam.second);
+            }
+        }
+
+        return uriBuilder.build();
+    }
 }

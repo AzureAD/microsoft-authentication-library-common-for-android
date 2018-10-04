@@ -7,23 +7,30 @@ apply plugin: 'pmd'
 apply plugin: 'checkstyle'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
+apply from: 'versioning/version_tasks.gradle'
 
+project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
+project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 android {
     compileSdkVersion 27
     buildToolsVersion '27.0.3'
 
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 16
         targetSdkVersion 27
-        versionCode 1
-        versionName "0.0.4"
+        versionCode getAppVersionCode()
+        versionName getAppVersionName()
         project.archivesBaseName = "common"
         project.version = android.defaultConfig.versionName
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"N1jdcbbnKDr0LaFZlqdhXgm2luE=\"")
+        }
         release {
+            buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"ho040S3ffZkmxqtQrSwpTVOn9r0=\"")
             minifyEnabled false
             debuggable false
             testCoverageEnabled false
@@ -40,6 +47,7 @@ android {
         disable 'GradleDependency'
         disable 'GradleOverrides'
         disable 'OldTargetApi'
+        disable 'RtlHardcoded'
     }
 
     testOptions {
@@ -63,13 +71,14 @@ android {
 }
 
 dependencies {
-    implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '5.7'
+    implementation 'com.nimbusds:nimbus-jose-jwt:5.7'
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation "com.google.code.gson:gson:2.8.4"
+    implementation "com.android.support:customtabs:27.1.1"
 
     // Test dependencies
-    testImplementation 'org.json:json:20160810'
     // Needed to resolve JSONObject inside of non-instrumented tests
+    testImplementation 'org.json:json:20160810'
     testImplementation 'junit:junit:4.12'
     testImplementation "org.mockito:mockito-core:1.10.19"
     testImplementation "com.google.dexmaker:dexmaker-mockito:1.2"
@@ -85,27 +94,33 @@ dependencies {
     })
 }
 
-// Task to generate javadoc
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += configurations.compile
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+// Create tasks to generate javadoc
+android.libraryVariants.all { variant ->
+    task("${variant.name}Javadoc", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
+        source = variant.javaCompiler.source
 
-    options.memberLevel = JavadocMemberLevel.PUBLIC
-    options.addStringOption('Xdoclint:none', '-quiet')
+        title = "Microsoft Identity Android Common"
 
-    exclude '**/BuildConfig.Java'
-    exclude '**/R.java'
-    classpath = configurations.compile
-    destinationDir = reporting.file("$project.buildDir/outputs/jar/javadoc/")
+        // First add all of your dependencies to the classpath, then add the android jars
+        doFirst { classpath += files(variant.javaCompiler.classpath.files) }
+        classpath += files(android.getBootClasspath())
+
+        options.memberLevel = JavadocMemberLevel.PUBLIC
+        options.addStringOption('Xdoclint:none', '-quiet')
+
+        // We're excluding these generated files
+        exclude '**/R.java'
+    }
 }
 
-// Task to generate javadoc.jar
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-    destinationDir = reporting.file("$project.buildDir/outputs/jar/")
+// Create tasks to generate javadoc jar
+android.libraryVariants.all { variant ->
+    task("${variant.name}JavadocJar", type: Jar, dependsOn: "${variant.name}Javadoc") {
+        classifier = 'javadoc'
+        from tasks["${variant.name}Javadoc"].destinationDir
+    }
 }
+
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
@@ -213,8 +228,9 @@ afterEvaluate {
                 }
 
                 artifact(sourcesJar)
-                artifact(javadocJar)
+                artifact(releaseJavadocJar)
                 artifact("$buildDir/outputs/aar/common-${project.version}.aar")
+
             }
         }
 
@@ -224,8 +240,8 @@ afterEvaluate {
                 name "vsts-maven-adal-android"
                 url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
                 credentials {
-                    username project.findProperty("vstsUsername")
-                    password project.findProperty("vstsMavenAccessToken")
+                    username project.vstsUsername
+                    password project.vstsPassword
                 }
             }
         }
@@ -234,19 +250,21 @@ afterEvaluate {
 
 // Repositories from which Gradle can fetch dependencies
 repositories {
+    mavenLocal()
+    jcenter()
+    google()
     maven {
         name "vsts-maven-adal-android"
         url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
         credentials {
-            username project.findProperty("vstsUsername")
-            password project.findProperty("vstsMavenAccessToken")
+            username project.vstsUsername
+            password project.vstsPassword
         }
     }
 }
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
-        task.dependsOn 'lint', 'javadocJar', 'sourcesJar', 'checkstyle', 'pmd'
+        task.dependsOn 'lint', 'sourcesJar', 'checkstyle', 'pmd'
     }
 }
-

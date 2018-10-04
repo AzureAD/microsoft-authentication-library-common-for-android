@@ -20,53 +20,41 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.dto;
+package com.microsoft.identity.common.internal.ui.browser;
+
+import android.support.annotation.NonNull;
+
+import com.microsoft.identity.common.internal.logging.Logger;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
- * Interface for schema-necessary fields for RefreshTokens.
+ * A blocked list of browsers. This will reject a match for any browser on the list, and permit
+ * all others.
  */
-public interface IRefreshToken {
+public class BrowserBlocklist {
+    private static final String TAG = BrowserBlocklist.class.getSimpleName();
+    private List<Browser> mBrowsers;
 
     /**
-     * Gets the home_account_id.
-     *
-     * @return The home_account_id to get.
+     * Create a block list from given set of browsers.
      */
-    String getHomeAccountId();
+    public BrowserBlocklist(Browser... browsers) {
+        mBrowsers = Arrays.asList(browsers);
+    }
 
     /**
-     * Gets the environment.
-     *
-     * @return The environment to get.
+     * @return true if the browser is in the block list.
      */
-    String getEnvironment();
+    public boolean matches(@NonNull Browser targetBrowser) {
+        for (Browser browser : mBrowsers) {
+            if (browser.equals(targetBrowser)) {
+                Logger.verbose(TAG, "The target browser is in the block list.");
+                return true;
+            }
+        }
 
-    /**
-     * Gets the clientId.
-     *
-     * @return The clientId to get.
-     */
-    String getClientId();
-
-    /**
-     * Gets the secret.
-     *
-     * @return The secret to get.
-     */
-    String getSecret();
-
-    /**
-     * Gets the target.
-     *
-     * @return The target to get.
-     */
-    String getTarget();
-
-    /**
-     * Gets the family_id.
-     *
-     * @return The family_id to get.
-     */
-    String getFamilyId();
-
+        return false;
+    }
 }

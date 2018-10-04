@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
-import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.BaseAccount;
 
 import java.util.List;
 
@@ -30,7 +30,7 @@ import java.util.List;
  * Represents the Azure AD B2C Account.
  */
 @SuppressWarnings("PMD") // Suppressing PMD warning for multiple usages of the String "Method stub!"
-public class AzureActiveDirectoryB2CAccount extends Account {
+public class AzureActiveDirectoryB2CAccount extends BaseAccount {
 
     @Override
     public String getUniqueIdentifier() {

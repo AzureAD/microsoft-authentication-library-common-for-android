@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-
 /**
  * Configuration class for OAuth2Settings
  * Settings include things like:

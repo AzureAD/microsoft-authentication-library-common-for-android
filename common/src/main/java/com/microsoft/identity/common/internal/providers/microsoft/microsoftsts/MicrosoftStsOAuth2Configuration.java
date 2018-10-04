@@ -22,7 +22,35 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import android.net.Uri;
+
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Configuration;
 
+import java.net.URL;
+
 public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2Configuration {
+
+    public URL getAuthorizationEndpoint() {
+        return getEndpoint(getAuthorityUrl(), "/oAuth2/v2.0/authorize");
+    }
+
+    public URL getTokenEndpoint() {
+        return getEndpoint(getAuthorityUrl(), "/oAuth2/v2.0/token");
+    }
+
+    private URL getEndpoint(URL root, String endpoint) {
+        try {
+            Uri authorityUri = Uri.parse(root.toString());
+            Uri endpointUri = authorityUri.buildUpon()
+                    .appendPath(endpoint)
+                    .build();
+            return new URL(endpointUri.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+
+    }
+
 }

@@ -22,13 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
-import android.net.Uri;
-
-import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -36,6 +38,9 @@ import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+
+import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * Azure Active Directory B2C OAuth Strategy.
@@ -54,13 +59,13 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    public AuthorizationResponse requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy) {
+    public Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy) {
         return super.requestAuthorization(request, authorizationStrategy);
     }
 
     @Override
-    protected Uri createAuthorizationUri() {
-        return super.createAuthorizationUri();
+    public AuthorizationResultFactory getAuthorizationResultFactory() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -79,12 +84,32 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    public Account createAccount(TokenResponse response) {
+    public BaseAccount createAccount(TokenResponse response) {
         return null;
     }
 
     @Override
+    public AuthorizationRequest.Builder createAuthorizationRequestBuilder() {
+        return new AzureActiveDirectoryB2CAuthorizationRequest.Builder();
+    }
 
+    @Override
+    public AuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccountRecord account) {
+        return createAuthorizationRequestBuilder();
+    }
+
+    @Override
+    public TokenRequest createTokenRequest(AuthorizationRequest request, AuthorizationResponse response) {
+        return null;
+    }
+
+
+    @Override
+    public TokenRequest createRefreshTokenRequest(RefreshTokenRecord refreshToken, List scopes) {
+        return null;
+    }
+
+    @Override
     protected void validateAuthorizationRequest(AuthorizationRequest request) {
     }
 

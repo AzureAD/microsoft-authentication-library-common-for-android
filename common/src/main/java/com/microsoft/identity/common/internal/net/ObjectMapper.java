@@ -24,11 +24,17 @@ package com.microsoft.identity.common.internal.net;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
 
 public final class ObjectMapper {
@@ -37,6 +43,7 @@ public final class ObjectMapper {
      * Encoding scheme.
      */
     public static final String ENCODING_SCHEME = "UTF-8";
+    public static final String TAG = ObjectMapper.class.getSimpleName();
 
     private ObjectMapper() {
         // Utility class.
@@ -96,4 +103,80 @@ public final class ObjectMapper {
         return builder.toString();
     }
 
+    /**
+     * Method to serialize the object into a map.
+     *
+     * @param object Object
+     * @return Map<String                                                                                                                               ,                                                                                                                                                                                                                                                               String>
+     */
+    public static Map<String, String> serializeObjectHashMap(final Object object) throws UnsupportedEncodingException {
+        String json = ObjectMapper.serializeObjectToJsonString(object);
+        return serializeNestedJsonToMap(json);
+    }
+
+    public static Map<String, String> serializeNestedJsonToMap(final String jsonString) throws UnsupportedEncodingException {
+        if (StringUtil.isEmpty(jsonString)) {
+            return null;
+        }
+
+        final Map<String, String> objectMap = new HashMap<>();
+        Type stringMap = new TypeToken<TreeMap<String, Object>>() {
+        }.getType();
+        TreeMap<String, Object> fields = new Gson().fromJson(jsonString, stringMap);
+        Iterator<TreeMap.Entry<String, Object>> iterator = fields.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            TreeMap.Entry<String, Object> entry = iterator.next();
+            if (entry.getValue() instanceof String
+                    && !StringUtil.isEmpty(entry.getKey())
+                    && !StringUtil.isEmpty((String) entry.getValue())) {
+                objectMap.put(URLDecoder.decode(entry.getKey(), ENCODING_SCHEME), URLDecoder.decode((String) entry.getValue(), ENCODING_SCHEME));
+            } else {
+                final Map<String, String> hashMap = serializeNestedJsonToMap(entry.getValue().toString());
+                if (hashMap != null) {
+                    objectMap.putAll(hashMap);
+                }
+            }
+        }
+
+        return objectMap;
+    }
+
+
+    /**
+     * Method to deserialize the query string into a map.
+     *
+     * @param queryString String
+     * @return Map
+     */
+    public static Map<String, String> deserializeQueryStringToMap(final String queryString) {
+        final Map<String, String> decodedUrlMap = new HashMap<>();
+
+        if (StringUtil.isEmpty(queryString)) {
+            return decodedUrlMap;
+        }
+
+        final StringTokenizer tokenizer = new StringTokenizer(queryString, "&");
+        while (tokenizer.hasMoreTokens()) {
+            final String pair = tokenizer.nextToken();
+            final String[] elements = pair.split("=");
+
+            if (elements.length != 2) {
+                continue;
+            }
+
+            try {
+                final String key = URLDecoder.decode(elements[0], ENCODING_SCHEME);
+                final String value = URLDecoder.decode(elements[1], ENCODING_SCHEME);
+
+                if (!StringUtil.isEmpty(key) && !StringUtil.isEmpty(value)) {
+                    decodedUrlMap.put(key, value);
+                }
+            } catch (final UnsupportedEncodingException e) {
+                Logger.error(TAG, null, "Decode failed.", e);
+            }
+        }
+
+        return decodedUrlMap;
+    }
 }

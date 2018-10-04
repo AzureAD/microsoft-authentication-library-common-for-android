@@ -22,11 +22,81 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+
 /**
  * A class to return the result of the authorization request to the calling code (ADAL or MSAL Controller classes)
  * This class should have a generic status in terms of : Cancelled, TimedOut, Error,  etc...
  * this class should also contain the AuthorizationResponse which contains the details returned from the
  * In the case of an error/exception this class should return the associated exception
  */
-public abstract class AuthorizationResult {
+public abstract class AuthorizationResult<
+        GenericAuthorizationResponse extends AuthorizationResponse,
+        GenericAuthorizationErrorResponse extends AuthorizationErrorResponse> {
+
+    private AuthorizationStatus mAuthorizationStatus;
+    private GenericAuthorizationResponse mAuthorizationResponse;
+    private GenericAuthorizationErrorResponse mAuthorizationErrorResponse;
+    private boolean mSuccess = false;
+
+    public AuthorizationResult(final GenericAuthorizationResponse response, final GenericAuthorizationErrorResponse errorResponse) {
+
+        this.mAuthorizationResponse = response;
+        this.mAuthorizationErrorResponse = errorResponse;
+
+        if (response != null) {
+            mSuccess = true;
+        }
+    }
+
+    public AuthorizationResult(final AuthorizationStatus status) {
+        this.mAuthorizationStatus = status;
+    }
+
+    public AuthorizationResult() {
+
+    }
+
+    /**
+     * Returns whether the authorization request was successful or not.
+     *
+     * @return boolean
+     */
+    public boolean getSuccess() {
+        return mSuccess;
+    }
+
+    /**
+     * @return The {@link AuthorizationStatus} indicating the auth status for the request sent to authorize endpoint.
+     */
+    public AuthorizationStatus getAuthorizationStatus() {
+        return mAuthorizationStatus;
+    }
+
+    /**
+     * @return The {@link AuthorizationResponse} indicating the auth response  for the request sent to authorize endpoint.
+     */
+    public GenericAuthorizationResponse getAuthorizationResponse() {
+        return mAuthorizationResponse;
+    }
+
+    /**
+     * @return The {@link AuthorizationErrorResponse} indicating the auth error response for the request sent to authorize endpoint.
+     */
+    public GenericAuthorizationErrorResponse getAuthorizationErrorResponse() {
+        return mAuthorizationErrorResponse;
+    }
+
+    protected void setAuthorizationErrorResponse(final GenericAuthorizationErrorResponse authErrorResponse) {
+        mAuthorizationErrorResponse = authErrorResponse;
+    }
+
+    protected void setAuthorizationResponse(final GenericAuthorizationResponse authResponse) {
+        mAuthorizationResponse = authResponse;
+    }
+
+    protected void setAuthorizationStatus(final AuthorizationStatus authStatus) {
+        mAuthorizationStatus = authStatus;
+    }
+
 }
+

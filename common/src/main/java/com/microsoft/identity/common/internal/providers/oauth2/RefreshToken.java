@@ -22,9 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import com.microsoft.identity.common.internal.dto.IRefreshToken;
+import com.microsoft.identity.common.internal.dto.IRefreshTokenRecord;
 
-public abstract class RefreshToken implements IRefreshToken {
+public abstract class RefreshToken implements IRefreshTokenRecord {
 
     /**
      * Constructor of RefreshToken.

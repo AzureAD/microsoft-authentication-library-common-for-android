@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
+import com.microsoft.identity.common.BuildConfig;
+
 /**
  * {@link AuthenticationConstants} contains all the constant value the SDK is using.
  */
@@ -148,6 +150,11 @@ public final class AuthenticationConstants {
          * Waiting for broker package to be installed, and resume request in broker.
          */
         public static final int BROKER_REQUEST_RESUME = 2006;
+
+        /**
+         * Device registration in broker apps.
+         */
+        public static final int BROWSER_CODE_DEVICE_REGISTER = 2007;
     }
 
     /**
@@ -160,10 +167,14 @@ public final class AuthenticationConstants {
          */
         public static final int BROWSER_FLOW = 1001;
 
-        /** Represents the request of token flow. */
+        /**
+         * Represents the request of token flow.
+         */
         public static final int TOKEN_FLOW = 1002;
 
-        /** Represents the request of broker flow. */
+        /**
+         * Represents the request of broker flow.
+         */
         public static final int BROKER_FLOW = 1003;
     }
 
@@ -371,7 +382,9 @@ public final class AuthenticationConstants {
          * String for cloud instance host name.
          */
         public static final String CLOUD_INSTANCE_HOST_NAME = "cloud_instance_host_name";
-        /** session key JWE. */
+        /**
+         * session key JWE.
+         */
         public static final String SESSION_KEY_JWE = "session_key_jwe";
     }
 
@@ -480,7 +493,9 @@ public final class AuthenticationConstants {
          **/
         public static final String REQUEST_ID_HEADER = "x-ms-request-id";
 
-        /** String for the broker version. */
+        /**
+         * String for the broker version.
+         */
         public static final String ADAL_BROKER_VERSION = "x-client-brkrver";
     }
 
@@ -800,6 +815,11 @@ public final class AuthenticationConstants {
         public static final String CHALLENGE_RESPONSE_CONTEXT = "Context";
 
         /**
+         * String of authorization code grants via Proof Key for Code Exchange (PKCE).
+         */
+        public static final String PKCE_CHALLENGE = "PkceChallenge";
+
+        /**
          * Certificate authorities are passed with delimiter.
          */
         public static final String CHALLENGE_REQUEST_CERT_AUTH_DELIMETER = ";";
@@ -820,7 +840,7 @@ public final class AuthenticationConstants {
          * Signature info for Azure authenticator app that installs authenticator
          * component.
          */
-        public static final String AZURE_AUTHENTICATOR_APP_SIGNATURE = "ho040S3ffZkmxqtQrSwpTVOn9r0=";
+        public static final String AZURE_AUTHENTICATOR_APP_SIGNATURE = BuildConfig.AZURE_AUTHENTICATOR_APP_SIGNATURE;
 
         /**
          * Azure Authenticator app signature hash.
@@ -899,6 +919,36 @@ public final class AuthenticationConstants {
         public static final String EXPIRATION_BUFFER = "expiration.buffer";
 
         /**
+         * String for authorization scope.
+         */
+        public static final String AUTH_SCOPE = "scope";
+
+        /**
+         * String for authorization state.
+         */
+        public static final String AUTH_STATE = "state";
+
+        /**
+         * String for authorization response type.
+         */
+        public static final String AUTH_RESPONSE_TYPE = "response_type";
+
+        /**
+         * String for library name.
+         */
+        public static final String LIB_NAME = "library_name";
+
+        /**
+         * String for library version.
+         */
+        public static final String LIB_VERSION = "library_version";
+
+        /**
+         * String for the package name of the client app.
+         */
+        public static final String CLIENT_APP_PACKAGE_NAME = "client_app_package_name";
+
+        /**
          * Bundle identifiers for x-ms-clitelem info.
          */
         public static final class CliTelemInfo {
@@ -933,7 +983,7 @@ public final class AuthenticationConstants {
     public static final class OAuth2ErrorCode {
         /**
          * Oauth2 error code invalid_grant.
-         */       
+         */
         public static final String INVALID_GRANT = "invalid_grant";
 
         /**

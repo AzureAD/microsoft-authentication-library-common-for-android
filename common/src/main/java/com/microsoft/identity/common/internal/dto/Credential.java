@@ -230,6 +230,13 @@ public abstract class Credential extends AccountCredentialBase {
         mCachedAt = cachedAt;
     }
 
+    /**
+     * Checks if the current Credentials is expired.
+     *
+     * @return True, if expired. False otherwise.
+     */
+    public abstract boolean isExpired();
+
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the

@@ -24,10 +24,10 @@ package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
 
-import static com.microsoft.identity.common.internal.dto.IdToken.SerializedNames.AUTHORITY;
-import static com.microsoft.identity.common.internal.dto.IdToken.SerializedNames.REALM;
+import static com.microsoft.identity.common.internal.dto.IdTokenRecord.SerializedNames.AUTHORITY;
+import static com.microsoft.identity.common.internal.dto.IdTokenRecord.SerializedNames.REALM;
 
-public class IdToken extends Credential {
+public class IdTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
         /**
@@ -88,6 +88,11 @@ public class IdToken extends Credential {
         mRealm = realm;
     }
 
+    @Override
+    public boolean isExpired() {
+        return false;
+    }
+
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
@@ -99,7 +104,7 @@ public class IdToken extends Credential {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
-        IdToken idToken = (IdToken) o;
+        IdTokenRecord idToken = (IdTokenRecord) o;
 
         if (mRealm != null ? !mRealm.equals(idToken.mRealm) : idToken.mRealm != null) return false;
         return mAuthority != null ? mAuthority.equals(idToken.mAuthority) : idToken.mAuthority == null;

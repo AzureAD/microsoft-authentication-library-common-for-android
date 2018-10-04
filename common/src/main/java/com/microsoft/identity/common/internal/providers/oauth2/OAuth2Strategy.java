@@ -24,16 +24,24 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.net.Uri;
 
-import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.platform.Device;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.Future;
 
 
 /**
@@ -42,20 +50,25 @@ import java.util.UUID;
  */
 public abstract class OAuth2Strategy
         <GenericAccessToken extends AccessToken,
-                GenericAccount extends Account,
+                GenericAccount extends BaseAccount,
                 GenericAuthorizationRequest extends AuthorizationRequest,
-                GenericAuthorizationResponse extends AuthorizationResponse,
+                GenericAuthorizationRequestBuilder extends AuthorizationRequest.Builder,
                 GenericAuthorizationStrategy extends AuthorizationStrategy,
                 GenericOAuth2Configuration extends OAuth2Configuration,
+                GenericAuthorizationResponse extends AuthorizationResponse,
                 GenericRefreshToken extends RefreshToken,
                 GenericTokenRequest extends TokenRequest,
                 GenericTokenResponse extends TokenResponse,
-                GenericTokenResult extends TokenResult> {
+                GenericTokenResult extends TokenResult,
+                GenericAuthorizationResult extends AuthorizationResult> {
+
+    private static final String TAG = OAuth2Strategy.class.getSimpleName();
+
     protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
-    private final GenericOAuth2Configuration mConfig;
-    private String mTokenEndpoint;
-    private String mAuthorizationEndpoint;
+    protected final GenericOAuth2Configuration mConfig;
+    protected String mTokenEndpoint;
+    protected String mAuthorizationEndpoint;
     private Uri mIssuer;
 
     /**
@@ -74,16 +87,21 @@ public abstract class OAuth2Strategy
      * @param authorizationStrategy generic authorization strategy.
      * @return GenericAuthorizationResponse
      */
-    public GenericAuthorizationResponse requestAuthorization(
+    public Future<AuthorizationResult> requestAuthorization(
             final GenericAuthorizationRequest request,
             final GenericAuthorizationStrategy authorizationStrategy) {
         validateAuthorizationRequest(request);
-        Uri authorizationUri = createAuthorizationUri(); //NOPMD Suppressing PMD warning for unused variable
-        AuthorizationResult result = authorizationStrategy.requestAuthorization(request); //NOPMD Suppressing PMD warning for unused variable
-        //TODO: Reconcile authorization result and response
-        AuthorizationResponse response = new AuthorizationResponse();
-        return (GenericAuthorizationResponse) response;
+        Future<AuthorizationResult> future = null;
+        try {
+            future = authorizationStrategy.requestAuthorization(request, this);
+        } catch (final UnsupportedEncodingException | ClientException exc) {
+            //TODO
+        }
+
+        return future;
     }
+
+    public abstract AuthorizationResultFactory getAuthorizationResultFactory();
 
     /**
      * @param request generic token request.
@@ -91,17 +109,27 @@ public abstract class OAuth2Strategy
      * @throws IOException thrown when failed or interrupted I/O operations occur.
      */
     public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException {
+        final String methodName = ":requestToken";
+        Logger.verbose(
+                TAG + methodName,
+                "Requesting token..."
+        );
         validateTokenRequest(request);
         HttpResponse response = performTokenRequest(request);
         return getTokenResultFromHttpResponse(response);
     }
 
     protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException {
-
+        final String methodName = ":performTokenRequest";
+        Logger.verbose(
+                TAG + methodName,
+                "Performing token request..."
+        );
         String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
         Map<String, String> headers = new TreeMap<>();
         String correlationId = UUID.randomUUID().toString();
         headers.put("client-request-id", correlationId);
+        headers.putAll(Device.getPlatformIdParameters());
 
         return HttpRequest.sendPost(
                 new URL(mTokenEndpoint),
@@ -111,34 +139,12 @@ public abstract class OAuth2Strategy
         );
     }
 
-
-    /**
-     * Construct the authorization endpoint URI based on issuer and path to the authorization endpoint.
-     * NOTE: We could look at basing this on the contents returned from the OpenID Configuration document
-     *
-     * @return URI
-     */
-    protected Uri createAuthorizationUri() {
-        //final Uri.Builder builder = new Uri.Builder().scheme(originalAuthority.getProtocol()).authority(host).appendPath(path);
-        Uri authorizationUri = Uri.withAppendedPath(mIssuer, mAuthorizationEndpoint);
-        return authorizationUri;
-    }
-
-    /**
-     * Gets the authorization endpoint used by this strategy.
-     *
-     * @return The authorization endpoint to use.
-     */
-    public String getAuthorizationEndpoint() {
-        return mAuthorizationEndpoint;
-    }
-
-    protected String getTokenEndpoint() {
-        return mTokenEndpoint;
-    }
-
     protected final void setTokenEndpoint(final String tokenEndpoint) {
         mTokenEndpoint = tokenEndpoint;
+    }
+
+    protected final void setAuthorizationEndpoint(final String authorizationEndpoint) {
+        mAuthorizationEndpoint = authorizationEndpoint;
     }
 
     protected GenericOAuth2Configuration getOAuth2Configuration() {
@@ -184,6 +190,36 @@ public abstract class OAuth2Strategy
      * @return GenericAccount
      */
     public abstract GenericAccount createAccount(GenericTokenResponse response);
+
+    /**
+     * Abstract method for creating the authorization request.
+     *
+     * @return AuthorizationRequest.
+     */
+    public abstract GenericAuthorizationRequestBuilder createAuthorizationRequestBuilder();
+
+    /**
+     * Abstract method for creating the authorization request.
+     *
+     * @param account The IAccount available to this strategy.
+     * @return AuthorizationRequest.
+     */
+    public abstract GenericAuthorizationRequestBuilder createAuthorizationRequestBuilder(IAccountRecord account);
+
+    /**
+     * Abstract method for creating the token request.  In the case of AAD this is the method
+     *
+     * @return TokenRequest.
+     */
+    public abstract GenericTokenRequest createTokenRequest(GenericAuthorizationRequest request, GenericAuthorizationResponse response);
+
+    /**
+     * Abstract method for creating the refresh token request.
+     *
+     * @param refreshToken The refresh token to use.
+     * @return TokenRequest.
+     */
+    public abstract GenericTokenRequest createRefreshTokenRequest(final RefreshTokenRecord refreshToken, final List<String> scopes);
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method

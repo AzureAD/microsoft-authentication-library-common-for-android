@@ -56,6 +56,11 @@ public final class ErrorStrings {
     public static final String IO_ERROR = "io_error";
 
     /**
+     * SocketTimeoutException happened, connection flow timed out, stalled or broken.
+     */
+    public static final String SOCKET_TIMEOUT = "socket_timeout";
+
+    /**
      * The url is malformed.  Likely caused when constructing the auth request, authority, or redirect URI.
      */
     public static final String MALFORMED_URL = "malformed_url";
@@ -191,6 +196,41 @@ public final class ErrorStrings {
     public static final String CREDENTIAL_IS_SCHEMA_NONCOMPLIANT = "Credential is missing schema-required fields.";
 
     /**
+     * Device certificate request is invalid.
+     */
+    public static final String DEVICE_CERTIFICATE_REQUEST_INVALID = "Device certificate request is invalid";
+
+    /**
+     * Certificate encoding is not generated.
+     */
+    public static final String CERTIFICATE_ENCODING_ERROR = "Certificate encoding is not generated";
+
+    /**
+     * Key Chain private key exception.
+     */
+    public static final String KEY_CHAIN_PRIVATE_KEY_EXCEPTION = "Key Chain private key exception";
+
+    /**
+     * Signature exception.
+     */
+    public static final String SIGNATURE_EXCEPTION = "Signature exception";
+
+    /**
+     * Device certificate API has exception.
+     */
+    public static final String DEVICE_CERTIFICATE_API_EXCEPTION = "Device certificate API has exception";
+
+    /**
+     * The redirectUri for broker is invalid.
+     */
+    public static final String DEVELOPER_REDIRECTURI_INVALID = "The redirectUri for broker is invalid";
+
+    /**
+     * WebView  redirect url is not SSL protected.
+     */
+    public static final String WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED = "Redirect url scheme not SSL protected";
+
+    /**
      * Package name is not resolved.
      */
     public static final String PACKAGE_NAME_NOT_FOUND = "Package name is not resolved";
@@ -209,4 +249,34 @@ public final class ErrorStrings {
      * Signature could not be verified.
      */
     public static final String BROKER_VERIFICATION_FAILED = "Signature could not be verified";
+
+    /**
+     * The broker app is not responding.
+     */
+    public static final String BROKER_APP_NOT_RESPONDING = "Broker application is not responding";
+
+    /**
+     * Failed to bind the service in broker app.
+     */
+    public static final String BROKER_BIND_SERVICE_FAILED = "Failed to bind the service in broker app";
+
+    /**
+     * Could not retrieve capabilities from broker apps.
+     */
+    public static final String FAILED_TO_GET_CAPABILITIES = "Could not get the capabilities";
+
+    /**
+     * Empty Context.
+     */
+    public static final String ANDROID_CONTEXT_IS_NULL = "Android Context is null.";
+
+    /**
+     * Empty Authorization Intent.
+     */
+    public static final String AUTHORIZATION_INTENT_IS_NULL = "Authorization intent is null.";
+
+    /**
+     * No available browser installed on the device.
+     */
+    public static final String NO_AVAILABLE_BROWSER_FOUND = "No available browser installed on the device.";
 }

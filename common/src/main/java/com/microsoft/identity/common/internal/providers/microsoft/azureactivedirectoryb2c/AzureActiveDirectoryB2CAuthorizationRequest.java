@@ -22,10 +22,47 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 
 /**
  * Azure Active Directory B2C Authorization Request.
  */
-public class AzureActiveDirectoryB2CAuthorizationRequest extends AuthorizationRequest {
+public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthorizationRequest<AzureActiveDirectoryB2CAuthorizationRequest> {
+    private String mPrompt;
+
+    private AzureActiveDirectoryB2CAuthorizationRequest(final Builder builder) {
+        super(builder);
+    }
+
+    public static final class Builder extends MicrosoftAuthorizationRequest.Builder<AzureActiveDirectoryB2CAuthorizationRequest.Builder> {
+        private String mPrompt;
+
+        public Builder() {
+        }
+
+        public Builder setPrompt(String prompt) {
+            mPrompt = prompt;
+            return this;
+        }
+
+        public AzureActiveDirectoryB2CAuthorizationRequest build() {
+            return new AzureActiveDirectoryB2CAuthorizationRequest(this);
+        }
+
+        @Override
+        public AzureActiveDirectoryB2CAuthorizationRequest.Builder self() {
+            return this;
+        }
+
+
+    }
+
+    public String getPrompt() {
+        return mPrompt;
+    }
+
+    @Override
+    public String getAuthorizationEndpoint() {
+        throw new UnsupportedOperationException("Not implemented.");
+    }
 }

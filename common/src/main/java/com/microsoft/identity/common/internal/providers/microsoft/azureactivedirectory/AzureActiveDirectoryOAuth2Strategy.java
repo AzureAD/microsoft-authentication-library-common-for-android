@@ -24,14 +24,16 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.text.TextUtils;
 
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -40,22 +42,37 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 import java.net.HttpURLConnection;
+import java.util.List;
 
 /**
  * The Azure Active Directory OAuth 2.0 Strategy.
+ * <MicrosoftStsAccessToken,
+ * MicrosoftStsAccount,
+ * MicrosoftStsAuthorizationRequest,
+ * MicrosoftStsAuthorizationRequest.Builder,
+ * AuthorizationStrategy,
+ * MicrosoftStsOAuth2Configuration,
+ * MicrosoftStsAuthorizationResponse,
+ * MicrosoftStsRefreshToken,
+ * MicrosoftStsTokenRequest,
+ * MicrosoftStsTokenResponse,
+ * TokenResult,
+ * AuthorizationResult>
  */
 public class AzureActiveDirectoryOAuth2Strategy
         extends OAuth2Strategy<
         AzureActiveDirectoryAccessToken,
         AzureActiveDirectoryAccount,
         AzureActiveDirectoryAuthorizationRequest,
-        AuthorizationResponse,
+        AzureActiveDirectoryAuthorizationRequest.Builder,
         AuthorizationStrategy,
         AzureActiveDirectoryOAuth2Configuration,
+        AzureActiveDirectoryAuthorizationResponse,
         AzureActiveDirectoryRefreshToken,
         AzureActiveDirectoryTokenRequest,
         AzureActiveDirectoryTokenResponse,
-        TokenResult> {
+        TokenResult,
+        AuthorizationResult> {
 
     private static final String TAG = AzureActiveDirectoryOAuth2Strategy.class.getSimpleName();
 
@@ -75,14 +92,19 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
+    public AuthorizationResultFactory getAuthorizationResultFactory() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public String getIssuerCacheIdentifier(final AzureActiveDirectoryAuthorizationRequest authRequest) {
         final String methodName = "getIssuerCacheIdentifier";
 
         final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
         if (cloud == null && !getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
             Logger.warn(TAG + ":" + methodName, "Discovery data does not include cloud authority and validation is off."
-                + " Returning passed in Authority: "
-                + authRequest.getAuthority().toString());
+                    + " Returning passed in Authority: "
+                    + authRequest.getAuthority().toString());
             return authRequest.getAuthority().toString();
         }
 
@@ -168,6 +190,26 @@ public class AzureActiveDirectoryOAuth2Strategy
         Logger.infoPII(TAG, account.toString());
 
         return account;
+    }
+
+    @Override
+    public AzureActiveDirectoryAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
+        return new AzureActiveDirectoryAuthorizationRequest.Builder();
+    }
+
+    @Override
+    public AzureActiveDirectoryAuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccountRecord account) {
+        return createAuthorizationRequestBuilder();
+    }
+
+    @Override
+    public AzureActiveDirectoryTokenRequest createTokenRequest(AzureActiveDirectoryAuthorizationRequest request, AzureActiveDirectoryAuthorizationResponse response) {
+        return null;
+    }
+
+    @Override
+    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(RefreshTokenRecord refreshToken, List<String> scopes) {
+        return null;
     }
 
     @Override

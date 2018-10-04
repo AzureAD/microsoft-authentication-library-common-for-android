@@ -24,11 +24,11 @@ package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
 
-import static com.microsoft.identity.common.internal.dto.RefreshToken.SerializedNames.CLIENT_INFO;
-import static com.microsoft.identity.common.internal.dto.RefreshToken.SerializedNames.FAMILY_ID;
-import static com.microsoft.identity.common.internal.dto.RefreshToken.SerializedNames.TARGET;
+import static com.microsoft.identity.common.internal.dto.RefreshTokenRecord.SerializedNames.CLIENT_INFO;
+import static com.microsoft.identity.common.internal.dto.RefreshTokenRecord.SerializedNames.FAMILY_ID;
+import static com.microsoft.identity.common.internal.dto.RefreshTokenRecord.SerializedNames.TARGET;
 
-public class RefreshToken extends Credential {
+public class RefreshTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
         /**
@@ -121,6 +121,11 @@ public class RefreshToken extends Credential {
         mFamilyId = familyId;
     }
 
+    @Override
+    public boolean isExpired() {
+        return false;
+    }
+
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
@@ -132,7 +137,7 @@ public class RefreshToken extends Credential {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
-        RefreshToken that = (RefreshToken) o;
+        RefreshTokenRecord that = (RefreshTokenRecord) o;
 
         if (mClientInfo != null ? !mClientInfo.equals(that.mClientInfo) : that.mClientInfo != null)
             return false;

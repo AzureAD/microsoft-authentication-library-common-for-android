@@ -25,14 +25,13 @@ package com.microsoft.identity.common.internal.cache;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.internal.dto.AccessToken;
-import com.microsoft.identity.common.internal.dto.Account;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.IdToken;
-import com.microsoft.identity.common.internal.dto.RefreshToken;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
@@ -40,8 +39,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.concurrent.TimeUnit;
 
@@ -55,37 +52,38 @@ public class MicrosoftStsAccountCredentialAdapter
 
     private static final String TAG = MicrosoftStsAccountCredentialAdapter.class.getSimpleName();
 
-    // TODO move me!
-    private static final String BEARER = "Bearer";
-
     @Override
-    public Account createAccount(
+    public AccountRecord createAccount(
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
         Logger.verbose(TAG, "Creating Account");
-        final Account account = new Account(strategy.createAccount(response));
+        final AccountRecord account = new AccountRecord(strategy.createAccount(response));
+        // TODO -- Setting the environment here is a bit of a workaround...
+        // The Account created by the strategy sets the environment to get the 'iss' from the IdToken
+        // For caching purposes, this may not be the correct value due to the preferred cache identifier
+        // in the InstanceDiscoveryMetadata
+        account.setEnvironment(strategy.getIssuerCacheIdentifier(request));
 
         return account;
     }
 
     @Override
-    public AccessToken createAccessToken(
+    public AccessTokenRecord createAccessToken(
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
         try {
             final long cachedAt = getCachedAt();
             final long expiresOn = getExpiresOn(response);
-            final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
-            final AccessToken accessToken = new AccessToken();
+            final AccessTokenRecord accessToken = new AccessTokenRecord();
             // Required fields
             accessToken.setCredentialType(CredentialType.AccessToken.name());
             accessToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             accessToken.setRealm(getRealm(strategy, response));
-            accessToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
+            accessToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
             accessToken.setClientId(request.getClientId());
             accessToken.setTarget(request.getScope());
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
@@ -93,10 +91,10 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setSecret(response.getAccessToken());
 
             // Optional fields
-            accessToken.setExtendedExpiresOn(getExtendedExpiresOn(strategy, response));
+            accessToken.setExtendedExpiresOn(getExtendedExpiresOn(response));
             accessToken.setAuthority(request.getAuthority().toString());
             accessToken.setClientInfo(response.getClientInfo());
-            accessToken.setAccessTokenType(BEARER); // TODO Don't hardcode this value.
+            accessToken.setAccessTokenType(response.getTokenType());
 
             return accessToken;
         } catch (ServiceException e) {
@@ -106,21 +104,20 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public RefreshToken createRefreshToken(
+    public RefreshTokenRecord createRefreshToken(
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
         try {
             final long cachedAt = getCachedAt();
-            final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
-            final RefreshToken refreshToken = new RefreshToken();
+            final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
             // Required
             refreshToken.setCredentialType(CredentialType.RefreshToken.name());
-            refreshToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
+            refreshToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
             refreshToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            refreshToken.setClientId(response.getClientId());
+            refreshToken.setClientId(request.getClientId());
             refreshToken.setSecret(response.getRefreshToken());
 
             // Optional
@@ -139,18 +136,17 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public IdToken createIdToken(
+    public IdTokenRecord createIdToken(
             final MicrosoftStsOAuth2Strategy strategy,
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
         try {
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
-            final MicrosoftIdToken msIdToken = new MicrosoftIdToken(response.getIdToken());
 
-            final IdToken idToken = new IdToken();
+            final IdTokenRecord idToken = new IdTokenRecord();
             // Required fields
             idToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            idToken.setEnvironment(SchemaUtil.getEnvironment(msIdToken));
+            idToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
             idToken.setRealm(getRealm(strategy, response));
             idToken.setCredentialType(CredentialType.IdToken.name());
             idToken.setClientId(request.getClientId());
@@ -167,8 +163,8 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public RefreshToken asRefreshToken(@NonNull final MicrosoftRefreshToken refreshTokenIn) {
-        final RefreshToken refreshTokenOut = new RefreshToken();
+    public RefreshTokenRecord asRefreshToken(@NonNull final MicrosoftRefreshToken refreshTokenIn) {
+        final RefreshTokenRecord refreshTokenOut = new RefreshTokenRecord();
 
         // Required fields
         refreshTokenOut.setHomeAccountId(refreshTokenIn.getHomeAccountId());
@@ -187,18 +183,18 @@ public class MicrosoftStsAccountCredentialAdapter
     }
 
     @Override
-    public Account asAccount(MicrosoftAccount account) {
-        Account acct = new Account(account);
+    public AccountRecord asAccount(MicrosoftAccount account) {
+        AccountRecord acct = new AccountRecord(account);
 
         return acct;
     }
 
     @Override
-    public IdToken asIdToken(MicrosoftAccount msAccount, MicrosoftRefreshToken refreshToken) {
+    public IdTokenRecord asIdToken(MicrosoftAccount msAccount, MicrosoftRefreshToken refreshToken) {
         final long cachedAt = getCachedAt();
         IDToken msIdToken = msAccount.getIDToken();
 
-        final IdToken idToken = new IdToken();
+        final IdTokenRecord idToken = new IdTokenRecord();
         // Required fields
         idToken.setHomeAccountId(refreshToken.getHomeAccountId());
         idToken.setEnvironment(refreshToken.getEnvironment());
@@ -214,12 +210,12 @@ public class MicrosoftStsAccountCredentialAdapter
         return idToken;
     }
 
-    private String getExtendedExpiresOn(final OAuth2Strategy strategy, final TokenResponse response) { //NOPMD (unused params - method is TODO)
-        // TODO It doesn't look like the v2 endpoint supports extended_expires_on claims
-        // Is this true?
-        String result = null;
+    private String getExtendedExpiresOn(final MicrosoftStsTokenResponse response) {
+        final long currentTimeMillis = System.currentTimeMillis();
+        final long currentTimeSecs = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
+        final long extExpiresIn = null == response.getExtExpiresIn() ? 0 : response.getExtExpiresIn();
 
-        return result;
+        return String.valueOf(currentTimeSecs + extExpiresIn);
     }
 
     private String getRealm(final MicrosoftStsOAuth2Strategy msStrategy, final MicrosoftStsTokenResponse msTokenResponse) {
@@ -229,17 +225,15 @@ public class MicrosoftStsAccountCredentialAdapter
 
     private long getCachedAt() {
         final long currentTimeMillis = System.currentTimeMillis();
-        final long cachedAt = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
-
-        return cachedAt;
+        return TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
     }
 
     private long getExpiresOn(final MicrosoftStsTokenResponse msTokenResponse) {
-        // Should be seconds since 1970
-        final long millisSince1970 = msTokenResponse.getExpiresOn().getTime();
-        final long secondsSince1970 = TimeUnit.MILLISECONDS.toSeconds(millisSince1970);
+        final long currentTimeMillis = System.currentTimeMillis();
+        final long currentTimeSecs = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
+        final long expiresIn = msTokenResponse.getExpiresIn();
 
-        return secondsSince1970;
+        return currentTimeSecs + expiresIn;
     }
 
 }

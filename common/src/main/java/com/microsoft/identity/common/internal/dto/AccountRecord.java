@@ -24,18 +24,18 @@ package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
 
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.ALTERNATIVE_ACCOUNT_ID;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AUTHORITY_TYPE;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.AVATAR_URL;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.ENVIRONMENT;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.FAMILY_NAME;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.FIRST_NAME;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.HOME_ACCOUNT_ID;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.LOCAL_ACCOUNT_ID;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.MIDDLE_NAME;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.NAME;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.REALM;
-import static com.microsoft.identity.common.internal.dto.Account.SerializedNames.USERNAME;
+import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.ALTERNATIVE_ACCOUNT_ID;
+import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.AUTHORITY_TYPE;
+import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.AVATAR_URL;
+import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.ENVIRONMENT;
+import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.FAMILY_NAME;
+import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.FIRST_NAME;
+import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.HOME_ACCOUNT_ID;
+import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.LOCAL_ACCOUNT_ID;
+import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.MIDDLE_NAME;
+import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.NAME;
+import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.REALM;
+import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.USERNAME;
 
 /**
  * Accounts collect user displayable information about the user in each tenant (AAD) or environment
@@ -44,7 +44,7 @@ import static com.microsoft.identity.common.internal.dto.Account.SerializedNames
  * Account schema only needs to be present, if there's a user available. For scenarios, where
  * there's no user present (e.g. client credential grant), only credential schema is necessary.
  */
-public class Account extends AccountCredentialBase implements IAccount {
+public class AccountRecord extends AccountCredentialBase implements IAccountRecord {
 
     /**
      * String name list for Account object serialization.
@@ -114,7 +114,7 @@ public class Account extends AccountCredentialBase implements IAccount {
     /**
      * Empty constructor for Account.
      */
-    public Account() {
+    public AccountRecord() {
         // Empty
     }
 
@@ -123,7 +123,7 @@ public class Account extends AccountCredentialBase implements IAccount {
      *
      * @param copy IAccount
      */
-    public Account(final IAccount copy) {
+    public AccountRecord(final IAccountRecord copy) {
         // Required
         setHomeAccountId(copy.getHomeAccountId());
         setEnvironment(copy.getEnvironment());
@@ -399,7 +399,7 @@ public class Account extends AccountCredentialBase implements IAccount {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Account account = (Account) o;
+        AccountRecord account = (AccountRecord) o;
 
         if (mHomeAccountId != null ? !mHomeAccountId.equals(account.mHomeAccountId) : account.mHomeAccountId != null)
             return false;
