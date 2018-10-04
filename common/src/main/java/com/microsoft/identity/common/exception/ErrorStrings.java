@@ -228,7 +228,7 @@ public final class ErrorStrings {
     /**
      * WebView  redirect url is not SSL protected.
      */
-    public static final String WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED = "The webView was redirected to an unsafe URL";
+    public static final String WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED = "Redirect url scheme not SSL protected";
 
     /**
      * Package name is not resolved.
@@ -269,4 +269,14 @@ public final class ErrorStrings {
      * Empty Context.
      */
     public static final String ANDROID_CONTEXT_IS_NULL = "Android Context is null.";
+
+    /**
+     * Empty Authorization Intent.
+     */
+    public static final String AUTHORIZATION_INTENT_IS_NULL = "Authorization intent is null.";
+
+    /**
+     * No available browser installed on the device.
+     */
+    public static final String NO_AVAILABLE_BROWSER_FOUND = "No available browser installed on the device.";
 }

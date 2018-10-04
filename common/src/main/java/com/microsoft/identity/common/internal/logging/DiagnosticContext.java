@@ -22,10 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.logging;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-
 public final class DiagnosticContext {
 
+    public static final String CORRELATION_ID = "correlation_id";
     private static final String THREAD_ID = "thread_id";
 
     private DiagnosticContext() {
@@ -36,7 +35,7 @@ public final class DiagnosticContext {
                 @Override // This is the default value for the RequestContext if it's unset
                 protected RequestContext initialValue() {
                     final RequestContext defaultRequestContext = new RequestContext();
-                    defaultRequestContext.put(AuthenticationConstants.AAD.CORRELATION_ID, "UNSET");
+                    defaultRequestContext.put(CORRELATION_ID, "UNSET");
                     return defaultRequestContext;
                 }
             };

@@ -36,6 +36,7 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
@@ -51,6 +52,7 @@ import java.util.Set;
 import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class MsalOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,
@@ -96,6 +98,7 @@ public class MsalOAuth2TokenCache
     public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
                              @NonNull final GenericAuthorizationRequest request,
                              @NonNull final GenericTokenResponse response) throws ClientException {
+        final String methodName = ":save";
         // Create the Account
         final AccountRecord accountToSave =
                 mAccountCredentialAdapter.createAccount(
@@ -136,6 +139,41 @@ public class MsalOAuth2TokenCache
                 idTokenToSave
         );
 
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+                accountToSave.getAuthorityType()
+        );
+
+        Logger.info(
+                TAG + methodName,
+                "isMultiResourceCapable? [" + isMultiResourceCapable + "]"
+        );
+
+        if (isMultiResourceCapable) {
+            // AAD v1 & v2 support multi-resource refresh tokens, allowing us to use
+            // a single refresh token to service all of an account's requests.
+            // To ensure that only one refresh token is maintained for an account,
+            // refresh tokens are cleared from the cache for the account which is about to be
+            // saved (in the event that there was already a refresh token in the cache)
+            final int refreshTokensRemoved = removeCredentialsOfTypeForAccount(
+                    accountToSave.getEnvironment(),
+                    refreshTokenToSave.getClientId(),
+                    CredentialType.RefreshToken,
+                    accountToSave
+            );
+
+            Logger.info(
+                    TAG + methodName,
+                    "Refresh tokens removed: [" + refreshTokensRemoved + "]"
+            );
+
+            if (refreshTokensRemoved > 1) {
+                Logger.warn(
+                        TAG + methodName,
+                        "Multiple refresh tokens found for Account."
+                );
+            }
+        }
+
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
         saveCredentials(accessTokenToSave, refreshTokenToSave, idTokenToSave);
@@ -153,6 +191,10 @@ public class MsalOAuth2TokenCache
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
                              @NonNull final AccountRecord account) {
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+                account.getAuthorityType()
+        );
+
         // Load the AccessTokens
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
@@ -169,8 +211,12 @@ public class MsalOAuth2TokenCache
                 account.getEnvironment(),
                 CredentialType.RefreshToken,
                 clientId,
-                account.getRealm(),
-                target
+                isMultiResourceCapable
+                        ? null // wildcard (*)
+                        : account.getRealm(),
+                isMultiResourceCapable
+                        ? null // wildcard (*)
+                        : target
         );
 
         // Load the IdTokens
@@ -193,7 +239,36 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public boolean removeCredential(Credential credential) {
+    public boolean removeCredential(final Credential credential) {
+        final String methodName = ":removeCredential";
+        Logger.info(
+                TAG + methodName,
+                "Removing credential..."
+        );
+        Logger.infoPII(
+                TAG + methodName,
+                "ClientId: [" + credential.getClientId() + "]"
+        );
+        Logger.infoPII(
+                TAG + methodName,
+                "CredentialType: [" + credential.getCredentialType() + "]"
+        );
+        Logger.infoPII(
+                TAG + methodName,
+                "CachedAt: [" + credential.getCachedAt() + "]"
+        );
+        Logger.infoPII(
+                TAG + methodName,
+                "Environment: [" + credential.getEnvironment() + "]"
+        );
+        Logger.infoPII(
+                TAG + methodName,
+                "HomeAccountId: [" + credential.getHomeAccountId() + "]"
+        );
+        Logger.infoPII(
+                TAG + methodName,
+                "IsExpired?: [" + credential.isExpired() + "]"
+        );
         return mAccountCredentialCache.removeCredential(credential);
     }
 
@@ -201,7 +276,29 @@ public class MsalOAuth2TokenCache
     public AccountRecord getAccount(@Nullable final String environment,
                                     @NonNull final String clientId,
                                     @NonNull final String homeAccountId) {
+        final String methodName = ":getAccount";
+
+        Logger.infoPII(
+                TAG + methodName,
+                "Environment: [" + environment + "]"
+        );
+
+        Logger.infoPII(
+                TAG + methodName,
+                "ClientId: [" + clientId + "]"
+        );
+
+        Logger.infoPII(
+                TAG + methodName,
+                "HomeAccountId: [" + homeAccountId + "]"
+        );
+
         final List<AccountRecord> allAccounts = getAccounts(environment, clientId);
+
+        Logger.info(
+                TAG + methodName,
+                "Found " + allAccounts.size() + " accounts"
+        );
 
         // Return the sought Account matching the supplied homeAccountId
         for (final AccountRecord account : allAccounts) {
@@ -210,12 +307,29 @@ public class MsalOAuth2TokenCache
             }
         }
 
+        Logger.warn(
+                TAG + methodName,
+                "No matching account found."
+        );
+
         return null;
     }
 
     @Override
     public List<AccountRecord> getAccounts(@Nullable final String environment,
                                            @NonNull final String clientId) {
+        final String methodName = ":getAccounts";
+
+        Logger.infoPII(
+                TAG + methodName,
+                "Environment: [" + environment + "]"
+        );
+
+        Logger.infoPII(
+                TAG + methodName,
+                "ClientId: [" + clientId + "]"
+        );
+
         final List<AccountRecord> accountsForThisApp = new ArrayList<>();
 
         // Get all of the Accounts for this environment
@@ -225,6 +339,11 @@ public class MsalOAuth2TokenCache
                         environment,
                         null // wildcard (*) realm
                 );
+
+        Logger.info(
+                TAG + methodName,
+                "Found " + accountsForEnvironment.size() + " accounts for this environment"
+        );
 
         // Grab the Credentials for this app...
         final List<Credential> appCredentials =
@@ -244,6 +363,11 @@ public class MsalOAuth2TokenCache
             }
         }
 
+        Logger.info(
+                TAG + methodName,
+                "Found " + accountsForThisApp.size() + " accounts for this clientId"
+        );
+
         return Collections.unmodifiableList(accountsForThisApp);
     }
 
@@ -257,12 +381,28 @@ public class MsalOAuth2TokenCache
      */
     private boolean accountHasCredential(@NonNull final AccountRecord account,
                                          @NonNull final List<Credential> appCredentials) {
+        final String methodName = ":accountHasCredential";
+
         final String accountHomeId = account.getHomeAccountId();
         final String accountEnvironment = account.getEnvironment();
+
+        Logger.infoPII(
+                TAG + methodName,
+                "HomeAccountId: [" + accountHomeId + "]"
+        );
+
+        Logger.infoPII(
+                TAG + methodName,
+                "Environment: [" + accountEnvironment + "]"
+        );
 
         for (final Credential credential : appCredentials) {
             if (accountHomeId.equals(credential.getHomeAccountId())
                     && accountEnvironment.equals(credential.getEnvironment())) {
+                Logger.info(
+                        TAG + methodName,
+                        "Credentials located for account."
+                );
                 return true;
             }
         }
@@ -275,6 +415,21 @@ public class MsalOAuth2TokenCache
                                  final String clientId,
                                  final String homeAccountId) {
         final String methodName = ":removeAccount";
+
+        Logger.infoPII(
+                TAG + methodName,
+                "Environment: [" + environment + "]"
+        );
+
+        Logger.infoPII(
+                TAG + methodName,
+                "ClientId: [" + clientId + "]"
+        );
+
+        Logger.infoPII(
+                TAG + methodName,
+                "HomeAccountId: [" + homeAccountId + "]"
+        );
 
         final AccountRecord targetAccount;
         if (null == environment
@@ -395,6 +550,12 @@ public class MsalOAuth2TokenCache
             final AccessTokenRecord accessTokenToSave,
             @NonNull final RefreshTokenRecord refreshTokenToSave,
             @NonNull final IdTokenRecord idTokenToSave) throws ClientException {
+        final String methodName = ":validateCacheArtifacts";
+        Logger.info(
+                TAG + methodName,
+                "Validating cache artifacts..."
+        );
+
         final boolean isAccountCompliant = isAccountSchemaCompliant(accountToSave);
         final boolean isAccessTokenCompliant = null == accessTokenToSave || isAccessTokenSchemaCompliant(accessTokenToSave);
         final boolean isRefreshTokenCompliant = isRefreshTokenSchemaCompliant(refreshTokenToSave);
@@ -519,7 +680,8 @@ public class MsalOAuth2TokenCache
         final String[][] params = new String[][]{
                 {AccountRecord.SerializedNames.HOME_ACCOUNT_ID, account.getHomeAccountId()},
                 {AccountRecord.SerializedNames.ENVIRONMENT, account.getEnvironment()},
-                {AccountRecord.SerializedNames.REALM, account.getRealm()},
+                //TODO Need to fix the validation for realm for AAD IDP scenario.
+                //{AccountRecord.SerializedNames.REALM, account.getRealm()},
                 {AccountRecord.SerializedNames.LOCAL_ACCOUNT_ID, account.getLocalAccountId()},
                 {AccountRecord.SerializedNames.USERNAME, account.getUsername()},
                 {AccountRecord.SerializedNames.AUTHORITY_TYPE, account.getAuthorityType()},
@@ -533,7 +695,8 @@ public class MsalOAuth2TokenCache
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.CREDENTIAL_TYPE, accessToken.getCredentialType()},
                 {Credential.SerializedNames.HOME_ACCOUNT_ID, accessToken.getHomeAccountId()},
-                {AccessTokenRecord.SerializedNames.REALM, accessToken.getRealm()},
+                //TODO Need to fix the validation for realm for AAD IDP scenario.
+                //{AccessTokenRecord.SerializedNames.REALM, accessToken.getRealm()},
                 {Credential.SerializedNames.ENVIRONMENT, accessToken.getEnvironment()},
                 {Credential.SerializedNames.CLIENT_ID, accessToken.getClientId()},
                 {AccessTokenRecord.SerializedNames.TARGET, accessToken.getTarget()},
@@ -563,7 +726,8 @@ public class MsalOAuth2TokenCache
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.HOME_ACCOUNT_ID, idToken.getHomeAccountId()},
                 {Credential.SerializedNames.ENVIRONMENT, idToken.getEnvironment()},
-                {IdTokenRecord.SerializedNames.REALM, idToken.getRealm()},
+                //TODO Need to fix the validation for realm for AAD IDP scenario.
+                //{IdTokenRecord.SerializedNames.REALM, idToken.getRealm()},
                 {Credential.SerializedNames.CREDENTIAL_TYPE, idToken.getCredentialType()},
                 {Credential.SerializedNames.CLIENT_ID, idToken.getClientId()},
                 {Credential.SerializedNames.SECRET, idToken.getSecret()},

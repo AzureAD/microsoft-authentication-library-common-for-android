@@ -31,6 +31,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAutho
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.util.Map;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
@@ -38,6 +39,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
      * Serial version id.
      */
     private static final long serialVersionUID = 6545759826515911472L;
+
+    private static final String AUTHORIZATION_ENDPOINT = "/oAuth2/v2.0/authorize";
 
     /**
      * Indicates the type of user interaction that is required. The only valid values at this time are 'login', 'none', and 'consent'.
@@ -113,6 +116,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
 
         public MicrosoftStsAuthorizationRequest build() {
+            this.setLibraryName("MSAL.Android");
+            this.setLibraryVersion("0.2.0");
             return new MicrosoftStsAuthorizationRequest(this);
         }
     }
@@ -161,6 +166,12 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
     @Override
     public String getAuthorizationEndpoint() {
-        return getAuthority().toString();
+
+        Uri authorityUri = Uri.parse(this.getAuthority().toString());
+        Uri endpointUri = authorityUri.buildUpon()
+                .appendPath(AUTHORIZATION_ENDPOINT)
+                .build();
+        return endpointUri.toString();
+
     }
 }

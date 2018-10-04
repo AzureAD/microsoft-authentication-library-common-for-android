@@ -42,6 +42,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 import java.net.HttpURLConnection;
+import java.util.List;
 
 /**
  * The Azure Active Directory OAuth 2.0 Strategy.
@@ -207,7 +208,7 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(RefreshTokenRecord refreshToken) {
+    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(RefreshTokenRecord refreshToken, List<String> scopes) {
         return null;
     }
 
