@@ -115,9 +115,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         //Initialize the diagnostic properties.
 
         //TODO: Need to figure out how to flow this information down
-        //builder.setLibraryVersion(PublicClientApplication.getSdkVersion());
-        mLibraryVersion = "0.1.3";
-        mLibraryName = "MSAL.Android";
+        mLibraryVersion =  builder.mLibraryVersion;
+        mLibraryName = builder.mLibraryName;
         mDiagnosticOS = String.valueOf(Build.VERSION.SDK_INT);
         mDiagnosticDM = android.os.Build.MODEL;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
