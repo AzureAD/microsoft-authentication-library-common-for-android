@@ -138,7 +138,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean isPkeyAuthUrl(@NonNull final String url) {
-        return url.startsWith(AuthenticationConstants.Broker.PKEYAUTH_REDIRECT);
+        return url.startsWith(AuthenticationConstants.Broker.PKEYAUTH_REDIRECT.toLowerCase());
     }
 
     private boolean isRedirectUrl(@NonNull final String url) {

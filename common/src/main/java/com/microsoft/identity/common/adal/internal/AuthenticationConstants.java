@@ -850,7 +850,7 @@ public final class AuthenticationConstants {
         /**
          * The value for pkeyauth redirect.
          */
-        public static final String PKEYAUTH_REDIRECT = "urn:http-auth:pkeyauth";
+        public static final String PKEYAUTH_REDIRECT = "urn:http-auth:PKeyAuth";
 
         /**
          * Value of pkeyauth sent in the header.
