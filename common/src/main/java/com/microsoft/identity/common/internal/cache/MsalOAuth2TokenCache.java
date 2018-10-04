@@ -680,7 +680,8 @@ public class MsalOAuth2TokenCache
         final String[][] params = new String[][]{
                 {AccountRecord.SerializedNames.HOME_ACCOUNT_ID, account.getHomeAccountId()},
                 {AccountRecord.SerializedNames.ENVIRONMENT, account.getEnvironment()},
-                {AccountRecord.SerializedNames.REALM, account.getRealm()},
+                //TODO Need to fix the validation for realm for AAD IDP scenario.
+                //{AccountRecord.SerializedNames.REALM, account.getRealm()},
                 {AccountRecord.SerializedNames.LOCAL_ACCOUNT_ID, account.getLocalAccountId()},
                 {AccountRecord.SerializedNames.USERNAME, account.getUsername()},
                 {AccountRecord.SerializedNames.AUTHORITY_TYPE, account.getAuthorityType()},
@@ -694,7 +695,8 @@ public class MsalOAuth2TokenCache
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.CREDENTIAL_TYPE, accessToken.getCredentialType()},
                 {Credential.SerializedNames.HOME_ACCOUNT_ID, accessToken.getHomeAccountId()},
-                {AccessTokenRecord.SerializedNames.REALM, accessToken.getRealm()},
+                //TODO Need to fix the validation for realm for AAD IDP scenario.
+                //{AccessTokenRecord.SerializedNames.REALM, accessToken.getRealm()},
                 {Credential.SerializedNames.ENVIRONMENT, accessToken.getEnvironment()},
                 {Credential.SerializedNames.CLIENT_ID, accessToken.getClientId()},
                 {AccessTokenRecord.SerializedNames.TARGET, accessToken.getTarget()},
@@ -724,7 +726,8 @@ public class MsalOAuth2TokenCache
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.HOME_ACCOUNT_ID, idToken.getHomeAccountId()},
                 {Credential.SerializedNames.ENVIRONMENT, idToken.getEnvironment()},
-                {IdTokenRecord.SerializedNames.REALM, idToken.getRealm()},
+                //TODO Need to fix the validation for realm for AAD IDP scenario.
+                //{IdTokenRecord.SerializedNames.REALM, idToken.getRealm()},
                 {Credential.SerializedNames.CREDENTIAL_TYPE, idToken.getCredentialType()},
                 {Credential.SerializedNames.CLIENT_ID, idToken.getClientId()},
                 {Credential.SerializedNames.SECRET, idToken.getSecret()},

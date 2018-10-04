@@ -97,7 +97,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
             // According to the spec, full tenant or organizational identifier that account belongs to.
             // Can be an empty string for non-AAD scenarios.
             Logger.warn(TAG, "TenantID is not returned from server.");
-            mTenantId = "Missing from the token response";
+            mTenantId = "";
         }
         mUid = uid;
         mUtid = utid;
