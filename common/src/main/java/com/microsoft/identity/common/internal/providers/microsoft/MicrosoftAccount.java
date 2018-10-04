@@ -94,11 +94,10 @@ public abstract class MicrosoftAccount extends BaseAccount {
         if (!StringUtil.isEmpty(claims.get(AzureActiveDirectoryIdToken.TENANT_ID))) {
             mTenantId = claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
         } else {
-            // This if-else check will be removed this after the server
-            // test slice goes to production. Use a placeholder for the
-            // tid now.
+            // According to the spec, full tenant or organizational identifier that account belongs to.
+            // Can be an empty string for non-AAD scenarios.
             Logger.warn(TAG, "TenantID is not returned from server.");
-            mTenantId = "tid not return from server";
+            mTenantId = "Missing from the token response";
         }
         mUid = uid;
         mUtid = utid;
