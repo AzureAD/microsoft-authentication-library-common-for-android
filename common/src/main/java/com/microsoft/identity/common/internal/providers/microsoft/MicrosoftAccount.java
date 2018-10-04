@@ -93,12 +93,16 @@ public abstract class MicrosoftAccount extends BaseAccount {
         mMiddleName = claims.get(AzureActiveDirectoryIdToken.MIDDLE_NAME);
         if (!StringUtil.isEmpty(claims.get(AzureActiveDirectoryIdToken.TENANT_ID))) {
             mTenantId = claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
+        } else if (!StringUtil.isEmpty(utid)) {
+            Logger.warnPII(TAG, "realm is not returned from server. Use utid as realm.");
+            mTenantId = utid;
         } else {
             // According to the spec, full tenant or organizational identifier that account belongs to.
             // Can be an empty string for non-AAD scenarios.
-            Logger.warn(TAG, "TenantID is not returned from server.");
+            Logger.warnPII(TAG, "realm and utid is not returned from server. Use empty string as default tid.");
             mTenantId = "";
         }
+
         mUid = uid;
         mUtid = utid;
 
