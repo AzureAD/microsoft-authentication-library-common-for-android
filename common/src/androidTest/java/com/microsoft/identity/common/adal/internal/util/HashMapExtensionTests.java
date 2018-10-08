@@ -61,7 +61,7 @@ public class HashMapExtensionTests extends AndroidTestHelper {
         final String methodName = "urlFormDecode";
         Object object = ReflectionUtils.getNonPublicInstance("com.microsoft.identity.common.adal.internal.util.HashMapExtensions");
         Method m = ReflectionUtils.getTestMethod(object, methodName, String.class);
-        HashMap<String, String> result = (HashMap<String, String>) m.invoke(object, "nokeyvalue");
+        HashMap<String, String> result = (HashMap<String, String>) m.invoke(object, "");
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
@@ -78,10 +78,6 @@ public class HashMapExtensionTests extends AndroidTestHelper {
         assertTrue(result.isEmpty());
 
         result = (HashMap<String, String>) m.invoke(object, "&=");
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-
-        result = (HashMap<String, String>) m.invoke(object, "&a=");
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
@@ -123,6 +119,15 @@ public class HashMapExtensionTests extends AndroidTestHelper {
         assertFalse(result.isEmpty());
         assertTrue(result.containsKey("d"));
         assertTrue(result.containsValue("f"));
+        assertTrue(result.size() == 1);
+
+        // This test verifies key/value query params can support empty values
+        // ex: CertAuthorities=""
+        result = (HashMap<String, String>) m.invoke(object, "=b&c=");
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.containsKey("c"));
+        assertFalse(result.containsValue("b"));
         assertTrue(result.size() == 1);
     }
 }
