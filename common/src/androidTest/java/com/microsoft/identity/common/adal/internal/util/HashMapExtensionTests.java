@@ -121,6 +121,8 @@ public class HashMapExtensionTests extends AndroidTestHelper {
         assertTrue(result.containsValue("f"));
         assertTrue(result.size() == 1);
 
+        // This test verifies key/value query params can support empty values
+        // ex: CertAuthorities=""
         result = (HashMap<String, String>) m.invoke(object, "=b&c=");
         assertNotNull(result);
         assertFalse(result.isEmpty());
