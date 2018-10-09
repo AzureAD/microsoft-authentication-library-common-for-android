@@ -1,6 +1,8 @@
 package com.microsoft.identity.common.internal.providers.li;
 
-import com.microsoft.identity.common.Account;
+import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -12,6 +14,8 @@ import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+
+import java.util.List;
 
 public class LiOAuth2Strategy extends OAuth2Strategy {
     /**
@@ -44,13 +48,19 @@ public class LiOAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    public Account createAccount(TokenResponse response) {
+    public BaseAccount createAccount(TokenResponse response) {
         return null;
     }
+
 
     @Override
     public AuthorizationRequest.Builder createAuthorizationRequestBuilder() {
         return new LiAuthorizationRequest.Builder();
+    }
+
+    @Override
+    public AuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccountRecord account) {
+        return null;
     }
 
     @Override
@@ -59,9 +69,10 @@ public class LiOAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    public TokenRequest createRefreshTokenRequest(com.microsoft.identity.common.internal.dto.RefreshToken refreshToken) {
+    public TokenRequest createRefreshTokenRequest(RefreshTokenRecord refreshToken, List scopes) {
         return null;
     }
+
 
     @Override
     protected void validateAuthorizationRequest(AuthorizationRequest request) {
