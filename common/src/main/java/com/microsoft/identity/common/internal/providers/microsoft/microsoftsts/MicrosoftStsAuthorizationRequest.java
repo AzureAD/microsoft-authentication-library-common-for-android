@@ -31,7 +31,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAutho
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.util.Map;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
@@ -166,8 +165,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
     @Override
     public String getAuthorizationEndpoint() {
-
-        Uri authorityUri = Uri.parse(this.getAuthority().toString());
+        final Uri authorityUri = Uri.parse(this.getAuthority().toString());
         Uri endpointUri = authorityUri.buildUpon()
                 .appendPath(AUTHORIZATION_ENDPOINT)
                 .build();

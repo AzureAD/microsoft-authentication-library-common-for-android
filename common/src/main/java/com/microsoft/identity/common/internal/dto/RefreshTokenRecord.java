@@ -24,17 +24,12 @@ package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
 
-import static com.microsoft.identity.common.internal.dto.RefreshTokenRecord.SerializedNames.CLIENT_INFO;
 import static com.microsoft.identity.common.internal.dto.RefreshTokenRecord.SerializedNames.FAMILY_ID;
 import static com.microsoft.identity.common.internal.dto.RefreshTokenRecord.SerializedNames.TARGET;
 
 public class RefreshTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
-        /**
-         * String of client info.
-         */
-        public static final String CLIENT_INFO = "client_info";
         /**
          * String of family id.
          */
@@ -44,13 +39,6 @@ public class RefreshTokenRecord extends Credential {
          */
         public static final String TARGET = "target";
     }
-
-    /**
-     * Full base64 encoded client info received from ESTS, if available. STS returns the clientInfo 
-     * on both v1 and v2 for AAD. This field is used for extensibility purposes.
-     */
-    @SerializedName(CLIENT_INFO)
-    private String mClientInfo;
 
     /**
      * 1st Party Application Family ID.
@@ -83,24 +71,6 @@ public class RefreshTokenRecord extends Credential {
      */
     public void setTarget(final String target) {
         mTarget = target;
-    }
-
-    /**
-     * Gets the client_info.
-     *
-     * @return The client_info to get.
-     */
-    public String getClientInfo() {
-        return mClientInfo;
-    }
-
-    /**
-     * Sets the client_info.
-     *
-     * @param clientInfo The clent_info to set.
-     */
-    public void setClientInfo(final String clientInfo) {
-        mClientInfo = clientInfo;
     }
 
     /**
@@ -139,8 +109,6 @@ public class RefreshTokenRecord extends Credential {
 
         RefreshTokenRecord that = (RefreshTokenRecord) o;
 
-        if (mClientInfo != null ? !mClientInfo.equals(that.mClientInfo) : that.mClientInfo != null)
-            return false;
         if (mFamilyId != null ? !mFamilyId.equals(that.mFamilyId) : that.mFamilyId != null)
             return false;
         return mTarget != null ? mTarget.equals(that.mTarget) : that.mTarget == null;
@@ -155,7 +123,6 @@ public class RefreshTokenRecord extends Credential {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (mClientInfo != null ? mClientInfo.hashCode() : 0);
         result = 31 * result + (mFamilyId != null ? mFamilyId.hashCode() : 0);
         result = 31 * result + (mTarget != null ? mTarget.hashCode() : 0);
         return result;
@@ -170,8 +137,7 @@ public class RefreshTokenRecord extends Credential {
     @Override
     public String toString() {
         return "RefreshToken{" +
-                "mClientInfo='" + mClientInfo + '\'' +
-                ", mFamilyId='" + mFamilyId + '\'' +
+                "mFamilyId='" + mFamilyId + '\'' +
                 ", mTarget='" + mTarget + '\'' +
                 "} " + super.toString();
     }

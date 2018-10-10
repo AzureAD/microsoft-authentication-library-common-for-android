@@ -107,4 +107,11 @@ public interface IAccountRecord {
      * @return The avatar_url to get.
      */
     String getAvatarUrl();
+
+    /**
+     * Gets the client_info.
+     *
+     * @return The client_info to get.
+     */
+    String getClientInfo();
 }

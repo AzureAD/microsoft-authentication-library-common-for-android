@@ -27,6 +27,7 @@ import com.google.gson.annotations.SerializedName;
 import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.ALTERNATIVE_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.AUTHORITY_TYPE;
 import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.AVATAR_URL;
+import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.CLIENT_INFO;
 import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.ENVIRONMENT;
 import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.FAMILY_NAME;
 import static com.microsoft.identity.common.internal.dto.AccountRecord.SerializedNames.FIRST_NAME;
@@ -109,6 +110,10 @@ public class AccountRecord extends AccountCredentialBase implements IAccountReco
          * JSON name of the avatar url.
          */
         public static final String AVATAR_URL = "avatar_url";
+        /**
+         * String of client info.
+         */
+        public static final String CLIENT_INFO = "client_info";
     }
 
     /**
@@ -133,6 +138,7 @@ public class AccountRecord extends AccountCredentialBase implements IAccountReco
         setAuthorityType(copy.getAuthorityType());
 
         // Optional
+        setClientInfo(copy.getClientInfo());
         setAlternativeAccountId(copy.getAlternativeAccountId());
         setFirstName(copy.getFirstName());
         setFamilyName(copy.getFamilyName());
@@ -220,6 +226,14 @@ public class AccountRecord extends AccountCredentialBase implements IAccountReco
      */
     @SerializedName(AVATAR_URL)
     private String mAvatarUrl;
+
+
+    /**
+     * Full base64 encoded client info received from ESTS, if available. STS returns the clientInfo 
+     * on both v1 and v2 for AAD. This field is used for extensibility purposes.
+     */
+    @SerializedName(CLIENT_INFO)
+    private String mClientInfo;
 
     @Override
     public String getHomeAccountId() {
@@ -387,6 +401,25 @@ public class AccountRecord extends AccountCredentialBase implements IAccountReco
      */
     public void setAvatarUrl(final String avatarUrl) {
         mAvatarUrl = avatarUrl;
+    }
+
+
+    /**
+     * Gets the client_info.
+     *
+     * @return The client_info to get.
+     */
+    public String getClientInfo() {
+        return mClientInfo;
+    }
+
+    /**
+     * Sets the client_info.
+     *
+     * @param clientInfo The clent_info to set.
+     */
+    public void setClientInfo(final String clientInfo) {
+        mClientInfo = clientInfo;
     }
 
     //CHECKSTYLE:OFF
