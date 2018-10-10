@@ -68,12 +68,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     private UUID mCorrelationId;
 
     /**
-     * Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
-     */
-    @SerializedName("pkceChallenge")
-    private PkceChallenge mPkceChallenge;
-
-    /**
      * The version of the calling library.
      */
     @SerializedName("x-client-Ver")
@@ -104,7 +98,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mLoginHint = builder.mLoginHint;
         mCorrelationId = builder.mCorrelationId;
 
-        mPkceChallenge = PkceChallenge.newPkceChallenge();
         mState = generateEncodedState();
 
         if (builder.mSlice != null) {
@@ -136,10 +129,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
          */
         private URL mAuthority;
         /**
-         * Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
-         */
-        private PkceChallenge mPkceChallenge;
-        /**
          * The version of the calling library.
          */
         private String mLibraryVersion;
@@ -158,11 +147,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         public B setAuthority(URL authority) {
             mAuthority = authority;
-            return self();
-        }
-
-        public B setPkceChallenge(PkceChallenge pkceChallenge) {
-            mPkceChallenge = pkceChallenge;
             return self();
         }
 
@@ -200,10 +184,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
     public UUID getCorrelationId() {
         return mCorrelationId;
-    }
-
-    public PkceChallenge getPkceChallenge() {
-        return mPkceChallenge;
     }
 
     public String getLibraryVersion() {

@@ -17,7 +17,7 @@ public class LiAuthorizationRequest extends AuthorizationRequest {
 
     @Override
     public String getAuthorizationEndpoint() {
-        return "https://www.linkedin.com/oauth/v2/authorization";
+        return "https://www.linkedin.com/oauth/native-pkce/authorization";
     }
 
 

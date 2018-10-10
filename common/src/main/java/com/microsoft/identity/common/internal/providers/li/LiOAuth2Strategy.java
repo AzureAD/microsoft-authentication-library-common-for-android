@@ -60,7 +60,7 @@ public class LiOAuth2Strategy extends OAuth2Strategy {
 
     @Override
     public AuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccountRecord account) {
-        return null;
+        return new LiAuthorizationRequest.Builder();
     }
 
     @Override

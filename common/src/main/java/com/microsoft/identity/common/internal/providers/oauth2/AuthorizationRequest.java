@@ -90,12 +90,19 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     @SerializedName("scope")
     private String mScope;
 
+    /**
+     * Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
+     */
+    @SerializedName("pkceChallenge")
+    private PkceChallenge mPkceChallenge;
+
     private transient List<Pair<String, String>> mExtraQueryParams;
 
     /**
      * Constructor of AuthorizationRequest.
      */
     protected AuthorizationRequest(final Builder builder) {
+        mPkceChallenge = PkceChallenge.newPkceChallenge();
         mResponseType = builder.mResponseType;
         mClientId = builder.mClientId;
         mRedirectUri = builder.mRedirectUri;
@@ -222,6 +229,10 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      */
     public String getState() {
         return mState;
+    }
+
+    public PkceChallenge getPkceChallenge() {
+        return mPkceChallenge;
     }
 
     //CHECKSTYLE:OFF
