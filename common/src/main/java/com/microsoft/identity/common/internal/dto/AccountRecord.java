@@ -409,6 +409,7 @@ public class AccountRecord extends AccountCredentialBase implements IAccountReco
      *
      * @return The client_info to get.
      */
+    @Override
     public String getClientInfo() {
         return mClientInfo;
     }
