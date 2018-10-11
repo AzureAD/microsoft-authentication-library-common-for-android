@@ -39,30 +39,13 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
     /**
      * Constructor of MicrosoftStsAccount.
      *
-     * @param idToken IDToken
-     * @param uid     String
-     * @param uTid    String
+     * @param idToken    IDToken
+     * @param clientInfo clientInfo
      */
-    public MicrosoftStsAccount(IDToken idToken, String uid, final String uTid) {
-        super(idToken, uid, uTid);
+    public MicrosoftStsAccount(@NonNull final IDToken idToken,
+                               @NonNull final ClientInfo clientInfo) {
+        super(idToken, clientInfo);
         Logger.verbose(TAG, "Init: " + TAG);
-    }
-
-    /**
-     * Creates an MicrosoftStsAccount based on the contents of the IDToken and based on the contents of the ClientInfo JSON returned as part of the TokenResponse.
-     *
-     * @param idToken    The IDToken for this Account.
-     * @param clientInfo The ClientInfo for this Account.
-     * @return The newly created MicrosoftStsAccount.
-     */
-    public static MicrosoftStsAccount create(@NonNull final IDToken idToken,
-                                             @NonNull final ClientInfo clientInfo) {
-        final String uid = clientInfo.getUid();
-        final String uTid = clientInfo.getUtid();
-
-        MicrosoftStsAccount acct = new MicrosoftStsAccount(idToken, uid, uTid);
-
-        return acct;
     }
 
     @Override

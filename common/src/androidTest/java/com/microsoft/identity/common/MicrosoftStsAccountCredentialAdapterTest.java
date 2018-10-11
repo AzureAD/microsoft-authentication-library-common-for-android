@@ -161,6 +161,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockAccount.getName()).thenReturn(MOCK_NAME);
         when(mockAccount.getMiddleName()).thenReturn(MOCK_MIDDLE_NAME);
         when(mockAccount.getFamilyName()).thenReturn(MOCK_FAMILY_NAME);
+        when(mockAccount.getClientInfo()).thenReturn(MOCK_CLIENT_INFO);
         when(mockRequest.getScope()).thenReturn(MOCK_SCOPE);
         when(mockResponse.getExpiresIn()).thenReturn(MOCK_EXPIRES_IN);
         when(mockResponse.getExtExpiresIn()).thenReturn(MOCK_EXT_EXPIRES_IN);
@@ -175,6 +176,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertNotNull(account);
         assertEquals(MOCK_UID + "." + MOCK_UTID, account.getHomeAccountId());
         assertEquals(MOCK_ENVIRONMENT, account.getEnvironment());
+        assertEquals(MOCK_CLIENT_INFO, account.getClientInfo());
         assertEquals(MOCK_TID, account.getRealm());
         assertEquals(MOCK_OID, account.getLocalAccountId());
         assertEquals(MOCK_PREFERRED_USERNAME, account.getUsername());
@@ -193,7 +195,6 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertNotNull(accessToken.getCachedAt());
         assertNotNull(accessToken.getExpiresOn());
         assertNotNull(accessToken.getExpiresOn());
-        assertEquals(MOCK_CLIENT_INFO, accessToken.getClientInfo());
         assertEquals(MOCK_TID, accessToken.getRealm());
         assertEquals(MOCK_AUTHORITY, accessToken.getAuthority());
         assertEquals(MOCK_ENVIRONMENT, accessToken.getEnvironment());
@@ -207,7 +208,6 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertNotNull(refreshToken);
         assertEquals(MOCK_SCOPE, refreshToken.getTarget());
         assertNotNull(refreshToken.getCachedAt());
-        assertEquals(MOCK_CLIENT_INFO, refreshToken.getClientInfo());
         assertEquals(MOCK_FAMILY_ID, refreshToken.getFamilyId());
     }
 

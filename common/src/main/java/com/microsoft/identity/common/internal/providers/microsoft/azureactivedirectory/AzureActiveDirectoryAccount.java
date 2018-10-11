@@ -48,33 +48,13 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
     /**
      * Constructor for AzureActiveDirectoryAccount object.
      *
-     * @param idToken Returned as part of the TokenResponse
-     * @param uid     Returned via clientInfo of TokenResponse
-     * @param uTid    Returned via ClientInfo of Token Response
+     * @param idToken    Returned as part of the TokenResponse
+     * @param clientInfo Returned via TokenResponse
      */
     public AzureActiveDirectoryAccount(@NonNull final IDToken idToken,
-                                       final String uid,
-                                       final String uTid) {
-        super(idToken, uid, uTid);
+                                       @NonNull final ClientInfo clientInfo) {
+        super(idToken, clientInfo);
         Logger.verbose(TAG, "Init: " + TAG);
-    }
-
-    /**
-     * Creates an AzureActiveDirectoryAccount based on the contents of the IDToken.
-     * And based on the contents of the ClientInfo JSON returned as part of the TokenResponse
-     *
-     * @param idToken    IDToken
-     * @param clientInfo ClientInfo
-     * @return AzureActiveDirectoryAccount
-     */
-    public static AzureActiveDirectoryAccount create(@NonNull final IDToken idToken,
-                                                     @NonNull final ClientInfo clientInfo) {
-        final String uid = clientInfo.getUid();
-        final String uTid = clientInfo.getUtid();
-
-        AzureActiveDirectoryAccount acct = new AzureActiveDirectoryAccount(idToken, uid, uTid);
-
-        return acct;
     }
 
     @Override
