@@ -1,3 +1,9 @@
+Version 0.0.5-hf1
+-------------
+- Hotfix for MSAL/#420
+    * AccessTokenRecord#isExpired no longer falls back on ext_expires_in
+    * ext_expires_in should only be inspected if HTTP 503 Service Unavailable is returned from AAD
+
 Version 0.0.5
 -------------
 Adding support for flight and slice parameters to authorization request.
