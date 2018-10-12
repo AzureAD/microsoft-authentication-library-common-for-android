@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -90,7 +91,6 @@ public class MicrosoftStsOAuth2Strategy
         final String methodName = ":getIssuerCacheIdentifier";
 
         final URL authority = request.getAuthority();
-        // TODO I don't think this is right... This is probably not the correct authority cache to consult...
         final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
         // This map can only be consulted if authority validation is on.
         // If the host has a hardcoded trust, we can just use the hostname.
@@ -170,6 +170,8 @@ public class MicrosoftStsOAuth2Strategy
             builder.setSlice(mConfig.getSlice());
         }
         builder.setFlightParameters(mConfig.getFlightParameters());
+        builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
+
         return builder;
     }
 
@@ -221,6 +223,11 @@ public class MicrosoftStsOAuth2Strategy
                 TAG + methodName,
                 "Creating TokenRequest..."
         );
+
+        if(mConfig.getMultipleCloudsSupported()){
+            setTokenEndpoint(getCloudAuthorityBasedOnAuthorizationResponse(response));
+        }
+
         MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setCodeVerifier(request.getPkceChallenge().getCodeVerifier());
         tokenRequest.setCode(response.getCode());
@@ -288,6 +295,15 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return new TokenResult(tokenResponse, tokenErrorResponse);
+    }
+
+    private String getCloudAuthorityBasedOnAuthorizationResponse(MicrosoftStsAuthorizationResponse response){
+
+        final String newAuthority = Uri.parse(mTokenEndpoint).buildUpon()
+                .authority(response.getCloudInstanceHostName())
+                .build().toString();
+
+        return newAuthority;
     }
 
 }
