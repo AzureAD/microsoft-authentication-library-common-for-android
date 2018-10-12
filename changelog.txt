@@ -1,3 +1,8 @@
+Version 0.0.6
+-------------
+- Bugfix: Resolves MSAL/#420
+    * Corrects an issue whereby expired access tokens can be returned from the cache
+
 Version 0.0.5
 -------------
 Adding support for flight and slice parameters to authorization request.
