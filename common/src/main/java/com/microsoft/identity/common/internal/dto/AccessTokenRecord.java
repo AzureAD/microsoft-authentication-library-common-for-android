@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.ACCESS_TOKEN_TYPE;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.AUTHORITY;
-import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.CLIENT_INFO;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.EXTENDED_EXPIRES_ON;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REALM;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TARGET;
@@ -48,11 +47,6 @@ public class AccessTokenRecord extends Credential {
          * String of authority.
          */
         public static final String AUTHORITY = "authority";
-
-        /**
-         * String of client info.
-         */
-        public static final String CLIENT_INFO = "client_info";
 
         /**
          * String of extended expires on.
@@ -83,13 +77,6 @@ public class AccessTokenRecord extends Credential {
      */
     @SerializedName(AUTHORITY)
     private String mAuthority;
-
-    /**
-     * Full base64 encoded client info received from ESTS, if available. STS returns the clientInfo 
-     * on both v1 and v2 for AAD. This field is used for extensibility purposes.
-     */
-    @SerializedName(CLIENT_INFO)
-    private String mClientInfo;
 
     /**
      * Additional extended expiry time until when token is valid in case of server-side outage.
@@ -154,24 +141,6 @@ public class AccessTokenRecord extends Credential {
      */
     public void setTarget(final String target) {
         mTarget = target;
-    }
-
-    /**
-     * Gets the client_info.
-     *
-     * @return The client_info to get.
-     */
-    public String getClientInfo() {
-        return mClientInfo;
-    }
-
-    /**
-     * Sets the client_info.
-     *
-     * @param clientInfo The clent_info to set.
-     */
-    public void setClientInfo(final String clientInfo) {
-        mClientInfo = clientInfo;
     }
 
     /**
@@ -260,14 +229,6 @@ public class AccessTokenRecord extends Credential {
 
     @Override
     public boolean isExpired() {
-        boolean isExpired = isExpired(getExpiresOn());
-
-        if (isExpired
-                && null != getExtendedExpiresOn()
-                && 0 < Long.valueOf(getExtendedExpiresOn())) {
-            isExpired = isExpired(getExtendedExpiresOn());
-        }
-
-        return isExpired;
+        return isExpired(getExpiresOn());
     }
 }

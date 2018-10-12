@@ -145,11 +145,12 @@ public class MicrosoftStsOAuth2Strategy
             idToken = new IDToken(response.getIdToken());
             clientInfo = new ClientInfo(response.getClientInfo());
         } catch (ServiceException ccse) {
-            // TODO: Add a log here
-            // TODO: Should we bail?
+            Logger.error(TAG + methodName, "Failed to construct IDToken or ClientInfo", null);
+            Logger.errorPII(TAG + methodName, "Failed with Exception", ccse);
+            throw new RuntimeException();
         }
 
-        return MicrosoftStsAccount.create(idToken, clientInfo);
+        return new MicrosoftStsAccount(idToken, clientInfo);
     }
 
     @Override

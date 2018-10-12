@@ -101,4 +101,9 @@ public class AzureActiveDirectoryB2CAccount extends BaseAccount {
     public String getAvatarUrl() {
         throw new UnsupportedOperationException("Method stub!");
     }
+
+    @Override
+    public String getClientInfo() {
+        throw new UnsupportedOperationException("Method stub!");
+    }
 }

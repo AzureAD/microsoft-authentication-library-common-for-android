@@ -101,4 +101,9 @@ public class ActiveDirectoryFederationServices2016Account extends BaseAccount {
     public String getAvatarUrl() {
         throw new UnsupportedOperationException("Method stub!");
     }
+
+    @Override
+    public String getClientInfo() {
+        throw new UnsupportedOperationException("Method stub!");
+    }
 }

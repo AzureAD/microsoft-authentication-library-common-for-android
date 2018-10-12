@@ -93,7 +93,6 @@ public class MicrosoftStsAccountCredentialAdapter
             // Optional fields
             accessToken.setExtendedExpiresOn(getExtendedExpiresOn(response));
             accessToken.setAuthority(request.getAuthority().toString());
-            accessToken.setClientInfo(response.getClientInfo());
             accessToken.setAccessTokenType(response.getTokenType());
 
             return accessToken;
@@ -123,7 +122,6 @@ public class MicrosoftStsAccountCredentialAdapter
             // Optional
             refreshToken.setFamilyId(response.getFamilyId());
             refreshToken.setTarget(request.getScope());
-            refreshToken.setClientInfo(response.getClientInfo());
 
             // TODO are these needed? Expected?
             refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
@@ -176,7 +174,6 @@ public class MicrosoftStsAccountCredentialAdapter
         // Optional fields
         refreshTokenOut.setTarget(refreshTokenIn.getTarget());
         refreshTokenOut.setCachedAt(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())));
-        refreshTokenOut.setClientInfo(refreshTokenIn.getClientInfo().getRawClientInfo());
         refreshTokenOut.setFamilyId(refreshTokenIn.getFamilyId());
 
         return refreshTokenOut;

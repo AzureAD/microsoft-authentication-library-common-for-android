@@ -31,6 +31,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -62,6 +63,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
     private String mFamilyName;
     private String mMiddleName;
     private String mEnvironment;
+    private String mRawClientInfo;
 
     /**
      * Constructor of MicrosoftAccount.
@@ -74,15 +76,14 @@ public abstract class MicrosoftAccount extends BaseAccount {
     /**
      * Constructor of MicrosoftAccount.
      *
-     * @param idToken id token of the Microsoft account.
-     * @param uid     UID of the Microsoft account.
-     * @param utid    UTID of the Microsoft account.
+     * @param idToken    id token of the Microsoft account.
+     * @param clientInfo the client_info for this Account.
      */
     public MicrosoftAccount(@NonNull final IDToken idToken,
-                            final String uid,
-                            final String utid) {
+                            @NonNull final ClientInfo clientInfo) {
         Logger.verbose(TAG, "Init: " + TAG);
         mIDToken = idToken;
+        mRawClientInfo = clientInfo.getRawClientInfo();
         final Map<String, String> claims = idToken.getTokenClaims();
         mUniqueId = getUniqueId(claims);
         mDisplayableId = getDisplayableId(claims);
@@ -93,9 +94,9 @@ public abstract class MicrosoftAccount extends BaseAccount {
         mMiddleName = claims.get(AzureActiveDirectoryIdToken.MIDDLE_NAME);
         if (!StringUtil.isEmpty(claims.get(AzureActiveDirectoryIdToken.TENANT_ID))) {
             mTenantId = claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
-        } else if (!StringUtil.isEmpty(utid)) {
+        } else if (!StringUtil.isEmpty(clientInfo.getUtid())) {
             Logger.warnPII(TAG, "realm is not returned from server. Use utid as realm.");
-            mTenantId = utid;
+            mTenantId = clientInfo.getUtid();
         } else {
             // According to the spec, full tenant or organizational identifier that account belongs to.
             // Can be an empty string for non-AAD scenarios.
@@ -103,8 +104,8 @@ public abstract class MicrosoftAccount extends BaseAccount {
             mTenantId = "";
         }
 
-        mUid = uid;
-        mUtid = utid;
+        mUid = clientInfo.getUid();
+        mUtid = clientInfo.getUtid();
 
         long mPasswordExpiration = 0;
 
@@ -365,6 +366,11 @@ public abstract class MicrosoftAccount extends BaseAccount {
     @Override
     public String getAvatarUrl() {
         return SchemaUtil.getAvatarUrl(mIDToken);
+    }
+
+    @Override
+    public String getClientInfo() {
+        return mRawClientInfo;
     }
 
     //CHECKSTYLE:OFF
