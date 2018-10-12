@@ -260,14 +260,6 @@ public class AccessTokenRecord extends Credential {
 
     @Override
     public boolean isExpired() {
-        boolean isExpired = isExpired(getExpiresOn());
-
-        if (isExpired
-                && null != getExtendedExpiresOn()
-                && 0 < Long.valueOf(getExtendedExpiresOn())) {
-            isExpired = isExpired(getExtendedExpiresOn());
-        }
-
-        return isExpired;
+        return isExpired(getExpiresOn());
     }
 }
