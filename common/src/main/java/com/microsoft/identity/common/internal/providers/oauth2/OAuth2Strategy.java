@@ -27,7 +27,7 @@ import android.net.Uri;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
@@ -37,12 +37,9 @@ import com.microsoft.identity.common.internal.platform.Device;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.UUID;
 import java.util.concurrent.Future;
-
 
 /**
  * Serves as the abstract base class for an oAuth2 client implementation; The base class should be extended
@@ -60,7 +57,8 @@ public abstract class OAuth2Strategy
                 GenericTokenRequest extends TokenRequest,
                 GenericTokenResponse extends TokenResponse,
                 GenericTokenResult extends TokenResult,
-                GenericAuthorizationResult extends AuthorizationResult> {
+                GenericAuthorizationResult extends AuthorizationResult,
+                GenericRefreshTokenRequestParameters extends RefreshTokenRequestParameters> {
 
     private static final String TAG = OAuth2Strategy.class.getSimpleName();
 
@@ -127,8 +125,7 @@ public abstract class OAuth2Strategy
         );
         String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
         Map<String, String> headers = new TreeMap<>();
-        String correlationId = UUID.randomUUID().toString();
-        headers.put("client-request-id", correlationId);
+        headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
 
         return HttpRequest.sendPost(
@@ -216,10 +213,10 @@ public abstract class OAuth2Strategy
     /**
      * Abstract method for creating the refresh token request.
      *
-     * @param refreshToken The refresh token to use.
+     * @param parameters The parameters for this request.
      * @return TokenRequest.
      */
-    public abstract GenericTokenRequest createRefreshTokenRequest(final RefreshTokenRecord refreshToken, final List<String> scopes);
+    public abstract GenericTokenRequest createRefreshTokenRequest(final GenericRefreshTokenRequestParameters parameters);
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method

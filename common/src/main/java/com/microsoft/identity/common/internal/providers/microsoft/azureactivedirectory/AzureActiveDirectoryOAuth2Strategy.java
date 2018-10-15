@@ -27,7 +27,6 @@ import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -37,12 +36,12 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.RefreshTokenRequestParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 import java.net.HttpURLConnection;
-import java.util.List;
 
 /**
  * The Azure Active Directory OAuth 2.0 Strategy.
@@ -72,7 +71,8 @@ public class AzureActiveDirectoryOAuth2Strategy
         AzureActiveDirectoryTokenRequest,
         AzureActiveDirectoryTokenResponse,
         TokenResult,
-        AuthorizationResult> {
+        AuthorizationResult,
+        RefreshTokenRequestParameters> {
 
     private static final String TAG = AzureActiveDirectoryOAuth2Strategy.class.getSimpleName();
 
@@ -208,7 +208,7 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(RefreshTokenRecord refreshToken, List<String> scopes) {
+    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(RefreshTokenRequestParameters parameters) {
         return null;
     }
 

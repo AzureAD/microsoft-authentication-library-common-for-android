@@ -28,7 +28,6 @@ import android.support.annotation.Nullable;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
@@ -43,14 +42,12 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStra
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.List;
 import java.util.UUID;
 
 public class MicrosoftStsOAuth2Strategy
@@ -66,7 +63,8 @@ public class MicrosoftStsOAuth2Strategy
                 MicrosoftStsTokenRequest,
                 MicrosoftStsTokenResponse,
                 TokenResult,
-                AuthorizationResult> {
+                AuthorizationResult,
+                MicrosoftStsRefreshTokenRequestParameters> {
 
     private static final String TAG = MicrosoftStsOAuth2Strategy.class.getSimpleName();
 
@@ -236,8 +234,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final RefreshTokenRecord refreshToken,
-                                                              @NonNull final List<String> scopes) {
+    public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final MicrosoftStsRefreshTokenRequestParameters parameters) {
         final String methodName = ":createRefreshTokenRequest";
         Logger.verbose(
                 TAG + methodName,
@@ -245,9 +242,11 @@ public class MicrosoftStsOAuth2Strategy
         );
 
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
-        request.setRefreshToken(refreshToken.getSecret());
-        request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
-        request.setScope(StringUtil.join(' ', scopes));
+        request.setRefreshToken(parameters.getRefreshToken());
+        request.setGrantType(parameters.getGrantType());
+        request.setScope(StringUtil.join(' ', parameters.getScopes()));
+        request.setClientId(parameters.getClientId());
+        request.setRedirectUri(parameters.getRedirectUri());
 
         if (null != request.getScope()) {
             Logger.verbosePII(
