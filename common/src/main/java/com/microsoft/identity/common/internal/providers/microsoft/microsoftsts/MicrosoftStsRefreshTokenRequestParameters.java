@@ -24,25 +24,49 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshTokenRequestParameters;
 
+/**
+ * Parameters used by the MicrosoftStsOAuth2Strategy when using a refresh token to acquire a new
+ * access token.
+ */
 public class MicrosoftStsRefreshTokenRequestParameters extends RefreshTokenRequestParameters {
 
     private String mClientId;
 
     private String mRedirectUri;
 
+    /**
+     * Gets the clientId.
+     *
+     * @return The clientId to get.
+     */
     public String getClientId() {
         return mClientId;
     }
 
-    public void setClientId(String mClientId) {
-        this.mClientId = mClientId;
+    /**
+     * Sets the client Id.
+     *
+     * @param clientId The clientId to set.
+     */
+    public void setClientId(final String clientId) {
+        mClientId = clientId;
     }
 
+    /**
+     * Gets the redirectUri.
+     *
+     * @return The redirectUri to get.
+     */
     public String getRedirectUri() {
         return mRedirectUri;
     }
 
-    public void setRedirectUri(String mRedirectUri) {
-        this.mRedirectUri = mRedirectUri;
+    /**
+     * Sets the redirectUri.
+     *
+     * @param redirectUri The redirectUri to set.
+     */
+    public void setRedirectUri(final String redirectUri) {
+        mRedirectUri = redirectUri;
     }
 }

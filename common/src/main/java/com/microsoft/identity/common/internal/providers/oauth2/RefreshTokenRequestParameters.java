@@ -24,6 +24,9 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import java.util.List;
 
+/**
+ * Parameters used by the OAuth2Strategy when using a refresh token to acquire a new access token.
+ */
 public class RefreshTokenRequestParameters {
 
     private String mRefreshToken;
@@ -36,23 +39,23 @@ public class RefreshTokenRequestParameters {
         return mRefreshToken;
     }
 
-    public void setRefreshToken(final String mRefreshToken) {
-        this.mRefreshToken = mRefreshToken;
+    public void setRefreshToken(final String refreshToken) {
+        mRefreshToken = refreshToken;
     }
 
     public List<String> getScopes() {
         return mScopes;
     }
 
-    public void setScopes(final List<String> mScopes) {
-        this.mScopes = mScopes;
+    public void setScopes(final List<String> scopes) {
+        mScopes = scopes;
     }
 
     public String getGrantType() {
         return mGrantType;
     }
 
-    public void setGrantType(final String mGrantType) {
-        this.mGrantType = mGrantType;
+    public void setGrantType(final String grantType) {
+        mGrantType = grantType;
     }
 }
