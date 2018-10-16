@@ -35,26 +35,56 @@ public class RefreshTokenRequestParameters {
 
     private String mGrantType;
 
+    /**
+     * Gets the refresh token value.
+     *
+     * @return The refresh token value to get.
+     */
     public String getRefreshToken() {
         return mRefreshToken;
     }
 
+    /**
+     * Sets the refresh token value.
+     *
+     * @param refreshToken The refresh token value to set.
+     */
     public void setRefreshToken(final String refreshToken) {
         mRefreshToken = refreshToken;
     }
 
+    /**
+     * Gets the List of scopes.
+     *
+     * @return The List of scopes to get.
+     */
     public List<String> getScopes() {
         return mScopes;
     }
 
+    /**
+     * Sets the List of scopes.
+     *
+     * @param scopes The List of scopes to set.
+     */
     public void setScopes(final List<String> scopes) {
         mScopes = scopes;
     }
 
+    /**
+     * Gets the grant type.
+     *
+     * @return The grant type to get.
+     */
     public String getGrantType() {
         return mGrantType;
     }
 
+    /**
+     * Sets the grant type.
+     *
+     * @param grantType The grant type to set.
+     */
     public void setGrantType(final String grantType) {
         mGrantType = grantType;
     }
