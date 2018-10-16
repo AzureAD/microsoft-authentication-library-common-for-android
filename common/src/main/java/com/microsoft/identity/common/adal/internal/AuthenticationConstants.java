@@ -378,6 +378,10 @@ public final class AuthenticationConstants {
          */
         public static final String CLAIMS = "claims";
 
+        public static final String CLIENT_CAPABILITIES_CLAIMS_LIST = "xms_cc";
+
+        public static final String CLIENT_CAPABILITY_ACCESS_TOKEN = "access_token";
+
         /**
          * String for cloud instance host name.
          */
@@ -497,6 +501,16 @@ public final class AuthenticationConstants {
          * String for the broker version.
          */
         public static final String ADAL_BROKER_VERSION = "x-client-brkrver";
+
+        /**
+         * String for the host app name
+         */
+        public static final String APP_PACKAGE_NAME = "x-app-name";
+
+        /**
+         * String for the host app version
+         */
+        public static final String APP_VERSION = "x-app-ver";
     }
 
     /**
