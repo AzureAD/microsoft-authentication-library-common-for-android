@@ -1,3 +1,8 @@
+Version 0.0.7
+-------------
+- Bugfix: Resolves MSAL/#418
+    * Adds client_id, redirect_uri to refresh token requests (previously missing, yielding inconsistent behavior depending on account type).
+
 Version 0.0.6
 -------------
 - Bugfix: Resolves MSAL/#420
