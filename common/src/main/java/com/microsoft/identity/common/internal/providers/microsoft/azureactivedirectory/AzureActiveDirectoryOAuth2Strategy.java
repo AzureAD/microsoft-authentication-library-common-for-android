@@ -36,7 +36,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.RefreshTokenRequestParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
@@ -71,8 +70,7 @@ public class AzureActiveDirectoryOAuth2Strategy
         AzureActiveDirectoryTokenRequest,
         AzureActiveDirectoryTokenResponse,
         TokenResult,
-        AuthorizationResult,
-        RefreshTokenRequestParameters> {
+        AuthorizationResult> {
 
     private static final String TAG = AzureActiveDirectoryOAuth2Strategy.class.getSimpleName();
 
@@ -208,7 +206,7 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(RefreshTokenRequestParameters parameters) {
+    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest() {
         return null;
     }
 

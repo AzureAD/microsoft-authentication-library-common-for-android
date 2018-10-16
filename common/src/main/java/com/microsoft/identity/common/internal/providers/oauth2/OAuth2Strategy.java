@@ -57,8 +57,7 @@ public abstract class OAuth2Strategy
                 GenericTokenRequest extends TokenRequest,
                 GenericTokenResponse extends TokenResponse,
                 GenericTokenResult extends TokenResult,
-                GenericAuthorizationResult extends AuthorizationResult,
-                GenericRefreshTokenRequestParameters extends RefreshTokenRequestParameters> {
+                GenericAuthorizationResult extends AuthorizationResult> {
 
     private static final String TAG = OAuth2Strategy.class.getSimpleName();
 
@@ -213,10 +212,9 @@ public abstract class OAuth2Strategy
     /**
      * Abstract method for creating the refresh token request.
      *
-     * @param parameters The parameters for this request.
      * @return TokenRequest.
      */
-    public abstract GenericTokenRequest createRefreshTokenRequest(final GenericRefreshTokenRequestParameters parameters);
+    public abstract GenericTokenRequest createRefreshTokenRequest();
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method

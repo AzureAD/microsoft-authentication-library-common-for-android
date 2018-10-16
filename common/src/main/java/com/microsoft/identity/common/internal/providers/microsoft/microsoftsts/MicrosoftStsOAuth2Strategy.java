@@ -42,9 +42,9 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStra
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -63,8 +63,7 @@ public class MicrosoftStsOAuth2Strategy
                 MicrosoftStsTokenRequest,
                 MicrosoftStsTokenResponse,
                 TokenResult,
-                AuthorizationResult,
-                MicrosoftStsRefreshTokenRequestParameters> {
+                AuthorizationResult> {
 
     private static final String TAG = MicrosoftStsOAuth2Strategy.class.getSimpleName();
 
@@ -234,7 +233,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final MicrosoftStsRefreshTokenRequestParameters parameters) {
+    public MicrosoftStsTokenRequest createRefreshTokenRequest() {
         final String methodName = ":createRefreshTokenRequest";
         Logger.verbose(
                 TAG + methodName,
@@ -242,19 +241,7 @@ public class MicrosoftStsOAuth2Strategy
         );
 
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
-        request.setRefreshToken(parameters.getRefreshToken());
-        request.setGrantType(parameters.getGrantType());
-        request.setScope(StringUtil.join(' ', parameters.getScopes()));
-        request.setClientId(parameters.getClientId());
-        request.setRedirectUri(parameters.getRedirectUri());
-
-        if (null != request.getScope()) {
-            Logger.verbosePII(
-                    TAG + methodName,
-                    "Scopes: [" + request.getScope() + "]"
-            );
-        }
-
+        request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
         return request;
     }
 
