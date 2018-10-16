@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.ui.browser;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.net.Uri;
 
@@ -51,6 +52,17 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
+    public void setCompleteIntent(PendingIntent completeIntent) {
+        mCompleteIntent = completeIntent;
+    }
+
+    public void setCancelIntent(PendingIntent cancelIntent) {
+        mCancelIntent = cancelIntent;
+    }
+
+    private PendingIntent mCompleteIntent;
+    private PendingIntent mCancelIntent;
+
     public BrowserAuthorizationStrategy(Activity activity) {
         mReferencedActivity = new WeakReference<>(activity);
     }
@@ -68,6 +80,9 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         final Browser browser = BrowserSelector.select(mReferencedActivity.get().getApplicationContext());
 
         //ClientException will be thrown if no browser found.
+        /*
+         * Create authIntent.
+         */
         Intent authIntent;
         if (browser.isCustomTabsServiceSupported()) {
             Logger.info(
@@ -90,14 +105,16 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         authIntent.setPackage(browser.getPackageName());
         final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
         authIntent.setData(requestUrl);
-        mReferencedActivity.get().startActivityForResult(
+
+        mReferencedActivity.get().startActivity(
                 AuthorizationActivity.createStartIntent(
                         mReferencedActivity.get().getApplicationContext(),
                         authIntent,
+                        mCompleteIntent,
+                        mCancelIntent,
                         requestUrl.toString(),
                         mAuthorizationRequest.getRedirectUri(),
-                        AuthorizationAgent.BROWSER),
-                BROWSER_FLOW);
+                        AuthorizationAgent.BROWSER));
 
         return mAuthorizationResultFuture;
     }

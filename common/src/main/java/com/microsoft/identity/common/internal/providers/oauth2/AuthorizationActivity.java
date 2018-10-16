@@ -2,6 +2,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -56,13 +57,27 @@ public final class AuthorizationActivity extends Activity {
 
     private AuthorizationAgent mAuthorizationAgent;
 
+    @VisibleForTesting
+    static final String KEY_COMPLETE_INTENT = "completeIntent";
+
+    private PendingIntent mCompleteIntent;
+
+    @VisibleForTesting
+    static final String KEY_CANCEL_INTENT = "cancelIntent";
+
+    private PendingIntent mCancelIntent;
+
     public static Intent createStartIntent(final Context context,
                                            final Intent authIntent,
+                                           final PendingIntent completeIntent,
+                                           final PendingIntent cancelIntent,
                                            final String requestUrl,
                                            final String redirectUri,
                                            final AuthorizationAgent authorizationAgent) {
         final Intent intent = new Intent(context, AuthorizationActivity.class);
         intent.putExtra(KEY_AUTH_INTENT, authIntent);
+        intent.putExtra(KEY_COMPLETE_INTENT, completeIntent);
+        intent.putExtra(KEY_CANCEL_INTENT, cancelIntent);
         intent.putExtra(KEY_AUTH_REQUEST_URL, requestUrl);
         intent.putExtra(KEY_AUTH_REDIRECT_URI, redirectUri);
         intent.putExtra(KEY_AUTH_AUTHORIZATION_AGENT, authorizationAgent);
@@ -92,17 +107,23 @@ public final class AuthorizationActivity extends Activity {
         }
 
         mAuthIntent = state.getParcelable(KEY_AUTH_INTENT);
+        mCompleteIntent = state.getParcelable(KEY_COMPLETE_INTENT);
+        mCancelIntent = state.getParcelable(KEY_CANCEL_INTENT);
         mAuthorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false);
         mPkeyAuthStatus = state.getBoolean(KEY_PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(KEY_AUTH_REQUEST_URL);
         mRedirectUri = state.getString(KEY_AUTH_REDIRECT_URI);
-        mAuthorizationAgent = (AuthorizationAgent)state.getSerializable(KEY_AUTH_AUTHORIZATION_AGENT);
+        mAuthorizationAgent = (AuthorizationAgent) state.getSerializable(KEY_AUTH_AUTHORIZATION_AGENT);
     }
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState == null) {
+            if (!StringUtil.isEmpty(getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT))) {
+                startActivity(AuthorizationActivity.createCustomTabResponseIntent(this, getIntent().getDataString()));
+            }
+
             extractState(getIntent().getExtras());
         } else {
             // If activity is killed by the os, savedInstance will be the saved bundle.
@@ -124,10 +145,13 @@ public final class AuthorizationActivity extends Activity {
         super.onResume();
 
         /*
-         * If this is the first run of the activity, start the authorization request.
+         * If this is the first run of the activity, start the authorization intent.
+         * If the Authorization Agent is set as WebView. set up the webView client and load the url in embedded webView.
+         * If the Authorization Agent is set as Default or Browser, start the authorization intent with customTabs or browsers.
          */
         if (!mAuthorizationStarted) {
             mAuthorizationStarted = true;
+
             if (mAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
                 //TODO Replace AzureActiveDirectoryWebViewClient with GenericOAuth2WebViewClient once OAuth2Strategy get integrated.
                 AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(this, new ChallengeCompletionCallback(), mRedirectUri);
@@ -152,20 +176,74 @@ public final class AuthorizationActivity extends Activity {
                     finish();
                 }
             }
+
             return;
         }
 
+        /*
+         * When it returns back to this Activity from OAuth2 redirect, two scenarios would happen.
+         * 1) The response uri is returned from BrowserTabActivity
+         * 2) The authorization is cancelled by pressing the 'Back' button or the BrowserTabActivity is not launched.
+         *
+         * In the first case, generate the authorization result from the response uri.
+         * In the second case, set the activity result intent with AUTH_CODE_CANCEL code.
+         */
+
+        //if (null != getIntent().getData()) {
         if (!StringUtil.isEmpty(getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT))) {
-            Logger.info(TAG, null, "Received redirect from system webview.");
-            final String url = getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
-            final Intent resultIntent = new Intent();
-            resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
-            setResult(AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE,
-                    resultIntent);
-            finish();
+            completeAuthorization();
         } else {
-            setResult(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, new Intent());
-            finish();
+            cancelAuthorization();
+        }
+
+        finish();
+
+//        if (!StringUtil.isEmpty(getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT))) {
+//            Logger.info(TAG, null, "Received redirect from system webview.");
+//            final String url = getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
+//            final Intent resultIntent = new Intent();
+//            resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
+//            setResult(AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE,
+//                    resultIntent);
+//             finish();
+//
+//        } else {
+//            setResult(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, new Intent());
+//           finish();
+//        }
+    }
+
+    private void completeAuthorization() {
+        Logger.info(TAG, null, "Received redirect from customTab/browser.");
+        final String url = getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
+        final Intent resultIntent = new Intent();
+        resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
+        if (mCompleteIntent != null) {
+            resultIntent.putExtra(AuthorizationStrategy.RESULT_CODE, AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE);
+            Logger.info(TAG, "Authorization complete with completion intent");
+            try {
+                mCompleteIntent.send(this, 0, resultIntent);
+            } catch (final PendingIntent.CanceledException exception) {
+                Logger.error(TAG, "Failed to send completion intent", exception);
+            }
+        } else {
+            setResult(AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE, resultIntent);
+        }
+    }
+
+    private void cancelAuthorization() {
+        Logger.info(TAG, "Authorization flow is canceled by user");
+        final Intent resultIntent = new Intent();
+        if (mCancelIntent != null) {
+            try {
+                resultIntent.putExtra(AuthorizationStrategy.RESULT_CODE, AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL);
+                mCancelIntent.send(this, 0, resultIntent);
+            } catch (final PendingIntent.CanceledException exception) {
+                Logger.error(TAG, "Failed to send cancel intent", exception);
+            }
+        } else {
+            setResult(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
+            Logger.info(TAG, "Empty cancel intent.");
         }
     }
 
@@ -178,6 +256,8 @@ public final class AuthorizationActivity extends Activity {
     protected void onSaveInstanceState(final Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(KEY_AUTH_INTENT, mAuthIntent);
+        outState.putParcelable(KEY_COMPLETE_INTENT, mCompleteIntent);
+        outState.putParcelable(KEY_CANCEL_INTENT, mCancelIntent);
         outState.putBoolean(KEY_AUTHORIZATION_STARTED, mAuthorizationStarted);
         outState.putBoolean(KEY_PKEYAUTH_STATUS, mPkeyAuthStatus);
         outState.putSerializable(KEY_AUTH_AUTHORIZATION_AGENT, mAuthorizationAgent);
