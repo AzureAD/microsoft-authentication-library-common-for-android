@@ -72,10 +72,14 @@ public final class AuthorizationActivity extends Activity {
                                            final AuthorizationAgent authorizationAgent) {
         final Intent intent = new Intent(context, AuthorizationActivity.class);
         intent.putExtra(KEY_AUTH_INTENT, authIntent);
-        intent.putExtra(KEY_RESULT_INTENT, resultIntent);
         intent.putExtra(KEY_AUTH_REQUEST_URL, requestUrl);
         intent.putExtra(KEY_AUTH_REDIRECT_URI, redirectUri);
         intent.putExtra(KEY_AUTH_AUTHORIZATION_AGENT, authorizationAgent);
+
+        if (null != resultIntent) {
+            intent.putExtra(KEY_RESULT_INTENT, resultIntent);
+        }
+
         return intent;
     }
 
@@ -116,9 +120,9 @@ public final class AuthorizationActivity extends Activity {
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState == null) {
-            if (!StringUtil.isEmpty(getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT))) {
-                startActivity(AuthorizationActivity.createCustomTabResponseIntent(this, getIntent().getDataString()));
-            }
+//            if (!StringUtil.isEmpty(getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT))) {
+//                startActivity(AuthorizationActivity.createCustomTabResponseIntent(this, getIntent().getDataString()));
+//            }
 
             extractState(getIntent().getExtras());
         } else {
@@ -240,7 +244,9 @@ public final class AuthorizationActivity extends Activity {
     protected void onSaveInstanceState(final Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(KEY_AUTH_INTENT, mAuthIntent);
-        outState.putParcelable(KEY_RESULT_INTENT, mResultIntent.get());
+        if (null != mResultIntent) {
+            outState.putParcelable(KEY_RESULT_INTENT, mResultIntent.get());
+        }
         outState.putBoolean(KEY_AUTHORIZATION_STARTED, mAuthorizationStarted);
         outState.putBoolean(KEY_PKEYAUTH_STATUS, mPkeyAuthStatus);
         outState.putSerializable(KEY_AUTH_AUTHORIZATION_AGENT, mAuthorizationAgent);

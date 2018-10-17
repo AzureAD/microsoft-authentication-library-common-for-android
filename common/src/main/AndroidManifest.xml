@@ -1,10 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.microsoft.identity.common">
-
-        <uses-sdk
-            android:minSdkVersion="16"
-            android:targetSdkVersion="25" />
-
         <uses-permission android:name="android.permission.INTERNET" />
         <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -13,7 +8,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name="com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:launchMode="singleTask"/>
         <!-- singleTask launchMode is required for the authorization redirect. -->
 
     </application>
