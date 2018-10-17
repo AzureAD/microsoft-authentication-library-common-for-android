@@ -47,24 +47,18 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
 
     private CustomTabsManager mCustomTabManager;
     private WeakReference<Activity> mReferencedActivity;
+    private PendingIntent mResultIntent;
     private AuthorizationResultFuture mAuthorizationResultFuture;
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
-    public void setCompleteIntent(PendingIntent completeIntent) {
-        mCompleteIntent = completeIntent;
-    }
-
-    public void setCancelIntent(PendingIntent cancelIntent) {
-        mCancelIntent = cancelIntent;
-    }
-
-    private PendingIntent mCompleteIntent;
-    private PendingIntent mCancelIntent;
-
     public BrowserAuthorizationStrategy(Activity activity) {
         mReferencedActivity = new WeakReference<>(activity);
+
+        //Create pendingIntent to handle the authorization result intent back to the calling activity
+        final Intent resultIntent = new Intent(activity.getApplicationContext(), activity.getClass());
+        mResultIntent = PendingIntent.getActivity(activity.getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     @Override
@@ -110,8 +104,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
                 AuthorizationActivity.createStartIntent(
                         mReferencedActivity.get().getApplicationContext(),
                         authIntent,
-                        mCompleteIntent,
-                        mCancelIntent,
+                        mResultIntent,
                         requestUrl.toString(),
                         mAuthorizationRequest.getRedirectUri(),
                         AuthorizationAgent.BROWSER));
