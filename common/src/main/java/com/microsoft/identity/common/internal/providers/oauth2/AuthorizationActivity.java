@@ -19,10 +19,8 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeCompletionCallback;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.util.StringUtil;
-
-import java.lang.ref.WeakReference;
 
 public final class AuthorizationActivity extends Activity {
     @VisibleForTesting
@@ -154,7 +152,7 @@ public final class AuthorizationActivity extends Activity {
 
             if (mAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
                 //TODO Replace AzureActiveDirectoryWebViewClient with GenericOAuth2WebViewClient once OAuth2Strategy get integrated.
-                AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(this, new ChallengeCompletionCallback(), mRedirectUri);
+                AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(this, new AuthorizationCompletionCallback(), mRedirectUri);
                 setUpWebView(webViewClient);
                 mWebView.post(new Runnable() {
                     @Override
@@ -290,7 +288,7 @@ public final class AuthorizationActivity extends Activity {
         mWebView.setWebViewClient(webViewClient);
     }
 
-    class ChallengeCompletionCallback implements IChallengeCompletionCallback {
+    class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {
         @Override
         public void onChallengeResponseReceived(final int returnCode, final Intent responseIntent) {
             Logger.verbose(TAG, null, "onChallengeResponseReceived:" + returnCode);

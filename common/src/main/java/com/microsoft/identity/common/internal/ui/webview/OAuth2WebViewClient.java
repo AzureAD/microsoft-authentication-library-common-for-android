@@ -38,7 +38,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeCompletionCallback;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallengeHandler;
@@ -48,7 +48,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     /* constants */
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
 
-    private final IChallengeCompletionCallback mCompletionCallback;
+    private final IAuthorizationCompletionCallback mCompletionCallback;
     private final Activity mActivity;
 
     /**
@@ -61,7 +61,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     /**
      * @return handler completion callback
      */
-    IChallengeCompletionCallback getCompletionCallback() {
+    IAuthorizationCompletionCallback getCompletionCallback() {
         return mCompletionCallback;
     }
 
@@ -72,7 +72,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * @param callback Challenge completion callback
      */
     OAuth2WebViewClient(@NonNull final Activity activity,
-                        @NonNull final IChallengeCompletionCallback callback) {
+                        @NonNull final IAuthorizationCompletionCallback callback) {
         //the validation of redirect url and authorization request should be in upper level before launching the webview.
         mActivity = activity;
         mCompletionCallback = callback;
