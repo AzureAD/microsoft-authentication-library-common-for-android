@@ -39,6 +39,20 @@ public class MicrosoftRefreshToken extends RefreshToken {
     private boolean mIsFamilyRefreshToken;
     private String mEnvironment;
 
+    public MicrosoftRefreshToken(final String rawRefreshToken,
+                                 final ClientInfo clientInfo,
+                                 final String scope,
+                                 final String clientId,
+                                 final boolean isFrt,
+                                 final String environment) {
+        super(rawRefreshToken);
+        mClientInfo = clientInfo;
+        mScope = scope;
+        mClientId = clientId;
+        mIsFamilyRefreshToken = isFrt;
+        mEnvironment = environment;
+    }
+
     /**
      * Constructs a new MicrosoftRefreshToken instance.
      *
