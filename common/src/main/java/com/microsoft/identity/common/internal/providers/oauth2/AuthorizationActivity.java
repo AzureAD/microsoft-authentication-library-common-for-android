@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 import android.view.MotionEvent;
 import android.view.View;
@@ -41,6 +42,9 @@ public final class AuthorizationActivity extends Activity {
     @VisibleForTesting
     static final String KEY_AUTH_AUTHORIZATION_AGENT = "authorizationAgent";
 
+    @VisibleForTesting
+    static final String KEY_RESULT_INTENT = "resultIntent";
+
     private static final String TAG = AuthorizationActivity.class.getSimpleName();
 
     private boolean mAuthorizationStarted = false;
@@ -57,14 +61,11 @@ public final class AuthorizationActivity extends Activity {
 
     private AuthorizationAgent mAuthorizationAgent;
 
-    @VisibleForTesting
-    static final String KEY_RESULT_INTENT = "resultIntent";
-
-    private WeakReference<PendingIntent> mResultIntent;
+    private PendingIntent mResultIntent;
 
     public static Intent createStartIntent(final Context context,
                                            final Intent authIntent,
-                                           final PendingIntent resultIntent,
+                                           @NonNull final PendingIntent resultIntent,
                                            final String requestUrl,
                                            final String redirectUri,
                                            final AuthorizationAgent authorizationAgent) {
@@ -73,11 +74,7 @@ public final class AuthorizationActivity extends Activity {
         intent.putExtra(KEY_AUTH_REQUEST_URL, requestUrl);
         intent.putExtra(KEY_AUTH_REDIRECT_URI, redirectUri);
         intent.putExtra(KEY_AUTH_AUTHORIZATION_AGENT, authorizationAgent);
-
-        if (null != resultIntent) {
-            intent.putExtra(KEY_RESULT_INTENT, resultIntent);
-        }
-
+        intent.putExtra(KEY_RESULT_INTENT, resultIntent);
         return intent;
     }
 
@@ -109,19 +106,13 @@ public final class AuthorizationActivity extends Activity {
         mAuthorizationRequestUrl = state.getString(KEY_AUTH_REQUEST_URL);
         mRedirectUri = state.getString(KEY_AUTH_REDIRECT_URI);
         mAuthorizationAgent = (AuthorizationAgent) state.getSerializable(KEY_AUTH_AUTHORIZATION_AGENT);
-        if (state.containsKey(KEY_RESULT_INTENT)) {
-            mResultIntent = new WeakReference<>((PendingIntent) state.getParcelable(KEY_RESULT_INTENT));
-        }
+        mResultIntent = state.getParcelable(KEY_RESULT_INTENT);
     }
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState == null) {
-//            if (!StringUtil.isEmpty(getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT))) {
-//                startActivity(AuthorizationActivity.createCustomTabResponseIntent(this, getIntent().getDataString()));
-//            }
-
             extractState(getIntent().getExtras());
         } else {
             // If activity is killed by the os, savedInstance will be the saved bundle.
@@ -170,7 +161,7 @@ public final class AuthorizationActivity extends Activity {
                 } else {
                     final Intent resultIntent = new Intent();
                     resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, new ClientException(ErrorStrings.AUTHORIZATION_INTENT_IS_NULL));
-                    setResult(AuthorizationStrategy.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
+                    sendResult(AuthorizationStrategy.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
                     finish();
                 }
             }
@@ -195,42 +186,36 @@ public final class AuthorizationActivity extends Activity {
         finish();
     }
 
+    private void sendResult(int resultCode, Intent intent) {
+        if (mResultIntent == null) {
+            Logger.error(TAG, "Result intent is null", null);
+            return;
+        }
+
+        intent.putExtra(AuthorizationStrategy.REQUEST_CODE, AuthorizationStrategy.BROWSER_FLOW);
+        intent.putExtra(AuthorizationStrategy.RESULT_CODE, resultCode);
+        try {
+            mResultIntent.send(this, 0, intent);
+        } catch (final PendingIntent.CanceledException exception) {
+            Logger.error(TAG, "Failed to send completion intent", exception);
+        }
+        //PendingIntent is a global reference used across apps. Need to call cancel() to remove it.
+        mResultIntent.cancel();
+    }
+
     private void completeAuthorization() {
         Logger.info(TAG, null, "Received redirect from customTab/browser.");
         final String url = getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
         final Intent resultIntent = new Intent();
         resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
-        if (mResultIntent.get() != null) {
-            resultIntent.putExtra(AuthorizationStrategy.RESULT_CODE, AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE);
-            resultIntent.putExtra(AuthorizationStrategy.REQUEST_CODE, AuthorizationStrategy.BROWSER_FLOW);
-            Logger.info(TAG, "Authorization complete with completion intent");
-            try {
-                mResultIntent.get().send(this, 0, resultIntent);
-            } catch (final PendingIntent.CanceledException exception) {
-                Logger.error(TAG, "Failed to send completion intent", exception);
-            }
-        } else {
-            setResult(AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE, resultIntent);
-        }
+        sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE, resultIntent);
     }
 
     private void cancelAuthorization() {
         Logger.info(TAG, "Authorization flow is canceled by user");
         final Intent resultIntent = new Intent();
-        if (mResultIntent.get() != null) {
-            try {
-                //Create Cancel Intent
-                resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                resultIntent.putExtra(AuthorizationStrategy.RESULT_CODE, AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL);
-                resultIntent.putExtra(AuthorizationStrategy.REQUEST_CODE, AuthorizationStrategy.BROWSER_FLOW);
-                mResultIntent.get().send(this, 0, resultIntent);
-            } catch (final PendingIntent.CanceledException exception) {
-                Logger.error(TAG, "Failed to send cancel intent", exception);
-            }
-        } else {
-            setResult(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
-            Logger.info(TAG, "Empty cancel intent.");
-        }
+        resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
     }
 
     @Override
@@ -242,9 +227,7 @@ public final class AuthorizationActivity extends Activity {
     protected void onSaveInstanceState(final Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(KEY_AUTH_INTENT, mAuthIntent);
-        if (null != mResultIntent) {
-            outState.putParcelable(KEY_RESULT_INTENT, mResultIntent.get());
-        }
+        outState.putParcelable(KEY_RESULT_INTENT, mResultIntent);
         outState.putBoolean(KEY_AUTHORIZATION_STARTED, mAuthorizationStarted);
         outState.putBoolean(KEY_PKEYAUTH_STATUS, mPkeyAuthStatus);
         outState.putSerializable(KEY_AUTH_AUTHORIZATION_AGENT, mAuthorizationAgent);
@@ -292,18 +275,7 @@ public final class AuthorizationActivity extends Activity {
         @Override
         public void onChallengeResponseReceived(final int returnCode, final Intent responseIntent) {
             Logger.verbose(TAG, null, "onChallengeResponseReceived:" + returnCode);
-            if (mResultIntent.get() != null) {
-                try {
-                    responseIntent.putExtra(AuthorizationStrategy.RESULT_CODE, returnCode);
-                    responseIntent.putExtra(AuthorizationStrategy.REQUEST_CODE, AuthorizationStrategy.BROWSER_FLOW);
-                    mResultIntent.get().send(getApplicationContext(), 0, responseIntent);
-                } catch (final PendingIntent.CanceledException exception) {
-                    Logger.error(TAG, "Failed to send cancel intent", exception);
-                }
-            } else {
-                setResult(returnCode, responseIntent);
-            }
-
+            sendResult(returnCode, responseIntent);
             finish();
         }
 

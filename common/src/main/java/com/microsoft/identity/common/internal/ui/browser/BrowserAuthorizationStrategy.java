@@ -26,6 +26,7 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -53,11 +54,8 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
-    public BrowserAuthorizationStrategy(Activity activity) {
+    public BrowserAuthorizationStrategy(@NonNull Activity activity, @NonNull Intent resultIntent) {
         mReferencedActivity = new WeakReference<>(activity);
-
-        //Create pendingIntent to handle the authorization result intent back to the calling activity
-        final Intent resultIntent = new Intent(activity.getApplicationContext(), activity.getClass());
         mResultIntent = PendingIntent.getActivity(activity.getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
@@ -74,9 +72,6 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         final Browser browser = BrowserSelector.select(mReferencedActivity.get().getApplicationContext());
 
         //ClientException will be thrown if no browser found.
-        /*
-         * Create authIntent.
-         */
         Intent authIntent;
         if (browser.isCustomTabsServiceSupported()) {
             Logger.info(
