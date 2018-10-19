@@ -235,6 +235,23 @@ public final class AuthorizationActivity extends Activity {
         outState.putString(KEY_AUTH_REQUEST_URL, mAuthorizationRequestUrl);
     }
 
+    @Override
+    public void onBackPressed() {
+        Logger.verbose(TAG, "Back button is pressed");
+        if ( null != mWebView && mWebView.canGoBack()) {
+            // User should be able to click back button to cancel. Counting blank page as well.
+            final int BACK_PRESSED_STEPS = -2;
+            if (!mWebView.canGoBackOrForward(BACK_PRESSED_STEPS)) {
+                cancelAuthorization();
+            } else {
+                mWebView.goBack();
+            }
+            return;
+        } else {
+            super.onBackPressed();
+        }
+    }
+
     /**
      * Set up the web view configurations.
      *
