@@ -142,7 +142,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean isRedirectUrl(@NonNull final String url) {
-        return url.startsWith(mRedirectUrl.toLowerCase(Locale.US));
+        return url.startsWith("http://127.0.0.1/someapp");//mRedirectUrl.toLowerCase(Locale.US));
     }
 
     private boolean isWebsiteRequestUrl(@NonNull final String url) {

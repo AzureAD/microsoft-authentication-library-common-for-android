@@ -29,7 +29,6 @@ import java.util.UUID;
 
 public class MicrosoftTokenRequest extends TokenRequest {
 
-    public static final String CODE_VERIFIER = "code_verifier";
     public static final String CLIENT_INFO = "client_info";
     public static final String CORRELATION_ID = "client-request-id";
 
@@ -37,22 +36,11 @@ public class MicrosoftTokenRequest extends TokenRequest {
         mClientInfoEnabled = "1";
     }
 
-    @SerializedName(CODE_VERIFIER)
-    private String mCodeVerifier;
-
     @SerializedName(CLIENT_INFO)
     private String mClientInfoEnabled;
 
     @SerializedName(CORRELATION_ID)
     private UUID mCorrelationId;
-
-    public String getCodeVerifier() {
-        return this.mCodeVerifier;
-    }
-
-    public void setCodeVerifier(String codeVerifier) {
-        this.mCodeVerifier = codeVerifier;
-    }
 
     public String getClientInfoEnabled() {
         return this.mClientInfoEnabled;

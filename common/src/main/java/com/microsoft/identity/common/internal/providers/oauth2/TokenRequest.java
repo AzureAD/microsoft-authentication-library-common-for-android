@@ -37,6 +37,8 @@ import com.google.gson.annotations.SerializedName;
  */
 public class TokenRequest {
 
+    public static final String CODE_VERIFIER = "code_verifier";
+
     @SerializedName("grant_type")
     private String mGrantType;
 
@@ -63,6 +65,17 @@ public class TokenRequest {
 
     @SerializedName("refresh_token")
     private String mRefreshToken;
+
+    @SerializedName(CODE_VERIFIER)
+    private String mCodeVerifier;
+
+    public String getCodeVerifier() {
+        return this.mCodeVerifier;
+    }
+
+    public void setCodeVerifier(String codeVerifier) {
+        this.mCodeVerifier = codeVerifier;
+    }
 
     /**
      * @return mCode of the token request.
