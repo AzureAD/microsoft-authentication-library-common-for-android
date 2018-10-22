@@ -737,8 +737,8 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public void setSingleSignOnState(final GenericAccount account,
-                                     final GenericRefreshToken refreshToken) {
+    public boolean setSingleSignOnState(final GenericAccount account,
+                                        final GenericRefreshToken refreshToken) {
         final String methodName = "setSingleSignOnState";
 
         try {
@@ -756,6 +756,7 @@ public class MsalOAuth2TokenCache
             mAccountCredentialCache.saveAccount(accountDto);
             mAccountCredentialCache.saveCredential(idToken);
             mAccountCredentialCache.saveCredential(rt);
+            return true;
         } catch (ClientException e) {
             Logger.error(
                     TAG + ":" + methodName,
@@ -765,6 +766,7 @@ public class MsalOAuth2TokenCache
                             e
                     )
             );
+            return false;
         }
     }
 
