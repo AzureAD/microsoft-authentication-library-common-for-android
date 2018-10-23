@@ -73,7 +73,8 @@ public class DefaultTokenCacheItemAdapter implements ITokenCacheItemAdapter {
                     scope,
                     clientId,
                     isFrt,
-                    environment
+                    environment,
+                    null
             );
 
             result.add(new Pair<>(currentAccount, refreshToken));

@@ -39,10 +39,12 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -160,7 +162,21 @@ public class AzureActiveDirectory
         }
 
         sIsInitialized = true;
+    }
 
+    public static Set<String> getHosts() {
+        if (null != sAadClouds) {
+            return sAadClouds.keySet();
+        }
+        return null;
+    }
+
+    public static List<AzureActiveDirectoryCloud> getClouds() {
+        if (null != sAadClouds) {
+            return new ArrayList<>(sAadClouds.values());
+        }
+
+        return new ArrayList<>();
     }
 
     /**
