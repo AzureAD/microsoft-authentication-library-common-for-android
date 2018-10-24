@@ -58,14 +58,7 @@ public class MicrosoftStsAccountCredentialAdapter
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
         Logger.verbose(TAG, "Creating Account");
-        final AccountRecord account = new AccountRecord(strategy.createAccount(response));
-        // TODO -- Setting the environment here is a bit of a workaround...
-        // The Account created by the strategy sets the environment to get the 'iss' from the IdToken
-        // For caching purposes, this may not be the correct value due to the preferred cache identifier
-        // in the InstanceDiscoveryMetadata
-        account.setEnvironment(strategy.getIssuerCacheIdentifier(request));
-
-        return account;
+        return new AccountRecord(strategy.createAccount(response));
     }
 
     @Override
@@ -93,7 +86,6 @@ public class MicrosoftStsAccountCredentialAdapter
             // Optional fields
             accessToken.setExtendedExpiresOn(getExtendedExpiresOn(response));
             accessToken.setAuthority(request.getAuthority().toString());
-            accessToken.setClientInfo(response.getClientInfo());
             accessToken.setAccessTokenType(response.getTokenType());
 
             return accessToken;
@@ -123,7 +115,6 @@ public class MicrosoftStsAccountCredentialAdapter
             // Optional
             refreshToken.setFamilyId(response.getFamilyId());
             refreshToken.setTarget(request.getScope());
-            refreshToken.setClientInfo(response.getClientInfo());
 
             // TODO are these needed? Expected?
             refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
@@ -176,7 +167,6 @@ public class MicrosoftStsAccountCredentialAdapter
         // Optional fields
         refreshTokenOut.setTarget(refreshTokenIn.getTarget());
         refreshTokenOut.setCachedAt(String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())));
-        refreshTokenOut.setClientInfo(refreshTokenIn.getClientInfo().getRawClientInfo());
         refreshTokenOut.setFamilyId(refreshTokenIn.getFamilyId());
 
         return refreshTokenOut;

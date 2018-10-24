@@ -27,7 +27,6 @@ import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -42,7 +41,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 import java.net.HttpURLConnection;
-import java.util.List;
 
 /**
  * The Azure Active Directory OAuth 2.0 Strategy.
@@ -181,10 +179,10 @@ public class AzureActiveDirectoryOAuth2Strategy
         } catch (ServiceException ccse) {
             Logger.error(TAG + ":" + methodName, "Failed to construct IDToken or ClientInfo", null);
             Logger.errorPII(TAG + ":" + methodName, "Failed with Exception", ccse);
-            // TODO: Should we bail?
+            throw new RuntimeException();
         }
 
-        final AzureActiveDirectoryAccount account = AzureActiveDirectoryAccount.create(idToken, clientInfo);
+        final AzureActiveDirectoryAccount account = new AzureActiveDirectoryAccount(idToken, clientInfo);
 
         Logger.info(TAG, "Account created");
         Logger.infoPII(TAG, account.toString());
@@ -208,7 +206,7 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(RefreshTokenRecord refreshToken, List<String> scopes) {
+    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest() {
         return null;
     }
 

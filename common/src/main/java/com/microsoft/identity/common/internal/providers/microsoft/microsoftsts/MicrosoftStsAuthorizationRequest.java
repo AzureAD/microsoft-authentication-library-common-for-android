@@ -31,7 +31,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAutho
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.util.Map;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
@@ -117,7 +116,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
         public MicrosoftStsAuthorizationRequest build() {
             this.setLibraryName("MSAL.Android");
-            this.setLibraryVersion("0.2.0");
+            this.setLibraryVersion("0.2.1");
             return new MicrosoftStsAuthorizationRequest(this);
         }
     }
@@ -141,8 +140,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
         Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
-        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
-            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        for (Map.Entry<String, Object> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
         }
 
         // Add extra qp, if present...
@@ -166,8 +165,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
     @Override
     public String getAuthorizationEndpoint() {
-
-        Uri authorityUri = Uri.parse(this.getAuthority().toString());
+        final Uri authorityUri = Uri.parse(this.getAuthority().toString());
         Uri endpointUri = authorityUri.buildUpon()
                 .appendPath(AUTHORIZATION_ENDPOINT)
                 .build();
