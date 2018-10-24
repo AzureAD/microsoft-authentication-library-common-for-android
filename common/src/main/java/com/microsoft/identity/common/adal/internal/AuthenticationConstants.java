@@ -378,8 +378,14 @@ public final class AuthenticationConstants {
          */
         public static final String CLAIMS = "claims";
 
+        /**
+         * String as JSON key to send client capabilities.
+         */
         public static final String CLIENT_CAPABILITIES_CLAIMS_LIST = "xms_cc";
 
+        /**
+         * String as JSON key to send access token claims.
+         */
         public static final String CLIENT_CAPABILITY_ACCESS_TOKEN = "access_token";
 
         /**

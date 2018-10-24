@@ -106,7 +106,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean handleUrl(final WebView view, final String url) {
-        //TODO : URL should not be lower cased . Remove this line after testing for impact.
         final String formattedURL = url.toLowerCase(Locale.US);
 
         if (isPkeyAuthUrl(formattedURL)) {
