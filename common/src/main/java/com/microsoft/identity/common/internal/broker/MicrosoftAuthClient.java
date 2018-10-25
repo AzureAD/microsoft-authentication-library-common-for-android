@@ -31,6 +31,9 @@ import android.content.Intent;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
 
+/**
+ * Client that wraps the code necessary to bind to the MicrosoftAuthService (Android Bound Service)
+ */
 public class MicrosoftAuthClient {
 
     private static final String TAG = MicrosoftAuthClient.class.getSimpleName();
@@ -41,11 +44,19 @@ public class MicrosoftAuthClient {
     private MicrosoftAuthServiceConnection mMicrosoftAuthServiceConnection;
     private Intent mMicrosoftAuthServiceIntent;
 
+    /**
+     * Constructor for the Microsoft Auth Client
+     * @param context
+     */
     public MicrosoftAuthClient(Context context){
         mContext = context;
         mMicrosoftAuthServiceIntent = getIntentForAuthService(mContext);
     }
 
+    /**
+     * Binds to the service and returns a future that provides the proxy for the calling the Microsoft auth service
+     * @return MicrosoftAuthServiceFuture
+     */
     public MicrosoftAuthServiceFuture connect(){
 
         MicrosoftAuthServiceFuture future = new MicrosoftAuthServiceFuture();
@@ -62,10 +73,20 @@ public class MicrosoftAuthClient {
         return future;
     }
 
+    /**
+     * Disconnects (unbinds) from the bound Microsoft Auth Service
+     */
     public void disconnect(){
         mContext.unbindService(mMicrosoftAuthServiceConnection);
     }
 
+
+    /**
+     * Gets the intent that points to the bound service on the device... if available
+     * You shouldn't get this far if it's not available
+     * @param context
+     * @return Intent
+     */
     private Intent getIntentForAuthService(final Context context) {
         String currentActiveBrokerPackageName = getCurrentActiveBrokerPackageName(context);
         if (currentActiveBrokerPackageName == null || currentActiveBrokerPackageName.length() == 0) {
@@ -79,6 +100,12 @@ public class MicrosoftAuthClient {
     }
 
 
+    /**
+     * Returns the package that is currently active relative to the Work Account custom account type
+     * Note: either the company portal or the authenticator
+     * @param context
+     * @return String
+     */
     private String getCurrentActiveBrokerPackageName(final Context context) {
         AuthenticatorDescription[] authenticators = AccountManager.get(context).getAuthenticatorTypes();
         for (AuthenticatorDescription authenticator : authenticators) {

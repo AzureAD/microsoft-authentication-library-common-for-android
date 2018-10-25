@@ -46,6 +46,7 @@ public class MicrosoftAuthServiceConnection implements android.content.ServiceCo
     }
 
     /*
+
     //Needed for API level 26 and above
     @Override
     public void onBindingDied(ComponentName name){
