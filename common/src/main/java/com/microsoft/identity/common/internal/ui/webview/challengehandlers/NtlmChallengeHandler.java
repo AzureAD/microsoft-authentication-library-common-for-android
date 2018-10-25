@@ -41,7 +41,7 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallenge, Void> {
     private static final String TAG = NtlmChallengeHandler.class.getSimpleName();
     private Activity mActivity;
-    private IChallengeCompletionCallback mChallengeCallback;
+    private IAuthorizationCompletionCallback mChallengeCallback;
 
     /**
      * Constructor of NtlmChallengeHandler.
@@ -50,7 +50,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
      * @param callback challenge completion callback which will process the challenge result.
      */
     public NtlmChallengeHandler(final Activity activity,
-                                final IChallengeCompletionCallback callback) {
+                                final IAuthorizationCompletionCallback callback) {
         mActivity = activity;
         mChallengeCallback = callback;
     }

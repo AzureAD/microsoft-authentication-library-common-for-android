@@ -42,7 +42,7 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeCompletionCallback;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -67,7 +67,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final String mRedirectUrl;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
-                                             @NonNull final IChallengeCompletionCallback callback,
+                                             @NonNull final IAuthorizationCompletionCallback callback,
                                              @NonNull final String redirectUrl) {
         super(activity, callback);
         getActivity().setContentView(R.layout.activity_authentication);
@@ -168,7 +168,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Intent resultIntent = new Intent();
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE, parameters.get(ERROR));
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_DESCRIPTION));
-            getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
+            getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_ERROR, resultIntent);
             view.stopLoading();
         } else {
             Logger.verbose(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
