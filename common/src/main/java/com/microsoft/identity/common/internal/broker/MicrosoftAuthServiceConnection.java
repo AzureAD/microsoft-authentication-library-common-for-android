@@ -34,7 +34,7 @@ public class MicrosoftAuthServiceConnection implements android.content.ServiceCo
     private IMicrosoftAuthService mMicrosoftAuthService;
     private MicrosoftAuthServiceFuture mMicrosoftAuthServiceFuture;
 
-    public MicrosoftAuthServiceConnection(MicrosoftAuthServiceFuture future){
+    public MicrosoftAuthServiceConnection(MicrosoftAuthServiceFuture future) {
         mMicrosoftAuthServiceFuture = future;
     }
 

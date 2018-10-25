@@ -33,9 +33,10 @@ public class BrokerResult {
 
     /**
      * Constructor for create successful broker result
+     *
      * @param tokenResult
      */
-    public BrokerResult(BrokerTokenResult tokenResult){
+    public BrokerResult(BrokerTokenResult tokenResult) {
         mTokenResult = tokenResult;
         mSuccess = true;
         mErrorResult = null;
@@ -43,9 +44,10 @@ public class BrokerResult {
 
     /**
      * Constructor for creating an unsuccessful broker response
+     *
      * @param errorResult
      */
-    public BrokerResult(BrokerErrorResult errorResult){
+    public BrokerResult(BrokerErrorResult errorResult) {
         mTokenResult = null;
         mSuccess = false;
         mErrorResult = errorResult;
@@ -53,25 +55,28 @@ public class BrokerResult {
 
     /**
      * Indicates whether the broker request was successful or not
+     *
      * @return
      */
-    public Boolean getSucceeded(){
+    public Boolean getSucceeded() {
         return mSuccess;
     }
 
     /**
      * Gets the token result associated with a successful request
+     *
      * @return
      */
-    public BrokerTokenResult getTokenResult(){
+    public BrokerTokenResult getTokenResult() {
         return mTokenResult;
     }
 
     /**
      * Gets the error result associated with a failed request
+     *
      * @return
      */
-    public BrokerErrorResult getErrorResult(){
+    public BrokerErrorResult getErrorResult() {
         return mErrorResult;
     }
 

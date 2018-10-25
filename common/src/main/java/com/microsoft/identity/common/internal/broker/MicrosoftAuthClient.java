@@ -46,18 +46,20 @@ public class MicrosoftAuthClient {
 
     /**
      * Constructor for the Microsoft Auth Client
+     *
      * @param context
      */
-    public MicrosoftAuthClient(Context context){
+    public MicrosoftAuthClient(Context context) {
         mContext = context;
         mMicrosoftAuthServiceIntent = getIntentForAuthService(mContext);
     }
 
     /**
      * Binds to the service and returns a future that provides the proxy for the calling the Microsoft auth service
+     *
      * @return MicrosoftAuthServiceFuture
      */
-    public MicrosoftAuthServiceFuture connect(){
+    public MicrosoftAuthServiceFuture connect() {
 
         MicrosoftAuthServiceFuture future = new MicrosoftAuthServiceFuture();
         mMicrosoftAuthServiceConnection = new MicrosoftAuthServiceConnection(future);
@@ -76,7 +78,7 @@ public class MicrosoftAuthClient {
     /**
      * Disconnects (unbinds) from the bound Microsoft Auth Service
      */
-    public void disconnect(){
+    public void disconnect() {
         mContext.unbindService(mMicrosoftAuthServiceConnection);
     }
 
@@ -84,6 +86,7 @@ public class MicrosoftAuthClient {
     /**
      * Gets the intent that points to the bound service on the device... if available
      * You shouldn't get this far if it's not available
+     *
      * @param context
      * @return Intent
      */
@@ -103,6 +106,7 @@ public class MicrosoftAuthClient {
     /**
      * Returns the package that is currently active relative to the Work Account custom account type
      * Note: either the company portal or the authenticator
+     *
      * @param context
      * @return String
      */
@@ -116,11 +120,6 @@ public class MicrosoftAuthClient {
 
         return null;
     }
-
-
-
-
-
 
 
 }
