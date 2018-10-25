@@ -39,7 +39,6 @@ public class MicrosoftAuthClient {
 
     private Context mContext;
     private MicrosoftAuthServiceConnection mMicrosoftAuthServiceConnection;
-    private IMicrosoftAuthService mMicrosoftAuthService;
     private Intent mMicrosoftAuthServiceIntent;
 
     public MicrosoftAuthClient(Context context){

@@ -7,9 +7,9 @@ import java.util.Date;
  */
 public class BrokerTokenResult {
 
-    private String mAccessToken;
-    private String mRefreshToken;
-    private String mIdToken;
-    private String mClientInfo;
+    private String mAccessToken;//NOPMD
+    private String mRefreshToken;//NOPMD
+    private String mIdToken;//NOPMD
+    private String mClientInfo;//NOPMD
 
 }
