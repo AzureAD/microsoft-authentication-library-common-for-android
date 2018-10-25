@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -45,18 +46,20 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
         return sInstance;
     }
 
-    public GenericAuthorizationStrategy getAuthorizationStrategy(Activity activity, @NonNull AuthorizationAgent authorizationAgent) {
+    public GenericAuthorizationStrategy getAuthorizationStrategy(Activity activity,
+                                                                 @NonNull AuthorizationAgent authorizationAgent,
+                                                                 @NonNull Intent resultIntent) {
         //Valid if available browser installed. Will fallback to embedded webView if no browser available.
         final AuthorizationAgent validatedAuthorizationAgent = validAuthorizationAgent(authorizationAgent, activity.getApplicationContext());
 
         if (validatedAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
             Logger.info(TAG, "Use webView for authorization.");
-            return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(activity));
+            return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(activity, resultIntent));
         }
 
         // Use device browser auth flow as default.
         Logger.info(TAG, "Use browser for authorization.");
-        return (GenericAuthorizationStrategy) (new BrowserAuthorizationStrategy(activity));
+        return (GenericAuthorizationStrategy) (new BrowserAuthorizationStrategy(activity, resultIntent));
     }
 
     private AuthorizationAgent validAuthorizationAgent(final AuthorizationAgent agent, final Context context) {

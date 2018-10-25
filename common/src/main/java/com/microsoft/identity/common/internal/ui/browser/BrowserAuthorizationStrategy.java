@@ -23,8 +23,10 @@
 package com.microsoft.identity.common.internal.ui.browser;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -46,13 +48,15 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
 
     private CustomTabsManager mCustomTabManager;
     private WeakReference<Activity> mReferencedActivity;
+    private PendingIntent mResultIntent;
     private AuthorizationResultFuture mAuthorizationResultFuture;
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
-    public BrowserAuthorizationStrategy(Activity activity) {
+    public BrowserAuthorizationStrategy(@NonNull Activity activity, @NonNull Intent resultIntent) {
         mReferencedActivity = new WeakReference<>(activity);
+        mResultIntent = PendingIntent.getActivity(activity.getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     @Override
@@ -90,14 +94,15 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         authIntent.setPackage(browser.getPackageName());
         final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
         authIntent.setData(requestUrl);
-        mReferencedActivity.get().startActivityForResult(
+
+        mReferencedActivity.get().startActivity(
                 AuthorizationActivity.createStartIntent(
                         mReferencedActivity.get().getApplicationContext(),
                         authIntent,
+                        mResultIntent,
                         requestUrl.toString(),
                         mAuthorizationRequest.getRedirectUri(),
-                        AuthorizationAgent.BROWSER),
-                BROWSER_FLOW);
+                        AuthorizationAgent.BROWSER));
 
         return mAuthorizationResultFuture;
     }

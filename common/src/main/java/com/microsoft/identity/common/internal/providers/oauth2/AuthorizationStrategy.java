@@ -46,6 +46,10 @@ public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2
 
     public static final String AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
 
+    public static final String RESULT_CODE = "com.microsoft.identity.client.result.code";
+
+    public static final String REQUEST_CODE = "com.microsoft.identity.client.request.code";
+
     public static final class UIResponse {
         /**
          * Represents that user cancelled the flow.
