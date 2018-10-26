@@ -32,8 +32,6 @@ import java.util.Calendar;
 
 public class AccessTokenTest {
 
-    private static final int ONE_MINUTE = 60;
-
     @Test
     public void testExpiry() {
         final AccessTokenRecord accessToken = new AccessTokenRecord();
@@ -41,22 +39,12 @@ public class AccessTokenTest {
         Assert.assertTrue(accessToken.isExpired());
     }
 
-    @Test
-    public void testExpiryWithExtExpiresOn() {
-        final AccessTokenRecord accessToken = new AccessTokenRecord();
-        final String currentTime = getCurrentTimeStr();
-        final String currentTimePlus5Min = String.valueOf(Long.valueOf(currentTime) + (5 * ONE_MINUTE));
-        accessToken.setExpiresOn(currentTime);
-        accessToken.setExtendedExpiresOn(currentTimePlus5Min);
-        Assert.assertFalse(accessToken.isExpired());
-    }
-
     private String getCurrentTimeStr() {
         return String.valueOf(
                 Calendar
                         .getInstance()
                         .getTime()
-                        .getTime() / 1000
+                        .getTime() / 1000 - 10
         );
     }
 }

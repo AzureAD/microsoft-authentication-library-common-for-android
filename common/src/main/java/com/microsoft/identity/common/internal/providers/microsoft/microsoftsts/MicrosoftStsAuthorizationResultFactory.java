@@ -105,7 +105,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
         } else if (urlParameters.containsKey(CODE)) {
-            result = validateAndCreateAuthorizationResult(urlParameters.get(CODE), urlParameters.get(STATE), requestStateParameter);
+            result = validateAndCreateAuthorizationResult(urlParameters, requestStateParameter);
         } else if (urlParameters.containsKey(ERROR)) {
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     urlParameters.get(ERROR), urlParameters.get(ERROR_DESCRIPTION));
@@ -118,10 +118,11 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
         return result;
     }
 
-    private MicrosoftStsAuthorizationResult validateAndCreateAuthorizationResult(final String code,
-                                                                                 final String state,
+    private MicrosoftStsAuthorizationResult validateAndCreateAuthorizationResult(final HashMap<String, String> urlParameters,
                                                                                  final String requestStateParameter) {
         MicrosoftStsAuthorizationResult result;
+        final String state = urlParameters.get(STATE);
+        final String code = urlParameters.get(CODE);
 
         if (StringUtil.isEmpty(state)) {
             Logger.warn(TAG, "State parameter is not returned from the webview redirect.");
@@ -135,7 +136,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
         } else {
 
             Logger.info(TAG, "Auth code is successfully returned from webview redirect.");
-            MicrosoftStsAuthorizationResponse authResponse = new MicrosoftStsAuthorizationResponse(code, state);
+            MicrosoftStsAuthorizationResponse authResponse = new MicrosoftStsAuthorizationResponse(code, state, urlParameters);
             result = new MicrosoftStsAuthorizationResult(AuthorizationStatus.SUCCESS, authResponse);
         }
 

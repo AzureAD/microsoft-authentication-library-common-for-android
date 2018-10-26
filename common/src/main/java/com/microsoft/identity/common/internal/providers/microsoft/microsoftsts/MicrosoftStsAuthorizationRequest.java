@@ -116,7 +116,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
         public MicrosoftStsAuthorizationRequest build() {
             this.setLibraryName("MSAL.Android");
-            this.setLibraryVersion("0.2.0");
+            this.setLibraryVersion("0.2.1");
             return new MicrosoftStsAuthorizationRequest(this);
         }
     }
@@ -140,8 +140,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
         Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
-        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
-            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        for (Map.Entry<String, Object> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
         }
 
         // Add extra qp, if present...
