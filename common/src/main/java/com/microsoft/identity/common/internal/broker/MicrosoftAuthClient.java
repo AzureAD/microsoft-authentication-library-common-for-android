@@ -29,6 +29,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 /**
@@ -43,6 +44,7 @@ public class MicrosoftAuthClient {
     private Context mContext;
     private MicrosoftAuthServiceConnection mMicrosoftAuthServiceConnection;
     private Intent mMicrosoftAuthServiceIntent;
+    private Boolean mBound = false;
 
     /**
      * Constructor for the Microsoft Auth Client
@@ -59,17 +61,16 @@ public class MicrosoftAuthClient {
      *
      * @return MicrosoftAuthServiceFuture
      */
-    public MicrosoftAuthServiceFuture connect() {
+    public MicrosoftAuthServiceFuture connect() throws ClientException {
 
         MicrosoftAuthServiceFuture future = new MicrosoftAuthServiceFuture();
         mMicrosoftAuthServiceConnection = new MicrosoftAuthServiceConnection(future);
 
-        final boolean serviceBound = mContext.bindService(mMicrosoftAuthServiceIntent, mMicrosoftAuthServiceConnection, Context.BIND_AUTO_CREATE);
-        Logger.verbose(TAG + "connect", "The status for MicrosoftAuthService bindService call is: " + Boolean.valueOf(serviceBound));
+        mBound = mContext.bindService(mMicrosoftAuthServiceIntent, mMicrosoftAuthServiceConnection, Context.BIND_AUTO_CREATE);
+        Logger.verbose(TAG + "connect", "The status for MicrosoftAuthService bindService call is: " + Boolean.valueOf(mBound));
 
-        if (!serviceBound) {
-            disconnect();
-            throw new RuntimeException("Unable to bind to service");
+        if (!mBound) {
+            throw new ClientException("Service is unavailable or does not support binding.  Microsoft Auth Service.");
         }
 
         return future;
@@ -79,7 +80,10 @@ public class MicrosoftAuthClient {
      * Disconnects (unbinds) from the bound Microsoft Auth Service
      */
     public void disconnect() {
-        mContext.unbindService(mMicrosoftAuthServiceConnection);
+        if(mBound) {
+            mContext.unbindService(mMicrosoftAuthServiceConnection);
+            mBound = false;
+        }
     }
 
 
