@@ -20,24 +20,64 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-
 package com.microsoft.identity.common.internal.broker;
 
 /**
- * internal Callback for handling asynchronous call.
+ * Encapsulates the possible responses from the broker.  Both successful response and error response.
  */
-interface Callback<T> {
-    /**
-     * Will be invoked if event triggered is correctly processed.
-     *
-     * @param result The success result.
-     */
-    void onSuccess(T result);
+public class BrokerResult {
+
+    private BrokerTokenResult mTokenResult;
+    private BrokerErrorResult mErrorResult;
+    private Boolean mSuccess = false;
 
     /**
-     * Will be invoked for the error case.
+     * Constructor for create successful broker result
      *
-     * @param throwable The {@link Throwable} for the error case.
+     * @param tokenResult
      */
-    void onError(Throwable throwable);
+    public BrokerResult(BrokerTokenResult tokenResult) {
+        mTokenResult = tokenResult;
+        mSuccess = true;
+        mErrorResult = null;
+    }
+
+    /**
+     * Constructor for creating an unsuccessful broker response
+     *
+     * @param errorResult
+     */
+    public BrokerResult(BrokerErrorResult errorResult) {
+        mTokenResult = null;
+        mSuccess = false;
+        mErrorResult = errorResult;
+    }
+
+    /**
+     * Indicates whether the broker request was successful or not
+     *
+     * @return
+     */
+    public Boolean getSucceeded() {
+        return mSuccess;
+    }
+
+    /**
+     * Gets the token result associated with a successful request
+     *
+     * @return
+     */
+    public BrokerTokenResult getTokenResult() {
+        return mTokenResult;
+    }
+
+    /**
+     * Gets the error result associated with a failed request
+     *
+     * @return
+     */
+    public BrokerErrorResult getErrorResult() {
+        return mErrorResult;
+    }
+
 }
