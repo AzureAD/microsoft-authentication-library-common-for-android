@@ -315,7 +315,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
             final String utid = refreshToken.getTenantId();
             final String environment = new URL(refreshToken.getAuthority()).getHost();
 
-            JsonObject clientInfo = new JsonObject();
+            final JsonObject clientInfo = new JsonObject();
             clientInfo.addProperty("uid", uid);
             clientInfo.addProperty("utid", utid);
 
