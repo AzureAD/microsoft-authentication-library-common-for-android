@@ -36,7 +36,7 @@ public interface IShareSingleSignOnState<T extends BaseAccount, U extends Refres
      * @param account      T
      * @param refreshToken U
      */
-    void setSingleSignOnState(T account, U refreshToken);
+    boolean setSingleSignOnState(T account, U refreshToken);
 
     /**
      * Get the single sign on state.
