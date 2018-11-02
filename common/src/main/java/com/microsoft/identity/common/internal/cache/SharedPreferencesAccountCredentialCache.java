@@ -46,9 +46,9 @@ import java.util.Set;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
-public class AccountCredentialCache implements IAccountCredentialCache {
+public class SharedPreferencesAccountCredentialCache implements IAccountCredentialCache {
 
-    private static final String TAG = AccountCredentialCache.class.getSimpleName();
+    private static final String TAG = SharedPreferencesAccountCredentialCache.class.getSimpleName();
 
     /**
      * The name of the SharedPreferences file on disk.
@@ -67,12 +67,12 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     private final ICacheKeyValueDelegate mCacheValueDelegate;
 
     /**
-     * Constructor of AccountCredentialCache.
+     * Constructor of SharedPreferencesAccountCredentialCache.
      *
      * @param accountCacheValueDelegate    ICacheKeyValueDelegate
      * @param sharedPreferencesFileManager ISharedPreferencesFileManager
      */
-    public AccountCredentialCache(
+    public SharedPreferencesAccountCredentialCache(
             @NonNull final ICacheKeyValueDelegate accountCacheValueDelegate,
             @NonNull final ISharedPreferencesFileManager sharedPreferencesFileManager) {
         Logger.verbose(TAG, "Init: " + TAG);
