@@ -195,6 +195,20 @@ public class SharedPreferencesAccountCredentialCache implements IAccountCredenti
             @Nullable final String realm) {
         Logger.verbose(TAG, "Loading Accounts...");
 
+        final List<AccountRecord> allAccounts = getAccounts();
+
+        final List<AccountRecord> matchingAccounts = getAccountsFilteredByInternal(homeAccountId, environment, realm, allAccounts);
+
+        Logger.info(TAG, "Found [" + matchingAccounts.size() + "] matching Accounts...");
+
+        return matchingAccounts;
+    }
+
+    @NonNull
+    static List<AccountRecord> getAccountsFilteredByInternal(@Nullable String homeAccountId,
+                                                             @Nullable String environment,
+                                                             @Nullable String realm,
+                                                             @NonNull List<AccountRecord> allAccounts) {
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
         final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
@@ -202,7 +216,6 @@ public class SharedPreferencesAccountCredentialCache implements IAccountCredenti
         Logger.verbose(TAG, "Account lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]");
         Logger.verbose(TAG, "Account lookup filtered by realm? [" + mustMatchOnRealm + "]");
 
-        final List<AccountRecord> allAccounts = getAccounts();
         final List<AccountRecord> matchingAccounts = new ArrayList<>();
 
         for (final AccountRecord account : allAccounts) {
@@ -224,9 +237,6 @@ public class SharedPreferencesAccountCredentialCache implements IAccountCredenti
                 matchingAccounts.add(account);
             }
         }
-
-        Logger.info(TAG, "Found [" + matchingAccounts.size() + "] matching Accounts...");
-
         return matchingAccounts;
     }
 
@@ -281,6 +291,23 @@ public class SharedPreferencesAccountCredentialCache implements IAccountCredenti
             throw new IllegalArgumentException("Param [clientId] cannot be null.");
         }
 
+        Logger.verbose(TAG, "Loading Credentials...");
+        final List<Credential> allCredentials = getCredentials();
+
+        final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(homeAccountId, environment, credentialType, clientId, realm, target, allCredentials);
+
+        Logger.info(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
+
+        return matchingCredentials;
+    }
+
+    static List<Credential> getCredentialsFilteredByInternal(@Nullable String homeAccountId,
+                                                             @Nullable String environment,
+                                                             @Nullable CredentialType credentialType,
+                                                             @Nullable String clientId,
+                                                             @Nullable String realm,
+                                                             @Nullable String target,
+                                                             @NonNull List<Credential> allCredentials) {
         final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
@@ -290,8 +317,7 @@ public class SharedPreferencesAccountCredentialCache implements IAccountCredenti
         Logger.verbose(TAG, "Credential lookup filtered by realm? [" + mustMatchOnRealm + "]");
         Logger.verbose(TAG, "Credential lookup filtered by target? [" + mustMatchOnTarget + "]");
 
-        Logger.verbose(TAG, "Loading Credentials...");
-        final List<Credential> allCredentials = getCredentials();
+
         final List<Credential> matchingCredentials = new ArrayList<>();
 
         for (final Credential credential : allCredentials) {
@@ -330,8 +356,6 @@ public class SharedPreferencesAccountCredentialCache implements IAccountCredenti
             }
         }
 
-        Logger.info(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
-
         return matchingCredentials;
     }
 
@@ -343,8 +367,8 @@ public class SharedPreferencesAccountCredentialCache implements IAccountCredenti
      * @return True, if the credentialTarget contains all of the targets (scopes) declared by
      * targetToMatch. False otherwise.
      */
-    private boolean targetsIntersect(@NonNull final String targetToMatch,
-                                     @NonNull final String credentialTarget) {
+    private static boolean targetsIntersect(@NonNull final String targetToMatch,
+                                            @NonNull final String credentialTarget) {
         // The credentialTarget must contain all of the scopes in the targetToMatch
         // It may contain more, but it must contain minimally those
         // Matching is case-insensitive
@@ -439,7 +463,16 @@ public class SharedPreferencesAccountCredentialCache implements IAccountCredenti
 
         Logger.verbose(TAG, "CredentialType matched: [" + targetType + "]");
 
+        Class<? extends Credential> credentialClass = getTargetClassForCredentialType(cacheKey, targetType);
+
+        return credentialClass;
+    }
+
+    @Nullable
+    static Class<? extends Credential> getTargetClassForCredentialType(@Nullable String cacheKey,
+                                                                       @NonNull CredentialType targetType) {
         Class<? extends Credential> credentialClass = null;
+
         switch (targetType) {
             case AccessToken:
                 credentialClass = AccessTokenRecord.class;
@@ -453,7 +486,9 @@ public class SharedPreferencesAccountCredentialCache implements IAccountCredenti
             default:
                 Logger.warn(TAG, "Could not match CredentialType to class."
                         + "Did you forget to update this method with a new type?");
-                Logger.warnPII(TAG, "Sought key was: [" + cacheKey + "]");
+                if (null != cacheKey) {
+                    Logger.warnPII(TAG, "Sought key was: [" + cacheKey + "]");
+                }
         }
 
         return credentialClass;
