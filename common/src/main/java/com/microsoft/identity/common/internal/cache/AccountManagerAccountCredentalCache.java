@@ -51,11 +51,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.getAccountsFilteredByInternal;
-import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.getCredentialsFilteredByInternal;
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.getTargetClassForCredentialType;
 
-public class AccountManagerAccountCredentalCache implements IAccountCredentialCache {
+public class AccountManagerAccountCredentalCache extends AbstractAccountCredentialCache {
 
     private static final String TAG = AccountManagerAccountCredentalCache.class.getSimpleName();
     private static final String ACCOUNT_TYPE = "com.microsoft.workaccount";
