@@ -51,8 +51,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.getTargetClassForCredentialType;
-
 public class AccountManagerAccountCredentalCache extends AbstractAccountCredentialCache {
 
     private static final String TAG = AccountManagerAccountCredentalCache.class.getSimpleName();

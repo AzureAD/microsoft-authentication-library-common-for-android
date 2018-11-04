@@ -30,6 +30,7 @@ import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -41,6 +42,32 @@ import java.util.Set;
 public abstract class AbstractAccountCredentialCache implements IAccountCredentialCache {
 
     private static final String TAG = AbstractAccountCredentialCache.class.getSimpleName();
+
+    @Nullable
+    protected Class<? extends Credential> getTargetClassForCredentialType(@Nullable String cacheKey,
+                                                                          @NonNull CredentialType targetType) {
+        Class<? extends Credential> credentialClass = null;
+
+        switch (targetType) {
+            case AccessToken:
+                credentialClass = AccessTokenRecord.class;
+                break;
+            case RefreshToken:
+                credentialClass = RefreshTokenRecord.class;
+                break;
+            case IdToken:
+                credentialClass = IdTokenRecord.class;
+                break;
+            default:
+                Logger.warn(TAG, "Could not match CredentialType to class."
+                        + "Did you forget to update this method with a new type?");
+                if (null != cacheKey) {
+                    Logger.warnPII(TAG, "Sought key was: [" + cacheKey + "]");
+                }
+        }
+
+        return credentialClass;
+    }
 
     @NonNull
     protected List<AccountRecord> getAccountsFilteredByInternal(@Nullable String homeAccountId,
