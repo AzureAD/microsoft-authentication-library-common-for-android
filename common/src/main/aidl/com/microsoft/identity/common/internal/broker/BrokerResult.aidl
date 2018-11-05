@@ -23,5 +23,5 @@
 
 package com.microsoft.identity.common.internal.broker;
 
-// Parcelable for BrokerRequest
+// Parcelable for BrokerResult
 parcelable BrokerResult;
