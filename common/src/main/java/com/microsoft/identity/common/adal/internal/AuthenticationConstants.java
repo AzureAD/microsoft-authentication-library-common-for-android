@@ -930,7 +930,12 @@ public final class AuthenticationConstants {
         /**
          * String to send Msal V2 Request params.
          */
-        public static final String BROKER_REQUEST_MSAL = "broker.request.msal";
+        public static final String BROKER_REQUEST_V2 = "broker.request.v2";
+
+        /**
+         * String to send Msal V2 Request params.
+         */
+        public static final String BROKER_RESULT_V2 = "broker.result.v2";
         /**
          * String for ssl prefix.
          */

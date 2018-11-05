@@ -22,43 +22,77 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Encapsulates the possible responses from the broker.  Both successful response and error response.
  */
-public class BrokerResult {
+public class BrokerResult implements Parcelable {
 
-    private BrokerTokenResult mTokenResult;
-    private BrokerErrorResult mErrorResult;
-    private Boolean mSuccess = false;
+    private BrokerTokenResponse mTokenResponse;
+    private BrokerErrorResponse mErrorResponse;
+    private boolean mSuccess;
 
     /**
      * Constructor for create successful broker result
      *
      * @param tokenResult
      */
-    public BrokerResult(BrokerTokenResult tokenResult) {
-        mTokenResult = tokenResult;
+    public BrokerResult(BrokerTokenResponse tokenResult) {
+        mTokenResponse = tokenResult;
         mSuccess = true;
-        mErrorResult = null;
+        mErrorResponse = null;
     }
 
     /**
      * Constructor for creating an unsuccessful broker response
      *
-     * @param errorResult
+     * @param errorResponse
      */
-    public BrokerResult(BrokerErrorResult errorResult) {
-        mTokenResult = null;
+    public BrokerResult(BrokerErrorResponse errorResponse) {
+        mTokenResponse = null;
         mSuccess = false;
-        mErrorResult = errorResult;
+        mErrorResponse = errorResponse;
     }
+
+    protected BrokerResult(Parcel in) {
+        mSuccess = in.readInt() != 0;
+        mTokenResponse = in.readParcelable(BrokerTokenResponse.class.getClassLoader());
+        mErrorResponse = in.readParcelable(BrokerErrorResponse.class.getClassLoader());
+
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt((mSuccess ? 1 : 0));
+        dest.writeParcelable(mTokenResponse, flags);
+        dest.writeParcelable(mErrorResponse, flags);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<BrokerResult> CREATOR = new Creator<BrokerResult>() {
+        @Override
+        public BrokerResult createFromParcel(Parcel in) {
+            return new BrokerResult(in);
+        }
+
+        @Override
+        public BrokerResult[] newArray(int size) {
+            return new BrokerResult[size];
+        }
+    };
 
     /**
      * Indicates whether the broker request was successful or not
      *
      * @return
      */
-    public Boolean getSucceeded() {
+    public boolean isSuccessful() {
         return mSuccess;
     }
 
@@ -67,8 +101,8 @@ public class BrokerResult {
      *
      * @return
      */
-    public BrokerTokenResult getTokenResult() {
-        return mTokenResult;
+    public BrokerTokenResponse getTokenResult() {
+        return mTokenResponse;
     }
 
     /**
@@ -76,8 +110,8 @@ public class BrokerResult {
      *
      * @return
      */
-    public BrokerErrorResult getErrorResult() {
-        return mErrorResult;
+    public BrokerErrorResponse getErrorResult() {
+        return mErrorResponse;
     }
 
 }
