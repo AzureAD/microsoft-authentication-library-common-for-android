@@ -46,9 +46,9 @@ import java.util.Set;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
-public class AccountCredentialCache implements IAccountCredentialCache {
+public class SharedPreferencesAccountCredentialCache extends AbstractAccountCredentialCache {
 
-    private static final String TAG = AccountCredentialCache.class.getSimpleName();
+    private static final String TAG = SharedPreferencesAccountCredentialCache.class.getSimpleName();
 
     /**
      * The name of the SharedPreferences file on disk.
@@ -67,12 +67,12 @@ public class AccountCredentialCache implements IAccountCredentialCache {
     private final ICacheKeyValueDelegate mCacheValueDelegate;
 
     /**
-     * Constructor of AccountCredentialCache.
+     * Constructor of SharedPreferencesAccountCredentialCache.
      *
      * @param accountCacheValueDelegate    ICacheKeyValueDelegate
      * @param sharedPreferencesFileManager ISharedPreferencesFileManager
      */
-    public AccountCredentialCache(
+    public SharedPreferencesAccountCredentialCache(
             @NonNull final ICacheKeyValueDelegate accountCacheValueDelegate,
             @NonNull final ISharedPreferencesFileManager sharedPreferencesFileManager) {
         Logger.verbose(TAG, "Init: " + TAG);
@@ -195,35 +195,14 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             @Nullable final String realm) {
         Logger.verbose(TAG, "Loading Accounts...");
 
-        final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
-        final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
-        final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
-
-        Logger.verbose(TAG, "Account lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]");
-        Logger.verbose(TAG, "Account lookup filtered by realm? [" + mustMatchOnRealm + "]");
-
         final List<AccountRecord> allAccounts = getAccounts();
-        final List<AccountRecord> matchingAccounts = new ArrayList<>();
 
-        for (final AccountRecord account : allAccounts) {
-            boolean matches = true;
-
-            if (mustMatchOnHomeAccountId) {
-                matches = homeAccountId.equalsIgnoreCase(account.getHomeAccountId());
-            }
-
-            if (mustMatchOnEnvironment) {
-                matches = matches && environment.equalsIgnoreCase(account.getEnvironment());
-            }
-
-            if (mustMatchOnRealm) {
-                matches = matches && realm.equalsIgnoreCase(account.getRealm());
-            }
-
-            if (matches) {
-                matchingAccounts.add(account);
-            }
-        }
+        final List<AccountRecord> matchingAccounts = getAccountsFilteredByInternal(
+                homeAccountId,
+                environment,
+                realm,
+                allAccounts
+        );
 
         Logger.info(TAG, "Found [" + matchingAccounts.size() + "] matching Accounts...");
 
@@ -281,91 +260,22 @@ public class AccountCredentialCache implements IAccountCredentialCache {
             throw new IllegalArgumentException("Param [clientId] cannot be null.");
         }
 
-        final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
-        final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
-        final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
-        final boolean mustMatchOnTarget = !StringExtensions.isNullOrBlank(target);
-
-        Logger.verbose(TAG, "Credential lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]");
-        Logger.verbose(TAG, "Credential lookup filtered by realm? [" + mustMatchOnRealm + "]");
-        Logger.verbose(TAG, "Credential lookup filtered by target? [" + mustMatchOnTarget + "]");
-
         Logger.verbose(TAG, "Loading Credentials...");
         final List<Credential> allCredentials = getCredentials();
-        final List<Credential> matchingCredentials = new ArrayList<>();
 
-        for (final Credential credential : allCredentials) {
-            boolean matches = true;
-
-            if (mustMatchOnHomeAccountId) {
-                matches = homeAccountId.equalsIgnoreCase(credential.getHomeAccountId());
-            }
-
-            if (mustMatchOnEnvironment) {
-                matches = matches && environment.equalsIgnoreCase(credential.getEnvironment());
-            }
-
-            matches = matches && credentialType.name().equalsIgnoreCase(credential.getCredentialType());
-            matches = matches && clientId.equalsIgnoreCase(credential.getClientId());
-
-            if (mustMatchOnRealm && credential instanceof AccessTokenRecord) {
-                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                matches = matches && realm.equalsIgnoreCase(accessToken.getRealm());
-            }
-
-            if (mustMatchOnTarget) {
-                if (credential instanceof AccessTokenRecord) {
-                    final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    matches = matches && targetsIntersect(target, accessToken.getTarget());
-                } else if (credential instanceof RefreshTokenRecord) {
-                    final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
-                    matches = matches && targetsIntersect(target, refreshToken.getTarget());
-                } else {
-                    Logger.warn(TAG, "Query specified target-match, but no target to match.");
-                }
-            }
-
-            if (matches) {
-                matchingCredentials.add(credential);
-            }
-        }
+        final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                homeAccountId,
+                environment,
+                credentialType,
+                clientId,
+                realm,
+                target,
+                allCredentials
+        );
 
         Logger.info(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
 
         return matchingCredentials;
-    }
-
-    /**
-     * Examines the intersections of the provided targets (scopes).
-     *
-     * @param targetToMatch    The target value[s] our cache-query is looking for.
-     * @param credentialTarget The target against which our sought value will be compared.
-     * @return True, if the credentialTarget contains all of the targets (scopes) declared by
-     * targetToMatch. False otherwise.
-     */
-    private boolean targetsIntersect(@NonNull final String targetToMatch,
-                                     @NonNull final String credentialTarget) {
-        // The credentialTarget must contain all of the scopes in the targetToMatch
-        // It may contain more, but it must contain minimally those
-        // Matching is case-insensitive
-        final String splitCriteria = "\\s+";
-        final String[] targetToMatchArray = targetToMatch.split(splitCriteria);
-        final String[] credentialTargetArray = credentialTarget.split(splitCriteria);
-
-        // Declare Sets to contain these scopes
-        final Set<String> soughtTargetSet = new HashSet<>();
-        final Set<String> credentialTargetSet = new HashSet<>();
-
-        // Add the array values to these sets, lowercasing them
-        for (final String target : targetToMatchArray) {
-            soughtTargetSet.add(target.toLowerCase());
-        }
-
-        for (final String target : credentialTargetArray) {
-            credentialTargetSet.add(target.toLowerCase());
-        }
-
-        return credentialTargetSet.containsAll(soughtTargetSet);
     }
 
     @Override
@@ -439,24 +349,7 @@ public class AccountCredentialCache implements IAccountCredentialCache {
 
         Logger.verbose(TAG, "CredentialType matched: [" + targetType + "]");
 
-        Class<? extends Credential> credentialClass = null;
-        switch (targetType) {
-            case AccessToken:
-                credentialClass = AccessTokenRecord.class;
-                break;
-            case RefreshToken:
-                credentialClass = RefreshTokenRecord.class;
-                break;
-            case IdToken:
-                credentialClass = IdTokenRecord.class;
-                break;
-            default:
-                Logger.warn(TAG, "Could not match CredentialType to class."
-                        + "Did you forget to update this method with a new type?");
-                Logger.warnPII(TAG, "Sought key was: [" + cacheKey + "]");
-        }
-
-        return credentialClass;
+        return getTargetClassForCredentialType(cacheKey, targetType);
     }
 
     /**

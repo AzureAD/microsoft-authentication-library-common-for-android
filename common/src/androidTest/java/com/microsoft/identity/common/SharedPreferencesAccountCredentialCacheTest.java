@@ -28,7 +28,7 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
-import com.microsoft.identity.common.internal.cache.AccountCredentialCache;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -53,7 +53,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @RunWith(AndroidJUnit4.class)
-public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
+public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
     static final String HOME_ACCOUNT_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
     static final String ENVIRONMENT = "login.microsoftonline.com";
@@ -74,11 +74,11 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     private static final String REALM2 = "20d3e9fa-982a-40bc-bea4-26bbe3fd332e";
     private static final String REALM3 = "fc5171ec-2889-4ba6-bd1f-216fe87a8613";
 
-    // The names of the SharedPreferences file on disk - must match AccountCredentialCache declaration to test impl
+    // The names of the SharedPreferences file on disk - must match SharedPreferencesAccountCredentialCache declaration to test impl
     private static final String sAccountCredentialSharedPreferences =
             "com.microsoft.identity.client.account_credential_cache";
 
-    private AccountCredentialCache mAccountCredentialCache;
+    private SharedPreferencesAccountCredentialCache mSharedPreferencesAccountCredentialCache;
     private CacheKeyValueDelegate mDelegate;
     private SharedPreferencesFileManager mSharedPreferencesFileManager;
 
@@ -92,7 +92,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
                 sAccountCredentialSharedPreferences,
                 new StorageHelper(testContext) // Use encrypted storage for tests...
         );
-        mAccountCredentialCache = new AccountCredentialCache(
+        mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
                 mDelegate,
                 mSharedPreferencesFileManager
         );
@@ -101,7 +101,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @After
     public void tearDown() {
         // Wipe the SharedPreferences between tests...
-        mAccountCredentialCache.clearAll();
+        mSharedPreferencesAccountCredentialCache.clearAll();
     }
 
     @Test
@@ -117,13 +117,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setName(NAME);
 
         // Save the Account
-        mAccountCredentialCache.saveAccount(account);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Synthesize a cache key for it
         final String accountCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Account
-        final AccountRecord restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
+        final AccountRecord restoredAccount = mSharedPreferencesAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
     }
 
@@ -137,13 +137,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setEnvironment(ENVIRONMENT);
 
         // Save the Account
-        mAccountCredentialCache.saveAccount(account);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Synthesize a cache key for it
         final String accountCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Account
-        final AccountRecord restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
+        final AccountRecord restoredAccount = mSharedPreferencesAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
     }
 
@@ -156,13 +156,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setAuthorityType(AUTHORITY_TYPE);
 
         // Save the Account
-        mAccountCredentialCache.saveAccount(account);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Synthesize a cache key for it
         final String accountCacheKey = mDelegate.generateCacheKey(account);
 
         // Resurrect the Account
-        final AccountRecord restoredAccount = mAccountCredentialCache.getAccount(accountCacheKey);
+        final AccountRecord restoredAccount = mSharedPreferencesAccountCredentialCache.getAccount(accountCacheKey);
         assertTrue(account.equals(restoredAccount));
     }
 
@@ -177,13 +177,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         idToken.setSecret(SECRET);
 
         // Save the Credential
-        mAccountCredentialCache.saveCredential(idToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(idToken);
 
         // Synthesize a cache key for it
         final String credentialCacheKey = mDelegate.generateCacheKey(idToken);
 
         // Resurrect the Credential
-        final Credential restoredIdToken = mAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredIdToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertEquals(idToken.getHomeAccountId(), restoredIdToken.getHomeAccountId());
         assertEquals(idToken.getEnvironment(), restoredIdToken.getEnvironment());
         assertEquals(idToken.getCredentialType(), restoredIdToken.getCredentialType());
@@ -202,13 +202,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setTarget(TARGET);
 
         // Save the Credential
-        mAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
 
         // Synthesize a cache key for it
         final String credentialCacheKey = mDelegate.generateCacheKey(refreshToken);
 
         // Resurrect the Credential
-        final Credential restoredRefreshToken = mAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredRefreshToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(refreshToken.equals(restoredRefreshToken));
     }
 
@@ -222,13 +222,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setSecret(SECRET);
 
         // Save the Credential
-        mAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
 
         // Synthesize a cache key for it
         final String credentialCacheKey = mDelegate.generateCacheKey(refreshToken);
 
         // Resurrect the Credential
-        final Credential restoredRefreshToken = mAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredRefreshToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(refreshToken.equals(restoredRefreshToken));
     }
 
@@ -244,13 +244,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setClientId(CLIENT_ID);
 
         // Save the Credential
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
         // Synthesize a cache key for it
         final String credentialCacheKey = mDelegate.generateCacheKey(accessToken);
 
         // Resurrect the Credential
-        final Credential restoredAccessToken = mAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredAccessToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(accessToken.equals(restoredAccessToken));
     }
 
@@ -266,13 +266,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setSecret(SECRET);
 
         // Save the Credential
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
         // Synthesize a cache key for it
         final String credentialCacheKey = mDelegate.generateCacheKey(accessToken);
 
         // Resurrect the Credential
-        final Credential restoredAccessToken = mAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredAccessToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(accessToken.equals(restoredAccessToken));
     }
 
@@ -286,13 +286,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setTarget(TARGET);
 
         // Save the Credential
-        mAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
 
         // Synthesize a cache key for it
         final String credentialCacheKey = mDelegate.generateCacheKey(refreshToken);
 
         // Resurrect the Credential
-        final Credential restoredRefreshToken = mAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredRefreshToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(refreshToken.equals(restoredRefreshToken));
     }
 
@@ -305,13 +305,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setTarget(TARGET);
 
         // Save the Credential
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
         // Synthesize a cache key for it
         final String credentialCacheKey = mDelegate.generateCacheKey(accessToken);
 
         // Resurrect the Credential
-        final Credential restoredAccessToken = mAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredAccessToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(accessToken.equals(restoredAccessToken));
     }
 
@@ -324,13 +324,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setSecret(SECRET);
 
         // Save the Credential
-        mAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
 
         // Synthesize a cache key for it
         final String credentialCacheKey = mDelegate.generateCacheKey(refreshToken);
 
         // Resurrect the Credential
-        final Credential restoredRefreshToken = mAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredRefreshToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertEquals(refreshToken, restoredRefreshToken);
     }
 
@@ -347,13 +347,13 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setSecret(SECRET);
 
         // Save the Credential
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
         // Synthesize a cache key for it
         final String credentialCacheKey = mDelegate.generateCacheKey(accessToken);
 
         // Resurrect the Credential
-        final Credential restoredAccessToken = mAccountCredentialCache.getCredential(credentialCacheKey);
+        final Credential restoredAccessToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
         assertTrue(accessToken.equals(restoredAccessToken));
     }
 
@@ -367,7 +367,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
-        mAccountCredentialCache.saveAccount(account);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Save an AccessToken into the cache
         final AccessTokenRecord accessToken = new AccessTokenRecord();
@@ -380,7 +380,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
         accessToken.setSecret(SECRET);
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
         // Save a RefreshToken into the cache
         final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
@@ -390,10 +390,10 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
-        mAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
 
         // Verify getAccountsFilteredBy() returns one matching element
-        final List<AccountRecord> accounts = mAccountCredentialCache.getAccounts();
+        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccounts();
         assertTrue(accounts.size() == 1);
         assertEquals(account, accounts.get(0));
     }
@@ -417,11 +417,11 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account2.setAuthorityType(AUTHORITY_TYPE);
 
         // Save the Accounts
-        mAccountCredentialCache.saveAccount(account1);
-        mAccountCredentialCache.saveAccount(account2);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account1);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account2);
 
         // Test retrieval
-        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(
+        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(
                 HOME_ACCOUNT_ID,
                 null,
                 REALM
@@ -440,10 +440,10 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setAuthorityType(AUTHORITY_TYPE);
 
         // Save the Account
-        mAccountCredentialCache.saveAccount(account);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, REALM);
+        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, REALM);
         assertEquals(1, accounts.size());
         final AccountRecord retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
@@ -462,10 +462,10 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setRealm(REALM);
 
         // Save the Account
-        mAccountCredentialCache.saveAccount(account);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, REALM);
+        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, REALM);
         assertEquals(1, accounts.size());
         final AccountRecord retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
@@ -484,10 +484,10 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setAuthorityType(AUTHORITY_TYPE);
 
         // Save the Account
-        mAccountCredentialCache.saveAccount(account);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, null);
+        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, null);
         assertEquals(1, accounts.size());
         final AccountRecord retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
@@ -506,10 +506,10 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setAuthorityType(AUTHORITY_TYPE);
 
         // Save the Account
-        mAccountCredentialCache.saveAccount(account);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Test retrieval
-        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, null);
+        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, null);
         assertEquals(1, accounts.size());
         final AccountRecord retrievedAccount = accounts.get(0);
         assertEquals(HOME_ACCOUNT_ID, retrievedAccount.getHomeAccountId());
@@ -552,12 +552,12 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account4.setRealm(REALM);
 
         // Save the Accounts
-        mAccountCredentialCache.saveAccount(account1);
-        mAccountCredentialCache.saveAccount(account2);
-        mAccountCredentialCache.saveAccount(account3);
-        mAccountCredentialCache.saveAccount(account4);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account1);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account2);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account3);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account4);
 
-        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, null);
+        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, null);
         assertEquals(3, accounts.size());
     }
 
@@ -596,12 +596,12 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account4.setRealm("quz");
 
         // Save the Accounts
-        mAccountCredentialCache.saveAccount(account1);
-        mAccountCredentialCache.saveAccount(account2);
-        mAccountCredentialCache.saveAccount(account3);
-        mAccountCredentialCache.saveAccount(account4);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account1);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account2);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account3);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account4);
 
-        final List<AccountRecord> accounts = mAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, REALM);
+        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccountsFilteredBy(null, ENVIRONMENT, REALM);
         assertEquals(3, accounts.size());
     }
 
@@ -615,7 +615,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
-        mAccountCredentialCache.saveAccount(account);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Save an AccessToken into the cache
         final AccessTokenRecord accessToken = new AccessTokenRecord();
@@ -628,7 +628,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
         accessToken.setSecret(SECRET);
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
         // Save a RefreshToken into the cache
         final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
@@ -638,10 +638,10 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
-        mAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
 
         // Verify getCredentials() returns two matching elements
-        final List<Credential> credentials = mAccountCredentialCache.getCredentials();
+        final List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentials();
         assertTrue(credentials.size() == 2);
     }
 
@@ -663,10 +663,10 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken2.setSecret(SECRET);
         refreshToken2.setTarget(TARGET);
 
-        mAccountCredentialCache.saveCredential(refreshToken1);
-        mAccountCredentialCache.saveCredential(refreshToken2);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken1);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken2);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                 HOME_ACCOUNT_ID,
                 null, // * wildcard
                 CredentialType.RefreshToken,
@@ -680,7 +680,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void getCredentialsNoCredentialType() {
         try {
-            mAccountCredentialCache.getCredentialsFilteredBy(
+            mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                     HOME_ACCOUNT_ID,
                     ENVIRONMENT,
                     null,
@@ -697,7 +697,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
     @Test
     public void getCredentialsNoClientId() {
         try {
-            mAccountCredentialCache.getCredentialsFilteredBy(
+            mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                     HOME_ACCOUNT_ID,
                     ENVIRONMENT,
                     CredentialType.RefreshToken,
@@ -733,10 +733,10 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setSecret(SECRET);
 
         // Save the Credentials
-        mAccountCredentialCache.saveCredential(refreshToken);
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                 HOME_ACCOUNT_ID,
                 ENVIRONMENT,
                 CredentialType.RefreshToken,
@@ -778,10 +778,10 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setSecret(SECRET);
 
         // Save the Credentials
-        mAccountCredentialCache.saveCredential(refreshToken);
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                 HOME_ACCOUNT_ID,
                 ENVIRONMENT,
                 CredentialType.RefreshToken,
@@ -828,10 +828,10 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setSecret(SECRET);
 
         // Save the Credentials
-        mAccountCredentialCache.saveCredential(refreshToken);
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                 HOME_ACCOUNT_ID,
                 ENVIRONMENT,
                 CredentialType.RefreshToken,
@@ -880,10 +880,10 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setSecret(SECRET);
 
         // Save the Credentials
-        mAccountCredentialCache.saveCredential(refreshToken);
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                 HOME_ACCOUNT_ID,
                 ENVIRONMENT,
                 CredentialType.RefreshToken,
@@ -922,10 +922,10 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setTarget(TARGET);
 
         // Save the Credentials
-        mAccountCredentialCache.saveCredential(refreshToken);
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                 null,
                 ENVIRONMENT,
                 CredentialType.RefreshToken,
@@ -969,11 +969,11 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken2.setTarget(TARGET);
 
         // Save the Credentials
-        mAccountCredentialCache.saveCredential(refreshToken);
-        mAccountCredentialCache.saveCredential(accessToken);
-        mAccountCredentialCache.saveCredential(accessToken2);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                 null,
                 ENVIRONMENT,
                 CredentialType.AccessToken,
@@ -1017,11 +1017,11 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken2.setTarget("qux");
 
         // Save the Credentials
-        mAccountCredentialCache.saveCredential(refreshToken);
-        mAccountCredentialCache.saveCredential(accessToken);
-        mAccountCredentialCache.saveCredential(accessToken2);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                 null,
                 ENVIRONMENT,
                 CredentialType.AccessToken,
@@ -1065,11 +1065,11 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken2.setTarget("qux");
 
         // Save the Credentials
-        mAccountCredentialCache.saveCredential(refreshToken);
-        mAccountCredentialCache.saveCredential(accessToken);
-        mAccountCredentialCache.saveCredential(accessToken2);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                 HOME_ACCOUNT_ID,
                 ENVIRONMENT,
                 CredentialType.AccessToken,
@@ -1113,11 +1113,11 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken2.setTarget(TARGET);
 
         // Save the Credentials
-        mAccountCredentialCache.saveCredential(refreshToken);
-        mAccountCredentialCache.saveCredential(accessToken);
-        mAccountCredentialCache.saveCredential(accessToken2);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                 HOME_ACCOUNT_ID,
                 ENVIRONMENT,
                 CredentialType.AccessToken,
@@ -1161,11 +1161,11 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken2.setSecret(SECRET);
 
         // Save the Credentials
-        mAccountCredentialCache.saveCredential(refreshToken);
-        mAccountCredentialCache.saveCredential(accessToken);
-        mAccountCredentialCache.saveCredential(accessToken2);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                 HOME_ACCOUNT_ID,
                 ENVIRONMENT,
                 CredentialType.AccessToken,
@@ -1209,11 +1209,11 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken2.setTarget(TARGET);
 
         // Save the Credentials
-        mAccountCredentialCache.saveCredential(refreshToken);
-        mAccountCredentialCache.saveCredential(accessToken);
-        mAccountCredentialCache.saveCredential(accessToken2);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
 
-        List<Credential> credentials = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
                 null,
                 ENVIRONMENT,
                 CredentialType.AccessToken,
@@ -1234,7 +1234,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
-        mAccountCredentialCache.saveAccount(account);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Save an AccessToken into the cache
         final AccessTokenRecord accessToken = new AccessTokenRecord();
@@ -1247,7 +1247,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
         accessToken.setSecret(SECRET);
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
         // Save a RefreshToken into the cache
         final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
@@ -1257,16 +1257,16 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
-        mAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
 
         // Call clearAccounts()
-        mAccountCredentialCache.removeAccount(account);
+        mSharedPreferencesAccountCredentialCache.removeAccount(account);
 
         // Verify getAccounts() returns zero items
-        assertTrue(mAccountCredentialCache.getAccounts().isEmpty());
+        assertTrue(mSharedPreferencesAccountCredentialCache.getAccounts().isEmpty());
 
         // Verify getCredentials() returns two items
-        final List<Credential> credentials = mAccountCredentialCache.getCredentials();
+        final List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentials();
         assertTrue(credentials.size() == 2);
     }
 
@@ -1280,7 +1280,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
-        mAccountCredentialCache.saveAccount(account);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Save an AccessToken into the cache
         final AccessTokenRecord accessToken = new AccessTokenRecord();
@@ -1293,7 +1293,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setCredentialType(CredentialType.AccessToken.name());
         accessToken.setClientId(CLIENT_ID);
         accessToken.setSecret(SECRET);
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
         // Save a RefreshToken into the cache
         final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
@@ -1303,17 +1303,17 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
-        mAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
 
         // Call clearCredentials()
-        mAccountCredentialCache.removeCredential(accessToken);
-        mAccountCredentialCache.removeCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.removeCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.removeCredential(refreshToken);
 
         // Verify getAccounts() returns 1 item
-        assertEquals(1, mAccountCredentialCache.getAccounts().size());
+        assertEquals(1, mSharedPreferencesAccountCredentialCache.getAccounts().size());
 
         // Verify getCredentials() returns zero items
-        assertEquals(0, mAccountCredentialCache.getCredentials().size());
+        assertEquals(0, mSharedPreferencesAccountCredentialCache.getCredentials().size());
     }
 
     @Test
@@ -1326,7 +1326,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         account.setLocalAccountId(LOCAL_ACCOUNT_ID);
         account.setUsername(USERNAME);
         account.setAuthorityType(AUTHORITY_TYPE);
-        mAccountCredentialCache.saveAccount(account);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
 
         // Save an AccessToken into the cache
         final AccessTokenRecord accessToken = new AccessTokenRecord();
@@ -1339,7 +1339,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         accessToken.setCachedAt(CACHED_AT);
         accessToken.setExpiresOn(EXPIRES_ON);
         accessToken.setSecret(SECRET);
-        mAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
 
         // Save a RefreshToken into the cache
         final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
@@ -1349,48 +1349,48 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
-        mAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
 
         // Call clearAll()
-        mAccountCredentialCache.clearAll();
+        mSharedPreferencesAccountCredentialCache.clearAll();
 
         // Verify getAccounts() returns zero items
-        assertTrue(mAccountCredentialCache.getAccounts().isEmpty());
+        assertTrue(mSharedPreferencesAccountCredentialCache.getAccounts().isEmpty());
 
         // Verify getCredentials() returns zero items
-        assertTrue(mAccountCredentialCache.getCredentials().isEmpty());
+        assertTrue(mSharedPreferencesAccountCredentialCache.getCredentials().isEmpty());
     }
 
     @Test(expected = RuntimeException.class) // TODO Should this *really* throw a RuntimeException
     public void testThrowsExceptionForMalformedCredentialCacheKey() {
-        mAccountCredentialCache.getCredential("Malformed cache key");
+        mSharedPreferencesAccountCredentialCache.getCredential("Malformed cache key");
     }
 
     @Test
     public void noValueForCacheKeyAccount() {
-        assertEquals(0, mAccountCredentialCache.getAccounts().size());
-        final AccountRecord account = (AccountRecord) mAccountCredentialCache.getAccount("No account");
+        assertEquals(0, mSharedPreferencesAccountCredentialCache.getAccounts().size());
+        final AccountRecord account = (AccountRecord) mSharedPreferencesAccountCredentialCache.getAccount("No account");
         assertNull(account);
     }
 
     @Test
     public void noValueForCacheKeyAccessToken() {
-        assertEquals(0, mAccountCredentialCache.getCredentials().size());
-        final AccessTokenRecord accessToken = (AccessTokenRecord) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.AccessToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        assertEquals(0, mSharedPreferencesAccountCredentialCache.getCredentials().size());
+        final AccessTokenRecord accessToken = (AccessTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.AccessToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
         assertNull(accessToken);
     }
 
     @Test
     public void noValueForCacheKeyRefreshToken() {
-        assertEquals(0, mAccountCredentialCache.getCredentials().size());
-        final RefreshTokenRecord refreshToken = (RefreshTokenRecord) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.RefreshToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        assertEquals(0, mSharedPreferencesAccountCredentialCache.getCredentials().size());
+        final RefreshTokenRecord refreshToken = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.RefreshToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
         assertNull(refreshToken);
     }
 
     @Test
     public void noValueForCacheKeyIdToken() {
-        assertEquals(0, mAccountCredentialCache.getCredentials().size());
-        final IdTokenRecord idToken = (IdTokenRecord) mAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.IdToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
+        assertEquals(0, mSharedPreferencesAccountCredentialCache.getCredentials().size());
+        final IdTokenRecord idToken = (IdTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(CACHE_VALUE_SEPARATOR + CredentialType.IdToken.name().toLowerCase() + CACHE_VALUE_SEPARATOR);
         assertNull(idToken);
     }
 
@@ -1406,7 +1406,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not an account\"}");
 
-        final AccountRecord malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
+        final AccountRecord malformedAccount = mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
         assertNull(malformedAccount);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
@@ -1423,7 +1423,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an account\"}");
 
-        final AccountRecord malformedAccount = mAccountCredentialCache.getAccount(cacheKey);
+        final AccountRecord malformedAccount = mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
         assertNull(malformedAccount);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
@@ -1441,7 +1441,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not an accessToken\"}");
 
-        final AccessTokenRecord malformedAccessToken = (AccessTokenRecord) mAccountCredentialCache.getCredential(cacheKey);
+        final AccessTokenRecord malformedAccessToken = (AccessTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedAccessToken);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
@@ -1459,7 +1459,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an accessToken\"}");
 
-        final AccessTokenRecord malformedAccessToken = (AccessTokenRecord) mAccountCredentialCache.getCredential(cacheKey);
+        final AccessTokenRecord malformedAccessToken = (AccessTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedAccessToken);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
@@ -1477,7 +1477,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not a refreshToken\"}");
 
-        final RefreshTokenRecord malformedRefreshToken = (RefreshTokenRecord) mAccountCredentialCache.getCredential(cacheKey);
+        final RefreshTokenRecord malformedRefreshToken = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedRefreshToken);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
@@ -1495,7 +1495,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not a refreshToken\"}");
 
-        final RefreshTokenRecord malformedRefreshToken = (RefreshTokenRecord) mAccountCredentialCache.getCredential(cacheKey);
+        final RefreshTokenRecord malformedRefreshToken = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedRefreshToken);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
@@ -1513,7 +1513,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\"  \"not an idToken\"}");
 
-        final IdTokenRecord restoredIdToken = (IdTokenRecord) mAccountCredentialCache.getCredential(cacheKey);
+        final IdTokenRecord restoredIdToken = (IdTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(restoredIdToken);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
@@ -1531,7 +1531,7 @@ public class AccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an idToken\"}");
 
-        final IdTokenRecord restoredIdToken = (IdTokenRecord) mAccountCredentialCache.getCredential(cacheKey);
+        final IdTokenRecord restoredIdToken = (IdTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(restoredIdToken);
         assertNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
