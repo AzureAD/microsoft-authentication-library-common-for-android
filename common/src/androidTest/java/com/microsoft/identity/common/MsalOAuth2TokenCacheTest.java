@@ -29,7 +29,7 @@ import android.support.test.runner.AndroidJUnit4;
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.cache.AccountCredentialCache;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
@@ -61,16 +61,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static com.microsoft.identity.common.AccountCredentialCacheTest.CACHED_AT;
-import static com.microsoft.identity.common.AccountCredentialCacheTest.CLIENT_ID;
-import static com.microsoft.identity.common.AccountCredentialCacheTest.ENVIRONMENT;
-import static com.microsoft.identity.common.AccountCredentialCacheTest.EXPIRES_ON;
-import static com.microsoft.identity.common.AccountCredentialCacheTest.HOME_ACCOUNT_ID;
-import static com.microsoft.identity.common.AccountCredentialCacheTest.LOCAL_ACCOUNT_ID;
-import static com.microsoft.identity.common.AccountCredentialCacheTest.REALM;
-import static com.microsoft.identity.common.AccountCredentialCacheTest.SECRET;
-import static com.microsoft.identity.common.AccountCredentialCacheTest.TARGET;
-import static com.microsoft.identity.common.AccountCredentialCacheTest.USERNAME;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CLIENT_ID;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.ENVIRONMENT;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.EXPIRES_ON;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.HOME_ACCOUNT_ID;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.LOCAL_ACCOUNT_ID;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SECRET;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.TARGET;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.USERNAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -234,7 +234,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final ICacheKeyValueDelegate keyValueDelegate = new CacheKeyValueDelegate();
 
-        accountCredentialCache = new AccountCredentialCache(
+        accountCredentialCache = new SharedPreferencesAccountCredentialCache(
                 keyValueDelegate,
                 mSharedPreferencesFileManager
         );
