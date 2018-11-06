@@ -29,6 +29,11 @@ import android.os.Parcelable;
  * Encapsulates the broker error result
  */
 public class BrokerErrorResponse implements Parcelable {
+
+    public static final String INTERACTION_REQUIRED = "interaction_required";
+
+    public static final String INVALID_GRANT = "invalid_grant";
+
     private int mErrorCode; //NOPMD
     private String mErrorMessage;//NOPMD
     private String mOAuthError;//NOPMD
@@ -81,6 +86,14 @@ public class BrokerErrorResponse implements Parcelable {
             return new BrokerErrorResponse[size];
         }
     };
+
+    public boolean isInteractionRequired() {
+        return mOAuthError.equalsIgnoreCase(INTERACTION_REQUIRED);
+    }
+
+    public boolean isInvalidGrant() {
+        return mOAuthError.equalsIgnoreCase(INVALID_GRANT);
+    }
 
     public int getErrorCode() {
         return mErrorCode;

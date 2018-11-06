@@ -101,7 +101,7 @@ public class BrokerResult implements Parcelable {
      *
      * @return
      */
-    public BrokerTokenResponse getTokenResult() {
+    public BrokerTokenResponse getTokenResponse() {
         return mTokenResponse;
     }
 
@@ -110,7 +110,7 @@ public class BrokerResult implements Parcelable {
      *
      * @return
      */
-    public BrokerErrorResponse getErrorResult() {
+    public BrokerErrorResponse getErrorResponse() {
         return mErrorResponse;
     }
 

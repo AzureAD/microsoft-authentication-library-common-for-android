@@ -34,6 +34,11 @@ import java.util.Date;
  */
 public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Parcelable{
 
+    private String mAuthority;
+    private String mTenantId;
+    private String mPrimaryRefreshToken;
+    private Date mExpiresNotBefore;
+
     public BrokerTokenResponse(){
 
     }
@@ -52,11 +57,15 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
         setClientId(in.readString());
         setExtExpiresIn(in.readLong());
         setFamilyId(in.readString());
+        setAuthority(in.readString());
+        setTenantId(in.readString());
+        setPrimaryRefreshToken(in.readString());
+        setExpiresNotBefore(new Date(in.readLong()));
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(getExpiresIn());
+        dest.writeLong(getExpiresIn() != null ? getExpiresIn() : 0);
         dest.writeString(getAccessToken());
         dest.writeString(getTokenType());
         dest.writeString(getRefreshToken());
@@ -64,11 +73,15 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
         dest.writeString(getState());
         dest.writeString(getIdToken());
         dest.writeLong(getResponseReceivedTime());
-        dest.writeLong(getExtExpiresOn().getTime());
+        dest.writeLong(getExtExpiresOn() != null ? getExtExpiresOn().getTime() : 0);
         dest.writeString(getClientInfo());
         dest.writeString(getClientId());
-        dest.writeLong(getExtExpiresIn());
+        dest.writeLong(getExtExpiresIn() != null ? getExtExpiresIn() : 0);
         dest.writeString(getFamilyId());
+        dest.writeString(getAuthority());
+        dest.writeString(getTenantId());
+        dest.writeString(getPrimaryRefreshToken());
+        dest.writeLong(getExpiresNotBefore() != null ? getExpiresNotBefore().getTime() : 0);
     }
 
     @Override
@@ -87,4 +100,37 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
             return new BrokerTokenResponse[size];
         }
     };
+
+    public String getAuthority() {
+        return mAuthority;
+    }
+
+    public void setAuthority(final String authority) {
+        mAuthority = authority;
+    }
+
+    public String getTenantId() {
+        return mTenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        mTenantId = tenantId;
+    }
+
+    public String getPrimaryRefreshToken() {
+        return mPrimaryRefreshToken;
+    }
+
+    public void setPrimaryRefreshToken(final String primaryRefreshToken) {
+        mPrimaryRefreshToken = primaryRefreshToken;
+    }
+
+    public Date getExpiresNotBefore() {
+        return mExpiresNotBefore;
+    }
+
+    public void setExpiresNotBefore(final Date expiresNotBefore) {
+        mExpiresNotBefore = expiresNotBefore;
+    }
+
 }
