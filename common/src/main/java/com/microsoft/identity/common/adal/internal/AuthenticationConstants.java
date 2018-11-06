@@ -927,6 +927,7 @@ public final class AuthenticationConstants {
          */
         public static final String CALLER_INFO_PACKAGE = "caller.info.package";
 
+        // TODO : See if these can be moved to common shared constants
         /**
          * String to send Msal V2 Request params.
          */
