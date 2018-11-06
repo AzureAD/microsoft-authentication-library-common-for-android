@@ -44,44 +44,48 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
     }
 
     protected BrokerTokenResponse(Parcel in) {
-        setExpiresIn(in.readLong());
-        setAccessToken(in.readString());
-        setTokenType(in.readString());
-        setRefreshToken(in.readString());
-        setScope(in.readString());
-        setState(in.readString());
-        setIdToken(in.readString());
-        setResponseReceivedTime(in.readLong());
-        setExtExpiresOn(new Date(in.readLong()));
-        setClientInfo(in.readString());
-        setClientId(in.readString());
-        setExtExpiresIn(in.readLong());
-        setFamilyId(in.readString());
-        setAuthority(in.readString());
-        setTenantId(in.readString());
-        setPrimaryRefreshToken(in.readString());
-        setExpiresNotBefore(new Date(in.readLong()));
+        if(in != null) {
+            setExpiresIn(in.readLong());
+            setAccessToken(in.readString());
+            setTokenType(in.readString());
+            setRefreshToken(in.readString());
+            setScope(in.readString());
+            setState(in.readString());
+            setIdToken(in.readString());
+            setResponseReceivedTime(in.readLong());
+            setExtExpiresOn(new Date(in.readLong()));
+            setClientInfo(in.readString());
+            setClientId(in.readString());
+            setExtExpiresIn(in.readLong());
+            setFamilyId(in.readString());
+            setAuthority(in.readString());
+            setTenantId(in.readString());
+            setPrimaryRefreshToken(in.readString());
+            setExpiresNotBefore(new Date(in.readLong()));
+        }
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(getExpiresIn() != null ? getExpiresIn() : 0);
-        dest.writeString(getAccessToken());
-        dest.writeString(getTokenType());
-        dest.writeString(getRefreshToken());
-        dest.writeString(getScope());
-        dest.writeString(getState());
-        dest.writeString(getIdToken());
-        dest.writeLong(getResponseReceivedTime());
-        dest.writeLong(getExtExpiresOn() != null ? getExtExpiresOn().getTime() : 0);
-        dest.writeString(getClientInfo());
-        dest.writeString(getClientId());
-        dest.writeLong(getExtExpiresIn() != null ? getExtExpiresIn() : 0);
-        dest.writeString(getFamilyId());
-        dest.writeString(getAuthority());
-        dest.writeString(getTenantId());
-        dest.writeString(getPrimaryRefreshToken());
-        dest.writeLong(getExpiresNotBefore() != null ? getExpiresNotBefore().getTime() : 0);
+        if (dest != null) {
+            dest.writeLong(getExpiresIn() != null ? getExpiresIn() : 0);
+            dest.writeString(getAccessToken());
+            dest.writeString(getTokenType());
+            dest.writeString(getRefreshToken());
+            dest.writeString(getScope());
+            dest.writeString(getState());
+            dest.writeString(getIdToken());
+            dest.writeLong(getResponseReceivedTime());
+            dest.writeLong(getExtExpiresOn() != null ? getExtExpiresOn().getTime() : 0);
+            dest.writeString(getClientInfo());
+            dest.writeString(getClientId());
+            dest.writeLong(getExtExpiresIn() != null ? getExtExpiresIn() : 0);
+            dest.writeString(getFamilyId());
+            dest.writeString(getAuthority());
+            dest.writeString(getTenantId());
+            dest.writeString(getPrimaryRefreshToken());
+            dest.writeLong(getExpiresNotBefore() != null ? getExpiresNotBefore().getTime() : 0);
+        }
     }
 
     @Override

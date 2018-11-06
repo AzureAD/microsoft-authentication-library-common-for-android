@@ -57,17 +57,21 @@ public class BrokerResult implements Parcelable {
     }
 
     protected BrokerResult(Parcel in) {
-        mSuccess = in.readInt() != 0;
-        mTokenResponse = in.readParcelable(BrokerTokenResponse.class.getClassLoader());
-        mErrorResponse = in.readParcelable(BrokerErrorResponse.class.getClassLoader());
+        if (in != null) {
+            mSuccess = in.readInt() != 0;
+            mTokenResponse = in.readParcelable(BrokerTokenResponse.class.getClassLoader());
+            mErrorResponse = in.readParcelable(BrokerErrorResponse.class.getClassLoader());
+        }
 
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt((mSuccess ? 1 : 0));
-        dest.writeParcelable(mTokenResponse, flags);
-        dest.writeParcelable(mErrorResponse, flags);
+        if (dest != null) {
+            dest.writeInt((mSuccess ? 1 : 0));
+            dest.writeParcelable(mTokenResponse, flags);
+            dest.writeParcelable(mErrorResponse, flags);
+        }
     }
 
     @Override

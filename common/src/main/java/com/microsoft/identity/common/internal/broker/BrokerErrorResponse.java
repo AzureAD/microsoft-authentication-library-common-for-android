@@ -48,26 +48,30 @@ public class BrokerErrorResponse implements Parcelable {
     }
 
     protected BrokerErrorResponse(Parcel in) {
-        setErrorCode(in.readInt());
-        setErrorMessage(in.readString());
-        setOAuthError(in.readString());
-        setOAuthSubError(in.readString());
-        setOAuthErrorMetadata(in.readString());
-        setOAuthErrorDescription(in.readString());
-        setHttpResponseBody(in.readString());
-        setHttpResponseHeaders(in.readString());
+        if(in!=null) {
+            setErrorCode(in.readInt());
+            setErrorMessage(in.readString());
+            setOAuthError(in.readString());
+            setOAuthSubError(in.readString());
+            setOAuthErrorMetadata(in.readString());
+            setOAuthErrorDescription(in.readString());
+            setHttpResponseBody(in.readString());
+            setHttpResponseHeaders(in.readString());
+        }
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(getErrorCode());
-        dest.writeString(getErrorMessage());
-        dest.writeString(getOAuthError());
-        dest.writeString(getOAuthSubError());
-        dest.writeString(getOAuthErrorMetadata());
-        dest.writeString(getOAuthErrorDescription());
-        dest.writeString(getHttpResponseBody());
-        dest.writeString(getHttpResponseHeaders());
+        if(dest!=null) {
+            dest.writeInt(getErrorCode());
+            dest.writeString(getErrorMessage());
+            dest.writeString(getOAuthError());
+            dest.writeString(getOAuthSubError());
+            dest.writeString(getOAuthErrorMetadata());
+            dest.writeString(getOAuthErrorDescription());
+            dest.writeString(getHttpResponseBody());
+            dest.writeString(getHttpResponseHeaders());
+        }
     }
 
     @Override
