@@ -22,12 +22,15 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.SerializedName;
 
 /**
  * Represents the broker request
  */
-public class BrokerRequest {
+public class BrokerRequest implements Parcelable{
 
     private class SerializedNames {
         public final static String AUTHORITY = "account.authority";
@@ -44,6 +47,8 @@ public class BrokerRequest {
         public final static String CLAIMS = "account.claims";
         public final static String FORCE_REFRESH = "force.refresh";
         public final static String APPLICATION_NAME = "application.name";
+        public final static String APPLICATION_UID = "application.uid";
+        public final static String EXPIRATION_BUFFER = "expiration.buffer";
     }
 
     @SerializedName(SerializedNames.AUTHORITY)
@@ -74,6 +79,72 @@ public class BrokerRequest {
     private Boolean mForceRefresh;
     @SerializedName(SerializedNames.APPLICATION_NAME)
     private String mApplicationName;
+    @SerializedName(SerializedNames.APPLICATION_UID)
+    private int mUId;
+    @SerializedName(SerializedNames.EXPIRATION_BUFFER)
+    private int mExpirationBuffer;
+
+    public BrokerRequest(){
+
+    }
+
+    protected BrokerRequest(Parcel in) {
+        mAuthority = in.readString();
+        mScope = in.readString();
+        mRedirect = in.readString();
+        mClientId = in.readString();
+        mVersion = in.readString();
+        mUserId = in.readString();
+        mExtraQueryStringParameter = in.readString();
+        mCorrelationId = in.readString();
+        mLoginHint = in.readString();
+        mName = in.readString();
+        mPrompt = in.readString();
+        mClaims = in.readString();
+        int tmpMForceRefresh = in.readInt();
+        mForceRefresh = tmpMForceRefresh != 0;
+        mApplicationName = in.readString();
+        mUId = in.readInt();
+        mExpirationBuffer = in.readInt();
+    }
+
+    public static final Creator<BrokerRequest> CREATOR = new Creator<BrokerRequest>() {
+        @Override
+        public BrokerRequest createFromParcel(Parcel in) {
+            return new BrokerRequest(in);
+        }
+
+        @Override
+        public BrokerRequest[] newArray(int size) {
+            return new BrokerRequest[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mAuthority);
+        dest.writeString(mScope);
+        dest.writeString(mRedirect);
+        dest.writeString(mClientId);
+        dest.writeString(mVersion);
+        dest.writeString(mUserId);
+        dest.writeString(mExtraQueryStringParameter);
+        dest.writeString(mCorrelationId);
+        dest.writeString(mLoginHint);
+        dest.writeString(mName);
+        dest.writeString(mPrompt);
+        dest.writeString(mClaims);
+        dest.writeInt(mForceRefresh ? 1 : 0);
+        dest.writeString(mApplicationName);
+        dest.writeInt(mUId);
+        dest.writeInt(mExpirationBuffer);
+    }
+
 
     public String getAuthority() {
         return mAuthority;
@@ -187,5 +258,20 @@ public class BrokerRequest {
         this.mApplicationName = applicationName;
     }
 
+    public int getUId() {
+        return mUId;
+    }
+
+    public void setUId(int uId) {
+        this.mUId = uId;
+    }
+
+    public int getExpirationBuffer() {
+        return mExpirationBuffer;
+    }
+
+    public void setExpirationBuffer(int expirationBuffer) {
+        this.mExpirationBuffer = expirationBuffer;
+    }
 
 }

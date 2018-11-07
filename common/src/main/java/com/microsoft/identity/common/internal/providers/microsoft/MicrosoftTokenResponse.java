@@ -54,10 +54,6 @@ public class MicrosoftTokenResponse extends TokenResponse {
      */
     private String mFamilyId;
 
-    protected Long getExtendedExpiresIn() {
-        return mExtendedExpiresIn;
-    }
-
     /**
      * Gets the ext_expires_in.
      *

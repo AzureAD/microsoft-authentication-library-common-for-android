@@ -22,21 +22,6 @@
 // THE SOFTWARE.
 
 package com.microsoft.identity.common.internal.broker;
-import com.microsoft.identity.common.internal.broker.BrokerRequest;
-import com.microsoft.identity.common.internal.broker.BrokerResult;
-/**
- * Broker Account service APIs provided by the broker app. Those APIs will be responsible for interacting with the
- * account manager API. Calling app does not need to request for contacts permission if the broker installed on the
- * device has the support for the bound service.
- */
-interface IMicrosoftAuthService {
-    Bundle getCapabilities();
 
-    Bundle getBrokerUsers();
-
-    BrokerResult acquireTokenSilently(in BrokerRequest brokerRequest);
-
-    Intent getIntentForInteractiveRequest();
-
-    void removeAccounts();
-}
+// Parcelable for BrokerRequest
+parcelable BrokerRequest;

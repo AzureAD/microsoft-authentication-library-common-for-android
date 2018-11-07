@@ -927,6 +927,16 @@ public final class AuthenticationConstants {
          */
         public static final String CALLER_INFO_PACKAGE = "caller.info.package";
 
+        // TODO : See if these can be moved to common shared constants
+        /**
+         * String to send Msal V2 Request params.
+         */
+        public static final String BROKER_REQUEST_V2 = "broker.request.v2";
+
+        /**
+         * String to send Msal V2 Request params.
+         */
+        public static final String BROKER_RESULT_V2 = "broker.result.v2";
         /**
          * String for ssl prefix.
          */
