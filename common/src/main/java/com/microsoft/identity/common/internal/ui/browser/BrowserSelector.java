@@ -30,6 +30,7 @@ import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.customtabs.CustomTabsService;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -43,7 +44,6 @@ public class BrowserSelector {
     private static final String TAG = BrowserSelector.class.getSimpleName();
     private static final String SCHEME_HTTP = "http";
     private static final String SCHEME_HTTPS = "https";
-    private static final String CUSTOM_TABS_SERVICE_ACTION = "android.support.customtabs.action.CustomTabsService";
 
     /**
      * Searches through all browsers for the best match.
@@ -118,7 +118,7 @@ public class BrowserSelector {
     }
 
     private static boolean isCustomTabsServiceSupported(@NonNull final Context context, @NonNull final PackageInfo packageInfo) {
-        Intent serviceIntent = new Intent(CUSTOM_TABS_SERVICE_ACTION);
+        Intent serviceIntent = new Intent(CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION);
         serviceIntent.setPackage(packageInfo.packageName);
         List<ResolveInfo> resolveInfos = context.getPackageManager().queryIntentServices(serviceIntent, 0);
         return !(resolveInfos == null || resolveInfos.isEmpty());
