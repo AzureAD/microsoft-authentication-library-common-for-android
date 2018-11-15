@@ -25,23 +25,28 @@ package com.microsoft.identity.common.internal.broker;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
+
+import java.util.ArrayList;
+
 /**
  * Encapsulates the broker error result
  */
-public class BrokerErrorResponse implements Parcelable {
+public class BrokerErrorResponse extends MicrosoftTokenErrorResponse implements Parcelable {
 
     public static final String INTERACTION_REQUIRED = "interaction_required";
 
     public static final String INVALID_GRANT = "invalid_grant";
 
-    private int mErrorCode; //NOPMD
-    private String mErrorMessage;//NOPMD
-    private String mOAuthError;//NOPMD
-    private String mOAuthSubError;//NOPMD
-    private String mOAuthErrorMetadata;//NOPMD
-    private String mOAuthErrorDescription;//NOPMD
-    private String mHttpResponseBody;//NOPMD
-    private String mHttpResponseHeaders;//NOPMD
+
+    private String mOAuthError;
+    private String mOAuthSubError;
+    private String mOAuthErrorMetadata;
+    private String mOAuthErrorDescription;
+    private int mHttpStatusCode;
+    private String mHttpResponseBody;
+    private String mHttpResponseHeaders;
+
 
     public BrokerErrorResponse(){
 
@@ -49,12 +54,20 @@ public class BrokerErrorResponse implements Parcelable {
 
     protected BrokerErrorResponse(Parcel in) {
         if(in!=null) {
-            setErrorCode(in.readInt());
-            setErrorMessage(in.readString());
+            setError(in.readString());
+            setErrorDescription(in.readString());
+            setErrorUri(in.readString());
+            ArrayList errorcodes = new ArrayList();
+            in.readList(errorcodes, ArrayList.class.getClassLoader());
+            setErrorCodes(errorcodes);
+            setTimeStamp(in.readString());
+            setTraceId(in.readString());
+            setCorrelationId(in.readString());
             setOAuthError(in.readString());
             setOAuthSubError(in.readString());
             setOAuthErrorMetadata(in.readString());
             setOAuthErrorDescription(in.readString());
+            setHttpStatusCode(in.readInt());
             setHttpResponseBody(in.readString());
             setHttpResponseHeaders(in.readString());
         }
@@ -63,12 +76,18 @@ public class BrokerErrorResponse implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         if(dest!=null) {
-            dest.writeInt(getErrorCode());
-            dest.writeString(getErrorMessage());
+            dest.writeString(getError());
+            dest.writeString(getErrorDescription());
+            dest.writeString(getErrorUri());
+            dest.writeList(getErrorCodes());
+            dest.writeString(getTimeStamp());
+            dest.writeString(getTraceId());
+            dest.writeString(getCorrelationId());
             dest.writeString(getOAuthError());
             dest.writeString(getOAuthSubError());
             dest.writeString(getOAuthErrorMetadata());
             dest.writeString(getOAuthErrorDescription());
+            dest.writeInt(getHttpStatusCode());
             dest.writeString(getHttpResponseBody());
             dest.writeString(getHttpResponseHeaders());
         }
@@ -97,22 +116,6 @@ public class BrokerErrorResponse implements Parcelable {
 
     public boolean isInvalidGrant() {
         return mOAuthError.equalsIgnoreCase(INVALID_GRANT);
-    }
-
-    public int getErrorCode() {
-        return mErrorCode;
-    }
-
-    public void setErrorCode(int errorCode) {
-        this.mErrorCode = errorCode;
-    }
-
-    public String getErrorMessage() {
-        return mErrorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.mErrorMessage = errorMessage;
     }
 
     public String getOAuthError() {
@@ -161,5 +164,13 @@ public class BrokerErrorResponse implements Parcelable {
 
     public void setHttpResponseHeaders(String httpResponseHeaders) {
         this.mHttpResponseHeaders = httpResponseHeaders;
+    }
+
+    public int getHttpStatusCode() {
+        return mHttpStatusCode;
+    }
+
+    public void setHttpStatusCode(int httpStatusCode) {
+        mHttpStatusCode = httpStatusCode;
     }
 }

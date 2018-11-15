@@ -35,6 +35,29 @@ public class TokenResult {
     private TokenErrorResponse mTokenErrorResponse;
     private boolean mSuccess = false;
 
+
+    public TokenResult(){
+
+    }
+
+
+    /**
+     * Constructor of TokenResult.
+     * @param response      TokenResponse
+     */
+    public TokenResult(final TokenResponse response) {
+        this(response, null);
+    }
+
+
+    /**
+     * Constructor of TokenResult.
+     * @param errorResponse TokenErrorResponse
+     */
+    public TokenResult(final TokenErrorResponse errorResponse) {
+        this(null, errorResponse);
+    }
+
     /**
      * Constructor of TokenResult.
      *
@@ -76,6 +99,14 @@ public class TokenResult {
      */
     public boolean getSuccess() {
         return mSuccess;
+    }
+
+    /**
+     * Set if the TokenResult is success or not
+     * @param success true if successful
+     */
+    public void setSuccess(boolean success){
+        mSuccess = success;
     }
 
     //CHECKSTYLE:OFF
