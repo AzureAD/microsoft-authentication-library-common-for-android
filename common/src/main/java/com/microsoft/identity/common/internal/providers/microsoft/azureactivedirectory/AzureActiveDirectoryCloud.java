@@ -59,7 +59,9 @@ public class AzureActiveDirectoryCloud {
      * @param preferredCache   preferred cache
      * @param aliases          aliases
      */
-    public AzureActiveDirectoryCloud(final String preferredNetwork, final String preferredCache, final List<String> aliases) {
+    public AzureActiveDirectoryCloud(final String preferredNetwork,
+                                     final String preferredCache,
+                                     final List<String> aliases) {
         mPreferredNetworkHostName = preferredNetwork;
         mPreferredCacheHostName = preferredCache;
         mCloudHostAliases = new ArrayList<>();
