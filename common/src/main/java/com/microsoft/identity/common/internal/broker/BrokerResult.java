@@ -25,24 +25,23 @@ package com.microsoft.identity.common.internal.broker;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+
 /**
  * Encapsulates the possible responses from the broker.  Both successful response and error response.
  */
-public class BrokerResult implements Parcelable {
+public class BrokerResult extends TokenResult implements Parcelable {
 
-    private BrokerTokenResponse mTokenResponse;
-    private BrokerErrorResponse mErrorResponse;
-    private boolean mSuccess;
+    private BrokerTokenResponse mBrokerTokenResponse;
+    private BrokerErrorResponse mBrokerErrorResponse;
 
     /**
-     * Constructor for create successful broker result
+     * Constructor for create successful broker response
      *
-     * @param tokenResult
+     * @param tokenResponse
      */
-    public BrokerResult(BrokerTokenResponse tokenResult) {
-        mTokenResponse = tokenResult;
-        mSuccess = true;
-        mErrorResponse = null;
+    public BrokerResult(BrokerTokenResponse tokenResponse) {
+        this(tokenResponse, null);
     }
 
     /**
@@ -51,16 +50,26 @@ public class BrokerResult implements Parcelable {
      * @param errorResponse
      */
     public BrokerResult(BrokerErrorResponse errorResponse) {
-        mTokenResponse = null;
-        mSuccess = false;
-        mErrorResponse = errorResponse;
+        this(null, errorResponse);
     }
+
+    /**
+     * Constructor for creating an BrokerResult
+     * @param brokerTokenResponse
+     * @param brokerErrorResponse
+     */
+    public BrokerResult(BrokerTokenResponse brokerTokenResponse, BrokerErrorResponse brokerErrorResponse) {
+        super(brokerTokenResponse, brokerErrorResponse);
+        mBrokerTokenResponse = brokerTokenResponse;
+        mBrokerErrorResponse = brokerErrorResponse;
+    }
+
 
     protected BrokerResult(Parcel in) {
         if (in != null) {
-            mSuccess = in.readInt() != 0;
-            mTokenResponse = in.readParcelable(BrokerTokenResponse.class.getClassLoader());
-            mErrorResponse = in.readParcelable(BrokerErrorResponse.class.getClassLoader());
+            setSuccess(in.readInt() != 0);
+            mBrokerTokenResponse = in.readParcelable(BrokerTokenResponse.class.getClassLoader());
+            mBrokerErrorResponse = in.readParcelable(BrokerErrorResponse.class.getClassLoader());
         }
 
     }
@@ -68,9 +77,9 @@ public class BrokerResult implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         if (dest != null) {
-            dest.writeInt((mSuccess ? 1 : 0));
-            dest.writeParcelable(mTokenResponse, flags);
-            dest.writeParcelable(mErrorResponse, flags);
+            dest.writeInt((getSuccess() ? 1 : 0));
+            dest.writeParcelable(mBrokerTokenResponse, flags);
+            dest.writeParcelable(mBrokerErrorResponse, flags);
         }
     }
 
@@ -97,7 +106,7 @@ public class BrokerResult implements Parcelable {
      * @return
      */
     public boolean isSuccessful() {
-        return mSuccess;
+        return getSuccess();
     }
 
     /**
@@ -105,8 +114,9 @@ public class BrokerResult implements Parcelable {
      *
      * @return
      */
+    @Override
     public BrokerTokenResponse getTokenResponse() {
-        return mTokenResponse;
+        return mBrokerTokenResponse;
     }
 
     /**
@@ -114,8 +124,9 @@ public class BrokerResult implements Parcelable {
      *
      * @return
      */
+    @Override
     public BrokerErrorResponse getErrorResponse() {
-        return mErrorResponse;
+        return mBrokerErrorResponse;
     }
 
 }
