@@ -76,7 +76,7 @@ public class BrokerRequest implements Parcelable{
     @SerializedName(SerializedNames.CLAIMS)
     private String mClaims;
     @SerializedName(SerializedNames.FORCE_REFRESH)
-    private Boolean mForceRefresh;
+    private boolean mForceRefresh;
     @SerializedName(SerializedNames.APPLICATION_NAME)
     private String mApplicationName;
     @SerializedName(SerializedNames.APPLICATION_UID)
@@ -242,11 +242,11 @@ public class BrokerRequest implements Parcelable{
         this.mClaims = claims;
     }
 
-    public Boolean getForceRefresh() {
+    public boolean getForceRefresh() {
         return mForceRefresh;
     }
 
-    public void setForceRefresh(Boolean forceRefresh) {
+    public void setForceRefresh(boolean forceRefresh) {
         this.mForceRefresh = forceRefresh;
     }
 
