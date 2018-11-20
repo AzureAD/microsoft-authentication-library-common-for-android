@@ -28,8 +28,8 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -1408,7 +1408,7 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
 
         final AccountRecord malformedAccount = mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
         assertNull(malformedAccount);
-        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+        assertNotNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
 
     @Test
@@ -1443,7 +1443,7 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
 
         final AccessTokenRecord malformedAccessToken = (AccessTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedAccessToken);
-        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+        assertNotNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
 
     @Test
@@ -1479,7 +1479,7 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
 
         final RefreshTokenRecord malformedRefreshToken = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedRefreshToken);
-        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+        assertNotNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
 
     @Test
@@ -1515,7 +1515,7 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
 
         final IdTokenRecord restoredIdToken = (IdTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(restoredIdToken);
-        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+        assertNotNull(mSharedPreferencesFileManager.getString(cacheKey));
     }
 
     @Test

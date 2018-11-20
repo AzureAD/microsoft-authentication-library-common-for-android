@@ -60,6 +60,9 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     private static final AccessTokenRecord EMPTY_AT = new AccessTokenRecord();
     private static final RefreshTokenRecord EMPTY_RT = new RefreshTokenRecord();
     private static final IdTokenRecord EMPTY_ID = new IdTokenRecord();
+    private static final String DESERIALIZATION_FAILED = "Deserialization failed. Skipping ";
+    private static final String ACCOUNT_RECORD_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + AccountRecord.class.getSimpleName();
+    private static final String CREDENTIAL_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + Credential.class.getSimpleName();
 
     // SharedPreferences used to store Accounts and Credentials
     private final ISharedPreferencesFileManager mSharedPreferencesFileManager;
@@ -107,9 +110,14 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 AccountRecord.class
         );
 
-        if (null == account || EMPTY_ACCOUNT.equals(account)) { // Either we found nothing or it wasn't an Account
-            // The returned account came back uninitialized...
-            // Remove the entry and return null...
+        if (null == account) {
+            // We could not deserialize the target AccountRecord...
+            // Maybe it was encrypted for another application?
+            Logger.warn(
+                    TAG,
+                    ACCOUNT_RECORD_DESERIALIZATION_FAILED
+            );
+        } else if (EMPTY_ACCOUNT.equals(account)) {
             Logger.warn(TAG, "The returned Account was uninitialized. Removing...");
             mSharedPreferencesFileManager.remove(cacheKey);
             account = null;
@@ -141,8 +149,14 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 clazz
         );
 
-        if (null == credential
-                || (AccessTokenRecord.class == clazz && EMPTY_AT.equals(credential))
+        if (null == credential) {
+            // We could not deserialize the target Credential...
+            // Maybe it was encrypted for another application?
+            Logger.warn(
+                    TAG,
+                    CREDENTIAL_DESERIALIZATION_FAILED
+            );
+        } else if ((AccessTokenRecord.class == clazz && EMPTY_AT.equals(credential))
                 || (RefreshTokenRecord.class == clazz && EMPTY_RT.equals(credential))
                 || (IdTokenRecord.class == clazz) && EMPTY_ID.equals(credential)) {
             // The returned credential came back uninitialized...
@@ -168,7 +182,15 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                         cacheValue.getValue().toString(),
                         AccountRecord.class
                 );
-                accounts.put(cacheKey, account);
+
+                if (null == account) {
+                    Logger.warn(
+                            TAG,
+                            ACCOUNT_RECORD_DESERIALIZATION_FAILED
+                    );
+                } else {
+                    accounts.put(cacheKey, account);
+                }
             }
         }
 
@@ -222,7 +244,15 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                         cacheValue.getValue().toString(),
                         credentialClassForType(cacheKey)
                 );
-                credentials.put(cacheKey, credential);
+
+                if (null == credential) {
+                    Logger.warn(
+                            TAG,
+                            CREDENTIAL_DESERIALIZATION_FAILED
+                    );
+                } else {
+                    credentials.put(cacheKey, credential);
+                }
             }
         }
 
