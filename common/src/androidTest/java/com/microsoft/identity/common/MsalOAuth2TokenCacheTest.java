@@ -369,6 +369,82 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
+    public void getAccountDisambiguate() throws ClientException {
+        final int iterations = 10;
+        final List<AccountCredentialTestBundle> testBundles = new ArrayList<>();
+
+        for (int ii = 0; ii < iterations; ii++) {
+            testBundles.add(
+                    new AccountCredentialTestBundle(
+                            MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                            UUID.randomUUID().toString(),
+                            "test.user@tenant.onmicrosoft.com",
+                            HOME_ACCOUNT_ID,
+                            ENVIRONMENT,
+                            UUID.randomUUID().toString(),
+                            TARGET,
+                            CACHED_AT,
+                            EXPIRES_ON,
+                            SECRET,
+                            CLIENT_ID,
+                            SECRET,
+                            MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS
+                    )
+            );
+        }
+
+        for (int i = 0; i < iterations; i++) {
+            when(
+                    mockCredentialAdapter.createAccount(
+                            mockStrategy,
+                            mockRequest,
+                            mockResponse
+                    )
+            ).thenReturn(testBundles.get(i).mGeneratedAccount);
+
+            when(
+                    mockCredentialAdapter.createAccessToken(
+                            mockStrategy,
+                            mockRequest,
+                            mockResponse
+                    )
+            ).thenReturn(testBundles.get(i).mGeneratedAccessToken);
+
+            when(
+                    mockCredentialAdapter.createRefreshToken(
+                            mockStrategy,
+                            mockRequest,
+                            mockResponse
+                    )
+            ).thenReturn(testBundles.get(i).mGeneratedRefreshToken);
+
+            when(
+                    mockCredentialAdapter.createIdToken(
+                            mockStrategy,
+                            mockRequest,
+                            mockResponse
+                    )
+            ).thenReturn(testBundles.get(i).mGeneratedIdToken);
+
+            mOauth2TokenCache.save(
+                    mockStrategy,
+                    mockRequest,
+                    mockResponse
+            );
+        }
+
+        final List<AccountRecord> accounts = mOauth2TokenCache.getAccounts(
+                ENVIRONMENT,
+                CLIENT_ID
+        );
+
+        assertEquals(testBundles.size(), accounts.size());
+        for (final AccountCredentialTestBundle bundle : testBundles) {
+            assertTrue(accounts.contains(bundle.mGeneratedAccount));
+        }
+    }
+
+    @Test
     public void getAccountCacheEmpty() {
         final AccountRecord account = mOauth2TokenCache.getAccount(
                 ENVIRONMENT,
