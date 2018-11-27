@@ -29,7 +29,6 @@ import android.support.test.runner.AndroidJUnit4;
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
@@ -37,6 +36,7 @@ import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -355,7 +355,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final AccountRecord account = mOauth2TokenCache.getAccount(
                 ENVIRONMENT,
                 CLIENT_ID,
-                HOME_ACCOUNT_ID
+                HOME_ACCOUNT_ID,
+                REALM
         );
 
         assertNotNull(account);
@@ -372,7 +373,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final AccountRecord account = mOauth2TokenCache.getAccount(
                 ENVIRONMENT,
                 CLIENT_ID,
-                HOME_ACCOUNT_ID
+                HOME_ACCOUNT_ID,
+                REALM
         );
 
         assertNull(account);
@@ -473,7 +475,14 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        assertTrue(mOauth2TokenCache.removeAccount(ENVIRONMENT, CLIENT_ID, HOME_ACCOUNT_ID));
+        assertTrue(
+                mOauth2TokenCache.removeAccount(
+                        ENVIRONMENT,
+                        CLIENT_ID,
+                        HOME_ACCOUNT_ID,
+                        REALM
+                )
+        );
     }
 
     @Test
@@ -489,14 +498,22 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mOauth2TokenCache.removeAccount(
                         "login.chinacloudapi.cn",
                         CLIENT_ID,
-                        HOME_ACCOUNT_ID
+                        HOME_ACCOUNT_ID,
+                        REALM
                 )
         );
     }
 
     @Test
     public void removeAccountCacheEmpty() {
-        assertFalse(mOauth2TokenCache.removeAccount(ENVIRONMENT, CLIENT_ID, HOME_ACCOUNT_ID));
+        assertFalse(
+                mOauth2TokenCache.removeAccount(
+                        ENVIRONMENT,
+                        CLIENT_ID,
+                        HOME_ACCOUNT_ID,
+                        REALM
+                )
+        );
     }
 
     @Test

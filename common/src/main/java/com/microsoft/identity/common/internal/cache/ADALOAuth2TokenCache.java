@@ -186,7 +186,8 @@ public class ADALOAuth2TokenCache
     @Override
     public AccountRecord getAccount(final String environment,
                                     final String clientId,
-                                    final String homeAccountId) {
+                                    final String homeAccountId,
+                                    final String realm) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
@@ -203,7 +204,8 @@ public class ADALOAuth2TokenCache
     @Override
     public boolean removeAccount(final String environment,
                                  final String clientId,
-                                 final String homeAccountId) {
+                                 final String homeAccountId,
+                                 final String realm) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );

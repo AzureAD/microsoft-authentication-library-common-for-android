@@ -87,13 +87,15 @@ public abstract class OAuth2TokenCache
      * Returns the IAccount matching the supplied criteria.
      *
      * @param environment   The environment to which the sought IAccount is associated.
-     * @param clientId      The clientId to which the sought IAccouct is associated.
+     * @param clientId      The clientId to which the sought IAccount is associated.
      * @param homeAccountId The homeAccountId of the sought IAccount.
+     * @param realm         The tenant id of the targeted account (if applicable).
      * @return The sought IAccount or null if it cannot be found.
      */
     public abstract AccountRecord getAccount(final String environment,
                                              final String clientId,
-                                             final String homeAccountId
+                                             final String homeAccountId,
+                                             final String realm
     );
 
     /**
@@ -111,11 +113,14 @@ public abstract class OAuth2TokenCache
      * @param environment   The environment to which the targeted Account is associated.
      * @param clientId      The clientId of this current app.
      * @param homeAccountId The homeAccountId of the Account targeted for deletion.
+     * @param realm         The tenant id of the targeted Account (if applicable).
      * @return True, if the Account was deleted. False otherwise.
      */
     public abstract boolean removeAccount(final String environment,
                                           final String clientId,
-                                          final String homeAccountId);
+                                          final String homeAccountId,
+                                          final String realm
+    );
 
     /**
      * Gets the Context used to initialize this OAuth2TokenCache.

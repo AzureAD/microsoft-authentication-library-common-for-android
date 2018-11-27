@@ -275,7 +275,8 @@ public class MsalOAuth2TokenCache
     @Override
     public AccountRecord getAccount(@Nullable final String environment,
                                     @NonNull final String clientId,
-                                    @NonNull final String homeAccountId) {
+                                    @NonNull final String homeAccountId,
+                                    @Nullable final String realm) {
         final String methodName = ":getAccount";
 
         Logger.infoPII(
@@ -293,6 +294,11 @@ public class MsalOAuth2TokenCache
                 "HomeAccountId: [" + homeAccountId + "]"
         );
 
+        Logger.infoPII(
+                TAG + methodName,
+                "Realm: [" + realm + "]"
+        );
+
         final List<AccountRecord> allAccounts = getAccounts(environment, clientId);
 
         Logger.info(
@@ -300,9 +306,10 @@ public class MsalOAuth2TokenCache
                 "Found " + allAccounts.size() + " accounts"
         );
 
-        // Return the sought Account matching the supplied homeAccountId
+        // Return the sought Account matching the supplied homeAccountId and realm, if applicable
         for (final AccountRecord account : allAccounts) {
-            if (homeAccountId.equals(account.getHomeAccountId())) {
+            if (homeAccountId.equals(account.getHomeAccountId())
+                    && (null == realm || realm.equals(account.getRealm()))) {
                 return account;
             }
         }
@@ -413,7 +420,8 @@ public class MsalOAuth2TokenCache
     @Override
     public boolean removeAccount(final String environment,
                                  final String clientId,
-                                 final String homeAccountId) {
+                                 final String homeAccountId,
+                                 @Nullable final String realm) {
         final String methodName = ":removeAccount";
 
         Logger.infoPII(
@@ -431,6 +439,11 @@ public class MsalOAuth2TokenCache
                 "HomeAccountId: [" + homeAccountId + "]"
         );
 
+        Logger.infoPII(
+                TAG + methodName,
+                "Realm: [" + realm + "]"
+        );
+
         final AccountRecord targetAccount;
         if (null == environment
                 || null == clientId
@@ -439,7 +452,8 @@ public class MsalOAuth2TokenCache
                 getAccount(
                         environment,
                         clientId,
-                        homeAccountId
+                        homeAccountId,
+                        realm
                 ))) {
             return false;
         }
@@ -504,7 +518,7 @@ public class MsalOAuth2TokenCache
                         environment,
                         credentialType,
                         clientId,
-                        null, // wildcard (*) realm
+                        targetAccount.getRealm(), // wildcard (*) realm
                         null // wildcard (*) target
                 );
 
