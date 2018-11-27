@@ -445,6 +445,25 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
+    public void getAccountByLocalAccountId() throws ClientException {
+        // Save an Account into the cache
+        mOauth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        // Find it by the local_account_id
+        final AccountRecord account = mOauth2TokenCache.getAccountWithLocalAccountId(
+                ENVIRONMENT,
+                CLIENT_ID,
+                LOCAL_ACCOUNT_ID
+        );
+
+        assertNotNull(account);
+    }
+
+    @Test
     public void getAccountCacheEmpty() {
         final AccountRecord account = mOauth2TokenCache.getAccount(
                 ENVIRONMENT,

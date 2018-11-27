@@ -323,6 +323,28 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
+    public AccountRecord getAccountWithLocalAccountId(@Nullable String environment,
+                                                      @NonNull String clientId,
+                                                      @NonNull String localAccountId) {
+        final String methodName = ":getAccountWithLocalAccountId";
+
+        final List<AccountRecord> accounts = getAccounts(environment, clientId);
+
+        Logger.infoPII(
+                TAG + methodName,
+                "LocalAccountId: [" + localAccountId + "]"
+        );
+
+        for (final AccountRecord account : accounts) {
+            if (localAccountId.equals(account.getLocalAccountId())) {
+                return account;
+            }
+        }
+
+        return null;
+    }
+
+    @Override
     public List<AccountRecord> getAccounts(@Nullable final String environment,
                                            @NonNull final String clientId) {
         final String methodName = ":getAccounts";

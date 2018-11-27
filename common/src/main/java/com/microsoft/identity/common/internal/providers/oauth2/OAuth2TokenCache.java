@@ -84,13 +84,13 @@ public abstract class OAuth2TokenCache
     public abstract boolean removeCredential(final Credential credential);
 
     /**
-     * Returns the IAccount matching the supplied criteria.
+     * Returns the AccountRecord matching the supplied criteria.
      *
-     * @param environment   The environment to which the sought IAccount is associated.
-     * @param clientId      The clientId to which the sought IAccount is associated.
-     * @param homeAccountId The homeAccountId of the sought IAccount.
+     * @param environment   The environment to which the sought AccountRecord is associated.
+     * @param clientId      The clientId to which the sought AccountRecord is associated.
+     * @param homeAccountId The homeAccountId of the sought AccountRecord.
      * @param realm         The tenant id of the targeted account (if applicable).
-     * @return The sought IAccount or null if it cannot be found.
+     * @return The sought AccountRecord or null if it cannot be found.
      */
     public abstract AccountRecord getAccount(final String environment,
                                              final String clientId,
@@ -99,11 +99,24 @@ public abstract class OAuth2TokenCache
     );
 
     /**
-     * Gets an immutable List of IAccounts for this app which have RefreshTokens in the cache.
+     * Returns the AccountRecord matching the supplied criteria.
+     *
+     * @param environment    The environment to which the sought IAccount is associated.
+     * @param clientId       The clientId to which the sought IAccount is associated.
+     * @param localAccountId The local account id of the targeted account.
+     * @return The sought AccountRecord or null if it cannot be found.
+     */
+    public abstract AccountRecord getAccountWithLocalAccountId(final String environment,
+                                                               final String clientId,
+                                                               final String localAccountId
+    );
+
+    /**
+     * Gets an immutable List of AccountRecords for this app which have RefreshTokens in the cache.
      *
      * @param clientId    The current application.
      * @param environment The current environment.
-     * @return An immutable List of IAccounts.
+     * @return An immutable List of AccountRecords.
      */
     public abstract List<AccountRecord> getAccounts(final String environment, final String clientId);
 

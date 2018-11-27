@@ -194,6 +194,15 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
+    public AccountRecord getAccountWithLocalAccountId(final String environment,
+                                                      final String clientId,
+                                                      final String localAccountId) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
     public List<AccountRecord> getAccounts(final String environment,
                                            final String clientId) {
         throw new UnsupportedOperationException(
