@@ -32,7 +32,7 @@ import com.google.gson.annotations.SerializedName;
  */
 public class BrokerRequest implements Parcelable {
 
-    public enum SDK_TYPE {
+    public enum SdkType {
         ADAL,
         MSAL
     }
@@ -90,7 +90,7 @@ public class BrokerRequest implements Parcelable {
     @SerializedName(SerializedNames.EXPIRATION_BUFFER)
     private int mExpirationBuffer;
     @SerializedName((SerializedNames.SDK_TYPE))
-    private SDK_TYPE mSdkType = SDK_TYPE.MSAL;
+    private SdkType mSdkType = SdkType.MSAL;
 
     public BrokerRequest() {
 
@@ -114,7 +114,7 @@ public class BrokerRequest implements Parcelable {
         mApplicationName = in.readString();
         mUId = in.readInt();
         mExpirationBuffer = in.readInt();
-        setSdkType(SDK_TYPE.valueOf(in.readString()));
+        setSdkType(SdkType.valueOf(in.readString()));
     }
 
     public static final Creator<BrokerRequest> CREATOR = new Creator<BrokerRequest>() {
@@ -284,11 +284,11 @@ public class BrokerRequest implements Parcelable {
         this.mExpirationBuffer = expirationBuffer;
     }
 
-    public SDK_TYPE getSdkType() {
+    public SdkType getSdkType() {
         return mSdkType;
     }
 
-    public void setSdkType(SDK_TYPE sdkType) {
+    public void setSdkType(SdkType sdkType) {
         this.mSdkType = sdkType;
     }
 
