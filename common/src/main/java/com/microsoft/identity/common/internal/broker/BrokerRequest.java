@@ -30,7 +30,12 @@ import com.google.gson.annotations.SerializedName;
 /**
  * Represents the broker request
  */
-public class BrokerRequest implements Parcelable{
+public class BrokerRequest implements Parcelable {
+
+    public enum SdkType {
+        ADAL,
+        MSAL
+    }
 
     private class SerializedNames {
         public final static String AUTHORITY = "account.authority";
@@ -49,6 +54,7 @@ public class BrokerRequest implements Parcelable{
         public final static String APPLICATION_NAME = "application.name";
         public final static String APPLICATION_UID = "application.uid";
         public final static String EXPIRATION_BUFFER = "expiration.buffer";
+        public final static String SDK_TYPE = "sdk.type";
     }
 
     @SerializedName(SerializedNames.AUTHORITY)
@@ -83,8 +89,10 @@ public class BrokerRequest implements Parcelable{
     private int mUId;
     @SerializedName(SerializedNames.EXPIRATION_BUFFER)
     private int mExpirationBuffer;
+    @SerializedName((SerializedNames.SDK_TYPE))
+    private SdkType mSdkType = SdkType.MSAL;
 
-    public BrokerRequest(){
+    public BrokerRequest() {
 
     }
 
@@ -106,6 +114,7 @@ public class BrokerRequest implements Parcelable{
         mApplicationName = in.readString();
         mUId = in.readInt();
         mExpirationBuffer = in.readInt();
+        setSdkType(SdkType.valueOf(in.readString()));
     }
 
     public static final Creator<BrokerRequest> CREATOR = new Creator<BrokerRequest>() {
@@ -143,6 +152,7 @@ public class BrokerRequest implements Parcelable{
         dest.writeString(mApplicationName);
         dest.writeInt(mUId);
         dest.writeInt(mExpirationBuffer);
+        dest.writeString(getSdkType().name());
     }
 
 
@@ -272,6 +282,14 @@ public class BrokerRequest implements Parcelable{
 
     public void setExpirationBuffer(int expirationBuffer) {
         this.mExpirationBuffer = expirationBuffer;
+    }
+
+    public SdkType getSdkType() {
+        return mSdkType;
+    }
+
+    public void setSdkType(SdkType sdkType) {
+        this.mSdkType = sdkType;
     }
 
 }
