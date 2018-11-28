@@ -73,8 +73,6 @@ public class MsalOAuth2TokenCache
             GenericAccount,
             GenericRefreshToken> mAccountCredentialAdapter;
 
-    private final boolean mSecondaryMode;
-
     /**
      * Constructor of MsalOAuth2TokenCache.
      *
@@ -94,41 +92,6 @@ public class MsalOAuth2TokenCache
         Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
         mAccountCredentialAdapter = accountCredentialAdapter;
-        mSecondaryMode = false;
-    }
-
-    /**
-     * Constructor of MsalOAuth2TokenCache.
-     *
-     * @param context                  Context
-     * @param accountCredentialCache   IAccountCredentialCache
-     * @param accountCredentialAdapter IAccountCredentialAdapter
-     * @param secondaryMode            True, if this cache is not the primary cache.
-     *                                 <p>
-     *                                 Ex: The cache is running locally inside of an app that stores
-     *                                 AT/RT pairs in the broker -- this will happen if the device
-     *                                 is WPJ'd.
-     *                                 <p>
-     *                                 Broker apps' caches should never run in secondary mode.
-     *                                 <p>
-     *                                 1st and 3rd party non-broker apps should run in secondary
-     *                                 mode when the broker is installed and enabled for auth
-     *                                 with the current application.
-     */
-    public MsalOAuth2TokenCache(final Context context,
-                                final IAccountCredentialCache accountCredentialCache,
-                                final IAccountCredentialAdapter<
-                                        GenericOAuth2Strategy,
-                                        GenericAuthorizationRequest,
-                                        GenericTokenResponse,
-                                        GenericAccount,
-                                        GenericRefreshToken> accountCredentialAdapter,
-                                final boolean secondaryMode) {
-        super(context);
-        Logger.verbose(TAG, "Init: " + TAG);
-        mAccountCredentialCache = accountCredentialCache;
-        mAccountCredentialAdapter = accountCredentialAdapter;
-        mSecondaryMode = secondaryMode;
     }
 
     @Override
@@ -463,17 +426,7 @@ public class MsalOAuth2TokenCache
                 mAccountCredentialCache.getCredentialsFilteredBy(
                         null, // homeAccountId
                         environment,
-                        // If we're running in secondary mode, apps will not cache ATs or
-                        // RTs for the Account. Instead, the broker app will maintain these
-                        // credentials. To support this case, we define the presence of an
-                        // Account by the existence of an IdToken matching it for the
-                        // current clientId.
-
-                        // If we're running in primary mode, we define the presence of an account by
-                        // the existence of a RefreshToken matching it for the current clientId.
-                        mSecondaryMode
-                                ? CredentialType.IdToken
-                                : CredentialType.RefreshToken,
+                        CredentialType.IdToken,
                         clientId,
                         null, // realm
                         null // target

@@ -345,13 +345,6 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void saveAccountDirect() {
-        mOauth2TokenCache = new MsalOAuth2TokenCache<>(
-                InstrumentationRegistry.getTargetContext(),
-                accountCredentialCache,
-                mockCredentialAdapter,
-                true
-        );
-
         mOauth2TokenCache.save(
                 defaultTestBundle.mGeneratedAccount,
                 defaultTestBundle.mGeneratedIdToken
