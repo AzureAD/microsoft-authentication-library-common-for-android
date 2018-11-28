@@ -37,6 +37,7 @@ import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -164,6 +165,14 @@ public class ADALOAuth2TokenCache
         }
 
         return null; // Returning null, since the ADAL cache's schema doesn't support this return type.
+    }
+
+    @Override
+    public ICacheRecord save(final AccountRecord accountRecord,
+                             final IdTokenRecord idTokenRecord) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
     }
 
     @Override

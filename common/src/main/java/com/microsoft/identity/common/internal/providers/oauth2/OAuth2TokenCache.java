@@ -28,6 +28,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 
 import java.util.List;
 
@@ -60,6 +61,17 @@ public abstract class OAuth2TokenCache
     public abstract ICacheRecord save(final T oAuth2Strategy,
                                       final U request,
                                       final V response) throws ClientException;
+
+    /**
+     * Saves the supplied Account and Credential in the cache.
+     *
+     * @param accountRecord The AccountRecord to save.
+     * @param idTokenRecord The IdTokenRecord to save.
+     * @return The {@link ICacheRecord} containing the Account + Credential[s] saved to the cache.
+     */
+    public abstract ICacheRecord save(final AccountRecord accountRecord,
+                                      final IdTokenRecord idTokenRecord
+    );
 
     /**
      * Loads the tokens for the supplied Account into the result {@link ICacheRecord}.

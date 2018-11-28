@@ -344,6 +344,51 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
+    public void saveAccountDirect() {
+        mOauth2TokenCache = new MsalOAuth2TokenCache<>(
+                InstrumentationRegistry.getTargetContext(),
+                accountCredentialCache,
+                mockCredentialAdapter,
+                true
+        );
+
+        mOauth2TokenCache.save(
+                defaultTestBundle.mGeneratedAccount,
+                defaultTestBundle.mGeneratedIdToken
+        );
+
+        final AccountRecord account = mOauth2TokenCache.getAccount(
+                ENVIRONMENT,
+                CLIENT_ID,
+                HOME_ACCOUNT_ID,
+                REALM
+        );
+
+        final ICacheRecord cacheRecord = mOauth2TokenCache.load(
+                CLIENT_ID,
+                TARGET,
+                account
+        );
+
+        assertNotNull(cacheRecord);
+        assertNotNull(cacheRecord.getAccount());
+        assertNotNull(cacheRecord.getIdToken());
+
+        assertNull(cacheRecord.getAccessToken());
+        assertNull(cacheRecord.getRefreshToken());
+
+        assertEquals(
+                defaultTestBundle.mGeneratedAccount,
+                cacheRecord.getAccount()
+        );
+
+        assertEquals(
+                defaultTestBundle.mGeneratedIdToken,
+                cacheRecord.getIdToken()
+        );
+    }
+
+    @Test
     public void getAccount() throws ClientException {
         // Save an Account into the cache
         mOauth2TokenCache.save(
