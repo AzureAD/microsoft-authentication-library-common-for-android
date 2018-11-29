@@ -24,8 +24,14 @@ package com.microsoft.identity.common.internal.broker;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Pair;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
+
+import java.util.List;
 
 /**
  * Represents the broker request
@@ -290,6 +296,21 @@ public class BrokerRequest implements Parcelable {
 
     public void setSdkType(SdkType sdkType) {
         this.mSdkType = sdkType;
+    }
+
+
+    public static String getJsonStringForExtraQueryParams(List<Pair<String, String>> mExtraQueryStringParameters) {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(QueryParamsAdapter.class, new QueryParamsAdapter());
+        Gson gson = gsonBuilder.create();
+        return  gson.toJson(mExtraQueryStringParameters, QueryParamsAdapter.class);
+    }
+
+    public static List<Pair<String, String>> getExtraQueryParamsFromJsonString(String jsonString){
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(QueryParamsAdapter.class, new QueryParamsAdapter());
+        Gson gson = gsonBuilder.create();
+        return (List<Pair<String, String>>) gson.fromJson(jsonString, QueryParamsAdapter.class);
     }
 
 }
