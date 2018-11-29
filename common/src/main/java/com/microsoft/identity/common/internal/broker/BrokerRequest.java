@@ -298,19 +298,4 @@ public class BrokerRequest implements Parcelable {
         this.mSdkType = sdkType;
     }
 
-
-    public static String getJsonStringForExtraQueryParams(List<Pair<String, String>> mExtraQueryStringParameters) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(QueryParamsAdapter.class, new QueryParamsAdapter());
-        Gson gson = gsonBuilder.create();
-        return  gson.toJson(mExtraQueryStringParameters, QueryParamsAdapter.class);
-    }
-
-    public static List<Pair<String, String>> getExtraQueryParamsFromJsonString(String jsonString){
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(QueryParamsAdapter.class, new QueryParamsAdapter());
-        Gson gson = gsonBuilder.create();
-        return (List<Pair<String, String>>) gson.fromJson(jsonString, QueryParamsAdapter.class);
-    }
-
 }
