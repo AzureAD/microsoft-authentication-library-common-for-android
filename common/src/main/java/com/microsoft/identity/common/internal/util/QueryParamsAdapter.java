@@ -79,7 +79,8 @@ public class QueryParamsAdapter extends TypeAdapter<List<Pair<String, String>>> 
     }
 
     public static String _toJson(final List<Pair<String, String>> extraQueryStringParameters) {
-        return mGson.toJson(extraQueryStringParameters, QueryParamsAdapter.class);
+        final Type listType = new TypeToken<List<Pair<String, String>>>(){}.getType();
+        return mGson.toJson(extraQueryStringParameters, listType);
     }
 
     public static List<Pair<String, String>> _fromJson(final String jsonString) {
