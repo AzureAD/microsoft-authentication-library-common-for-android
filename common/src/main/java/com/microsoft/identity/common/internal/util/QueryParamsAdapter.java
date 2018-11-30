@@ -67,10 +67,10 @@ public class QueryParamsAdapter extends TypeAdapter<List<Pair<String, String>>> 
     @Override
     public List<Pair<String, String>> read(JsonReader in) throws IOException {
         in.beginObject();
-        List<Pair<String, String>> result = new ArrayList<>();
+        final List<Pair<String, String>> result = new ArrayList<>();
         while (in.hasNext()){
-            String key = in.nextName();
-            String value = in.nextString();
+            final String key = in.nextName();
+            final String value = in.nextString();
             final Pair<String, String> pair = new Pair<>(key, value);
             result.add(pair);
         }
@@ -83,7 +83,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Pair<String, String>>> 
     }
 
     public static List<Pair<String, String>> _fromJson(final String jsonString) {
-        Type listType = new TypeToken<List<Pair<String, String>>>(){}.getType();
+        final Type listType = new TypeToken<List<Pair<String, String>>>(){}.getType();
         return mGson.fromJson(jsonString, listType);
     }
 
