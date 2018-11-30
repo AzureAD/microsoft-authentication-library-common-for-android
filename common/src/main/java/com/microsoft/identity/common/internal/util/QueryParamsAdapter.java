@@ -54,7 +54,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Pair<String, String>>> 
     }
 
     @Override
-    public void write(JsonWriter out, List<Pair<String, String>> queryParams) throws IOException {
+    public void write(final JsonWriter out, final List<Pair<String, String>> queryParams) throws IOException {
         out.beginObject();
 
         for(final Pair<String, String> pair : queryParams){
@@ -65,7 +65,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Pair<String, String>>> 
     }
 
     @Override
-    public List<Pair<String, String>> read(JsonReader in) throws IOException {
+    public List<Pair<String, String>> read(final JsonReader in) throws IOException {
         in.beginObject();
         final List<Pair<String, String>> result = new ArrayList<>();
         while (in.hasNext()){

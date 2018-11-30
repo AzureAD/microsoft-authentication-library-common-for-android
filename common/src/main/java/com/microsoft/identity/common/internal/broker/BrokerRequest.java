@@ -24,14 +24,8 @@ package com.microsoft.identity.common.internal.broker;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Pair;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
-
-import java.util.List;
 
 /**
  * Represents the broker request
