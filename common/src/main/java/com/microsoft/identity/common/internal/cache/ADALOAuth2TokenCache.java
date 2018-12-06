@@ -37,6 +37,7 @@ import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -167,6 +168,14 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
+    public ICacheRecord save(final AccountRecord accountRecord,
+                             final IdTokenRecord idTokenRecord) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
     public ICacheRecord load(
             final String clientId,
             final String target,
@@ -186,7 +195,17 @@ public class ADALOAuth2TokenCache
     @Override
     public AccountRecord getAccount(final String environment,
                                     final String clientId,
-                                    final String homeAccountId) {
+                                    final String homeAccountId,
+                                    final String realm) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public AccountRecord getAccountWithLocalAccountId(final String environment,
+                                                      final String clientId,
+                                                      final String localAccountId) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
@@ -203,7 +222,8 @@ public class ADALOAuth2TokenCache
     @Override
     public boolean removeAccount(final String environment,
                                  final String clientId,
-                                 final String homeAccountId) {
+                                 final String homeAccountId,
+                                 final String realm) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );

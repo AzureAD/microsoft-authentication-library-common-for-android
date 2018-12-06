@@ -29,7 +29,6 @@ import android.support.test.runner.AndroidJUnit4;
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
@@ -37,6 +36,7 @@ import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -344,6 +344,44 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
+    public void saveAccountDirect() {
+        mOauth2TokenCache.save(
+                defaultTestBundle.mGeneratedAccount,
+                defaultTestBundle.mGeneratedIdToken
+        );
+
+        final AccountRecord account = mOauth2TokenCache.getAccount(
+                ENVIRONMENT,
+                CLIENT_ID,
+                HOME_ACCOUNT_ID,
+                REALM
+        );
+
+        final ICacheRecord cacheRecord = mOauth2TokenCache.load(
+                CLIENT_ID,
+                TARGET,
+                account
+        );
+
+        assertNotNull(cacheRecord);
+        assertNotNull(cacheRecord.getAccount());
+        assertNotNull(cacheRecord.getIdToken());
+
+        assertNull(cacheRecord.getAccessToken());
+        assertNull(cacheRecord.getRefreshToken());
+
+        assertEquals(
+                defaultTestBundle.mGeneratedAccount,
+                cacheRecord.getAccount()
+        );
+
+        assertEquals(
+                defaultTestBundle.mGeneratedIdToken,
+                cacheRecord.getIdToken()
+        );
+    }
+
+    @Test
     public void getAccount() throws ClientException {
         // Save an Account into the cache
         mOauth2TokenCache.save(
@@ -355,7 +393,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final AccountRecord account = mOauth2TokenCache.getAccount(
                 ENVIRONMENT,
                 CLIENT_ID,
-                HOME_ACCOUNT_ID
+                HOME_ACCOUNT_ID,
+                REALM
         );
 
         assertNotNull(account);
@@ -368,11 +407,107 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
+    public void getAccountDisambiguate() throws ClientException {
+        final int iterations = 10;
+        final List<AccountCredentialTestBundle> testBundles = new ArrayList<>();
+
+        for (int ii = 0; ii < iterations; ii++) {
+            testBundles.add(
+                    new AccountCredentialTestBundle(
+                            MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                            UUID.randomUUID().toString(),
+                            "test.user@tenant.onmicrosoft.com",
+                            HOME_ACCOUNT_ID,
+                            ENVIRONMENT,
+                            UUID.randomUUID().toString(),
+                            TARGET,
+                            CACHED_AT,
+                            EXPIRES_ON,
+                            SECRET,
+                            CLIENT_ID,
+                            SECRET,
+                            MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS
+                    )
+            );
+        }
+
+        for (int i = 0; i < iterations; i++) {
+            when(
+                    mockCredentialAdapter.createAccount(
+                            mockStrategy,
+                            mockRequest,
+                            mockResponse
+                    )
+            ).thenReturn(testBundles.get(i).mGeneratedAccount);
+
+            when(
+                    mockCredentialAdapter.createAccessToken(
+                            mockStrategy,
+                            mockRequest,
+                            mockResponse
+                    )
+            ).thenReturn(testBundles.get(i).mGeneratedAccessToken);
+
+            when(
+                    mockCredentialAdapter.createRefreshToken(
+                            mockStrategy,
+                            mockRequest,
+                            mockResponse
+                    )
+            ).thenReturn(testBundles.get(i).mGeneratedRefreshToken);
+
+            when(
+                    mockCredentialAdapter.createIdToken(
+                            mockStrategy,
+                            mockRequest,
+                            mockResponse
+                    )
+            ).thenReturn(testBundles.get(i).mGeneratedIdToken);
+
+            mOauth2TokenCache.save(
+                    mockStrategy,
+                    mockRequest,
+                    mockResponse
+            );
+        }
+
+        final List<AccountRecord> accounts = mOauth2TokenCache.getAccounts(
+                ENVIRONMENT,
+                CLIENT_ID
+        );
+
+        assertEquals(testBundles.size(), accounts.size());
+        for (final AccountCredentialTestBundle bundle : testBundles) {
+            assertTrue(accounts.contains(bundle.mGeneratedAccount));
+        }
+    }
+
+    @Test
+    public void getAccountByLocalAccountId() throws ClientException {
+        // Save an Account into the cache
+        mOauth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        // Find it by the local_account_id
+        final AccountRecord account = mOauth2TokenCache.getAccountWithLocalAccountId(
+                ENVIRONMENT,
+                CLIENT_ID,
+                LOCAL_ACCOUNT_ID
+        );
+
+        assertNotNull(account);
+    }
+
+    @Test
     public void getAccountCacheEmpty() {
         final AccountRecord account = mOauth2TokenCache.getAccount(
                 ENVIRONMENT,
                 CLIENT_ID,
-                HOME_ACCOUNT_ID
+                HOME_ACCOUNT_ID,
+                REALM
         );
 
         assertNull(account);
@@ -473,7 +608,14 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        assertTrue(mOauth2TokenCache.removeAccount(ENVIRONMENT, CLIENT_ID, HOME_ACCOUNT_ID));
+        assertTrue(
+                mOauth2TokenCache.removeAccount(
+                        ENVIRONMENT,
+                        CLIENT_ID,
+                        HOME_ACCOUNT_ID,
+                        REALM
+                )
+        );
     }
 
     @Test
@@ -489,14 +631,22 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mOauth2TokenCache.removeAccount(
                         "login.chinacloudapi.cn",
                         CLIENT_ID,
-                        HOME_ACCOUNT_ID
+                        HOME_ACCOUNT_ID,
+                        REALM
                 )
         );
     }
 
     @Test
     public void removeAccountCacheEmpty() {
-        assertFalse(mOauth2TokenCache.removeAccount(ENVIRONMENT, CLIENT_ID, HOME_ACCOUNT_ID));
+        assertFalse(
+                mOauth2TokenCache.removeAccount(
+                        ENVIRONMENT,
+                        CLIENT_ID,
+                        HOME_ACCOUNT_ID,
+                        REALM
+                )
+        );
     }
 
     @Test
