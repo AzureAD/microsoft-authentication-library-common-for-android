@@ -542,7 +542,7 @@ public class MsalOAuth2TokenCache
         }
 
         // If no realm is provided, remove the Account/Credetials from all realms.
-        final boolean isRealmAgnostic = null == realm;
+        final boolean isRealmAgnostic = (null == realm);
 
         Logger.info(
                 TAG + methodName,
