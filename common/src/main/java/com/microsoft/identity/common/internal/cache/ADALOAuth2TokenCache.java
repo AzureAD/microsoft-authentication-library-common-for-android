@@ -220,7 +220,7 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public AccountRecordDeletionResult removeAccount(final String environment,
+    public AccountRecordDeletionRecord removeAccount(final String environment,
                                                      final String clientId,
                                                      final String homeAccountId,
                                                      final String realm) {
