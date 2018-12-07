@@ -220,10 +220,10 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public boolean removeAccount(final String environment,
-                                 final String clientId,
-                                 final String homeAccountId,
-                                 final String realm) {
+    public AccountRecordDeletionResult removeAccount(final String environment,
+                                                     final String clientId,
+                                                     final String homeAccountId,
+                                                     final String realm) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );

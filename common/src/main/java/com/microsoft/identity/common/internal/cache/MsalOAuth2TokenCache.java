@@ -158,7 +158,8 @@ public class MsalOAuth2TokenCache
                     accountToSave.getEnvironment(),
                     refreshTokenToSave.getClientId(),
                     CredentialType.RefreshToken,
-                    accountToSave
+                    accountToSave,
+                    true
             );
 
             Logger.info(
@@ -486,11 +487,24 @@ public class MsalOAuth2TokenCache
         return false;
     }
 
+    /**
+     * Removes the specified Account or Accounts from the cache.
+     * <p>
+     * Note: if realm is passed as null, all tokens and AccountRecords associated to the
+     * provided homeAccountId will be deleted. If a realm is provided, then the deletion is
+     * restricted to only those AccountRecords and Credentials in that realm (tenant).
+     *
+     * @param environment   The environment to which the targeted Account is associated.
+     * @param clientId      The clientId of this current app.
+     * @param homeAccountId The homeAccountId of the Account targeted for deletion.
+     * @param realm         The tenant id of the targeted Account (if applicable).
+     * @return
+     */
     @Override
-    public boolean removeAccount(final String environment,
-                                 final String clientId,
-                                 final String homeAccountId,
-                                 @Nullable final String realm) {
+    public AccountRecordDeletionResult removeAccount(final String environment,
+                                                     final String clientId,
+                                                     final String homeAccountId,
+                                                     @Nullable final String realm) {
         final String methodName = ":removeAccount";
 
         Logger.infoPII(
@@ -524,36 +538,69 @@ public class MsalOAuth2TokenCache
                         homeAccountId,
                         realm
                 ))) {
-            return false;
+            return new AccountRecordDeletionResult(null);
         }
 
+        // If no realm is provided, remove the Account/Credetials from all realms.
+        final boolean isRealmAgnostic = null == realm;
+
+        Logger.info(
+                TAG + methodName,
+                "IsRealmAgnostic? " + isRealmAgnostic
+        );
+
         // Remove this user's AccessToken, RefreshToken, IdToken, and Account entries
-        int atsRemoved = removeCredentialsOfTypeForAccount(
+        final int atsRemoved = removeCredentialsOfTypeForAccount(
                 environment,
                 clientId,
                 CredentialType.AccessToken,
-                targetAccount
+                targetAccount,
+                isRealmAgnostic
         );
-        int rtsRemoved = removeCredentialsOfTypeForAccount(
+
+        final int rtsRemoved = removeCredentialsOfTypeForAccount(
                 environment,
                 clientId,
                 CredentialType.RefreshToken,
-                targetAccount
+                targetAccount,
+                isRealmAgnostic
         );
-        int idsRemoved = removeCredentialsOfTypeForAccount(
+
+        final int idsRemoved = removeCredentialsOfTypeForAccount(
                 environment,
                 clientId,
                 CredentialType.IdToken,
-                targetAccount
+                targetAccount,
+                isRealmAgnostic
         );
 
-        final boolean accountRemoved = mAccountCredentialCache.removeAccount(targetAccount);
+        final List<AccountRecord> deletedAccounts = new ArrayList<>();
+
+        if (isRealmAgnostic) {
+            // Remove all Accounts associated with this home_account_id...
+            final List<AccountRecord> accountsToRemove = mAccountCredentialCache.getAccountsFilteredBy(
+                    homeAccountId,
+                    environment,
+                    null // wildcard (*) realm
+            );
+
+            for (final AccountRecord accountToRemove : accountsToRemove) {
+                if (mAccountCredentialCache.removeAccount(accountToRemove)) {
+                    deletedAccounts.add(accountToRemove);
+                }
+            }
+        } else {
+            // Remove only the target Account
+            if (mAccountCredentialCache.removeAccount(targetAccount)) {
+                deletedAccounts.add(targetAccount);
+            }
+        }
 
         final String[][] logInfo = new String[][]{
                 {"Access tokens", String.valueOf(atsRemoved)},
                 {"Refresh tokens", String.valueOf(rtsRemoved)},
                 {"Id tokens", String.valueOf(idsRemoved)},
-                {"Accounts", accountRemoved ? "1" : "0"}
+                {"Accounts", String.valueOf(deletedAccounts.size())}
         };
 
         for (final String[] tuple : logInfo) {
@@ -563,21 +610,25 @@ public class MsalOAuth2TokenCache
             );
         }
 
-        return accountRemoved;
+        return new AccountRecordDeletionResult(deletedAccounts);
     }
 
     /**
      * Removes Credentials of the supplied type for the supplied Account.
      *
+     * @param environment    Entity which issued the token represented as a host.
+     * @param clientId       The clientId of the target app.
      * @param credentialType The type of Credential to remove.
      * @param targetAccount  The target Account whose Credentials should be removed.
+     * @param realmAgnostic  True if the specified action should be completed irrespective of realm.
      * @return The number of Credentials removed.
      */
     private int removeCredentialsOfTypeForAccount(
             @NonNull final String environment, // 'authority host'
             @NonNull final String clientId,
             @NonNull final CredentialType credentialType,
-            @NonNull final AccountRecord targetAccount) {
+            @NonNull final AccountRecord targetAccount,
+            boolean realmAgnostic) {
         int credentialsRemoved = 0;
 
         // Query it for Credentials matching the supplied targetAccount
@@ -587,7 +638,9 @@ public class MsalOAuth2TokenCache
                         environment,
                         credentialType,
                         clientId,
-                        targetAccount.getRealm(), // wildcard (*) realm
+                        realmAgnostic
+                                ? null // wildcard (*) realm
+                                : targetAccount.getRealm(),
                         null // wildcard (*) target
                 );
 
@@ -674,7 +727,8 @@ public class MsalOAuth2TokenCache
         }
     }
 
-    private void deleteAccessTokensWithIntersectingScopes(final AccessTokenRecord referenceToken) {
+    private void deleteAccessTokensWithIntersectingScopes(
+            final AccessTokenRecord referenceToken) {
         final String methodName = "deleteAccessTokensWithIntersectingScopes";
 
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
@@ -699,7 +753,8 @@ public class MsalOAuth2TokenCache
         }
     }
 
-    private boolean scopesIntersect(final AccessTokenRecord token1, final AccessTokenRecord token2) {
+    private boolean scopesIntersect(final AccessTokenRecord token1,
+                                    final AccessTokenRecord token2) {
         final String methodName = "scopesIntersect";
 
         final Set<String> token1Scopes = scopesAsSet(token1);

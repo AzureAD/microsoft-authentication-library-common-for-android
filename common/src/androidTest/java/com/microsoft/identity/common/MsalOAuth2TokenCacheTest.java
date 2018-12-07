@@ -72,7 +72,6 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.TARGET;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.USERNAME;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -590,6 +589,89 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
+    public void getAccountsWithDeletion() throws ClientException {
+        final int iterations = 10;
+        final List<AccountCredentialTestBundle> testBundles = new ArrayList<>();
+
+        final String randomHomeAccountId = UUID.randomUUID().toString();
+
+        for (int ii = 0; ii < iterations; ii++) {
+            testBundles.add(
+                    new AccountCredentialTestBundle(
+                            MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                            UUID.randomUUID().toString(),
+                            "test.user" + ii + "@tenant.onmicrosoft.com",
+                            randomHomeAccountId,
+                            ENVIRONMENT,
+                            UUID.randomUUID().toString(),
+                            TARGET,
+                            CACHED_AT,
+                            EXPIRES_ON,
+                            SECRET,
+                            CLIENT_ID,
+                            SECRET,
+                            MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS
+                    )
+            );
+        }
+
+        for (int i = 0; i < iterations; i++) {
+            when(
+                    mockCredentialAdapter.createAccount(
+                            mockStrategy,
+                            mockRequest,
+                            mockResponse
+                    )
+            ).thenReturn(testBundles.get(i).mGeneratedAccount);
+
+            when(
+                    mockCredentialAdapter.createAccessToken(
+                            mockStrategy,
+                            mockRequest,
+                            mockResponse
+                    )
+            ).thenReturn(testBundles.get(i).mGeneratedAccessToken);
+
+            when(
+                    mockCredentialAdapter.createRefreshToken(
+                            mockStrategy,
+                            mockRequest,
+                            mockResponse
+                    )
+            ).thenReturn(testBundles.get(i).mGeneratedRefreshToken);
+
+            when(
+                    mockCredentialAdapter.createIdToken(
+                            mockStrategy,
+                            mockRequest,
+                            mockResponse
+                    )
+            ).thenReturn(testBundles.get(i).mGeneratedIdToken);
+
+            mOauth2TokenCache.save(
+                    mockStrategy,
+                    mockRequest,
+                    mockResponse
+            );
+        }
+
+        final List<AccountRecord> accounts = mOauth2TokenCache.getAccounts(
+                ENVIRONMENT,
+                CLIENT_ID
+        );
+
+        assertEquals(
+                mOauth2TokenCache.removeAccount(
+                        ENVIRONMENT,
+                        CLIENT_ID,
+                        randomHomeAccountId,
+                        null
+                ).size(),
+                accounts.size()
+        );
+    }
+
+    @Test
     public void getAccountsCacheEmpty() {
         final List<AccountRecord> accounts = mOauth2TokenCache.getAccounts(
                 ENVIRONMENT,
@@ -608,13 +690,14 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        assertTrue(
+        assertEquals(
                 mOauth2TokenCache.removeAccount(
                         ENVIRONMENT,
                         CLIENT_ID,
                         HOME_ACCOUNT_ID,
                         REALM
-                )
+                ).size(),
+                1
         );
     }
 
@@ -627,25 +710,27 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        assertFalse(
+        assertEquals(
                 mOauth2TokenCache.removeAccount(
                         "login.chinacloudapi.cn",
                         CLIENT_ID,
                         HOME_ACCOUNT_ID,
                         REALM
-                )
+                ).size(),
+                0
         );
     }
 
     @Test
     public void removeAccountCacheEmpty() {
-        assertFalse(
+        assertEquals(
                 mOauth2TokenCache.removeAccount(
                         ENVIRONMENT,
                         CLIENT_ID,
                         HOME_ACCOUNT_ID,
                         REALM
-                )
+                ).size(),
+                0
         );
     }
 
