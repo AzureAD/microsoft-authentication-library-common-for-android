@@ -38,12 +38,12 @@ import java.util.ListIterator;
  * Functions as a 'receipt' when deleting AccountRecords: AccountRecords which have been removed
  * from the cache are returned in this container.
  */
-public class AccountRecordDeletionRecord implements List<AccountRecord> {
+public class AccountDeletionRecord implements List<AccountRecord> {
 
     private static final String RESULT_IS_READ_ONLY = "Result is read-only";
     private final List<AccountRecord> mAccountRecordList;
 
-    AccountRecordDeletionRecord(@Nullable final List<AccountRecord> accountRecordMetadataList) {
+    AccountDeletionRecord(@Nullable final List<AccountRecord> accountRecordMetadataList) {
         if (null == accountRecordMetadataList) {
             mAccountRecordList = new ArrayList<>();
         } else {

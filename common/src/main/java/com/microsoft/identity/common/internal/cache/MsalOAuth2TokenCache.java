@@ -501,10 +501,10 @@ public class MsalOAuth2TokenCache
      * @return
      */
     @Override
-    public AccountRecordDeletionRecord removeAccount(final String environment,
-                                                     final String clientId,
-                                                     final String homeAccountId,
-                                                     @Nullable final String realm) {
+    public AccountDeletionRecord removeAccount(final String environment,
+                                               final String clientId,
+                                               final String homeAccountId,
+                                               @Nullable final String realm) {
         final String methodName = ":removeAccount";
 
         Logger.infoPII(
@@ -538,7 +538,7 @@ public class MsalOAuth2TokenCache
                         homeAccountId,
                         realm
                 ))) {
-            return new AccountRecordDeletionRecord(null);
+            return new AccountDeletionRecord(null);
         }
 
         // If no realm is provided, remove the Account/Credetials from all realms.
@@ -610,7 +610,7 @@ public class MsalOAuth2TokenCache
             );
         }
 
-        return new AccountRecordDeletionRecord(deletedAccounts);
+        return new AccountDeletionRecord(deletedAccounts);
     }
 
     /**
