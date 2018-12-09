@@ -56,6 +56,30 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     public static final String DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES =
             "com.microsoft.identity.client.account_credential_cache";
 
+    /**
+     * Returns the generated filename for UID-specific caches.
+     *
+     * @param uid The uid of the current (or targeted) application.
+     * @return The uid-based cache filename.
+     */
+    public static String getBrokerUidSequesteredFilename(final int uid) {
+        return DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES
+                + ".uid-"
+                + uid;
+    }
+
+    /**
+     * Returns the generated filename for the foci caches.
+     *
+     * @param familyId The familyId to use.
+     * @return The familyId-based cache filename.
+     */
+    public static String getBrokerFociFilename(final int familyId) {
+        return DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES
+                + ".foci-"
+                + familyId;
+    }
+
     private static final AccountRecord EMPTY_ACCOUNT = new AccountRecord();
     private static final AccessTokenRecord EMPTY_AT = new AccessTokenRecord();
     private static final RefreshTokenRecord EMPTY_RT = new RefreshTokenRecord();
