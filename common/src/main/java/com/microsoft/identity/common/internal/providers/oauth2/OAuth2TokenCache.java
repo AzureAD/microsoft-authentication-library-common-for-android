@@ -28,6 +28,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 
 import java.util.List;
 
@@ -62,6 +63,17 @@ public abstract class OAuth2TokenCache
                                       final V response) throws ClientException;
 
     /**
+     * Saves the supplied Account and Credential in the cache.
+     *
+     * @param accountRecord The AccountRecord to save.
+     * @param idTokenRecord The IdTokenRecord to save.
+     * @return The {@link ICacheRecord} containing the Account + Credential[s] saved to the cache.
+     */
+    public abstract ICacheRecord save(final AccountRecord accountRecord,
+                                      final IdTokenRecord idTokenRecord
+    );
+
+    /**
      * Loads the tokens for the supplied Account into the result {@link ICacheRecord}.
      *
      * @param clientId The ClientId of the current app.
@@ -84,24 +96,39 @@ public abstract class OAuth2TokenCache
     public abstract boolean removeCredential(final Credential credential);
 
     /**
-     * Returns the IAccount matching the supplied criteria.
+     * Returns the AccountRecord matching the supplied criteria.
      *
-     * @param environment   The environment to which the sought IAccount is associated.
-     * @param clientId      The clientId to which the sought IAccouct is associated.
-     * @param homeAccountId The homeAccountId of the sought IAccount.
-     * @return The sought IAccount or null if it cannot be found.
+     * @param environment   The environment to which the sought AccountRecord is associated.
+     * @param clientId      The clientId to which the sought AccountRecord is associated.
+     * @param homeAccountId The homeAccountId of the sought AccountRecord.
+     * @param realm         The tenant id of the targeted account (if applicable).
+     * @return The sought AccountRecord or null if it cannot be found.
      */
     public abstract AccountRecord getAccount(final String environment,
                                              final String clientId,
-                                             final String homeAccountId
+                                             final String homeAccountId,
+                                             final String realm
     );
 
     /**
-     * Gets an immutable List of IAccounts for this app which have RefreshTokens in the cache.
+     * Returns the AccountRecord matching the supplied criteria.
+     *
+     * @param environment    The environment to which the sought IAccount is associated.
+     * @param clientId       The clientId to which the sought IAccount is associated.
+     * @param localAccountId The local account id of the targeted account.
+     * @return The sought AccountRecord or null if it cannot be found.
+     */
+    public abstract AccountRecord getAccountWithLocalAccountId(final String environment,
+                                                               final String clientId,
+                                                               final String localAccountId
+    );
+
+    /**
+     * Gets an immutable List of AccountRecords for this app which have RefreshTokens in the cache.
      *
      * @param clientId    The current application.
      * @param environment The current environment.
-     * @return An immutable List of IAccounts.
+     * @return An immutable List of AccountRecords.
      */
     public abstract List<AccountRecord> getAccounts(final String environment, final String clientId);
 
@@ -111,11 +138,14 @@ public abstract class OAuth2TokenCache
      * @param environment   The environment to which the targeted Account is associated.
      * @param clientId      The clientId of this current app.
      * @param homeAccountId The homeAccountId of the Account targeted for deletion.
+     * @param realm         The tenant id of the targeted Account (if applicable).
      * @return True, if the Account was deleted. False otherwise.
      */
     public abstract boolean removeAccount(final String environment,
                                           final String clientId,
-                                          final String homeAccountId);
+                                          final String homeAccountId,
+                                          final String realm
+    );
 
     /**
      * Gets the Context used to initialize this OAuth2TokenCache.

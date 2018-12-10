@@ -188,6 +188,53 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
+    public ICacheRecord save(@NonNull final AccountRecord accountToSave,
+                             @NonNull final IdTokenRecord idTokenToSave) {
+        final String methodName = ":save";
+
+        Logger.verbose(
+                TAG + methodName,
+                "Importing AccountRecord, IdTokenRecord (direct)"
+        );
+
+        // Validate the incoming artifacts
+        final boolean isAccountCompliant = isAccountSchemaCompliant(accountToSave);
+        final boolean isIdTokenCompliant = isIdTokenSchemaCompliant(idTokenToSave);
+
+        final CacheRecord result = new CacheRecord();
+
+        if (!(isAccountCompliant && isIdTokenCompliant)) {
+            String nonCompliantCredentials = "[";
+
+            if (!isAccountCompliant) {
+                nonCompliantCredentials += "(Account)";
+            }
+
+            if (!isIdTokenCompliant) {
+                nonCompliantCredentials += "(ID)";
+            }
+
+            nonCompliantCredentials += "]";
+
+            Logger.warn(
+                    TAG + methodName,
+                    "Skipping persistence of non-compliant credentials: "
+                            + nonCompliantCredentials
+            );
+        } else {
+            // Save the inputs
+            saveAccounts(accountToSave);
+            saveCredentials(idTokenToSave);
+
+            // Set them as the result outputs
+            result.setAccount(accountToSave);
+            result.setIdToken(idTokenToSave);
+        }
+
+        return result;
+    }
+
+    @Override
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
                              @NonNull final AccountRecord account) {
@@ -275,7 +322,8 @@ public class MsalOAuth2TokenCache
     @Override
     public AccountRecord getAccount(@Nullable final String environment,
                                     @NonNull final String clientId,
-                                    @NonNull final String homeAccountId) {
+                                    @NonNull final String homeAccountId,
+                                    @Nullable final String realm) {
         final String methodName = ":getAccount";
 
         Logger.infoPII(
@@ -293,6 +341,11 @@ public class MsalOAuth2TokenCache
                 "HomeAccountId: [" + homeAccountId + "]"
         );
 
+        Logger.infoPII(
+                TAG + methodName,
+                "Realm: [" + realm + "]"
+        );
+
         final List<AccountRecord> allAccounts = getAccounts(environment, clientId);
 
         Logger.info(
@@ -300,9 +353,10 @@ public class MsalOAuth2TokenCache
                 "Found " + allAccounts.size() + " accounts"
         );
 
-        // Return the sought Account matching the supplied homeAccountId
+        // Return the sought Account matching the supplied homeAccountId and realm, if applicable
         for (final AccountRecord account : allAccounts) {
-            if (homeAccountId.equals(account.getHomeAccountId())) {
+            if (homeAccountId.equals(account.getHomeAccountId())
+                    && (null == realm || realm.equals(account.getRealm()))) {
                 return account;
             }
         }
@@ -311,6 +365,28 @@ public class MsalOAuth2TokenCache
                 TAG + methodName,
                 "No matching account found."
         );
+
+        return null;
+    }
+
+    @Override
+    public AccountRecord getAccountWithLocalAccountId(@Nullable String environment,
+                                                      @NonNull String clientId,
+                                                      @NonNull String localAccountId) {
+        final String methodName = ":getAccountWithLocalAccountId";
+
+        final List<AccountRecord> accounts = getAccounts(environment, clientId);
+
+        Logger.infoPII(
+                TAG + methodName,
+                "LocalAccountId: [" + localAccountId + "]"
+        );
+
+        for (final AccountRecord account : accounts) {
+            if (localAccountId.equals(account.getLocalAccountId())) {
+                return account;
+            }
+        }
 
         return null;
     }
@@ -350,7 +426,7 @@ public class MsalOAuth2TokenCache
                 mAccountCredentialCache.getCredentialsFilteredBy(
                         null, // homeAccountId
                         environment,
-                        CredentialType.RefreshToken,
+                        CredentialType.IdToken,
                         clientId,
                         null, // realm
                         null // target
@@ -413,7 +489,8 @@ public class MsalOAuth2TokenCache
     @Override
     public boolean removeAccount(final String environment,
                                  final String clientId,
-                                 final String homeAccountId) {
+                                 final String homeAccountId,
+                                 @Nullable final String realm) {
         final String methodName = ":removeAccount";
 
         Logger.infoPII(
@@ -431,6 +508,11 @@ public class MsalOAuth2TokenCache
                 "HomeAccountId: [" + homeAccountId + "]"
         );
 
+        Logger.infoPII(
+                TAG + methodName,
+                "Realm: [" + realm + "]"
+        );
+
         final AccountRecord targetAccount;
         if (null == environment
                 || null == clientId
@@ -439,7 +521,8 @@ public class MsalOAuth2TokenCache
                 getAccount(
                         environment,
                         clientId,
-                        homeAccountId
+                        homeAccountId,
+                        realm
                 ))) {
             return false;
         }
@@ -504,7 +587,7 @@ public class MsalOAuth2TokenCache
                         environment,
                         credentialType,
                         clientId,
-                        null, // wildcard (*) realm
+                        targetAccount.getRealm(), // wildcard (*) realm
                         null // wildcard (*) target
                 );
 
