@@ -32,6 +32,47 @@ import java.util.List;
 
 public class ServiceException extends BaseException {
 
+    /**
+     * This request is missing a required parameter, includes an invalid parameter, includes a parameter more than
+     * once, or is otherwise malformed.
+     */
+    public static final String INVALID_REQUEST = "invalid_request";
+
+    /**
+     * The client is not authorized to request an authorization code.
+     */
+    public static final String UNAUTHORIZED_CLIENT = "unauthorized_client";
+
+    /**
+     * The resource owner or authorization server denied the request.
+     */
+    public static final String ACCESS_DENIED = "access_denied";
+
+    /**
+     * The request scope is invalid, unknown or malformed.
+     */
+    public static final String INVALID_SCOPE = "invalid_scope";
+
+    /**
+     * Represents 500/503/504 error codes.
+     */
+    public static final String SERVICE_NOT_AVAILABLE = "service_not_available";
+
+    /**
+     * Represents {@link java.net.SocketTimeoutException}.
+     */
+    public static final String REQUEST_TIMEOUT = "request_timeout";
+
+    /**
+     * AuthorityMetadata validation failed.
+     */
+    public static final String INVALID_INSTANCE = "invalid_instance";
+
+    /**
+     * Request to server failed, but no error and error_description is returned back from the service.
+     */
+    public static final String UNKNOWN_ERROR = "unknown_error";
+
     private int mHttpStatusCode;
 
     private HashMap<String, String> mHttpResponseBody = null;
@@ -41,7 +82,7 @@ public class ServiceException extends BaseException {
     /**
      * When {@link java.net.SocketTimeoutException} is thrown, no status code will be caught. Will use 0 instead.
      */
-    static final int DEFAULT_STATUS_CODE = 0;
+    public static final int DEFAULT_STATUS_CODE = 0;
 
     /**
      * @return The http status code for the request sent to the service.
