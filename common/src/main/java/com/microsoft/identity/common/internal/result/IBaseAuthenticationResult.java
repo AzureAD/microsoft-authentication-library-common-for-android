@@ -23,36 +23,54 @@
 
 package com.microsoft.identity.common.internal.result;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import java.util.Date;
+
 /**
  * Interface to wrap successful authentication result. When auth succeeds, token will be wrapped into the
- * {@link IAuthenticationResult}
+ * {@link IBaseAuthenticationResult}
  */
-public interface IAuthenticationResult {
+public interface IBaseAuthenticationResult {
 
     /**
      * @return The access token requested.
      */
-     String getAccessToken();
+    @NonNull
+    String getAccessToken();
+
+    /**
+     * @return The expiration time of the access token returned in the Token property.
+     * This value is calculated based on current UTC time measured locally and the value expiresIn returned from the
+     * service.
+     */
+    @NonNull
+    Date getExpiresOn();
 
     /**
      * @return A unique tenant identifier that was used in token acquisiton. Could be null if tenant information is not
      * returned by the service.
      */
+    @Nullable
     String getTenantId();
 
     /**
      * @return The unique identifier of the user.
      */
+    @NonNull
     String getUniqueId();
 
     /**
      * @return The id token returned by the service or null if no id token is returned.
      */
+    @Nullable
     String getIdToken();
 
 
     /**
      * @return The scopes returned from the service.
      */
+    @NonNull
     String[] getScope();
 }

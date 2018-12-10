@@ -24,19 +24,19 @@
 package com.microsoft.identity.common.internal.request;
 
 import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.internal.result.IAuthenticationResult;
+import com.microsoft.identity.common.internal.result.IBaseAuthenticationResult;
 
 /**
- * Callback passed with token acquisition. {@link IAuthenticationResult} or {@link Exception} will be returned back via callback.
+ * Callback passed with token acquisition. {@link IBaseAuthenticationResult} or {@link Exception} will be returned back via callback.
  */
 public interface IAuthenticationCallback {
 
     /**
      * Authentication finishes successfully.
      *
-     * @param authenticationResult {@link IAuthenticationResult} that contains the success response.
+     * @param authenticationResult {@link IBaseAuthenticationResult} that contains the success response.
      */
-    void onSuccess(final IAuthenticationResult authenticationResult);
+    void onSuccess(final IBaseAuthenticationResult authenticationResult);
 
 
     /**
