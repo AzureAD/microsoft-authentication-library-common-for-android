@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
@@ -46,6 +47,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorRespons
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -176,14 +178,14 @@ public class MicrosoftStsOAuth2Strategy
         // in the InstanceDiscoveryMetadata
         URL authority = null;
         try {
-             authority = new URL(mTokenEndpoint);
+            authority = new URL(mTokenEndpoint);
         } catch (MalformedURLException e) {
             Logger.verbose(
                     TAG + methodName,
                     "Creating account from TokenResponse failed due to malformed URL (mTokenEndpoint)..."
             );
         }
-        if(authority != null) {
+        if (authority != null) {
             account.setEnvironment(getIssuerCacheIdentifierFromAuthority(authority));
         }
 
@@ -224,27 +226,20 @@ public class MicrosoftStsOAuth2Strategy
         if (null != account) {
             final String homeAccountId = account.getHomeAccountId();
 
-            // Split this value by its parts... <uid>.<utid>
-            final int EXPECTED_LENGTH = 2;
-            final int INDEX_UID = 0;
-            final int INDEX_UTID = 1;
-
-            final String[] uidUtidPair = homeAccountId.split("\\.");
-
-            if (EXPECTED_LENGTH == uidUtidPair.length
-                    && !StringExtensions.isNullOrBlank(uidUtidPair[INDEX_UID])
-                    && !StringExtensions.isNullOrBlank(uidUtidPair[INDEX_UTID])) {
-                builder.setUid(uidUtidPair[INDEX_UID]);
-                builder.setUtid(uidUtidPair[INDEX_UTID]);
+            final Pair<String, String> uidUtidPair = StringUtil.getTenantInfo(homeAccountId);
+            if (!StringExtensions.isNullOrBlank(uidUtidPair.first)
+                    && !StringExtensions.isNullOrBlank(uidUtidPair.second)) {
+                builder.setUid(uidUtidPair.first);
+                builder.setUtid(uidUtidPair.second);
 
                 Logger.verbosePII(
                         TAG + methodName,
-                        "Builder w/ uid: [" + uidUtidPair[INDEX_UID] + "]"
+                        "Builder w/ uid: [" + uidUtidPair.first + "]"
                 );
 
                 Logger.verbosePII(
                         TAG + methodName,
-                        "Builder w/ utid: [" + uidUtidPair[INDEX_UTID] + "]"
+                        "Builder w/ utid: [" + uidUtidPair.second + "]"
                 );
             }
         }
@@ -261,7 +256,7 @@ public class MicrosoftStsOAuth2Strategy
                 "Creating TokenRequest..."
         );
 
-        if(mConfig.getMultipleCloudsSupported()){
+        if (mConfig.getMultipleCloudsSupported()) {
             setTokenEndpoint(getCloudSpecificAuthorityBasedOnAuthorizationResponse(response));
         }
 
@@ -323,7 +318,7 @@ public class MicrosoftStsOAuth2Strategy
         return new TokenResult(tokenResponse, tokenErrorResponse);
     }
 
-    private String getCloudSpecificAuthorityBasedOnAuthorizationResponse(MicrosoftStsAuthorizationResponse response){
+    private String getCloudSpecificAuthorityBasedOnAuthorizationResponse(MicrosoftStsAuthorizationResponse response) {
 
         final String newAuthority = Uri.parse(mTokenEndpoint).buildUpon()
                 .authority(response.getCloudInstanceHostName())

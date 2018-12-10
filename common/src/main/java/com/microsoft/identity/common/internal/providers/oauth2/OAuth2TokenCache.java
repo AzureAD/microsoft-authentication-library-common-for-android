@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.content.Context;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -139,12 +140,12 @@ public abstract class OAuth2TokenCache
      * @param clientId      The clientId of this current app.
      * @param homeAccountId The homeAccountId of the Account targeted for deletion.
      * @param realm         The tenant id of the targeted Account (if applicable).
-     * @return True, if the Account was deleted. False otherwise.
+     * @return The {@link AccountDeletionRecord} containing the removed AccountRecords.
      */
-    public abstract boolean removeAccount(final String environment,
-                                          final String clientId,
-                                          final String homeAccountId,
-                                          final String realm
+    public abstract AccountDeletionRecord removeAccount(final String environment,
+                                                        final String clientId,
+                                                        final String homeAccountId,
+                                                        final String realm
     );
 
     /**
