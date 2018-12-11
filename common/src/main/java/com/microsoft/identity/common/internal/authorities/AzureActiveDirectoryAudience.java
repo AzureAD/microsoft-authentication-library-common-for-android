@@ -29,28 +29,28 @@ public abstract class AzureActiveDirectoryAudience {
 
     private static final String TAG = AzureActiveDirectoryAudience.class.getSimpleName();
 
-    private String cloudUrl;
+    private String mCloudUrl;
     @SerializedName("tenant_id")
-    private String tenantId;
+    private String mTenantId;
 
     public static final String ORGANIZATIONS = "organizations";
     public static final String CONSUMERS = "consumers";
     public static final String ALL = "common";
 
     public String getCloudUrl() {
-        return this.cloudUrl;
+        return mCloudUrl;
     }
 
     public void setCloudUrl(String cloudUrl) {
-        this.cloudUrl = cloudUrl;
+        mCloudUrl = cloudUrl;
     }
 
     public String getTenantId() {
-        return tenantId;
+        return mTenantId;
     }
 
     public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
+        mTenantId = tenantId;
     }
 
     public static AzureActiveDirectoryAudience getAzureActiveDirectoryAudience(final String cloudUrl,

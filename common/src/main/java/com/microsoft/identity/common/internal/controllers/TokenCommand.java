@@ -101,7 +101,7 @@ public class TokenCommand implements TokenOperation {
                     return result;
                 }
             }catch(UiRequiredException e){
-                if(e.getErrorCode() == UiRequiredException.INVALID_GRANT){
+                if(e.getErrorCode().equals(UiRequiredException.INVALID_GRANT)){
                     continue;
                 }else{
                     throw e;

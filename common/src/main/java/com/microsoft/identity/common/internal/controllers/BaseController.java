@@ -22,11 +22,15 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.UiRequiredException;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -36,10 +40,31 @@ import java.util.concurrent.ExecutionException;
 
 public abstract class BaseController {
 
+    private static final String TAG = BaseController.class.getSimpleName();
+
     public abstract AcquireTokenResult acquireToken(AcquireTokenOperationParameters request) throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException;
 
     public abstract void completeAcquireToken(int requestCode, int resultCode, final Intent data);
 
     public abstract AcquireTokenResult acquireTokenSilent(AcquireTokenSilentOperationParameters request) throws IOException, ClientException, UiRequiredException, ArgumentException;
+
+
+    protected void throwIfNetworkNotAvailable(final Context context) throws ClientException {
+        final String methodName = ":throwIfNetworkNotAvailable";
+        final ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        final NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+
+        if (networkInfo == null || !networkInfo.isConnected()) {
+            throw new ClientException(
+                    ClientException.DEVICE_NETWORK_NOT_AVAILABLE,
+                    "Device network connection is not available."
+            );
+        }
+
+        Logger.info(
+                TAG + methodName,
+                "Network status: connected"
+        );
+    }
 
 }
