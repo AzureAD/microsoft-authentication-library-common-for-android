@@ -135,47 +135,47 @@ public class ApiDispatcher {
 
     private static void logInteractiveRequestParameters(final String methodName,
                                                         final AcquireTokenOperationParameters params) {
-        com.microsoft.identity.common.internal.logging.Logger.verbose(
+        Logger.verbose(
                 TAG + methodName,
                 "Requested "
                         + params.getScopes().size()
                         + " scopes"
         );
 
-        com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "----\nRequested scopes:"
         );
         for (final String scope : params.getScopes()) {
-            com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+            Logger.verbosePII(
                     TAG + methodName,
                     "\t" + scope
             );
         }
-        com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "----"
         );
-        com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "ClientId: [" + params.getClientId() + "]"
         );
-        com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "RedirectUri: [" + params.getRedirectUri() + "]"
         );
-        com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "Login hint: [" + params.getLoginHint() + "]"
         );
 
         if (null != params.getExtraQueryStringParameters()) {
-            com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+            Logger.verbosePII(
                     TAG + methodName,
                     "Extra query params:"
             );
             for (final Pair<String, String> qp : params.getExtraQueryStringParameters()) {
-                com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+                Logger.verbosePII(
                         TAG + methodName,
                         "\t\"" + qp.first + "\":\"" + qp.second + "\""
                 );
@@ -183,25 +183,25 @@ public class ApiDispatcher {
         }
 
         if (null != params.getExtraScopesToConsent()) {
-            com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+            Logger.verbosePII(
                     TAG + methodName,
                     "Extra scopes to consent:"
             );
             for (final String extraScope : params.getExtraScopesToConsent()) {
-                com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+                Logger.verbosePII(
                         TAG + methodName,
                         "\t" + extraScope
                 );
             }
         }
 
-        com.microsoft.identity.common.internal.logging.Logger.verbose(
+        Logger.verbose(
                 TAG + methodName,
                 "Using authorization agent: " + params.getAuthorizationAgent().toString()
         );
 
         if (null != params.getAccount()) {
-            com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+            Logger.verbosePII(
                     TAG + methodName,
                     "Using account: " + params.getAccount().getHomeAccountId()
             );
@@ -210,34 +210,34 @@ public class ApiDispatcher {
 
     private static void logSilentRequestParams(final String methodName,
                                                final AcquireTokenSilentOperationParameters parameters) {
-        com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "ClientId: [" + parameters.getClientId() + "]"
         );
-        com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "----\nRequested scopes:"
         );
 
         for (final String scope : parameters.getScopes()) {
-            com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+            Logger.verbosePII(
                     TAG + methodName,
                     "\t" + scope
             );
         }
-        com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "----"
         );
 
         if (null != parameters.getAccount()) {
-            com.microsoft.identity.common.internal.logging.Logger.verbosePII(
+            Logger.verbosePII(
                     TAG + methodName,
                     "Using account: " + parameters.getAccount().getHomeAccountId()
             );
         }
 
-        com.microsoft.identity.common.internal.logging.Logger.verbose(
+        Logger.verbose(
                 TAG + methodName,
                 "Force refresh? [" + parameters.getForceRefresh() + "]"
         );
