@@ -30,7 +30,15 @@ import android.net.NetworkInfo;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.UiRequiredException;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -48,7 +56,6 @@ public abstract class BaseController {
 
     public abstract AcquireTokenResult acquireTokenSilent(AcquireTokenSilentOperationParameters request) throws IOException, ClientException, UiRequiredException, ArgumentException;
 
-
     protected void throwIfNetworkNotAvailable(final Context context) throws ClientException {
         final String methodName = ":throwIfNetworkNotAvailable";
         final ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -65,6 +72,43 @@ public abstract class BaseController {
                 TAG + methodName,
                 "Network status: connected"
         );
+    }
+
+    protected TokenResult performTokenRequest(final OAuth2Strategy strategy,
+                                            final AuthorizationRequest request,
+                                            final AuthorizationResponse response,
+                                            final AcquireTokenOperationParameters parameters)
+            throws IOException, ClientException {
+        throwIfNetworkNotAvailable(parameters.getAppContext());
+
+        TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
+        tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
+
+        TokenResult tokenResult = null;
+
+        tokenResult = strategy.requestToken(tokenRequest);
+
+        return tokenResult;
+    }
+
+    protected ICacheRecord saveTokens(final OAuth2Strategy strategy,
+                                    final AuthorizationRequest request,
+                                    final TokenResponse tokenResponse,
+                                    final OAuth2TokenCache tokenCache) throws ClientException {
+        final String methodName = ":saveTokens";
+        Logger.verbose(
+                TAG + methodName,
+                "Saving tokens..."
+        );
+        return tokenCache.save(strategy, request, tokenResponse);
+    }
+
+    protected boolean refreshTokenIsNull(ICacheRecord cacheRecord) {
+        return null == cacheRecord.getRefreshToken();
+    }
+
+    protected boolean accessTokenIsNull(ICacheRecord cacheRecord) {
+        return null == cacheRecord.getAccessToken();
     }
 
 }
