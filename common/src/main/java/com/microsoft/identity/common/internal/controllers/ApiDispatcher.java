@@ -33,7 +33,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
-import com.microsoft.identity.common.internal.result.IBaseAuthenticationResult;
+import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -99,7 +99,7 @@ public class ApiDispatcher {
                     } else {
                         if (null != result && result.getSucceeded()) {
                             //Post Success
-                            final IBaseAuthenticationResult authenticationResult = result.getAuthenticationResult();
+                            final ILocalAuthenticationResult authenticationResult = result.getLocalAuthenticationResult();
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -296,7 +296,7 @@ public class ApiDispatcher {
                 } else {
                     if (null != result && result.getSucceeded()) {
                         //Post Success
-                        final IBaseAuthenticationResult authenticationResult = result.getAuthenticationResult();
+                        final ILocalAuthenticationResult authenticationResult = result.getLocalAuthenticationResult();
                         handler.post(new Runnable() {
                             @Override
                             public void run() {

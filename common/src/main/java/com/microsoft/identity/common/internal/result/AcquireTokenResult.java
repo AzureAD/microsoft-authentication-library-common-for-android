@@ -27,18 +27,18 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 public class AcquireTokenResult {
 
-    private IBaseAuthenticationResult mAuthenticationResult;
+    private ILocalAuthenticationResult mLocalAuthenticationResult;
     private TokenResult mTokenResult;
     private AuthorizationResult mAuthorizationResult;
     private Boolean mSucceeded = false;
 
-    public void setAuthenticationResult(IBaseAuthenticationResult result) {
-        this.mAuthenticationResult = result;
+    public void setLocalAuthenticationResult(ILocalAuthenticationResult result) {
+        this.mLocalAuthenticationResult = result;
         this.mSucceeded = true;
     }
 
-    public IBaseAuthenticationResult getAuthenticationResult() {
-        return this.mAuthenticationResult;
+    public ILocalAuthenticationResult getLocalAuthenticationResult() {
+        return this.mLocalAuthenticationResult;
     }
 
     public TokenResult getTokenResult() {

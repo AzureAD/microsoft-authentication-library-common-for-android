@@ -26,7 +26,6 @@ import android.content.Context;
 
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.authorities.Authority;
-import com.microsoft.identity.common.internal.claims.ClaimsRequest;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
@@ -45,7 +44,7 @@ public class OperationParameters {
     private String clientId;
     private String redirectUri;
     private Authority mAuthority;
-    private ClaimsRequest mClaimsRequest;
+    private String mClaimsRequestJson;
 
     public Context getAppContext() {
         return mAppContext;
@@ -103,12 +102,12 @@ public class OperationParameters {
         return mAccount;
     }
 
-    public ClaimsRequest getClaimsRequest() {
-        return mClaimsRequest;
+    public String getClaimsRequestJson() {
+        return mClaimsRequestJson;
     }
 
-    public void setClaimsRequest(ClaimsRequest mClaimsRequest) {
-        this.mClaimsRequest = mClaimsRequest;
+    public void setClaimsRequest(String claimsRequestJson) {
+        mClaimsRequestJson = claimsRequestJson;
     }
 
 

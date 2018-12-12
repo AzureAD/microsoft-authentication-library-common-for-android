@@ -29,7 +29,7 @@ import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
-import com.microsoft.identity.common.internal.request.IAuthenticationCallback;
+import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.io.IOException;
@@ -42,7 +42,7 @@ public class InteractiveTokenCommand extends TokenCommand {
     public InteractiveTokenCommand(Context context,
                                    AcquireTokenOperationParameters parameters,
                                    BaseController controller,
-                                   IAuthenticationCallback callback) {
+                                   ILocalAuthenticationCallback callback) {
         mContext = context;
         mParameters = parameters;
         mController = controller;

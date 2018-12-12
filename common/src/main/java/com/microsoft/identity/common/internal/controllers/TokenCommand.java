@@ -30,7 +30,7 @@ import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
-import com.microsoft.identity.common.internal.request.IAuthenticationCallback;
+import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
@@ -46,7 +46,7 @@ public class TokenCommand implements TokenOperation {
     protected BaseController mController;
     protected List<BaseController> mControllers;
     protected Context mContext;
-    protected IAuthenticationCallback mCallback;
+    protected ILocalAuthenticationCallback mCallback;
 
 
     public TokenCommand() {
@@ -55,7 +55,7 @@ public class TokenCommand implements TokenOperation {
     public TokenCommand(@NonNull final Context context,
                         @NonNull final OperationParameters parameters,
                         @NonNull final BaseController controller,
-                        @NonNull final IAuthenticationCallback callback) {
+                        @NonNull final ILocalAuthenticationCallback callback) {
         mContext = context;
         mParameters = parameters;
         mController = controller;
@@ -69,7 +69,7 @@ public class TokenCommand implements TokenOperation {
     public TokenCommand(@NonNull final Context context,
                         @NonNull final OperationParameters parameters,
                         @NonNull final List<BaseController> controllers,
-                        @NonNull final IAuthenticationCallback callback) {
+                        @NonNull final ILocalAuthenticationCallback callback) {
         mContext = context;
         mParameters = parameters;
         mController = null;
@@ -148,11 +148,11 @@ public class TokenCommand implements TokenOperation {
         this.mContext = context;
     }
 
-    public IAuthenticationCallback getCallback() {
+    public ILocalAuthenticationCallback getCallback() {
         return mCallback;
     }
 
-    public void setCallback(IAuthenticationCallback callback) {
+    public void setCallback(ILocalAuthenticationCallback callback) {
         this.mCallback = callback;
     }
 }

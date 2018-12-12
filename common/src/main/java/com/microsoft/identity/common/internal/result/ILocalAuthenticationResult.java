@@ -26,13 +26,16 @@ package com.microsoft.identity.common.internal.result;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
+
 import java.util.Date;
 
 /**
  * Interface to wrap successful authentication result. When auth succeeds, token will be wrapped into the
- * {@link IBaseAuthenticationResult}
+ * {@link ILocalAuthenticationResult}
  */
-public interface IBaseAuthenticationResult {
+public interface ILocalAuthenticationResult {
 
     /**
      * @return The access token requested.
@@ -67,6 +70,22 @@ public interface IBaseAuthenticationResult {
     @Nullable
     String getIdToken();
 
+    /**
+     * Gets the AccountRecord.
+     *
+     * @return The AccountRecord to get.
+     */
+    @NonNull
+    IAccountRecord getAccountRecord();
+
+
+    /**
+     * Gets the {@link AccessTokenRecord}.
+     *
+     * @return The AccessTokenRecord to get.
+     */
+    @NonNull
+    AccessTokenRecord getAccessTokenRecord();
 
     /**
      * @return The scopes returned from the service.
