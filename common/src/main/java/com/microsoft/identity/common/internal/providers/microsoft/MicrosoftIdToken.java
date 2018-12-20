@@ -68,7 +68,7 @@ public class MicrosoftIdToken extends IDToken {
      * tenants, the user will contain a different object ID in each tenant - they are considered
      * different accounts, even though the user logs into each account with the same credentials.
      */
-    public static final String OJBECT_ID = "oid";
+    public static final String OBJECT_ID = "oid";
 
     /**
      * A GUID that represents the Azure AD tenant that the user is from. For work and school

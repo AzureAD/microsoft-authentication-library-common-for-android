@@ -25,6 +25,7 @@ package com.microsoft.identity.common.adal.internal;
 
 import android.net.Uri;
 
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
 import java.io.Serializable;
@@ -96,11 +97,11 @@ public class UserInfo implements Serializable {
      */
     public UserInfo(IDToken idToken) {
         Map<String, String> claims = idToken.getTokenClaims();
-        mUniqueId = claims.get(claims.get(AuthenticationConstants.OAuth2.ID_TOKEN_OBJECT_ID));
+        mUniqueId = claims.get(MicrosoftIdToken.OBJECT_ID);
         mGivenName = claims.get(AuthenticationConstants.OAuth2.ID_TOKEN_GIVEN_NAME);
         mFamilyName = claims.get(AuthenticationConstants.OAuth2.ID_TOKEN_FAMILY_NAME);
         mIdentityProvider = claims.get(AuthenticationConstants.OAuth2.ID_TOKEN_IDENTITY_PROVIDER);
-        mDisplayableId =  claims.get(AuthenticationConstants.OAuth2.ID_TOKEN_UPN);
+        mDisplayableId =  claims.get(IDToken.PREFERRED_USERNAME);
     }
 
     /**
