@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -82,8 +83,8 @@ public abstract class BaseController {
     }
 
 
-    protected AuthorizationRequest getAuthorizationRequest(final OAuth2Strategy strategy,
-                                                         final OperationParameters parameters) {
+    protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
+                                                         @NonNull final OperationParameters parameters) {
         AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
 
         List<String> msalScopes = new ArrayList<>();
