@@ -35,7 +35,7 @@ import java.util.Date;
  * Interface to wrap successful authentication result. When auth succeeds, token will be wrapped into the
  * {@link ILocalAuthenticationResult}
  */
-public interface ILocalAuthenticationResult {
+public interface ILocalAuthenticationResult<GenericAccountRecord extends IAccountRecord> {
 
     /**
      * @return The access token requested.
@@ -71,12 +71,12 @@ public interface ILocalAuthenticationResult {
     String getIdToken();
 
     /**
-     * Gets the AccountRecord.
+     * Gets the IAccountRecord.
      *
-     * @return The AccountRecord to get.
+     * @return The IAccountRecord to get.
      */
     @NonNull
-    IAccountRecord getAccountRecord();
+    GenericAccountRecord getAccountRecord();
 
 
     /**
