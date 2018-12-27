@@ -98,7 +98,7 @@ public abstract class BaseController {
         try {
             correlationId = UUID.fromString(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         } catch (IllegalArgumentException ex) {
-            Logger.error("LocalMsalController", "correlation id from diagnostic context is not a UUID", ex);
+            Logger.error(TAG, "correlation id from diagnostic context is not a UUID", ex);
         }
 
         AuthorizationRequest.Builder request = builder

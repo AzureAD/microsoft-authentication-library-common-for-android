@@ -38,6 +38,14 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
 
     /**
      * Constructor of MicrosoftStsAccount.
+     */
+    public MicrosoftStsAccount() {
+        super();
+        Logger.verbose(TAG, "Init: " + TAG);
+    }
+
+    /**
+     * Constructor of MicrosoftStsAccount.
      *
      * @param idToken    IDToken
      * @param clientInfo clientInfo
