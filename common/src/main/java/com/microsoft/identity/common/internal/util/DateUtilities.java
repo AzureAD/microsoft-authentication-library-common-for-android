@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.util;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public final class DateUtilities {
 
@@ -41,6 +42,12 @@ public final class DateUtilities {
         }
 
         return date;
+    }
+
+    public static long getExpiresOn(long expiresIn) {
+        final long currentTimeMillis = System.currentTimeMillis();
+        final long currentTimeSecs = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
+        return currentTimeSecs + expiresIn;
     }
 }
 

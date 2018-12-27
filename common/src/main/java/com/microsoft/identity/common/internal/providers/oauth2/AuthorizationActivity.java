@@ -112,6 +112,7 @@ public final class AuthorizationActivity extends Activity {
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_authentication);
         if (savedInstanceState == null) {
             extractState(getIntent().getExtras());
         } else {
@@ -260,7 +261,7 @@ public final class AuthorizationActivity extends Activity {
     @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
     private void setUpWebView(final AzureActiveDirectoryWebViewClient webViewClient) {
         // Create the Web View to show the page
-        mWebView = this.findViewById(R.id.webview);
+        mWebView = findViewById(R.id.common_auth_webview);
         WebSettings userAgentSetting = mWebView.getSettings();
         final String userAgent = userAgentSetting.getUserAgentString();
         mWebView.getSettings().setUserAgentString(
