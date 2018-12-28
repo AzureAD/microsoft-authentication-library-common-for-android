@@ -112,7 +112,7 @@ public final class AuthorizationActivity extends Activity {
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_authentication);
+        setContentView(R.layout.common_activity_authentication);
         if (savedInstanceState == null) {
             extractState(getIntent().getExtras());
         } else {
