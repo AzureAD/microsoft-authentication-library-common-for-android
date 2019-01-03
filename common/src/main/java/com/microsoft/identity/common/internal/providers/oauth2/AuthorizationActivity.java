@@ -138,11 +138,17 @@ public final class AuthorizationActivity extends Activity {
          * If this is the first run of the activity, start the authorization intent.
          * If the Authorization Agent is set as WebView. set up the webView client and load the url in embedded webView.
          * If the Authorization Agent is set as Default or Browser, start the authorization intent with customTabs or browsers.
+         *
+         * When it returns back to this Activity from OAuth2 redirect, two scenarios would happen.
+         * 1) The response uri is returned from BrowserTabActivity
+         * 2) The authorization is cancelled by pressing the 'Back' button or the BrowserTabActivity is not launched.
+         *
+         * In the first case, generate the authorization result from the response uri.
+         * In the second case, set the activity result intent with AUTH_CODE_CANCEL code.
          */
-        if (!mAuthorizationStarted) {
-            mAuthorizationStarted = true;
-
-            if (mAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
+        if (mAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
+            if (!mAuthorizationStarted) {
+                mAuthorizationStarted = true;
                 //TODO Replace AzureActiveDirectoryWebViewClient with GenericOAuth2WebViewClient once OAuth2Strategy get integrated.
                 AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(this, new AuthorizationCompletionCallback(), mRedirectUri);
                 setUpWebView(webViewClient);
@@ -157,6 +163,11 @@ public final class AuthorizationActivity extends Activity {
                     }
                 });
             } else {
+                return;
+            }
+        } else {
+            if (!mAuthorizationStarted) {
+                mAuthorizationStarted = true;
                 if (mAuthIntent != null) {
                     startActivity(mAuthIntent);
                 } else {
@@ -165,26 +176,16 @@ public final class AuthorizationActivity extends Activity {
                     sendResult(AuthorizationStrategy.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
                     finish();
                 }
+            } else {
+                if (!StringUtil.isEmpty(getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT))) {
+                    completeAuthorization();
+                } else {
+                    cancelAuthorization();
+                }
+
+                finish();
             }
-
-            return;
         }
-
-        /*
-         * When it returns back to this Activity from OAuth2 redirect, two scenarios would happen.
-         * 1) The response uri is returned from BrowserTabActivity
-         * 2) The authorization is cancelled by pressing the 'Back' button or the BrowserTabActivity is not launched.
-         *
-         * In the first case, generate the authorization result from the response uri.
-         * In the second case, set the activity result intent with AUTH_CODE_CANCEL code.
-         */
-        if (!StringUtil.isEmpty(getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT))) {
-            completeAuthorization();
-        } else {
-            cancelAuthorization();
-        }
-
-        finish();
     }
 
     private void sendResult(int resultCode, Intent intent) {
