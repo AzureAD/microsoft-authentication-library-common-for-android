@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.adal.internal;
 
 import android.net.Uri;
 
@@ -57,6 +57,24 @@ public class ADALUserInfo {
         mIdentityProvider = account.getIdentityProvider();
         mPasswordChangeUrl = account.getPasswordChangeUrl();
         mPasswordExpiresOn = account.getPasswordExpiresOn();
+    }
+
+    /**
+     * Constructor for {@link ADALUserInfo}.
+     *
+     * @param userid           Unique user id for the userInfo.
+     * @param givenName        Given name for the userInfo.
+     * @param familyName       Family name for the userInfo.
+     * @param identityProvider IdentityProvider for the userInfo.
+     * @param displayableId    Displayable for the userInfo.
+     */
+    public ADALUserInfo(String userid, String givenName, String familyName, String identityProvider,
+                    String displayableId) {
+        mUniqueId = userid;
+        mGivenName = givenName;
+        mFamilyName = familyName;
+        mIdentityProvider = identityProvider;
+        mDisplayableId = displayableId;
     }
 
     /**
