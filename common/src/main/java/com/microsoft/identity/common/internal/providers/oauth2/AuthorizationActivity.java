@@ -119,6 +119,22 @@ public final class AuthorizationActivity extends Activity {
             // If activity is killed by the os, savedInstance will be the saved bundle.
             extractState(savedInstanceState);
         }
+
+        if (mAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
+            mAuthorizationStarted = true;
+            AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(this, new AuthorizationCompletionCallback(), mRedirectUri);
+            setUpWebView(webViewClient);
+            mWebView.post(new Runnable() {
+                @Override
+                public void run() {
+                    // load blank first to avoid error for not loading webView
+                    mWebView.loadUrl("about:blank");
+                    Logger.verbose(TAG, "Launching embedded WebView for acquiring auth code.");
+                    Logger.verbosePII(TAG, "The start url is " + mAuthorizationRequestUrl);
+                    mWebView.loadUrl(mAuthorizationRequestUrl);
+                }
+            });
+        }
     }
 
     /**
@@ -134,57 +150,42 @@ public final class AuthorizationActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        /*
-         * If this is the first run of the activity, start the authorization intent.
-         * If the Authorization Agent is set as WebView. set up the webView client and load the url in embedded webView.
-         * If the Authorization Agent is set as Default or Browser, start the authorization intent with customTabs or browsers.
-         *
-         * When it returns back to this Activity from OAuth2 redirect, two scenarios would happen.
-         * 1) The response uri is returned from BrowserTabActivity
-         * 2) The authorization is cancelled by pressing the 'Back' button or the BrowserTabActivity is not launched.
-         *
-         * In the first case, generate the authorization result from the response uri.
-         * In the second case, set the activity result intent with AUTH_CODE_CANCEL code.
-         */
         if (mAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
-            if (!mAuthorizationStarted) {
-                mAuthorizationStarted = true;
-                //TODO Replace AzureActiveDirectoryWebViewClient with GenericOAuth2WebViewClient once OAuth2Strategy get integrated.
-                AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(this, new AuthorizationCompletionCallback(), mRedirectUri);
-                setUpWebView(webViewClient);
-                mWebView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        // load blank first to avoid error for not loading webview
-                        mWebView.loadUrl("about:blank");
-                        Logger.verbose(TAG, "Launching embedded WebView for acquiring auth code.");
-                        Logger.verbosePII(TAG, "The start url is " + mAuthorizationRequestUrl);
-                        mWebView.loadUrl(mAuthorizationRequestUrl);
-                    }
-                });
-            } else {
-                return;
-            }
+            return;
         } else {
-            if (!mAuthorizationStarted) {
-                mAuthorizationStarted = true;
-                if (mAuthIntent != null) {
-                    startActivity(mAuthIntent);
-                } else {
-                    final Intent resultIntent = new Intent();
-                    resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, new ClientException(ErrorStrings.AUTHORIZATION_INTENT_IS_NULL));
-                    sendResult(AuthorizationStrategy.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
-                    finish();
-                }
-            } else {
-                if (!StringUtil.isEmpty(getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT))) {
-                    completeAuthorization();
-                } else {
-                    cancelAuthorization();
-                }
-
-                finish();
-            }
+            /*
+             * If the Authorization Agent is set as Default or Browser,
+             * and this is the first run of the activity, start the authorization intent with customTabs or browsers.
+             *
+             * When it returns back to this Activity from OAuth2 redirect, two scenarios would happen.
+             * 1) The response uri is returned from BrowserTabActivity
+             * 2) The authorization is cancelled by pressing the 'Back' button or the BrowserTabActivity is not launched.
+             *
+             * In the first case, generate the authorization result from the response uri.
+             * In the second case, set the activity result intent with AUTH_CODE_CANCEL code.
+             */
+            //This check is needed when using customTabs or browser flow.
+           if (!mAuthorizationStarted) {
+               mAuthorizationStarted = true;
+               if (mAuthIntent != null) {
+                   // We cannot start browser activity inside OnCreate().
+                   // Because the life cycle of the current activity will continue and onResume will be called before finishing the login in browser.
+                   // This is by design of Android OS.
+                   startActivity(mAuthIntent);
+               } else {
+                   final Intent resultIntent = new Intent();
+                   resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, new ClientException(ErrorStrings.AUTHORIZATION_INTENT_IS_NULL));
+                   sendResult(AuthorizationStrategy.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
+                   finish();
+               }
+           } else {
+               if (!StringUtil.isEmpty(getIntent().getStringExtra(AuthorizationStrategy.CUSTOM_TAB_REDIRECT))) {
+                   completeAuthorization();
+               } else {
+                   cancelAuthorization();
+               }
+               finish();
+           }
         }
     }
 
