@@ -150,7 +150,7 @@ public final class SchemaUtil {
                 final Map<String, String> idTokenClaims = idToken.getTokenClaims();
 
                 if (null != idTokenClaims) {
-                    idp = idTokenClaims.get("idp");
+                    idp = idTokenClaims.get(MicrosoftIdToken.ISSUER);
 
                     Logger.verbosePII(TAG + ":" + methodName, "idp: " + idp);
 
