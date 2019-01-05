@@ -128,7 +128,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                                     final String atSecret,
                                     final String clientId, //guid
                                     final String rtSecret,
-                                    final String idTokenSecret) {
+                                    final String idTokenSecret,
+                                    final String familyId) {
             mGeneratedAccount = new AccountRecord();
             mGeneratedAccount.setAuthorityType(authorityType);
             mGeneratedAccount.setLocalAccountId(localAccountId);
@@ -155,6 +156,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             mGeneratedRefreshToken.setEnvironment(environment);
             mGeneratedRefreshToken.setCredentialType(CredentialType.RefreshToken.name());
             mGeneratedRefreshToken.setClientId(clientId);
+            mGeneratedRefreshToken.setFamilyId(familyId);
 
             mGeneratedIdToken = new IdTokenRecord();
             mGeneratedIdToken.setHomeAccountId(homeAccountId);
@@ -187,7 +189,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 SECRET,
                 CLIENT_ID,
                 SECRET,
-                MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS
+                MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                null
         );
 
         // Mocks
@@ -425,7 +428,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                             SECRET,
                             CLIENT_ID,
                             SECRET,
-                            MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS
+                            MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                            null
                     )
             );
         }
@@ -532,7 +536,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                             SECRET,
                             CLIENT_ID,
                             SECRET,
-                            MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS
+                            MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                            null
                     )
             );
         }
@@ -610,7 +615,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                             SECRET,
                             CLIENT_ID,
                             SECRET,
-                            MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS
+                            MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                            null
                     )
             );
         }
@@ -824,6 +830,107 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertEquals(defaultTestBundle.mGeneratedAccessToken, secondaryLoad.getAccessToken());
         assertEquals(defaultTestBundle.mGeneratedRefreshToken, secondaryLoad.getRefreshToken());
         assertNull(secondaryLoad.getIdToken());
+    }
+
+    @Test
+    public void testRetrieveFrt() throws ClientException {
+        final String randomHomeAccountId = UUID.randomUUID().toString();
+
+        final AccountCredentialTestBundle frtTestBundle = new AccountCredentialTestBundle(
+                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                UUID.randomUUID().toString(),
+                "test.user@tenant.onmicrosoft.com",
+                randomHomeAccountId,
+                ENVIRONMENT,
+                UUID.randomUUID().toString(),
+                TARGET,
+                CACHED_AT,
+                EXPIRES_ON,
+                SECRET,
+                CLIENT_ID,
+                SECRET,
+                MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                "1"
+        );
+
+        when(
+                mockCredentialAdapter.createAccount(
+                        mockStrategy,
+                        mockRequest,
+                        mockResponse
+                )
+        ).thenReturn(frtTestBundle.mGeneratedAccount);
+
+        when(
+                mockCredentialAdapter.createAccessToken(
+                        mockStrategy,
+                        mockRequest,
+                        mockResponse
+                )
+        ).thenReturn(frtTestBundle.mGeneratedAccessToken);
+
+        when(
+                mockCredentialAdapter.createRefreshToken(
+                        mockStrategy,
+                        mockRequest,
+                        mockResponse
+                )
+        ).thenReturn(frtTestBundle.mGeneratedRefreshToken);
+
+        when(
+                mockCredentialAdapter.createIdToken(
+                        mockStrategy,
+                        mockRequest,
+                        mockResponse
+                )
+        ).thenReturn(frtTestBundle.mGeneratedIdToken);
+
+        // Save the family token data
+        mOauth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final ICacheRecord familyCacheRecord = mOauth2TokenCache.loadByFamilyId(
+                null,
+                null,
+                frtTestBundle.mGeneratedAccount,
+                "1"
+        );
+
+        assertNotNull(familyCacheRecord);
+        assertNotNull(familyCacheRecord.getAccount());
+        assertNotNull(familyCacheRecord.getRefreshToken());
+        assertNull(familyCacheRecord.getIdToken());
+        assertNull(familyCacheRecord.getAccessToken());
+
+        final ICacheRecord familyCacheRecordWithClientId = mOauth2TokenCache.loadByFamilyId(
+                CLIENT_ID,
+                null,
+                frtTestBundle.mGeneratedAccount,
+                "1"
+        );
+
+        assertNotNull(familyCacheRecordWithClientId);
+        assertNotNull(familyCacheRecordWithClientId.getAccount());
+        assertNotNull(familyCacheRecordWithClientId.getRefreshToken());
+        assertNotNull(familyCacheRecordWithClientId.getIdToken());
+        assertNotNull(familyCacheRecordWithClientId.getAccessToken());
+
+        final ICacheRecord familyCacheRecordWithClientIdButNonMatchingTarget =
+                mOauth2TokenCache.loadByFamilyId(
+                        CLIENT_ID,
+                        "foo",
+                        frtTestBundle.mGeneratedAccount,
+                        "1"
+                );
+
+        assertNotNull(familyCacheRecordWithClientIdButNonMatchingTarget);
+        assertNotNull(familyCacheRecordWithClientIdButNonMatchingTarget.getAccount());
+        assertNotNull(familyCacheRecordWithClientIdButNonMatchingTarget.getRefreshToken());
+        assertNotNull(familyCacheRecordWithClientIdButNonMatchingTarget.getIdToken());
+        assertNull(familyCacheRecordWithClientIdButNonMatchingTarget.getAccessToken());
     }
 
 }

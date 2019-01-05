@@ -236,6 +236,74 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
+    public ICacheRecord loadByFamilyId(@Nullable final String clientId,
+                                       @Nullable final String target,
+                                       @NonNull final AccountRecord accountRecord,
+                                       @NonNull final String familyId) {
+        ICacheRecord result = null;
+
+        // Try to find a 'perfect match' if possible (clientId & target match)
+        // If no perfect match, fall back on any RT for this app (clientId but no target)
+        if (null != clientId) {
+            result = load(clientId, target, accountRecord);
+        }
+
+        // If there is no RT for this app, try to find any RT in the family (family id ONLY)
+        if (null == result || null == result.getRefreshToken()) {
+            final List<Credential> allCredentials = mAccountCredentialCache.getCredentials();
+            // The following fields must match:
+            // - environment
+            // - home_account_id
+            // - credential_type == RT
+
+            // The following fields do not matter:
+            // - clientId doesn't matter (FRT)
+            // - target doesn't matter (FRT)
+            // - realm doesn't matter (MRRT)
+
+            final List<RefreshTokenRecord> allRefreshTokens = new ArrayList<>();
+
+            // First, filter down to only the refresh tokens...
+            for (final Credential credential : allCredentials) {
+                if (credential instanceof RefreshTokenRecord) {
+                    allRefreshTokens.add((RefreshTokenRecord) credential);
+                }
+            }
+
+            // Iterate over those refresh tokens and see if any are in the family...
+            final List<RefreshTokenRecord> familyRefreshTokens = new ArrayList<>();
+
+            for (final RefreshTokenRecord refreshToken : allRefreshTokens) {
+                if (refreshToken.getFamilyId().equals(familyId)) {
+                    familyRefreshTokens.add(refreshToken);
+                }
+            }
+
+            // Iterate over the family refresh tokens and filter for the current environment...
+            final List<RefreshTokenRecord> familyRtsForEnvironment = new ArrayList<>();
+
+            for (final RefreshTokenRecord familyRefreshToken : familyRefreshTokens) {
+                if (familyRefreshToken.getEnvironment().equals(accountRecord.getEnvironment())) {
+                    familyRtsForEnvironment.add(familyRefreshToken);
+                }
+            }
+
+            // Filter for the current user...
+            result = new CacheRecord();
+            ((CacheRecord) result).setAccount(accountRecord);
+
+            for (final RefreshTokenRecord familyRefreshToken : familyRtsForEnvironment) {
+                if (familyRefreshToken.getHomeAccountId().equals(accountRecord.getHomeAccountId())) {
+                    ((CacheRecord) result).setRefreshToken(familyRefreshToken);
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Override
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
                              @NonNull final AccountRecord account) {

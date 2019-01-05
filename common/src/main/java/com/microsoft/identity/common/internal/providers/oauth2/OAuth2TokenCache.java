@@ -74,6 +74,12 @@ public abstract class OAuth2TokenCache
                                       final IdTokenRecord idTokenRecord
     );
 
+    public abstract ICacheRecord loadByFamilyId(final String clientId,
+                                                final String target,
+                                                final AccountRecord accountRecord,
+                                                final String familyId
+    );
+
     /**
      * Loads the tokens for the supplied Account into the result {@link ICacheRecord}.
      *
