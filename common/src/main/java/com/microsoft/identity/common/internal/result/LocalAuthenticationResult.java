@@ -25,8 +25,9 @@ package com.microsoft.identity.common.internal.result;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
 
 import java.util.Date;
@@ -34,21 +35,27 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Successful authentication result. When auth succeeds, token will be wrapped into the
- * {@link MicrosoftAuthenticationResult} and passed back through the {@link ILocalAuthenticationCallback}.
+ * {@link LocalAuthenticationResult} and passed back through the {@link ILocalAuthenticationCallback}.
  */
-public class MicrosoftAuthenticationResult<GenericMicrosoftAccount extends MicrosoftAccount> implements ILocalAuthenticationResult<MicrosoftAccount> {
+public final class LocalAuthenticationResult implements ILocalAuthenticationResult {
 
 
     private final String mRawIdToken;
     private final AccessTokenRecord mAccessTokenRecord;
-    private final GenericMicrosoftAccount mMicrosoftAccount;
+    private final IAccountRecord mAccountRecord;
 
-    public MicrosoftAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
-                                         @Nullable String rawIdToken,
-                                         @NonNull GenericMicrosoftAccount microsoftAccount) {
+    public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord) {
+        mAccessTokenRecord = cacheRecord.getAccessToken();
+        mRawIdToken = cacheRecord.getIdToken().getSecret();
+        mAccountRecord = cacheRecord.getAccount();
+    }
+
+    public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
+                                     @Nullable String rawIdToken,
+                                     @NonNull IAccountRecord accountRecord) {
         mAccessTokenRecord = accessTokenRecord;
         mRawIdToken = rawIdToken;
-        mMicrosoftAccount = microsoftAccount;
+        mAccountRecord = accountRecord;
 
     }
 
@@ -94,8 +101,8 @@ public class MicrosoftAuthenticationResult<GenericMicrosoftAccount extends Micro
 
     @Override
     @NonNull
-    public GenericMicrosoftAccount getAccountRecord() {
-        return mMicrosoftAccount;
+    public IAccountRecord getAccountRecord() {
+        return mAccountRecord;
     }
 
     @Override

@@ -33,7 +33,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
-import com.microsoft.identity.common.internal.cache.ADALUserInfo;
+import com.microsoft.identity.common.adal.internal.ADALUserInfo;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
