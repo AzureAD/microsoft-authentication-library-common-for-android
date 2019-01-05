@@ -253,6 +253,12 @@ public class MsalOAuth2TokenCache
         // If no perfect match, fall back on any RT for this app (clientId but no target)
         if (null != clientId) {
             result = load(clientId, target, accountRecord);
+
+            // A result was found... therefore the familyId will be ignored...
+            Logger.warn(
+                    TAG + methodName,
+                    "Credentials located for client id. Skipping family id check."
+            );
         }
 
         // If there is no RT for this app, try to find any RT in the family (family id ONLY)

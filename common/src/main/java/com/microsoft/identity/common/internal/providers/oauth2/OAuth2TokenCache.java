@@ -74,6 +74,18 @@ public abstract class OAuth2TokenCache
                                       final IdTokenRecord idTokenRecord
     );
 
+    /**
+     * Loads the tokens available for the supplied client criteria.
+     *
+     * @param clientId      The current client's id.
+     * @param target        The desired scopes.
+     * @param accountRecord The current account.
+     * @param familyId      The sought family id value.
+     * @return An ICacheRecord containing the account. If a matching id token is available
+     * (for the provided clientId), it is returned. If a matching access token is available
+     * (for the provided client id), it is also returned. If a matching refresh token is available
+     * it is returned.
+     */
     public abstract ICacheRecord loadByFamilyId(final String clientId,
                                                 final String target,
                                                 final AccountRecord accountRecord,
