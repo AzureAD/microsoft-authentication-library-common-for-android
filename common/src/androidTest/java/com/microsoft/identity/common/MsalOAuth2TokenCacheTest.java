@@ -931,6 +931,20 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertNotNull(familyCacheRecordWithClientIdButNonMatchingTarget.getRefreshToken());
         assertNotNull(familyCacheRecordWithClientIdButNonMatchingTarget.getIdToken());
         assertNull(familyCacheRecordWithClientIdButNonMatchingTarget.getAccessToken());
+
+        final ICacheRecord wrongClientIdResult =
+                mOauth2TokenCache.loadByFamilyId(
+                        "12345",
+                        "foo",
+                        frtTestBundle.mGeneratedAccount,
+                        "1"
+                );
+
+        assertNotNull(wrongClientIdResult);
+        assertNotNull(wrongClientIdResult.getAccount());
+        assertNotNull(wrongClientIdResult.getRefreshToken());
+        assertNull(wrongClientIdResult.getIdToken());
+        assertNull(wrongClientIdResult.getAccessToken());
     }
 
 }
