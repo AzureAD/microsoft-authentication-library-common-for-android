@@ -240,6 +240,13 @@ public class MsalOAuth2TokenCache
                                        @Nullable final String target,
                                        @NonNull final AccountRecord accountRecord,
                                        @NonNull final String familyId) {
+        final String methodName = ":loadByFamilyId";
+
+        Logger.verbose(
+                TAG + methodName,
+                "ClientId[" + clientId + ", " + familyId + "]"
+        );
+
         ICacheRecord result = null;
 
         // Try to find a 'perfect match' if possible (clientId & target match)
@@ -250,6 +257,11 @@ public class MsalOAuth2TokenCache
 
         // If there is no RT for this app, try to find any RT in the family (family id ONLY)
         if (null == result || null == result.getRefreshToken()) {
+            Logger.warn(
+                    TAG + methodName,
+                    "Matching RT could not be found. Searching for compatible FRT."
+            );
+
             final List<Credential> allCredentials = mAccountCredentialCache.getCredentials();
             // The following fields must match:
             // - environment
@@ -270,6 +282,11 @@ public class MsalOAuth2TokenCache
                 }
             }
 
+            Logger.info(
+                    TAG + methodName,
+                    "Found [" + allRefreshTokens.size() + "] RTs"
+            );
+
             // Iterate over those refresh tokens and see if any are in the family...
             final List<RefreshTokenRecord> familyRefreshTokens = new ArrayList<>();
 
@@ -278,6 +295,11 @@ public class MsalOAuth2TokenCache
                     familyRefreshTokens.add(refreshToken);
                 }
             }
+
+            Logger.info(
+                    TAG + methodName,
+                    "Found [" + familyRefreshTokens.size() + "] foci RTs"
+            );
 
             // Iterate over the family refresh tokens and filter for the current environment...
             final List<RefreshTokenRecord> familyRtsForEnvironment = new ArrayList<>();
@@ -288,6 +310,11 @@ public class MsalOAuth2TokenCache
                 }
             }
 
+            Logger.info(
+                    TAG + methodName,
+                    "Found [" + familyRtsForEnvironment.size() + "] foci RTs"
+            );
+
             // Filter for the current user...
             result = new CacheRecord();
             ((CacheRecord) result).setAccount(accountRecord);
@@ -295,6 +322,10 @@ public class MsalOAuth2TokenCache
             for (final RefreshTokenRecord familyRefreshToken : familyRtsForEnvironment) {
                 if (familyRefreshToken.getHomeAccountId().equals(accountRecord.getHomeAccountId())) {
                     ((CacheRecord) result).setRefreshToken(familyRefreshToken);
+                    Logger.verbose(
+                            TAG + methodName,
+                            "Compatible FOCI token found."
+                    );
                     break;
                 }
             }
