@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.cache;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -135,6 +136,38 @@ public final class SchemaUtil {
         }
 
         return alternativeAccountId;
+    }
+
+    public static String getIdentityProvider(final String idTokenString) {
+        final String methodName = "getIdentityProvider";
+
+        String idp = null;
+
+        if (null != idTokenString) {
+            IDToken idToken;
+            try {
+                idToken = new IDToken(idTokenString);
+                final Map<String, String> idTokenClaims = idToken.getTokenClaims();
+
+                if (null != idTokenClaims) {
+                    idp = idTokenClaims.get(MicrosoftIdToken.ISSUER);
+
+                    Logger.verbosePII(TAG + ":" + methodName, "idp: " + idp);
+
+                    if (null == idp) {
+                        Logger.warn(TAG + ":" + methodName, "idp claim was null.");
+                    }
+                } else {
+                    Logger.warn(TAG + ":" + methodName, "IDToken claims were null.");
+                }
+            }catch (ServiceException e){
+                Logger.warn(TAG + ":" + methodName, "Exception constructing IDToken. " + e.getMessage());
+            }
+        } else {
+            Logger.warn(TAG + ":" + methodName, "IDToken was null.");
+        }
+
+        return idp;
     }
 
     /**
