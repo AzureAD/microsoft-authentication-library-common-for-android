@@ -20,12 +20,14 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.adal.internal;
 
 import android.net.Uri;
 
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
+import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
+import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 
 import java.util.Date;
 
@@ -57,6 +59,32 @@ public class ADALUserInfo {
         mIdentityProvider = account.getIdentityProvider();
         mPasswordChangeUrl = account.getPasswordChangeUrl();
         mPasswordExpiresOn = account.getPasswordExpiresOn();
+    }
+
+    public ADALUserInfo (ILocalAuthenticationResult localAuthenticationResult){
+        mUniqueId = localAuthenticationResult.getUniqueId();
+        mDisplayableId = localAuthenticationResult.getAccountRecord().getUsername();
+        mGivenName = localAuthenticationResult.getAccountRecord().getFirstName();
+        mFamilyName = localAuthenticationResult.getAccountRecord().getFamilyName();
+        mIdentityProvider = SchemaUtil.getIdentityProvider(localAuthenticationResult.getIdToken());
+    }
+
+    /**
+     * Constructor for {@link ADALUserInfo}.
+     *
+     * @param userid           Unique user id for the userInfo.
+     * @param givenName        Given name for the userInfo.
+     * @param familyName       Family name for the userInfo.
+     * @param identityProvider IdentityProvider for the userInfo.
+     * @param displayableId    Displayable for the userInfo.
+     */
+    public ADALUserInfo(String userid, String givenName, String familyName, String identityProvider,
+                    String displayableId) {
+        mUniqueId = userid;
+        mGivenName = givenName;
+        mFamilyName = familyName;
+        mIdentityProvider = identityProvider;
+        mDisplayableId = displayableId;
     }
 
     /**
