@@ -28,7 +28,7 @@ public final class AuthorizationActivity extends Activity {
     static final String KEY_AUTH_INTENT = "authIntent";
 
     @VisibleForTesting
-    static final String KEY_AUTHORIZATION_STARTED = "authStarted";
+    static final String KEY_BROWSER_FLOW_STARTED = "browserFlowStarted";
 
     @VisibleForTesting
     static final String KEY_PKEYAUTH_STATUS = "pkeyAuthStatus";
@@ -47,7 +47,7 @@ public final class AuthorizationActivity extends Activity {
 
     private static final String TAG = AuthorizationActivity.class.getSimpleName();
 
-    private boolean mAuthorizationStarted = false;
+    private boolean mBrowserFlowStarted = false;
 
     private WebView mWebView;
 
@@ -101,7 +101,7 @@ public final class AuthorizationActivity extends Activity {
         }
 
         mAuthIntent = state.getParcelable(KEY_AUTH_INTENT);
-        mAuthorizationStarted = state.getBoolean(KEY_AUTHORIZATION_STARTED, false);
+        mBrowserFlowStarted = state.getBoolean(KEY_BROWSER_FLOW_STARTED, false);
         mPkeyAuthStatus = state.getBoolean(KEY_PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(KEY_AUTH_REQUEST_URL);
         mRedirectUri = state.getString(KEY_AUTH_REDIRECT_URI);
@@ -121,7 +121,6 @@ public final class AuthorizationActivity extends Activity {
         }
 
         if (mAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
-            mAuthorizationStarted = true;
             AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(this, new AuthorizationCompletionCallback(), mRedirectUri);
             setUpWebView(webViewClient);
             mWebView.post(new Runnable() {
@@ -165,8 +164,8 @@ public final class AuthorizationActivity extends Activity {
              * In the second case, set the activity result intent with AUTH_CODE_CANCEL code.
              */
             //This check is needed when using customTabs or browser flow.
-           if (!mAuthorizationStarted) {
-               mAuthorizationStarted = true;
+           if (!mBrowserFlowStarted) {
+               mBrowserFlowStarted = true;
                if (mAuthIntent != null) {
                    // We cannot start browser activity inside OnCreate().
                    // Because the life cycle of the current activity will continue and onResume will be called before finishing the login in browser.
@@ -231,7 +230,7 @@ public final class AuthorizationActivity extends Activity {
         super.onSaveInstanceState(outState);
         outState.putParcelable(KEY_AUTH_INTENT, mAuthIntent);
         outState.putParcelable(KEY_RESULT_INTENT, mResultIntent);
-        outState.putBoolean(KEY_AUTHORIZATION_STARTED, mAuthorizationStarted);
+        outState.putBoolean(KEY_BROWSER_FLOW_STARTED, mBrowserFlowStarted);
         outState.putBoolean(KEY_PKEYAUTH_STATUS, mPkeyAuthStatus);
         outState.putSerializable(KEY_AUTH_AUTHORIZATION_AGENT, mAuthorizationAgent);
         outState.putString(KEY_AUTH_REDIRECT_URI, mRedirectUri);
