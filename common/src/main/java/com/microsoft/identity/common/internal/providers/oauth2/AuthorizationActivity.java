@@ -149,9 +149,8 @@ public final class AuthorizationActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        if (mAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
-            return;
-        } else {
+       if (mAuthorizationAgent == AuthorizationAgent.DEFAULT
+               || mAuthorizationAgent == AuthorizationAgent.BROWSER) {
             /*
              * If the Authorization Agent is set as Default or Browser,
              * and this is the first run of the activity, start the authorization intent with customTabs or browsers.
