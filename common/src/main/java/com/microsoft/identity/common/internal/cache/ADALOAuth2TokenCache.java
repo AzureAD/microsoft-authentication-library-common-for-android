@@ -176,7 +176,9 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public ICacheRecord loadByFamilyId(String clientId, String target, AccountRecord accountRecord, String familyId) {
+    public ICacheRecord loadByFamilyId(final String clientId,
+                                       final String target,
+                                       final AccountRecord accountRecord) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );

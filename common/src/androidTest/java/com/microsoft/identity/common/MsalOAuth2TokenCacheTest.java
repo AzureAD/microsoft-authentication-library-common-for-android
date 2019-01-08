@@ -896,8 +896,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord familyCacheRecord = mOauth2TokenCache.loadByFamilyId(
                 null,
                 null,
-                frtTestBundle.mGeneratedAccount,
-                "1"
+                frtTestBundle.mGeneratedAccount
         );
 
         assertNotNull(familyCacheRecord);
@@ -909,8 +908,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord familyCacheRecordWithClientId = mOauth2TokenCache.loadByFamilyId(
                 CLIENT_ID,
                 null,
-                frtTestBundle.mGeneratedAccount,
-                "1"
+                frtTestBundle.mGeneratedAccount
         );
 
         assertNotNull(familyCacheRecordWithClientId);
@@ -923,8 +921,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mOauth2TokenCache.loadByFamilyId(
                         CLIENT_ID,
                         "foo",
-                        frtTestBundle.mGeneratedAccount,
-                        "1"
+                        frtTestBundle.mGeneratedAccount
                 );
 
         assertNotNull(familyCacheRecordWithClientIdButNonMatchingTarget);
@@ -937,8 +934,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mOauth2TokenCache.loadByFamilyId(
                         "12345",
                         "foo",
-                        frtTestBundle.mGeneratedAccount,
-                        "1"
+                        frtTestBundle.mGeneratedAccount
                 );
 
         assertNotNull(wrongClientIdResult);
@@ -1071,8 +1067,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord cacheRecord = mOauth2TokenCache.loadByFamilyId(
                 CLIENT_ID,
                 null,
-                frtTestBundle2.mGeneratedAccount,
-                "1"
+                frtTestBundle2.mGeneratedAccount
         );
 
         assertNotNull(cacheRecord);
@@ -1088,8 +1083,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord cacheRecord2 = mOauth2TokenCache.loadByFamilyId(
                 CLIENT_ID + "2",
                 null,
-                frtTestBundle2.mGeneratedAccount,
-                "1"
+                frtTestBundle2.mGeneratedAccount
         );
 
         assertNotNull(cacheRecord2);
@@ -1114,8 +1108,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord cacheRecord3 = mOauth2TokenCache.loadByFamilyId(
                 CLIENT_ID + "2",
                 null,
-                randomAcct,
-                "1"
+                randomAcct
         );
 
         assertNotNull(cacheRecord3);

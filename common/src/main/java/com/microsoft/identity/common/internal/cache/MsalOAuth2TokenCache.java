@@ -270,9 +270,10 @@ public class MsalOAuth2TokenCache
     @Override
     public ICacheRecord loadByFamilyId(@Nullable final String clientId,
                                        @Nullable final String target,
-                                       @NonNull final AccountRecord accountRecord,
-                                       @NonNull final String familyId) {
+                                       @NonNull final AccountRecord accountRecord) {
         final String methodName = ":loadByFamilyId";
+
+        final String familyId = "1";
 
         Logger.verbose(
                 TAG + methodName,
