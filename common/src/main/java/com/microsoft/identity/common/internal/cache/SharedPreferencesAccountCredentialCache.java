@@ -295,19 +295,11 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     public List<Credential> getCredentialsFilteredBy(
             @Nullable final String homeAccountId,
             @Nullable final String environment,
-            @NonNull final CredentialType credentialType,
-            @NonNull final String clientId,
+            @Nullable final CredentialType credentialType,
+            @Nullable final String clientId,
             @Nullable final String realm,
             @Nullable final String target) {
         Logger.verbose(TAG, "getCredentialsFilteredBy()");
-
-        if (null == credentialType) {
-            throw new IllegalArgumentException("Param [credentialType] cannot be null.");
-        }
-
-        if (StringExtensions.isNullOrBlank(clientId)) {
-            throw new IllegalArgumentException("Param [clientId] cannot be null.");
-        }
 
         Logger.verbose(TAG, "Loading Credentials...");
         final List<Credential> allCredentials = getCredentials();

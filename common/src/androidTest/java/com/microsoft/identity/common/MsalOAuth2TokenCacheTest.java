@@ -947,4 +947,157 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertNull(wrongClientIdResult.getAccessToken());
     }
 
+    @Test
+    public void testOnlyOneFrtMayExist() throws ClientException {
+        // Save an FRT
+        final String randomHomeAccountId = UUID.randomUUID().toString();
+        final String localAccountId = UUID.randomUUID().toString();
+        final String realm = UUID.randomUUID().toString();
+
+        final AccountCredentialTestBundle frtTestBundle = new AccountCredentialTestBundle(
+                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                localAccountId,
+                "test.user@tenant.onmicrosoft.com",
+                randomHomeAccountId,
+                ENVIRONMENT,
+                realm,
+                TARGET,
+                CACHED_AT,
+                EXPIRES_ON,
+                SECRET,
+                CLIENT_ID,
+                SECRET,
+                MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                "1"
+        );
+
+        when(
+                mockCredentialAdapter.createAccount(
+                        mockStrategy,
+                        mockRequest,
+                        mockResponse
+                )
+        ).thenReturn(frtTestBundle.mGeneratedAccount);
+
+        when(
+                mockCredentialAdapter.createAccessToken(
+                        mockStrategy,
+                        mockRequest,
+                        mockResponse
+                )
+        ).thenReturn(frtTestBundle.mGeneratedAccessToken);
+
+        when(
+                mockCredentialAdapter.createRefreshToken(
+                        mockStrategy,
+                        mockRequest,
+                        mockResponse
+                )
+        ).thenReturn(frtTestBundle.mGeneratedRefreshToken);
+
+        when(
+                mockCredentialAdapter.createIdToken(
+                        mockStrategy,
+                        mockRequest,
+                        mockResponse
+                )
+        ).thenReturn(frtTestBundle.mGeneratedIdToken);
+
+        mOauth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        // Save another FRT, this time with a different client id
+        final AccountCredentialTestBundle frtTestBundle2 = new AccountCredentialTestBundle(
+                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                localAccountId,
+                "test.user@tenant.onmicrosoft.com",
+                randomHomeAccountId,
+                ENVIRONMENT,
+                realm,
+                TARGET,
+                CACHED_AT,
+                EXPIRES_ON,
+                SECRET,
+                CLIENT_ID + "2",
+                SECRET,
+                MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                "1"
+        );
+
+        when(
+                mockCredentialAdapter.createAccount(
+                        mockStrategy,
+                        mockRequest,
+                        mockResponse
+                )
+        ).thenReturn(frtTestBundle2.mGeneratedAccount);
+
+        when(
+                mockCredentialAdapter.createAccessToken(
+                        mockStrategy,
+                        mockRequest,
+                        mockResponse
+                )
+        ).thenReturn(frtTestBundle2.mGeneratedAccessToken);
+
+        when(
+                mockCredentialAdapter.createRefreshToken(
+                        mockStrategy,
+                        mockRequest,
+                        mockResponse
+                )
+        ).thenReturn(frtTestBundle2.mGeneratedRefreshToken);
+
+        when(
+                mockCredentialAdapter.createIdToken(
+                        mockStrategy,
+                        mockRequest,
+                        mockResponse
+                )
+        ).thenReturn(frtTestBundle2.mGeneratedIdToken);
+
+        // Save the family token data
+        mOauth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        // Test only one FRT exists and it is the second one saved...
+        final ICacheRecord cacheRecord = mOauth2TokenCache.loadByFamilyId(
+                CLIENT_ID,
+                null,
+                frtTestBundle2.mGeneratedAccount,
+                "1"
+        );
+
+        assertNotNull(cacheRecord);
+        assertNotNull(cacheRecord.getRefreshToken());
+        assertNotNull(cacheRecord.getAccessToken());
+        assertNotNull(cacheRecord.getIdToken());
+        assertEquals(
+                CLIENT_ID + "2",
+                cacheRecord.getRefreshToken().getClientId()
+        );
+
+        final ICacheRecord cacheRecord2 = mOauth2TokenCache.loadByFamilyId(
+                CLIENT_ID + "2",
+                null,
+                frtTestBundle2.mGeneratedAccount,
+                "1"
+        );
+
+        assertNotNull(cacheRecord2);
+        assertNotNull(cacheRecord2.getRefreshToken());
+        assertNotNull(cacheRecord2.getAccessToken());
+        assertNotNull(cacheRecord2.getIdToken());
+        assertEquals(
+                CLIENT_ID + "2",
+                cacheRecord2.getRefreshToken().getClientId()
+        );
+    }
+
 }

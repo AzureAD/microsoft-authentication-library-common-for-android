@@ -22,9 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
@@ -82,9 +79,9 @@ public interface IAccountCredentialCache {
      * @return A List of Accounts matching the supplied criteria.
      */
     List<AccountRecord> getAccountsFilteredBy(
-            @Nullable final String homeAccountId,
-            @Nullable final String environment,
-            @Nullable final String realm
+            final String homeAccountId,
+            final String environment,
+            final String realm
     );
 
     /**
@@ -106,12 +103,12 @@ public interface IAccountCredentialCache {
      * @return A List of Credentials matching the supplied criteria.
      */
     List<Credential> getCredentialsFilteredBy(
-            @Nullable final String homeAccountId,
-            @Nullable final String environment,
-            @NonNull final CredentialType credentialType,
-            @NonNull final String clientId,
-            @Nullable final String realm,
-            @Nullable final String target
+            final String homeAccountId,
+            final String environment,
+            final CredentialType credentialType,
+            final String clientId,
+            final String realm,
+            final String target
     );
 
     /**
