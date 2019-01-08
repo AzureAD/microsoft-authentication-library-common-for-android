@@ -61,6 +61,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.AUTHORITY_TYPE;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CLIENT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.ENVIRONMENT;
@@ -1083,6 +1084,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 cacheRecord.getRefreshToken().getClientId()
         );
 
+        // Check querying for the FRT in the second app yields the same FRT
         final ICacheRecord cacheRecord2 = mOauth2TokenCache.loadByFamilyId(
                 CLIENT_ID + "2",
                 null,
@@ -1098,6 +1100,29 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 CLIENT_ID + "2",
                 cacheRecord2.getRefreshToken().getClientId()
         );
+
+        // Test querying with a different account yields nothing at all....
+
+        final AccountRecord randomAcct = new AccountRecord();
+        randomAcct.setAuthorityType(AUTHORITY_TYPE);
+        randomAcct.setLocalAccountId(UUID.randomUUID().toString());
+        randomAcct.setUsername("foo@bar.com");
+        randomAcct.setHomeAccountId(UUID.randomUUID().toString());
+        randomAcct.setEnvironment(ENVIRONMENT);
+        randomAcct.setRealm(REALM);
+
+        final ICacheRecord cacheRecord3 = mOauth2TokenCache.loadByFamilyId(
+                CLIENT_ID + "2",
+                null,
+                randomAcct,
+                "1"
+        );
+
+        assertNotNull(cacheRecord3);
+        assertNotNull(cacheRecord3.getAccount());
+        assertNull(cacheRecord3.getRefreshToken());
+        assertNull(cacheRecord3.getAccessToken());
+        assertNull(cacheRecord3.getIdToken());
     }
 
 }
