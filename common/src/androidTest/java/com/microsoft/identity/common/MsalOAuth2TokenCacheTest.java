@@ -949,7 +949,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
-    public void testOnlyOneFrtMayExist() throws ClientException {
+    public void testOnlyOneFrtMayExistAcrossClientsForAccount() throws ClientException {
         // Save an FRT
         final String randomHomeAccountId = UUID.randomUUID().toString();
         final String localAccountId = UUID.randomUUID().toString();
