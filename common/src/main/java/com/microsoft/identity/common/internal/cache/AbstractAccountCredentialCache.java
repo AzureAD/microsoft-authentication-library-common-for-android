@@ -116,11 +116,14 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
         final boolean mustMatchOnTarget = !StringExtensions.isNullOrBlank(target);
+        final boolean mustMatchOnClientId = !StringExtensions.isNullOrBlank(clientId);
+        final boolean mustMatchOnCredentialType = null != credentialType;
 
         Logger.verbose(TAG, "Credential lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]");
         Logger.verbose(TAG, "Credential lookup filtered by realm? [" + mustMatchOnRealm + "]");
         Logger.verbose(TAG, "Credential lookup filtered by target? [" + mustMatchOnTarget + "]");
-
+        Logger.verbose(TAG, "Credential lookup filtered by clientId? [" + mustMatchOnClientId + "]");
+        Logger.verbose(TAG, "Credential lookup filtered by credential type? [" + mustMatchOnCredentialType + "]");
 
         final List<Credential> matchingCredentials = new ArrayList<>();
 
@@ -135,8 +138,13 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 matches = matches && environment.equalsIgnoreCase(credential.getEnvironment());
             }
 
-            matches = matches && credentialType.name().equalsIgnoreCase(credential.getCredentialType());
-            matches = matches && clientId.equalsIgnoreCase(credential.getClientId());
+            if (mustMatchOnCredentialType) {
+                matches = matches && credentialType.name().equalsIgnoreCase(credential.getCredentialType());
+            }
+
+            if (mustMatchOnClientId) {
+                matches = matches && clientId.equalsIgnoreCase(credential.getClientId());
+            }
 
             if (mustMatchOnRealm && credential instanceof AccessTokenRecord) {
                 final AccessTokenRecord accessToken = (AccessTokenRecord) credential;

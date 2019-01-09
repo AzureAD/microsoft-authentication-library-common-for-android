@@ -139,6 +139,15 @@ public class MsalOAuth2TokenCache
                 idTokenToSave
         );
 
+        final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
+                refreshTokenToSave.getFamilyId()
+        );
+
+        Logger.info(
+                TAG + methodName,
+                "isFamilyRefreshToken? [" + isFamilyRefreshToken + "]"
+        );
+
         final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
                 accountToSave.getAuthorityType()
         );
@@ -148,15 +157,38 @@ public class MsalOAuth2TokenCache
                 "isMultiResourceCapable? [" + isMultiResourceCapable + "]"
         );
 
-        if (isMultiResourceCapable) {
+        if (isFamilyRefreshToken || isMultiResourceCapable) {
             // AAD v1 & v2 support multi-resource refresh tokens, allowing us to use
             // a single refresh token to service all of an account's requests.
             // To ensure that only one refresh token is maintained for an account,
             // refresh tokens are cleared from the cache for the account which is about to be
             // saved (in the event that there was already a refresh token in the cache)
+
+            // AAD v1 & v2 also support the use of family refresh tokens (FRTs).
+            // FRTs allow us to think of 1st party clients as having a shared clientId, though
+            // this isn't *actually* the case. Basically, 1st party tokens in "the family"
+            // are allowed to use one another's MRRTs so long as they match the current account.
             final int refreshTokensRemoved = removeCredentialsOfTypeForAccount(
                     accountToSave.getEnvironment(),
-                    refreshTokenToSave.getClientId(),
+                    isFamilyRefreshToken
+                            // Delete all RTs, irrespective of clientId.
+                            // Please note: this mechanism relies on there being a logically
+                            // separate cache for FOCI inside the broker. If more families are
+                            // added in the future (eg "foci" : "2") this logic will need to be
+                            // modified so that the deletion is scoped to only delete RTs in a
+                            // provided family. This is unimplemented for now, as it complicates the
+                            // api and has only a marginal chance of ever being needed.
+                            // Basically, FOCI is more like true/false than a real "id".
+
+                            // If this cache is running in standalone (no-broker) mode,
+                            // then we can think of this call as saying 'delete all RTs in the cache
+                            // relative to the current account and for all client ids'. Since
+                            // standalone mode only ever serves a single client id, this should be
+                            // OK for now. If TSL support comes later, this approach may need to be
+                            // reevaluated.
+                            ? null
+                            // Delete all RTs relative to this client ID
+                            : refreshTokenToSave.getClientId(),
                     CredentialType.RefreshToken,
                     accountToSave,
                     true
@@ -230,6 +262,127 @@ public class MsalOAuth2TokenCache
             // Set them as the result outputs
             result.setAccount(accountToSave);
             result.setIdToken(idTokenToSave);
+        }
+
+        return result;
+    }
+
+    @Override
+    public ICacheRecord loadByFamilyId(@Nullable final String clientId,
+                                       @Nullable final String target,
+                                       @NonNull final AccountRecord accountRecord) {
+        final String methodName = ":loadByFamilyId";
+
+        final String familyId = "1";
+
+        Logger.verbose(
+                TAG + methodName,
+                "ClientId[" + clientId + ", " + familyId + "]"
+        );
+
+        ICacheRecord result = null;
+
+        // Try to find a 'perfect match' if possible (clientId & target match)
+        // If no perfect match, fall back on any RT for this app (clientId but no target)
+        if (null != clientId) {
+            result = load(clientId, target, accountRecord);
+
+            // A result was found... therefore the familyId will be ignored...
+            Logger.warn(
+                    TAG + methodName,
+                    "Credentials located for client id. Skipping family id check."
+            );
+        }
+
+        // If there is no RT for this app, try to find any RT in the family (family id ONLY)
+        if (null == result || null == result.getRefreshToken()) {
+            Logger.warn(
+                    TAG + methodName,
+                    "Matching RT could not be found. Searching for compatible FRT."
+            );
+
+            final List<Credential> allCredentials = mAccountCredentialCache.getCredentials();
+            // The following fields must match:
+            // - environment
+            // - home_account_id
+            // - credential_type == RT
+
+            // The following fields do not matter:
+            // - clientId doesn't matter (FRT)
+            // - target doesn't matter (FRT)
+            // - realm doesn't matter (MRRT)
+
+            final List<RefreshTokenRecord> allRefreshTokens = new ArrayList<>();
+
+            // First, filter down to only the refresh tokens...
+            for (final Credential credential : allCredentials) {
+                if (credential instanceof RefreshTokenRecord) {
+                    allRefreshTokens.add((RefreshTokenRecord) credential);
+                }
+            }
+
+            Logger.info(
+                    TAG + methodName,
+                    "Found [" + allRefreshTokens.size() + "] RTs"
+            );
+
+            // Iterate over those refresh tokens and see if any are in the family...
+            final List<RefreshTokenRecord> familyRefreshTokens = new ArrayList<>();
+
+            for (final RefreshTokenRecord refreshToken : allRefreshTokens) {
+                if (refreshToken.getFamilyId().equals(familyId)) {
+                    familyRefreshTokens.add(refreshToken);
+                }
+            }
+
+            Logger.info(
+                    TAG + methodName,
+                    "Found [" + familyRefreshTokens.size() + "] foci RTs"
+            );
+
+            // Iterate over the family refresh tokens and filter for the current environment...
+            final List<RefreshTokenRecord> familyRtsForEnvironment = new ArrayList<>();
+
+            for (final RefreshTokenRecord familyRefreshToken : familyRefreshTokens) {
+                if (familyRefreshToken.getEnvironment().equals(accountRecord.getEnvironment())) {
+                    familyRtsForEnvironment.add(familyRefreshToken);
+                }
+            }
+
+            Logger.info(
+                    TAG + methodName,
+                    "Found [" + familyRtsForEnvironment.size() + "] foci RTs"
+            );
+
+            IdTokenRecord idTokenRecord = null;
+            AccessTokenRecord accessTokenRecord = null;
+
+            if (null != result) {
+                // If our first call yielded an id or access token, bring that result 'forward'
+                // and return it with the newly-found FRT... The onus is on the caller to check
+                // if the AT is expired or not...
+                idTokenRecord = result.getIdToken();
+                accessTokenRecord = result.getAccessToken();
+            }
+
+            // Filter for the current user...
+            result = new CacheRecord();
+            ((CacheRecord) result).setAccount(accountRecord);
+
+            for (final RefreshTokenRecord familyRefreshToken : familyRtsForEnvironment) {
+                if (familyRefreshToken.getHomeAccountId().equals(accountRecord.getHomeAccountId())) {
+                    Logger.verbose(
+                            TAG + methodName,
+                            "Compatible FOCI token found."
+                    );
+
+                    ((CacheRecord) result).setRefreshToken(familyRefreshToken);
+                    ((CacheRecord) result).setIdToken(idTokenRecord);
+                    ((CacheRecord) result).setAccessToken(accessTokenRecord);
+
+                    break;
+                }
+            }
         }
 
         return result;
@@ -541,7 +694,7 @@ public class MsalOAuth2TokenCache
             return new AccountDeletionRecord(null);
         }
 
-        // If no realm is provided, remove the Account/Credetials from all realms.
+        // If no realm is provided, remove the Account/Credentials from all realms.
         final boolean isRealmAgnostic = (null == realm);
 
         Logger.info(
@@ -625,7 +778,7 @@ public class MsalOAuth2TokenCache
      */
     private int removeCredentialsOfTypeForAccount(
             @NonNull final String environment, // 'authority host'
-            @NonNull final String clientId,
+            @Nullable final String clientId,
             @NonNull final CredentialType credentialType,
             @NonNull final AccountRecord targetAccount,
             boolean realmAgnostic) {
