@@ -50,7 +50,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 @RunWith(AndroidJUnit4.class)
 public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
@@ -679,36 +678,82 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
 
     @Test
     public void getCredentialsNoCredentialType() {
-        try {
-            mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                    HOME_ACCOUNT_ID,
-                    ENVIRONMENT,
-                    null,
-                    CLIENT_ID,
-                    REALM,
-                    TARGET
-            );
-            fail();
-        } catch (IllegalArgumentException e) {
-            assertNotNull(e);
-        }
+        // Save an AccessToken into the cache
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm("Foo");
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(SECRET);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+
+        // Save a RefreshToken into the cache
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setSecret(SECRET);
+        refreshToken.setTarget(TARGET);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+
+        final List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                HOME_ACCOUNT_ID,
+                ENVIRONMENT,
+                null,
+                CLIENT_ID,
+                null,
+                TARGET
+        );
+
+        assertEquals(
+                2,
+                credentials.size()
+        );
     }
 
     @Test
     public void getCredentialsNoClientId() {
-        try {
-            mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
-                    HOME_ACCOUNT_ID,
-                    ENVIRONMENT,
-                    CredentialType.RefreshToken,
-                    null,
-                    REALM,
-                    TARGET
-            );
-            fail();
-        } catch (IllegalArgumentException e) {
-            assertNotNull(e);
-        }
+        // Save an AccessToken into the cache
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(SECRET);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+
+        // Save a RefreshToken into the cache
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setClientId(CLIENT_ID + "2");
+        refreshToken.setSecret(SECRET);
+        refreshToken.setTarget(TARGET);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+
+        final List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                HOME_ACCOUNT_ID,
+                ENVIRONMENT,
+                null,
+                null,
+                REALM,
+                TARGET
+        );
+
+        assertEquals(
+                2,
+                credentials.size()
+        );
     }
 
     @Test
