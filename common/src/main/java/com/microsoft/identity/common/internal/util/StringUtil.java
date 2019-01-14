@@ -27,8 +27,13 @@ import android.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -118,4 +123,24 @@ public final class StringUtil {
 
         return new Pair<>(uid, utid);
     }
+
+    /**
+     * get key value pairs from response.
+     *
+     * @param webResponse HttpWebResponse to convert to a map
+     * @return Map
+     * @throws JSONException if JSON string is malformed.
+     */
+    public static Map<String, String> getJsonResponse(final String webResponse) throws JSONException {
+        final Map<String, String> response = new HashMap<>();
+        final JSONObject jsonObject = new JSONObject(webResponse);
+        final Iterator<String> i = jsonObject.keys();
+        while (i.hasNext()) {
+            final String key = i.next();
+            response.put(key, jsonObject.getString(key));
+        }
+        return response;
+    }
+
+
 }
