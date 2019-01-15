@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.broker;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 
 import java.util.Date;
@@ -37,7 +38,13 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
     private String mAuthority;
     private String mTenantId;
     private String mPrimaryRefreshToken;
+
+    // TODO :
+    @SerializedName("not_before")
     private Date mExpiresNotBefore;
+
+    @SerializedName("cloud_instance_host_name")
+    private String mCloudInstanceHostName;
 
     public BrokerTokenResponse(){
 
@@ -62,6 +69,7 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
             setTenantId(in.readString());
             setPrimaryRefreshToken(in.readString());
             setExpiresNotBefore(new Date(in.readLong()));
+            setCloudInstanceHostName(in.readString());
         }
     }
 
@@ -85,6 +93,7 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
             dest.writeString(getTenantId());
             dest.writeString(getPrimaryRefreshToken());
             dest.writeLong(getExpiresNotBefore() != null ? getExpiresNotBefore().getTime() : 0);
+            dest.writeString(getCloudInstanceHostName());
         }
     }
 
@@ -95,7 +104,7 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
 
     public static final Creator<BrokerTokenResponse> CREATOR = new Creator<BrokerTokenResponse>() {
         @Override
-        public BrokerTokenResponse createFromParcel(Parcel in) {
+        public BrokerTokenResponse createFromParcel(final Parcel in) {
             return new BrokerTokenResponse(in);
         }
 
@@ -117,7 +126,7 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
         return mTenantId;
     }
 
-    public void setTenantId(String tenantId) {
+    public void setTenantId(final String tenantId) {
         mTenantId = tenantId;
     }
 
@@ -137,4 +146,11 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
         mExpiresNotBefore = expiresNotBefore;
     }
 
+    public String getCloudInstanceHostName() {
+        return mCloudInstanceHostName;
+    }
+
+    public void setCloudInstanceHostName(final String cloudInstanceHostName) {
+        this.mCloudInstanceHostName = cloudInstanceHostName;
+    }
 }
