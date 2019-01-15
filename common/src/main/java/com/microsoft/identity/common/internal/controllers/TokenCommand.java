@@ -28,6 +28,7 @@ import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
@@ -82,7 +83,7 @@ public class TokenCommand implements TokenOperation {
     }
 
     @Override
-    public AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, ClientException, UiRequiredException, ArgumentException {
+    public AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, ClientException, UiRequiredException, ArgumentException, ServiceException {
         AcquireTokenResult result = null;
         final String methodName = ":execute";
 

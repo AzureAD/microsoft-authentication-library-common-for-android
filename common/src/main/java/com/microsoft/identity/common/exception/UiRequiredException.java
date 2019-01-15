@@ -41,6 +41,11 @@ public final class UiRequiredException extends BaseException {
     public static final String INVALID_GRANT = "invalid_grant";
 
     /**
+     * The refresh token used to redeem access token is invalid and auth code request is needed.
+     */
+    public static final String INTERACTION_REQUIRED = "interaction_required";
+
+    /**
      * Access token doesn't exist and there is no refresh token can be found to redeem access token.
      */
     public static final String NO_TOKENS_FOUND = "no_tokens_found";

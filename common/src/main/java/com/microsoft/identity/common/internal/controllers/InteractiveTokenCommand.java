@@ -27,6 +27,7 @@ import android.content.Intent;
 
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
@@ -54,7 +55,7 @@ public class InteractiveTokenCommand extends TokenCommand {
     }
 
     @Override
-    public AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, ClientException, ArgumentException {
+    public AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, ClientException, ArgumentException, ServiceException {
         final String methodName = ":execute";
         if (getParameters() instanceof AcquireTokenOperationParameters) {
             Logger.info(

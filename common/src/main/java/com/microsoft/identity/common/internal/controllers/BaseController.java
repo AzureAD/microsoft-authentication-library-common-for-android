@@ -30,6 +30,7 @@ import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -58,11 +59,13 @@ public abstract class BaseController {
 
     private static final String TAG = BaseController.class.getSimpleName();
 
-    public abstract AcquireTokenResult acquireToken(AcquireTokenOperationParameters request) throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException;
+    public abstract AcquireTokenResult acquireToken(AcquireTokenOperationParameters request)
+            throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException, ServiceException;
 
     public abstract void completeAcquireToken(int requestCode, int resultCode, final Intent data);
 
-    public abstract AcquireTokenResult acquireTokenSilent(AcquireTokenSilentOperationParameters request) throws IOException, ClientException, UiRequiredException, ArgumentException;
+    public abstract AcquireTokenResult acquireTokenSilent(AcquireTokenSilentOperationParameters request)
+            throws IOException, ClientException, UiRequiredException, ArgumentException, ServiceException;
 
     protected void throwIfNetworkNotAvailable(final Context context) throws ClientException {
         final String methodName = ":throwIfNetworkNotAvailable";
