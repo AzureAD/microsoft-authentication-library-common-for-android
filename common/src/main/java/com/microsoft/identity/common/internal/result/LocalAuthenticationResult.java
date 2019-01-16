@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
  * Successful authentication result. When auth succeeds, token will be wrapped into the
  * {@link LocalAuthenticationResult} and passed back through the {@link ILocalAuthenticationCallback}.
  */
-public final class LocalAuthenticationResult implements ILocalAuthenticationResult {
+public class LocalAuthenticationResult implements ILocalAuthenticationResult {
 
 
     private final String mRawIdToken;

@@ -66,4 +66,12 @@ public final class UiRequiredException extends BaseException {
     public UiRequiredException(final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
     }
+
+    public boolean isInteractionRequired(){
+        return getErrorCode().equalsIgnoreCase(INTERACTION_REQUIRED);
+    }
+
+    public boolean isInvalidGrant(){
+        return getErrorCode().equalsIgnoreCase(INVALID_GRANT);
+    }
 }
