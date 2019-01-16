@@ -39,7 +39,6 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
     private String mTenantId;
     private String mPrimaryRefreshToken;
 
-    // TODO :
     @SerializedName("not_before")
     private Date mExpiresNotBefore;
 

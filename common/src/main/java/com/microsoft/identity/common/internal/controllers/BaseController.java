@@ -65,12 +65,12 @@ public abstract class BaseController {
 
     private static final String TAG = BaseController.class.getSimpleName();
 
-    public abstract AcquireTokenResult acquireToken(AcquireTokenOperationParameters request)
+    public abstract AcquireTokenResult acquireToken(final AcquireTokenOperationParameters request)
             throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException, ServiceException;
 
-    public abstract void completeAcquireToken(int requestCode, int resultCode, final Intent data);
+    public abstract void completeAcquireToken(final int requestCode, final int resultCode, final Intent data);
 
-    public abstract AcquireTokenResult acquireTokenSilent(AcquireTokenSilentOperationParameters request)
+    public abstract AcquireTokenResult acquireTokenSilent(final AcquireTokenSilentOperationParameters request)
             throws IOException, ClientException, UiRequiredException, ArgumentException, ServiceException;
 
     protected void throwIfNetworkNotAvailable(final Context context) throws ClientException {
