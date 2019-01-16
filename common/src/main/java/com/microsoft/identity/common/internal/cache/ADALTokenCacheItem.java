@@ -65,6 +65,10 @@ public class ADALTokenCacheItem {
 
     private String mSpeRing;
 
+    ADALTokenCacheItem() {
+        // noop
+    }
+
     ADALTokenCacheItem(final ADALTokenCacheItem tokenCacheItem) {
         mAuthority = tokenCacheItem.getAuthority();
         mResource = tokenCacheItem.getResource();
