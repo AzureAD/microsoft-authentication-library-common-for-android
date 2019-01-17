@@ -30,10 +30,16 @@ import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.internal.cache.SchemaUtil;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
+import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -45,6 +51,7 @@ import com.microsoft.identity.common.internal.request.AcquireTokenOperationParam
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.util.DateUtilities;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.IOException;
@@ -58,11 +65,13 @@ public abstract class BaseController {
 
     private static final String TAG = BaseController.class.getSimpleName();
 
-    public abstract AcquireTokenResult acquireToken(AcquireTokenOperationParameters request) throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException;
+    public abstract AcquireTokenResult acquireToken(final AcquireTokenOperationParameters request)
+            throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException, ServiceException;
 
-    public abstract void completeAcquireToken(int requestCode, int resultCode, final Intent data);
+    public abstract void completeAcquireToken(final int requestCode, final int resultCode, final Intent data);
 
-    public abstract AcquireTokenResult acquireTokenSilent(AcquireTokenSilentOperationParameters request) throws IOException, ClientException, UiRequiredException, ArgumentException;
+    public abstract AcquireTokenResult acquireTokenSilent(final AcquireTokenSilentOperationParameters request)
+            throws IOException, ClientException, UiRequiredException, ArgumentException, ServiceException;
 
     protected void throwIfNetworkNotAvailable(final Context context) throws ClientException {
         final String methodName = ":throwIfNetworkNotAvailable";
@@ -164,6 +173,30 @@ public abstract class BaseController {
 
     protected boolean accessTokenIsNull(ICacheRecord cacheRecord) {
         return null == cacheRecord.getAccessToken();
+    }
+
+    public static AccessTokenRecord getAccessTokenRecord(@NonNull final MicrosoftStsTokenResponse tokenResponse,
+                                                         @NonNull final String authority) {
+        final String methodName = ":getAccessTokenRecord";
+
+        final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
+
+        try {
+            final ClientInfo clientInfo = new ClientInfo(tokenResponse.getClientInfo());
+            accessTokenRecord.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
+            accessTokenRecord.setRealm(clientInfo.getUtid());
+        } catch (final ServiceException e) {
+            Logger.error(TAG + methodName, "ClientInfo construction failed ", e);
+        }
+
+        accessTokenRecord.setSecret(tokenResponse.getAccessToken());
+        accessTokenRecord.setAuthority(tokenResponse.getTokenType());
+        accessTokenRecord.setAuthority(authority);
+        accessTokenRecord.setTarget(tokenResponse.getScope());
+        accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
+        accessTokenRecord.setExpiresOn(String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExpiresIn())));
+        accessTokenRecord.setExtendedExpiresOn(String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExtExpiresIn())));
+        return accessTokenRecord;
     }
 
 }

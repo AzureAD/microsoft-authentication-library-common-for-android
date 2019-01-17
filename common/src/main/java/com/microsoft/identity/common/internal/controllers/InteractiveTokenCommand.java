@@ -27,6 +27,7 @@ import android.content.Intent;
 
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
@@ -43,10 +44,8 @@ public class InteractiveTokenCommand extends TokenCommand {
                                    AcquireTokenOperationParameters parameters,
                                    BaseController controller,
                                    ILocalAuthenticationCallback callback) {
-        mContext = context;
-        mParameters = parameters;
-        mController = controller;
-        mCallback = callback;
+
+        super(context, parameters, controller, callback);
 
         if (!(mParameters instanceof AcquireTokenOperationParameters)) {
             throw new IllegalArgumentException("Invalid operation parameters");
@@ -54,14 +53,14 @@ public class InteractiveTokenCommand extends TokenCommand {
     }
 
     @Override
-    public AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, ClientException, ArgumentException {
+    public AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, ClientException, ArgumentException, ServiceException {
         final String methodName = ":execute";
         if (getParameters() instanceof AcquireTokenOperationParameters) {
             Logger.info(
                     TAG + methodName,
                     "Executing interactive token command..."
             );
-            return getController().acquireToken((AcquireTokenOperationParameters) getParameters());
+            return getDefaultController().acquireToken((AcquireTokenOperationParameters) getParameters());
         } else {
             throw new IllegalArgumentException("Invalid operation parameters");
         }
@@ -69,6 +68,6 @@ public class InteractiveTokenCommand extends TokenCommand {
 
     @Override
     public void notify(int requestCode, int resultCode, final Intent data) {
-        getController().completeAcquireToken(requestCode, resultCode, data);
+        getDefaultController().completeAcquireToken(requestCode, resultCode, data);
     }
 }
