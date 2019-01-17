@@ -44,10 +44,8 @@ public class InteractiveTokenCommand extends TokenCommand {
                                    AcquireTokenOperationParameters parameters,
                                    BaseController controller,
                                    ILocalAuthenticationCallback callback) {
-        mContext = context;
-        mParameters = parameters;
-        mController = controller;
-        mCallback = callback;
+
+        super(context, parameters, controller, callback);
 
         if (!(mParameters instanceof AcquireTokenOperationParameters)) {
             throw new IllegalArgumentException("Invalid operation parameters");
@@ -62,7 +60,7 @@ public class InteractiveTokenCommand extends TokenCommand {
                     TAG + methodName,
                     "Executing interactive token command..."
             );
-            return getController().acquireToken((AcquireTokenOperationParameters) getParameters());
+            return getDefaultController().acquireToken((AcquireTokenOperationParameters) getParameters());
         } else {
             throw new IllegalArgumentException("Invalid operation parameters");
         }
@@ -70,6 +68,6 @@ public class InteractiveTokenCommand extends TokenCommand {
 
     @Override
     public void notify(int requestCode, int resultCode, final Intent data) {
-        getController().completeAcquireToken(requestCode, resultCode, data);
+        getDefaultController().completeAcquireToken(requestCode, resultCode, data);
     }
 }
