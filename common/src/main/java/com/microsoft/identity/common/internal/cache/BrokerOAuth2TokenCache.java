@@ -34,6 +34,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -59,6 +60,7 @@ public class BrokerOAuth2TokenCache
 
     private final OAuth2TokenCache mFociCache;
     private OAuth2TokenCache mAppUidCache;
+    @SuppressWarnings("PMD.UnusedPrivateField")
     private Set<OAuth2TokenCache> mOptionalCaches;
 
     /**
@@ -79,10 +81,18 @@ public class BrokerOAuth2TokenCache
     public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
                              @NonNull final GenericAuthorizationRequest request,
                              @NonNull final GenericTokenResponse response) throws ClientException {
-        final OAuth2TokenCache targetCache =
-                StringExtensions.isNullOrBlank(response.getFamilyId())
-                        ? mAppUidCache
-                        : mFociCache;
+        final String methodName = ":save";
+
+        final boolean isFoci = !StringExtensions.isNullOrBlank(response.getFamilyId());
+
+        Logger.info(
+                TAG + methodName,
+                "Saving to FOCI cache? ["
+                        + isFoci
+                        + "}"
+        );
+
+        final OAuth2TokenCache targetCache = isFoci ? mFociCache : mAppUidCache;
 
         return targetCache.save(
                 oAuth2Strategy,
