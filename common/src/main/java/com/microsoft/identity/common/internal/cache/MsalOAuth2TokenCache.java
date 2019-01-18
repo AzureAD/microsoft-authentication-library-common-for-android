@@ -474,6 +474,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
+    @Nullable
     public AccountRecord getAccount(@Nullable final String environment,
                                     @NonNull final String clientId,
                                     @NonNull final String homeAccountId,
@@ -524,6 +525,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
+    @Nullable
     public AccountRecord getAccountWithLocalAccountId(@Nullable final String environment,
                                                       @NonNull final String clientId,
                                                       @NonNull final String localAccountId) {
