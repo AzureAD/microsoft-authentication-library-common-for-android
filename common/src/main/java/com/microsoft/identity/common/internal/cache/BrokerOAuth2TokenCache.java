@@ -40,7 +40,9 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -124,33 +126,91 @@ public class BrokerOAuth2TokenCache
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
                              @NonNull final AccountRecord account) {
-        return null;
+        // First look in the app specific cache...
+        ICacheRecord resultRecord = mAppUidCache.load(
+                clientId,
+                target,
+                account
+        );
+
+        final boolean resultFound = null != resultRecord.getRefreshToken();
+
+        if (!resultFound) {
+            resultRecord = loadByFamilyId(
+                    clientId,
+                    target,
+                    account
+            );
+        }
+
+        return resultRecord;
     }
 
     @Override
     public boolean removeCredential(@NonNull final Credential credential) {
-        return false;
+        return mAppUidCache.removeCredential(credential) || mFociCache.removeCredential(credential);
     }
 
     @Override
+    @Nullable
     public AccountRecord getAccount(@Nullable final String environment,
                                     @NonNull final String clientId,
                                     @NonNull final String homeAccountId,
                                     @Nullable final String realm) {
-        return null;
+        final AccountRecord account = mAppUidCache.getAccount(
+                environment,
+                clientId,
+                homeAccountId,
+                realm
+        );
+
+        return null != account
+                ? account
+                : mFociCache.getAccount(
+                environment,
+                clientId,
+                homeAccountId,
+                realm
+        );
     }
 
     @Override
+    @Nullable
     public AccountRecord getAccountWithLocalAccountId(@Nullable final String environment,
                                                       @NonNull final String clientId,
                                                       @NonNull final String localAccountId) {
-        return null;
+        // First, check the primary cache...
+        AccountRecord accountRecord = mAppUidCache.getAccountWithLocalAccountId(
+                environment,
+                clientId,
+                localAccountId
+        );
+
+        // If nothing was returned, check the foci cache...
+        if (null == accountRecord) {
+            accountRecord = mFociCache.getAccountWithLocalAccountId(
+                    environment,
+                    clientId,
+                    localAccountId
+            );
+        }
+
+        return accountRecord;
     }
 
     @Override
     public List<AccountRecord> getAccounts(@Nullable final String environment,
-                                           @NonNull final String clientId) {
-        return null;
+                                           @NonNull final String clientId) { // TODO allow this to be nullable...
+        final List<AccountRecord> allAccounts = new ArrayList<>();
+
+        allAccounts.addAll(mAppUidCache.getAccounts(environment, clientId));
+        allAccounts.addAll(mFociCache.getAccounts(environment, clientId));
+
+        for (final OAuth2TokenCache optionalTokenCache : mOptionalCaches) {
+            allAccounts.addAll(optionalTokenCache.getAccounts(environment, clientId));
+        }
+
+        return allAccounts;
     }
 
     @Override
@@ -158,7 +218,37 @@ public class BrokerOAuth2TokenCache
                                                String clientId,
                                                String homeAccountId,
                                                @Nullable String realm) {
-        return null;
+        AccountDeletionRecord deletionRecord = mAppUidCache.removeAccount(
+                environment,
+                clientId,
+                homeAccountId,
+                realm
+        );
+
+        if (deletionRecord.isEmpty()) {
+            deletionRecord = mFociCache.removeAccount(
+                    environment,
+                    clientId,
+                    homeAccountId,
+                    realm
+            );
+        }
+
+        final Iterator<OAuth2TokenCache> cacheIterator = mOptionalCaches.iterator();
+
+        while (deletionRecord.isEmpty() && cacheIterator.hasNext()) {
+            deletionRecord = cacheIterator
+                    .next()
+                    .removeAccount(
+                            environment,
+                            clientId,
+                            homeAccountId,
+                            realm
+                    );
+        }
+
+
+        return deletionRecord;
     }
 
     private Set<OAuth2TokenCache> initializeOptionalCaches(@NonNull final Context context,
