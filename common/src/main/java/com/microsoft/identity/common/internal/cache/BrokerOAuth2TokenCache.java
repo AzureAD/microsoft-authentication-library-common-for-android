@@ -63,7 +63,7 @@ public class BrokerOAuth2TokenCache
     private final OAuth2TokenCache mFociCache;
     private OAuth2TokenCache mAppUidCache;
     @SuppressWarnings("PMD.UnusedPrivateField")
-    private Set<OAuth2TokenCache> mOptionalCaches;
+    private List<OAuth2TokenCache> mOptionalCaches;
 
     /**
      * Constructs a new OAuth2TokenCache.
@@ -74,9 +74,23 @@ public class BrokerOAuth2TokenCache
                                   int appPrimaryUid,
                                   @Nullable final int[] optionalAppUids) {
         super(context);
+        Logger.verbose(
+                TAG + "ctor",
+                "Init::" + TAG
+        );
         mFociCache = initializeFociCache(context);
         mAppUidCache = initializeAppUidCache(context, appPrimaryUid);
         mOptionalCaches = initializeOptionalCaches(context, appPrimaryUid, optionalAppUids);
+    }
+
+    public BrokerOAuth2TokenCache(@NonNull Context context,
+                                  @NonNull final OAuth2TokenCache fociCache,
+                                  @NonNull final OAuth2TokenCache appUidCache,
+                                  @NonNull final List<OAuth2TokenCache> otherAppCaches) {
+        super(context);
+        mFociCache = fociCache;
+        mAppUidCache = appUidCache;
+        mOptionalCaches = otherAppCaches;
     }
 
     @Override
@@ -251,15 +265,21 @@ public class BrokerOAuth2TokenCache
         return deletionRecord;
     }
 
-    private Set<OAuth2TokenCache> initializeOptionalCaches(@NonNull final Context context,
-                                                           final int appPrimaryUid,
-                                                           @Nullable final int[] optionalAppUids) {
-        final Set<OAuth2TokenCache> optionalCaches = new HashSet<>();
+    private List<OAuth2TokenCache> initializeOptionalCaches(@NonNull final Context context,
+                                                            final int appPrimaryUid,
+                                                            @Nullable final int[] optionalAppUids) {
+        final List<OAuth2TokenCache> caches = new ArrayList<>();
 
         if (null != optionalAppUids) {
-            for (final Integer uid : optionalAppUids) {
+            final Set<Integer> uids = new HashSet<>();
+
+            for (final int uid : optionalAppUids) {
+                uids.add(uid);
+            }
+
+            for (final Integer uid : uids) {
                 if (uid != appPrimaryUid) { // do not allow the primary cache to exist twice
-                    optionalCaches.add(
+                    caches.add(
                             initializeAppUidCache(
                                     context,
                                     uid
@@ -267,13 +287,20 @@ public class BrokerOAuth2TokenCache
                     );
                 }
             }
+
+            return caches;
         }
 
-        return optionalCaches;
+        return caches;
     }
 
     private static OAuth2TokenCache initializeAppUidCache(@NonNull final Context context,
                                                           final int bindingAppUid) {
+        final String methodName = ":initializeAppUidCache";
+        Logger.verbose(
+                TAG + methodName,
+                ""
+        );
         final IStorageHelper storageHelper = new StorageHelper(context);
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
                 new SharedPreferencesFileManager(
@@ -287,6 +314,11 @@ public class BrokerOAuth2TokenCache
     }
 
     private static OAuth2TokenCache initializeFociCache(@NonNull final Context context) {
+        final String methodName = ":initializeFociCache";
+        Logger.verbose(
+                TAG + methodName,
+                "Initializing foci cache"
+        );
         final IStorageHelper storageHelper = new StorageHelper(context);
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
                 new SharedPreferencesFileManager(

@@ -110,7 +110,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     private AccountCredentialTestBundle defaultTestBundle;
     private IAccountCredentialCache accountCredentialCache;
 
-    static class AccountCredentialTestBundle {
+    public static class AccountCredentialTestBundle {
 
         final AccountRecord mGeneratedAccount;
         final AccessTokenRecord mGeneratedAccessToken;
