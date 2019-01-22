@@ -284,4 +284,26 @@ public final class ErrorStrings {
      * Refresh token request failed.
      */
     public static final String AUTH_REFRESH_FAILED = "Refresh token request failed";
+
+    /**
+     * STK patching failed.
+     */
+    public static final String STK_PATCHING_FAILED = "STK patching failed";
+
+    /**
+     * Primary refresh token request failed.
+     */
+    public static final String BROKER_PRT_REFRESH_FAILED = "Failed to refresh PRT";
+
+    /**
+     * Broker RT is invalid
+     */
+    public static final String INVALID_BROKER_REFRESH_TOKEN = "Broker refresh token is invalid";
+
+    /**
+     *
+     */
+    public static final String DEVICE_STATE_INVALID = "Invalid device state";
+
+
 }
