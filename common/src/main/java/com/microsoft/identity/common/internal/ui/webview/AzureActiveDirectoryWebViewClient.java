@@ -30,6 +30,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.text.TextUtils;
 import android.webkit.ClientCertRequest;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -62,6 +63,7 @@ import java.util.Map;
 public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String TAG = AzureActiveDirectoryWebViewClient.class.getSimpleName();
     private static final String INSTALL_URL_KEY = "app_link";
+    private static final String INSTALL_UPN_KEY = "username";
     public static final String ERROR = "error";
     public static final String ERROR_DESCRIPTION = "error_description";
     private final String mRedirectUrl;
@@ -186,6 +188,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
+        // TODO : check for company portal link and open if available.
         //Open url link in browser
         final String link = url
                 .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
@@ -198,8 +201,22 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean processInstallRequest(@NonNull final WebView view, @NonNull final String url) {
-        Logger.verbose(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
         final Intent resultIntent = new Intent();
+        final HashMap<String, String> parameters = StringExtensions.getUrlParameters(url);
+        final String installLink = parameters.get(INSTALL_URL_KEY);
+        final String userName = parameters.get(INSTALL_UPN_KEY);
+        if(TextUtils.isEmpty(installLink)){
+            Logger.verbose(TAG, "Install link is null or empty, Return to caller with BROWSER_CODE_DEVICE_REGISTER");
+            resultIntent.putExtra(AuthenticationConstants.Broker.ACCOUNT_NAME, userName);
+            getCompletionCallback().onChallengeResponseReceived(
+                    AuthorizationStrategy.UIResponse.BROWSER_CODE_DEVICE_REGISTER,
+                    resultIntent
+            );
+            view.stopLoading();
+            return true;
+        }
+
+        Logger.verbose(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
         getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.BROKER_REQUEST_RESUME, resultIntent);
 
         // Having thread sleep for 1 second for calling activity to receive the result from
@@ -214,8 +231,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                HashMap<String, String> parameters = StringExtensions.getUrlParameters(url);
-                String link = parameters.get(INSTALL_URL_KEY)
+                String link = installLink
                         .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
                 getActivity().getApplicationContext().startActivity(intent);

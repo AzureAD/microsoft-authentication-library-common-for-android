@@ -63,10 +63,6 @@ public class TokenCommand implements TokenOperation {
         mCallback = callback;
 
         mControllers.add(controller);
-
-        if (!(mParameters instanceof AcquireTokenSilentOperationParameters)) {
-            throw new IllegalArgumentException("Invalid operation parameters");
-        }
     }
 
     public TokenCommand(@NonNull final Context context,
@@ -77,10 +73,6 @@ public class TokenCommand implements TokenOperation {
         mParameters = parameters;
         mControllers = controllers;
         mCallback = callback;
-
-        if (!(mParameters instanceof AcquireTokenSilentOperationParameters)) {
-            throw new IllegalArgumentException("Invalid operation parameters");
-        }
     }
 
     @Override

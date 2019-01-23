@@ -46,10 +46,6 @@ public class InteractiveTokenCommand extends TokenCommand {
                                    ILocalAuthenticationCallback callback) {
 
         super(context, parameters, controller, callback);
-
-        if (!(mParameters instanceof AcquireTokenOperationParameters)) {
-            throw new IllegalArgumentException("Invalid operation parameters");
-        }
     }
 
     @Override
