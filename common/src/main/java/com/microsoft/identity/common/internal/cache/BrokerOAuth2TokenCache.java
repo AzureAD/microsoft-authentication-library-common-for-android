@@ -60,7 +60,7 @@ public class BrokerOAuth2TokenCache
 
     private static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported by the ADALOAuth2TokenCache";
 
-    private final OAuth2TokenCache mFociCache;
+    private final FociOAuth2TokenCache mFociCache;
     private OAuth2TokenCache mAppUidCache;
     @SuppressWarnings("PMD.UnusedPrivateField")
     private List<OAuth2TokenCache> mOptionalCaches;
@@ -84,7 +84,7 @@ public class BrokerOAuth2TokenCache
     }
 
     public BrokerOAuth2TokenCache(@NonNull Context context,
-                                  @NonNull final OAuth2TokenCache fociCache,
+                                  @NonNull final FociOAuth2TokenCache fociCache,
                                   @NonNull final OAuth2TokenCache appUidCache,
                                   @NonNull final List<OAuth2TokenCache> otherAppCaches) {
         super(context);
@@ -126,17 +126,6 @@ public class BrokerOAuth2TokenCache
     }
 
     @Override
-    public ICacheRecord loadByFamilyId(@Nullable final String clientId,
-                                       @Nullable final String target,
-                                       @NonNull final AccountRecord accountRecord) {
-        return mFociCache.loadByFamilyId(
-                clientId,
-                target,
-                accountRecord
-        );
-    }
-
-    @Override
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
                              @NonNull final AccountRecord account) {
@@ -150,7 +139,7 @@ public class BrokerOAuth2TokenCache
         final boolean resultFound = null != resultRecord.getRefreshToken();
 
         if (!resultFound) {
-            resultRecord = loadByFamilyId(
+            resultRecord = mFociCache.loadByFamilyId(
                     clientId,
                     target,
                     account
@@ -311,10 +300,10 @@ public class BrokerOAuth2TokenCache
                         storageHelper
                 );
 
-        return getTokenCache(context, sharedPreferencesFileManager);
+        return getTokenCache(context, sharedPreferencesFileManager, false);
     }
 
-    private static OAuth2TokenCache initializeFociCache(@NonNull final Context context) {
+    private static FociOAuth2TokenCache initializeFociCache(@NonNull final Context context) {
         final String methodName = ":initializeFociCache";
         Logger.verbose(
                 TAG + methodName,
@@ -328,11 +317,13 @@ public class BrokerOAuth2TokenCache
                         storageHelper
                 );
 
-        return getTokenCache(context, sharedPreferencesFileManager);
+        return getTokenCache(context, sharedPreferencesFileManager, true);
     }
 
-    private static OAuth2TokenCache getTokenCache(@NonNull final Context context,
-                                                  @NonNull final ISharedPreferencesFileManager spfm) {
+    @SuppressWarnings("unchecked")
+    private static <T extends MsalOAuth2TokenCache> T getTokenCache(@NonNull final Context context,
+                                                                    @NonNull final ISharedPreferencesFileManager spfm,
+                                                                    boolean isFoci) {
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
         final IAccountCredentialCache accountCredentialCache =
                 new SharedPreferencesAccountCredentialCache(
@@ -342,10 +333,19 @@ public class BrokerOAuth2TokenCache
         final MicrosoftStsAccountCredentialAdapter accountCredentialAdapter =
                 new MicrosoftStsAccountCredentialAdapter();
 
-        return new MsalOAuth2TokenCache<>(
-                context,
-                accountCredentialCache,
-                accountCredentialAdapter
-        );
+        return (T)
+                (isFoci ? // Decide which cache type to create
+                        new FociOAuth2TokenCache<>(
+                                context,
+                                accountCredentialCache,
+                                accountCredentialAdapter
+                        )
+                        :
+                        new MsalOAuth2TokenCache<>(
+                                context,
+                                accountCredentialCache,
+                                accountCredentialAdapter
+                        )
+                );
     }
 }

@@ -31,6 +31,7 @@ import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.FociOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
@@ -95,7 +96,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Mock
     IAccountCredentialAdapter mMockCredentialAdapter;
 
-    private OAuth2TokenCache mFociCache;
+    private FociOAuth2TokenCache mFociCache;
     private IAccountCredentialCache mFociCredentialCache;
 
     private OAuth2TokenCache mAppUidCache;
@@ -223,7 +224,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             mOtherAppTokenCaches.add(
                     getTokenCache(
                             context,
-                            cache
+                            cache,
+                            false
                     )
             );
         }
@@ -283,12 +285,20 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @SuppressWarnings("unchecked")
-    private MsalOAuth2TokenCache getTokenCache(final Context context,
-                                               final IAccountCredentialCache cache) {
-        return new MsalOAuth2TokenCache(
-                context,
-                cache,
-                mMockCredentialAdapter
+    private <T extends MsalOAuth2TokenCache> T getTokenCache(final Context context,
+                                                             final IAccountCredentialCache cache,
+                                                             boolean isFoci) {
+        return (T) (isFoci ?
+                new FociOAuth2TokenCache<>(
+                        context,
+                        cache,
+                        mMockCredentialAdapter
+                ) :
+                new MsalOAuth2TokenCache(
+                        context,
+                        cache,
+                        mMockCredentialAdapter
+                )
         );
     }
 
@@ -301,7 +311,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mAppUidCredentialCache = getAccountCredentialCache(appUidCacheFileManager);
 
-        mAppUidCache = getTokenCache(context, mAppUidCredentialCache);
+        mAppUidCache = getTokenCache(context, mAppUidCredentialCache, false);
     }
 
     private void initFociCache(final Context context) {
@@ -309,7 +319,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mFociCredentialCache = getAccountCredentialCache(fociCacheFileManager);
 
-        mFociCache = getTokenCache(context, mFociCredentialCache);
+        mFociCache = getTokenCache(context, mFociCredentialCache, true);
     }
 
     @SuppressWarnings("unchecked")
