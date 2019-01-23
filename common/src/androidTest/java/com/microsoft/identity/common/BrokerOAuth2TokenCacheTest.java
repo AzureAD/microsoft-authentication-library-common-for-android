@@ -33,6 +33,7 @@ import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
@@ -46,6 +47,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,6 +56,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CLIENT_ID;
@@ -68,6 +71,10 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.getBrokerUidSequesteredFilename;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
@@ -88,19 +95,20 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Mock
     IAccountCredentialAdapter mMockCredentialAdapter;
 
-    OAuth2TokenCache mFociCache;
-    IAccountCredentialCache mFociCredentialCache;
+    private OAuth2TokenCache mFociCache;
+    private IAccountCredentialCache mFociCredentialCache;
 
-    OAuth2TokenCache mAppUidCache;
-    IAccountCredentialCache mAppUidCredentialCache;
+    private OAuth2TokenCache mAppUidCache;
+    private IAccountCredentialCache mAppUidCredentialCache;
 
-    List<OAuth2TokenCache> mOtherAppTokenCaches;
-    List<IAccountCredentialCache> mOtherAppCredentialCaches;
+    private List<OAuth2TokenCache> mOtherAppTokenCaches;
+    private List<IAccountCredentialCache> mOtherAppCredentialCaches;
 
-    BrokerOAuth2TokenCache mBrokerOAuth2TokenCache;
+    private BrokerOAuth2TokenCache mBrokerOAuth2TokenCache;
 
-    MsalOAuth2TokenCacheTest.AccountCredentialTestBundle mDefaultFociTestBundle;
-    MsalOAuth2TokenCacheTest.AccountCredentialTestBundle mDefaultAppUidTestBundle;
+    private MsalOAuth2TokenCacheTest.AccountCredentialTestBundle mDefaultFociTestBundle;
+    private MsalOAuth2TokenCacheTest.AccountCredentialTestBundle mDefaultAppUidTestBundle;
+    private List<MsalOAuth2TokenCacheTest.AccountCredentialTestBundle> mOtherCacheTestBundles;
 
     @Before
     @Override
@@ -121,7 +129,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
                 context,
                 mFociCache,
-                mBrokerOAuth2TokenCache,
+                mAppUidCache,
                 mOtherAppTokenCaches
         );
 
@@ -158,6 +166,38 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
                 null
         );
+
+        mOtherCacheTestBundles = new ArrayList<>();
+
+        for (int ii = 0; ii < mOtherAppTokenCaches.size(); ii++) {
+            mOtherCacheTestBundles.add(
+                    new MsalOAuth2TokenCacheTest.AccountCredentialTestBundle(
+                            MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                            UUID.randomUUID().toString(),
+                            "test.user@tenant.onmicrosoft.com",
+                            HOME_ACCOUNT_ID,
+                            ENVIRONMENT,
+                            UUID.randomUUID().toString(),
+                            TARGET,
+                            CACHED_AT,
+                            EXPIRES_ON,
+                            SECRET,
+                            UUID.randomUUID().toString(),
+                            SECRET,
+                            MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                            null
+                    )
+            );
+        }
+    }
+
+    @After
+    public void tearDown() {
+        mAppUidCredentialCache.clearAll();
+        mFociCredentialCache.clearAll();
+        for (final IAccountCredentialCache cache : mOtherAppCredentialCaches) {
+            cache.clearAll();
+        }
     }
 
     private void initOtherCaches(final Context context) {
@@ -309,6 +349,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
     private void configureMocksForFoci() {
         configureMocks(mDefaultFociTestBundle);
+        when(mockResponse.getFamilyId()).thenReturn("1");
     }
 
     private void configureMocksForAppUid() {
@@ -320,17 +361,17 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     public void testCanSaveIntoAppUidCache() throws ClientException {
         configureMocksForAppUid();
 
-        mFociCache.save(
+        mBrokerOAuth2TokenCache.save(
                 mockStrategy,
                 mockRequest,
                 mockResponse
         );
 
-        final List<AccountRecord> accounts = mFociCredentialCache.getAccounts();
+        final List<AccountRecord> accounts = mAppUidCredentialCache.getAccounts();
         assertEquals(1, accounts.size());
         assertEquals(mDefaultAppUidTestBundle.mGeneratedAccount, accounts.get(0));
 
-        final List<Credential> credentials = mFociCredentialCache.getCredentials();
+        final List<Credential> credentials = mAppUidCredentialCache.getCredentials();
         assertEquals(3, credentials.size());
 
         final List<Credential> rts = new ArrayList<>();
@@ -355,54 +396,248 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
-    public void testCanSaveIntoFociCache() {
-        // TODO
+    public void testCanSaveIntoFociCache() throws ClientException {
         configureMocksForFoci();
+
+        mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final List<AccountRecord> accounts = mFociCredentialCache.getAccounts();
+        assertEquals(1, accounts.size());
+        assertEquals(mDefaultFociTestBundle.mGeneratedAccount, accounts.get(0));
+
+        final List<Credential> credentials = mFociCredentialCache.getCredentials();
+        assertEquals(3, credentials.size());
+
+        final List<Credential> rts = new ArrayList<>();
+        final List<Credential> ats = new ArrayList<>();
+        final List<Credential> ids = new ArrayList<>();
+
+        for (final Credential credential : credentials) {
+            if (credential.getCredentialType().equalsIgnoreCase(CredentialType.AccessToken.name())) {
+                ats.add(credential);
+            } else if (credential.getCredentialType().equalsIgnoreCase(CredentialType.RefreshToken.name())) {
+                rts.add(credential);
+            } else if (credential.getCredentialType().equalsIgnoreCase(CredentialType.IdToken.name())) {
+                ids.add(credential);
+            } else {
+                fail();
+            }
+        }
+
+        assertEquals(mDefaultFociTestBundle.mGeneratedAccessToken, ats.get(0));
+        assertEquals(mDefaultFociTestBundle.mGeneratedRefreshToken, rts.get(0));
+        assertEquals(mDefaultFociTestBundle.mGeneratedIdToken, ids.get(0));
     }
 
     @Test
     public void testCacheMiss() {
-        // TODO
+        final ICacheRecord cacheRecord = mBrokerOAuth2TokenCache.load(
+                CLIENT_ID,
+                TARGET,
+                mDefaultAppUidTestBundle.mGeneratedAccount
+        );
+
+        assertNotNull(cacheRecord);
+        assertNotNull(cacheRecord.getAccount());
+        assertNull(cacheRecord.getAccessToken());
+        assertNull(cacheRecord.getRefreshToken());
+        assertNull(cacheRecord.getIdToken());
     }
 
     @Test
-    public void testRemoveCredentialAppUidCache() {
-        // TODO
+    public void testRemoveCredentialAppUidCache() throws ClientException {
+        configureMocksForAppUid();
+
+        mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final ICacheRecord cacheRecord = mBrokerOAuth2TokenCache.load(
+                CLIENT_ID,
+                TARGET,
+                mDefaultAppUidTestBundle.mGeneratedAccount
+        );
+
+        assertTrue(
+                mBrokerOAuth2TokenCache.removeCredential(
+                        mDefaultAppUidTestBundle.mGeneratedAccessToken
+                )
+        );
     }
 
     @Test
-    public void testRemoveCredentialFociCache() {
-        // TODO
+    public void testRemoveCredentialFociCache() throws ClientException {
+        configureMocksForFoci();
+
+        mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final ICacheRecord cacheRecord = mBrokerOAuth2TokenCache.load(
+                CLIENT_ID,
+                TARGET,
+                mDefaultFociTestBundle.mGeneratedAccount
+        );
+
+        assertTrue(
+                mBrokerOAuth2TokenCache.removeCredential(
+                        mDefaultFociTestBundle.mGeneratedAccessToken
+                )
+        );
     }
 
     @Test
     public void testRemoveCredentialMiss() {
-        // TODO
+        assertFalse(
+                mBrokerOAuth2TokenCache.removeCredential(
+                        mDefaultFociTestBundle.mGeneratedAccessToken
+                )
+        );
     }
 
     @Test
-    public void testGetAccountAppUidCache() {
-        // TODO
+    public void testGetAccountAppUidCache() throws ClientException {
+        configureMocksForAppUid();
+
+        mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        assertNotNull(
+                mBrokerOAuth2TokenCache.getAccount(
+                        ENVIRONMENT,
+                        CLIENT_ID,
+                        HOME_ACCOUNT_ID,
+                        REALM
+                )
+        );
+
+        assertNull(
+                mFociCache.getAccount(
+                        ENVIRONMENT,
+                        CLIENT_ID,
+                        HOME_ACCOUNT_ID,
+                        REALM
+                )
+        );
     }
 
     @Test
-    public void testGetAccountFociCache() {
-        // TODO
+    public void testGetAccountFociCache() throws ClientException {
+        configureMocksForFoci();
+
+        mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        assertNotNull(
+                mBrokerOAuth2TokenCache.getAccount(
+                        ENVIRONMENT,
+                        CLIENT_ID,
+                        HOME_ACCOUNT_ID,
+                        REALM
+                )
+        );
+
+        assertNull(
+                mAppUidCache.getAccount(
+                        ENVIRONMENT,
+                        CLIENT_ID,
+                        HOME_ACCOUNT_ID,
+                        REALM
+                )
+        );
     }
 
     @Test
-    public void testGetAccountWithLocalAccountIdAppUidCache() {
-        // TODO
+    public void testGetAccountWithLocalAccountIdAppUidCache() throws ClientException {
+        configureMocksForAppUid();
+
+        mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final AccountRecord account = mBrokerOAuth2TokenCache.getAccountWithLocalAccountId(
+                ENVIRONMENT,
+                CLIENT_ID,
+                LOCAL_ACCOUNT_ID
+        );
+
+        assertNotNull(account);
     }
 
     @Test
-    public void testGetAccountWithLocalAcocuntIdFociCache() {
-        // TODO
+    public void testGetAccountWithLocalAcocuntIdFociCache() throws ClientException {
+        configureMocksForFoci();
+
+        mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final AccountRecord account = mBrokerOAuth2TokenCache.getAccountWithLocalAccountId(
+                ENVIRONMENT,
+                CLIENT_ID,
+                LOCAL_ACCOUNT_ID
+        );
+
+        assertNotNull(account);
     }
 
     @Test
-    public void testGetAccountsAdal() {
-        // TODO
+    public void testGetAccountsAdal() throws ClientException {
+        // Load up the 'other caches' which a bunch of test credentials, see if we can get them out...
+        int ii = 0;
+        for (final OAuth2TokenCache cache : mOtherAppTokenCaches) {
+            configureMocks(mOtherCacheTestBundles.get(ii++));
+
+            cache.save(
+                    mockStrategy,
+                    mockRequest,
+                    mockResponse
+            );
+        }
+
+        // TODO update this to accept a wildcard...
+
+        final List<String> clientIds = new ArrayList<>();
+
+        for (final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle testBundle : mOtherCacheTestBundles) {
+            clientIds.add(
+                    testBundle.mGeneratedRefreshToken.getClientId()
+            );
+        }
+
+        final List<AccountRecord> xAppAccounts = new ArrayList<>();
+
+        for (final String clientId : clientIds) {
+            xAppAccounts.addAll(
+                    mBrokerOAuth2TokenCache.getAccounts(
+                            ENVIRONMENT,
+                            clientId
+                    )
+            );
+        }
+
+        assertEquals(
+                clientIds.size(),
+                xAppAccounts.size()
+        );
     }
 
     @Test
