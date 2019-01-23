@@ -219,6 +219,16 @@ public final class AuthenticationConstants {
         public static final String CLIENT_INFO_TRUE = "1";
 
         /**
+         * String of AAD version.
+         */
+        public static final String AAD_VERSION = "ver";
+
+        /**
+         * String of preferred user name.
+         */
+        public static final String AAD_PREFERRED_USERNAME = "preferred_username";
+
+        /**
          * String of code.
          */
         public static final String CODE = "code";
