@@ -212,6 +212,7 @@ public class BrokerOAuth2TokenCache
         return accountRecord;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public List<AccountRecord> getAccounts(@Nullable final String environment,
                                            @NonNull final String clientId) { // TODO allow this to be nullable...
