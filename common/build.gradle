@@ -28,9 +28,13 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"N1jdcbbnKDr0LaFZlqdhXgm2luE=\"")
+            buildConfigField("String", "COMPANY_PORTAL_APP_SIGNATURE", "\"1wIqXSqBj7w+h11ZifsnqwgyKrY=\"")
+            buildConfigField("String", "COMPANY_PORTAL_APP_PACKAGE_NAME", "\"com.example.userapp\"")
         }
         release {
             buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"ho040S3ffZkmxqtQrSwpTVOn9r0=\"")
+            buildConfigField("String", "COMPANY_PORTAL_APP_SIGNATURE", "\"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=\"")
+            buildConfigField("String", "COMPANY_PORTAL_APP_PACKAGE_NAME", "\"com.microsoft.windowsintune.companyportal\"")
             minifyEnabled false
             debuggable false
             testCoverageEnabled false
@@ -266,6 +270,6 @@ repositories {
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
-        task.dependsOn 'lint', 'sourcesJar', 'checkstyle', 'pmd'
+        task.dependsOn 'lint', 'sourcesJar', 'pmd'
     }
 }
