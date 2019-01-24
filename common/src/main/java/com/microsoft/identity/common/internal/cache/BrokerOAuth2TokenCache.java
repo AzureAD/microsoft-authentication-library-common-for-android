@@ -62,7 +62,6 @@ public class BrokerOAuth2TokenCache
 
     private final FociOAuth2TokenCache mFociCache;
     private MsalOAuth2TokenCache mAppUidCache;
-    @SuppressWarnings("PMD.UnusedPrivateField")
     private List<MsalOAuth2TokenCache> mOptionalCaches;
 
     /**
