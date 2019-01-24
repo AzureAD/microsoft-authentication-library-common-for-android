@@ -623,8 +623,6 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             );
         }
 
-        // TODO update this to accept a wildcard...
-
         final List<String> clientIds = new ArrayList<>();
 
         for (final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle testBundle : mOtherCacheTestBundles) {

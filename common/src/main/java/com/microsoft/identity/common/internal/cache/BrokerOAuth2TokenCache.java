@@ -222,7 +222,7 @@ public class BrokerOAuth2TokenCache
     @SuppressWarnings("unchecked")
     @Override
     public List<AccountRecord> getAccounts(@Nullable final String environment,
-                                           @NonNull final String clientId) { // TODO allow this to be nullable...
+                                           @NonNull final String clientId) {
         final List<AccountRecord> allAccounts = new ArrayList<>();
 
         allAccounts.addAll(mAppUidCache.getAccounts(environment, clientId));
