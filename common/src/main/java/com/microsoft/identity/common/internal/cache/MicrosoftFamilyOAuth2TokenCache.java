@@ -40,7 +40,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FociOAuth2TokenCache
+public class MicrosoftFamilyOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,
                 GenericTokenResponse extends TokenResponse,
@@ -48,16 +48,16 @@ public class FociOAuth2TokenCache
                 GenericRefreshToken extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken>
         extends MsalOAuth2TokenCache<GenericOAuth2Strategy, GenericAuthorizationRequest, GenericTokenResponse, GenericAccount, GenericRefreshToken> {
 
-    private static final String TAG = FociOAuth2TokenCache.class.getSimpleName();
+    private static final String TAG = MicrosoftFamilyOAuth2TokenCache.class.getSimpleName();
 
     /**
      * Constructs a new OAuth2TokenCache.
      *
      * @param context The Application Context of the consuming app.
      */
-    public FociOAuth2TokenCache(final Context context,
-                                final IAccountCredentialCache accountCredentialCache,
-                                final IAccountCredentialAdapter<
+    public MicrosoftFamilyOAuth2TokenCache(final Context context,
+                                           final IAccountCredentialCache accountCredentialCache,
+                                           final IAccountCredentialAdapter<
                                         GenericOAuth2Strategy,
                                         GenericAuthorizationRequest,
                                         GenericTokenResponse,

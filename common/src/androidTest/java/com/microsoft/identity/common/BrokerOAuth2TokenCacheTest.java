@@ -32,7 +32,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
-import com.microsoft.identity.common.internal.cache.FociOAuth2TokenCache;
+import com.microsoft.identity.common.internal.cache.MicrosoftFamilyOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
@@ -97,7 +97,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Mock
     IAccountCredentialAdapter mMockCredentialAdapter;
 
-    private FociOAuth2TokenCache mFociCache;
+    private MicrosoftFamilyOAuth2TokenCache mFociCache;
     private IAccountCredentialCache mFociCredentialCache;
 
     private MsalOAuth2TokenCache mAppUidCache;
@@ -290,7 +290,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                                                              final IAccountCredentialCache cache,
                                                              boolean isFoci) {
         return (T) (isFoci ?
-                new FociOAuth2TokenCache<>(
+                new MicrosoftFamilyOAuth2TokenCache<>(
                         context,
                         cache,
                         mMockCredentialAdapter

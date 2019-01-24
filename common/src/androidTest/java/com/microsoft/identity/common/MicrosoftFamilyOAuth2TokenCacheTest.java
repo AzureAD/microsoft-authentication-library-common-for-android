@@ -26,7 +26,7 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.cache.FociOAuth2TokenCache;
+import com.microsoft.identity.common.internal.cache.MicrosoftFamilyOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
@@ -56,20 +56,20 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
-public class FociOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTest {
+public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTest {
 
-    private FociOAuth2TokenCache<
-            MicrosoftStsOAuth2Strategy,
-            MicrosoftStsAuthorizationRequest,
-            MicrosoftStsTokenResponse,
-            MicrosoftAccount,
-            MicrosoftRefreshToken> mOauth2TokenCache;
+    private MicrosoftFamilyOAuth2TokenCache<
+                MicrosoftStsOAuth2Strategy,
+                MicrosoftStsAuthorizationRequest,
+                MicrosoftStsTokenResponse,
+                MicrosoftAccount,
+                MicrosoftRefreshToken> mOauth2TokenCache;
 
     @Before
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        mOauth2TokenCache = new FociOAuth2TokenCache<>(
+        mOauth2TokenCache = new MicrosoftFamilyOAuth2TokenCache<>(
                 InstrumentationRegistry.getTargetContext(),
                 accountCredentialCache,
                 mockCredentialAdapter

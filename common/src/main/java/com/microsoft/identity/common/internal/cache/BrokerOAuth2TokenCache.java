@@ -70,7 +70,7 @@ public class BrokerOAuth2TokenCache
 
     private static final String UNCHECKED = "unchecked";
 
-    private final FociOAuth2TokenCache mFociCache;
+    private final MicrosoftFamilyOAuth2TokenCache mFociCache;
     private MsalOAuth2TokenCache mAppUidCache;
     private List<MsalOAuth2TokenCache> mOptionalCaches;
 
@@ -103,7 +103,7 @@ public class BrokerOAuth2TokenCache
      * @param otherAppCaches A List of other app caches to inspect.
      */
     public BrokerOAuth2TokenCache(@NonNull Context context,
-                                  @NonNull final FociOAuth2TokenCache fociCache,
+                                  @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache,
                                   @NonNull final MsalOAuth2TokenCache appUidCache,
                                   @NonNull final List<MsalOAuth2TokenCache> otherAppCaches) {
         super(context);
@@ -531,7 +531,7 @@ public class BrokerOAuth2TokenCache
         return getTokenCache(context, sharedPreferencesFileManager, false);
     }
 
-    private static FociOAuth2TokenCache initializeFociCache(@NonNull final Context context) {
+    private static MicrosoftFamilyOAuth2TokenCache initializeFociCache(@NonNull final Context context) {
         final String methodName = ":initializeFociCache";
         Logger.verbose(
                 TAG + methodName,
@@ -563,7 +563,7 @@ public class BrokerOAuth2TokenCache
 
         return (T)
                 (isFoci ? // Decide which cache type to create
-                        new FociOAuth2TokenCache<>(
+                        new MicrosoftFamilyOAuth2TokenCache<>(
                                 context,
                                 accountCredentialCache,
                                 accountCredentialAdapter
