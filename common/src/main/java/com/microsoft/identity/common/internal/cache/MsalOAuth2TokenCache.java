@@ -572,6 +572,12 @@ public class MsalOAuth2TokenCache
                         homeAccountId,
                         realm
                 ))) {
+
+            Logger.warn(
+                    TAG + methodName,
+                    "Insufficient filtering provided for account removal - preserving Account."
+            );
+
             return new AccountDeletionRecord(null);
         }
 
