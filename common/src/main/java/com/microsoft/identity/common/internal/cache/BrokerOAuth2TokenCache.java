@@ -48,6 +48,15 @@ import java.util.Set;
 
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 
+/**
+ * "Combined" cache implementation to cache tokens inside of the broker.
+ *
+ * @param <GenericOAuth2Strategy>       The strategy type to use.
+ * @param <GenericAuthorizationRequest> The AuthorizationRequest type to use.
+ * @param <GenericTokenResponse>        The TokenResponse type to use.
+ * @param <GenericAccount>              The Account type to use.
+ * @param <GenericRefreshToken>         The RefreshToken type to use.
+ */
 public class BrokerOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,
@@ -65,9 +74,11 @@ public class BrokerOAuth2TokenCache
     private List<MsalOAuth2TokenCache> mOptionalCaches;
 
     /**
-     * Constructs a new OAuth2TokenCache.
+     * Constructs a new BrokerOAuth2TokenCache.
      *
-     * @param context The Application Context of the consuming app.
+     * @param context         The current application context.
+     * @param appPrimaryUid   The calling app UID (current app).
+     * @param optionalAppUids An array of other app UID whose caches may be inspected.
      */
     public BrokerOAuth2TokenCache(@NonNull final Context context,
                                   int appPrimaryUid,
@@ -82,6 +93,14 @@ public class BrokerOAuth2TokenCache
         mOptionalCaches = initializeOptionalCaches(context, appPrimaryUid, optionalAppUids);
     }
 
+    /**
+     * Constructs a new BrokerOAuth2TokenCache.
+     *
+     * @param context        The current application context.
+     * @param fociCache      The FOCI cache implementation to use.
+     * @param appUidCache    The app-UID-specific cache implementation to use.
+     * @param otherAppCaches A List of other app caches to inspect.
+     */
     public BrokerOAuth2TokenCache(@NonNull Context context,
                                   @NonNull final FociOAuth2TokenCache fociCache,
                                   @NonNull final MsalOAuth2TokenCache appUidCache,
