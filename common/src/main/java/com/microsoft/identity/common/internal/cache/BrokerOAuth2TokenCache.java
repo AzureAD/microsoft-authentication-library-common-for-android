@@ -61,9 +61,9 @@ public class BrokerOAuth2TokenCache
     private static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported by the ADALOAuth2TokenCache";
 
     private final FociOAuth2TokenCache mFociCache;
-    private OAuth2TokenCache mAppUidCache;
+    private MsalOAuth2TokenCache mAppUidCache;
     @SuppressWarnings("PMD.UnusedPrivateField")
-    private List<OAuth2TokenCache> mOptionalCaches;
+    private List<MsalOAuth2TokenCache> mOptionalCaches;
 
     /**
      * Constructs a new OAuth2TokenCache.
@@ -85,8 +85,8 @@ public class BrokerOAuth2TokenCache
 
     public BrokerOAuth2TokenCache(@NonNull Context context,
                                   @NonNull final FociOAuth2TokenCache fociCache,
-                                  @NonNull final OAuth2TokenCache appUidCache,
-                                  @NonNull final List<OAuth2TokenCache> otherAppCaches) {
+                                  @NonNull final MsalOAuth2TokenCache appUidCache,
+                                  @NonNull final List<MsalOAuth2TokenCache> otherAppCaches) {
         super(context);
         mFociCache = fociCache;
         mAppUidCache = appUidCache;
@@ -217,6 +217,25 @@ public class BrokerOAuth2TokenCache
         return allAccounts;
     }
 
+    /**
+     * Broker-only API. Fetches AccountRecords from all provided caches - makes NO GUARANTEES
+     * as to whether or not an AT/RT pair exists for these Accounts.
+     *
+     * @return A List of AccountRecords, may be empty but is never null.
+     */
+    public List<AccountRecord> getAccounts() {
+        final List<AccountRecord> allAccounts = new ArrayList<>();
+
+        allAccounts.addAll(mAppUidCache.getAccountCredentialCache().getAccounts());
+        allAccounts.addAll(mFociCache.getAccountCredentialCache().getAccounts());
+
+        for (final MsalOAuth2TokenCache optionalTokenCache : mOptionalCaches) {
+            allAccounts.addAll(optionalTokenCache.getAccountCredentialCache().getAccounts());
+        }
+
+        return allAccounts;
+    }
+
     @Override
     public AccountDeletionRecord removeAccount(String environment,
                                                String clientId,
@@ -238,7 +257,7 @@ public class BrokerOAuth2TokenCache
             );
         }
 
-        final Iterator<OAuth2TokenCache> cacheIterator = mOptionalCaches.iterator();
+        final Iterator<MsalOAuth2TokenCache> cacheIterator = mOptionalCaches.iterator();
 
         while (deletionRecord.isEmpty() && cacheIterator.hasNext()) {
             deletionRecord = cacheIterator
@@ -255,10 +274,10 @@ public class BrokerOAuth2TokenCache
         return deletionRecord;
     }
 
-    private List<OAuth2TokenCache> initializeOptionalCaches(@NonNull final Context context,
-                                                            final int appPrimaryUid,
-                                                            @Nullable final int[] optionalAppUids) {
-        final List<OAuth2TokenCache> caches = new ArrayList<>();
+    private List<MsalOAuth2TokenCache> initializeOptionalCaches(@NonNull final Context context,
+                                                                final int appPrimaryUid,
+                                                                @Nullable final int[] optionalAppUids) {
+        final List<MsalOAuth2TokenCache> caches = new ArrayList<>();
 
         if (null != optionalAppUids) {
             final Set<Integer> uids = new HashSet<>();
@@ -284,8 +303,8 @@ public class BrokerOAuth2TokenCache
         return caches;
     }
 
-    private static OAuth2TokenCache initializeAppUidCache(@NonNull final Context context,
-                                                          final int bindingAppUid) {
+    private static MsalOAuth2TokenCache initializeAppUidCache(@NonNull final Context context,
+                                                              final int bindingAppUid) {
         final String methodName = ":initializeAppUidCache";
         Logger.verbose(
                 TAG + methodName,

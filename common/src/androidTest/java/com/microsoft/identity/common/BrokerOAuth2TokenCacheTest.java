@@ -99,10 +99,10 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     private FociOAuth2TokenCache mFociCache;
     private IAccountCredentialCache mFociCredentialCache;
 
-    private OAuth2TokenCache mAppUidCache;
+    private MsalOAuth2TokenCache mAppUidCache;
     private IAccountCredentialCache mAppUidCredentialCache;
 
-    private List<OAuth2TokenCache> mOtherAppTokenCaches;
+    private List<MsalOAuth2TokenCache> mOtherAppTokenCaches;
     private List<IAccountCredentialCache> mOtherAppCredentialCaches;
 
     private BrokerOAuth2TokenCache mBrokerOAuth2TokenCache;
@@ -648,6 +648,12 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 clientIds.size(),
                 xAppAccounts.size()
         );
+
+        final List<AccountRecord> xAppAccountsNoParam = new ArrayList<>(
+                mBrokerOAuth2TokenCache.getAccounts()
+        );
+
+        assertEquals(xAppAccounts.size(), xAppAccountsNoParam.size());
     }
 
     @Test
