@@ -44,20 +44,20 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
     @SerializedName("cloud_instance_host_name")
     private String mCloudInstanceHostName;
 
-    public BrokerTokenResponse(MicrosoftStsTokenResponse copy){
-        setExpiresIn(copy.getExpiresIn());
-        setAccessToken(copy.getAccessToken());
-        setTokenType(copy.getTokenType());
-        setRefreshToken(copy.getRefreshToken());
-        setScope(copy.getScope());
-        setState(copy.getState());
-        setIdToken(copy.getIdToken());
-        setResponseReceivedTime(copy.getResponseReceivedTime());
-        setExtExpiresOn(copy.getExtExpiresOn());
-        setClientInfo(copy.getClientInfo());
-        setClientId(copy.getClientId());
-        setExtExpiresIn(copy.getExtExpiresIn());
-        setFamilyId(copy.getFamilyId());
+    public BrokerTokenResponse(MicrosoftStsTokenResponse microsoftStsTokenResponse){
+        setExpiresIn(microsoftStsTokenResponse.getExpiresIn());
+        setAccessToken(microsoftStsTokenResponse.getAccessToken());
+        setTokenType(microsoftStsTokenResponse.getTokenType());
+        setRefreshToken(microsoftStsTokenResponse.getRefreshToken());
+        setScope(microsoftStsTokenResponse.getScope());
+        setState(microsoftStsTokenResponse.getState());
+        setIdToken(microsoftStsTokenResponse.getIdToken());
+        setResponseReceivedTime(microsoftStsTokenResponse.getResponseReceivedTime());
+        setExtExpiresOn(microsoftStsTokenResponse.getExtExpiresOn());
+        setClientInfo(microsoftStsTokenResponse.getClientInfo());
+        setClientId(microsoftStsTokenResponse.getClientId());
+        setExtExpiresIn(microsoftStsTokenResponse.getExtExpiresIn());
+        setFamilyId(microsoftStsTokenResponse.getFamilyId());
     }
 
     protected BrokerTokenResponse(Parcel in) {
@@ -85,7 +85,7 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         if (dest != null) {
-            dest.writeLong(getExpiresIn());
+            dest.writeLong(getExpiresIn() != null ? getExpiresIn() : 0);
             dest.writeString(getAccessToken());
             dest.writeString(getTokenType());
             dest.writeString(getRefreshToken());
