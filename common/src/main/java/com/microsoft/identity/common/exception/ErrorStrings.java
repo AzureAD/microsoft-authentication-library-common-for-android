@@ -301,9 +301,13 @@ public final class ErrorStrings {
     public static final String INVALID_BROKER_REFRESH_TOKEN = "Broker refresh token is invalid";
 
     /**
-     *
+     * Device state of Joined account invalid.
      */
     public static final String DEVICE_STATE_INVALID = "Invalid device state";
 
+    /**
+     * Device registration failed.
+     */
+    public static final String DEVICE_REGISTRATION_FAILED = "Device registration failed";
 
 }

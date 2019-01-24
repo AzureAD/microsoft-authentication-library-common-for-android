@@ -37,7 +37,6 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
 
     private String mAuthority;
     private String mTenantId;
-    private String mPrimaryRefreshToken;
 
     @SerializedName("not_before")
     private Date mExpiresNotBefore;
@@ -45,8 +44,20 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
     @SerializedName("cloud_instance_host_name")
     private String mCloudInstanceHostName;
 
-    public BrokerTokenResponse(){
-
+    public BrokerTokenResponse(MicrosoftStsTokenResponse copy){
+        setExpiresIn(copy.getExpiresIn());
+        setAccessToken(copy.getAccessToken());
+        setTokenType(copy.getTokenType());
+        setRefreshToken(copy.getRefreshToken());
+        setScope(copy.getScope());
+        setState(copy.getState());
+        setIdToken(copy.getIdToken());
+        setResponseReceivedTime(copy.getResponseReceivedTime());
+        setExtExpiresOn(copy.getExtExpiresOn());
+        setClientInfo(copy.getClientInfo());
+        setClientId(copy.getClientId());
+        setExtExpiresIn(copy.getExtExpiresIn());
+        setFamilyId(copy.getFamilyId());
     }
 
     protected BrokerTokenResponse(Parcel in) {
@@ -66,7 +77,6 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
             setFamilyId(in.readString());
             setAuthority(in.readString());
             setTenantId(in.readString());
-            setPrimaryRefreshToken(in.readString());
             setExpiresNotBefore(new Date(in.readLong()));
             setCloudInstanceHostName(in.readString());
         }
@@ -75,7 +85,7 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         if (dest != null) {
-            dest.writeLong(getExpiresIn() != null ? getExpiresIn() : 0);
+            dest.writeLong(getExpiresIn());
             dest.writeString(getAccessToken());
             dest.writeString(getTokenType());
             dest.writeString(getRefreshToken());
@@ -90,7 +100,6 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
             dest.writeString(getFamilyId());
             dest.writeString(getAuthority());
             dest.writeString(getTenantId());
-            dest.writeString(getPrimaryRefreshToken());
             dest.writeLong(getExpiresNotBefore() != null ? getExpiresNotBefore().getTime() : 0);
             dest.writeString(getCloudInstanceHostName());
         }
@@ -127,14 +136,6 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
 
     public void setTenantId(final String tenantId) {
         mTenantId = tenantId;
-    }
-
-    public String getPrimaryRefreshToken() {
-        return mPrimaryRefreshToken;
-    }
-
-    public void setPrimaryRefreshToken(final String primaryRefreshToken) {
-        mPrimaryRefreshToken = primaryRefreshToken;
     }
 
     public Date getExpiresNotBefore() {
