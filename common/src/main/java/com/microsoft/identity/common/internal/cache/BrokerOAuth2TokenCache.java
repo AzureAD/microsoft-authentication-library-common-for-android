@@ -106,6 +106,10 @@ public class BrokerOAuth2TokenCache
                                   @NonNull final MsalOAuth2TokenCache appUidCache,
                                   @NonNull final List<MsalOAuth2TokenCache> otherAppCaches) {
         super(context);
+        Logger.verbose(
+                TAG + "ctor",
+                "Init::" + TAG
+        );
         mFociCache = fociCache;
         mAppUidCache = appUidCache;
         mOptionalCaches = otherAppCaches;
@@ -147,6 +151,13 @@ public class BrokerOAuth2TokenCache
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
                              @NonNull final AccountRecord account) {
+        final String methodName = ":load";
+
+        Logger.verbose(
+                TAG + methodName,
+                "Performing lookup in app-specific cache."
+        );
+
         // First look in the app specific cache...
         ICacheRecord resultRecord = mAppUidCache.load(
                 clientId,
@@ -155,6 +166,13 @@ public class BrokerOAuth2TokenCache
         );
 
         final boolean resultFound = null != resultRecord.getRefreshToken();
+
+        Logger.verbose(
+                TAG + methodName,
+                "Result found? ["
+                        + resultFound
+                        + "]"
+        );
 
         if (!resultFound) {
             resultRecord = mFociCache.loadByFamilyId(
@@ -169,7 +187,26 @@ public class BrokerOAuth2TokenCache
 
     @Override
     public boolean removeCredential(@NonNull final Credential credential) {
-        return mAppUidCache.removeCredential(credential) || mFociCache.removeCredential(credential);
+        final String methodName = ":removeCredential";
+
+        boolean removed = mAppUidCache.removeCredential(credential);
+
+        if (!removed) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Attempting to remove credential from FOCI cache."
+            );
+            removed = mFociCache.removeCredential(credential);
+        }
+
+        Logger.verbose(
+                TAG + methodName,
+                "Credential removed? ["
+                        + removed
+                        + "]"
+        );
+
+        return removed;
     }
 
     @Override
@@ -178,6 +215,13 @@ public class BrokerOAuth2TokenCache
                                     @NonNull final String clientId,
                                     @NonNull final String homeAccountId,
                                     @Nullable final String realm) {
+        final String methodName = ":getAccount";
+
+        Logger.verbose(
+                TAG + methodName,
+                "Fetching account..."
+        );
+
         final AccountRecord account = mAppUidCache.getAccount(
                 environment,
                 clientId,
@@ -185,7 +229,14 @@ public class BrokerOAuth2TokenCache
                 realm
         );
 
-        return null != account
+        Logger.verbose(
+                TAG + methodName,
+                "Record was null? ["
+                        + (null == account)
+                        + "]"
+        );
+
+        final AccountRecord result = null != account
                 ? account
                 : mFociCache.getAccount(
                 environment,
@@ -193,6 +244,15 @@ public class BrokerOAuth2TokenCache
                 homeAccountId,
                 realm
         );
+
+        Logger.verbose(
+                TAG + methodName,
+                "Result AccountRecord located? ["
+                        + (null != result)
+                        + "]"
+        );
+
+        return result;
     }
 
     @Override
@@ -200,6 +260,13 @@ public class BrokerOAuth2TokenCache
     public AccountRecord getAccountWithLocalAccountId(@Nullable final String environment,
                                                       @NonNull final String clientId,
                                                       @NonNull final String localAccountId) {
+        final String methodName = ":getAccountWithLocalAccountId";
+
+        Logger.verbose(
+                TAG + methodName,
+                "Loading account by local account id."
+        );
+
         // First, check the primary cache...
         AccountRecord accountRecord = mAppUidCache.getAccountWithLocalAccountId(
                 environment,
@@ -207,14 +274,33 @@ public class BrokerOAuth2TokenCache
                 localAccountId
         );
 
+        Logger.verbose(
+                TAG + methodName,
+                "Result found? ["
+                        + (null != accountRecord)
+                        + "]"
+        );
+
         // If nothing was returned, check the foci cache...
         if (null == accountRecord) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Inspecting FOCI cache..."
+            );
+
             accountRecord = mFociCache.getAccountWithLocalAccountId(
                     environment,
                     clientId,
                     localAccountId
             );
         }
+
+        Logger.verbose(
+                TAG + methodName,
+                "Result found? ["
+                        + (null != accountRecord)
+                        + "]"
+        );
 
         return accountRecord;
     }
@@ -223,6 +309,8 @@ public class BrokerOAuth2TokenCache
     @Override
     public List<AccountRecord> getAccounts(@Nullable final String environment,
                                            @NonNull final String clientId) {
+        final String methodName = ":getAccounts (2 param)";
+
         final List<AccountRecord> allAccounts = new ArrayList<>();
 
         allAccounts.addAll(mAppUidCache.getAccounts(environment, clientId));
@@ -231,6 +319,13 @@ public class BrokerOAuth2TokenCache
         for (final OAuth2TokenCache optionalTokenCache : mOptionalCaches) {
             allAccounts.addAll(optionalTokenCache.getAccounts(environment, clientId));
         }
+
+        Logger.verbose(
+                TAG + methodName,
+                "Found ["
+                        + allAccounts.size()
+                        + "] accounts."
+        );
 
         return allAccounts;
     }
@@ -242,6 +337,8 @@ public class BrokerOAuth2TokenCache
      * @return A List of AccountRecords, may be empty but is never null.
      */
     public List<AccountRecord> getAccounts() {
+        final String methodName = ":getAccounts";
+
         final List<AccountRecord> allAccounts = new ArrayList<>();
 
         allAccounts.addAll(mAppUidCache.getAccountCredentialCache().getAccounts());
@@ -251,6 +348,13 @@ public class BrokerOAuth2TokenCache
             allAccounts.addAll(optionalTokenCache.getAccountCredentialCache().getAccounts());
         }
 
+        Logger.verbose(
+                TAG + methodName,
+                "Found ["
+                        + allAccounts.size()
+                        + "] accounts."
+        );
+
         return allAccounts;
     }
 
@@ -259,11 +363,20 @@ public class BrokerOAuth2TokenCache
                                                String clientId,
                                                String homeAccountId,
                                                @Nullable String realm) {
+        final String methodName = ":removeAccount";
+
         AccountDeletionRecord deletionRecord = mAppUidCache.removeAccount(
                 environment,
                 clientId,
                 homeAccountId,
                 realm
+        );
+
+        Logger.verbose(
+                TAG + methodName,
+                "Accounts deleted count (uid): ["
+                        + deletionRecord.size()
+                        + "]"
         );
 
         if (deletionRecord.isEmpty()) {
@@ -274,6 +387,13 @@ public class BrokerOAuth2TokenCache
                     realm
             );
         }
+
+        Logger.verbose(
+                TAG + methodName,
+                "Accounts deleted count (foci): ["
+                        + deletionRecord.size()
+                        + "]"
+        );
 
         final Iterator<MsalOAuth2TokenCache> cacheIterator = mOptionalCaches.iterator();
 
@@ -288,6 +408,12 @@ public class BrokerOAuth2TokenCache
                     );
         }
 
+        Logger.verbose(
+                TAG + methodName,
+                "Accounts deleted count (other caches): ["
+                        + deletionRecord.size()
+                        + "]"
+        );
 
         return deletionRecord;
     }
@@ -295,6 +421,13 @@ public class BrokerOAuth2TokenCache
     private List<MsalOAuth2TokenCache> initializeOptionalCaches(@NonNull final Context context,
                                                                 final int appPrimaryUid,
                                                                 @Nullable final int[] optionalAppUids) {
+        final String methodName = ":initializeOptionalCaches";
+
+        Logger.verbose(
+                TAG + methodName,
+                "Initializing optional caches."
+        );
+
         final List<MsalOAuth2TokenCache> caches = new ArrayList<>();
 
         if (null != optionalAppUids) {
@@ -314,9 +447,15 @@ public class BrokerOAuth2TokenCache
                     );
                 }
             }
-
-            return caches;
         }
+
+        Logger.info(
+                TAG + methodName,
+                "Initialized ["
+                        + caches.size()
+                        + "] caches."
+
+        );
 
         return caches;
     }
@@ -324,10 +463,12 @@ public class BrokerOAuth2TokenCache
     private static MsalOAuth2TokenCache initializeAppUidCache(@NonNull final Context context,
                                                               final int bindingAppUid) {
         final String methodName = ":initializeAppUidCache";
+
         Logger.verbose(
                 TAG + methodName,
                 ""
         );
+
         final IStorageHelper storageHelper = new StorageHelper(context);
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
                 new SharedPreferencesFileManager(
