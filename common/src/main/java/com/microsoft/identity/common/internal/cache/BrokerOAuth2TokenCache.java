@@ -124,6 +124,15 @@ public class BrokerOAuth2TokenCache
 
         final boolean isFoci = !StringExtensions.isNullOrBlank(response.getFamilyId());
 
+        if (isFoci) {
+            Logger.info(
+                    TAG + methodName,
+                    "Received FOCI value: ["
+                            + response.getFamilyId()
+                            + "]"
+            );
+        }
+
         Logger.info(
                 TAG + methodName,
                 "Saving to FOCI cache? ["
