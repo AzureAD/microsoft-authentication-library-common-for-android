@@ -61,8 +61,9 @@ import java.util.Set;
 public class ADALOAuth2TokenCache
         extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
         implements IShareSingleSignOnState {
-    private static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported by the ADALOAuth2TokenCache";
     private ISharedPreferencesFileManager mISharedPreferencesFileManager;
+
+    static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported.";
 
     private static final String TAG = ADALOAuth2TokenCache.class.getSimpleName();
     private static final String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";

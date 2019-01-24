@@ -46,6 +46,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import static com.microsoft.identity.common.internal.cache.ADALOAuth2TokenCache.ERR_UNSUPPORTED_OPERATION;
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 
 /**
@@ -67,7 +68,6 @@ public class BrokerOAuth2TokenCache
 
     private static final String TAG = BrokerOAuth2TokenCache.class.getSimpleName();
 
-    private static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported by the ADALOAuth2TokenCache";
     private static final String UNCHECKED = "unchecked";
 
     private final FociOAuth2TokenCache mFociCache;
