@@ -78,11 +78,11 @@ public class BrokerOAuth2TokenCache
      * Constructs a new BrokerOAuth2TokenCache.
      *
      * @param context         The current application context.
-     * @param appPrimaryUid   The calling app UID (current app).
+     * @param callingAppUid   The calling app UID (current app).
      * @param optionalAppUids An array of other app UID whose caches may be inspected.
      */
     public BrokerOAuth2TokenCache(@NonNull final Context context,
-                                  int appPrimaryUid,
+                                  int callingAppUid,
                                   @Nullable final int[] optionalAppUids) {
         super(context);
         Logger.verbose(
@@ -90,8 +90,8 @@ public class BrokerOAuth2TokenCache
                 "Init::" + TAG
         );
         mFociCache = initializeFociCache(context);
-        mAppUidCache = initializeAppUidCache(context, appPrimaryUid);
-        mOptionalCaches = initializeOptionalCaches(context, appPrimaryUid, optionalAppUids);
+        mAppUidCache = initializeAppUidCache(context, callingAppUid);
+        mOptionalCaches = initializeOptionalCaches(context, callingAppUid, optionalAppUids);
     }
 
     /**
@@ -277,7 +277,7 @@ public class BrokerOAuth2TokenCache
                 "Loading account by local account id."
         );
 
-        // First, check the primary cache...
+        // First, check the current calling app's cache...
         AccountRecord accountRecord = mAppUidCache.getAccountWithLocalAccountId(
                 environment,
                 clientId,
@@ -478,7 +478,7 @@ public class BrokerOAuth2TokenCache
     }
 
     private List<MsalOAuth2TokenCache> initializeOptionalCaches(@NonNull final Context context,
-                                                                final int appPrimaryUid,
+                                                                final int callingAppUid,
                                                                 @Nullable final int[] optionalAppUids) {
         final String methodName = ":initializeOptionalCaches";
 
@@ -497,7 +497,7 @@ public class BrokerOAuth2TokenCache
             }
 
             for (final Integer uid : uids) {
-                if (uid != appPrimaryUid) { // do not allow the primary cache to exist twice
+                if (uid != callingAppUid) { // do not allow the calling app uid cache to exist twice
                     caches.add(
                             initializeAppUidCache(
                                     context,
