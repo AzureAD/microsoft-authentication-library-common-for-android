@@ -29,6 +29,7 @@ import android.support.test.runner.AndroidJUnit4;
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.FociOAuth2TokenCache;
@@ -607,6 +608,39 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         );
 
         assertNotNull(account);
+    }
+
+    @Test
+    public void testRemoveAccountFromDevice() throws ClientException {
+        // Load up the 'other caches' which a bunch of test credentials, see if we can get them out...
+        int ii = 0;
+        for (final OAuth2TokenCache cache : mOtherAppTokenCaches) {
+            configureMocks(mOtherCacheTestBundles.get(ii++));
+
+            cache.save(
+                    mockStrategy,
+                    mockRequest,
+                    mockResponse
+            );
+        }
+
+        final List<String> clientIds = new ArrayList<>();
+
+        for (final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle testBundle : mOtherCacheTestBundles) {
+            clientIds.add(
+                    testBundle.mGeneratedRefreshToken.getClientId()
+            );
+        }
+
+        final List<AccountRecord> xAppAccounts = mBrokerOAuth2TokenCache.getAccounts();
+
+        // Deleting one of these AccountRecords should remove all of them...
+        final AccountDeletionRecord deletionRecord = mBrokerOAuth2TokenCache.removeAccountFromDevice(
+                xAppAccounts.get(0)
+        );
+
+        assertEquals(xAppAccounts.size(), deletionRecord.size());
+        assertEquals(0, mBrokerOAuth2TokenCache.getAccounts().size());
     }
 
     @Test

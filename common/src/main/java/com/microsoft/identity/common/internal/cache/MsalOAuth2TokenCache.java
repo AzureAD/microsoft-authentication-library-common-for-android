@@ -653,6 +653,26 @@ public class MsalOAuth2TokenCache
         return new AccountDeletionRecord(deletedAccounts);
     }
 
+    @Override
+    protected Set<String> getAllClientIds() {
+        final String methodName = ":getAllClientIds";
+
+        final Set<String> result = new HashSet<>();
+
+        for (final Credential credential : mAccountCredentialCache.getCredentials()) {
+            result.add(credential.getClientId());
+        }
+
+        Logger.verbose(
+                TAG + methodName,
+                "Found ["
+                        + result.size()
+                        + "] clientIds/"
+        );
+
+        return result;
+    }
+
     /**
      * Removes Credentials of the supplied type for the supplied Account.
      *

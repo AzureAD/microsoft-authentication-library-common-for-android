@@ -68,6 +68,7 @@ public class BrokerOAuth2TokenCache
     private static final String TAG = BrokerOAuth2TokenCache.class.getSimpleName();
 
     private static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported by the ADALOAuth2TokenCache";
+    private static final String UNCHECKED = "unchecked";
 
     private final FociOAuth2TokenCache mFociCache;
     private MsalOAuth2TokenCache mAppUidCache;
@@ -305,7 +306,7 @@ public class BrokerOAuth2TokenCache
         return accountRecord;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings(UNCHECKED)
     @Override
     public List<AccountRecord> getAccounts(@Nullable final String environment,
                                            @NonNull final String clientId) {
@@ -356,6 +357,40 @@ public class BrokerOAuth2TokenCache
         );
 
         return allAccounts;
+    }
+
+    @SuppressWarnings(UNCHECKED)
+    public AccountDeletionRecord removeAccountFromDevice(@NonNull final AccountRecord accountRecord) {
+        final Set<String> allClientIds = new HashSet<>();
+
+        allClientIds.addAll(mFociCache.getAllClientIds());
+        allClientIds.addAll(mAppUidCache.getAllClientIds());
+
+        for (final MsalOAuth2TokenCache optionalTokenCache : mOptionalCaches) {
+            allClientIds.addAll(optionalTokenCache.getAllClientIds());
+        }
+
+        final List<AccountDeletionRecord> deletionRecordList = new ArrayList<>();
+
+        for (final String clientId : allClientIds) {
+            deletionRecordList.add(
+                    removeAccount(
+                            accountRecord.getEnvironment(),
+                            clientId,
+                            accountRecord.getHomeAccountId(),
+                            null
+                    )
+            );
+        }
+
+        // Create a List of the deleted AccountRecords...
+        final List<AccountRecord> deletedAccountRecords = new ArrayList<>();
+
+        for (final AccountDeletionRecord accountDeletionRecord : deletionRecordList) {
+            deletedAccountRecords.addAll(accountDeletionRecord);
+        }
+
+        return new AccountDeletionRecord(deletedAccountRecords);
     }
 
     @Override
@@ -416,6 +451,21 @@ public class BrokerOAuth2TokenCache
         );
 
         return deletionRecord;
+    }
+
+    @Override
+    @SuppressWarnings(UNCHECKED)
+    protected Set<String> getAllClientIds() {
+        final Set<String> result = new HashSet<>();
+
+        result.addAll(mFociCache.getAllClientIds());
+        result.addAll(mAppUidCache.getAllClientIds());
+
+        for (final MsalOAuth2TokenCache optionalCache : mOptionalCaches) {
+            result.addAll(optionalCache.getAllClientIds());
+        }
+
+        return result;
     }
 
     private List<MsalOAuth2TokenCache> initializeOptionalCaches(@NonNull final Context context,
@@ -498,7 +548,7 @@ public class BrokerOAuth2TokenCache
         return getTokenCache(context, sharedPreferencesFileManager, true);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings(UNCHECKED)
     private static <T extends MsalOAuth2TokenCache> T getTokenCache(@NonNull final Context context,
                                                                     @NonNull final ISharedPreferencesFileManager spfm,
                                                                     boolean isFoci) {

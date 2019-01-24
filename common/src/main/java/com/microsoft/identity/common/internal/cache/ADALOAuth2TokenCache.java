@@ -52,6 +52,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Class responsible for saving oAuth2 Tokens for use in future requests.  Ideally this class would
@@ -224,6 +225,13 @@ public class ADALOAuth2TokenCache
                                                final String clientId,
                                                final String homeAccountId,
                                                final String realm) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    protected Set<String> getAllClientIds() {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
