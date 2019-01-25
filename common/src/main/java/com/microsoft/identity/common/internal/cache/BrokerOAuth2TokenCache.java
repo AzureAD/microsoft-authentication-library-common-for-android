@@ -51,6 +51,30 @@ import static com.microsoft.identity.common.internal.cache.SharedPreferencesAcco
 
 /**
  * "Combined" cache implementation to cache tokens inside of the broker.
+ * <p>
+ * This cache is really a container for other caches. It contains:
+ * 1 Family of Client ID cache (FOCI)
+ * <p>
+ * 1 "Primary" cache which, if the calligAppUid (broker-bound app) is NOT in the family, is used
+ * to store tokens.
+ * <p>
+ * 0 or more "optional caches" -- these are initialized by passing the known appUids of other
+ * broker-binding apps to this cache. Because all of the SharedPrefernces-based cache files'
+ * names are deterministically chosen based on this UID, we can construct a reference to these
+ * caches using this information.
+ * <p>
+ * Operations performed on the BrokerOAuth2TokenCache are designed to route the caller to the
+ * proper data store: a good example of this is when calling save(). Save() will inspect the contents
+ * of the response and determine if the payload contains a family id. If it does, the Account and
+ * any associated credentials are written to the FOCI cache and nowhere else.
+ * <p>
+ * The reverse is true for non-family apps: if the response does not contain a family id, then the
+ * account and credentials are written to the app uid-specific cache (the "primary cache").
+ * <p>
+ * Some operations will be performed on multiple caches; a good example of this is the
+ * removeAccountFromDevice() API. This call affects multiple caches by iterating over the family,
+ * app-specific, and optional caches to locate occurrences of an Account: if it is found, the account
+ * and corresponding credential entries are removed.
  *
  * @param <GenericOAuth2Strategy>       The strategy type to use.
  * @param <GenericAuthorizationRequest> The AuthorizationRequest type to use.
@@ -157,6 +181,27 @@ public class BrokerOAuth2TokenCache
         );
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The caller of this function should inspect the result carefully.
+     * <p>
+     * If the result contains an AccountRecord, IdTokenRecord, AccessTokenRecord, and
+     * RefreshTokenRecord then the result is OK to use. The caller should still check the expiry of
+     * the AccessTokenRecord before returning the result to the caller, refreshing as necessary...
+     * <p>
+     * If the result contains only an AccountRecord then we had no tokens in the cache and the
+     * library should do some equivalent of AUTH_REFRESH_FAILED_PROMPT_NOT_ALLOWED
+     * <p>
+     * If the result contains only a RefreshTokenRecord then the caller should attempt to refresh
+     * the access token. If it works, call BrokerOAuth2TokenCache#save() with the result. If it
+     * fails, throw some equivalent of AUTH_REFRESH_FAILED_PROMPT_NOT_ALLOWED
+     *
+     * @param clientId The ClientId of the current app.
+     * @param target   The 'target' (scopes) the requested token should contain.
+     * @param account  The Account whose Credentials should be loaded.
+     * @return
+     */
     @Override
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
