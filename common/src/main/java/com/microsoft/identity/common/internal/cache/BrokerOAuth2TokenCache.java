@@ -368,8 +368,28 @@ public class BrokerOAuth2TokenCache
         return allAccounts;
     }
 
+    /**
+     * Removes the provided {@link AccountRecord} from all of the caches known by this instance.
+     * This API is akin to a device-wide signout for a non-joined user. Note, this affects the cache
+     * ONLY so don't rely on this API for things like clearing cookies.
+     *
+     * @param accountRecord The AccountRecord to remove.
+     * @return An {@link AccountDeletionRecord} indicating which AccountRecords were removed, if any.
+     */
     @SuppressWarnings(UNCHECKED)
     public AccountDeletionRecord removeAccountFromDevice(@NonNull final AccountRecord accountRecord) {
+        final String methodName = ":removeAccountFromDevice";
+
+        if (null == accountRecord) {
+            Logger.error(
+                    TAG + methodName,
+                    "Illegal arg. Cannot delete a null AccountRecord!",
+                    null
+            );
+
+            throw new IllegalArgumentException("AccountRecord may not be null.");
+        }
+
         final Set<String> allClientIds = new HashSet<>();
 
         allClientIds.addAll(mFociCache.getAllClientIds());
@@ -378,6 +398,13 @@ public class BrokerOAuth2TokenCache
         for (final MsalOAuth2TokenCache optionalTokenCache : mOptionalCaches) {
             allClientIds.addAll(optionalTokenCache.getAllClientIds());
         }
+
+        Logger.info(
+                TAG + methodName,
+                "Found ["
+                        + allClientIds.size()
+                        + "] client ids."
+        );
 
         final List<AccountDeletionRecord> deletionRecordList = new ArrayList<>();
 
@@ -398,6 +425,13 @@ public class BrokerOAuth2TokenCache
         for (final AccountDeletionRecord accountDeletionRecord : deletionRecordList) {
             deletedAccountRecords.addAll(accountDeletionRecord);
         }
+
+        Logger.info(
+                TAG + methodName,
+                "Deleted ["
+                        + deletedAccountRecords.size()
+                        + "] AccountRecords."
+        );
 
         return new AccountDeletionRecord(deletedAccountRecords);
     }
@@ -496,6 +530,13 @@ public class BrokerOAuth2TokenCache
                 uids.add(uid);
             }
 
+            Logger.verbose(
+                    TAG + methodName,
+                    "Attempting to initialize ["
+                            + uids.size()
+                            + "] caches."
+            );
+
             for (final Integer uid : uids) {
                 if (uid != callingAppUid) { // do not allow the calling app uid cache to exist twice
                     caches.add(
@@ -503,6 +544,13 @@ public class BrokerOAuth2TokenCache
                                     context,
                                     uid
                             )
+                    );
+                } else {
+                    Logger.warn(
+                            TAG + methodName,
+                            "Attempt to create duplicate cache for uid: ["
+                                    + uid
+                                    + "] -- skipping!"
                     );
                 }
             }
