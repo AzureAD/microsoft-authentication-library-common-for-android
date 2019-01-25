@@ -44,6 +44,10 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
     @SerializedName("cloud_instance_host_name")
     private String mCloudInstanceHostName;
 
+    public BrokerTokenResponse(){
+
+    }
+
     public BrokerTokenResponse(MicrosoftStsTokenResponse microsoftStsTokenResponse){
         setExpiresIn(microsoftStsTokenResponse.getExpiresIn());
         setAccessToken(microsoftStsTokenResponse.getAccessToken());
