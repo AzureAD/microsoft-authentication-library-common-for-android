@@ -436,11 +436,31 @@ public class BrokerOAuth2TokenCache
         return new AccountDeletionRecord(deletedAccountRecords);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This override adds some broker-specific behavior. Specifically, the following:
+     * Attempts to delete any provided matching account criteria from the callingAppUid cache,
+     * followed by the foci cache, followed by the List of optional caches. Deletion from the
+     * optional caches should only have an effect if the clientId matches. In the base-case, these
+     * values will not match and as such, calling removeAccount iteratively will not remove anything.
+     * <p>
+     * In the case where the provided clientId matches neither the current callingAppUid nor any
+     * save cache value in the FOCI, then that account will be removed from one of the optional
+     * caches. This supports removeAccountFromDevice.
+     *
+     * @param environment   The environment to which the targeted Account is associated.
+     * @param clientId      The clientId of this current app.
+     * @param homeAccountId The homeAccountId of the Account targeted for deletion.
+     * @param realm         The tenant id of the targeted Account (if applicable).
+     * @return An {@link AccountDeletionRecord}, containing the deleted {@link AccountDeletionRecord}s.
+     * @see #removeAccountFromDevice(AccountRecord).
+     */
     @Override
-    public AccountDeletionRecord removeAccount(String environment,
-                                               String clientId,
-                                               String homeAccountId,
-                                               @Nullable String realm) {
+    public AccountDeletionRecord removeAccount(@Nullable final String environment,
+                                               @Nullable final String clientId,
+                                               @Nullable final String homeAccountId,
+                                               @Nullable final String realm) {
         final String methodName = ":removeAccount";
 
         AccountDeletionRecord deletionRecord = mAppUidCache.removeAccount(

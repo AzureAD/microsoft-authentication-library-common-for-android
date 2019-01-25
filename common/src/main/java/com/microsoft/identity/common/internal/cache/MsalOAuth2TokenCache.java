@@ -527,17 +527,20 @@ public class MsalOAuth2TokenCache
      * Note: if realm is passed as null, all tokens and AccountRecords associated to the
      * provided homeAccountId will be deleted. If a realm is provided, then the deletion is
      * restricted to only those AccountRecords and Credentials in that realm (tenant).
+     * <p>
+     * Environment, clientId, and home_account_id are nullable parameters. However, it should be
+     * noted that if these params are null, this method will have no effect.
      *
      * @param environment   The environment to which the targeted Account is associated.
      * @param clientId      The clientId of this current app.
      * @param homeAccountId The homeAccountId of the Account targeted for deletion.
      * @param realm         The tenant id of the targeted Account (if applicable).
-     * @return
+     * @return An {@link AccountDeletionRecord}, containing the deleted {@link AccountDeletionRecord}s.
      */
     @Override
-    public AccountDeletionRecord removeAccount(final String environment,
-                                               final String clientId,
-                                               final String homeAccountId,
+    public AccountDeletionRecord removeAccount(@Nullable final String environment,
+                                               @Nullable final String clientId,
+                                               @Nullable final String homeAccountId,
                                                @Nullable final String realm) {
         final String methodName = ":removeAccount";
 
