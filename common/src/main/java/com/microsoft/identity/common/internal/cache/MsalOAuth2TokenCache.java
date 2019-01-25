@@ -268,127 +268,6 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public ICacheRecord loadByFamilyId(@Nullable final String clientId,
-                                       @Nullable final String target,
-                                       @NonNull final AccountRecord accountRecord) {
-        final String methodName = ":loadByFamilyId";
-
-        final String familyId = "1";
-
-        Logger.verbose(
-                TAG + methodName,
-                "ClientId[" + clientId + ", " + familyId + "]"
-        );
-
-        ICacheRecord result = null;
-
-        // Try to find a 'perfect match' if possible (clientId & target match)
-        // If no perfect match, fall back on any RT for this app (clientId but no target)
-        if (null != clientId) {
-            result = load(clientId, target, accountRecord);
-
-            // A result was found... therefore the familyId will be ignored...
-            Logger.warn(
-                    TAG + methodName,
-                    "Credentials located for client id. Skipping family id check."
-            );
-        }
-
-        // If there is no RT for this app, try to find any RT in the family (family id ONLY)
-        if (null == result || null == result.getRefreshToken()) {
-            Logger.warn(
-                    TAG + methodName,
-                    "Matching RT could not be found. Searching for compatible FRT."
-            );
-
-            final List<Credential> allCredentials = mAccountCredentialCache.getCredentials();
-            // The following fields must match:
-            // - environment
-            // - home_account_id
-            // - credential_type == RT
-
-            // The following fields do not matter:
-            // - clientId doesn't matter (FRT)
-            // - target doesn't matter (FRT)
-            // - realm doesn't matter (MRRT)
-
-            final List<RefreshTokenRecord> allRefreshTokens = new ArrayList<>();
-
-            // First, filter down to only the refresh tokens...
-            for (final Credential credential : allCredentials) {
-                if (credential instanceof RefreshTokenRecord) {
-                    allRefreshTokens.add((RefreshTokenRecord) credential);
-                }
-            }
-
-            Logger.info(
-                    TAG + methodName,
-                    "Found [" + allRefreshTokens.size() + "] RTs"
-            );
-
-            // Iterate over those refresh tokens and see if any are in the family...
-            final List<RefreshTokenRecord> familyRefreshTokens = new ArrayList<>();
-
-            for (final RefreshTokenRecord refreshToken : allRefreshTokens) {
-                if (refreshToken.getFamilyId().equals(familyId)) {
-                    familyRefreshTokens.add(refreshToken);
-                }
-            }
-
-            Logger.info(
-                    TAG + methodName,
-                    "Found [" + familyRefreshTokens.size() + "] foci RTs"
-            );
-
-            // Iterate over the family refresh tokens and filter for the current environment...
-            final List<RefreshTokenRecord> familyRtsForEnvironment = new ArrayList<>();
-
-            for (final RefreshTokenRecord familyRefreshToken : familyRefreshTokens) {
-                if (familyRefreshToken.getEnvironment().equals(accountRecord.getEnvironment())) {
-                    familyRtsForEnvironment.add(familyRefreshToken);
-                }
-            }
-
-            Logger.info(
-                    TAG + methodName,
-                    "Found [" + familyRtsForEnvironment.size() + "] foci RTs"
-            );
-
-            IdTokenRecord idTokenRecord = null;
-            AccessTokenRecord accessTokenRecord = null;
-
-            if (null != result) {
-                // If our first call yielded an id or access token, bring that result 'forward'
-                // and return it with the newly-found FRT... The onus is on the caller to check
-                // if the AT is expired or not...
-                idTokenRecord = result.getIdToken();
-                accessTokenRecord = result.getAccessToken();
-            }
-
-            // Filter for the current user...
-            result = new CacheRecord();
-            ((CacheRecord) result).setAccount(accountRecord);
-
-            for (final RefreshTokenRecord familyRefreshToken : familyRtsForEnvironment) {
-                if (familyRefreshToken.getHomeAccountId().equals(accountRecord.getHomeAccountId())) {
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Compatible FOCI token found."
-                    );
-
-                    ((CacheRecord) result).setRefreshToken(familyRefreshToken);
-                    ((CacheRecord) result).setIdToken(idTokenRecord);
-                    ((CacheRecord) result).setAccessToken(accessTokenRecord);
-
-                    break;
-                }
-            }
-        }
-
-        return result;
-    }
-
-    @Override
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
                              @NonNull final AccountRecord account) {
@@ -474,6 +353,7 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
+    @Nullable
     public AccountRecord getAccount(@Nullable final String environment,
                                     @NonNull final String clientId,
                                     @NonNull final String homeAccountId,
@@ -524,9 +404,10 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public AccountRecord getAccountWithLocalAccountId(@Nullable String environment,
-                                                      @NonNull String clientId,
-                                                      @NonNull String localAccountId) {
+    @Nullable
+    public AccountRecord getAccountWithLocalAccountId(@Nullable final String environment,
+                                                      @NonNull final String clientId,
+                                                      @NonNull final String localAccountId) {
         final String methodName = ":getAccountWithLocalAccountId";
 
         final List<AccountRecord> accounts = getAccounts(environment, clientId);
@@ -646,17 +527,20 @@ public class MsalOAuth2TokenCache
      * Note: if realm is passed as null, all tokens and AccountRecords associated to the
      * provided homeAccountId will be deleted. If a realm is provided, then the deletion is
      * restricted to only those AccountRecords and Credentials in that realm (tenant).
+     * <p>
+     * Environment, clientId, and home_account_id are nullable parameters. However, it should be
+     * noted that if these params are null, this method will have no effect.
      *
      * @param environment   The environment to which the targeted Account is associated.
      * @param clientId      The clientId of this current app.
      * @param homeAccountId The homeAccountId of the Account targeted for deletion.
      * @param realm         The tenant id of the targeted Account (if applicable).
-     * @return
+     * @return An {@link AccountDeletionRecord}, containing the deleted {@link AccountDeletionRecord}s.
      */
     @Override
-    public AccountDeletionRecord removeAccount(final String environment,
-                                               final String clientId,
-                                               final String homeAccountId,
+    public AccountDeletionRecord removeAccount(@Nullable final String environment,
+                                               @Nullable final String clientId,
+                                               @Nullable final String homeAccountId,
                                                @Nullable final String realm) {
         final String methodName = ":removeAccount";
 
@@ -691,6 +575,12 @@ public class MsalOAuth2TokenCache
                         homeAccountId,
                         realm
                 ))) {
+
+            Logger.warn(
+                    TAG + methodName,
+                    "Insufficient filtering provided for account removal - preserving Account."
+            );
+
             return new AccountDeletionRecord(null);
         }
 
@@ -764,6 +654,26 @@ public class MsalOAuth2TokenCache
         }
 
         return new AccountDeletionRecord(deletedAccounts);
+    }
+
+    @Override
+    protected Set<String> getAllClientIds() {
+        final String methodName = ":getAllClientIds";
+
+        final Set<String> result = new HashSet<>();
+
+        for (final Credential credential : mAccountCredentialCache.getCredentials()) {
+            result.add(credential.getClientId());
+        }
+
+        Logger.verbose(
+                TAG + methodName,
+                "Found ["
+                        + result.size()
+                        + "] clientIds/"
+        );
+
+        return result;
     }
 
     /**
@@ -1025,6 +935,10 @@ public class MsalOAuth2TokenCache
         };
 
         return isSchemaCompliant(idToken.getClass(), params);
+    }
+
+    IAccountCredentialCache getAccountCredentialCache() {
+        return mAccountCredentialCache;
     }
 
     @Override
