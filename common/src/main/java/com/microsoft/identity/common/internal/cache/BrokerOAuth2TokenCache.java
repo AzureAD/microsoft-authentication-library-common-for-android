@@ -473,6 +473,13 @@ public class BrokerOAuth2TokenCache
                         + "]"
         );
 
+        // Iterate over the optionalCaches to try and locate the account to delete.
+        // This supports the removeAccountFromDevice API -- when this method is called directly,
+        // the clientId will not match any records stored in the optional caches (only the
+        // callingAppUid cache and/or the FOCI cache...
+        //
+        // Effectively, this means that this logic does nothing unless called via
+        // removeAccountFromDevice or if the function is invoked using a clientId other than our own.
         final Iterator<MsalOAuth2TokenCache> cacheIterator = mOptionalCaches.iterator();
 
         while (deletionRecord.isEmpty() && cacheIterator.hasNext()) {
