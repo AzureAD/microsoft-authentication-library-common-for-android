@@ -240,9 +240,12 @@ public final class AuthorizationActivity extends Activity {
         Logger.info(TAG, null, "Received redirect from customTab/browser.");
         final String url = getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
         final Intent resultIntent = createResultIntent(url);
-        //TODO refactor here.
-        //send result for different response
-        sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE, resultIntent);
+        if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL))) {
+            sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE, resultIntent);
+        } else {
+            sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_ERROR, resultIntent);
+        }
+
         finish();
     }
 
