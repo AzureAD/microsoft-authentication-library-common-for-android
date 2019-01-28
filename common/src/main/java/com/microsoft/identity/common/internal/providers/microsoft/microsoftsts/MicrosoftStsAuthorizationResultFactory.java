@@ -44,6 +44,7 @@ import java.util.HashMap;
 public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultFactory<MicrosoftStsAuthorizationResult, MicrosoftStsAuthorizationRequest> {
 
     private static final String TAG = MicrosoftStsAuthorizationResultFactory.class.getSimpleName();
+    protected static final String ERROR_SUBCODE = "error_subcode";
 
     /**
      * Constant key to get authorization request final url from intent.
@@ -74,8 +75,9 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                 // This is purely client side error, possible return could be chrome_not_installed or the request intent is
                 // not resolvable
                 final String error = data.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE);
+                final String errorSubcode = data.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE);
                 final String errorDescription = data.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE);
-                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL, error, errorDescription);
+                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL, error, errorSubcode, errorDescription);
                 break;
 
             default:
@@ -88,10 +90,25 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
 
     private MicrosoftStsAuthorizationResult createAuthorizationResultWithErrorResponse(final AuthorizationStatus authStatus,
                                                                                        final String error,
+                                                                                       final String errorSubcode,
                                                                                        final String errorDescription) {
         Logger.info(TAG, "Error is returned from webview redirect");
-        Logger.infoPII(TAG, "error: " + error + " errorDescription: " + errorDescription);
-        MicrosoftStsAuthorizationErrorResponse errorResponse = new MicrosoftStsAuthorizationErrorResponse(error, errorDescription);
+        Logger.infoPII(TAG, "error: " + error
+                + "error subcode:" + errorSubcode
+                + " errorDescription: " + errorDescription);
+        MicrosoftStsAuthorizationErrorResponse errorResponse
+                = new MicrosoftStsAuthorizationErrorResponse(error, errorSubcode, errorDescription);
+        return new MicrosoftStsAuthorizationResult(authStatus, errorResponse);
+    }
+
+    private MicrosoftStsAuthorizationResult createAuthorizationResultWithErrorResponse(final AuthorizationStatus authStatus,
+                                                                                       final String error,
+                                                                                       final String errorDescription) {
+        Logger.info(TAG, "Error is returned from webview redirect");
+        Logger.infoPII(TAG, "error: " + error
+                + " errorDescription: " + errorDescription);
+        MicrosoftStsAuthorizationErrorResponse errorResponse
+                = new MicrosoftStsAuthorizationErrorResponse(error, errorDescription);
         return new MicrosoftStsAuthorizationResult(authStatus, errorResponse);
     }
 
@@ -108,7 +125,9 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
             result = validateAndCreateAuthorizationResult(urlParameters, requestStateParameter);
         } else if (urlParameters.containsKey(ERROR)) {
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
-                    urlParameters.get(ERROR), urlParameters.get(ERROR_DESCRIPTION));
+                    urlParameters.get(ERROR),
+                    urlParameters.get(ERROR_SUBCODE),
+                    urlParameters.get(ERROR_DESCRIPTION));
         } else {
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
