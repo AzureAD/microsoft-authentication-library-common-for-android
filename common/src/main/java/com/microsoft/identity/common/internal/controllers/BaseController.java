@@ -28,10 +28,12 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
+import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -51,6 +53,7 @@ import com.microsoft.identity.common.internal.request.AcquireTokenOperationParam
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.util.DateUtilities;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -153,6 +156,102 @@ public abstract class BaseController {
         tokenResult = strategy.requestToken(tokenRequest);
 
         return tokenResult;
+    }
+
+    protected void renewAccessToken(@NonNull final AcquireTokenSilentOperationParameters parameters,
+                                  @NonNull final AcquireTokenResult acquireTokenSilentResult,
+                                  @NonNull final OAuth2TokenCache tokenCache,
+                                  @NonNull final OAuth2Strategy strategy,
+                                  @NonNull final ICacheRecord cacheRecord)
+            throws IOException, ClientException, UiRequiredException {
+        final String methodName = ":renewAccessToken";
+        Logger.verbose(
+                TAG + methodName,
+                "Renewing access token..."
+        );
+        parameters.setRefreshToken(cacheRecord.getRefreshToken());
+
+        final TokenResult tokenResult = performSilentTokenRequest(strategy, parameters);
+        acquireTokenSilentResult.setTokenResult(tokenResult);
+
+        if (tokenResult.getSuccess()) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Token request was successful"
+            );
+            final ICacheRecord savedRecord = tokenCache.save(
+                    strategy,
+                    getAuthorizationRequest(strategy, parameters),
+                    tokenResult.getTokenResponse()
+            );
+
+            // Create a new AuthenticationResult to hold the saved record
+            final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(savedRecord);
+
+            // Set the AuthenticationResult on the final result object
+            acquireTokenSilentResult.setLocalAuthenticationResult(authenticationResult);
+        } else {
+            // Log all the particulars...
+            if (null != tokenResult.getErrorResponse()) {
+                if (null != tokenResult.getErrorResponse().getError()) {
+                    Logger.warn(
+                            TAG,
+                            tokenResult.getErrorResponse().getError()
+                    );
+                }
+
+                if (null != tokenResult.getErrorResponse().getErrorDescription()) {
+                    Logger.warnPII(
+                            TAG,
+                            tokenResult.getErrorResponse().getErrorDescription()
+                    );
+                }
+
+                if (UiRequiredException.INVALID_GRANT.equalsIgnoreCase(tokenResult.getErrorResponse().getError())) {
+                    throw new UiRequiredException(
+                            UiRequiredException.INVALID_GRANT,
+                            null != tokenResult.getErrorResponse().getErrorDescription()
+                                    ? tokenResult.getErrorResponse().getErrorDescription()
+                                    : "Failed to renew access token"
+                    );
+                }
+            }
+        }
+    }
+
+    protected TokenResult performSilentTokenRequest(
+            final OAuth2Strategy strategy,
+            final AcquireTokenSilentOperationParameters parameters)
+            throws ClientException, IOException {
+
+        final String methodName = ":performSilentTokenRequest";
+        Logger.verbose(
+                TAG + methodName,
+                "Requesting tokens..."
+        );
+        throwIfNetworkNotAvailable(parameters.getAppContext());
+
+        // Check that the authority is known
+        Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parameters.getAuthority());
+
+        if (!authorityResult.getKnown()) {
+            throw authorityResult.getClientException();
+        }
+
+        final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest();
+        refreshTokenRequest.setClientId(parameters.getClientId());
+        refreshTokenRequest.setScope(StringUtil.join(' ', parameters.getScopes()));
+        refreshTokenRequest.setRefreshToken(parameters.getRefreshToken().getSecret());
+        refreshTokenRequest.setRedirectUri(parameters.getRedirectUri());
+
+        if (!StringExtensions.isNullOrBlank(refreshTokenRequest.getScope())) {
+            Logger.verbosePII(
+                    TAG + methodName,
+                    "Scopes: [" + refreshTokenRequest.getScope() + "]"
+            );
+        }
+
+        return strategy.requestToken(refreshTokenRequest);
     }
 
     protected ICacheRecord saveTokens(final OAuth2Strategy strategy,

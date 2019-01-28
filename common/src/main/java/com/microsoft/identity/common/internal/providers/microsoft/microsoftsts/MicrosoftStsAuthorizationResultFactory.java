@@ -89,7 +89,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
             case AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER:
                 Logger.verbose(TAG, "Device Registration needed, need to start WPJ");
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
-                        MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
+                        MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED,
                         MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED);
                 break;
 

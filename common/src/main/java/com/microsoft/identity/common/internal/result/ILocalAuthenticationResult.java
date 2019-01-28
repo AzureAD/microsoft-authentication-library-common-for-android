@@ -65,6 +65,13 @@ public interface ILocalAuthenticationResult {
     String getUniqueId();
 
     /**
+     *
+     * @return The refresh token
+     */
+    @NonNull
+    String getRefreshToken();
+
+    /**
      * @return The id token returned by the service or null if no id token is returned.
      */
     @Nullable
