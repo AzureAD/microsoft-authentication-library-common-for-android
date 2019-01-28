@@ -1,3 +1,8 @@
+Version 0.0.8
+-------------
+- Bugfix: Resolves COMMON/#343
+    * Fix the discrepancy on idToken claim of Account object in v1.15.1.
+
 Version 0.0.7
 -------------
 - Bugfix: Resolves MSAL/#418
