@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Class for managing the tokens saved locally on a device.
@@ -72,22 +73,6 @@ public abstract class OAuth2TokenCache
      */
     public abstract ICacheRecord save(final AccountRecord accountRecord,
                                       final IdTokenRecord idTokenRecord
-    );
-
-    /**
-     * Loads the tokens available for the supplied client criteria.
-     *
-     * @param clientId      The current client's id.
-     * @param target        The desired scopes.
-     * @param accountRecord The current account.
-     * @return An ICacheRecord containing the account. If a matching id token is available
-     * (for the provided clientId), it is returned. If a matching access token is available
-     * (for the provided client id), it is also returned. If a matching refresh token is available
-     * it is returned.
-     */
-    public abstract ICacheRecord loadByFamilyId(final String clientId,
-                                                final String target,
-                                                final AccountRecord accountRecord
     );
 
     /**
@@ -163,6 +148,13 @@ public abstract class OAuth2TokenCache
                                                         final String homeAccountId,
                                                         final String realm
     );
+
+    /**
+     * Returns a Set of all of the ClientIds which have tokens stored in this cache.
+     *
+     * @return A Set of ClientIds.
+     */
+    protected abstract Set<String> getAllClientIds();
 
     /**
      * Gets the Context used to initialize this OAuth2TokenCache.
