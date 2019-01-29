@@ -24,6 +24,7 @@ package com.microsoft.identity.common.exception;
 
 import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 
 import org.json.JSONException;
 
@@ -79,6 +80,10 @@ public class ServiceException extends BaseException {
 
     private HashMap<String, List<String>> mHttpResponseHeaders = null;
 
+    private String mOAuthError;
+
+    private String mOAuthErrorDescription;
+
     /**
      * When {@link java.net.SocketTimeoutException} is thrown, no status code will be caught. Will use 0 instead.
      */
@@ -114,20 +119,16 @@ public class ServiceException extends BaseException {
      *
      * @param response HttpWebResponse
      */
-    public void setHttpResponse(final HttpWebResponse response) {
+    public void setHttpResponse(final HttpResponse response) throws JSONException {
         if (null != response) {
             mHttpStatusCode = response.getStatusCode();
 
-            if (null != response.getResponseHeaders()) {
-                mHttpResponseHeaders = new HashMap<>(response.getResponseHeaders());
+            if (null != response.getHeaders()) {
+                mHttpResponseHeaders = new HashMap<>(response.getHeaders());
             }
 
             if (null != response.getBody()) {
-                try {
                     mHttpResponseBody = new HashMap<>(HashMapExtensions.getJsonResponse(response));
-                } catch (final JSONException exception) {
-                    //Log.e(CommonCoreBaseException.class.getSimpleName(), ADALError.SERVER_INVALID_JSON_RESPONSE.toString(), exception);
-                }
             }
         }
     }
@@ -155,5 +156,21 @@ public class ServiceException extends BaseException {
     public ServiceException(final String errorCode, final String errorMessage, final int httpStatusCode, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
         mHttpStatusCode = httpStatusCode;
+    }
+
+    public String getOAuthError() {
+        return mOAuthError;
+    }
+
+    public void setOAuthError(final String oAuthError) {
+        this.mOAuthError = oAuthError;
+    }
+
+    public String getOAuthErrorDescription() {
+        return mOAuthErrorDescription;
+    }
+
+    public void setOAuthErrorDescription(final String oAuthErrorDescription) {
+        this.mOAuthErrorDescription = oAuthErrorDescription;
     }
 }

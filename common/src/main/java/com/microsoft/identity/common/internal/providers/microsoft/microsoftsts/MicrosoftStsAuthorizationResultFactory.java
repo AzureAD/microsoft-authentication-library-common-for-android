@@ -78,6 +78,21 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL, error, errorDescription);
                 break;
 
+            case AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME:
+                Logger.verbose(TAG, "Device needs to have broker installed, we expect the apps to call us"
+                        + "back when the broker is installed");
+                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                        MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
+                        MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED);
+                break;
+
+            case AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER:
+                Logger.verbose(TAG, "Device Registration needed, need to start WPJ");
+                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                        MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED,
+                        MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED);
+                break;
+
             default:
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.UNKNOWN_ERROR, MicrosoftAuthorizationErrorResponse.UNKNOWN_RESULT_CODE);

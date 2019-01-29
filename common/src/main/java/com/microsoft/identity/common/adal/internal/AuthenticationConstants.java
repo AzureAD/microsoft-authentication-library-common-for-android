@@ -47,7 +47,7 @@ public final class AuthenticationConstants {
     /**
      * The Constant ENCODING_UTF8.
      */
-    public static final String ENCODING_UTF8 = "UTF_8";
+    public static final String ENCODING_UTF8 = "UTF-8";
 
     /**
      * Bundle message.
@@ -406,6 +406,11 @@ public final class AuthenticationConstants {
          * session key JWE.
          */
         public static final String SESSION_KEY_JWE = "session_key_jwe";
+
+        /**
+         * String as Query parameter key to send a V1 request to V2 endpoint
+         */
+        public static final String IT_VER_PARAM = "itver";
     }
 
     /**
