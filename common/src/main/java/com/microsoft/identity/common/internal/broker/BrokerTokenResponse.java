@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.broker;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 
 import java.util.Date;
@@ -36,11 +37,31 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
 
     private String mAuthority;
     private String mTenantId;
-    private String mPrimaryRefreshToken;
+
+    @SerializedName("not_before")
     private Date mExpiresNotBefore;
+
+    @SerializedName("cloud_instance_host_name")
+    private String mCloudInstanceHostName;
 
     public BrokerTokenResponse(){
 
+    }
+
+    public BrokerTokenResponse(MicrosoftStsTokenResponse microsoftStsTokenResponse){
+        setExpiresIn(microsoftStsTokenResponse.getExpiresIn());
+        setAccessToken(microsoftStsTokenResponse.getAccessToken());
+        setTokenType(microsoftStsTokenResponse.getTokenType());
+        setRefreshToken(microsoftStsTokenResponse.getRefreshToken());
+        setScope(microsoftStsTokenResponse.getScope());
+        setState(microsoftStsTokenResponse.getState());
+        setIdToken(microsoftStsTokenResponse.getIdToken());
+        setResponseReceivedTime(microsoftStsTokenResponse.getResponseReceivedTime());
+        setExtExpiresOn(microsoftStsTokenResponse.getExtExpiresOn());
+        setClientInfo(microsoftStsTokenResponse.getClientInfo());
+        setClientId(microsoftStsTokenResponse.getClientId());
+        setExtExpiresIn(microsoftStsTokenResponse.getExtExpiresIn());
+        setFamilyId(microsoftStsTokenResponse.getFamilyId());
     }
 
     protected BrokerTokenResponse(Parcel in) {
@@ -60,8 +81,8 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
             setFamilyId(in.readString());
             setAuthority(in.readString());
             setTenantId(in.readString());
-            setPrimaryRefreshToken(in.readString());
             setExpiresNotBefore(new Date(in.readLong()));
+            setCloudInstanceHostName(in.readString());
         }
     }
 
@@ -83,8 +104,8 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
             dest.writeString(getFamilyId());
             dest.writeString(getAuthority());
             dest.writeString(getTenantId());
-            dest.writeString(getPrimaryRefreshToken());
             dest.writeLong(getExpiresNotBefore() != null ? getExpiresNotBefore().getTime() : 0);
+            dest.writeString(getCloudInstanceHostName());
         }
     }
 
@@ -95,7 +116,7 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
 
     public static final Creator<BrokerTokenResponse> CREATOR = new Creator<BrokerTokenResponse>() {
         @Override
-        public BrokerTokenResponse createFromParcel(Parcel in) {
+        public BrokerTokenResponse createFromParcel(final Parcel in) {
             return new BrokerTokenResponse(in);
         }
 
@@ -117,16 +138,8 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
         return mTenantId;
     }
 
-    public void setTenantId(String tenantId) {
+    public void setTenantId(final String tenantId) {
         mTenantId = tenantId;
-    }
-
-    public String getPrimaryRefreshToken() {
-        return mPrimaryRefreshToken;
-    }
-
-    public void setPrimaryRefreshToken(final String primaryRefreshToken) {
-        mPrimaryRefreshToken = primaryRefreshToken;
     }
 
     public Date getExpiresNotBefore() {
@@ -137,4 +150,11 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
         mExpiresNotBefore = expiresNotBefore;
     }
 
+    public String getCloudInstanceHostName() {
+        return mCloudInstanceHostName;
+    }
+
+    public void setCloudInstanceHostName(final String cloudInstanceHostName) {
+        this.mCloudInstanceHostName = cloudInstanceHostName;
+    }
 }

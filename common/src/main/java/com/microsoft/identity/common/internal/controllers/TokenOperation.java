@@ -26,6 +26,7 @@ import android.content.Intent;
 
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
@@ -33,7 +34,7 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 public interface TokenOperation {
-    AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, ClientException, UiRequiredException, ArgumentException;
+    AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, ClientException, UiRequiredException, ArgumentException, ServiceException;
 
     void notify(int requestCode, int resultCode, final Intent data);
 }

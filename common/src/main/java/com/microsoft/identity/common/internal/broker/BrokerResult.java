@@ -27,8 +27,6 @@ import android.os.Parcelable;
 
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
-import com.microsoft.identity.common.internal.broker.BrokerRequest.SdkType;
-
 /**
  * Encapsulates the possible responses from the broker.  Both successful response and error response.
  */
@@ -36,8 +34,6 @@ public class BrokerResult extends TokenResult implements Parcelable {
 
     private BrokerTokenResponse mBrokerTokenResponse;
     private BrokerErrorResponse mBrokerErrorResponse;
-
-    private SdkType mSdkType = SdkType.MSAL;
 
     /**
      * Constructor for create successful broker response
@@ -74,7 +70,6 @@ public class BrokerResult extends TokenResult implements Parcelable {
             setSuccess(in.readInt() != 0);
             mBrokerTokenResponse = in.readParcelable(BrokerTokenResponse.class.getClassLoader());
             mBrokerErrorResponse = in.readParcelable(BrokerErrorResponse.class.getClassLoader());
-            setSdkType(SdkType.valueOf(in.readString()));
         }
 
     }
@@ -85,7 +80,6 @@ public class BrokerResult extends TokenResult implements Parcelable {
             dest.writeInt((getSuccess() ? 1 : 0));
             dest.writeParcelable(mBrokerTokenResponse, flags);
             dest.writeParcelable(mBrokerErrorResponse, flags);
-            dest.writeString(getSdkType().name());
         }
     }
 
@@ -133,15 +127,6 @@ public class BrokerResult extends TokenResult implements Parcelable {
     @Override
     public BrokerErrorResponse getErrorResponse() {
         return mBrokerErrorResponse;
-    }
-
-
-    public SdkType getSdkType() {
-        return mSdkType;
-    }
-
-    public void setSdkType(SdkType sdkType) {
-        this.mSdkType = sdkType;
     }
 
 }

@@ -37,23 +37,27 @@ import java.util.concurrent.TimeUnit;
  * Successful authentication result. When auth succeeds, token will be wrapped into the
  * {@link LocalAuthenticationResult} and passed back through the {@link ILocalAuthenticationCallback}.
  */
-public final class LocalAuthenticationResult implements ILocalAuthenticationResult {
+public class LocalAuthenticationResult implements ILocalAuthenticationResult {
 
 
     private final String mRawIdToken;
     private final AccessTokenRecord mAccessTokenRecord;
     private final IAccountRecord mAccountRecord;
+    private final String mRefreshToken;
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord) {
         mAccessTokenRecord = cacheRecord.getAccessToken();
         mRawIdToken = cacheRecord.getIdToken().getSecret();
         mAccountRecord = cacheRecord.getAccount();
+        mRefreshToken = cacheRecord.getRefreshToken().getSecret();
     }
 
     public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
+                                     @NonNull String refreshToken,
                                      @Nullable String rawIdToken,
                                      @NonNull IAccountRecord accountRecord) {
         mAccessTokenRecord = accessTokenRecord;
+        mRefreshToken = refreshToken;
         mRawIdToken = rawIdToken;
         mAccountRecord = accountRecord;
 
@@ -91,6 +95,12 @@ public final class LocalAuthenticationResult implements ILocalAuthenticationResu
     @NonNull
     public String getUniqueId() {
         return mAccessTokenRecord.getHomeAccountId();
+    }
+
+    @NonNull
+    @Override
+    public String getRefreshToken() {
+        return mRefreshToken;
     }
 
     @Override
