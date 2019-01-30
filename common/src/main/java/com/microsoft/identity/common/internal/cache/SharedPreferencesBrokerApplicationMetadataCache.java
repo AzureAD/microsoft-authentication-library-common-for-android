@@ -133,6 +133,7 @@ public class SharedPreferencesBrokerApplicationMetadataCache
                     TAG + methodName,
                     "Nothing to delete -- cache entry is missing!"
             );
+
             return true;
         } else {
             final String json = mGson.toJson(allMetadata);
