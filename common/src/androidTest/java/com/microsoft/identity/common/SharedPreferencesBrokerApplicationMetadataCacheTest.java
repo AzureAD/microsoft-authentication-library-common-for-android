@@ -78,8 +78,6 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
                 mMetadataCache.getAll().size()
         );
 
-        final List<BrokerApplicationMetadata> metadata = mMetadataCache.getAll();
-
         assertEquals(
                 randomMetadata,
                 mMetadataCache
@@ -120,8 +118,6 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
                 1,
                 mMetadataCache.getAll().size()
         );
-
-        final List<BrokerApplicationMetadata> metadata = mMetadataCache.getAll();
 
         assertEquals(
                 randomMetadata,
