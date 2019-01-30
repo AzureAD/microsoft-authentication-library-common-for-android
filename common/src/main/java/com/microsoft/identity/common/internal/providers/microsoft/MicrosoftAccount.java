@@ -52,7 +52,6 @@ public abstract class MicrosoftAccount extends BaseAccount {
     private String mUniqueId; // Legacy Identifier - Object Id (preferred) or Subject
 
     private String mName;
-    private String mIdentityProvider;
     private String mUid;
     private String mUtid;
     private IDToken mIDToken;
@@ -88,7 +87,6 @@ public abstract class MicrosoftAccount extends BaseAccount {
         mUniqueId = getUniqueId(claims);
         mDisplayableId = getDisplayableId(claims);
         mName = claims.get(AzureActiveDirectoryIdToken.NAME);
-        mIdentityProvider = claims.get(AzureActiveDirectoryIdToken.ISSUER);
         mGivenName = claims.get(AzureActiveDirectoryIdToken.GIVEN_NAME);
         mFamilyName = claims.get(AzureActiveDirectoryIdToken.FAMILY_NAME);
         mMiddleName = claims.get(AzureActiveDirectoryIdToken.MIDDLE_NAME);
@@ -177,13 +175,6 @@ public abstract class MicrosoftAccount extends BaseAccount {
     }
 
     /**
-     * @return The identity provider of the user authenticated. Can be null if not returned from the service.
-     */
-    public String getIdentityProvider() {
-        return mIdentityProvider;
-    }
-
-    /**
      * @return The unique identifier of the user, which is across tenant.
      */
     public String getUserId() {
@@ -224,15 +215,6 @@ public abstract class MicrosoftAccount extends BaseAccount {
      */
     public void setName(final String name) {
         mName = name;
-    }
-
-    /**
-     * Sets the identity provider.
-     *
-     * @param idp The identity provider to set.
-     */
-    public void setIdentityProvider(final String idp) {
-        mIdentityProvider = idp;
     }
 
     /**
@@ -380,7 +362,6 @@ public abstract class MicrosoftAccount extends BaseAccount {
                 "mDisplayableId='" + mDisplayableId + '\'' +
                 ", mUniqueId='" + mUniqueId + '\'' +
                 ", mName='" + mName + '\'' +
-                ", mIdentityProvider='" + mIdentityProvider + '\'' +
                 ", mUid='" + mUid + '\'' +
                 ", mUtid='" + mUtid + '\'' +
                 ", mIDToken=" + mIDToken +
