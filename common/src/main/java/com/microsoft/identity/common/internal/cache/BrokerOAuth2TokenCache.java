@@ -94,28 +94,50 @@ public class BrokerOAuth2TokenCache
 
     private static final String UNCHECKED = "unchecked";
 
+    private final IBrokerApplicationMetadataCache mApplicationMetadataCache;
     private final MicrosoftFamilyOAuth2TokenCache mFociCache;
     private MsalOAuth2TokenCache mAppUidCache;
     private List<MsalOAuth2TokenCache> mOptionalCaches;
+    private final int mCallingAppUid;
 
     /**
      * Constructs a new BrokerOAuth2TokenCache.
      *
-     * @param context         The current application context.
-     * @param callingAppUid   The calling app UID (current app).
-     * @param optionalAppUids An array of other app UID whose caches may be inspected.
+     * @param context                  The current application context.
+     * @param callingAppUid            The UID of the current broker-calling app.
+     * @param applicationMetadataCache The metadata cache to use.
+     * @param initializeOptionalCaches True, if the caller wants to view and modify other caches (ADAL).
+     *                                 False otherwise.
      */
     public BrokerOAuth2TokenCache(@NonNull final Context context,
                                   int callingAppUid,
-                                  @Nullable final int[] optionalAppUids) {
+                                  @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
+                                  boolean initializeOptionalCaches) {
         super(context);
+
         Logger.verbose(
                 TAG + "ctor",
                 "Init::" + TAG
         );
+
+        mCallingAppUid = callingAppUid;
         mFociCache = initializeFociCache(context);
         mAppUidCache = initializeAppUidCache(context, callingAppUid);
-        mOptionalCaches = initializeOptionalCaches(context, callingAppUid, optionalAppUids);
+        mApplicationMetadataCache = applicationMetadataCache;
+
+        final int[] appUids;
+        if (initializeOptionalCaches) {
+            final List<BrokerApplicationMetadata> metadataList = mApplicationMetadataCache.getAll();
+            appUids = new int[metadataList.size()];
+
+            for (int ii = 0; ii < metadataList.size(); ii++) {
+                appUids[ii] = metadataList.get(ii).getUid();
+            }
+        } else {
+            appUids = null;
+        }
+
+        mOptionalCaches = initializeOptionalCaches(context, callingAppUid, appUids);
     }
 
     /**
@@ -127,14 +149,20 @@ public class BrokerOAuth2TokenCache
      * @param otherAppCaches A List of other app caches to inspect.
      */
     public BrokerOAuth2TokenCache(@NonNull Context context,
+                                  final int callingAppUid,
+                                  @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
                                   @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache,
                                   @NonNull final MsalOAuth2TokenCache appUidCache,
                                   @NonNull final List<MsalOAuth2TokenCache> otherAppCaches) {
         super(context);
+
         Logger.verbose(
                 TAG + "ctor",
                 "Init::" + TAG
         );
+
+        mApplicationMetadataCache = applicationMetadataCache;
+        mCallingAppUid = callingAppUid;
         mFociCache = fociCache;
         mAppUidCache = appUidCache;
         mOptionalCaches = otherAppCaches;
@@ -166,10 +194,48 @@ public class BrokerOAuth2TokenCache
 
         final OAuth2TokenCache targetCache = isFoci ? mFociCache : mAppUidCache;
 
-        return targetCache.save(
+        final ICacheRecord result = targetCache.save(
                 oAuth2Strategy,
                 request,
                 response
+        );
+
+        updateApplicationMetadataCache(
+                result.getIdToken().getClientId(),
+                result.getIdToken().getEnvironment(),
+                result.getRefreshToken().getFamilyId(),
+                mCallingAppUid
+        );
+
+        return result;
+    }
+
+    private void updateApplicationMetadataCache(@NonNull final String clientId,
+                                                @NonNull final String environment,
+                                                @NonNull final String familyId,
+                                                int callingAppUid) {
+        final String methodName = ":updateApplicationMetadataCache";
+
+        final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
+        applicationMetadata.setClientId(clientId);
+        applicationMetadata.setEnvironment(environment);
+        applicationMetadata.setFoci(familyId);
+        applicationMetadata.setUid(callingAppUid);
+
+        Logger.verbose(
+                TAG + methodName,
+                "Adding cache entry for clientId: ["
+                        + clientId
+                        + "]"
+        );
+
+        final boolean success = mApplicationMetadataCache.insert(applicationMetadata);
+
+        Logger.info(
+                TAG + methodName,
+                "Cache updated successfully? ["
+                        + success
+                        + "]"
         );
     }
 
