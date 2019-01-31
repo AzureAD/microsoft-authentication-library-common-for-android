@@ -116,9 +116,19 @@ public class BrokerOAuth2TokenCache
         mApplicationMetadataCache = applicationMetadataCache;
     }
 
+    /**
+     * Interface used to inject process-uid based caches into the broker.
+     */
+    @VisibleForTesting
     public interface ProcessUidCacheFactory {
 
-        MsalOAuth2TokenCache getTestDelegate(final Context context, final int bindingProcessUid);
+        /**
+         * Returns an instance of the {@link MsalOAuth2TokenCache} for the supplied params.
+         * @param context The application context to use.
+         * @param bindingProcessUid The process UID of the current binding-app.
+         * @return
+         */
+        MsalOAuth2TokenCache getTokenCache(final Context context, final int bindingProcessUid);
 
     }
 
@@ -703,7 +713,7 @@ public class BrokerOAuth2TokenCache
                     "Using swapped delegate cache."
             );
 
-            return mDelegate.getTestDelegate(context, bindingProcessUid);
+            return mDelegate.getTokenCache(context, bindingProcessUid);
         }
 
         final IStorageHelper storageHelper = new StorageHelper(context);

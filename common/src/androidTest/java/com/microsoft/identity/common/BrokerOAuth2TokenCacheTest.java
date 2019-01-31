@@ -140,8 +140,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mApplicationMetadataCache,
                 new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
                     @Override
-                    public MsalOAuth2TokenCache getTestDelegate(final Context context,
-                                                                final int bindingProcessUid) {
+                    public MsalOAuth2TokenCache getTokenCache(final Context context,
+                                                              final int bindingProcessUid) {
                         return initAppUidCache(context, bindingProcessUid);
                     }
                 },
