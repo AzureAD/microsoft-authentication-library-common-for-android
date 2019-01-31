@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.cache;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
@@ -97,6 +98,7 @@ public class BrokerOAuth2TokenCache
     private final IBrokerApplicationMetadataCache mApplicationMetadataCache;
     private final MicrosoftFamilyOAuth2TokenCache mFociCache;
     private final int mCallingProcessUid;
+    private ProcessUidCacheFactory mDelegate = null;
 
     /**
      * Constructs a new BrokerOAuth2TokenCache.
@@ -120,15 +122,23 @@ public class BrokerOAuth2TokenCache
         mApplicationMetadataCache = applicationMetadataCache;
     }
 
+    public interface ProcessUidCacheFactory {
+
+        MsalOAuth2TokenCache getTestDelegate(final Context context, final int bindingProcessUid);
+
+    }
+
     /**
      * Constructs a new BrokerOAuth2TokenCache.
      *
      * @param context   The current application context.
      * @param fociCache The FOCI cache implementation to use.
      */
+    @VisibleForTesting
     public BrokerOAuth2TokenCache(@NonNull Context context,
                                   final int callingProcessUid,
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
+                                  @NonNull ProcessUidCacheFactory delegate,
                                   @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache) {
         super(context);
 
@@ -137,6 +147,7 @@ public class BrokerOAuth2TokenCache
                 "Init::" + TAG
         );
 
+        mDelegate = delegate;
         mApplicationMetadataCache = applicationMetadataCache;
         mCallingProcessUid = callingProcessUid;
         mFociCache = fociCache;
@@ -688,14 +699,23 @@ public class BrokerOAuth2TokenCache
         return mApplicationMetadataCache.getAllClientIds();
     }
 
-    private static MsalOAuth2TokenCache initializeProcessUidCache(@NonNull final Context context,
-                                                                  final int bindingProcessUid) {
+    private MsalOAuth2TokenCache initializeProcessUidCache(@NonNull final Context context,
+                                                           final int bindingProcessUid) {
         final String methodName = ":initializeProcessUidCache";
 
         Logger.verbose(
                 TAG + methodName,
-                ""
+                "Initializing uid cache."
         );
+
+        if (null != mDelegate) {
+            Logger.warn(
+                    TAG + methodName,
+                    "Using swapped delegate cache."
+            );
+
+            return mDelegate.getTestDelegate(context, bindingProcessUid);
+        }
 
         final IStorageHelper storageHelper = new StorageHelper(context);
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
