@@ -63,11 +63,20 @@ public class SharedPreferencesBrokerApplicationMetadataCache
 
     @Override
     public Set<String> getAllClientIds() {
+        final String methodName = ":getAllClientIds";
+
         final Set<String> allClientIds = new HashSet<>();
 
         for (final BrokerApplicationMetadata metadata : getAll()) {
             allClientIds.add(metadata.getClientId());
         }
+
+        Logger.verbose(
+                TAG + methodName,
+                "Found ["
+                        + allClientIds.size()
+                        + "] client ids."
+        );
 
         return allClientIds;
     }
