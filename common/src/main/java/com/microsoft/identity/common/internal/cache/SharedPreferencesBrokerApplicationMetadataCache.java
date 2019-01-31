@@ -121,7 +121,17 @@ public class SharedPreferencesBrokerApplicationMetadataCache
     @Override
     public synchronized Integer getUidForApp(@NonNull final String clientId,
                                              @NonNull final String environment) {
+        final String methodName = ":getUidForApp";
         final BrokerApplicationMetadata applicationMetadata = getMetadata(clientId, environment);
+
+        if (null != applicationMetadata) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Application uid ["
+                            + applicationMetadata.getUid()
+                            + "]"
+            );
+        }
 
         return null == applicationMetadata ? null : applicationMetadata.getUid();
     }
