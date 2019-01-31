@@ -776,18 +776,17 @@ public class BrokerOAuth2TokenCache
     }
 
     /**
-     * Returns the TokenCache to use for supplied client and environment or null, if none can be found.
+     * Returns the TokenCache to use for supplied client and environment.
      *
-     * @param clientId
-     * @param environment
-     * @return
+     * @param clientId    The target client id.
+     * @param environment The target environment.
+     * @return The {@link MsalOAuth2TokenCache} matching the supplied criteria or null, if no matching
+     * cache was found.
      */
     @Nullable
     private MsalOAuth2TokenCache getTokenCacheForClient(@NonNull final String clientId,
                                                         @NonNull final String environment) {
-
-        // TODO Add logging
-        // TODO javadoc
+        final String methodName = ":getTokenCacheForClient";
 
         final BrokerApplicationMetadata metadata = mApplicationMetadataCache.getMetadata(
                 clientId,
@@ -799,11 +798,25 @@ public class BrokerOAuth2TokenCache
         if (null != metadata) {
             final boolean isFoci = null != metadata.getFoci();
 
+            Logger.verbose(
+                    TAG + methodName,
+                    "is Foci? ["
+                            + isFoci
+                            + "]"
+            );
+
             if (isFoci) {
                 targetCache = mFociCache;
             } else {
                 targetCache = initializeProcessUidCache(getContext(), metadata.getUid());
             }
+        }
+
+        if (null == targetCache) {
+            Logger.warn(
+                    TAG + methodName,
+                    "Could not locate a cache for this app."
+            );
         }
 
         return targetCache;
