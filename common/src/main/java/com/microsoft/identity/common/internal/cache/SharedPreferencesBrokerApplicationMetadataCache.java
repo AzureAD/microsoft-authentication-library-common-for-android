@@ -85,14 +85,33 @@ public class SharedPreferencesBrokerApplicationMetadataCache
     @Override
     public BrokerApplicationMetadata getMetadata(@NonNull final String clientId,
                                                  @NonNull final String environment) {
+        final String methodName = ":getMetadata";
+
         final List<BrokerApplicationMetadata> allMetadata = getAll();
         BrokerApplicationMetadata result = null;
 
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             if (clientId.equals(metadata.getClientId())
                     && environment.equals(metadata.getEnvironment())) {
+                Logger.verbose(
+                        TAG + metadata,
+                        "Metadata located."
+                );
+
                 result = metadata;
+                break;
             }
+        }
+
+        if (null == result) {
+            Logger.warn(
+                    TAG + methodName,
+                    "Metadata could not be found for clientId, environment: ["
+                            + clientId
+                            + ", "
+                            + environment
+                            + "]"
+            );
         }
 
         return result;
