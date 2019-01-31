@@ -56,13 +56,7 @@ import static com.microsoft.identity.common.internal.cache.SharedPreferencesAcco
  * This cache is really a container for other caches. It contains:
  * 1 Family of Client ID cache (FOCI)
  * <p>
- * 1 "Primary" cache which, if the callingProcessUid (broker-bound app) is NOT in the family, is used
- * to store tokens.
- * <p>
- * 0 or more "optional caches" -- these are initialized by passing the known processUids of other
- * broker-binding apps to this cache. Because all of the SharedPrefernces-based cache files'
- * names are deterministically chosen based on this UID, we can construct a reference to these
- * caches using this information.
+ * 0 or more app-specific caches for use when an application is not a member of the family.
  * <p>
  * Operations performed on the BrokerOAuth2TokenCache are designed to route the caller to the
  * proper data store: a good example of this is when calling save(). Save() will inspect the contents
@@ -70,11 +64,11 @@ import static com.microsoft.identity.common.internal.cache.SharedPreferencesAcco
  * any associated credentials are written to the FOCI cache and nowhere else.
  * <p>
  * The reverse is true for non-family apps: if the response does not contain a family id, then the
- * account and credentials are written to the process uid-specific cache (the "primary cache").
+ * account and credentials are written to the app specific cache.
  * <p>
  * Some operations will be performed on multiple caches; a good example of this is the
- * removeAccountFromDevice() API. This call affects multiple caches by iterating over the family,
- * app-specific, and optional caches to locate occurrences of an Account: if it is found, the account
+ * removeAccountFromDevice() API. This call affects multiple caches by iterating over the family
+ * and app-specific caches to locate occurrences of an Account: if it is found, the account
  * and corresponding credential entries are removed.
  *
  * @param <GenericOAuth2Strategy>       The strategy type to use.
@@ -632,14 +626,9 @@ public class BrokerOAuth2TokenCache
      * {@inheritDoc}
      * <p>
      * This override adds some broker-specific behavior. Specifically, the following:
-     * Attempts to delete any provided matching account criteria from the callingProcessUid cache,
-     * followed by the foci cache, followed by the List of optional caches. Deletion from the
-     * optional caches should only have an effect if the clientId matches. In the base-case, these
-     * values will not match and as such, calling removeAccount iteratively will not remove anything.
-     * <p>
-     * In the case where the provided clientId matches neither the current callingProcessUid nor any
-     * save cache value in the FOCI, then that account will be removed from one of the optional
-     * caches. This supports removeAccountFromDevice.
+     * Attempts to delete any provided matching account criteria from all caches which can be
+     * found via {@link BrokerApplicationMetadata}. Depending on whether wildcards are used or not,
+     * calling removeAccount may remove 0 or more accounts in 0 or more caches.
      *
      * @param environment   The environment to which the targeted Account is associated.
      * @param clientId      The clientId of this current app.
