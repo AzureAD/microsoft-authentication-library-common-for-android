@@ -127,7 +127,7 @@ public class SharedPreferencesBrokerApplicationMetadataCache
         if (null != applicationMetadata) {
             Logger.verbose(
                     TAG + methodName,
-                    "Application uid ["
+                    "Application uid: ["
                             + applicationMetadata.getUid()
                             + "]"
             );
@@ -140,7 +140,17 @@ public class SharedPreferencesBrokerApplicationMetadataCache
     @Override
     public String getFamilyId(@NonNull final String clientId,
                               @NonNull final String environment) {
+        final String methodName = ":getFamilyId";
         final BrokerApplicationMetadata applicationMetadata = getMetadata(clientId, environment);
+
+        if (null != applicationMetadata) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Application family id: ["
+                            + applicationMetadata.getFoci()
+                            + "]"
+            );
+        }
 
         return null == applicationMetadata ? null : applicationMetadata.getFoci();
     }
