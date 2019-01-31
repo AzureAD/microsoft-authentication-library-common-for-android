@@ -22,9 +22,23 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import android.support.annotation.Nullable;
+
 import java.util.List;
+import java.util.Set;
 
 public interface IBrokerApplicationMetadataCache {
+
+    Set<String> getAllClientIds();
+
+    @Nullable
+    BrokerApplicationMetadata getMetadata(String clientId, String environment);
+
+    @Nullable
+    Integer getUidForApp(String clientId, String environment);
+
+    @Nullable
+    String getFamilyId(String clientId, String environment);
 
     /**
      * Inserts a new entry in the cache.

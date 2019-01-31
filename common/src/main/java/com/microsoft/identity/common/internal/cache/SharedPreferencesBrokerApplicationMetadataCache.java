@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.cache;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -58,6 +59,52 @@ public class SharedPreferencesBrokerApplicationMetadataCache
                 DEFAULT_APP_METADATA_CACHE_NAME,
                 Context.MODE_PRIVATE
         );
+    }
+
+    @Override
+    public Set<String> getAllClientIds() {
+        final Set<String> allClientIds = new HashSet<>();
+
+        for (final BrokerApplicationMetadata metadata : getAll()) {
+            allClientIds.add(metadata.getClientId());
+        }
+
+        return allClientIds;
+    }
+
+    @Nullable
+    @Override
+    public BrokerApplicationMetadata getMetadata(@NonNull final String clientId,
+                                                 @NonNull final String environment) {
+        final List<BrokerApplicationMetadata> allMetadata = getAll();
+        BrokerApplicationMetadata result = null;
+
+        for (final BrokerApplicationMetadata metadata : allMetadata) {
+            if (clientId.equals(metadata.getClientId())
+                    && environment.equals(metadata.getEnvironment())) {
+                result = metadata;
+            }
+        }
+
+        return result;
+    }
+
+    @Nullable
+    @Override
+    public synchronized Integer getUidForApp(@NonNull final String clientId,
+                                             @NonNull final String environment) {
+        final BrokerApplicationMetadata applicationMetadata = getMetadata(clientId, environment);
+
+        return null == applicationMetadata ? null : applicationMetadata.getUid();
+    }
+
+    @Nullable
+    @Override
+    public String getFamilyId(@NonNull final String clientId,
+                              @NonNull final String environment) {
+        final BrokerApplicationMetadata applicationMetadata = getMetadata(clientId, environment);
+
+        return null == applicationMetadata ? null : applicationMetadata.getFoci();
     }
 
     @Override
