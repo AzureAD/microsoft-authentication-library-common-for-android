@@ -124,7 +124,8 @@ public class BrokerOAuth2TokenCache
 
         /**
          * Returns an instance of the {@link MsalOAuth2TokenCache} for the supplied params.
-         * @param context The application context to use.
+         *
+         * @param context           The application context to use.
          * @param bindingProcessUid The process UID of the current binding-app.
          * @return
          */
@@ -193,7 +194,10 @@ public class BrokerOAuth2TokenCache
             );
 
             if (null == targetCache) {// No existing cache could be found... Make a new one!
-                // TODO Add logging
+                Logger.warn(
+                        TAG + methodName,
+                        "Existing cache not found. A new one will be created."
+                );
                 targetCache = initializeProcessUidCache(
                         getContext(),
                         mCallingProcessUid
