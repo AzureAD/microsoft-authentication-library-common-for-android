@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.cache;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -58,6 +59,100 @@ public class SharedPreferencesBrokerApplicationMetadataCache
                 DEFAULT_APP_METADATA_CACHE_NAME,
                 Context.MODE_PRIVATE
         );
+    }
+
+    @Override
+    public Set<String> getAllClientIds() {
+        final String methodName = ":getAllClientIds";
+
+        final Set<String> allClientIds = new HashSet<>();
+
+        for (final BrokerApplicationMetadata metadata : getAll()) {
+            allClientIds.add(metadata.getClientId());
+        }
+
+        Logger.verbose(
+                TAG + methodName,
+                "Found ["
+                        + allClientIds.size()
+                        + "] client ids."
+        );
+
+        return allClientIds;
+    }
+
+    @Nullable
+    @Override
+    public BrokerApplicationMetadata getMetadata(@NonNull final String clientId,
+                                                 @NonNull final String environment) {
+        final String methodName = ":getMetadata";
+
+        final List<BrokerApplicationMetadata> allMetadata = getAll();
+        BrokerApplicationMetadata result = null;
+
+        for (final BrokerApplicationMetadata metadata : allMetadata) {
+            if (clientId.equals(metadata.getClientId())
+                    && environment.equals(metadata.getEnvironment())) {
+                Logger.verbose(
+                        TAG + metadata,
+                        "Metadata located."
+                );
+
+                result = metadata;
+                break;
+            }
+        }
+
+        if (null == result) {
+            Logger.warn(
+                    TAG + methodName,
+                    "Metadata could not be found for clientId, environment: ["
+                            + clientId
+                            + ", "
+                            + environment
+                            + "]"
+            );
+        }
+
+        return result;
+    }
+
+    @Nullable
+    @Override
+    public synchronized Integer getUidForApp(@NonNull final String clientId,
+                                             @NonNull final String environment) {
+        final String methodName = ":getUidForApp";
+        final BrokerApplicationMetadata applicationMetadata = getMetadata(clientId, environment);
+
+        if (null != applicationMetadata) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Application uid: ["
+                            + applicationMetadata.getUid()
+                            + "]"
+            );
+        }
+
+        return null == applicationMetadata ? null : applicationMetadata.getUid();
+    }
+
+    @Nullable
+    @Override
+    public String getFamilyId(@NonNull final String clientId,
+                              @NonNull final String environment) {
+        final String methodName = ":getFamilyId";
+        final BrokerApplicationMetadata applicationMetadata = getMetadata(clientId, environment);
+
+        if (null != applicationMetadata) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Application family id: ["
+                            + applicationMetadata.getFoci()
+                            + "]"
+            );
+        }
+
+        return null == applicationMetadata ? null : applicationMetadata.getFoci();
     }
 
     @Override

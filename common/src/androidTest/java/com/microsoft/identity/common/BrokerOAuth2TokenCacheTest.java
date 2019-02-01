@@ -103,7 +103,6 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     private MicrosoftFamilyOAuth2TokenCache mFociCache;
     private IAccountCredentialCache mFociCredentialCache;
 
-    private MsalOAuth2TokenCache mAppUidCache;
     private IAccountCredentialCache mAppUidCredentialCache;
 
     private List<MsalOAuth2TokenCache> mOtherAppTokenCaches;
@@ -133,16 +132,20 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         // Test Configs for caches...
         initFociCache(context);
-        initAppUidCache(context);
         initOtherCaches(context);
 
         mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
                 context,
                 TEST_APP_UID,
                 mApplicationMetadataCache,
-                mFociCache,
-                mAppUidCache,
-                mOtherAppTokenCaches
+                new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
+                    @Override
+                    public MsalOAuth2TokenCache getTokenCache(final Context context,
+                                                              final int bindingProcessUid) {
+                        return initAppUidCache(context, bindingProcessUid);
+                    }
+                },
+                mFociCache
         );
 
         mDefaultFociTestBundle = new MsalOAuth2TokenCacheTest.AccountCredentialTestBundle(
@@ -205,7 +208,9 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @After
     public void tearDown() {
-        mAppUidCredentialCache.clearAll();
+        if (null != mAppUidCredentialCache) {
+            mAppUidCredentialCache.clearAll();
+        }
         mFociCredentialCache.clearAll();
         for (final IAccountCredentialCache cache : mOtherAppCredentialCaches) {
             cache.clearAll();
@@ -315,15 +320,15 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
 
-    private void initAppUidCache(final Context context) {
+    private MsalOAuth2TokenCache initAppUidCache(final Context context, final int uid) {
         final ISharedPreferencesFileManager appUidCacheFileManager = getAppUidFileManager(
                 context,
-                TEST_APP_UID
+                uid
         );
 
         mAppUidCredentialCache = getAccountCredentialCache(appUidCacheFileManager);
 
-        mAppUidCache = getTokenCache(context, mAppUidCredentialCache, false);
+        return getTokenCache(context, mAppUidCredentialCache, false);
     }
 
     private void initFociCache(final Context context) {
@@ -572,15 +577,6 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                         REALM
                 )
         );
-
-        assertNull(
-                mAppUidCache.getAccount(
-                        ENVIRONMENT,
-                        CLIENT_ID,
-                        HOME_ACCOUNT_ID,
-                        REALM
-                )
-        );
     }
 
     @Test
@@ -626,13 +622,21 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         // Load up the 'other caches' which a bunch of test credentials, see if we can get them out...
         int ii = 0;
         for (final OAuth2TokenCache cache : mOtherAppTokenCaches) {
-            configureMocks(mOtherCacheTestBundles.get(ii++));
+            configureMocks(mOtherCacheTestBundles.get(ii));
 
-            cache.save(
+            final ICacheRecord cacheRecord = cache.save(
                     mockStrategy,
                     mockRequest,
                     mockResponse
             );
+
+            final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
+            applicationMetadata.setClientId(cacheRecord.getIdToken().getClientId());
+            applicationMetadata.setEnvironment(cacheRecord.getIdToken().getEnvironment());
+            applicationMetadata.setFoci(cacheRecord.getRefreshToken().getFamilyId());
+            applicationMetadata.setUid(testAppUids[ii++]);
+
+            mApplicationMetadataCache.insert(applicationMetadata);
         }
 
         final List<String> clientIds = new ArrayList<>();
@@ -765,20 +769,18 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
                 context,
                 TEST_APP_UID,
-                new SharedPreferencesBrokerApplicationMetadataCache(context),
-                false
+                new SharedPreferencesBrokerApplicationMetadataCache(context)
         );
 
         assertEquals(
                 0,
-                brokerOAuth2TokenCache.getAccounts().size()
+                brokerOAuth2TokenCache.getAccounts(ENVIRONMENT, CLIENT_ID).size()
         );
 
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache2 = new BrokerOAuth2TokenCache(
                 context,
                 TEST_APP_UID,
-                new SharedPreferencesBrokerApplicationMetadataCache(context),
-                true
+                new SharedPreferencesBrokerApplicationMetadataCache(context)
         );
 
         assertEquals(
