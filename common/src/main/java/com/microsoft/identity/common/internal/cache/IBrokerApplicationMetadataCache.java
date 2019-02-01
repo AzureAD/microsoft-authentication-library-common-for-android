@@ -22,9 +22,54 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.List;
+import java.util.Set;
 
 public interface IBrokerApplicationMetadataCache {
+
+    /**
+     * @return A Set of all ClientIds known to this cache. May be empty, but never null.
+     */
+    Set<String> getAllClientIds();
+
+    /**
+     * For the supplied criteria, return the {@link BrokerApplicationMetadata} which corresponds to it.
+     *
+     * @param clientId    The target client id.
+     * @param environment The target environment.
+     * @return The matching {@link BrokerApplicationMetadata} or null if a match cannot be found.
+     */
+    @Nullable
+    BrokerApplicationMetadata getMetadata(String clientId, String environment);
+
+    /**
+     * For the supplied criteria, finds the UID associated to it. Note, this value may not match the
+     * value used by the {@link BrokerOAuth2TokenCache} for caching.
+     * <p>
+     * Reasons this value may not match:
+     * - The app has changed its UID through manifest settings.
+     * - The app shares its clientId with another application with a different UID.
+     * - The app is using the FOCI cache.
+     *
+     * @param clientId    The target client id.
+     * @param environment The target environment.
+     * @return The UID for the supplied criteria or null, if no such entry is cached.
+     */
+    @Nullable
+    Integer getUidForApp(String clientId, String environment);
+
+    /**
+     * For the supplied criteria, return the matching family of client id value (FOCI).
+     *
+     * @param clientId    The target client id.
+     * @param environment The target environment.
+     * @return The matching FOCI value or null, if no such entry exists.
+     */
+    @Nullable
+    String getFamilyId(String clientId, String environment);
 
     /**
      * Inserts a new entry in the cache.
@@ -47,6 +92,7 @@ public interface IBrokerApplicationMetadataCache {
      *
      * @return A List of {@link BrokerApplicationMetadata}.
      */
+    @NonNull
     List<BrokerApplicationMetadata> getAll();
 
     /**
