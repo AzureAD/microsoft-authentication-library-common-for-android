@@ -27,6 +27,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -149,14 +150,12 @@ public final class StringExtensions {
      */
     public static HashMap<String, String> getUrlParameters(String finalUrl) {
         Uri response = Uri.parse(finalUrl);
-        String fragment = response.getFragment();
-        HashMap<String, String> parameters = HashMapExtensions.urlFormDecode(fragment);
-
-        if (parameters == null || parameters.isEmpty()) {
-            String queryParameters = response.getEncodedQuery();
-            parameters = HashMapExtensions.urlFormDecode(queryParameters);
+        if (!HashMapExtensions.urlFormDecode(response.getFragment()).isEmpty()) {
+            Logger.warn(TAG, "Received url contains unexpected fragment parameters.");
+            Logger.warnPII(TAG, "Unexpected fragment: " + response.getFragment());
         }
-        return parameters;
+
+        return HashMapExtensions.urlFormDecode(response.getEncodedQuery());
     }
 
     /**
