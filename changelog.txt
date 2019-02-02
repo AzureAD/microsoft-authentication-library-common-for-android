@@ -2,6 +2,8 @@ Version 0.0.8
 -------------
 - Bugfix: Resolves COMMON/#343
     * Fix the discrepancy on idToken claim of Account object in v1.15.1.
+- Bugfix: Resolves MSAL/#517
+	* Fix the bug caused by fragment parameter when extracting the redirect url.
 
 Version 0.0.7
 -------------
