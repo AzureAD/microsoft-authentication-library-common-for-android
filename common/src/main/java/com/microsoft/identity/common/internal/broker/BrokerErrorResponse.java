@@ -52,6 +52,16 @@ public class BrokerErrorResponse extends MicrosoftTokenErrorResponse implements 
 
     }
 
+    public BrokerErrorResponse(MicrosoftTokenErrorResponse microsoftTokenErrorResponse){
+        setError(microsoftTokenErrorResponse.getError());
+        setErrorDescription(microsoftTokenErrorResponse.getErrorDescription());
+        setErrorUri(microsoftTokenErrorResponse.getErrorUri());
+        setErrorCodes(microsoftTokenErrorResponse.getErrorCodes());
+        setTimeStamp(microsoftTokenErrorResponse.getTimeStamp());
+        setTraceId(microsoftTokenErrorResponse.getTraceId());
+        setCorrelationId(microsoftTokenErrorResponse.getCorrelationId());
+    }
+
     protected BrokerErrorResponse(Parcel in) {
         if(in!=null) {
             setError(in.readString());
