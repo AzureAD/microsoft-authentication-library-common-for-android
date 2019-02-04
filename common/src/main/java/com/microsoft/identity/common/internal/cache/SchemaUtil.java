@@ -155,9 +155,9 @@ public final class SchemaUtil {
 
                 if (null != idTokenClaims) {
                     final String aadVersion = idTokenClaims.get(AuthenticationConstants.OAuth2.AAD_VERSION);
-                    if(!TextUtils.isEmpty(aadVersion) && aadVersion.equalsIgnoreCase("1.0")) {
+                    if (!TextUtils.isEmpty(aadVersion) && aadVersion.equalsIgnoreCase("1.0")) {
                         idp = idTokenClaims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
-                    }else if(!TextUtils.isEmpty(aadVersion) && aadVersion.equalsIgnoreCase("2.0")){
+                    } else if (!TextUtils.isEmpty(aadVersion) && aadVersion.equalsIgnoreCase("2.0")) {
                         idp = idTokenClaims.get(MicrosoftIdToken.ISSUER);
                     }
 
@@ -169,7 +169,7 @@ public final class SchemaUtil {
                 } else {
                     Logger.warn(TAG + ":" + methodName, "IDToken claims were null.");
                 }
-            }catch (ServiceException e){
+            } catch (ServiceException e) {
                 Logger.warn(TAG + ":" + methodName, "Exception constructing IDToken. " + e.getMessage());
             }
         } else {

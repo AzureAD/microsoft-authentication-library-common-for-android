@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.broker;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 
@@ -52,7 +53,7 @@ public class BrokerErrorResponse extends MicrosoftTokenErrorResponse implements 
 
     }
 
-    public BrokerErrorResponse(MicrosoftTokenErrorResponse microsoftTokenErrorResponse){
+    public BrokerErrorResponse(@NonNull final MicrosoftTokenErrorResponse microsoftTokenErrorResponse){
         setError(microsoftTokenErrorResponse.getError());
         setErrorDescription(microsoftTokenErrorResponse.getErrorDescription());
         setErrorUri(microsoftTokenErrorResponse.getErrorUri());
