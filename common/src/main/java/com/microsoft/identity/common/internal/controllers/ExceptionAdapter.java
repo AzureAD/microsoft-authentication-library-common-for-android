@@ -73,7 +73,7 @@ public class ExceptionAdapter {
         final TokenResult tokenResult = result.getTokenResult();
         final TokenErrorResponse tokenErrorResponse;
 
-        if (!result.getTokenResult().getSuccess()) {
+        if (tokenResult != null && !tokenResult.getSuccess()) {
             tokenErrorResponse = tokenResult.getErrorResponse();
 
             if (tokenErrorResponse.getError().equalsIgnoreCase(UiRequiredException.INVALID_GRANT)) {
