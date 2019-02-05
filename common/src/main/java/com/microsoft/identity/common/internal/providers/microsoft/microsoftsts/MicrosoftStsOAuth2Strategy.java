@@ -366,11 +366,15 @@ public class MicrosoftStsOAuth2Strategy
         return new TokenResult(tokenResponse, tokenErrorResponse);
     }
 
-    private String getCloudSpecificAuthorityBasedOnAuthorizationResponse(final MicrosoftStsAuthorizationResponse response) {
+    private String getCloudSpecificAuthorityBasedOnAuthorizationResponse(
+            @NonNull final MicrosoftStsAuthorizationResponse response) {
 
-        final String newAuthority = Uri.parse(mTokenEndpoint).buildUpon()
-                .authority(response.getCloudInstanceHostName())
-                .build().toString();
+        final String newAuthority =
+                Uri.parse(mTokenEndpoint)
+                        .buildUpon()
+                        .authority(response.getCloudInstanceHostName())
+                        .build()
+                        .toString();
 
         return newAuthority;
     }
