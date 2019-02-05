@@ -24,7 +24,16 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+import java.util.Map;
+
 public class TokenErrorResponse {
+
+    private int mStatusCode;
+
+    private String mResponseBody;
+
+    private Map<String, List<String>> mResponseHeaders;
 
     @SerializedName("error")
     private String mError;
@@ -77,15 +86,71 @@ public class TokenErrorResponse {
         mErrorUri = errorUri;
     }
 
+    /**
+     * Gets the response status code.
+     *
+     * @return The status code to get.
+     */
+    public int getStatusCode() {
+        return mStatusCode;
+    }
+
+    /**
+     * Sets the response status code.
+     *
+     * @param statusCode The status code to set.
+     */
+    public void setStatusCode(final int statusCode) {
+        this.mStatusCode = statusCode;
+    }
+
+    /**
+     * Gets the response body.
+     *
+     * @return The response body to get.
+     */
+    public String getResponseBody() {
+        return mResponseBody;
+    }
+
+    /**
+     * Sets the response body.
+     *
+     * @param responseBody The response body to set.
+     */
+    public void setResponseBody(final String responseBody) {
+        this.mResponseBody = responseBody;
+    }
+
+    /**
+     * Gets the response headers.
+     *
+     * @return The response headers to get.
+     */
+    public Map<String, List<String>> getResponseHeaders() {
+        return mResponseHeaders;
+    }
+
+    /**
+     * Sets the response headers.
+     *
+     * @param responseHeaders The response headers to set.
+     */
+    public void setResponseHeaders(final Map<String, List<String>> responseHeaders) {
+        this.mResponseHeaders = responseHeaders;
+    }
+
     //CHECKSTYLE:OFF
     @Override
     public String toString() {
         return "TokenErrorResponse{" +
-                "mError='" + mError + '\'' +
+                "mStatusCode=" + mStatusCode +
+                ", mResponseBody='" + mResponseBody + '\'' +
+                ", mResponseHeaders=" + mResponseHeaders +
+                ", mError='" + mError + '\'' +
                 ", mErrorDescription='" + mErrorDescription + '\'' +
                 ", mErrorUri='" + mErrorUri + '\'' +
                 '}';
     }
     //CHECKSTYLE:ON
-
 }
