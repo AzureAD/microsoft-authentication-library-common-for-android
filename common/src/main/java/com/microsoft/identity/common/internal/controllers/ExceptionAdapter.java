@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
@@ -105,37 +108,57 @@ public class ExceptionAdapter {
                         null
                 );
 
-                if (null != tokenErrorResponse.getResponseHeadersJson()
-                        && null != tokenErrorResponse.getResponseBody()) {
-                    try {
-                        outErr.setHttpResponse(
-                                new HttpResponse(
-                                        tokenErrorResponse.getStatusCode(),
-                                        tokenErrorResponse.getResponseBody(),
-                                        HeaderSerializationUtil.fromJson(
-                                                tokenErrorResponse.getResponseHeadersJson()
-                                        )
-                                )
-                        );
-                    } catch (JSONException | JsonSyntaxException e) {
-                        Logger.warn(
-                                TAG + methodName,
-                                "Failed to deserialize error data: status, headers, response body"
-                        );
-                    }
-                }
+                applyHttpErrorResponseData(
+                        outErr,
+                        tokenErrorResponse.getStatusCode(),
+                        tokenErrorResponse.getResponseHeadersJson(),
+                        tokenErrorResponse.getResponseBody()
+                );
 
                 return outErr;
             }
 
-            return new ServiceException(
+            final ServiceException outErr =  new ServiceException(
                     tokenErrorResponse.getError(),
                     tokenErrorResponse.getErrorDescription(),
                     null
             );
+
+            applyHttpErrorResponseData(
+                    outErr,
+                    tokenErrorResponse.getStatusCode(),
+                    tokenErrorResponse.getResponseHeadersJson(),
+                    tokenErrorResponse.getResponseBody()
+            );
+
+            return outErr;
         }
 
         return null;
+    }
+
+    private static void applyHttpErrorResponseData(@NonNull final ServiceException targetException,
+                                                   final int statusCode,
+                                                   @Nullable String responseHeadersJson,
+                                                   @Nullable String responseBody) {
+        final String methodName = ":applyHttpErrorResponseData";
+
+        if (null != responseHeadersJson && null != responseBody) {
+            try {
+                final HttpResponse synthesizedResponse = new HttpResponse(
+                        statusCode,
+                        responseBody,
+                        HeaderSerializationUtil.fromJson(responseHeadersJson)
+                );
+
+                targetException.setHttpResponse(synthesizedResponse);
+            } catch (JSONException | JsonSyntaxException e) {
+                Logger.warn(
+                        TAG + methodName,
+                        "Failed to deserialize error data: status, headers, response body."
+                );
+            }
+        }
     }
 
     public static BaseException baseExceptionFromException(final Exception e) {

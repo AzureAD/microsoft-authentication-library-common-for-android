@@ -355,9 +355,13 @@ public class MicrosoftStsOAuth2Strategy
                     MicrosoftTokenErrorResponse.class
             );
             tokenErrorResponse.setStatusCode(response.getStatusCode());
-            tokenErrorResponse.setResponseHeadersJson(
-                    HeaderSerializationUtil.toJson(response.getHeaders())
-            );
+
+            if (null != response.getHeaders()) {
+                tokenErrorResponse.setResponseHeadersJson(
+                        HeaderSerializationUtil.toJson(response.getHeaders())
+                );
+            }
+
             tokenErrorResponse.setResponseBody(response.getBody());
         } else {
             tokenResponse = ObjectMapper.deserializeJsonStringToObject(
