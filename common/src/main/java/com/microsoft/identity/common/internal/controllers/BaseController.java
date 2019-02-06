@@ -96,7 +96,7 @@ public abstract class BaseController {
 
 
     protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
-                                                         @NonNull final OperationParameters parameters) {
+                                                           @NonNull final OperationParameters parameters) {
         AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
 
         List<String> msalScopes = new ArrayList<>();
@@ -120,7 +120,7 @@ public abstract class BaseController {
 
         if (parameters instanceof AcquireTokenOperationParameters) {
             AcquireTokenOperationParameters acquireTokenOperationParameters = (AcquireTokenOperationParameters) parameters;
-            if(acquireTokenOperationParameters.getExtraScopesToConsent()!=null) {
+            if (acquireTokenOperationParameters.getExtraScopesToConsent() != null) {
                 msalScopes.addAll(acquireTokenOperationParameters.getExtraScopesToConsent());
             }
 
@@ -142,9 +142,9 @@ public abstract class BaseController {
     }
 
     protected TokenResult performTokenRequest(final OAuth2Strategy strategy,
-                                            final AuthorizationRequest request,
-                                            final AuthorizationResponse response,
-                                            final AcquireTokenOperationParameters parameters)
+                                              final AuthorizationRequest request,
+                                              final AuthorizationResponse response,
+                                              final AcquireTokenOperationParameters parameters)
             throws IOException, ClientException {
         throwIfNetworkNotAvailable(parameters.getAppContext());
 
@@ -159,10 +159,10 @@ public abstract class BaseController {
     }
 
     protected void renewAccessToken(@NonNull final AcquireTokenSilentOperationParameters parameters,
-                                  @NonNull final AcquireTokenResult acquireTokenSilentResult,
-                                  @NonNull final OAuth2TokenCache tokenCache,
-                                  @NonNull final OAuth2Strategy strategy,
-                                  @NonNull final ICacheRecord cacheRecord)
+                                    @NonNull final AcquireTokenResult acquireTokenSilentResult,
+                                    @NonNull final OAuth2TokenCache tokenCache,
+                                    @NonNull final OAuth2Strategy strategy,
+                                    @NonNull final ICacheRecord cacheRecord)
             throws IOException, ClientException, UiRequiredException {
         final String methodName = ":renewAccessToken";
         Logger.verbose(
@@ -255,9 +255,9 @@ public abstract class BaseController {
     }
 
     protected ICacheRecord saveTokens(final OAuth2Strategy strategy,
-                                    final AuthorizationRequest request,
-                                    final TokenResponse tokenResponse,
-                                    final OAuth2TokenCache tokenCache) throws ClientException {
+                                      final AuthorizationRequest request,
+                                      final TokenResponse tokenResponse,
+                                      final OAuth2TokenCache tokenCache) throws ClientException {
         final String methodName = ":saveTokens";
         Logger.verbose(
                 TAG + methodName,
