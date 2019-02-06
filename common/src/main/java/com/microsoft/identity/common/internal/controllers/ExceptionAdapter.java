@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
+import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -29,12 +30,16 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
+
+import org.json.JSONException;
 
 import java.io.IOException;
 
@@ -93,11 +98,34 @@ public class ExceptionAdapter {
                         TAG + methodName,
                         "Received unknown error"
                 );
-                return new ServiceException(
+
+                final ServiceException outErr = new ServiceException(
                         ServiceException.UNKNOWN_ERROR,
                         "Request failed, but no error returned back from service.",
                         null
                 );
+
+                if (null != tokenErrorResponse.getResponseHeadersJson()
+                        && null != tokenErrorResponse.getResponseBody()) {
+                    try {
+                        outErr.setHttpResponse(
+                                new HttpResponse(
+                                        tokenErrorResponse.getStatusCode(),
+                                        tokenErrorResponse.getResponseBody(),
+                                        HeaderSerializationUtil.fromJson(
+                                                tokenErrorResponse.getResponseHeadersJson()
+                                        )
+                                )
+                        );
+                    } catch (JSONException | JsonSyntaxException e) {
+                        Logger.warn(
+                                TAG + methodName,
+                                "Failed to deserialize error data: status, headers, response body"
+                        );
+                    }
+                }
+
+                return outErr;
             }
 
             return new ServiceException(
@@ -128,8 +156,8 @@ public class ExceptionAdapter {
                     e);
         }
 
-        if( e instanceof ArgumentException){
-            ArgumentException argumentException = ((ArgumentException) e) ;
+        if (e instanceof ArgumentException) {
+            ArgumentException argumentException = ((ArgumentException) e);
             msalException = new ArgumentException(
                     argumentException.getArgumentName(),
                     argumentException.getOperationName(),
@@ -138,7 +166,7 @@ public class ExceptionAdapter {
             );
         }
 
-        if(e instanceof UiRequiredException){
+        if (e instanceof UiRequiredException) {
             UiRequiredException uiRequiredException = ((UiRequiredException) e);
             msalException = new UiRequiredException(
                     uiRequiredException.getErrorCode(),

@@ -24,16 +24,13 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.List;
-import java.util.Map;
-
 public class TokenErrorResponse {
 
     private int mStatusCode;
 
     private String mResponseBody;
 
-    private Map<String, List<String>> mResponseHeaders;
+    private String mResponseHeadersJson;
 
     @SerializedName("error")
     private String mError;
@@ -127,17 +124,17 @@ public class TokenErrorResponse {
      *
      * @return The response headers to get.
      */
-    public Map<String, List<String>> getResponseHeaders() {
-        return mResponseHeaders;
+    public String getResponseHeadersJson() {
+        return mResponseHeadersJson;
     }
 
     /**
      * Sets the response headers.
      *
-     * @param responseHeaders The response headers to set.
+     * @param responseHeadersJson The response headers to set.
      */
-    public void setResponseHeaders(final Map<String, List<String>> responseHeaders) {
-        this.mResponseHeaders = responseHeaders;
+    public void setResponseHeadersJson(final String responseHeadersJson) {
+        this.mResponseHeadersJson = responseHeadersJson;
     }
 
     //CHECKSTYLE:OFF
@@ -146,7 +143,7 @@ public class TokenErrorResponse {
         return "TokenErrorResponse{" +
                 "mStatusCode=" + mStatusCode +
                 ", mResponseBody='" + mResponseBody + '\'' +
-                ", mResponseHeaders=" + mResponseHeaders +
+                ", mResponseHeadersJson=" + mResponseHeadersJson +
                 ", mError='" + mError + '\'' +
                 ", mErrorDescription='" + mErrorDescription + '\'' +
                 ", mErrorUri='" + mErrorUri + '\'' +

@@ -47,6 +47,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorRespons
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.net.HttpURLConnection;
@@ -354,7 +355,9 @@ public class MicrosoftStsOAuth2Strategy
                     MicrosoftTokenErrorResponse.class
             );
             tokenErrorResponse.setStatusCode(response.getStatusCode());
-            tokenErrorResponse.setResponseHeaders(response.getHeaders());
+            tokenErrorResponse.setResponseHeadersJson(
+                    HeaderSerializationUtil.toJson(response.getHeaders())
+            );
             tokenErrorResponse.setResponseBody(response.getBody());
         } else {
             tokenResponse = ObjectMapper.deserializeJsonStringToObject(
