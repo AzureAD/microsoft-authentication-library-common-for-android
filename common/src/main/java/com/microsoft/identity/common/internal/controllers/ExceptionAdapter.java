@@ -50,6 +50,7 @@ public class ExceptionAdapter {
 
     private static final String TAG = ExceptionAdapter.class.getSimpleName();
 
+    @Nullable
     public static BaseException exceptionFromAcquireTokenResult(final AcquireTokenResult result) {
         final String methodName = ":exceptionFromAcquireTokenResult";
         final AuthorizationResult authorizationResult = result.getAuthorizationResult();
@@ -96,33 +97,28 @@ public class ExceptionAdapter {
                 );
             }
 
+            ServiceException outErr = null;
+
             if (StringUtil.isEmpty(tokenErrorResponse.getError())) {
                 Logger.warn(
                         TAG + methodName,
                         "Received unknown error"
                 );
 
-                final ServiceException outErr = new ServiceException(
+                outErr = new ServiceException(
                         ServiceException.UNKNOWN_ERROR,
                         "Request failed, but no error returned back from service.",
                         null
                 );
-
-                applyHttpErrorResponseData(
-                        outErr,
-                        tokenErrorResponse.getStatusCode(),
-                        tokenErrorResponse.getResponseHeadersJson(),
-                        tokenErrorResponse.getResponseBody()
-                );
-
-                return outErr;
             }
 
-            final ServiceException outErr =  new ServiceException(
-                    tokenErrorResponse.getError(),
-                    tokenErrorResponse.getErrorDescription(),
-                    null
-            );
+            if (null == outErr) {
+                outErr = new ServiceException(
+                        tokenErrorResponse.getError(),
+                        tokenErrorResponse.getErrorDescription(),
+                        null
+                );
+            }
 
             applyHttpErrorResponseData(
                     outErr,
