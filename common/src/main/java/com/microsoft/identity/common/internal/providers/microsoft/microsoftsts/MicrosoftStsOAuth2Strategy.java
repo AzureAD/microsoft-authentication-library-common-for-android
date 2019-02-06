@@ -22,8 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
@@ -45,8 +47,10 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorRespons
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 
@@ -87,9 +91,29 @@ public class MicrosoftStsOAuth2Strategy
         final String methodName = ":getIssuerCacheIdentifier";
 
         final URL authority = request.getAuthority();
-        // TODO I don't think this is right... This is probably not the correct authority cache to consult...
         final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
-        // This map can only be consulted if authority validation is on.
+        // This map can only be consulted if the authority (cloud really) is known to Microsoft
+        // If the host has a hardcoded trust, we can just use the hostname.
+        if (null != cloudEnv) {
+            final String preferredCacheHostName = cloudEnv.getPreferredCacheHostName();
+            Logger.info(
+                    TAG + methodName,
+                    "Using preferred cache host name..."
+            );
+            Logger.infoPII(
+                    TAG + methodName,
+                    "Preferred cache hostname: [" + preferredCacheHostName + "]"
+            );
+            return preferredCacheHostName;
+        }
+        return authority.getHost();
+    }
+
+    private String getIssuerCacheIdentifierFromAuthority(URL authority) {
+        final String methodName = ":getIssuerCacheIdentifierFromAuthority";
+
+        final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
+        // This map can only be consulted if the cloud is known to Microsoft
         // If the host has a hardcoded trust, we can just use the hostname.
         if (null != cloudEnv) {
             final String preferredCacheHostName = cloudEnv.getPreferredCacheHostName();
@@ -147,7 +171,25 @@ public class MicrosoftStsOAuth2Strategy
             throw new RuntimeException();
         }
 
-        return new MicrosoftStsAccount(idToken, clientInfo);
+        MicrosoftStsAccount account = new MicrosoftStsAccount(idToken, clientInfo);
+
+        // The Account created by the strategy sets the environment to get the 'iss' from the IdToken
+        // For caching purposes, this may not be the correct value due to the preferred cache identifier
+        // in the InstanceDiscoveryMetadata
+        URL authority = null;
+        try {
+            authority = new URL(mTokenEndpoint);
+        } catch (MalformedURLException e) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Creating account from TokenResponse failed due to malformed URL (mTokenEndpoint)..."
+            );
+        }
+        if (authority != null) {
+            account.setEnvironment(getIssuerCacheIdentifierFromAuthority(authority));
+        }
+
+        return account;
     }
 
     @Override
@@ -167,6 +209,8 @@ public class MicrosoftStsOAuth2Strategy
             builder.setSlice(mConfig.getSlice());
         }
         builder.setFlightParameters(mConfig.getFlightParameters());
+        builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
+
         return builder;
     }
 
@@ -182,27 +226,20 @@ public class MicrosoftStsOAuth2Strategy
         if (null != account) {
             final String homeAccountId = account.getHomeAccountId();
 
-            // Split this value by its parts... <uid>.<utid>
-            final int EXPECTED_LENGTH = 2;
-            final int INDEX_UID = 0;
-            final int INDEX_UTID = 1;
-
-            final String[] uidUtidPair = homeAccountId.split("\\.");
-
-            if (EXPECTED_LENGTH == uidUtidPair.length
-                    && !StringExtensions.isNullOrBlank(uidUtidPair[INDEX_UID])
-                    && !StringExtensions.isNullOrBlank(uidUtidPair[INDEX_UTID])) {
-                builder.setUid(uidUtidPair[INDEX_UID]);
-                builder.setUtid(uidUtidPair[INDEX_UTID]);
+            final Pair<String, String> uidUtidPair = StringUtil.getTenantInfo(homeAccountId);
+            if (!StringExtensions.isNullOrBlank(uidUtidPair.first)
+                    && !StringExtensions.isNullOrBlank(uidUtidPair.second)) {
+                builder.setUid(uidUtidPair.first);
+                builder.setUtid(uidUtidPair.second);
 
                 Logger.verbosePII(
                         TAG + methodName,
-                        "Builder w/ uid: [" + uidUtidPair[INDEX_UID] + "]"
+                        "Builder w/ uid: [" + uidUtidPair.first + "]"
                 );
 
                 Logger.verbosePII(
                         TAG + methodName,
-                        "Builder w/ utid: [" + uidUtidPair[INDEX_UTID] + "]"
+                        "Builder w/ utid: [" + uidUtidPair.second + "]"
                 );
             }
         }
@@ -218,6 +255,11 @@ public class MicrosoftStsOAuth2Strategy
                 TAG + methodName,
                 "Creating TokenRequest..."
         );
+
+        if (mConfig.getMultipleCloudsSupported()) {
+            setTokenEndpoint(getCloudSpecificAuthorityBasedOnAuthorizationResponse(response));
+        }
+
         MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setCodeVerifier(request.getPkceChallenge().getCodeVerifier());
         tokenRequest.setCode(response.getCode());
@@ -274,6 +316,15 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return new TokenResult(tokenResponse, tokenErrorResponse);
+    }
+
+    private String getCloudSpecificAuthorityBasedOnAuthorizationResponse(MicrosoftStsAuthorizationResponse response) {
+
+        final String newAuthority = Uri.parse(mTokenEndpoint).buildUpon()
+                .authority(response.getCloudInstanceHostName())
+                .build().toString();
+
+        return newAuthority;
     }
 
 }

@@ -37,6 +37,7 @@ import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -51,6 +52,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Class responsible for saving oAuth2 Tokens for use in future requests.  Ideally this class would
@@ -59,8 +61,9 @@ import java.util.List;
 public class ADALOAuth2TokenCache
         extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
         implements IShareSingleSignOnState {
-    private static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported by the ADALOAuth2TokenCache";
     private ISharedPreferencesFileManager mISharedPreferencesFileManager;
+
+    static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported.";
 
     private static final String TAG = ADALOAuth2TokenCache.class.getSimpleName();
     private static final String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
@@ -167,6 +170,14 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
+    public ICacheRecord save(final AccountRecord accountRecord,
+                             final IdTokenRecord idTokenRecord) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
     public ICacheRecord load(
             final String clientId,
             final String target,
@@ -186,7 +197,17 @@ public class ADALOAuth2TokenCache
     @Override
     public AccountRecord getAccount(final String environment,
                                     final String clientId,
-                                    final String homeAccountId) {
+                                    final String homeAccountId,
+                                    final String realm) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public AccountRecord getAccountWithLocalAccountId(final String environment,
+                                                      final String clientId,
+                                                      final String localAccountId) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
@@ -201,9 +222,17 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public boolean removeAccount(final String environment,
-                                 final String clientId,
-                                 final String homeAccountId) {
+    public AccountDeletionRecord removeAccount(final String environment,
+                                               final String clientId,
+                                               final String homeAccountId,
+                                               final String realm) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    protected Set<String> getAllClientIds() {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
@@ -260,9 +289,10 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public void setSingleSignOnState(final BaseAccount account, final RefreshToken refreshToken) {
+    public boolean setSingleSignOnState(final BaseAccount account, final RefreshToken refreshToken) {
         // Unimplemented
         Logger.warn(TAG, "setSingleSignOnState was called, but is not implemented.");
+        return false;
     }
 
     @Override

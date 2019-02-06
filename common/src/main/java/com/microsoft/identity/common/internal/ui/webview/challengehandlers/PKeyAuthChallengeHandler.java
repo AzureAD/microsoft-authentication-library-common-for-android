@@ -44,14 +44,14 @@ import java.util.Map;
 public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAuthChallenge, Void> {
     private static final String TAG = PKeyAuthChallengeHandler.class.getSimpleName();
     private WebView mWebView;
-    private IChallengeCompletionCallback mChallengeCallback;
+    private IAuthorizationCompletionCallback mChallengeCallback;
 
     /**
      * @param view
      * @param completionCallback
      */
     public PKeyAuthChallengeHandler(@NonNull final WebView view,
-                                    @NonNull IChallengeCompletionCallback completionCallback) {
+                                    @NonNull IAuthorizationCompletionCallback completionCallback) {
         mWebView = view;
         mChallengeCallback = completionCallback;
     }

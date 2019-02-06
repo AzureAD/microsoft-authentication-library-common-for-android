@@ -13,7 +13,7 @@ project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") 
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 android {
     compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
         minSdkVersion 16
@@ -28,9 +28,13 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"N1jdcbbnKDr0LaFZlqdhXgm2luE=\"")
+            buildConfigField("String", "COMPANY_PORTAL_APP_SIGNATURE", "\"1wIqXSqBj7w+h11ZifsnqwgyKrY=\"")
+            buildConfigField("String", "COMPANY_PORTAL_APP_PACKAGE_NAME", "\"com.example.userapp\"")
         }
         release {
             buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"ho040S3ffZkmxqtQrSwpTVOn9r0=\"")
+            buildConfigField("String", "COMPANY_PORTAL_APP_SIGNATURE", "\"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=\"")
+            buildConfigField("String", "COMPANY_PORTAL_APP_PACKAGE_NAME", "\"com.microsoft.windowsintune.companyportal\"")
             minifyEnabled false
             debuggable false
             testCoverageEnabled false
@@ -60,6 +64,7 @@ android {
         main {
             manifest.srcFile 'src/main/AndroidManifest.xml'
             java.srcDirs = ['src/main/java']
+            res.srcDirs = ['src/main/res']
         }
     }
 
@@ -72,9 +77,9 @@ android {
 
 dependencies {
     implementation 'com.nimbusds:nimbus-jose-jwt:5.7'
-    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:appcompat-v7:27.1.+'
     implementation "com.google.code.gson:gson:2.8.4"
-    implementation "com.android.support:customtabs:27.1.1"
+    implementation "com.android.support:customtabs:27.1.+"
 
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
@@ -250,9 +255,9 @@ afterEvaluate {
 
 // Repositories from which Gradle can fetch dependencies
 repositories {
+    google()
     mavenLocal()
     jcenter()
-    google()
     maven {
         name "vsts-maven-adal-android"
         url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
@@ -265,6 +270,6 @@ repositories {
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
-        task.dependsOn 'lint', 'sourcesJar', 'checkstyle', 'pmd'
+        task.dependsOn 'lint', 'sourcesJar', 'pmd'
     }
 }

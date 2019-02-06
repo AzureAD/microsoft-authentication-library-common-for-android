@@ -47,7 +47,7 @@ public final class StringExtensions {
     /**
      * The constant ENCODING_UTF8.
      */
-    public static final String ENCODING_UTF8 = "UTF_8";
+    public static final String ENCODING_UTF8 = "UTF-8";
 
     private static final String TAG = StringExtensions.class.getSimpleName();
 

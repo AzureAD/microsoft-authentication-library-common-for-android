@@ -44,7 +44,7 @@ public class AccessTokenTest {
                 Calendar
                         .getInstance()
                         .getTime()
-                        .getTime() / 1000
+                        .getTime() / 1000 - 10
         );
     }
 }

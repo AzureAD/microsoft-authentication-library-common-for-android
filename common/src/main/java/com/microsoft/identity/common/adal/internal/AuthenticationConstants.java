@@ -47,7 +47,7 @@ public final class AuthenticationConstants {
     /**
      * The Constant ENCODING_UTF8.
      */
-    public static final String ENCODING_UTF8 = "UTF_8";
+    public static final String ENCODING_UTF8 = "UTF-8";
 
     /**
      * Bundle message.
@@ -219,6 +219,16 @@ public final class AuthenticationConstants {
         public static final String CLIENT_INFO_TRUE = "1";
 
         /**
+         * String of AAD version.
+         */
+        public static final String AAD_VERSION = "ver";
+
+        /**
+         * String of preferred user name.
+         */
+        public static final String AAD_PREFERRED_USERNAME = "preferred_username";
+
+        /**
          * String of code.
          */
         public static final String CODE = "code";
@@ -378,8 +388,14 @@ public final class AuthenticationConstants {
          */
         public static final String CLAIMS = "claims";
 
+        /**
+         * String as JSON key to send client capabilities.
+         */
         public static final String CLIENT_CAPABILITIES_CLAIMS_LIST = "xms_cc";
 
+        /**
+         * String as JSON key to send access token claims.
+         */
         public static final String CLIENT_CAPABILITY_ACCESS_TOKEN = "access_token";
 
         /**
@@ -390,6 +406,11 @@ public final class AuthenticationConstants {
          * session key JWE.
          */
         public static final String SESSION_KEY_JWE = "session_key_jwe";
+
+        /**
+         * String as Query parameter key to send a V1 request to V2 endpoint
+         */
+        public static final String IT_VER_PARAM = "itver";
     }
 
     /**
@@ -842,13 +863,13 @@ public final class AuthenticationConstants {
          * Apk packagename that will install AD-Authenticator. It is used to
          * query if this app installed or not from package manager.
          */
-        public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
+        public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = BuildConfig.COMPANY_PORTAL_APP_PACKAGE_NAME;//"com.microsoft.windowsintune.companyportal";
 
         /**
          * Signature info for Intune Company portal app that installs authenticator
          * component.
          */
-        public static final String COMPANY_PORTAL_APP_SIGNATURE = "1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
+        public static final String COMPANY_PORTAL_APP_SIGNATURE = BuildConfig.COMPANY_PORTAL_APP_SIGNATURE;//"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
 
         /**
          * Signature info for Azure authenticator app that installs authenticator
@@ -921,6 +942,16 @@ public final class AuthenticationConstants {
          */
         public static final String CALLER_INFO_PACKAGE = "caller.info.package";
 
+        // TODO : See if these can be moved to common shared constants
+        /**
+         * String to send Msal V2 Request params.
+         */
+        public static final String BROKER_REQUEST_V2 = "broker.request.v2";
+
+        /**
+         * String to send Msal V2 Request params.
+         */
+        public static final String BROKER_RESULT_V2 = "broker.result.v2";
         /**
          * String for ssl prefix.
          */

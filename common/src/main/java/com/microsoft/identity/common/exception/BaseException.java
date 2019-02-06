@@ -31,7 +31,7 @@ public class BaseException extends Exception {
     /**
      * Default constructor.
      */
-    BaseException() {
+    protected BaseException() {
     }
 
     /**

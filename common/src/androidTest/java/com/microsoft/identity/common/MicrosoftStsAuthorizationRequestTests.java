@@ -83,7 +83,7 @@ public class MicrosoftStsAuthorizationRequestTests {
         final String actualCodeRequestUrlWithLoginHint = requestWithLoginHint.getAuthorizationRequestAsHttpRequest().toString();
         assertTrue("Matching login hint", actualCodeRequestUrlWithLoginHint.contains("login_hint=" + DEFAULT_TEST_LOGIN_HINT));
         assertTrue("Matching response type", actualCodeRequestUrlWithLoginHint.contains("response_type=code"));
-        assertTrue("Matching correlation id", actualCodeRequestUrlWithLoginHint.contains("&client-request-id=" + DEFAULT_TEST_CORRELATION_ID.toString()));
+        assertTrue("Matching correlation id", actualCodeRequestUrlWithLoginHint.contains("client-request-id=" + DEFAULT_TEST_CORRELATION_ID.toString()));
 
     }
 
@@ -95,7 +95,7 @@ public class MicrosoftStsAuthorizationRequestTests {
                 .build();
 
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
-        assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt=" + MicrosoftStsAuthorizationRequest.Prompt.FORCE_LOGIN));
+        assertTrue("Prompt", actualCodeRequestUrl.contains("prompt=" + MicrosoftStsAuthorizationRequest.Prompt.FORCE_LOGIN));
     }
 
     @Test
@@ -106,7 +106,7 @@ public class MicrosoftStsAuthorizationRequestTests {
                 .build();
 
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
-        assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt=" + MicrosoftStsAuthorizationRequest.Prompt.SELECT_ACCOUNT));
+        assertTrue("Prompt", actualCodeRequestUrl.contains("prompt=" + MicrosoftStsAuthorizationRequest.Prompt.SELECT_ACCOUNT));
     }
 
     @Test
@@ -118,9 +118,9 @@ public class MicrosoftStsAuthorizationRequestTests {
                 .build();
 
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
-        assertTrue("Extra parameters 1", actualCodeRequestUrl.contains("&extra=1"));
-        assertTrue("Extra parameters 2", actualCodeRequestUrl.contains("&haschrome=1"));
-        assertTrue("Prompt", actualCodeRequestUrl.contains("&prompt=consent"));
+        assertTrue("Extra parameters 1", actualCodeRequestUrl.contains("extra=1"));
+        assertTrue("Extra parameters 2", actualCodeRequestUrl.contains("haschrome=1"));
+        assertTrue("Prompt", actualCodeRequestUrl.contains("prompt=consent"));
     }
 
 
@@ -128,6 +128,6 @@ public class MicrosoftStsAuthorizationRequestTests {
     public void testGetCodeRequestUrlWithResponseType() throws MalformedURLException, UnsupportedEncodingException {
         final MicrosoftStsAuthorizationRequest request = getBaseBuilder().build();
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
-        assertTrue("Response type", actualCodeRequestUrl.contains("&response_type=" + AuthorizationRequest.ResponseType.CODE));
+        assertTrue("Response type", actualCodeRequestUrl.contains("response_type=" + AuthorizationRequest.ResponseType.CODE));
     }
 }

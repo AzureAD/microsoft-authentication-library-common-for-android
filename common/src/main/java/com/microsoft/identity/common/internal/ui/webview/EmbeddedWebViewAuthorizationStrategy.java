@@ -23,8 +23,10 @@
 package com.microsoft.identity.common.internal.ui.webview;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
@@ -47,6 +49,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
 
     private static final String TAG = EmbeddedWebViewAuthorizationStrategy.class.getSimpleName();
     private WeakReference<Activity> mReferencedActivity;
+    private PendingIntent mResultIntent;
     private AuthorizationResultFuture mAuthorizationResultFuture;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
@@ -56,8 +59,9 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      *
      * @param activity The app activity which invoke the interactive auth request.
      */
-    public EmbeddedWebViewAuthorizationStrategy(Activity activity) {
+    public EmbeddedWebViewAuthorizationStrategy(@NonNull Activity activity, @NonNull Intent resultIntent) {
         mReferencedActivity = new WeakReference<>(activity);
+        mResultIntent = PendingIntent.getActivity(activity.getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     /**
@@ -75,10 +79,11 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         final Intent authIntent = AuthorizationActivity.createStartIntent(
                 mReferencedActivity.get().getApplicationContext(),
                 null,
+                mResultIntent,
                 requestUrl.toString(),
                 mAuthorizationRequest.getRedirectUri(),
                 AuthorizationAgent.WEBVIEW);
-        mReferencedActivity.get().startActivityForResult(authIntent, BROWSER_FLOW);
+        mReferencedActivity.get().startActivity(authIntent);
         return mAuthorizationResultFuture;
     }
 

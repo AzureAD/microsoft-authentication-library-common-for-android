@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
@@ -38,6 +39,22 @@ public class MicrosoftRefreshToken extends RefreshToken {
     private String mClientId;
     private boolean mIsFamilyRefreshToken;
     private String mEnvironment;
+
+    public MicrosoftRefreshToken(final String rawRefreshToken,
+                                 final ClientInfo clientInfo,
+                                 final String scope,
+                                 final String clientId,
+                                 final boolean isFrt,
+                                 final String environment,
+                                 @Nullable String familyId) {
+        super(rawRefreshToken);
+        mClientInfo = clientInfo;
+        mScope = scope;
+        mClientId = clientId;
+        mIsFamilyRefreshToken = isFrt;
+        mEnvironment = environment;
+        mFamilyId = familyId;
+    }
 
     /**
      * Constructs a new MicrosoftRefreshToken instance.

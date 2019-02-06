@@ -58,14 +58,7 @@ public class MicrosoftStsAccountCredentialAdapter
             final MicrosoftStsAuthorizationRequest request,
             final MicrosoftStsTokenResponse response) {
         Logger.verbose(TAG, "Creating Account");
-        final AccountRecord account = new AccountRecord(strategy.createAccount(response));
-        // TODO -- Setting the environment here is a bit of a workaround...
-        // The Account created by the strategy sets the environment to get the 'iss' from the IdToken
-        // For caching purposes, this may not be the correct value due to the preferred cache identifier
-        // in the InstanceDiscoveryMetadata
-        account.setEnvironment(strategy.getIssuerCacheIdentifier(request));
-
-        return account;
+        return new AccountRecord(strategy.createAccount(response));
     }
 
     @Override

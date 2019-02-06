@@ -78,6 +78,21 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL, error, errorDescription);
                 break;
 
+            case AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME:
+                Logger.verbose(TAG, "Device needs to have broker installed, we expect the apps to call us"
+                        + "back when the broker is installed");
+                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                        MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
+                        MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED);
+                break;
+
+            case AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER:
+                Logger.verbose(TAG, "Device Registration needed, need to start WPJ");
+                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                        MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED,
+                        MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED);
+                break;
+
             default:
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.UNKNOWN_ERROR, MicrosoftAuthorizationErrorResponse.UNKNOWN_RESULT_CODE);
@@ -105,7 +120,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
         } else if (urlParameters.containsKey(CODE)) {
-            result = validateAndCreateAuthorizationResult(urlParameters.get(CODE), urlParameters.get(STATE), requestStateParameter);
+            result = validateAndCreateAuthorizationResult(urlParameters, requestStateParameter);
         } else if (urlParameters.containsKey(ERROR)) {
             result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     urlParameters.get(ERROR), urlParameters.get(ERROR_DESCRIPTION));
@@ -118,10 +133,11 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
         return result;
     }
 
-    private MicrosoftStsAuthorizationResult validateAndCreateAuthorizationResult(final String code,
-                                                                                 final String state,
+    private MicrosoftStsAuthorizationResult validateAndCreateAuthorizationResult(final HashMap<String, String> urlParameters,
                                                                                  final String requestStateParameter) {
         MicrosoftStsAuthorizationResult result;
+        final String state = urlParameters.get(STATE);
+        final String code = urlParameters.get(CODE);
 
         if (StringUtil.isEmpty(state)) {
             Logger.warn(TAG, "State parameter is not returned from the webview redirect.");
@@ -135,7 +151,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
         } else {
 
             Logger.info(TAG, "Auth code is successfully returned from webview redirect.");
-            MicrosoftStsAuthorizationResponse authResponse = new MicrosoftStsAuthorizationResponse(code, state);
+            MicrosoftStsAuthorizationResponse authResponse = new MicrosoftStsAuthorizationResponse(code, state, urlParameters);
             result = new MicrosoftStsAuthorizationResult(AuthorizationStatus.SUCCESS, authResponse);
         }
 

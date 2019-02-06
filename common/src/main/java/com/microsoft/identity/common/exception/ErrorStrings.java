@@ -279,4 +279,35 @@ public final class ErrorStrings {
      * No available browser installed on the device.
      */
     public static final String NO_AVAILABLE_BROWSER_FOUND = "No available browser installed on the device.";
+
+    /**
+     * Refresh token request failed.
+     */
+    public static final String AUTH_REFRESH_FAILED = "Refresh token request failed";
+
+    /**
+     * STK patching failed.
+     */
+    public static final String STK_PATCHING_FAILED = "STK patching failed";
+
+    /**
+     * Primary refresh token request failed.
+     */
+    public static final String BROKER_PRT_REFRESH_FAILED = "Failed to refresh PRT";
+
+    /**
+     * Broker RT is invalid
+     */
+    public static final String INVALID_BROKER_REFRESH_TOKEN = "Broker refresh token is invalid";
+
+    /**
+     * Device state of Joined account invalid.
+     */
+    public static final String DEVICE_STATE_INVALID = "Invalid device state";
+
+    /**
+     * Device registration failed.
+     */
+    public static final String DEVICE_REGISTRATION_FAILED = "Device registration failed";
+
 }

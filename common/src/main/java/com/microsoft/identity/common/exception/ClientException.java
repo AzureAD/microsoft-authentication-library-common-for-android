@@ -25,6 +25,103 @@ package com.microsoft.identity.common.exception;
 public class ClientException extends BaseException {
 
     /**
+     * There are multiple cache entries found, the sdk cannot pick the correct access token
+     * or refresh token from the cache. Likely it's a bug in the sdk when caching tokens or authority
+     * is not proviced in the silent request and multiple tokens were found.
+     */
+    public static final String MULTIPLE_MATCHING_TOKENS_DETECTED = "multiple_matching_tokens_detected";
+
+    /**
+     * No active network is available on the device.
+     */
+    public static final String DEVICE_NETWORK_NOT_AVAILABLE = "device_network_not_available";
+
+    /**
+     * A scope is required when making a token request
+     */
+    public static final String SCOPE_EMPTY_OR_NULL = "scope_empty_or_null";
+
+    /**
+     * The sdk failed to parse the Json format.
+     */
+    public static final String JSON_PARSE_FAILURE = "json_parse_failure";
+
+    /**
+     * IOException happened, could be the device/network errors.
+     */
+    public static final String IO_ERROR = "io_error";
+
+    /**
+     * The url is malformed.  Likely caused when constructing the auth request, authority, or redirect URI.
+     */
+    public static final String MALFORMED_URL = "malformed_url";
+
+    /**
+     * The authority is unknown.  Occurs when the authority is not part of configuration or the authority host is not recognized by Microsoft.
+     */
+    public static final String UNKNOWN_AUTHORITY = "unknown_authority";
+
+    /**
+     * The encoding is not supported by the device.
+     */
+    public static final String UNSUPPORTED_ENCODING = "unsupported_encoding";
+
+    /**
+     * The algorithm used to generate pkce challenge is not supported.
+     */
+    public static final String NO_SUCH_ALGORITHM = "no_such_algorithm";
+
+    /**
+     * JWT returned by the server is not valid, empty or malformed.
+     */
+    public static final String INVALID_JWT = "invalid_jwt";
+
+    /**
+     * State from authorization response did not match the state in the authorization request.
+     * For authorization requests, the sdk will verify the state returned from redirect and the one sent in the request.
+     */
+    public static final String STATE_MISMATCH = "state_mismatch";
+
+    /**
+     * Unsupported url, cannot perform adfs authority validation.
+     */
+    public static final String UNSUPPORTED_URL = "unsupported_url";
+
+    /**
+     * The authority is not supported for authority validation. The sdk supports b2c authority, but we don't support b2c authority validation yet.
+     * Only well-known host will be supported.
+     */
+    public static final String AUTHORITY_VALIDATION_NOT_SUPPORTED = "authority_validation_not_supported";
+
+    /**
+     * Note: after MSAL 0.2.0 this error is no longer relevant.
+     * chrome_not_installed: Chrome is not installed on the device. The sdk uses chrome custom tab for
+     * authorization requests if available, and will fall back to chrome browser.
+     */
+    public static final String CHROME_NOT_INSTALLED = "chrome_not_installed";
+
+    /**
+     * The user provided in the acquire token request doesn't match the user returned from server.
+     */
+    public static final String USER_MISMATCH = "user_mismatch";
+
+    /**
+     * Extra query parameters set by the client app is already sent by the sdk.
+     */
+    public static final String DUPLICATE_QUERY_PARAMETER = "duplicate_query_parameter";
+
+    /**
+     * Extra query parameters set by the client app is already sent by the sdk.
+     */
+    public static final String UNKNOWN_ERROR = "unknown_error";
+
+    /**
+     * Temporary non-exposed error code to indicate that ADFS authority validation fails. ADFS as authority is not supported
+     * for preview.
+     */
+    static final String ADFS_AUTHORITY_VALIDATION_FAILED = "adfs_authority_validation_failed";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String

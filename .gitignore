@@ -32,16 +32,19 @@ proguard/
 # Android Studio captures folder
 captures/
 
-# Intellij
+# IntelliJ
 *.iml
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/gradle.xml
+.idea/assetWizardSettings.xml
 .idea/dictionaries
 .idea/libraries
-.idea/vcs.xml
+.idea/caches
+# Android Studio 3 in .gitignore file.
+.idea/caches/build_file_checksums.ser
 .idea/modules.xml
-.idea/.name
+.idea/codeStyles/
 
 # Keystore files
 # Uncomment the following line if you do not want to check your keystore files in.
