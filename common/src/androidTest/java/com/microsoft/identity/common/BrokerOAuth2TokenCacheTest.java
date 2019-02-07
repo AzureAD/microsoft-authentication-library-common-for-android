@@ -789,4 +789,120 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         );
     }
 
+    @Test
+    public void testWPJSaveNonFoci() throws ClientException {
+        final ICacheRecord saveResult = mBrokerOAuth2TokenCache.save(
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                mDefaultAppUidTestBundle.mGeneratedIdToken,
+                mDefaultAppUidTestBundle.mGeneratedAccessToken,
+                null
+        );
+
+        assertNotNull(saveResult);
+        assertNotNull(saveResult.getAccount());
+        assertNotNull(saveResult.getIdToken());
+        assertNotNull(saveResult.getAccessToken());
+        assertNull(saveResult.getRefreshToken());
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                saveResult.getAccount()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedIdToken,
+                saveResult.getIdToken()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedAccessToken,
+                saveResult.getAccessToken()
+        );
+
+        final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
+                mDefaultAppUidTestBundle.mGeneratedIdToken.getClientId(),
+                mDefaultAppUidTestBundle.mGeneratedAccessToken.getTarget(),
+                mDefaultAppUidTestBundle.mGeneratedAccount
+        );
+
+        assertNotNull(retrievedResult);
+        assertNotNull(retrievedResult.getAccount());
+        assertNotNull(retrievedResult.getIdToken());
+        assertNotNull(retrievedResult.getAccessToken());
+        assertNull(retrievedResult.getRefreshToken());
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                retrievedResult.getAccount()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedIdToken,
+                retrievedResult.getIdToken()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedAccessToken,
+                retrievedResult.getAccessToken()
+        );
+    }
+
+    @Test
+    public void testWPJSaveFoci() throws ClientException {
+        final ICacheRecord saveResult = mBrokerOAuth2TokenCache.save(
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                mDefaultAppUidTestBundle.mGeneratedIdToken,
+                mDefaultAppUidTestBundle.mGeneratedAccessToken,
+                "1"
+        );
+
+        assertNotNull(saveResult);
+        assertNotNull(saveResult.getAccount());
+        assertNotNull(saveResult.getIdToken());
+        assertNotNull(saveResult.getAccessToken());
+        assertNull(saveResult.getRefreshToken());
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                saveResult.getAccount()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedIdToken,
+                saveResult.getIdToken()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedAccessToken,
+                saveResult.getAccessToken()
+        );
+
+        final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
+                mDefaultAppUidTestBundle.mGeneratedIdToken.getClientId(),
+                mDefaultAppUidTestBundle.mGeneratedAccessToken.getTarget(),
+                mDefaultAppUidTestBundle.mGeneratedAccount
+        );
+
+        assertNotNull(retrievedResult);
+        assertNotNull(retrievedResult.getAccount());
+        assertNotNull(retrievedResult.getIdToken());
+        assertNotNull(retrievedResult.getAccessToken());
+        assertNull(retrievedResult.getRefreshToken());
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                retrievedResult.getAccount()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedIdToken,
+                retrievedResult.getIdToken()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedAccessToken,
+                retrievedResult.getAccessToken()
+        );
+    }
+
 }
