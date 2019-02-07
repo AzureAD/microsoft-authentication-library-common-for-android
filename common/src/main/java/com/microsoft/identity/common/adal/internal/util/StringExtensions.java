@@ -117,11 +117,8 @@ public final class StringExtensions {
      * @return String
      * @throws UnsupportedEncodingException throws if encoding not supported.
      */
-    public static String encodeBase64URLSafeString(final byte[] bytes)
-            throws UnsupportedEncodingException {
-        return new String(
-                Base64.encode(bytes, Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE),
-                ENCODING_UTF8);
+    public static String encodeBase64URLSafeString(final byte[] bytes) {
+        return Base64.encodeToString(bytes, Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE);
     }
 
     /**

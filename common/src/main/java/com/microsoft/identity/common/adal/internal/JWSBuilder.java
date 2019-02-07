@@ -199,8 +199,6 @@ public class JWSBuilder {
         } catch (SignatureException e) {
             throw new ClientException(ErrorStrings.SIGNATURE_EXCEPTION,
                     "RSA signature exception: " + e.getMessage(), e);
-        } catch (UnsupportedEncodingException e) {
-            throw new ClientException(ErrorStrings.UNSUPPORTED_ENCODING, "Unsupported encoding", e);
         } catch (NoSuchAlgorithmException e) {
             throw new ClientException(ErrorStrings.NO_SUCH_ALGORITHM,
                     "Unsupported RSA algorithm: " + e.getMessage(), e);
