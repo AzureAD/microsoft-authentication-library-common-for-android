@@ -122,7 +122,6 @@ public class MsalOAuth2TokenCache
 
         if (!isAccessTokenValid) {
             throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(AT)]");
-
         }
 
         Logger.verbose(
