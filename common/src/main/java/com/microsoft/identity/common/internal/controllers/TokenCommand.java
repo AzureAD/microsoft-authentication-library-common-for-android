@@ -76,28 +76,38 @@ public class TokenCommand implements TokenOperation {
     }
 
     @Override
-    public AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, ClientException, UiRequiredException, ArgumentException, ServiceException {
+    public AcquireTokenResult execute()
+            throws InterruptedException, ExecutionException, IOException, ClientException,
+            UiRequiredException, ArgumentException, ServiceException {
         AcquireTokenResult result = null;
         final String methodName = ":execute";
 
-        for(BaseController controller : mControllers) {
+        for (BaseController controller : mControllers) {
             try {
                 com.microsoft.identity.common.internal.logging.Logger.verbose(
                         TAG + methodName,
-                        "Executing with controller: " + controller.getClass().getSimpleName()
+                        "Executing with controller: "
+                                + controller.getClass().getSimpleName()
                 );
-                result = controller.acquireTokenSilent((AcquireTokenSilentOperationParameters) getParameters());
-                if(result.getSucceeded()){
+
+                result = controller.acquireTokenSilent(
+                        (AcquireTokenSilentOperationParameters) getParameters()
+                );
+
+                if (result.getSucceeded()) {
                     com.microsoft.identity.common.internal.logging.Logger.verbose(
                             TAG + methodName,
-                            "Executing with controller: " + controller.getClass().getSimpleName() + ": Succeeded"
+                            "Executing with controller: "
+                                    + controller.getClass().getSimpleName()
+                                    + ": Succeeded"
                     );
+
                     return result;
                 }
-            }catch(UiRequiredException e){
-                if(e.getErrorCode().equals(UiRequiredException.INVALID_GRANT)){
+            } catch (UiRequiredException e) {
+                if (e.getErrorCode().equals(UiRequiredException.INVALID_GRANT)) {
                     continue;
-                }else{
+                } else {
                     throw e;
                 }
             }
@@ -115,10 +125,11 @@ public class TokenCommand implements TokenOperation {
         return mParameters;
     }
 
-    public void setParameters(OperationParameters parameters) {
+    public void setParameters(final OperationParameters parameters) {
         if (!(parameters instanceof AcquireTokenSilentOperationParameters)) {
             throw new IllegalArgumentException("Invalid operation parameters");
         }
+
         this.mParameters = parameters;
     }
 
@@ -126,15 +137,19 @@ public class TokenCommand implements TokenOperation {
         return mControllers.get(0);
     }
 
-    public List<BaseController> getControllers () { return mControllers; }
+    public List<BaseController> getControllers() {
+        return mControllers;
+    }
 
-    public void setControllers(List<BaseController> controllers){ this.mControllers = controllers;}
+    public void setControllers(final List<BaseController> controllers) {
+        this.mControllers = controllers;
+    }
 
     public Context getContext() {
         return mContext;
     }
 
-    public void setContext(Context context) {
+    public void setContext(final Context context) {
         this.mContext = context;
     }
 
@@ -142,7 +157,7 @@ public class TokenCommand implements TokenOperation {
         return mCallback;
     }
 
-    public void setCallback(ILocalAuthenticationCallback callback) {
+    public void setCallback(final ILocalAuthenticationCallback callback) {
         this.mCallback = callback;
     }
 }

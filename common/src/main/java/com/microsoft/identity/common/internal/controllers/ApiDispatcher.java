@@ -259,7 +259,10 @@ public class ApiDispatcher {
                 initializeDiagnosticContext();
 
                 if (command.mParameters instanceof AcquireTokenSilentOperationParameters) {
-                    logSilentRequestParams(methodName, (AcquireTokenSilentOperationParameters) command.mParameters);
+                    logSilentRequestParams(
+                            methodName,
+                            (AcquireTokenSilentOperationParameters) command.mParameters
+                    );
                 }
 
                 AcquireTokenResult result = null;

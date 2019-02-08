@@ -225,10 +225,12 @@ public abstract class BaseController {
             throws ClientException, IOException {
 
         final String methodName = ":performSilentTokenRequest";
+
         Logger.verbose(
                 TAG + methodName,
                 "Requesting tokens..."
         );
+
         throwIfNetworkNotAvailable(parameters.getAppContext());
 
         // Check that the authority is known

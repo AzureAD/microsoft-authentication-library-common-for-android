@@ -35,15 +35,14 @@ public class TokenResult {
     private TokenErrorResponse mTokenErrorResponse;
     private boolean mSuccess = false;
 
-
-    public TokenResult(){
-
+    public TokenResult() {
+        // Intentionally blank
     }
-
 
     /**
      * Constructor of TokenResult.
-     * @param response      TokenResponse
+     *
+     * @param response TokenResponse
      */
     public TokenResult(final TokenResponse response) {
         this(response, null);
@@ -52,6 +51,7 @@ public class TokenResult {
 
     /**
      * Constructor of TokenResult.
+     *
      * @param errorResponse TokenErrorResponse
      */
     public TokenResult(final TokenErrorResponse errorResponse) {
@@ -103,9 +103,10 @@ public class TokenResult {
 
     /**
      * Set if the TokenResult is success or not
+     *
      * @param success true if successful
      */
-    public void setSuccess(boolean success){
+    public void setSuccess(boolean success) {
         mSuccess = success;
     }
 
