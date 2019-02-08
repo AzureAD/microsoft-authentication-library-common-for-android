@@ -47,13 +47,18 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorRespons
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField.X_MS_CLITELEM;
 
 public class MicrosoftStsOAuth2Strategy
         extends OAuth2Strategy
@@ -113,7 +118,7 @@ public class MicrosoftStsOAuth2Strategy
         return authority.getHost();
     }
 
-    private String getIssuerCacheIdentifierFromAuthority(URL authority) {
+    private String getIssuerCacheIdentifierFromAuthority(final URL authority) {
         final String methodName = ":getIssuerCacheIdentifierFromAuthority";
 
         final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
@@ -242,7 +247,8 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder(@Nullable final IAccountRecord account) {
+    public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder(
+            @Nullable final IAccountRecord account) {
         final String methodName = ":createAuthorizationRequestBuilder";
         Logger.verbose(
                 TAG + methodName,
@@ -341,10 +347,12 @@ public class MicrosoftStsOAuth2Strategy
     @Override
     protected TokenResult getTokenResultFromHttpResponse(final HttpResponse response) {
         final String methodName = ":getTokenResultFromHttpResponse";
+
         Logger.verbose(
                 TAG + methodName,
                 "Getting TokenResult from HttpResponse..."
         );
+
         TokenResponse tokenResponse = null;
         TokenErrorResponse tokenErrorResponse = null;
 
@@ -370,7 +378,27 @@ public class MicrosoftStsOAuth2Strategy
             );
         }
 
-        return new TokenResult(tokenResponse, tokenErrorResponse);
+        final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
+
+        if (null != response.getHeaders()) {
+            final Map<String, List<String>> responseHeaders = response.getHeaders();
+
+            final List<String> cliTelemValues;
+            if (null != (cliTelemValues = responseHeaders.get(X_MS_CLITELEM))
+                    && !cliTelemValues.isEmpty()) {
+                // Element should only contain 1 value...
+                final String cliTelemHeader = cliTelemValues.get(0);
+
+                // Parse and set the result...
+                result.setCliTelemInfo(
+                        CliTelemInfo.fromXMsCliTelemHeader(
+                                cliTelemHeader
+                        )
+                );
+            }
+        }
+
+        return result;
     }
 
     private String getCloudSpecificAuthorityBasedOnAuthorizationResponse(

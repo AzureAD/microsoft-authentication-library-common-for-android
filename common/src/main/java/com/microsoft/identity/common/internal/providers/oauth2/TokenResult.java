@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 
 /**
  * Holds the request of a token request.  The request will either contain the success result or the error result.
@@ -33,6 +34,7 @@ public class TokenResult {
 
     private TokenResponse mTokenResponse;
     private TokenErrorResponse mTokenErrorResponse;
+    private CliTelemInfo mCliTelemInfo;
     private boolean mSuccess = false;
 
     public TokenResult() {
@@ -90,6 +92,24 @@ public class TokenResult {
      */
     public TokenErrorResponse getErrorResponse() {
         return mTokenErrorResponse;
+    }
+
+    /**
+     * Gets the CliTelemInfo associated with this TokenResult.
+     *
+     * @return The CliTelemInfo to get.
+     */
+    public CliTelemInfo getCliTelemInfo() {
+        return mCliTelemInfo;
+    }
+
+    /**
+     * Sets the CliTelemInfo associated with this TokenResult.
+     *
+     * @param cliTelemInfo The CliTelemInfo to set.
+     */
+    public void setCliTelemInfo(final CliTelemInfo cliTelemInfo) {
+        mCliTelemInfo = cliTelemInfo;
     }
 
     /**

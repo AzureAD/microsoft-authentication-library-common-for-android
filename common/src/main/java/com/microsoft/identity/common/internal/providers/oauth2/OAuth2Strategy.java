@@ -107,10 +107,12 @@ public abstract class OAuth2Strategy
      */
     public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException {
         final String methodName = ":requestToken";
+
         Logger.verbose(
                 TAG + methodName,
                 "Requesting token..."
         );
+
         validateTokenRequest(request);
         HttpResponse response = performTokenRequest(request);
         return getTokenResultFromHttpResponse(response);
