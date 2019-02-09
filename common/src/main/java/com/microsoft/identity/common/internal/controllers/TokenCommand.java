@@ -81,25 +81,17 @@ public class TokenCommand implements TokenOperation {
         final String methodName = ":execute";
 
         for(BaseController controller : mControllers) {
-            try {
+            com.microsoft.identity.common.internal.logging.Logger.verbose(
+                    TAG + methodName,
+                    "Executing with controller: " + controller.getClass().getSimpleName()
+            );
+            result = controller.acquireTokenSilent((AcquireTokenSilentOperationParameters) getParameters());
+            if(result.getSucceeded()){
                 com.microsoft.identity.common.internal.logging.Logger.verbose(
                         TAG + methodName,
-                        "Executing with controller: " + controller.getClass().getSimpleName()
+                        "Executing with controller: " + controller.getClass().getSimpleName() + ": Succeeded"
                 );
-                result = controller.acquireTokenSilent((AcquireTokenSilentOperationParameters) getParameters());
-                if(result.getSucceeded()){
-                    com.microsoft.identity.common.internal.logging.Logger.verbose(
-                            TAG + methodName,
-                            "Executing with controller: " + controller.getClass().getSimpleName() + ": Succeeded"
-                    );
-                    return result;
-                }
-            }catch(UiRequiredException e){
-                if(e.getErrorCode().equals(UiRequiredException.INVALID_GRANT)){
-                    continue;
-                }else{
-                    throw e;
-                }
+                return result;
             }
         }
 
