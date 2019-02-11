@@ -82,7 +82,9 @@ public class TokenCommand implements TokenOperation {
         AcquireTokenResult result = null;
         final String methodName = ":execute";
 
-        for (BaseController controller : mControllers) {
+        for (int ii = 0; ii < mControllers.size(); ii++) {
+            final BaseController controller = mControllers.get(ii);
+
             try {
                 com.microsoft.identity.common.internal.logging.Logger.verbose(
                         TAG + methodName,
@@ -105,7 +107,8 @@ public class TokenCommand implements TokenOperation {
                     return result;
                 }
             } catch (UiRequiredException e) {
-                if (e.getErrorCode().equals(UiRequiredException.INVALID_GRANT)) {
+                if (e.getErrorCode().equals(UiRequiredException.INVALID_GRANT) // was invalid_grant
+                        && mControllers.size() > ii + 1) { // isn't the last controller we can try
                     continue;
                 } else {
                     throw e;
