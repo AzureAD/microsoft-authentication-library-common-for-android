@@ -108,7 +108,7 @@ public abstract class BaseController {
         defaultScopes.add("offline_access");
 
         List<String> scopes  = parameters.getScopes();
-        if(scopes.containsAll(defaultScopes)){
+        if(!scopes.containsAll(defaultScopes)){
             scopes.addAll(defaultScopes);
         }
         scopes.removeAll(Arrays.asList("", null));
