@@ -40,20 +40,24 @@ import java.util.concurrent.TimeUnit;
 public class LocalAuthenticationResult implements ILocalAuthenticationResult {
 
 
-    private final String mRawIdToken;
-    private final AccessTokenRecord mAccessTokenRecord;
-    private final IAccountRecord mAccountRecord;
-    private final String mRefreshToken;
+    private String mRawIdToken = null;
+    private AccessTokenRecord mAccessTokenRecord;
+    private IAccountRecord mAccountRecord;
+    private String mRefreshToken = null;
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord) {
         mAccessTokenRecord = cacheRecord.getAccessToken();
-        mRawIdToken = cacheRecord.getIdToken().getSecret();
         mAccountRecord = cacheRecord.getAccount();
-        mRefreshToken = cacheRecord.getRefreshToken().getSecret();
+        if(cacheRecord.getIdToken() != null) {
+            mRawIdToken = cacheRecord.getIdToken().getSecret();
+        }
+        if(cacheRecord.getRefreshToken() != null) {
+            mRefreshToken = cacheRecord.getRefreshToken().getSecret();
+        }
     }
 
     public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
-                                     @NonNull String refreshToken,
+                                     @Nullable String refreshToken,
                                      @Nullable String rawIdToken,
                                      @NonNull IAccountRecord accountRecord) {
         mAccessTokenRecord = accessTokenRecord;

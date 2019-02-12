@@ -32,6 +32,7 @@ import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
@@ -156,6 +157,76 @@ public class BrokerOAuth2TokenCache
         mApplicationMetadataCache = applicationMetadataCache;
         mCallingProcessUid = callingProcessUid;
         mFociCache = fociCache;
+    }
+
+    /**
+     * Broker-only API to persist WPJ's Accounts & their associated credentials.
+     *
+     * @param accountRecord     The {@link AccountRecord} to store.
+     * @param idTokenRecord     The {@link IdTokenRecord} to store.
+     * @param accessTokenRecord The {@link AccessTokenRecord} to store.
+     * @param familyId          The family_id or null, if not applicable.
+     * @return The {@link ICacheRecord} result of this save action.
+     * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
+     */
+    public ICacheRecord save(@NonNull AccountRecord accountRecord,
+                             @NonNull IdTokenRecord idTokenRecord,
+                             @NonNull AccessTokenRecord accessTokenRecord,
+                             @Nullable String familyId) throws ClientException {
+        final String methodName = ":save";
+
+        final ICacheRecord result;
+
+        final boolean isFoci = !StringExtensions.isNullOrBlank(familyId);
+
+        Logger.info(
+                TAG + methodName,
+                "Saving to FOCI cache? ["
+                        + isFoci
+                        + "}"
+        );
+
+        if (isFoci) {
+            // Save to the foci cache....
+            result = mFociCache.save(
+                    accountRecord,
+                    idTokenRecord,
+                    accessTokenRecord
+            );
+        } else {
+            // Save to the processUid cache... or create a new one
+            MsalOAuth2TokenCache targetCache = getTokenCacheForClient(
+                    idTokenRecord.getClientId(),
+                    idTokenRecord.getEnvironment()
+            );
+
+            if (null == targetCache) {
+                Logger.warn(
+                        TAG + methodName,
+                        "Existing cache not found. A new one will be created."
+                );
+
+                targetCache = initializeProcessUidCache(
+                        getContext(),
+                        mCallingProcessUid
+                );
+            }
+
+            result = targetCache.save(
+                    accountRecord,
+                    idTokenRecord,
+                    accessTokenRecord
+            );
+        }
+
+        updateApplicationMetadataCache(
+                result.getIdToken().getClientId(),
+                result.getIdToken().getEnvironment(),
+                familyId,
+                mCallingProcessUid
+        );
+
+        return result;
     }
 
     @Override

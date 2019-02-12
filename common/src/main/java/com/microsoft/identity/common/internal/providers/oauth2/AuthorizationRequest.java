@@ -86,6 +86,12 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     @SerializedName("scope")
     private String mScope;
 
+    /**
+     * Claims request parameter (Per ODIC spec)
+     */
+    @SerializedName("claims")
+    private String mClaims;
+
     private transient List<Pair<String, String>> mExtraQueryParams;
 
     /**
@@ -98,6 +104,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mState = builder.mState;
         mScope = builder.mScope;
         mExtraQueryParams = builder.mExtraQueryParams;
+        mClaims = builder.mClaims;
     }
 
     public static final class ResponseType {
@@ -110,6 +117,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         private String mRedirectUri;
         private String mState;
         private String mScope;
+        private String mClaims;
 
         /**
          * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
@@ -170,6 +178,11 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
         public B setExtraQueryParams(List<Pair<String, String>> extraQueryParams) {
             mExtraQueryParams = extraQueryParams;
+            return self();
+        }
+
+        public B setClaims(String claims) {
+            mClaims = claims;
             return self();
         }
 
