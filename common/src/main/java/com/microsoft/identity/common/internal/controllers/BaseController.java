@@ -60,6 +60,7 @@ import com.microsoft.identity.common.internal.util.DateUtilities;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -101,7 +102,17 @@ public abstract class BaseController {
                                                            @NonNull final OperationParameters parameters) {
         AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
 
+        List<String> defaultScopes = new ArrayList<>();
+        defaultScopes.add("openid");
+        defaultScopes.add("profile");
+        defaultScopes.add("offline_access");
+
         List<String> scopes  = parameters.getScopes();
+        if(scopes.containsAll(defaultScopes)){
+            scopes.addAll(defaultScopes);
+        }
+        scopes.removeAll(Arrays.asList("", null));
+
 
         UUID correlationId = null;
 
