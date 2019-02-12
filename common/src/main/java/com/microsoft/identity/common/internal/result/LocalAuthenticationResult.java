@@ -43,6 +43,9 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private final AccessTokenRecord mAccessTokenRecord;
     private final IAccountRecord mAccountRecord;
     private final String mRefreshToken;
+    private String mSpeRing;
+    private String mRefreshTokenAge;
+
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord) {
         mAccessTokenRecord = cacheRecord.getAccessToken();
@@ -118,6 +121,36 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     @NonNull
     public String[] getScope() {
         return mAccessTokenRecord.getTarget().split("\\s");
+    }
+
+    @Nullable
+    @Override
+    public String getSpeRing() {
+        return null;
+    }
+
+    /**
+     * Sets the SPE Ring.
+     *
+     * @param speRing The SPE Ring to set.
+     */
+    public void setSpeRing(final String speRing) {
+        mSpeRing = speRing;
+    }
+
+    @Nullable
+    @Override
+    public String getRefreshTokenAge() {
+        return null;
+    }
+
+    /**
+     * Sets the refresh token age.
+     *
+     * @param refreshTokenAge The refresh token age to set.
+     */
+    public void setRefreshTokenAge(final String refreshTokenAge) {
+        mRefreshTokenAge = refreshTokenAge;
     }
 
     @Override
