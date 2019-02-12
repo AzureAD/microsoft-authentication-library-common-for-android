@@ -126,7 +126,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     @Nullable
     @Override
     public String getSpeRing() {
-        return null;
+        return mSpeRing;
     }
 
     /**
@@ -141,7 +141,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     @Nullable
     @Override
     public String getRefreshTokenAge() {
-        return null;
+        return mRefreshTokenAge;
     }
 
     /**
