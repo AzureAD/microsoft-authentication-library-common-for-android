@@ -40,6 +40,8 @@ import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -63,6 +65,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public abstract class BaseController {
 
@@ -99,11 +102,17 @@ public abstract class BaseController {
                                                            @NonNull final OperationParameters parameters) {
         AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
 
-        List<String> msalScopes = new ArrayList<>();
-        msalScopes.add("openid");
-        msalScopes.add("profile");
-        msalScopes.add("offline_access");
-        msalScopes.addAll(parameters.getScopes());
+        List<String> defaultScopes = new ArrayList<>();
+        defaultScopes.add("openid");
+        defaultScopes.add("profile");
+        defaultScopes.add("offline_access");
+
+        List<String> scopes  = parameters.getScopes();
+        if(!scopes.containsAll(defaultScopes)){
+            scopes.addAll(defaultScopes);
+        }
+        scopes.removeAll(Arrays.asList("", null));
+
 
         UUID correlationId = null;
 
@@ -121,7 +130,7 @@ public abstract class BaseController {
         if (parameters instanceof AcquireTokenOperationParameters) {
             AcquireTokenOperationParameters acquireTokenOperationParameters = (AcquireTokenOperationParameters) parameters;
             if (acquireTokenOperationParameters.getExtraScopesToConsent() != null) {
-                msalScopes.addAll(acquireTokenOperationParameters.getExtraScopesToConsent());
+                scopes.addAll(acquireTokenOperationParameters.getExtraScopesToConsent());
             }
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
@@ -135,8 +144,8 @@ public abstract class BaseController {
         }
 
         //Remove empty strings and null values
-        msalScopes.removeAll(Arrays.asList("", null));
-        request.setScope(StringUtil.join(' ', msalScopes));
+        scopes.removeAll(Arrays.asList("", null));
+        request.setScope(StringUtil.join(' ', scopes));
 
         return request.build();
     }
@@ -275,7 +284,7 @@ public abstract class BaseController {
     }
 
     public static AccessTokenRecord getAccessTokenRecord(@NonNull final MicrosoftStsTokenResponse tokenResponse,
-                                                         @NonNull final String authority) {
+                                                         @NonNull final OperationParameters requestParameters) {
         final String methodName = ":getAccessTokenRecord";
 
         final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
@@ -284,17 +293,38 @@ public abstract class BaseController {
             final ClientInfo clientInfo = new ClientInfo(tokenResponse.getClientInfo());
             accessTokenRecord.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             accessTokenRecord.setRealm(clientInfo.getUtid());
+            final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.
+                    getAzureActiveDirectoryCloud(
+                            requestParameters.getAuthority().getAuthorityURL()
+                    );
+            if (cloudEnv != null) {
+                Logger.info(TAG, "Using preferred cache host name...");
+                accessTokenRecord.setEnvironment(cloudEnv.getPreferredCacheHostName());
+            } else {
+                accessTokenRecord.setEnvironment(
+                        requestParameters.getAuthority().getAuthorityURL().getHost()
+                );
+            }
         } catch (final ServiceException e) {
             Logger.error(TAG + methodName, "ClientInfo construction failed ", e);
         }
-
+        accessTokenRecord.setClientId(requestParameters.getClientId());
         accessTokenRecord.setSecret(tokenResponse.getAccessToken());
-        accessTokenRecord.setAuthority(tokenResponse.getTokenType());
-        accessTokenRecord.setAuthority(authority);
+        accessTokenRecord.setAccessTokenType(tokenResponse.getTokenType());
+        accessTokenRecord.setAuthority(
+                requestParameters.getAuthority().getAuthorityURL().toString()
+        );
         accessTokenRecord.setTarget(tokenResponse.getScope());
         accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
-        accessTokenRecord.setExpiresOn(String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExpiresIn())));
-        accessTokenRecord.setExtendedExpiresOn(String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExtExpiresIn())));
+        accessTokenRecord.setExpiresOn(
+                String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExpiresIn()))
+        );
+        accessTokenRecord.setExtendedExpiresOn(
+                String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExtExpiresIn()))
+        );
+        accessTokenRecord.setCachedAt(
+                String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()))
+        );
         return accessTokenRecord;
     }
 

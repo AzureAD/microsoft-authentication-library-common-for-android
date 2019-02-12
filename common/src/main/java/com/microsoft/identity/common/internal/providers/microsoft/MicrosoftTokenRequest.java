@@ -32,7 +32,12 @@ public class MicrosoftTokenRequest extends TokenRequest {
     public static final String CODE_VERIFIER = "code_verifier";
     public static final String CLIENT_INFO = "client_info";
     public static final String CORRELATION_ID = "client-request-id";
+    public static final String ID_TOKEN_VERSIOM = "itver";
+    public static final String MAM_VERSION = "mamver";
     public static final String CLAIMS = "claims";
+    public static final String INSTANCE_AWARE = "instance_aware";
+    public static final String CLIENT_APP_NAME = "x-app-name";
+    public static final String CLIENT_APP_VERSION = "x-app-ver";
 
     public MicrosoftTokenRequest() {
         mClientInfoEnabled = "1";
@@ -47,8 +52,23 @@ public class MicrosoftTokenRequest extends TokenRequest {
     @SerializedName(CORRELATION_ID)
     private UUID mCorrelationId;
 
+    @SerializedName(ID_TOKEN_VERSIOM)
+    private String mIdTokenVersion;
+
+    @SerializedName(MAM_VERSION)
+    private String mMamVersion;
+
     @SerializedName(CLAIMS)
     private String mClaims;
+
+    @SerializedName(INSTANCE_AWARE)
+    private String mInstanceAware;
+
+    @SerializedName(CLIENT_APP_NAME)
+    private String mClientAppName;
+
+    @SerializedName(CLIENT_APP_VERSION)
+    private String mClientAppVersion;
 
     public String getCodeVerifier() {
         return this.mCodeVerifier;
@@ -70,6 +90,14 @@ public class MicrosoftTokenRequest extends TokenRequest {
         return mCorrelationId;
     }
 
+    public String getIdTokenVersion() {
+        return mIdTokenVersion;
+    }
+
+    public void setIdTokenVersion(final String mIdTokenVersion) {
+        this.mIdTokenVersion = mIdTokenVersion;
+    }
+
     public String getClaims() {
         return mClaims;
     }
@@ -77,4 +105,37 @@ public class MicrosoftTokenRequest extends TokenRequest {
     public void setClaims(final String claims) {
         this.mClaims = claims;
     }
+
+    public String getInstanceAware() {
+        return mInstanceAware;
+    }
+
+    public void setInstanceAware(final String instanceAware) {
+        this.mInstanceAware = instanceAware;
+    }
+
+    public String getClientAppName() {
+        return mClientAppName;
+    }
+
+    public void setClientAppName(String clientAppName) {
+        this.mClientAppName = clientAppName;
+    }
+
+    public String getClientAppVersion() {
+        return mClientAppVersion;
+    }
+
+    public void setClientAppVersion(final String clientAppVersion) {
+        this.mClientAppVersion = clientAppVersion;
+    }
+
+    public String getMamVersion() {
+        return mMamVersion;
+    }
+
+    public void setMamversion(final String mamVersion) {
+        this.mMamVersion = mamVersion;
+    }
+
 }
