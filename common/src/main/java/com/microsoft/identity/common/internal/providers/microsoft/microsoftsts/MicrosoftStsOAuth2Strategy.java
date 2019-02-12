@@ -284,9 +284,12 @@ public class MicrosoftStsOAuth2Strategy
                 "Creating TokenRequest..."
         );
 
-        if (mConfig.getMultipleCloudsSupported()) {
+        if (mConfig.getMultipleCloudsSupported() || request.getMultipleCloudAware()) {
+            Logger.verbose(TAG, "get cloud specific authority based on authorization response.");
             setTokenEndpoint(getCloudSpecificAuthorityBasedOnAuthorizationResponse(response));
         }
+
+
 
         MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setCodeVerifier(request.getPkceChallenge().getCodeVerifier());
