@@ -131,7 +131,7 @@ public abstract class BaseController {
                     acquireTokenOperationParameters.getExtraQueryStringParameters()
             ).setPrompt(
                     acquireTokenOperationParameters.getOpenIdConnectPromptParameter().toString()
-            );
+            ).setClaims(parameters.getClaimsRequestJson());
         }
 
         //Remove empty strings and null values

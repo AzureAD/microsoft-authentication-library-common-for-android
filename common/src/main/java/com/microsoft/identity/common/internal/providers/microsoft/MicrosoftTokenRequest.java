@@ -32,6 +32,7 @@ public class MicrosoftTokenRequest extends TokenRequest {
     public static final String CODE_VERIFIER = "code_verifier";
     public static final String CLIENT_INFO = "client_info";
     public static final String CORRELATION_ID = "client-request-id";
+    public static final String CLAIMS = "claims";
 
     public MicrosoftTokenRequest() {
         mClientInfoEnabled = "1";
@@ -45,6 +46,9 @@ public class MicrosoftTokenRequest extends TokenRequest {
 
     @SerializedName(CORRELATION_ID)
     private UUID mCorrelationId;
+
+    @SerializedName(CLAIMS)
+    private String mClaims;
 
     public String getCodeVerifier() {
         return this.mCodeVerifier;
@@ -64,5 +68,13 @@ public class MicrosoftTokenRequest extends TokenRequest {
 
     public UUID getCorrelationId() {
         return mCorrelationId;
+    }
+
+    public String getClaims() {
+        return mClaims;
+    }
+
+    public void setClaims(final String claims) {
+        this.mClaims = claims;
     }
 }
