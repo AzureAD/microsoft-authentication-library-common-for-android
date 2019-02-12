@@ -39,7 +39,6 @@ public class MicrosoftTokenRequest extends TokenRequest {
     public static final String CLIENT_APP_NAME = "x-app-name";
     public static final String CLIENT_APP_VERSION = "x-app-ver";
 
-
     public MicrosoftTokenRequest() {
         mClientInfoEnabled = "1";
     }
@@ -70,7 +69,6 @@ public class MicrosoftTokenRequest extends TokenRequest {
 
     @SerializedName(CLIENT_APP_VERSION)
     private String mClientAppVersion;
-
 
     public String getCodeVerifier() {
         return this.mCodeVerifier;
@@ -139,4 +137,5 @@ public class MicrosoftTokenRequest extends TokenRequest {
     public void setMamversion(final String mamVersion) {
         this.mMamVersion = mamVersion;
     }
+
 }
