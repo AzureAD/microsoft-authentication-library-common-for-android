@@ -344,7 +344,8 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    protected TokenResult getTokenResultFromHttpResponse(final HttpResponse response) {
+    @NonNull
+    protected TokenResult getTokenResultFromHttpResponse(@NonNull final HttpResponse response) {
         final String methodName = ":getTokenResultFromHttpResponse";
 
         Logger.verbose(
