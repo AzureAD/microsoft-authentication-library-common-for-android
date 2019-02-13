@@ -45,7 +45,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
@@ -353,7 +352,7 @@ public class MicrosoftStsOAuth2Strategy
                 "Getting TokenResult from HttpResponse..."
         );
 
-        TokenResponse tokenResponse = null;
+        MicrosoftStsTokenResponse tokenResponse = null;
         TokenErrorResponse tokenErrorResponse = null;
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
@@ -388,13 +387,18 @@ public class MicrosoftStsOAuth2Strategy
                     && !cliTelemValues.isEmpty()) {
                 // Element should only contain 1 value...
                 final String cliTelemHeader = cliTelemValues.get(0);
-
-                // Parse and set the result...
-                result.setCliTelemInfo(
-                        CliTelemInfo.fromXMsCliTelemHeader(
-                                cliTelemHeader
-                        )
+                final CliTelemInfo cliTelemInfo = CliTelemInfo.fromXMsCliTelemHeader(
+                        cliTelemHeader
                 );
+                // Parse and set the result...
+                result.setCliTelemInfo(cliTelemInfo);
+
+                if (null != tokenResponse && null != cliTelemInfo) {
+                    tokenResponse.setSpeRing(cliTelemInfo.getSpeRing());
+                    tokenResponse.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
+                    tokenResponse.setServerErrorCode(cliTelemInfo.getServerErrorCode());
+                    tokenResponse.setServerSubErrorCode(cliTelemInfo.getServerSubErrorCode());
+                }
             }
         }
 

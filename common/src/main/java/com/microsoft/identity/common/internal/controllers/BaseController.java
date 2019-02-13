@@ -56,6 +56,7 @@ import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperatio
 import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.util.DateUtilities;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -107,8 +108,8 @@ public abstract class BaseController {
         defaultScopes.add("profile");
         defaultScopes.add("offline_access");
 
-        List<String> scopes  = parameters.getScopes();
-        if(!scopes.containsAll(defaultScopes)){
+        List<String> scopes = parameters.getScopes();
+        if (!scopes.containsAll(defaultScopes)) {
             scopes.addAll(defaultScopes);
         }
         scopes.removeAll(Arrays.asList("", null));
@@ -197,6 +198,13 @@ public abstract class BaseController {
             // Create a new AuthenticationResult to hold the saved record
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(savedRecord);
 
+            // Set the client telemetry...
+            if (null != tokenResult.getCliTelemInfo()) {
+                final CliTelemInfo cliTelemInfo = tokenResult.getCliTelemInfo();
+                authenticationResult.setSpeRing(cliTelemInfo.getSpeRing());
+                authenticationResult.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
+            }
+
             // Set the AuthenticationResult on the final result object
             acquireTokenSilentResult.setLocalAuthenticationResult(authenticationResult);
         } else {
@@ -217,12 +225,22 @@ public abstract class BaseController {
                 }
 
                 if (UiRequiredException.INVALID_GRANT.equalsIgnoreCase(tokenResult.getErrorResponse().getError())) {
-                    throw new UiRequiredException(
+                    final UiRequiredException uiException = new UiRequiredException(
                             UiRequiredException.INVALID_GRANT,
                             null != tokenResult.getErrorResponse().getErrorDescription()
                                     ? tokenResult.getErrorResponse().getErrorDescription()
                                     : "Failed to renew access token"
                     );
+
+                    if (null != tokenResult.getCliTelemInfo()) {
+                        final CliTelemInfo cliTelemInfo = tokenResult.getCliTelemInfo();
+                        uiException.setSpeRing(cliTelemInfo.getSpeRing());
+                        uiException.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
+                        uiException.setCliTelemErrorCode(cliTelemInfo.getServerErrorCode());
+                        uiException.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
+                    }
+
+                    throw uiException;
                 }
             }
         }
