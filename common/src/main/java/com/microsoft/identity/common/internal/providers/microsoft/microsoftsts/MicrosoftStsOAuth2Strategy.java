@@ -289,8 +289,6 @@ public class MicrosoftStsOAuth2Strategy
             setTokenEndpoint(getCloudSpecificAuthorityBasedOnAuthorizationResponse(response));
         }
 
-
-
         MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setCodeVerifier(request.getPkceChallenge().getCodeVerifier());
         tokenRequest.setCode(response.getCode());
@@ -338,7 +336,7 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     protected void validateTokenRequest(MicrosoftStsTokenRequest request) {
-
+        //TODO implement
     }
 
     @Override
