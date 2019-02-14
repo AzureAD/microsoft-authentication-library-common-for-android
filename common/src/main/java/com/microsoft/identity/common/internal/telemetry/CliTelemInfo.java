@@ -83,7 +83,7 @@ public class CliTelemInfo implements Serializable {
         return mRefreshTokenAge;
     }
 
-    protected void setRefreshTokenAge(String refreshTokenAge) {
+    public void setRefreshTokenAge(String refreshTokenAge) {
         this.mRefreshTokenAge = refreshTokenAge;
     }
 
@@ -91,7 +91,7 @@ public class CliTelemInfo implements Serializable {
         return mSpeRing;
     }
 
-    protected void setSpeRing(String speRing) {
+    public void setSpeRing(String speRing) {
         this.mSpeRing = speRing;
     }
 
