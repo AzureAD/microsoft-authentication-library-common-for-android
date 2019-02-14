@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry;
 
+import android.support.annotation.Nullable;
+
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -93,6 +95,7 @@ public class CliTelemInfo implements Serializable {
         this.mSpeRing = speRing;
     }
 
+    @Nullable
     public static CliTelemInfo fromXMsCliTelemHeader(final String headerValue) {
         // if the header isn't present, do nothing
         if (StringExtensions.isNullOrBlank(headerValue)) {

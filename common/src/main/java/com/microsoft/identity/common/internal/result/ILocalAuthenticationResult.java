@@ -65,7 +65,6 @@ public interface ILocalAuthenticationResult {
     String getUniqueId();
 
     /**
-     *
      * @return The refresh token
      */
     @NonNull
@@ -99,4 +98,20 @@ public interface ILocalAuthenticationResult {
      */
     @NonNull
     String[] getScope();
+
+    /**
+     * Gets the SPE Ring property returned from the STS client telemetry header (if present).
+     *
+     * @return The SPE Ring or null, if not present.
+     */
+    @Nullable
+    String getSpeRing();
+
+    /**
+     * Gets the refresh token age property returned from the STS client telemetry header (if present).
+     *
+     * @return The refresh token age or null, if not present.
+     */
+    @Nullable
+    String getRefreshTokenAge();
 }

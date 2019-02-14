@@ -39,6 +39,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -90,11 +91,15 @@ public class ExceptionAdapter {
                         TAG + methodName,
                         "Received invalid_grant"
                 );
-                return new UiRequiredException(
+                final UiRequiredException uiRequiredException = new UiRequiredException(
                         tokenErrorResponse.getError(),
                         tokenErrorResponse.getErrorDescription(),
                         null
                 );
+
+                applyCliTelemInfo(tokenResult, uiRequiredException);
+
+                return uiRequiredException;
             }
 
             ServiceException outErr = null;
@@ -120,6 +125,8 @@ public class ExceptionAdapter {
                 );
             }
 
+            applyCliTelemInfo(tokenResult, outErr);
+
             applyHttpErrorResponseData(
                     outErr,
                     tokenErrorResponse.getStatusCode(),
@@ -131,6 +138,17 @@ public class ExceptionAdapter {
         }
 
         return null;
+    }
+
+    private static void applyCliTelemInfo(@NonNull final TokenResult tokenResult,
+                                          @NonNull final BaseException outErr) {
+        if (null != tokenResult.getCliTelemInfo()) {
+            final CliTelemInfo cliTelemInfo = tokenResult.getCliTelemInfo();
+            outErr.setSpeRing(cliTelemInfo.getSpeRing());
+            outErr.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
+            outErr.setCliTelemErrorCode(cliTelemInfo.getServerErrorCode());
+            outErr.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
+        }
     }
 
     private static void applyHttpErrorResponseData(@NonNull final ServiceException targetException,

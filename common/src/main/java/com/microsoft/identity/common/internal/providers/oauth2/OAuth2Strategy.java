@@ -107,23 +107,27 @@ public abstract class OAuth2Strategy
      */
     public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException {
         final String methodName = ":requestToken";
+
         Logger.verbose(
                 TAG + methodName,
                 "Requesting token..."
         );
+
         validateTokenRequest(request);
-        HttpResponse response = performTokenRequest(request);
+        final HttpResponse response = performTokenRequest(request);
         return getTokenResultFromHttpResponse(response);
     }
 
     protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException {
         final String methodName = ":performTokenRequest";
+
         Logger.verbose(
                 TAG + methodName,
                 "Performing token request..."
         );
-        String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
-        Map<String, String> headers = new TreeMap<>();
+
+        final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
+        final Map<String, String> headers = new TreeMap<>();
         headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
 

@@ -39,19 +39,20 @@ import java.util.concurrent.TimeUnit;
  */
 public class LocalAuthenticationResult implements ILocalAuthenticationResult {
 
-
     private String mRawIdToken = null;
     private AccessTokenRecord mAccessTokenRecord;
     private IAccountRecord mAccountRecord;
     private String mRefreshToken = null;
+    private String mSpeRing;
+    private String mRefreshTokenAge;
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord) {
         mAccessTokenRecord = cacheRecord.getAccessToken();
         mAccountRecord = cacheRecord.getAccount();
-        if(cacheRecord.getIdToken() != null) {
+        if (cacheRecord.getIdToken() != null) {
             mRawIdToken = cacheRecord.getIdToken().getSecret();
         }
-        if(cacheRecord.getRefreshToken() != null) {
+        if (cacheRecord.getRefreshToken() != null) {
             mRefreshToken = cacheRecord.getRefreshToken().getSecret();
         }
     }
@@ -123,6 +124,36 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     @NonNull
     public String[] getScope() {
         return mAccessTokenRecord.getTarget().split("\\s");
+    }
+
+    @Nullable
+    @Override
+    public String getSpeRing() {
+        return mSpeRing;
+    }
+
+    /**
+     * Sets the SPE Ring.
+     *
+     * @param speRing The SPE Ring to set.
+     */
+    public void setSpeRing(final String speRing) {
+        mSpeRing = speRing;
+    }
+
+    @Nullable
+    @Override
+    public String getRefreshTokenAge() {
+        return mRefreshTokenAge;
+    }
+
+    /**
+     * Sets the refresh token age.
+     *
+     * @param refreshTokenAge The refresh token age to set.
+     */
+    public void setRefreshTokenAge(final String refreshTokenAge) {
+        mRefreshTokenAge = refreshTokenAge;
     }
 
     @Override
