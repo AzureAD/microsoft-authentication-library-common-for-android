@@ -68,6 +68,98 @@ public class MicrosoftTokenResponse extends TokenResponse {
     }
 
     /**
+     * The deployment ring of the current request chain.
+     */
+    private String mSpeRing;
+
+    /**
+     * The age of the RT, according to the server.
+     */
+    private String mRefreshTokenAge;
+
+    /**
+     * The error code surfaced by the server.
+     */
+    private String mServerErrorCode;
+
+    /**
+     * The server suberror code.
+     */
+    private String mServerSubErrorCode;
+
+    /**
+     * Gets the SPE Ring.
+     *
+     * @return The SPE Ring to get.
+     */
+    public String getSpeRing() {
+        return mSpeRing;
+    }
+
+    /**
+     * Sets the SPE Ring.
+     *
+     * @param speRing The SPR Ring to set.
+     */
+    public void setSpeRing(String speRing) {
+        this.mSpeRing = speRing;
+    }
+
+    /**
+     * Gets the refresh token age.
+     *
+     * @return The refresh token age to get.
+     */
+    public String getRefreshTokenAge() {
+        return mRefreshTokenAge;
+    }
+
+    /**
+     * Sets the refresh token age.
+     *
+     * @param refreshTokenAge The refresh token age to set.
+     */
+    public void setRefreshTokenAge(String refreshTokenAge) {
+        this.mRefreshTokenAge = refreshTokenAge;
+    }
+
+    /**
+     * Gets the server error code.
+     *
+     * @return The server error code to get.
+     */
+    public String getServerErrorCode() {
+        return mServerErrorCode;
+    }
+
+    /**
+     * Sets the server error code.
+     *
+     * @param serverErrorCode The server error code to set.
+     */
+    public void setServerErrorCode(String serverErrorCode) {
+        this.mServerErrorCode = serverErrorCode;
+    }
+
+    /**
+     * Gets the server suberror code.
+     *
+     * @return The server suberror code to get.
+     */
+    public String getServerSubErrorCode() {
+        return mServerSubErrorCode;
+    }
+
+    /**
+     * Sets the server suberror code.
+     *
+     * @param serverSubErrorCode The server suberror code to get.
+     */
+    public void setServerSubErrorCode(String serverSubErrorCode) {
+        this.mServerSubErrorCode = serverSubErrorCode;
+    }
+
+    /**
      * Gets the ext_expires_in.
      *
      * @return The ext_expires_in to get.

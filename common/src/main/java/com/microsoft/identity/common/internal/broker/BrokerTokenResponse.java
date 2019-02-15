@@ -42,11 +42,11 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
     @SerializedName("cloud_instance_host_name")
     private String mCloudInstanceHostName;
 
-    public BrokerTokenResponse(){
+    public BrokerTokenResponse() {
 
     }
 
-    public BrokerTokenResponse(MicrosoftStsTokenResponse microsoftStsTokenResponse){
+    public BrokerTokenResponse(final MicrosoftStsTokenResponse microsoftStsTokenResponse) {
         setExpiresIn(microsoftStsTokenResponse.getExpiresIn());
         setAccessToken(microsoftStsTokenResponse.getAccessToken());
         setTokenType(microsoftStsTokenResponse.getTokenType());
@@ -61,10 +61,14 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
         setExtExpiresIn(microsoftStsTokenResponse.getExtExpiresIn());
         setFamilyId(microsoftStsTokenResponse.getFamilyId());
         setAuthority(microsoftStsTokenResponse.getAuthority());
+        setSpeRing(microsoftStsTokenResponse.getSpeRing());
+        setRefreshTokenAge(microsoftStsTokenResponse.getRefreshTokenAge());
+        setServerErrorCode(microsoftStsTokenResponse.getServerErrorCode());
+        setServerSubErrorCode(microsoftStsTokenResponse.getServerSubErrorCode());
     }
 
     protected BrokerTokenResponse(Parcel in) {
-        if(in != null) {
+        if (in != null) {
             setExpiresIn(in.readLong());
             setAccessToken(in.readString());
             setTokenType(in.readString());
@@ -82,6 +86,10 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
             setTenantId(in.readString());
             setExpiresNotBefore(new Date(in.readLong()));
             setCloudInstanceHostName(in.readString());
+            setSpeRing(in.readString());
+            setRefreshTokenAge(in.readString());
+            setServerErrorCode(in.readString());
+            setServerSubErrorCode(in.readString());
         }
     }
 
@@ -105,6 +113,10 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
             dest.writeString(getTenantId());
             dest.writeLong(getExpiresNotBefore() != null ? getExpiresNotBefore().getTime() : 0);
             dest.writeString(getCloudInstanceHostName());
+            dest.writeString(getSpeRing());
+            dest.writeString(getRefreshTokenAge());
+            dest.writeString(getServerErrorCode());
+            dest.writeString(getServerSubErrorCode());
         }
     }
 

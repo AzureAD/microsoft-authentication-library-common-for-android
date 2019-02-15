@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry;
 
+import android.support.annotation.Nullable;
+
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -81,7 +83,7 @@ public class CliTelemInfo implements Serializable {
         return mRefreshTokenAge;
     }
 
-    protected void setRefreshTokenAge(String refreshTokenAge) {
+    public void setRefreshTokenAge(String refreshTokenAge) {
         this.mRefreshTokenAge = refreshTokenAge;
     }
 
@@ -89,10 +91,11 @@ public class CliTelemInfo implements Serializable {
         return mSpeRing;
     }
 
-    protected void setSpeRing(String speRing) {
+    public void setSpeRing(String speRing) {
         this.mSpeRing = speRing;
     }
 
+    @Nullable
     public static CliTelemInfo fromXMsCliTelemHeader(final String headerValue) {
         // if the header isn't present, do nothing
         if (StringExtensions.isNullOrBlank(headerValue)) {
