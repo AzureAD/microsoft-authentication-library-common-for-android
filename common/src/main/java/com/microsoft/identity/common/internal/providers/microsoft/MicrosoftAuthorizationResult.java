@@ -45,6 +45,7 @@ public abstract class MicrosoftAuthorizationResult<
      * @param authResponse {@link MicrosoftAuthorizationResponse}
      */
     public MicrosoftAuthorizationResult(final AuthorizationStatus authStatus, final GenericMicrosoftAuthorizationResponse authResponse) {
+        super(authResponse, null);
         setAuthorizationStatus(authStatus);
         setAuthorizationResponse(authResponse);
     }
@@ -56,6 +57,7 @@ public abstract class MicrosoftAuthorizationResult<
      * @param errorResponse {@link MicrosoftAuthorizationErrorResponse}
      */
     public MicrosoftAuthorizationResult(final AuthorizationStatus authStatus, final GenericMicrosoftAuthorizationErrorResponse errorResponse) {
+        super(null, errorResponse);
         setAuthorizationStatus(authStatus);
         setAuthorizationErrorResponse(errorResponse);
     }

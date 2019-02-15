@@ -32,7 +32,7 @@ import java.util.List;
 
 public class AcquireTokenOperationParameters extends OperationParameters {
 
-    private Activity mActivity;
+    private transient Activity mActivity;
     private String mLoginHint;
     private List<Pair<String, String>> mExtraQueryStringParameters;
     private List<String> mExtraScopesToConsent;
