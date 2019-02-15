@@ -113,7 +113,7 @@ public class MicrosoftStsOAuth2Strategy
         return authority.getHost();
     }
 
-    private String getIssuerCacheIdentifierFromAuthority(URL authority) {
+    public String getIssuerCacheIdentifierFromAuthority(URL authority) {
         final String methodName = ":getIssuerCacheIdentifierFromAuthority";
 
         final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
