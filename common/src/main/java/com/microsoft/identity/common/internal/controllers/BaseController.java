@@ -280,7 +280,7 @@ public abstract class BaseController {
                     );
                 }
                 if(result.getErrorResponse().getErrorDescription() != null) {
-                    Logger.warn(
+                    Logger.warnPII(
                             TAG,
                             "Description: " + result.getErrorResponse().getErrorDescription()
                     );
