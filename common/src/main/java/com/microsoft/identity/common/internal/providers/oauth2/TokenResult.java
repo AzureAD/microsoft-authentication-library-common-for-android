@@ -30,8 +30,6 @@ import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
  */
 public class TokenResult implements IResult {
 
-    private static final String TAG = TokenResult.class.getSimpleName();
-
     private TokenResponse mTokenResponse;
     private TokenErrorResponse mTokenErrorResponse;
     private CliTelemInfo mCliTelemInfo;
