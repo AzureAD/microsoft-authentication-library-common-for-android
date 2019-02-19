@@ -35,14 +35,7 @@ import java.util.ArrayList;
  */
 public class BrokerErrorResponse extends MicrosoftTokenErrorResponse implements Parcelable {
 
-    public static final String INTERACTION_REQUIRED = "interaction_required";
-
-    public static final String INVALID_GRANT = "invalid_grant";
-
-    private String mOAuthError;
-    private String mOAuthSubError;
     private String mOAuthErrorMetadata;
-    private String mOAuthErrorDescription;
 
     public BrokerErrorResponse() {
 
@@ -50,6 +43,7 @@ public class BrokerErrorResponse extends MicrosoftTokenErrorResponse implements 
 
     public BrokerErrorResponse(@NonNull final MicrosoftTokenErrorResponse microsoftTokenErrorResponse) {
         setError(microsoftTokenErrorResponse.getError());
+        setSubError(microsoftTokenErrorResponse.getSubError());
         setErrorDescription(microsoftTokenErrorResponse.getErrorDescription());
         setErrorUri(microsoftTokenErrorResponse.getErrorUri());
         setErrorCodes(microsoftTokenErrorResponse.getErrorCodes());
@@ -64,6 +58,7 @@ public class BrokerErrorResponse extends MicrosoftTokenErrorResponse implements 
     protected BrokerErrorResponse(Parcel in) {
         if (in != null) {
             setError(in.readString());
+            setSubError(in.readString());
             setErrorDescription(in.readString());
             setErrorUri(in.readString());
             ArrayList errorcodes = new ArrayList();
@@ -72,10 +67,7 @@ public class BrokerErrorResponse extends MicrosoftTokenErrorResponse implements 
             setTimeStamp(in.readString());
             setTraceId(in.readString());
             setCorrelationId(in.readString());
-            setOAuthError(in.readString());
-            setOAuthSubError(in.readString());
             setOAuthErrorMetadata(in.readString());
-            setOAuthErrorDescription(in.readString());
             setStatusCode(in.readInt());
             setResponseHeadersJson(in.readString());
             setResponseBody(in.readString());
@@ -86,16 +78,14 @@ public class BrokerErrorResponse extends MicrosoftTokenErrorResponse implements 
     public void writeToParcel(Parcel dest, int flags) {
         if (dest != null) {
             dest.writeString(getError());
+            dest.writeString(getSubError());
             dest.writeString(getErrorDescription());
             dest.writeString(getErrorUri());
             dest.writeList(getErrorCodes());
             dest.writeString(getTimeStamp());
             dest.writeString(getTraceId());
             dest.writeString(getCorrelationId());
-            dest.writeString(getOAuthError());
-            dest.writeString(getOAuthSubError());
             dest.writeString(getOAuthErrorMetadata());
-            dest.writeString(getOAuthErrorDescription());
             dest.writeInt(getStatusCode());
             dest.writeString(getResponseHeadersJson());
             dest.writeString(getResponseBody());
@@ -119,43 +109,11 @@ public class BrokerErrorResponse extends MicrosoftTokenErrorResponse implements 
         }
     };
 
-    public boolean isInteractionRequired() {
-        return mOAuthError.equalsIgnoreCase(INTERACTION_REQUIRED);
-    }
-
-    public boolean isInvalidGrant() {
-        return mOAuthError.equalsIgnoreCase(INVALID_GRANT);
-    }
-
-    public String getOAuthError() {
-        return mOAuthError;
-    }
-
-    public void setOAuthError(String oAuthError) {
-        this.mOAuthError = oAuthError;
-    }
-
-    public String getOAuthSubError() {
-        return mOAuthSubError;
-    }
-
-    public void setOAuthSubError(String oAuthSubError) {
-        this.mOAuthSubError = oAuthSubError;
-    }
-
     public String getOAuthErrorMetadata() {
         return mOAuthErrorMetadata;
     }
 
     public void setOAuthErrorMetadata(String oAuthErrorMetadata) {
         this.mOAuthErrorMetadata = oAuthErrorMetadata;
-    }
-
-    public String getOAuthErrorDescription() {
-        return mOAuthErrorDescription;
-    }
-
-    public void setOAuthErrorDescription(String oAuthErrorDescription) {
-        this.mOAuthErrorDescription = oAuthErrorDescription;
     }
 }
