@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import com.google.gson.annotations.SerializedName;
 
-public class TokenErrorResponse {
+public class TokenErrorResponse implements IErrorResponse {
 
     private int mStatusCode;
 

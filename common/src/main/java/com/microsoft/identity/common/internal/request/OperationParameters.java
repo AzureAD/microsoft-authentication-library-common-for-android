@@ -37,8 +37,9 @@ public class OperationParameters {
 
     private static final String TAG = OperationParameters.class.getSimpleName();
 
-    private Context mAppContext;
-    private OAuth2TokenCache mTokenCache;
+
+    private transient Context mAppContext;
+    private transient OAuth2TokenCache mTokenCache;
     private ArrayList<String> mScopes;
     protected IAccountRecord mAccount;
     private String clientId;
