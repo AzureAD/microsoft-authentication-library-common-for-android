@@ -28,9 +28,7 @@ import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 /**
  * Holds the request of a token request.  The request will either contain the success result or the error result.
  */
-public class TokenResult {
-
-    private static final String TAG = TokenResult.class.getSimpleName();
+public class TokenResult implements IResult {
 
     private TokenResponse mTokenResponse;
     private TokenErrorResponse mTokenErrorResponse;
@@ -67,7 +65,6 @@ public class TokenResult {
      * @param errorResponse TokenErrorResponse
      */
     public TokenResult(final TokenResponse response, final TokenErrorResponse errorResponse) {
-        Logger.verbose(TAG, "Init: " + TAG);
         this.mTokenResponse = response;
         this.mTokenErrorResponse = errorResponse;
 
@@ -129,6 +126,7 @@ public class TokenResult {
     public void setSuccess(boolean success) {
         mSuccess = success;
     }
+
 
     //CHECKSTYLE:OFF
     @Override

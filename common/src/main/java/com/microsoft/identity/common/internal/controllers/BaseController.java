@@ -28,6 +28,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 
+import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -40,12 +41,15 @@ import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.IResult;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
@@ -165,6 +169,7 @@ public abstract class BaseController {
 
         tokenResult = strategy.requestToken(tokenRequest);
 
+
         return tokenResult;
     }
 
@@ -183,6 +188,8 @@ public abstract class BaseController {
 
         final TokenResult tokenResult = performSilentTokenRequest(strategy, parameters);
         acquireTokenSilentResult.setTokenResult(tokenResult);
+
+        logResult(TAG + methodName, tokenResult);
 
         if (tokenResult.getSuccess()) {
             Logger.verbose(
@@ -244,6 +251,62 @@ public abstract class BaseController {
                 }
             }
         }
+    }
+
+    /**
+     * Log IResult objects.  IResult objects are returned from Authorization and Token Requests
+     * @param tag
+     * @param result
+     */
+    protected void logResult(String tag, IResult result){
+
+        final String TAG = tag + ":" + result.getClass().getSimpleName();
+
+        if(result.getSuccess()) {
+            Logger.verbose(
+                    TAG,
+                    "Success Result"
+            );
+        }else{
+            Logger.warn(
+                    TAG,
+                    "Failure Result"
+            );
+            if(result.getErrorResponse() != null) {
+                if(result.getErrorResponse().getError() != null) {
+                    Logger.warn(
+                            TAG,
+                            "Error: " + result.getErrorResponse().getError()
+                    );
+                }
+                if(result.getErrorResponse().getErrorDescription() != null) {
+                    Logger.warnPII(
+                            TAG,
+                            "Description: " + result.getErrorResponse().getErrorDescription()
+                    );
+                }
+            }
+        }
+
+        if(result instanceof AuthorizationResult){
+            AuthorizationResult authResult = (AuthorizationResult)result;
+            if(authResult.getAuthorizationStatus() != null) {
+                Logger.verbose(
+                        TAG,
+                        "Authorization Status: " + authResult.getAuthorizationStatus().toString()
+                );
+            }
+        }
+    }
+
+    /**
+     * Log parameters objects passed to controllers
+     * @param tag
+     * @param parameters
+     */
+    protected void logParameters(String tag, Object parameters){
+        final String TAG = tag + ":" + parameters.getClass().getSimpleName();
+        Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
     }
 
     protected TokenResult performSilentTokenRequest(
