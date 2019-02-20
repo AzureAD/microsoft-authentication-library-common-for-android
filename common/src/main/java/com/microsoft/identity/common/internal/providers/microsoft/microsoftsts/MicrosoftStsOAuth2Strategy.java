@@ -117,7 +117,7 @@ public class MicrosoftStsOAuth2Strategy
         return authority.getHost();
     }
 
-    private String getIssuerCacheIdentifierFromAuthority(final URL authority) {
+    public String getIssuerCacheIdentifierFromAuthority(final URL authority) {
         final String methodName = ":getIssuerCacheIdentifierFromAuthority";
 
         final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
@@ -289,7 +289,8 @@ public class MicrosoftStsOAuth2Strategy
                 "Creating TokenRequest..."
         );
 
-        if (mConfig.getMultipleCloudsSupported()) {
+        if (mConfig.getMultipleCloudsSupported() || request.getMultipleCloudAware()) {
+            Logger.verbose(TAG, "get cloud specific authority based on authorization response.");
             setTokenEndpoint(getCloudSpecificAuthorityBasedOnAuthorizationResponse(response));
         }
 
@@ -340,7 +341,7 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     protected void validateTokenRequest(MicrosoftStsTokenRequest request) {
-
+        //TODO implement
     }
 
     @Override
