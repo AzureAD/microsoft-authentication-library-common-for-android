@@ -40,7 +40,8 @@ public class OperationParameters {
 
     private transient Context mAppContext;
     private transient OAuth2TokenCache mTokenCache;
-    private ArrayList<String> mScopes;
+    // Instantiate with default scopes by default
+    private ArrayList<String> mScopes = getDefaultScopes();
     protected IAccountRecord mAccount;
     private String clientId;
     private String redirectUri;
@@ -56,11 +57,18 @@ public class OperationParameters {
     }
 
     public ArrayList<String> getScopes() {
+        // Remove empty and null scopes
+        mScopes.removeAll(Arrays.asList("", null));
         return mScopes;
     }
 
-    public void setScopes(ArrayList<String> mScopes) {
-        this.mScopes = mScopes;
+    public void setScopes(final ArrayList<String> scopes) {
+        // avoid adding duplicate scopes
+        for(String scope : scopes){
+            if(!mScopes.contains(scope)){
+                mScopes.add(scope);
+            }
+        }
     }
 
     public String getClientId() {
@@ -111,6 +119,14 @@ public class OperationParameters {
         mClaimsRequestJson = claimsRequestJson;
     }
 
+    private static ArrayList<String> getDefaultScopes() {
+        final ArrayList<String> defaultScopes = new ArrayList<>();
+        defaultScopes.add("openid");
+        defaultScopes.add("profile");
+        defaultScopes.add("offline_access");
+        return defaultScopes;
+    }
+
 
     /**
      * Since this is about validating MSAL Parameters and not an authorization request or token request.  I've placed this here.
@@ -125,7 +141,7 @@ public class OperationParameters {
 
         if (mScopes != null) {
             mScopes.removeAll(Arrays.asList("", null));
-            if (mScopes.size() > 0) {
+            if (mScopes.size() > 3) {
                 validScopeArgument = true;
             }
         }
