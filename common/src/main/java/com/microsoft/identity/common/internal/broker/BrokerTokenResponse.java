@@ -33,9 +33,7 @@ import java.util.Date;
 /**
  * Encapsulates the broker token response
  */
-public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Parcelable {
-
-    private String mAuthority;
+public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Parcelable{
     private String mTenantId;
 
     @SerializedName("not_before")
@@ -62,6 +60,7 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
         setClientId(microsoftStsTokenResponse.getClientId());
         setExtExpiresIn(microsoftStsTokenResponse.getExtExpiresIn());
         setFamilyId(microsoftStsTokenResponse.getFamilyId());
+        setAuthority(microsoftStsTokenResponse.getAuthority());
         setSpeRing(microsoftStsTokenResponse.getSpeRing());
         setRefreshTokenAge(microsoftStsTokenResponse.getRefreshTokenAge());
         setServerErrorCode(microsoftStsTokenResponse.getServerErrorCode());
@@ -137,14 +136,6 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
             return new BrokerTokenResponse[size];
         }
     };
-
-    public String getAuthority() {
-        return mAuthority;
-    }
-
-    public void setAuthority(final String authority) {
-        mAuthority = authority;
-    }
 
     public String getTenantId() {
         return mTenantId;
