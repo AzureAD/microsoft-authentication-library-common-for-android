@@ -65,8 +65,9 @@ public class OperationParameters {
     public void setScopes(final ArrayList<String> scopes) {
         // avoid adding duplicate scopes
         for(String scope : scopes){
-            if(!mScopes.contains(scope)){
-                mScopes.add(scope);
+            final String trimmedScope = scope.trim();
+            if(!mScopes.contains(trimmedScope)){
+                mScopes.add(trimmedScope);
             }
         }
     }
