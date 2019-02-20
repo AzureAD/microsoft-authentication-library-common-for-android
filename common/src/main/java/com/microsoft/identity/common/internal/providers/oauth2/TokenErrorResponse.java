@@ -35,6 +35,9 @@ public class TokenErrorResponse implements IErrorResponse {
     @SerializedName("error")
     private String mError;
 
+    @SerializedName("suberror")
+    private String mSubError;
+
     @SerializedName("error_description")
     private String mErrorDescription;
 
@@ -53,6 +56,20 @@ public class TokenErrorResponse implements IErrorResponse {
      */
     public void setError(final String error) {
         mError = error;
+    }
+
+    /**
+     * @return mSubError of the suberror response.
+     */
+    public String getSubError() {
+        return mSubError;
+    }
+
+    /**
+     * @param subError suberror string of the token error response.
+     */
+    public void setSubError(final String subError) {
+        mSubError = subError;
     }
 
     /**
@@ -145,6 +162,7 @@ public class TokenErrorResponse implements IErrorResponse {
                 ", mResponseBody='" + mResponseBody + '\'' +
                 ", mResponseHeadersJson=" + mResponseHeadersJson +
                 ", mError='" + mError + '\'' +
+                ", mSubError='" + mSubError + '\'' +
                 ", mErrorDescription='" + mErrorDescription + '\'' +
                 ", mErrorUri='" + mErrorUri + '\'' +
                 '}';

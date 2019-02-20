@@ -26,6 +26,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.google.gson.JsonSyntaxException;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -86,16 +87,18 @@ public class ExceptionAdapter {
         if (tokenResult != null && !tokenResult.getSuccess()) {
             tokenErrorResponse = tokenResult.getErrorResponse();
 
-            if (tokenErrorResponse.getError().equalsIgnoreCase(UiRequiredException.INVALID_GRANT)) {
+            if (tokenErrorResponse.getError().equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT)) {
                 Logger.warn(
                         TAG + methodName,
                         "Received invalid_grant"
                 );
                 final UiRequiredException uiRequiredException = new UiRequiredException(
                         tokenErrorResponse.getError(),
-                        tokenErrorResponse.getErrorDescription(),
-                        null
+                        tokenErrorResponse.getSubError(),
+                        tokenErrorResponse.getErrorDescription()
                 );
+
+
 
                 applyCliTelemInfo(tokenResult, uiRequiredException);
 
@@ -207,6 +210,7 @@ public class ExceptionAdapter {
             UiRequiredException uiRequiredException = ((UiRequiredException) e);
             msalException = new UiRequiredException(
                     uiRequiredException.getErrorCode(),
+                    uiRequiredException.getSubErrorCode(),
                     uiRequiredException.getMessage()
             );
         }
