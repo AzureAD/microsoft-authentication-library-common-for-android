@@ -63,6 +63,8 @@ import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.util.DateUtilities;
 
+import junit.framework.TestResult;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
@@ -395,7 +397,7 @@ public abstract class BaseController {
         accessTokenRecord.setAuthority(
                 requestParameters.getAuthority().getAuthorityURL().toString()
         );
-        accessTokenRecord.setTarget(tokenResponse.getScope());
+        accessTokenRecord.setTarget(TextUtils.join(" ", requestParameters.getScopes()));
         accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
         accessTokenRecord.setExpiresOn(
                 String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExpiresIn()))
