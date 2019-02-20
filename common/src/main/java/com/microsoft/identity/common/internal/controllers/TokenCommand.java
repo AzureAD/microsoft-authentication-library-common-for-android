@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ServiceException;
@@ -107,7 +108,7 @@ public class TokenCommand implements TokenOperation {
                     return result;
                 }
             } catch (UiRequiredException e) {
-                if (e.getErrorCode().equals(UiRequiredException.INVALID_GRANT) // was invalid_grant
+                if (e.getErrorCode().equals(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT) // was invalid_grant
                         && mControllers.size() > ii + 1) { // isn't the last controller we can try
                     continue;
                 } else {
