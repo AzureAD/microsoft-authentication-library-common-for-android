@@ -80,10 +80,6 @@ public class ServiceException extends BaseException {
 
     private HashMap<String, List<String>> mHttpResponseHeaders = null;
 
-    private String mOAuthError;
-
-    private String mOAuthErrorDescription;
-
     /**
      * When {@link java.net.SocketTimeoutException} is thrown, no status code will be caught. Will use 0 instead.
      */
@@ -156,21 +152,5 @@ public class ServiceException extends BaseException {
     public ServiceException(final String errorCode, final String errorMessage, final int httpStatusCode, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
         mHttpStatusCode = httpStatusCode;
-    }
-
-    public String getOAuthError() {
-        return mOAuthError;
-    }
-
-    public void setOAuthError(final String oAuthError) {
-        this.mOAuthError = oAuthError;
-    }
-
-    public String getOAuthErrorDescription() {
-        return mOAuthErrorDescription;
-    }
-
-    public void setOAuthErrorDescription(final String oAuthErrorDescription) {
-        this.mOAuthErrorDescription = oAuthErrorDescription;
     }
 }

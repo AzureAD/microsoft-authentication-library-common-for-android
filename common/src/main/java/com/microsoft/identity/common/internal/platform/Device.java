@@ -44,7 +44,7 @@ public final class Device {
         final Map<String, String> platformParameters = new HashMap<>();
 
         platformParameters.put(PlatformIdParameters.PRODUCT, PlatformIdParameters.PRODUCT_NAME);
-        platformParameters.put(PlatformIdParameters.VERSION, "0.1.3");
+        platformParameters.put(PlatformIdParameters.VERSION, PlatformIdParameters.PRODUCT_VERSION);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             platformParameters.put(PlatformIdParameters.CPU_PLATFORM, Build.CPU_ABI);
         } else {
@@ -69,6 +69,11 @@ public final class Device {
          * The String representing the sdk platform name.
          */
         static final String PRODUCT_NAME = "MSAL.Android";
+
+        /**
+         * The String representing the sdk platform version.
+         */
+        static final String PRODUCT_VERSION = "0.2.2";
 
         /**
          * The String representing the sdk version.

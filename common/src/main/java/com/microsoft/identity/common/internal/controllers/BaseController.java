@@ -29,6 +29,7 @@ import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -62,8 +63,6 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.util.DateUtilities;
-
-import junit.framework.TestResult;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -221,9 +220,10 @@ public abstract class BaseController {
                     );
                 }
 
-                if (UiRequiredException.INVALID_GRANT.equalsIgnoreCase(tokenResult.getErrorResponse().getError())) {
+                if (AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(tokenResult.getErrorResponse().getError())) {
                     final UiRequiredException uiException = new UiRequiredException(
-                            UiRequiredException.INVALID_GRANT,
+                            AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT,
+                            tokenResult.getErrorResponse().getSubError(),
                             null != tokenResult.getErrorResponse().getErrorDescription()
                                     ? tokenResult.getErrorResponse().getErrorDescription()
                                     : "Failed to renew access token"
