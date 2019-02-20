@@ -361,7 +361,7 @@ public abstract class BaseController {
         requestScopes.add(OPEN_ID_SCOPE);
         requestScopes.add(OFFLINE_ACCESS_SCOPE);
         requestScopes.add(PROFILE_SCOPE);
-        // sanatize empty and null scopes
+        // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
         operationParameters.setScopes(requestScopes);
     }
