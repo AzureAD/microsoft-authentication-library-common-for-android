@@ -118,6 +118,11 @@ public final class AuthenticationConstants {
          * Used as the key to send back request id.
          */
         public static final String REQUEST_ID = "com.microsoft.aad.adal:RequestId";
+
+        /**
+         * Sub error returned by server representing the user cancel the auth flow.
+         */
+        public static final String SUB_ERROR_UI_CANCEL = "cancel";
     }
 
     /**
