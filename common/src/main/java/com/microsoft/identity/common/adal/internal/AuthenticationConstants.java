@@ -80,6 +80,11 @@ public final class AuthenticationConstants {
         public static final String RESPONSE_ERROR_CODE = "com.microsoft.aad.adal:BrowserErrorCode";
 
         /**
+         * Represents the error subcode returned from webview.
+         */
+        public static final String RESPONSE_ERROR_SUBCODE = "com.microsoft.aad.adal:BrowserErrorSubCode";
+
+        /**
          * Represents the error message returned from webview.
          */
         public static final String RESPONSE_ERROR_MESSAGE = "com.microsoft.aad.adal:BrowserErrorMessage";
@@ -113,6 +118,11 @@ public final class AuthenticationConstants {
          * Used as the key to send back request id.
          */
         public static final String REQUEST_ID = "com.microsoft.aad.adal:RequestId";
+
+        /**
+         * Sub error returned by server representing the user cancel the auth flow.
+         */
+        public static final String SUB_ERROR_UI_CANCEL = "cancel";
     }
 
     /**

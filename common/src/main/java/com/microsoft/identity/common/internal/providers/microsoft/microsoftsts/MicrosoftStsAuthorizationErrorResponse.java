@@ -29,6 +29,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAutho
  * Encapsulates Microsoft STS specific Authorization Result errors in addition to Microsoft error parameters.
  */
 public class MicrosoftStsAuthorizationErrorResponse extends MicrosoftAuthorizationErrorResponse {
+    private String mErrorSubcode;
 
     /**
      * Constructor of {@link MicrosoftStsAuthorizationErrorResponse}.
@@ -39,5 +40,28 @@ public class MicrosoftStsAuthorizationErrorResponse extends MicrosoftAuthorizati
     public MicrosoftStsAuthorizationErrorResponse(final String error, final String errorDescription) {
         super(error, errorDescription);
     }
+
+    /**
+     * Constructor of {@link MicrosoftStsAuthorizationErrorResponse}.
+     *
+     * @param error            Error string returned from the Authorization Server.
+     * @param errorSubcode     Error subcode string return from the Authorization Server.
+     * @param errorDescription Description string of the error.
+     */
+    public MicrosoftStsAuthorizationErrorResponse(final String error,
+                                                  final String errorSubcode,
+                                                  final String errorDescription) {
+        super(error, errorDescription);
+        mErrorSubcode = errorSubcode;
+    }
+
+    public String getErrorSubcode() {
+        return mErrorSubcode;
+    }
+
+    public void setErrorSubcode(String errorSubcode) {
+        mErrorSubcode = errorSubcode;
+    }
+
 
 }
