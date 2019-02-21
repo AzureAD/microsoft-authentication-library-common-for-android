@@ -1022,6 +1022,30 @@ public final class AuthenticationConstants {
         }
     }
 
+    public static final class OAuth2Scopes{
+
+        /**
+         * Scope to get get open id connect ID token
+         */
+        public static final String OPEN_ID_SCOPE = "openid";
+
+        /**
+         * Scope to give the app access to get resources on behalf of user for an extended time.
+         * App can receive refresh tokens using this scope.
+         */
+        public static final String OFFLINE_ACCESS_SCOPE = "offline_access";
+
+        /**
+         * Scope to get user profile information as a part Id token
+         */
+        public static final String PROFILE_SCOPE = "profile";
+
+        /**
+         * Custom scope used to get PRT
+         */
+        public static final String AZA_SCOPE = "aza";
+    }
+
     /**
      * Represents the oauth2 error code.
      */

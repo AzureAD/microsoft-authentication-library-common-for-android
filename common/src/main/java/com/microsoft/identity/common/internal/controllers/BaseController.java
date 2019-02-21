@@ -75,10 +75,6 @@ public abstract class BaseController {
 
     private static final String TAG = BaseController.class.getSimpleName();
 
-    private static final String OPEN_ID_SCOPE = "openid";
-    private static final String OFFLINE_ACCESS_SCOPE = "offline_access";
-    private static final String PROFILE_SCOPE = "profile";
-
     public abstract AcquireTokenResult acquireToken(final AcquireTokenOperationParameters request)
             throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException, ServiceException;
 
@@ -358,9 +354,9 @@ public abstract class BaseController {
 
     protected void addDefaultScopes(final OperationParameters operationParameters){
         final Set<String> requestScopes = operationParameters.getScopes();
-        requestScopes.add(OPEN_ID_SCOPE);
-        requestScopes.add(OFFLINE_ACCESS_SCOPE);
-        requestScopes.add(PROFILE_SCOPE);
+        requestScopes.add(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE);
+        requestScopes.add(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE);
+        requestScopes.add(AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE);
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
         operationParameters.setScopes(requestScopes);
