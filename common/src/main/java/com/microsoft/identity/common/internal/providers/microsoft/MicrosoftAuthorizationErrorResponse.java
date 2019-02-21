@@ -81,6 +81,11 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
     public static final String BROKER_NEEDS_TO_BE_INSTALLED = "Device needs to have broker installed";
 
     /**
+     * Error string to indicate that the device needs to be registered
+     */
+    public static final String DEVICE_REGISTRATION_NEEDED = "Device needs to be registered to access the resource";
+
+    /**
      * Constructor of {@link MicrosoftAuthorizationErrorResponse}.
      *
      * @param error            error string returned from the Authorization Server.

@@ -53,6 +53,14 @@ public class AzureActiveDirectoryIdToken extends MicrosoftIdToken {
     public static final String PASSWORD_CHANGE_URL = "pwd_url";
 
     /**
+     * Records the identity provider that authenticated the subject of the token.
+     * This value is identical to the value of the Issuer claim unless the user account
+     * not in the same tenant as the issuer - guests, for instance.
+     * If the claim is not present, it means that the value of iss can be used instead.
+     */
+    public static final String IDENTITY_PROVIDER = "idp";
+
+    /**
      * Constructor of AzureActiveDirectoryIdToken.
      *
      * @param rawIdToken raw ID token

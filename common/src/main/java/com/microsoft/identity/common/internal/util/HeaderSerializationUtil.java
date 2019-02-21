@@ -20,21 +20,29 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.internal.util;
 
-import android.content.Intent;
+import android.support.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.ArgumentException;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.exception.UiRequiredException;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public interface TokenOperation {
-    AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, ClientException, UiRequiredException, ArgumentException, ServiceException;
+public class HeaderSerializationUtil {
 
-    void notify(int requestCode, int resultCode, final Intent data);
+    public static String toJson(@NonNull final Map<String, List<String>> headersIn) {
+        return new Gson().toJson(headersIn);
+    }
+
+    public static HashMap<String, List<String>> fromJson(@NonNull final String jsonIn) {
+        return new Gson()
+                .fromJson(
+                        jsonIn,
+                        new TypeToken<HashMap<String, List<String>>>() {
+                        }.getType()
+                );
+    }
 }

@@ -52,6 +52,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
 
     private static final String REDIRECT_URI = "msauth-clientid://packagename/";
     private static final String AUTH_CODE_AND_STATE = "code=authorization_code&state=state";
+    private static final String FRAGMENT_STRING = "#_=_";
     private static final String MOCK_AUTH_CODE = "authorization_code";
     private static final String MOCK_STATE = "state";
     private static final String ERROR_MESSAGE = "access_denied";
@@ -196,4 +197,33 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         assertEquals(errorResponse.getErrorDescription(), ERROR_DESCRIPTION);
     }
 
+    @Test
+    public void testUrlWithValidAuthCodeAndFragmentParas() {
+        Intent intent = new Intent();
+        MicrosoftStsAuthorizationRequest testRequest = getMstsAuthorizationRequest();
+        intent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL,
+                REDIRECT_URI
+                        + "?" + "code=authorization_code&state=" + testRequest.getState()
+                        + FRAGMENT_STRING);
+        AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, testRequest);
+        assertNotNull(result);
+        assertNotNull(result.getAuthorizationResponse());
+        assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
+        assertNotNull(result.getAuthorizationResponse().getCode());
+    }
+
+    @Test
+    public void testUrlWithInvalidAuthCodeAndFragmentParas() {
+        Intent intent = new Intent();
+        intent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, REDIRECT_URI  + "?" + FRAGMENT_STRING);
+        AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+                AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getMstsAuthorizationRequest());
+        assertNotNull(result);
+        assertNotNull(result.getAuthorizationErrorResponse());
+        assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
+        AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
+        assertEquals(errorResponse.getError(), MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED);
+        assertEquals(errorResponse.getErrorDescription(), MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
+    }
 }

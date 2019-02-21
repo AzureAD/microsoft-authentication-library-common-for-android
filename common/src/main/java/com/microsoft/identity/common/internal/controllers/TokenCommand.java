@@ -26,8 +26,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
@@ -35,6 +37,7 @@ import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -43,7 +46,6 @@ public class TokenCommand implements TokenOperation {
     private static final String TAG = TokenCommand.class.getSimpleName();
 
     protected OperationParameters mParameters;
-    protected BaseController mController;
     protected List<BaseController> mControllers;
     protected Context mContext;
     protected ILocalAuthenticationCallback mCallback;
@@ -58,12 +60,10 @@ public class TokenCommand implements TokenOperation {
                         @NonNull final ILocalAuthenticationCallback callback) {
         mContext = context;
         mParameters = parameters;
-        mController = controller;
+        mControllers = new ArrayList<>();
         mCallback = callback;
 
-        if (!(mParameters instanceof AcquireTokenSilentOperationParameters)) {
-            throw new IllegalArgumentException("Invalid operation parameters");
-        }
+        mControllers.add(controller);
     }
 
     public TokenCommand(@NonNull final Context context,
@@ -72,38 +72,46 @@ public class TokenCommand implements TokenOperation {
                         @NonNull final ILocalAuthenticationCallback callback) {
         mContext = context;
         mParameters = parameters;
-        mController = null;
         mControllers = controllers;
         mCallback = callback;
-
-        if (!(mParameters instanceof AcquireTokenSilentOperationParameters)) {
-            throw new IllegalArgumentException("Invalid operation parameters");
-        }
     }
 
     @Override
-    public AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, ClientException, UiRequiredException, ArgumentException {
+    public AcquireTokenResult execute()
+            throws InterruptedException, ExecutionException, IOException, ClientException,
+            UiRequiredException, ArgumentException, ServiceException {
         AcquireTokenResult result = null;
         final String methodName = ":execute";
 
-        for(BaseController controller : mControllers) {
+        for (int ii = 0; ii < mControllers.size(); ii++) {
+            final BaseController controller = mControllers.get(ii);
+
             try {
                 com.microsoft.identity.common.internal.logging.Logger.verbose(
                         TAG + methodName,
-                        "Executing with controller: " + controller.getClass().getSimpleName()
+                        "Executing with controller: "
+                                + controller.getClass().getSimpleName()
                 );
-                result = controller.acquireTokenSilent((AcquireTokenSilentOperationParameters) getParameters());
-                if(result.getSucceeded()){
+
+                result = controller.acquireTokenSilent(
+                        (AcquireTokenSilentOperationParameters) getParameters()
+                );
+
+                if (result.getSucceeded()) {
                     com.microsoft.identity.common.internal.logging.Logger.verbose(
                             TAG + methodName,
-                            "Executing with controller: " + controller.getClass().getSimpleName() + ": Succeeded"
+                            "Executing with controller: "
+                                    + controller.getClass().getSimpleName()
+                                    + ": Succeeded"
                     );
+
                     return result;
                 }
-            }catch(UiRequiredException e){
-                if(e.getErrorCode().equals(UiRequiredException.INVALID_GRANT)){
+            } catch (UiRequiredException e) {
+                if (e.getErrorCode().equals(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT) // was invalid_grant
+                        && mControllers.size() > ii + 1) { // isn't the last controller we can try
                     continue;
-                }else{
+                } else {
                     throw e;
                 }
             }
@@ -121,30 +129,31 @@ public class TokenCommand implements TokenOperation {
         return mParameters;
     }
 
-    public void setParameters(OperationParameters parameters) {
+    public void setParameters(final OperationParameters parameters) {
         if (!(parameters instanceof AcquireTokenSilentOperationParameters)) {
             throw new IllegalArgumentException("Invalid operation parameters");
         }
+
         this.mParameters = parameters;
     }
 
-    public BaseController getController() {
-        return mController;
+    public BaseController getDefaultController() {
+        return mControllers.get(0);
     }
 
-    public List<BaseController> getControllers () { return mControllers; }
+    public List<BaseController> getControllers() {
+        return mControllers;
+    }
 
-    public void setControllers(List<BaseController> controllers){ this.mControllers = controllers;}
-
-    public void setController(BaseController controller) {
-        this.mController = controller;
+    public void setControllers(final List<BaseController> controllers) {
+        this.mControllers = controllers;
     }
 
     public Context getContext() {
         return mContext;
     }
 
-    public void setContext(Context context) {
+    public void setContext(final Context context) {
         this.mContext = context;
     }
 
@@ -152,7 +161,7 @@ public class TokenCommand implements TokenOperation {
         return mCallback;
     }
 
-    public void setCallback(ILocalAuthenticationCallback callback) {
+    public void setCallback(final ILocalAuthenticationCallback callback) {
         this.mCallback = callback;
     }
 }

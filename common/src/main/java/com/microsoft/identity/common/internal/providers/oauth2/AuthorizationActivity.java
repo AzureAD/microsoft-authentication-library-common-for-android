@@ -19,12 +19,12 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.util.StringUtil;
-
 import java.util.Map;
 
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR;
@@ -83,6 +83,7 @@ public final class AuthorizationActivity extends Activity {
         intent.putExtra(KEY_AUTH_REDIRECT_URI, redirectUri);
         intent.putExtra(KEY_AUTH_AUTHORIZATION_AGENT, authorizationAgent);
         intent.putExtra(KEY_RESULT_INTENT, resultIntent);
+        intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         return intent;
     }
 
@@ -133,6 +134,7 @@ public final class AuthorizationActivity extends Activity {
             return;
         }
 
+        setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
         mAuthIntent = state.getParcelable(KEY_AUTH_INTENT);
         mBrowserFlowStarted = state.getBoolean(KEY_BROWSER_FLOW_STARTED, false);
         mPkeyAuthStatus = state.getBoolean(KEY_PKEYAUTH_STATUS, false);
@@ -145,6 +147,7 @@ public final class AuthorizationActivity extends Activity {
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.common_activity_authentication);
         if (savedInstanceState == null) {
             extractState(getIntent().getExtras());
@@ -167,6 +170,24 @@ public final class AuthorizationActivity extends Activity {
                 }
             });
         }
+    }
+
+    /**
+     * When authorization activity is launched.  It will be launched on a new thread.  Initialize based on value provided in intent.
+     * @return
+     */
+    public static String setDiagnosticContextForNewThread(String correlationId) {
+        final String methodName = ":setDiagnosticContextForAuthorizationActivity";
+        final com.microsoft.identity.common.internal.logging.RequestContext rc =
+                new com.microsoft.identity.common.internal.logging.RequestContext();
+        rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
+        DiagnosticContext.setRequestContext(rc);
+        Logger.verbose(
+                TAG + methodName,
+                "Initializing diagnostic context for AuthorizationActivity"
+        );
+
+        return correlationId;
     }
 
     /**

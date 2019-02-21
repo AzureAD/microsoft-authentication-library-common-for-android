@@ -37,23 +37,32 @@ import java.util.concurrent.TimeUnit;
  * Successful authentication result. When auth succeeds, token will be wrapped into the
  * {@link LocalAuthenticationResult} and passed back through the {@link ILocalAuthenticationCallback}.
  */
-public final class LocalAuthenticationResult implements ILocalAuthenticationResult {
+public class LocalAuthenticationResult implements ILocalAuthenticationResult {
 
-
-    private final String mRawIdToken;
-    private final AccessTokenRecord mAccessTokenRecord;
-    private final IAccountRecord mAccountRecord;
+    private String mRawIdToken = null;
+    private AccessTokenRecord mAccessTokenRecord;
+    private IAccountRecord mAccountRecord;
+    private String mRefreshToken = null;
+    private String mSpeRing;
+    private String mRefreshTokenAge;
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord) {
         mAccessTokenRecord = cacheRecord.getAccessToken();
-        mRawIdToken = cacheRecord.getIdToken().getSecret();
         mAccountRecord = cacheRecord.getAccount();
+        if (cacheRecord.getIdToken() != null) {
+            mRawIdToken = cacheRecord.getIdToken().getSecret();
+        }
+        if (cacheRecord.getRefreshToken() != null) {
+            mRefreshToken = cacheRecord.getRefreshToken().getSecret();
+        }
     }
 
     public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
+                                     @Nullable String refreshToken,
                                      @Nullable String rawIdToken,
                                      @NonNull IAccountRecord accountRecord) {
         mAccessTokenRecord = accessTokenRecord;
+        mRefreshToken = refreshToken;
         mRawIdToken = rawIdToken;
         mAccountRecord = accountRecord;
 
@@ -93,6 +102,12 @@ public final class LocalAuthenticationResult implements ILocalAuthenticationResu
         return mAccessTokenRecord.getHomeAccountId();
     }
 
+    @NonNull
+    @Override
+    public String getRefreshToken() {
+        return mRefreshToken;
+    }
+
     @Override
     @Nullable
     public String getIdToken() {
@@ -109,6 +124,36 @@ public final class LocalAuthenticationResult implements ILocalAuthenticationResu
     @NonNull
     public String[] getScope() {
         return mAccessTokenRecord.getTarget().split("\\s");
+    }
+
+    @Nullable
+    @Override
+    public String getSpeRing() {
+        return mSpeRing;
+    }
+
+    /**
+     * Sets the SPE Ring.
+     *
+     * @param speRing The SPE Ring to set.
+     */
+    public void setSpeRing(final String speRing) {
+        mSpeRing = speRing;
+    }
+
+    @Nullable
+    @Override
+    public String getRefreshTokenAge() {
+        return mRefreshTokenAge;
+    }
+
+    /**
+     * Sets the refresh token age.
+     *
+     * @param refreshTokenAge The refresh token age to set.
+     */
+    public void setRefreshTokenAge(final String refreshTokenAge) {
+        mRefreshTokenAge = refreshTokenAge;
     }
 
     @Override

@@ -22,10 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import android.text.TextUtils;
+
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
@@ -150,7 +154,12 @@ public final class SchemaUtil {
                 final Map<String, String> idTokenClaims = idToken.getTokenClaims();
 
                 if (null != idTokenClaims) {
-                    idp = idTokenClaims.get(MicrosoftIdToken.ISSUER);
+                    final String aadVersion = idTokenClaims.get(AuthenticationConstants.OAuth2.AAD_VERSION);
+                    if (!TextUtils.isEmpty(aadVersion) && aadVersion.equalsIgnoreCase("1.0")) {
+                        idp = idTokenClaims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
+                    } else if (!TextUtils.isEmpty(aadVersion) && aadVersion.equalsIgnoreCase("2.0")) {
+                        idp = idTokenClaims.get(MicrosoftIdToken.ISSUER);
+                    }
 
                     Logger.verbosePII(TAG + ":" + methodName, "idp: " + idp);
 
@@ -160,7 +169,7 @@ public final class SchemaUtil {
                 } else {
                     Logger.warn(TAG + ":" + methodName, "IDToken claims were null.");
                 }
-            }catch (ServiceException e){
+            } catch (ServiceException e) {
                 Logger.warn(TAG + ":" + methodName, "Exception constructing IDToken. " + e.getMessage());
             }
         } else {

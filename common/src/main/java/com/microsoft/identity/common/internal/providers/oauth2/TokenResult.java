@@ -23,27 +23,26 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 
 /**
  * Holds the request of a token request.  The request will either contain the success result or the error result.
  */
-public class TokenResult {
-
-    private static final String TAG = TokenResult.class.getSimpleName();
+public class TokenResult implements IResult {
 
     private TokenResponse mTokenResponse;
     private TokenErrorResponse mTokenErrorResponse;
+    private CliTelemInfo mCliTelemInfo;
     private boolean mSuccess = false;
 
-
-    public TokenResult(){
-
+    public TokenResult() {
+        // Intentionally blank
     }
-
 
     /**
      * Constructor of TokenResult.
-     * @param response      TokenResponse
+     *
+     * @param response TokenResponse
      */
     public TokenResult(final TokenResponse response) {
         this(response, null);
@@ -52,6 +51,7 @@ public class TokenResult {
 
     /**
      * Constructor of TokenResult.
+     *
      * @param errorResponse TokenErrorResponse
      */
     public TokenResult(final TokenErrorResponse errorResponse) {
@@ -65,7 +65,6 @@ public class TokenResult {
      * @param errorResponse TokenErrorResponse
      */
     public TokenResult(final TokenResponse response, final TokenErrorResponse errorResponse) {
-        Logger.verbose(TAG, "Init: " + TAG);
         this.mTokenResponse = response;
         this.mTokenErrorResponse = errorResponse;
 
@@ -93,6 +92,24 @@ public class TokenResult {
     }
 
     /**
+     * Gets the CliTelemInfo associated with this TokenResult.
+     *
+     * @return The CliTelemInfo to get.
+     */
+    public CliTelemInfo getCliTelemInfo() {
+        return mCliTelemInfo;
+    }
+
+    /**
+     * Sets the CliTelemInfo associated with this TokenResult.
+     *
+     * @param cliTelemInfo The CliTelemInfo to set.
+     */
+    public void setCliTelemInfo(final CliTelemInfo cliTelemInfo) {
+        mCliTelemInfo = cliTelemInfo;
+    }
+
+    /**
      * Returns whether the token request was successful or not.
      *
      * @return boolean
@@ -103,11 +120,13 @@ public class TokenResult {
 
     /**
      * Set if the TokenResult is success or not
+     *
      * @param success true if successful
      */
-    public void setSuccess(boolean success){
+    public void setSuccess(boolean success) {
         mSuccess = success;
     }
+
 
     //CHECKSTYLE:OFF
     @Override

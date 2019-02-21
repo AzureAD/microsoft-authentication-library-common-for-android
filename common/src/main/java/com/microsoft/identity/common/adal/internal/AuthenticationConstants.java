@@ -47,7 +47,7 @@ public final class AuthenticationConstants {
     /**
      * The Constant ENCODING_UTF8.
      */
-    public static final String ENCODING_UTF8 = "UTF_8";
+    public static final String ENCODING_UTF8 = "UTF-8";
 
     /**
      * Bundle message.
@@ -416,6 +416,11 @@ public final class AuthenticationConstants {
          * session key JWE.
          */
         public static final String SESSION_KEY_JWE = "session_key_jwe";
+
+        /**
+         * String as Query parameter key to send a V1 request to V2 endpoint
+         */
+        public static final String IT_VER_PARAM = "itver";
     }
 
     /**
@@ -1041,12 +1046,28 @@ public final class AuthenticationConstants {
          */
         public static final String UNAUTHORIZED_CLIENT = "unauthorized_client";
 
+        /**
+         * The refresh token used to redeem access token is invalid and auth code request is needed.
+         * @deprecated This is deprecated in V2, but is kept here due to this bug https://identitydivision.visualstudio.com/Engineering/_workitems/edit/597793.
+         */
+        public static final String INTERACTION_REQUIRED = "interaction_required";
+    }
+
+    /**
+     * Represents the oauth2 sub error code.
+     */
+    public static final class OAuth2SubErrorCode {
 
         /**
          * Oauth2 suberror code for Intune App Protection Policy required.
          */
         public static final String PROTECTION_POLICY_REQUIRED = "protection_policy_required";
 
+        /**
+         * Oauth2 suberror code for invalid_grant.
+         * Token is expired or invalid for all resources and scopes and shouldn't be retried again as-is.
+         */
+        public static final String BAD_TOKEN = "bad_token";
     }
 
     /**

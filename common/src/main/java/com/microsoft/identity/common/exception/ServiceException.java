@@ -24,6 +24,7 @@ package com.microsoft.identity.common.exception;
 
 import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 
 import org.json.JSONException;
 
@@ -114,20 +115,16 @@ public class ServiceException extends BaseException {
      *
      * @param response HttpWebResponse
      */
-    public void setHttpResponse(final HttpWebResponse response) {
+    public void setHttpResponse(final HttpResponse response) throws JSONException {
         if (null != response) {
             mHttpStatusCode = response.getStatusCode();
 
-            if (null != response.getResponseHeaders()) {
-                mHttpResponseHeaders = new HashMap<>(response.getResponseHeaders());
+            if (null != response.getHeaders()) {
+                mHttpResponseHeaders = new HashMap<>(response.getHeaders());
             }
 
             if (null != response.getBody()) {
-                try {
                     mHttpResponseBody = new HashMap<>(HashMapExtensions.getJsonResponse(response));
-                } catch (final JSONException exception) {
-                    //Log.e(CommonCoreBaseException.class.getSimpleName(), ADALError.SERVER_INVALID_JSON_RESPONSE.toString(), exception);
-                }
             }
         }
     }
