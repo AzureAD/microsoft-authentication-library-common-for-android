@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -37,27 +38,32 @@ import com.google.gson.annotations.SerializedName;
  */
 public class TokenRequest {
 
+    @Expose()
     @SerializedName("grant_type")
     private String mGrantType;
 
     @SerializedName("code")
     private String mCode;
 
+    @Expose()
     @SerializedName("redirect_uri")
     private String mRedirectUri;
 
+    @Expose()
     @SerializedName("client_id")
     private String mClientId;
 
     @SerializedName("client_secret")
     private String mClientSecret;
 
+    @Expose()
     @SerializedName("client_assertion_type")
     private String mClientAssertionType;
 
     @SerializedName("client_assertion")
     private String mClientAssertion;
 
+    @Expose()
     @SerializedName("scope")
     private String mScope;
 

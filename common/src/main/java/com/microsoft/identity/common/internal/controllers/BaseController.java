@@ -253,6 +253,7 @@ public abstract class BaseController {
                     TAG,
                     "Success Result"
             );
+            logExposedFieldsOfObject(TAG, result.getSuccessResponse());
         }else{
             Logger.warn(
                     TAG,
@@ -271,6 +272,7 @@ public abstract class BaseController {
                             "Description: " + result.getErrorResponse().getErrorDescription()
                     );
                 }
+                logExposedFieldsOfObject(TAG, result.getErrorResponse());
             }
         }
 
@@ -293,6 +295,11 @@ public abstract class BaseController {
     protected void logParameters(String tag, Object parameters){
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
         Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+    }
+
+    private void logExposedFieldsOfObject(String tag, Object object){
+        final String TAG = tag + ":" + object.getClass().getSimpleName();
+        Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
     }
 
     protected TokenResult performSilentTokenRequest(

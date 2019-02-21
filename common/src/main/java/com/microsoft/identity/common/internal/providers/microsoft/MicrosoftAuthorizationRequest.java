@@ -27,6 +27,7 @@ import android.os.Build;
 import android.util.Base64;
 import android.util.Pair;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -58,12 +59,14 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     /**
      * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
      */
+    @Expose()
     @SerializedName("login_hint")
     private String mLoginHint;
 
     /**
      * Correlation ID.
      */
+    @Expose()
     @SerializedName("client-request-id")
     private UUID mCorrelationId;
 
@@ -81,21 +84,27 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     /**
      * The version of the calling library.
      */
+    @Expose()
     @SerializedName("x-client-Ver")
     private String mLibraryVersion;
 
+    @Expose()
     @SerializedName("x-client-SKU")
     private String mLibraryName;
 
+    @Expose()
     @SerializedName("x-client-OS")
     private String mDiagnosticOS;
 
+    @Expose()
     @SerializedName("x-client-CPU")
     private String mDiagnosticCPU;
 
+    @Expose()
     @SerializedName("x-client-DM")
     private String mDiagnosticDM;
 
+    @Expose()
     @SerializedName("instance_aware")
     private Boolean mMultipleCloudAware;
 
