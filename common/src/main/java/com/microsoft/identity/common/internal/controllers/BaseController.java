@@ -132,7 +132,11 @@ public abstract class BaseController {
                     acquireTokenOperationParameters.getExtraQueryStringParameters()
             ).setPrompt(
                     acquireTokenOperationParameters.getOpenIdConnectPromptParameter().toString()
-            ).setClaims(parameters.getClaimsRequestJson());
+            ).setClaims(
+                    parameters.getClaimsRequestJson()
+            ).setRequestHeaders(
+                    acquireTokenOperationParameters.getRequestHeaders()
+            );
         }
 
         request.setScope(TextUtils.join(" ", parameters.getScopes()));
