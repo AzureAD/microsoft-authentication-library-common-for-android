@@ -145,9 +145,11 @@ public abstract class BaseController {
                                               final AuthorizationResponse response,
                                               final AcquireTokenOperationParameters parameters)
             throws IOException, ClientException {
+        final String methodName = ":performTokenRequest";
         throwIfNetworkNotAvailable(parameters.getAppContext());
 
         TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
+        logExposedFieldsOfObject(TAG + methodName, tokenRequest);
         tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
 
         TokenResult tokenResult = null;
@@ -297,7 +299,7 @@ public abstract class BaseController {
         Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
     }
 
-    private void logExposedFieldsOfObject(String tag, Object object){
+    protected void logExposedFieldsOfObject(String tag, Object object){
         final String TAG = tag + ":" + object.getClass().getSimpleName();
         Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
     }
