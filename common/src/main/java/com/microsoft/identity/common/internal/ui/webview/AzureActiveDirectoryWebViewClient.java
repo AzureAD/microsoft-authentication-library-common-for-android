@@ -52,6 +52,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SUB_ERROR_UI_CANCEL;
+
 /**
  * For web view client, we do not distinguish V1 from V2.
  * Thus we name V1 and V2 webview client as AADWebViewClient, synced with the naming in the iOS common library.
@@ -65,6 +67,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String INSTALL_URL_KEY = "app_link";
     private static final String INSTALL_UPN_KEY = "username";
     public static final String ERROR = "error";
+    public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
     private final String mRedirectUrl;
 
@@ -169,8 +172,24 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.info(TAG, "Sending intent to cancel authentication activity");
             Intent resultIntent = new Intent();
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE, parameters.get(ERROR));
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_DESCRIPTION));
-            getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_ERROR, resultIntent);
+            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE, parameters.get(ERROR_SUBCODE));
+
+            // Fallback logic on error_subcode when error_description is not provided.
+            // When error is "login_required", redirect url has error_description.
+            // When error is  "access_denied", redirect url has  error_subcode.
+            if (!StringUtil.isEmpty(parameters.get(ERROR_DESCRIPTION))) {
+                resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_DESCRIPTION));
+            } else {
+                resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_SUBCODE));
+            }
+
+            //If user clicked the "Back" button in the webview
+            if (!StringUtil.isEmpty(parameters.get(ERROR_SUBCODE)) && parameters.get(ERROR_SUBCODE).equalsIgnoreCase(SUB_ERROR_UI_CANCEL)) {
+                getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
+            } else {
+                getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_ERROR, resultIntent);
+            }
+
             view.stopLoading();
         } else {
             Logger.verbose(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
