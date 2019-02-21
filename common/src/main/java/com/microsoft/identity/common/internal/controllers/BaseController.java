@@ -296,7 +296,11 @@ public abstract class BaseController {
      */
     protected void logParameters(String tag, Object parameters){
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
-        Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+        if(Logger.getAllowPii()) {
+            Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+        }else{
+            Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
+        }
     }
 
     protected void logExposedFieldsOfObject(String tag, Object object){

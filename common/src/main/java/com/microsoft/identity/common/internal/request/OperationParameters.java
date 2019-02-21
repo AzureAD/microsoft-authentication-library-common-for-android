@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.request;
 
 import android.content.Context;
 
+import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
@@ -39,11 +40,16 @@ public class OperationParameters {
 
     private transient Context mAppContext;
     private transient OAuth2TokenCache mTokenCache;
+    @Expose()
     private Set<String> mScopes;
     protected IAccountRecord mAccount;
+    @Expose()
     private String clientId;
+    @Expose()
     private String redirectUri;
+    @Expose()
     private Authority mAuthority;
+    @Expose()
     private String mClaimsRequestJson;
 
     public Context getAppContext() {
