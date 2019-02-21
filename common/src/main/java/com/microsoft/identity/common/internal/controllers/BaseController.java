@@ -27,8 +27,8 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
-import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ArgumentException;
@@ -63,12 +63,10 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.util.DateUtilities;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -108,18 +106,6 @@ public abstract class BaseController {
                                                            @NonNull final OperationParameters parameters) {
         AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
 
-        List<String> defaultScopes = new ArrayList<>();
-        defaultScopes.add("openid");
-        defaultScopes.add("profile");
-        defaultScopes.add("offline_access");
-
-        List<String> scopes = parameters.getScopes();
-        if (!scopes.containsAll(defaultScopes)) {
-            scopes.addAll(defaultScopes);
-        }
-        scopes.removeAll(Arrays.asList("", null));
-
-
         UUID correlationId = null;
 
         try {
@@ -136,7 +122,7 @@ public abstract class BaseController {
         if (parameters instanceof AcquireTokenOperationParameters) {
             AcquireTokenOperationParameters acquireTokenOperationParameters = (AcquireTokenOperationParameters) parameters;
             if (acquireTokenOperationParameters.getExtraScopesToConsent() != null) {
-                scopes.addAll(acquireTokenOperationParameters.getExtraScopesToConsent());
+                parameters.getScopes().addAll(acquireTokenOperationParameters.getExtraScopesToConsent());
             }
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
@@ -149,9 +135,7 @@ public abstract class BaseController {
             ).setClaims(parameters.getClaimsRequestJson());
         }
 
-        //Remove empty strings and null values
-        scopes.removeAll(Arrays.asList("", null));
-        request.setScope(StringUtil.join(' ', scopes));
+        request.setScope(TextUtils.join(" ", parameters.getScopes()));
 
         return request.build();
     }
@@ -334,7 +318,7 @@ public abstract class BaseController {
 
         final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest();
         refreshTokenRequest.setClientId(parameters.getClientId());
-        refreshTokenRequest.setScope(StringUtil.join(' ', parameters.getScopes()));
+        refreshTokenRequest.setScope(TextUtils.join(" ", parameters.getScopes()));
         refreshTokenRequest.setRefreshToken(parameters.getRefreshToken().getSecret());
         refreshTokenRequest.setRedirectUri(parameters.getRedirectUri());
 
@@ -368,6 +352,16 @@ public abstract class BaseController {
         return null == cacheRecord.getAccessToken();
     }
 
+    protected void addDefaultScopes(final OperationParameters operationParameters){
+        final Set<String> requestScopes = operationParameters.getScopes();
+        requestScopes.add(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE);
+        requestScopes.add(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE);
+        requestScopes.add(AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE);
+        // sanitize empty and null scopes
+        requestScopes.removeAll(Arrays.asList("", null));
+        operationParameters.setScopes(requestScopes);
+    }
+
     public static AccessTokenRecord getAccessTokenRecord(@NonNull final MicrosoftStsTokenResponse tokenResponse,
                                                          @NonNull final OperationParameters requestParameters) {
         final String methodName = ":getAccessTokenRecord";
@@ -399,7 +393,7 @@ public abstract class BaseController {
         accessTokenRecord.setAuthority(
                 requestParameters.getAuthority().getAuthorityURL().toString()
         );
-        accessTokenRecord.setTarget(tokenResponse.getScope());
+        accessTokenRecord.setTarget(TextUtils.join(" ", requestParameters.getScopes()));
         accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
         accessTokenRecord.setExpiresOn(
                 String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExpiresIn()))
