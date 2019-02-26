@@ -897,6 +897,14 @@ public class BrokerOAuth2TokenCache
         return targetCache;
     }
 
+    /**
+     * Sets the SSO state for the supplied Account, relative to the provided uid.
+     *
+     * @param uidStr       The uid of the app whose SSO token is being inserted.
+     * @param account      The account for which the supplied token is being inserted.
+     * @param refreshToken The token to insert.
+     * @return True if the token was successfully inserted into an app-specific or foci cache.
+     */
     public boolean setSingleSignOnState(@NonNull final String uidStr,
                                         @NonNull final GenericAccount account,
                                         @NonNull final GenericRefreshToken refreshToken) {
