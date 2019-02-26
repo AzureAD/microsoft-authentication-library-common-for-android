@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
+import android.support.v4.app.NotificationCompat;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebSettings;
@@ -15,6 +16,7 @@ import android.webkit.WebView;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -23,8 +25,15 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import java.util.Map;
 
 import java.util.UUID;
+import java.io.Serializable;
+import java.util.HashMap;
+
+import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR;
+import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_DESCRIPTION;
+import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_SUBCODE;
 
 public final class AuthorizationActivity extends Activity {
     @VisibleForTesting
@@ -48,6 +57,9 @@ public final class AuthorizationActivity extends Activity {
     @VisibleForTesting
     static final String KEY_RESULT_INTENT = "resultIntent";
 
+    @VisibleForTesting
+    static final String KEY_REQUEST_HEADERS = "requestHeaders";
+
     private static final String TAG = AuthorizationActivity.class.getSimpleName();
 
     private boolean mBrowserFlowStarted = false;
@@ -62,6 +74,8 @@ public final class AuthorizationActivity extends Activity {
 
     private String mRedirectUri;
 
+    private HashMap<String, String> mRequestHeaders;
+
     private AuthorizationAgent mAuthorizationAgent;
 
     private PendingIntent mResultIntent;
@@ -71,15 +85,42 @@ public final class AuthorizationActivity extends Activity {
                                            @NonNull final PendingIntent resultIntent,
                                            final String requestUrl,
                                            final String redirectUri,
+                                           final HashMap<String, String> requestHeaders,
                                            final AuthorizationAgent authorizationAgent) {
         final Intent intent = new Intent(context, AuthorizationActivity.class);
         intent.putExtra(KEY_AUTH_INTENT, authIntent);
         intent.putExtra(KEY_AUTH_REQUEST_URL, requestUrl);
         intent.putExtra(KEY_AUTH_REDIRECT_URI, redirectUri);
+        intent.putExtra(KEY_REQUEST_HEADERS, requestHeaders);
         intent.putExtra(KEY_AUTH_AUTHORIZATION_AGENT, authorizationAgent);
         intent.putExtra(KEY_RESULT_INTENT, resultIntent);
         intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         return intent;
+    }
+
+    public static Intent createResultIntent(@NonNull final String url) {
+        Intent resultIntent = new Intent();
+        final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
+        if (!StringExtensions.isNullOrBlank(parameters.get(ERROR))) {
+            Logger.info(TAG, "Sending intent to cancel authentication activity");
+
+            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE, parameters.get(ERROR));
+            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE, parameters.get(ERROR_SUBCODE));
+
+            // Fallback logic on error_subcode when error_description is not provided.
+            // When error is "login_required", redirect url has error_description.
+            // When error is  "access_denied", redirect url has  error_subcode.
+            if (!StringUtil.isEmpty(parameters.get(ERROR_DESCRIPTION))) {
+                resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_DESCRIPTION));
+            } else {
+                resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_SUBCODE));
+            }
+        } else {
+            Logger.verbose(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
+            resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
+        }
+
+        return resultIntent;
     }
 
     /**
@@ -110,8 +151,21 @@ public final class AuthorizationActivity extends Activity {
         mPkeyAuthStatus = state.getBoolean(KEY_PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(KEY_AUTH_REQUEST_URL);
         mRedirectUri = state.getString(KEY_AUTH_REDIRECT_URI);
+        mRequestHeaders = getRequestHeaders(state);
         mAuthorizationAgent = (AuthorizationAgent) state.getSerializable(KEY_AUTH_AUTHORIZATION_AGENT);
         mResultIntent = state.getParcelable(KEY_RESULT_INTENT);
+    }
+
+    /**
+     * Extracts request headers from the given bundle object.
+     */
+    private HashMap<String, String> getRequestHeaders(final Bundle state) {
+        try {
+            return (HashMap<String,String>)state.getSerializable(KEY_REQUEST_HEADERS);
+        }
+        catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
@@ -136,7 +190,7 @@ public final class AuthorizationActivity extends Activity {
                     mWebView.loadUrl("about:blank");
                     Logger.verbose(TAG, "Launching embedded WebView for acquiring auth code.");
                     Logger.verbosePII(TAG, "The start url is " + mAuthorizationRequestUrl);
-                    mWebView.loadUrl(mAuthorizationRequestUrl);
+                    mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
                 }
             });
         }
@@ -206,7 +260,6 @@ public final class AuthorizationActivity extends Activity {
                } else {
                    cancelAuthorization();
                }
-               finish();
            }
         }
     }
@@ -231,9 +284,18 @@ public final class AuthorizationActivity extends Activity {
     private void completeAuthorization() {
         Logger.info(TAG, null, "Received redirect from customTab/browser.");
         final String url = getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
-        final Intent resultIntent = new Intent();
-        resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
-        sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE, resultIntent);
+        final Intent resultIntent = createResultIntent(url);
+        if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL))) {
+            sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE, resultIntent);
+        } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE))
+                && resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE).equalsIgnoreCase("cancel")) {
+            //when the user click the "cancel" button in the UI, server will send the the redirect uri with "cancel" error sub-code and redirects back to the calling app
+            sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
+        } else {
+            sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_ERROR, resultIntent);
+        }
+
+        finish();
     }
 
     private void cancelAuthorization() {
@@ -241,6 +303,7 @@ public final class AuthorizationActivity extends Activity {
         final Intent resultIntent = new Intent();
         resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
+        finish();
     }
 
     @Override

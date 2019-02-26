@@ -27,8 +27,9 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
-import com.google.gson.Gson;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -62,12 +63,10 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.util.DateUtilities;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -102,23 +101,11 @@ public abstract class BaseController {
         );
     }
 
-
-    protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
-                                                           @NonNull final OperationParameters parameters) {
-        AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
-
-        List<String> defaultScopes = new ArrayList<>();
-        defaultScopes.add("openid");
-        defaultScopes.add("profile");
-        defaultScopes.add("offline_access");
-
-        List<String> scopes = parameters.getScopes();
-        if (!scopes.containsAll(defaultScopes)) {
-            scopes.addAll(defaultScopes);
-        }
-        scopes.removeAll(Arrays.asList("", null));
-
-
+    /**
+     * Pre-filled ALL the fields in AuthorizationRequest.Builder
+     */
+    protected final AuthorizationRequest.Builder initializeAuthorizationRequestBuilder(@NonNull final AuthorizationRequest.Builder builder,
+                                                                                        @NonNull final OperationParameters parameters){
         UUID correlationId = null;
 
         try {
@@ -127,32 +114,40 @@ public abstract class BaseController {
             Logger.error(TAG, "correlation id from diagnostic context is not a UUID", ex);
         }
 
-        AuthorizationRequest.Builder request = builder
-                .setClientId(parameters.getClientId())
+        builder.setClientId(parameters.getClientId())
                 .setRedirectUri(parameters.getRedirectUri())
                 .setCorrelationId(correlationId);
 
         if (parameters instanceof AcquireTokenOperationParameters) {
             AcquireTokenOperationParameters acquireTokenOperationParameters = (AcquireTokenOperationParameters) parameters;
             if (acquireTokenOperationParameters.getExtraScopesToConsent() != null) {
-                scopes.addAll(acquireTokenOperationParameters.getExtraScopesToConsent());
+                parameters.getScopes().addAll(acquireTokenOperationParameters.getExtraScopesToConsent());
             }
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
-            request.setLoginHint(
+            builder.setLoginHint(
                     acquireTokenOperationParameters.getLoginHint()
             ).setExtraQueryParams(
                     acquireTokenOperationParameters.getExtraQueryStringParameters()
             ).setPrompt(
                     acquireTokenOperationParameters.getOpenIdConnectPromptParameter().toString()
-            ).setClaims(parameters.getClaimsRequestJson());
+            ).setClaims(
+                    parameters.getClaimsRequestJson()
+            ).setRequestHeaders(
+                    acquireTokenOperationParameters.getRequestHeaders()
+            );
         }
 
-        //Remove empty strings and null values
-        scopes.removeAll(Arrays.asList("", null));
-        request.setScope(StringUtil.join(' ', scopes));
+        builder.setScope(TextUtils.join(" ", parameters.getScopes()));
 
-        return request.build();
+        return builder;
+    }
+
+    protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
+                                                           @NonNull final OperationParameters parameters) {
+        AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
+        initializeAuthorizationRequestBuilder(builder, parameters);
+        return builder.build();
     }
 
     protected TokenResult performTokenRequest(final OAuth2Strategy strategy,
@@ -231,9 +226,10 @@ public abstract class BaseController {
                     );
                 }
 
-                if (UiRequiredException.INVALID_GRANT.equalsIgnoreCase(tokenResult.getErrorResponse().getError())) {
+                if (AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(tokenResult.getErrorResponse().getError())) {
                     final UiRequiredException uiException = new UiRequiredException(
-                            UiRequiredException.INVALID_GRANT,
+                            AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT,
+                            tokenResult.getErrorResponse().getSubError(),
                             null != tokenResult.getErrorResponse().getErrorDescription()
                                     ? tokenResult.getErrorResponse().getErrorDescription()
                                     : "Failed to renew access token"
@@ -332,7 +328,7 @@ public abstract class BaseController {
 
         final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest();
         refreshTokenRequest.setClientId(parameters.getClientId());
-        refreshTokenRequest.setScope(StringUtil.join(' ', parameters.getScopes()));
+        refreshTokenRequest.setScope(TextUtils.join(" ", parameters.getScopes()));
         refreshTokenRequest.setRefreshToken(parameters.getRefreshToken().getSecret());
         refreshTokenRequest.setRedirectUri(parameters.getRedirectUri());
 
@@ -366,6 +362,16 @@ public abstract class BaseController {
         return null == cacheRecord.getAccessToken();
     }
 
+    protected void addDefaultScopes(final OperationParameters operationParameters){
+        final Set<String> requestScopes = operationParameters.getScopes();
+        requestScopes.add(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE);
+        requestScopes.add(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE);
+        requestScopes.add(AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE);
+        // sanitize empty and null scopes
+        requestScopes.removeAll(Arrays.asList("", null));
+        operationParameters.setScopes(requestScopes);
+    }
+
     public static AccessTokenRecord getAccessTokenRecord(@NonNull final MicrosoftStsTokenResponse tokenResponse,
                                                          @NonNull final OperationParameters requestParameters) {
         final String methodName = ":getAccessTokenRecord";
@@ -397,7 +403,7 @@ public abstract class BaseController {
         accessTokenRecord.setAuthority(
                 requestParameters.getAuthority().getAuthorityURL().toString()
         );
-        accessTokenRecord.setTarget(tokenResponse.getScope());
+        accessTokenRecord.setTarget(TextUtils.join(" ", requestParameters.getScopes()));
         accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
         accessTokenRecord.setExpiresOn(
                 String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExpiresIn()))

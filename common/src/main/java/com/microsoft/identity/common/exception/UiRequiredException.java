@@ -23,28 +23,13 @@
 
 package com.microsoft.identity.common.exception;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+
 /**
  * This exception indicates that UI is required for authentication to succeed.
- * <p>
- * Error codes that can be returned from this exception:
- * <ul>
- * <li>invalid_grant: The refresh token used to redeem access token is invalid, expired or revoked. </li>
- * <li>no_tokens_found: Access token doesn't exist and no refresh token can be found to redeem access token. </li>
- * </ul>
- * </p>
  */
 
 public final class UiRequiredException extends BaseException {
-    /**
-     * The refresh token used to redeem access token is invalid, expired, revoked.
-     */
-    public static final String INVALID_GRANT = "invalid_grant";
-
-    /**
-     * The refresh token used to redeem access token is invalid and auth code request is needed.
-     */
-    public static final String INTERACTION_REQUIRED = "interaction_required";
-
     /**
      * Access token doesn't exist and there is no refresh token can be found to redeem access token.
      */
@@ -55,23 +40,28 @@ public final class UiRequiredException extends BaseException {
      */
     public static final String NO_ACCOUNT_FOUND = "no_account_found";
 
-    public UiRequiredException(final String errorCode) {
-        super(errorCode);
-    }
+    /**
+     * Sub error code contained in the exception.
+     */
+    private String mSubErrorCode;
 
-    public UiRequiredException(final String errorCode, final String errorMessage) {
+    public UiRequiredException(final String errorCode, final String subErrorCode, final String errorMessage) {
         super(errorCode, errorMessage);
+        mSubErrorCode = subErrorCode;
     }
 
-    public UiRequiredException(final String errorCode, final String errorMessage, final Throwable throwable) {
+    public UiRequiredException(final String errorCode, final String subErrorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
+        mSubErrorCode = subErrorCode;
     }
 
-    public boolean isInteractionRequired(){
-        return getErrorCode().equalsIgnoreCase(INTERACTION_REQUIRED);
+    public boolean isBadTokenSubError(){
+        return getErrorCode().equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT) &&
+                mSubErrorCode != null &&
+                mSubErrorCode.equalsIgnoreCase(AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN);
     }
 
-    public boolean isInvalidGrant(){
-        return getErrorCode().equalsIgnoreCase(INVALID_GRANT);
+    public String getSubErrorCode() {
+        return mSubErrorCode;
     }
 }

@@ -54,6 +54,19 @@ public class MicrosoftTokenResponse extends TokenResponse {
      */
     private String mFamilyId;
 
+    private String mAuthority;
+
+    // The token returned is cached with this authority as key.
+    // We expect the subsequent requests to AcquireToken will use this authority as the authority parameter,
+    // otherwise the AcquireTokenSilent will fail
+    public final String getAuthority() {
+        return mAuthority;
+    }
+
+    public void setAuthority(final String authority) {
+        mAuthority = authority;
+    }
+
     /**
      * The deployment ring of the current request chain.
      */
