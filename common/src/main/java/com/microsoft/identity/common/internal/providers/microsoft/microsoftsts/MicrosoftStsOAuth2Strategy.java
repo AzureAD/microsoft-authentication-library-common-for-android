@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
@@ -238,6 +239,13 @@ public class MicrosoftStsOAuth2Strategy
             );
             builder.setSlice(mConfig.getSlice());
         }
+        Map<String, String> platformParameters = Device.getPlatformIdParameters();
+        builder.setLibraryName(platformParameters.get(
+                Device.PlatformIdParameters.PRODUCT)
+        );
+        builder.setLibraryVersion(platformParameters.get(
+                Device.PlatformIdParameters.VERSION)
+        );
 
         builder.setFlightParameters(mConfig.getFlightParameters());
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());

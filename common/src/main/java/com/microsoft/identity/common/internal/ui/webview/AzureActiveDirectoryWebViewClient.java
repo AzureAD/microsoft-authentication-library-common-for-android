@@ -65,7 +65,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String TAG = AzureActiveDirectoryWebViewClient.class.getSimpleName();
     private static final String INSTALL_URL_KEY = "app_link";
-    private static final String INSTALL_UPN_KEY = "username";
+    public static final String INSTALL_UPN_KEY = "username";
     public static final String ERROR = "error";
     public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
@@ -226,7 +226,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String userName = parameters.get(INSTALL_UPN_KEY);
         if(TextUtils.isEmpty(installLink)){
             Logger.verbose(TAG, "Install link is null or empty, Return to caller with BROWSER_CODE_DEVICE_REGISTER");
-            resultIntent.putExtra(AuthenticationConstants.Broker.ACCOUNT_NAME, userName);
+            resultIntent.putExtra(INSTALL_UPN_KEY, userName);
             getCompletionCallback().onChallengeResponseReceived(
                     AuthorizationStrategy.UIResponse.BROWSER_CODE_DEVICE_REGISTER,
                     resultIntent

@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAutho
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.HashMap;
@@ -93,6 +94,10 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED,
                         MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED);
+                // Set username returned from the service
+                result.getAuthorizationErrorResponse().setUserName(data.getStringExtra(
+                                AzureActiveDirectoryWebViewClient.INSTALL_UPN_KEY)
+                        );
                 break;
 
             default:
