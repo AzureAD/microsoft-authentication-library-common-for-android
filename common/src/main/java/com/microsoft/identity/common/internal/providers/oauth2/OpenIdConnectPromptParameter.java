@@ -28,6 +28,11 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 public enum OpenIdConnectPromptParameter {
 
     /**
+     * No prompt parameter will be injected into the request.
+     */
+    NONE,
+
+    /**
      * acquireToken will send prompt=select_account to the authorize endpoint. Shows a list of users from which can be
      * selected for authentication.
      */
@@ -47,6 +52,10 @@ public enum OpenIdConnectPromptParameter {
 
     @Override
     public String toString() {
+        if (this == NONE) {
+            return null;
+        }
+
         return this.name().toLowerCase();
     }
 }
