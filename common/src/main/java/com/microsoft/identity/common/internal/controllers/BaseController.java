@@ -101,11 +101,11 @@ public abstract class BaseController {
         );
     }
 
-
-    protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
-                                                           @NonNull final OperationParameters parameters) {
-        AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
-
+    /**
+     * Pre-filled ALL the fields in AuthorizationRequest.Builder
+     */
+    protected final AuthorizationRequest.Builder initializeAuthorizationRequestBuilder(@NonNull final AuthorizationRequest.Builder builder,
+                                                                                        @NonNull final OperationParameters parameters){
         UUID correlationId = null;
 
         try {
@@ -114,8 +114,7 @@ public abstract class BaseController {
             Logger.error(TAG, "correlation id from diagnostic context is not a UUID", ex);
         }
 
-        AuthorizationRequest.Builder request = builder
-                .setClientId(parameters.getClientId())
+        builder.setClientId(parameters.getClientId())
                 .setRedirectUri(parameters.getRedirectUri())
                 .setCorrelationId(correlationId);
 
@@ -126,18 +125,29 @@ public abstract class BaseController {
             }
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
-            request.setLoginHint(
+            builder.setLoginHint(
                     acquireTokenOperationParameters.getLoginHint()
             ).setExtraQueryParams(
                     acquireTokenOperationParameters.getExtraQueryStringParameters()
             ).setPrompt(
                     acquireTokenOperationParameters.getOpenIdConnectPromptParameter().toString()
-            ).setClaims(parameters.getClaimsRequestJson());
+            ).setClaims(
+                    parameters.getClaimsRequestJson()
+            ).setRequestHeaders(
+                    acquireTokenOperationParameters.getRequestHeaders()
+            );
         }
 
-        request.setScope(TextUtils.join(" ", parameters.getScopes()));
+        builder.setScope(TextUtils.join(" ", parameters.getScopes()));
 
-        return request.build();
+        return builder;
+    }
+
+    protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
+                                                           @NonNull final OperationParameters parameters) {
+        AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
+        initializeAuthorizationRequestBuilder(builder, parameters);
+        return builder.build();
     }
 
     protected TokenResult performTokenRequest(final OAuth2Strategy strategy,
