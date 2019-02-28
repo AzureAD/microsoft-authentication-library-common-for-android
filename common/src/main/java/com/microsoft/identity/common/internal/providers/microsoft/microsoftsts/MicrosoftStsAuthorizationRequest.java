@@ -115,8 +115,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
 
         public MicrosoftStsAuthorizationRequest build() {
-            this.setLibraryName("MSAL.Android");
-            this.setLibraryVersion("0.2.1");
             return new MicrosoftStsAuthorizationRequest(this);
         }
     }
