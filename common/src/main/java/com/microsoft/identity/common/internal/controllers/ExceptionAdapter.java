@@ -66,17 +66,17 @@ public class ExceptionAdapter {
                 switch (result.getAuthorizationResult().getAuthorizationStatus()) {
                     case FAIL:
                         // Check if the error is to register device and throw DEVICE_REGISTRATION_NEEDED exception
-                        if(authorizationErrorResponse instanceof MicrosoftAuthorizationErrorResponse){
+                        if (authorizationErrorResponse instanceof MicrosoftAuthorizationErrorResponse) {
                             MicrosoftAuthorizationErrorResponse microsoftAuthorizationErrorResponse =
                                     (MicrosoftAuthorizationErrorResponse) authorizationErrorResponse;
 
-                            if(microsoftAuthorizationErrorResponse.getError().equals(
-                                    MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED)){
+                            if (microsoftAuthorizationErrorResponse.getError().equals(
+                                    MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED)) {
 
                                 return new DeviceRegistrationRequiredException(
                                         microsoftAuthorizationErrorResponse.getError(),
-                                        microsoftAuthorizationErrorResponse.getErrorDescription()
-                                        , microsoftAuthorizationErrorResponse.getUserName()
+                                        microsoftAuthorizationErrorResponse.getErrorDescription(),
+                                        microsoftAuthorizationErrorResponse.getUserName()
                                 );
                             }
                         }
@@ -115,7 +115,6 @@ public class ExceptionAdapter {
                         tokenErrorResponse.getSubError(),
                         tokenErrorResponse.getErrorDescription()
                 );
-
 
 
                 applyCliTelemInfo(tokenResult, uiRequiredException);

@@ -115,7 +115,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                         MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED);
                 // Set username returned from the service
                 result.getAuthorizationErrorResponse().setUserName(data.getStringExtra(
-                                AzureActiveDirectoryWebViewClient.INSTALL_UPN_KEY)
+                                AuthenticationConstants.Broker.INSTALL_UPN_KEY)
                         );
                 break;
 
