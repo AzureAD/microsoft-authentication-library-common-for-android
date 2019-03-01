@@ -23,45 +23,23 @@
 
 package com.microsoft.identity.common.exception;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-
 /**
  * This exception indicates that UI is required for authentication to succeed.
  */
 
 public final class UiRequiredException extends BaseException {
-    /**
-     * Access token doesn't exist and there is no refresh token can be found to redeem access token.
-     */
-    public static final String NO_TOKENS_FOUND = "no_tokens_found";
 
-    /**
-     * The supplied Account cannot be found in the cache.
-     */
-    public static final String NO_ACCOUNT_FOUND = "no_account_found";
+    public UiRequiredException(BaseException e) {
+        super(e.getErrorCode(), e.getMessage(), e.getCause());
+        super.setSubErrorCode(e.getSubErrorCode());
+    }
 
-    /**
-     * Sub error code contained in the exception.
-     */
-    private String mSubErrorCode;
-
-    public UiRequiredException(final String errorCode, final String subErrorCode, final String errorMessage) {
+    public UiRequiredException(final String errorCode, final String errorMessage) {
         super(errorCode, errorMessage);
-        mSubErrorCode = subErrorCode;
     }
 
-    public UiRequiredException(final String errorCode, final String subErrorCode, final String errorMessage, final Throwable throwable) {
+    public UiRequiredException(final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
-        mSubErrorCode = subErrorCode;
     }
 
-    public boolean isBadTokenSubError(){
-        return getErrorCode().equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT) &&
-                mSubErrorCode != null &&
-                mSubErrorCode.equalsIgnoreCase(AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN);
-    }
-
-    public String getSubErrorCode() {
-        return mSubErrorCode;
-    }
 }

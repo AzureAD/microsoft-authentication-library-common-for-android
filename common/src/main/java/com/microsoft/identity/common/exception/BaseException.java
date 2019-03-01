@@ -42,6 +42,8 @@ public class BaseException extends Exception {
 
     private String mErrorCode;
 
+    private String mSubErrorCode;
+
     /**
      * Default constructor.
      */
@@ -87,6 +89,22 @@ public class BaseException extends Exception {
      */
     public String getErrorCode() {
         return mErrorCode;
+    }
+
+    /**
+     * @return The sub error code for the exception, could be null. {@link BaseException} is the top level base exception, for the
+     * constants value of all the error code.
+     */
+    public String getSubErrorCode() {
+        return mSubErrorCode;
+    }
+
+    /**
+     * @@param subErrorCode - The sub error code for the exception, could be null. {@link BaseException} is the top level base exception, for the
+     * constants value of all the error code.
+     */
+    public void setSubErrorCode(@Nullable final String subErrorCode){
+        mSubErrorCode = subErrorCode;
     }
 
     /**

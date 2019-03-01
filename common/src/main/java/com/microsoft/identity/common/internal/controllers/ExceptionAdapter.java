@@ -99,28 +99,18 @@ public class ExceptionAdapter {
             );
         }
 
-        final TokenResult tokenResult = result.getTokenResult();
+        return exceptionFromTokenResult(result.getTokenResult());
+    }
+
+    /**
+     * Extract exception from a given TokenResult object.
+     * */
+    public static ServiceException exceptionFromTokenResult(TokenResult tokenResult) {
+        final String methodName = ":exceptionFromTokenResult";
         final TokenErrorResponse tokenErrorResponse;
 
         if (tokenResult != null && !tokenResult.getSuccess()) {
             tokenErrorResponse = tokenResult.getErrorResponse();
-
-            if (tokenErrorResponse.getError().equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT)) {
-                Logger.warn(
-                        TAG + methodName,
-                        "Received invalid_grant"
-                );
-                final UiRequiredException uiRequiredException = new UiRequiredException(
-                        tokenErrorResponse.getError(),
-                        tokenErrorResponse.getSubError(),
-                        tokenErrorResponse.getErrorDescription()
-                );
-
-
-                applyCliTelemInfo(tokenResult, uiRequiredException);
-
-                return uiRequiredException;
-            }
 
             ServiceException outErr = null;
 
@@ -143,6 +133,7 @@ public class ExceptionAdapter {
                         tokenErrorResponse.getErrorDescription(),
                         null
                 );
+                outErr.setSubErrorCode(tokenErrorResponse.getSubError());
             }
 
             applyCliTelemInfo(tokenResult, outErr);
@@ -196,52 +187,22 @@ public class ExceptionAdapter {
     }
 
     public static BaseException baseExceptionFromException(final Exception e) {
-        BaseException msalException = null;
-
         if (e instanceof IOException) {
-            msalException = new ClientException(
+            return new ClientException(
                     ClientException.IO_ERROR,
                     "An IO error occurred with message: " + e.getMessage(),
                     e
             );
         }
 
-        if (e instanceof ClientException) {
-            msalException = new ClientException(
-                    ((ClientException) e).getErrorCode(),
-                    e.getMessage(),
-                    e);
+        if (e instanceof BaseException) {
+            return (BaseException) e;
         }
 
-        if (e instanceof ArgumentException) {
-            ArgumentException argumentException = ((ArgumentException) e);
-            msalException = new ArgumentException(
-                    argumentException.getArgumentName(),
-                    argumentException.getOperationName(),
-                    argumentException.getMessage(),
-                    argumentException
-            );
-        }
-
-        if (e instanceof UiRequiredException) {
-            UiRequiredException uiRequiredException = ((UiRequiredException) e);
-            msalException = new UiRequiredException(
-                    uiRequiredException.getErrorCode(),
-                    uiRequiredException.getSubErrorCode(),
-                    uiRequiredException.getMessage()
-            );
-        }
-
-        if (msalException == null) {
-            msalException = new ClientException(
-                    ClientException.UNKNOWN_ERROR,
-                    e.getMessage(),
-                    e
-            );
-        }
-
-        return msalException;
-
+        return new ClientException(
+                ClientException.UNKNOWN_ERROR,
+                e.getMessage(),
+                e);
     }
 
 }

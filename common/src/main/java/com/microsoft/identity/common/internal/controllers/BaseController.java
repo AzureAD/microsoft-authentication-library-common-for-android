@@ -173,7 +173,7 @@ public abstract class BaseController {
                                     @NonNull final OAuth2TokenCache tokenCache,
                                     @NonNull final OAuth2Strategy strategy,
                                     @NonNull final ICacheRecord cacheRecord)
-            throws IOException, ClientException, UiRequiredException {
+            throws IOException, ClientException, ServiceException {
         final String methodName = ":renewAccessToken";
         Logger.verbose(
                 TAG + methodName,
@@ -210,41 +210,18 @@ public abstract class BaseController {
             // Set the AuthenticationResult on the final result object
             acquireTokenSilentResult.setLocalAuthenticationResult(authenticationResult);
         } else {
-            // Log all the particulars...
-            if (null != tokenResult.getErrorResponse()) {
-                if (null != tokenResult.getErrorResponse().getError()) {
-                    Logger.warn(
-                            TAG,
-                            tokenResult.getErrorResponse().getError()
-                    );
-                }
+            ServiceException e = ExceptionAdapter.exceptionFromTokenResult(tokenResult);
 
-                if (null != tokenResult.getErrorResponse().getErrorDescription()) {
-                    Logger.warnPII(
-                            TAG,
-                            tokenResult.getErrorResponse().getErrorDescription()
-                    );
-                }
+            if (e != null){
+                Logger.warn(
+                        TAG + methodName,
+                        e.getErrorCode() + ":" + e.getSubErrorCode());
 
-                if (AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(tokenResult.getErrorResponse().getError())) {
-                    final UiRequiredException uiException = new UiRequiredException(
-                            AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT,
-                            tokenResult.getErrorResponse().getSubError(),
-                            null != tokenResult.getErrorResponse().getErrorDescription()
-                                    ? tokenResult.getErrorResponse().getErrorDescription()
-                                    : "Failed to renew access token"
-                    );
+                Logger.warnPII(
+                        TAG + methodName,
+                        e.getMessage());
 
-                    if (null != tokenResult.getCliTelemInfo()) {
-                        final CliTelemInfo cliTelemInfo = tokenResult.getCliTelemInfo();
-                        uiException.setSpeRing(cliTelemInfo.getSpeRing());
-                        uiException.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
-                        uiException.setCliTelemErrorCode(cliTelemInfo.getServerErrorCode());
-                        uiException.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
-                    }
-
-                    throw uiException;
-                }
+                throw e;
             }
         }
     }
