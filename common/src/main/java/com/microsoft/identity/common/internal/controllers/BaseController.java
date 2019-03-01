@@ -36,6 +36,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -43,6 +44,7 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -136,6 +138,15 @@ public abstract class BaseController {
             ).setRequestHeaders(
                     acquireTokenOperationParameters.getRequestHeaders()
             );
+
+            // Set the multipleCloudAware and slice fields.
+            if (acquireTokenOperationParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
+                final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority)acquireTokenOperationParameters.getAuthority();
+                ((MicrosoftAuthorizationRequest.Builder) builder)
+                    .setAuthority(requestAuthority.getAuthorityURL())
+                    .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
+                    .setSlice(requestAuthority.mSlice);
+            }
         }
 
         builder.setScope(TextUtils.join(" ", parameters.getScopes()));
