@@ -928,6 +928,16 @@ public final class AuthenticationConstants {
         public static final String BROWSER_EXT_INSTALL_PREFIX = "msauth://";
 
         /**
+         * Redirect URI parameter key to get link to install broker
+         */
+        public static final String INSTALL_URL_KEY = "app_link";
+
+        /**
+         * Redirect URI parameter key to get the upn
+         */
+        public static final String INSTALL_UPN_KEY = "username";
+
+        /**
          * PRT nonce.
          */
         public static final String PRT_NONCE = "nonce";
