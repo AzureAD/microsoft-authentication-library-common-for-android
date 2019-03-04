@@ -81,6 +81,11 @@ public final class ErrorStrings {
     public static final String INVALID_JWT = "invalid_jwt";
 
     /**
+     * Interaction is required
+     */
+    public static final String INTERACTION_REQUIRED = "interaction_required";
+
+    /**
      * State from authorization response did not match the state in the authorization request.
      * For authorization requests, the sdk will verify the state returned from redirect and the one sent in the request.
      */
