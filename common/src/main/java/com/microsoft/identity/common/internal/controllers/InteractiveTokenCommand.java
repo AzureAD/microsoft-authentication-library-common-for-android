@@ -56,7 +56,11 @@ public class InteractiveTokenCommand extends TokenCommand {
                     TAG + methodName,
                     "Executing interactive token command..."
             );
-            return getDefaultController().acquireToken((AcquireTokenOperationParameters) getParameters());
+
+            return getDefaultController()
+                    .acquireToken(
+                            (AcquireTokenOperationParameters) getParameters()
+                    );
         } else {
             throw new IllegalArgumentException("Invalid operation parameters");
         }

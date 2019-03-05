@@ -20,42 +20,10 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-
 package com.microsoft.identity.common.internal.providers.oauth2;
-/**
- * The UI options that developer can pass during interactive token acquisition requests.
- */
-public enum OpenIdConnectPromptParameter {
 
-    /**
-     * No prompt parameter will be injected into the request.
-     */
-    NONE,
+public interface IErrorResponse {
 
-    /**
-     * acquireToken will send prompt=select_account to the authorize endpoint. Shows a list of users from which can be
-     * selected for authentication.
-     */
-    SELECT_ACCOUNT,
-
-    /**
-     * acquireToken will send prompt=login to the authorize endpoint.  The user will always be prompted for credentials by the service.
-     * <p>
-     * toString override is to enable the correct protocol value of login to be returned instead of "force_login".
-     */
-    LOGIN,
-
-    /**
-     * acquireToken will send prompt=consent to the authorize endpoint.  The user will be prompted to consent even if consent was granted before.
-     */
-    CONSENT;
-
-    @Override
-    public String toString() {
-        if (this == NONE) {
-            return null;
-        }
-
-        return this.name().toLowerCase();
-    }
+    String getError();
+    String getErrorDescription();
 }

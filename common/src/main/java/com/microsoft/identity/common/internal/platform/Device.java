@@ -44,7 +44,7 @@ public final class Device {
         final Map<String, String> platformParameters = new HashMap<>();
 
         platformParameters.put(PlatformIdParameters.PRODUCT, PlatformIdParameters.PRODUCT_NAME);
-        platformParameters.put(PlatformIdParameters.VERSION, "0.1.3");
+        platformParameters.put(PlatformIdParameters.VERSION, PlatformIdParameters.PRODUCT_VERSION);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             platformParameters.put(PlatformIdParameters.CPU_PLATFORM, Build.CPU_ABI);
         } else {
@@ -59,35 +59,40 @@ public final class Device {
         return Collections.unmodifiableMap(platformParameters);
     }
 
-    static final class PlatformIdParameters {
+    public static final class PlatformIdParameters {
         /**
          * The String representing the sdk platform.
          */
-        static final String PRODUCT = "x-client-SKU";
+        public static final String PRODUCT = "x-client-SKU";
 
         /**
          * The String representing the sdk platform name.
          */
-        static final String PRODUCT_NAME = "MSAL.Android";
+        public static final String PRODUCT_NAME = "MSAL.Android";
+
+        /**
+         * The String representing the sdk platform version.
+         */
+        public static final String PRODUCT_VERSION = "0.3.0";
 
         /**
          * The String representing the sdk version.
          */
-        static final String VERSION = "x-client-Ver";
+        public static final String VERSION = "x-client-Ver";
 
         /**
          * The String representing the CPU for the device.
          */
-        static final String CPU_PLATFORM = "x-client-CPU";
+        public static final String CPU_PLATFORM = "x-client-CPU";
 
         /**
          * The String representing the device OS.
          */
-        static final String OS = "x-client-OS";
+        public static final String OS = "x-client-OS";
 
         /**
          * The String representing the device model.
          */
-        static final String DEVICE_MODEL = "x-client-DM";
+        public static final String DEVICE_MODEL = "x-client-DM";
     }
 }

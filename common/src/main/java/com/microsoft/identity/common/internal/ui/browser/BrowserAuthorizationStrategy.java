@@ -102,6 +102,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
                         mResultIntent,
                         requestUrl.toString(),
                         mAuthorizationRequest.getRedirectUri(),
+                        mAuthorizationRequest.getRequestHeaders(),
                         AuthorizationAgent.BROWSER));
 
         return mAuthorizationResultFuture;

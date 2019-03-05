@@ -30,16 +30,16 @@ import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Set;
 
 public class OperationParameters {
 
     private static final String TAG = OperationParameters.class.getSimpleName();
 
-    private Context mAppContext;
-    private OAuth2TokenCache mTokenCache;
-    private ArrayList<String> mScopes;
+    private transient Context mAppContext;
+    private transient OAuth2TokenCache mTokenCache;
+    private Set<String> mScopes;
     protected IAccountRecord mAccount;
     private String clientId;
     private String redirectUri;
@@ -54,11 +54,11 @@ public class OperationParameters {
         this.mAppContext = mAppContext;
     }
 
-    public ArrayList<String> getScopes() {
+    public Set<String> getScopes() {
         return mScopes;
     }
 
-    public void setScopes(ArrayList<String> mScopes) {
+    public void setScopes(Set<String> mScopes) {
         this.mScopes = mScopes;
     }
 

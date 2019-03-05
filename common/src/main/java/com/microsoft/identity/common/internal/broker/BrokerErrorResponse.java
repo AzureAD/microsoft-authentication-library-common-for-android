@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.broker;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 
@@ -34,27 +35,30 @@ import java.util.ArrayList;
  */
 public class BrokerErrorResponse extends MicrosoftTokenErrorResponse implements Parcelable {
 
-    public static final String INTERACTION_REQUIRED = "interaction_required";
-
-    public static final String INVALID_GRANT = "invalid_grant";
-
-
-    private String mOAuthError;
-    private String mOAuthSubError;
     private String mOAuthErrorMetadata;
-    private String mOAuthErrorDescription;
-    private int mHttpStatusCode;
-    private String mHttpResponseBody;
-    private String mHttpResponseHeaders;
 
-
-    public BrokerErrorResponse(){
+    public BrokerErrorResponse() {
 
     }
 
+    public BrokerErrorResponse(@NonNull final MicrosoftTokenErrorResponse microsoftTokenErrorResponse) {
+        setError(microsoftTokenErrorResponse.getError());
+        setSubError(microsoftTokenErrorResponse.getSubError());
+        setErrorDescription(microsoftTokenErrorResponse.getErrorDescription());
+        setErrorUri(microsoftTokenErrorResponse.getErrorUri());
+        setErrorCodes(microsoftTokenErrorResponse.getErrorCodes());
+        setTimeStamp(microsoftTokenErrorResponse.getTimeStamp());
+        setTraceId(microsoftTokenErrorResponse.getTraceId());
+        setCorrelationId(microsoftTokenErrorResponse.getCorrelationId());
+        setStatusCode(microsoftTokenErrorResponse.getStatusCode());
+        setResponseHeadersJson(microsoftTokenErrorResponse.getResponseHeadersJson());
+        setResponseBody(microsoftTokenErrorResponse.getResponseBody());
+    }
+
     protected BrokerErrorResponse(Parcel in) {
-        if(in!=null) {
+        if (in != null) {
             setError(in.readString());
+            setSubError(in.readString());
             setErrorDescription(in.readString());
             setErrorUri(in.readString());
             ArrayList errorcodes = new ArrayList();
@@ -63,33 +67,28 @@ public class BrokerErrorResponse extends MicrosoftTokenErrorResponse implements 
             setTimeStamp(in.readString());
             setTraceId(in.readString());
             setCorrelationId(in.readString());
-            setOAuthError(in.readString());
-            setOAuthSubError(in.readString());
             setOAuthErrorMetadata(in.readString());
-            setOAuthErrorDescription(in.readString());
-            setHttpStatusCode(in.readInt());
-            setHttpResponseBody(in.readString());
-            setHttpResponseHeaders(in.readString());
+            setStatusCode(in.readInt());
+            setResponseHeadersJson(in.readString());
+            setResponseBody(in.readString());
         }
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        if(dest!=null) {
+        if (dest != null) {
             dest.writeString(getError());
+            dest.writeString(getSubError());
             dest.writeString(getErrorDescription());
             dest.writeString(getErrorUri());
             dest.writeList(getErrorCodes());
             dest.writeString(getTimeStamp());
             dest.writeString(getTraceId());
             dest.writeString(getCorrelationId());
-            dest.writeString(getOAuthError());
-            dest.writeString(getOAuthSubError());
             dest.writeString(getOAuthErrorMetadata());
-            dest.writeString(getOAuthErrorDescription());
-            dest.writeInt(getHttpStatusCode());
-            dest.writeString(getHttpResponseBody());
-            dest.writeString(getHttpResponseHeaders());
+            dest.writeInt(getStatusCode());
+            dest.writeString(getResponseHeadersJson());
+            dest.writeString(getResponseBody());
         }
     }
 
@@ -110,67 +109,11 @@ public class BrokerErrorResponse extends MicrosoftTokenErrorResponse implements 
         }
     };
 
-    public boolean isInteractionRequired() {
-        return mOAuthError.equalsIgnoreCase(INTERACTION_REQUIRED);
-    }
-
-    public boolean isInvalidGrant() {
-        return mOAuthError.equalsIgnoreCase(INVALID_GRANT);
-    }
-
-    public String getOAuthError() {
-        return mOAuthError;
-    }
-
-    public void setOAuthError(String oAuthError) {
-        this.mOAuthError = oAuthError;
-    }
-
-    public String getOAuthSubError() {
-        return mOAuthSubError;
-    }
-
-    public void setOAuthSubError(String oAuthSubError) {
-        this.mOAuthSubError = oAuthSubError;
-    }
-
     public String getOAuthErrorMetadata() {
         return mOAuthErrorMetadata;
     }
 
     public void setOAuthErrorMetadata(String oAuthErrorMetadata) {
         this.mOAuthErrorMetadata = oAuthErrorMetadata;
-    }
-
-    public String getOAuthErrorDescription() {
-        return mOAuthErrorDescription;
-    }
-
-    public void setOAuthErrorDescription(String oAuthErrorDescription) {
-        this.mOAuthErrorDescription = oAuthErrorDescription;
-    }
-
-    public String getHttpResponseBody() {
-        return mHttpResponseBody;
-    }
-
-    public void setHttpResponseBody(String httpResponseBody) {
-        this.mHttpResponseBody = httpResponseBody;
-    }
-
-    public String getHttpResponseHeaders() {
-        return mHttpResponseHeaders;
-    }
-
-    public void setHttpResponseHeaders(String httpResponseHeaders) {
-        this.mHttpResponseHeaders = httpResponseHeaders;
-    }
-
-    public int getHttpStatusCode() {
-        return mHttpStatusCode;
-    }
-
-    public void setHttpStatusCode(int httpStatusCode) {
-        mHttpStatusCode = httpStatusCode;
     }
 }

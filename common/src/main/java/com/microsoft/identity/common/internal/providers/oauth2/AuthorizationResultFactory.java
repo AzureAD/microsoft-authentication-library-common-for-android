@@ -37,6 +37,7 @@ public abstract class AuthorizationResultFactory<
     protected static final String CODE = "code";
     protected static final String STATE = "state";
     protected static final String ERROR = "error";
+    protected static final String ERROR_SUBCODE = "error_subcode";
     protected static final String ERROR_CODE = "error_code";
     protected static final String ERROR_DESCRIPTION = "error_description";
 

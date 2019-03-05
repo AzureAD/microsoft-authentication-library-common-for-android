@@ -37,6 +37,10 @@ import java.util.Map;
 public class AzureActiveDirectoryAccount extends MicrosoftAccount {
 
     private static final String TAG = AzureActiveDirectoryAccount.class.getSimpleName();
+    /**
+     * Identity provide is a claim for V1 specific.
+     */
+    private String mIdentityProvider;
 
     /**
      * Constructor of AzureActiveDirectoryAccount.
@@ -54,7 +58,25 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
     public AzureActiveDirectoryAccount(@NonNull final IDToken idToken,
                                        @NonNull final ClientInfo clientInfo) {
         super(idToken, clientInfo);
+        final Map<String, String> claims = idToken.getTokenClaims();
+        mIdentityProvider = claims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
         Logger.verbose(TAG, "Init: " + TAG);
+    }
+
+    /**
+     * Sets the identity provider.
+     *
+     * @param idp The identity provider to set.
+     */
+    public void setIdentityProvider(final String idp) {
+        mIdentityProvider = idp;
+    }
+
+    /**
+     * @return The identity provider of the user authenticated. Can be null if not returned from the service.
+     */
+    public String getIdentityProvider() {
+        return mIdentityProvider;
     }
 
     @Override
@@ -81,6 +103,7 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
 
     @Override
     public String toString() {
-        return "AzureActiveDirectoryAccount{} " + super.toString();
+        return "AzureActiveDirectoryAccount{} " + super.toString() +
+                ", mIdentityProvider='" + mIdentityProvider + '\'';
     }
 }

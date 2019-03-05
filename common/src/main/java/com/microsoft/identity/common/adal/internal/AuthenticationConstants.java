@@ -80,6 +80,11 @@ public final class AuthenticationConstants {
         public static final String RESPONSE_ERROR_CODE = "com.microsoft.aad.adal:BrowserErrorCode";
 
         /**
+         * Represents the error subcode returned from webview.
+         */
+        public static final String RESPONSE_ERROR_SUBCODE = "com.microsoft.aad.adal:BrowserErrorSubCode";
+
+        /**
          * Represents the error message returned from webview.
          */
         public static final String RESPONSE_ERROR_MESSAGE = "com.microsoft.aad.adal:BrowserErrorMessage";
@@ -113,6 +118,11 @@ public final class AuthenticationConstants {
          * Used as the key to send back request id.
          */
         public static final String REQUEST_ID = "com.microsoft.aad.adal:RequestId";
+
+        /**
+         * Sub error returned by server representing the user cancel the auth flow.
+         */
+        public static final String SUB_ERROR_UI_CANCEL = "cancel";
     }
 
     /**
@@ -918,6 +928,16 @@ public final class AuthenticationConstants {
         public static final String BROWSER_EXT_INSTALL_PREFIX = "msauth://";
 
         /**
+         * Redirect URI parameter key to get link to install broker
+         */
+        public static final String INSTALL_URL_KEY = "app_link";
+
+        /**
+         * Redirect URI parameter key to get the upn
+         */
+        public static final String INSTALL_UPN_KEY = "username";
+
+        /**
          * PRT nonce.
          */
         public static final String PRT_NONCE = "nonce";
@@ -1022,6 +1042,30 @@ public final class AuthenticationConstants {
         }
     }
 
+    public static final class OAuth2Scopes{
+
+        /**
+         * Scope to get get open id connect ID token
+         */
+        public static final String OPEN_ID_SCOPE = "openid";
+
+        /**
+         * Scope to give the app access to get resources on behalf of user for an extended time.
+         * App can receive refresh tokens using this scope.
+         */
+        public static final String OFFLINE_ACCESS_SCOPE = "offline_access";
+
+        /**
+         * Scope to get user profile information as a part Id token
+         */
+        public static final String PROFILE_SCOPE = "profile";
+
+        /**
+         * Custom scope used to get PRT
+         */
+        public static final String AZA_SCOPE = "aza";
+    }
+
     /**
      * Represents the oauth2 error code.
      */
@@ -1036,12 +1080,28 @@ public final class AuthenticationConstants {
          */
         public static final String UNAUTHORIZED_CLIENT = "unauthorized_client";
 
+        /**
+         * The refresh token used to redeem access token is invalid and auth code request is needed.
+         * @deprecated This is deprecated in V2, but is kept here due to this bug https://identitydivision.visualstudio.com/Engineering/_workitems/edit/597793.
+         */
+        public static final String INTERACTION_REQUIRED = "interaction_required";
+    }
+
+    /**
+     * Represents the oauth2 sub error code.
+     */
+    public static final class OAuth2SubErrorCode {
 
         /**
          * Oauth2 suberror code for Intune App Protection Policy required.
          */
         public static final String PROTECTION_POLICY_REQUIRED = "protection_policy_required";
 
+        /**
+         * Oauth2 suberror code for invalid_grant.
+         * Token is expired or invalid for all resources and scopes and shouldn't be retried again as-is.
+         */
+        public static final String BAD_TOKEN = "bad_token";
     }
 
     /**

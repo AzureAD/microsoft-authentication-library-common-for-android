@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 /**
  * Class to encapsulate Authorization Result errors.
  */
-public class AuthorizationErrorResponse {
+public class AuthorizationErrorResponse implements IErrorResponse{
 
     private String mError;
     private String mErrorDescription;
