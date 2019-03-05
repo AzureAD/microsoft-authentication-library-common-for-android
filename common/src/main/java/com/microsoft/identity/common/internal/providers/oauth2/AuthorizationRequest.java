@@ -68,7 +68,6 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      * application, the authorization server will redirect the user back to the application with
      * either an authorization code or access token in the URL.
      */
-    @Expose()
     @SerializedName("redirect_uri")
     private String mRedirectUri;
 
