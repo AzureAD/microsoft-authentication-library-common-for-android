@@ -27,6 +27,10 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuth
 import com.microsoft.identity.common.internal.util.StringUtil;
 import java.util.Map;
 
+import java.util.UUID;
+import java.io.Serializable;
+import java.util.HashMap;
+
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR;
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_DESCRIPTION;
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_SUBCODE;
@@ -53,6 +57,9 @@ public final class AuthorizationActivity extends Activity {
     @VisibleForTesting
     static final String KEY_RESULT_INTENT = "resultIntent";
 
+    @VisibleForTesting
+    static final String KEY_REQUEST_HEADERS = "requestHeaders";
+
     private static final String TAG = AuthorizationActivity.class.getSimpleName();
 
     private boolean mBrowserFlowStarted = false;
@@ -67,6 +74,8 @@ public final class AuthorizationActivity extends Activity {
 
     private String mRedirectUri;
 
+    private HashMap<String, String> mRequestHeaders;
+
     private AuthorizationAgent mAuthorizationAgent;
 
     private PendingIntent mResultIntent;
@@ -76,11 +85,13 @@ public final class AuthorizationActivity extends Activity {
                                            @NonNull final PendingIntent resultIntent,
                                            final String requestUrl,
                                            final String redirectUri,
+                                           final HashMap<String, String> requestHeaders,
                                            final AuthorizationAgent authorizationAgent) {
         final Intent intent = new Intent(context, AuthorizationActivity.class);
         intent.putExtra(KEY_AUTH_INTENT, authIntent);
         intent.putExtra(KEY_AUTH_REQUEST_URL, requestUrl);
         intent.putExtra(KEY_AUTH_REDIRECT_URI, redirectUri);
+        intent.putExtra(KEY_REQUEST_HEADERS, requestHeaders);
         intent.putExtra(KEY_AUTH_AUTHORIZATION_AGENT, authorizationAgent);
         intent.putExtra(KEY_RESULT_INTENT, resultIntent);
         intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
@@ -140,8 +151,21 @@ public final class AuthorizationActivity extends Activity {
         mPkeyAuthStatus = state.getBoolean(KEY_PKEYAUTH_STATUS, false);
         mAuthorizationRequestUrl = state.getString(KEY_AUTH_REQUEST_URL);
         mRedirectUri = state.getString(KEY_AUTH_REDIRECT_URI);
+        mRequestHeaders = getRequestHeaders(state);
         mAuthorizationAgent = (AuthorizationAgent) state.getSerializable(KEY_AUTH_AUTHORIZATION_AGENT);
         mResultIntent = state.getParcelable(KEY_RESULT_INTENT);
+    }
+
+    /**
+     * Extracts request headers from the given bundle object.
+     */
+    private HashMap<String, String> getRequestHeaders(final Bundle state) {
+        try {
+            return (HashMap<String,String>)state.getSerializable(KEY_REQUEST_HEADERS);
+        }
+        catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
@@ -166,7 +190,7 @@ public final class AuthorizationActivity extends Activity {
                     mWebView.loadUrl("about:blank");
                     Logger.verbose(TAG, "Launching embedded WebView for acquiring auth code.");
                     Logger.verbosePII(TAG, "The start url is " + mAuthorizationRequestUrl);
-                    mWebView.loadUrl(mAuthorizationRequestUrl);
+                    mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
                 }
             });
         }

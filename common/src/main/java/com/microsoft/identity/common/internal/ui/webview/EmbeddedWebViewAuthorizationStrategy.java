@@ -82,6 +82,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                 mResultIntent,
                 requestUrl.toString(),
                 mAuthorizationRequest.getRedirectUri(),
+                mAuthorizationRequest.getRequestHeaders(),
                 AuthorizationAgent.WEBVIEW);
         mReferencedActivity.get().startActivity(authIntent);
         return mAuthorizationResultFuture;

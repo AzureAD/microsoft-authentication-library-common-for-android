@@ -31,6 +31,7 @@ import com.microsoft.identity.common.internal.net.ObjectMapper;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -99,6 +100,11 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     @SerializedName("claims")
     private String mClaims;
 
+    /**
+     * Header of the request.
+     */
+    private transient HashMap<String, String> mRequestHeaders;
+
     private transient List<Pair<String, String>> mExtraQueryParams;
 
     /**
@@ -112,6 +118,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mScope = builder.mScope;
         mExtraQueryParams = builder.mExtraQueryParams;
         mClaims = builder.mClaims;
+        mRequestHeaders = builder.mRequestHeaders;
     }
 
     public static final class ResponseType {
@@ -125,6 +132,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         private String mState;
         private String mScope;
         private String mClaims;
+        private HashMap<String, String> mRequestHeaders;
 
         /**
          * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
@@ -193,6 +201,11 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return self();
         }
 
+        public B setRequestHeaders(HashMap<String, String> requestHeaders){
+            mRequestHeaders = requestHeaders;
+            return self();
+        }
+
         public abstract B self();
 
         public abstract AuthorizationRequest build();
@@ -227,12 +240,18 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     }
 
     /**
+     * @return mRequestHeaders of the authorization request.
+     */
+    public HashMap<String, String> getRequestHeaders() {
+        return mRequestHeaders;
+    }
+
+    /**
      * @return mRedirectUri of the authorization request.
      */
     public String getRedirectUri() {
         return mRedirectUri;
     }
-
     /**
      * @return mState of the authorization request.
      */
