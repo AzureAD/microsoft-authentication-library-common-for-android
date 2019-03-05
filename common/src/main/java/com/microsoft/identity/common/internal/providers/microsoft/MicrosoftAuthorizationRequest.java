@@ -59,7 +59,6 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     /**
      * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
      */
-    @Expose()
     @SerializedName("login_hint")
     private String mLoginHint;
 
