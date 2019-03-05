@@ -29,6 +29,12 @@ import java.util.Date;
 
 public class MicrosoftTokenResponse extends TokenResponse {
 
+    private static final String CLIENT_INFO = "client_info";
+
+    private static final String EXT_EXPIRES_IN = "ext_expires_in";
+
+    private static final String FAMILY_ID = "foci";
+
     /**
      * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
      * extend the valid lifetime of an access_token.
@@ -38,7 +44,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
     /**
      * Information to uniquely identify the tenant and the user _within_ that tenant.
      */
-    @SerializedName("client_info")
+    @SerializedName(CLIENT_INFO)
     private String mClientInfo;
 
     /**
@@ -46,12 +52,13 @@ public class MicrosoftTokenResponse extends TokenResponse {
      */
     private transient String mClientId;
 
-    @SerializedName("ext_expires_in")
+    @SerializedName(EXT_EXPIRES_IN)
     private Long mExtendedExpiresIn;
 
     /**
      * Information to uniquely identify the family that the client application belongs to.
      */
+    @SerializedName(FAMILY_ID)
     private String mFamilyId;
 
     private String mAuthority;
