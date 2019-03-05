@@ -102,6 +102,14 @@ public class AzureActiveDirectoryAuthorizationResultFactory extends Authorizatio
                         MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED);
                 break;
 
+            case AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER:
+                Logger.verbose(TAG, "Device needs to have broker installed, we expect the apps to call us"
+                        + "back when the broker is installed");
+                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                        MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
+                        MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED);
+                break;
+
             default:
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.UNKNOWN_ERROR,

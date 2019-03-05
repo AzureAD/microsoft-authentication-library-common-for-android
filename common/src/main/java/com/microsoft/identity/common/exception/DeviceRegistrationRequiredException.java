@@ -21,41 +21,28 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.exception;
+
 /**
- * The UI options that developer can pass during interactive token acquisition requests.
+ *  Internal exception thrown when a device needs to registered to access the required resource (MAM)
  */
-public enum OpenIdConnectPromptParameter {
+final public class DeviceRegistrationRequiredException extends BaseException {
 
-    /**
-     * No prompt parameter will be injected into the request.
-     */
-    NONE,
 
-    /**
-     * acquireToken will send prompt=select_account to the authorize endpoint. Shows a list of users from which can be
-     * selected for authentication.
-     */
-    SELECT_ACCOUNT,
+    // The username for which device needs registration
+    private String mUsername;
 
-    /**
-     * acquireToken will send prompt=login to the authorize endpoint.  The user will always be prompted for credentials by the service.
-     * <p>
-     * toString override is to enable the correct protocol value of login to be returned instead of "force_login".
-     */
-    LOGIN,
+    public DeviceRegistrationRequiredException(final String errorCode, final String errorDescription,
+                                               final String userName) {
+        super(errorCode, errorDescription);
+        mUsername = userName;
+    }
 
-    /**
-     * acquireToken will send prompt=consent to the authorize endpoint.  The user will be prompted to consent even if consent was granted before.
-     */
-    CONSENT;
+    public String getUsername() {
+        return mUsername;
+    }
 
-    @Override
-    public String toString() {
-        if (this == NONE) {
-            return null;
-        }
-
-        return this.name().toLowerCase();
+    public void setUsername(String username) {
+        this.mUsername = username;
     }
 }

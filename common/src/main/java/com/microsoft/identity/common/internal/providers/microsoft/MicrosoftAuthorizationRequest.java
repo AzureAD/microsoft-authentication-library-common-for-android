@@ -50,6 +50,10 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     private static final long serialVersionUID = 6873634931996113294L;
 
     private static final String TAG = MicrosoftAuthorizationRequest.class.getSimpleName();
+    /**
+     * String for the instance aware extra query parameter.
+     */
+    public static final String INSTANCE_AWARE = "instance_aware";
 
     /**
      * Required.
@@ -104,7 +108,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     private String mDiagnosticDM;
 
     @Expose()
-    @SerializedName("instance_aware")
+    @SerializedName(INSTANCE_AWARE)
     private Boolean mMultipleCloudAware;
 
     protected transient AzureActiveDirectorySlice mSlice;

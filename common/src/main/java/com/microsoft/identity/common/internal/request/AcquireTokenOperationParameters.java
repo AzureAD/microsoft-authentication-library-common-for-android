@@ -29,6 +29,7 @@ import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class AcquireTokenOperationParameters extends OperationParameters {
@@ -41,6 +42,7 @@ public class AcquireTokenOperationParameters extends OperationParameters {
     private List<String> mExtraScopesToConsent;
     @Expose()
     private OpenIdConnectPromptParameter mOpenIdConnectPromptParameter;
+    private HashMap<String, String> mRequestHeaders;
 
     public AuthorizationAgent getAuthorizationAgent() {
         return mAuthorizationAgent;
@@ -91,5 +93,13 @@ public class AcquireTokenOperationParameters extends OperationParameters {
 
     public void setOpenIdConnectPromptParameter(OpenIdConnectPromptParameter openIdConnectPromptParameter) {
         mOpenIdConnectPromptParameter = openIdConnectPromptParameter;
+    }
+
+    public HashMap<String, String> getRequestHeaders() {
+        return mRequestHeaders;
+    }
+
+    public void setRequestHeaders(HashMap<String, String> requestHeaders) {
+        this.mRequestHeaders = requestHeaders;
     }
 }
