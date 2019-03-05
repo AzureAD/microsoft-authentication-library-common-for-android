@@ -34,7 +34,6 @@ import java.util.List;
 public class AcquireTokenOperationParameters extends OperationParameters {
 
     private transient Activity mActivity;
-    @Expose()
     private String mLoginHint;
     @Expose()
     private List<Pair<String, String>> mExtraQueryStringParameters;
