@@ -60,35 +60,30 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
     public Void processChallenge(final PKeyAuthChallenge pKeyAuthChallenge) {
         mWebView.stopLoading();
         mChallengeCallback.setPKeyAuthStatus(true);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
 
-                try {
-                    //Get no device cert response
-                    final Map<String, String> header = getChallengeHeader(pKeyAuthChallenge);
+        try {
+            //Get no device cert response
+            final Map<String, String> header = getChallengeHeader(pKeyAuthChallenge);
 
-                    mWebView.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            String loadUrl = pKeyAuthChallenge.getSubmitUrl();
-                            Logger.verbose(TAG, "Respond to pkeyAuth challenge");
-                            Logger.verbosePII(TAG, "Challenge submit url:" + pKeyAuthChallenge.getSubmitUrl());
+            mWebView.post(new Runnable() {
+                @Override
+                public void run() {
+                    String loadUrl = pKeyAuthChallenge.getSubmitUrl();
+                    Logger.verbose(TAG, "Respond to pkeyAuth challenge");
+                    Logger.verbosePII(TAG, "Challenge submit url:" + pKeyAuthChallenge.getSubmitUrl());
 
-                            mWebView.loadUrl(loadUrl, header);
-                        }
-                    });
-                } catch (final ClientException e) {
-                    // It should return error code and finish the
-                    // activity, so that onActivityResult implementation
-                    // returns errors to callback.
-                    Intent resultIntent = new Intent();
-                    resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, e);
-                    //TODO log the request info
-                    mChallengeCallback.onChallengeResponseReceived(AuthorizationStrategy.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
+                    mWebView.loadUrl(loadUrl, header);
                 }
-            }
-        }).start();
+            });
+        } catch (final ClientException e) {
+            // It should return error code and finish the
+            // activity, so that onActivityResult implementation
+            // returns errors to callback.
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, e);
+            //TODO log the request info
+            mChallengeCallback.onChallengeResponseReceived(AuthorizationStrategy.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
+        }
 
         return null;
     }
