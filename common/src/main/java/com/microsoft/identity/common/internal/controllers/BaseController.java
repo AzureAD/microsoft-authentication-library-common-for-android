@@ -167,9 +167,11 @@ public abstract class BaseController {
                                               final AuthorizationResponse response,
                                               final AcquireTokenOperationParameters parameters)
             throws IOException, ClientException {
+        final String methodName = ":performTokenRequest";
         throwIfNetworkNotAvailable(parameters.getAppContext());
 
         TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
+        logExposedFieldsOfObject(TAG + methodName, tokenRequest);
         tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
 
         TokenResult tokenResult = null;
@@ -238,6 +240,7 @@ public abstract class BaseController {
                     TAG,
                     "Success Result"
             );
+            logExposedFieldsOfObject(TAG, result.getSuccessResponse());
         }else{
             Logger.warn(
                     TAG,
@@ -256,6 +259,7 @@ public abstract class BaseController {
                             "Description: " + result.getErrorResponse().getErrorDescription()
                     );
                 }
+                logExposedFieldsOfObject(TAG, result.getErrorResponse());
             }
         }
 
@@ -277,7 +281,16 @@ public abstract class BaseController {
      */
     protected void logParameters(String tag, Object parameters){
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
-        Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+        if(Logger.getAllowPii()) {
+            Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+        }else{
+            Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
+        }
+    }
+
+    protected void logExposedFieldsOfObject(String tag, Object object){
+        final String TAG = tag + ":" + object.getClass().getSimpleName();
+        Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
     }
 
     protected TokenResult performSilentTokenRequest(

@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -30,7 +31,7 @@ import com.google.gson.annotations.SerializedName;
  * It should include all of the required and optional parameters based on the protocol and
  * support an extension to allow the authorization server / openid provider to send back additional information
  */
-public class TokenResponse {
+public class TokenResponse implements ISuccessResponse {
 
     /**
      * RECOMMENDED.  The lifetime in seconds of the access token.  For
@@ -41,6 +42,7 @@ public class TokenResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
+    @Expose()
     @SerializedName("expires_in")
     private Long mExpiresIn;
 
@@ -59,6 +61,7 @@ public class TokenResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
+    @Expose()
     @SerializedName("token_type")
     private String mTokenType;
 
@@ -79,6 +82,7 @@ public class TokenResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
      */
+    @Expose()
     @SerializedName("scope")
     private String mScope;
 
@@ -89,6 +93,8 @@ public class TokenResponse {
      *
      * @see <a href="https://tools.ietf.org/html/rfc6749#section-4.2.2">RFC 6749 - Access Token Response</a>
      */
+    @Expose()
+    @SerializedName("state")
     private String mState;
 
     /**
@@ -105,6 +111,7 @@ public class TokenResponse {
     /**
      * A long representing the time at which the response was received in milliseconds since the Unix Epoch.
      */
+    @Expose()
     private long mResponseReceivedTime;
 
     /**

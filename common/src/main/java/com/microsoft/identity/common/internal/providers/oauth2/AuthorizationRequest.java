@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.net.Uri;
 import android.util.Pair;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 
@@ -50,6 +51,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     /**
      * A required value and must be set to "code".
      */
+    @Expose()
     @SerializedName("response_type")
     private String mResponseType;
 
@@ -58,6 +60,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      * <p>
      * The client identifier as assigned by the authorization server, when the client was registered.
      */
+    @Expose()
     @SerializedName("client_id")
     private String mClientId;
 
@@ -78,18 +81,21 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      * encode information about the user's state in the app before the authentication request
      * occurred, such as the page or view they were on.
      */
+    @Expose()
     @SerializedName("state")
     protected String mState;
 
     /**
      * Scopes scopes that you want the user to consent to is required for V2 auth request.
      */
+    @Expose()
     @SerializedName("scope")
     private String mScope;
 
     /**
      * Claims request parameter (Per ODIC spec)
      */
+    @Expose()
     @SerializedName("claims")
     private String mClaims;
 
