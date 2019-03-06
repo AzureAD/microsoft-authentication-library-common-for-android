@@ -334,7 +334,7 @@ public class StorageHelper implements IStorageHelper {
     private synchronized SecretKey getKeyOrCreate(final String keyVersion)
             throws GeneralSecurityException, IOException {
         if (VERSION_USER_DEFINED.equals(keyVersion)) {
-            return getSecretKey(AuthenticationSettings.INSTANCE.getSecretKeyData());
+            return getSecretKey(getSecretKeyData(mContext.getPackageName()));
         }
 
         try {
