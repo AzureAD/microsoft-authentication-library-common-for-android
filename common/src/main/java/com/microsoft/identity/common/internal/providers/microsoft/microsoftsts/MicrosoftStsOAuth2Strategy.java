@@ -28,10 +28,12 @@ import android.support.annotation.Nullable;
 import android.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
@@ -48,16 +50,22 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorRespons
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField.X_MS_CLITELEM;
 
 public class MicrosoftStsOAuth2Strategy
@@ -350,6 +358,51 @@ public class MicrosoftStsOAuth2Strategy
     @Override
     protected void validateTokenRequest(MicrosoftStsTokenRequest request) {
         //TODO implement
+    }
+
+    @Override
+    protected HttpResponse performTokenRequest(final MicrosoftStsTokenRequest request) throws IOException {
+        final String methodName = ":performTokenRequest";
+
+        Logger.verbose(
+                TAG + methodName,
+                "Performing token request..."
+        );
+
+        final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
+        final Map<String, String> headers = new TreeMap<>();
+        headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        headers.putAll(Device.getPlatformIdParameters());
+
+        HttpResponse response =  HttpRequest.sendPost(
+                new URL(mTokenEndpoint),
+                headers,
+                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
+                TOKEN_REQUEST_CONTENT_TYPE
+        );
+
+        if (response.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED
+                && response.getHeaders() != null
+                && response.getHeaders().containsKey(CHALLENGE_REQUEST_HEADER)) {
+            // Received the device certificate challenge request. It is sent in 401 header.
+            String challengeHeader = response.getHeaders().get(CHALLENGE_REQUEST_HEADER).get(0);
+            Logger.info(TAG + methodName, "Device certificate challenge request. ");
+            Logger.infoPII(TAG + methodName, "Challenge header: " + challengeHeader);
+            try {
+                final URL authority = StringExtensions.getUrl(mTokenEndpoint);
+                final PKeyAuthChallenge pkeyAuthChallenge = new PKeyAuthChallenge(challengeHeader, authority.toString());
+                headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
+                response = HttpRequest.sendPost(
+                        authority,
+                        headers,
+                        requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
+                        TOKEN_REQUEST_CONTENT_TYPE);
+            } catch (final UnsupportedEncodingException | ClientException exception) {
+                //TODO
+            }
+        }
+
+        return response;
     }
 
     @Override
