@@ -25,11 +25,13 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.net.Uri;
 import android.util.Pair;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -49,6 +51,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     /**
      * A required value and must be set to "code".
      */
+    @Expose()
     @SerializedName("response_type")
     private String mResponseType;
 
@@ -57,6 +60,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      * <p>
      * The client identifier as assigned by the authorization server, when the client was registered.
      */
+    @Expose()
     @SerializedName("client_id")
     private String mClientId;
 
@@ -77,20 +81,28 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      * encode information about the user's state in the app before the authentication request
      * occurred, such as the page or view they were on.
      */
+    @Expose()
     @SerializedName("state")
     protected String mState;
 
     /**
      * Scopes scopes that you want the user to consent to is required for V2 auth request.
      */
+    @Expose()
     @SerializedName("scope")
     private String mScope;
 
     /**
      * Claims request parameter (Per ODIC spec)
      */
+    @Expose()
     @SerializedName("claims")
     private String mClaims;
+
+    /**
+     * Header of the request.
+     */
+    private transient HashMap<String, String> mRequestHeaders;
 
     private transient List<Pair<String, String>> mExtraQueryParams;
 
@@ -105,6 +117,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mScope = builder.mScope;
         mExtraQueryParams = builder.mExtraQueryParams;
         mClaims = builder.mClaims;
+        mRequestHeaders = builder.mRequestHeaders;
     }
 
     public static final class ResponseType {
@@ -118,6 +131,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         private String mState;
         private String mScope;
         private String mClaims;
+        private HashMap<String, String> mRequestHeaders;
 
         /**
          * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
@@ -186,6 +200,11 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return self();
         }
 
+        public B setRequestHeaders(HashMap<String, String> requestHeaders){
+            mRequestHeaders = requestHeaders;
+            return self();
+        }
+
         public abstract B self();
 
         public abstract AuthorizationRequest build();
@@ -220,12 +239,18 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     }
 
     /**
+     * @return mRequestHeaders of the authorization request.
+     */
+    public HashMap<String, String> getRequestHeaders() {
+        return mRequestHeaders;
+    }
+
+    /**
      * @return mRedirectUri of the authorization request.
      */
     public String getRedirectUri() {
         return mRedirectUri;
     }
-
     /**
      * @return mState of the authorization request.
      */

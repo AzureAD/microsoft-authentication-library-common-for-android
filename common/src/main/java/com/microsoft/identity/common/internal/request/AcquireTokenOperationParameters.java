@@ -25,18 +25,24 @@ package com.microsoft.identity.common.internal.request;
 import android.app.Activity;
 import android.util.Pair;
 
+import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class AcquireTokenOperationParameters extends OperationParameters {
 
     private transient Activity mActivity;
     private String mLoginHint;
+    @Expose()
     private List<Pair<String, String>> mExtraQueryStringParameters;
+    @Expose()
     private List<String> mExtraScopesToConsent;
+    @Expose()
     private OpenIdConnectPromptParameter mOpenIdConnectPromptParameter;
+    private HashMap<String, String> mRequestHeaders;
 
     public AuthorizationAgent getAuthorizationAgent() {
         return mAuthorizationAgent;
@@ -46,6 +52,7 @@ public class AcquireTokenOperationParameters extends OperationParameters {
         mAuthorizationAgent = authorizationAgent;
     }
 
+    @Expose()
     private AuthorizationAgent mAuthorizationAgent;
 
     public Activity getActivity() {
@@ -86,5 +93,13 @@ public class AcquireTokenOperationParameters extends OperationParameters {
 
     public void setOpenIdConnectPromptParameter(OpenIdConnectPromptParameter openIdConnectPromptParameter) {
         mOpenIdConnectPromptParameter = openIdConnectPromptParameter;
+    }
+
+    public HashMap<String, String> getRequestHeaders() {
+        return mRequestHeaders;
+    }
+
+    public void setRequestHeaders(HashMap<String, String> requestHeaders) {
+        this.mRequestHeaders = requestHeaders;
     }
 }

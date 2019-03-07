@@ -30,11 +30,13 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.DeviceRegistrationRequiredException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
@@ -63,6 +65,22 @@ public class ExceptionAdapter {
                 //THERE ARE CURRENTLY NO USAGES of INVALID_REQUEST
                 switch (result.getAuthorizationResult().getAuthorizationStatus()) {
                     case FAIL:
+                        // Check if the error is to register device and throw DEVICE_REGISTRATION_NEEDED exception
+                        if (authorizationErrorResponse instanceof MicrosoftAuthorizationErrorResponse) {
+                            MicrosoftAuthorizationErrorResponse microsoftAuthorizationErrorResponse =
+                                    (MicrosoftAuthorizationErrorResponse) authorizationErrorResponse;
+
+                            if (microsoftAuthorizationErrorResponse.getError().equals(
+                                    MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED)) {
+
+                                return new DeviceRegistrationRequiredException(
+                                        microsoftAuthorizationErrorResponse.getError(),
+                                        microsoftAuthorizationErrorResponse.getErrorDescription(),
+                                        microsoftAuthorizationErrorResponse.getUserName()
+                                );
+                            }
+                        }
+
                         return new ServiceException(
                                 authorizationErrorResponse.getError(),
                                 authorizationErrorResponse.getError() + ";" + authorizationErrorResponse.getErrorDescription(),
@@ -97,7 +115,6 @@ public class ExceptionAdapter {
                         tokenErrorResponse.getSubError(),
                         tokenErrorResponse.getErrorDescription()
                 );
-
 
 
                 applyCliTelemInfo(tokenResult, uiRequiredException);

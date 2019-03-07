@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 
@@ -32,7 +33,7 @@ public class MicrosoftTokenRequest extends TokenRequest {
     public static final String CODE_VERIFIER = "code_verifier";
     public static final String CLIENT_INFO = "client_info";
     public static final String CORRELATION_ID = "client-request-id";
-    public static final String ID_TOKEN_VERSIOM = "itver";
+    public static final String ID_TOKEN_VERSION = "itver";
     public static final String MAM_VERSION = "mamver";
     public static final String CLAIMS = "claims";
     public static final String INSTANCE_AWARE = "instance_aware";
@@ -46,27 +47,35 @@ public class MicrosoftTokenRequest extends TokenRequest {
     @SerializedName(CODE_VERIFIER)
     private String mCodeVerifier;
 
+    @Expose()
     @SerializedName(CLIENT_INFO)
     private String mClientInfoEnabled;
 
+    @Expose()
     @SerializedName(CORRELATION_ID)
     private UUID mCorrelationId;
 
-    @SerializedName(ID_TOKEN_VERSIOM)
+    @Expose()
+    @SerializedName(ID_TOKEN_VERSION)
     private String mIdTokenVersion;
 
+    @Expose()
     @SerializedName(MAM_VERSION)
     private String mMamVersion;
 
+    @Expose()
     @SerializedName(CLAIMS)
     private String mClaims;
 
+    @Expose()
     @SerializedName(INSTANCE_AWARE)
     private String mInstanceAware;
 
+    @Expose()
     @SerializedName(CLIENT_APP_NAME)
     private String mClientAppName;
 
+    @Expose()
     @SerializedName(CLIENT_APP_VERSION)
     private String mClientAppVersion;
 
@@ -82,7 +91,7 @@ public class MicrosoftTokenRequest extends TokenRequest {
         return this.mClientInfoEnabled;
     }
 
-    public void setCorrelationId(UUID correlationId){
+    public void setCorrelationId(UUID correlationId) {
         mCorrelationId = correlationId;
     }
 

@@ -27,6 +27,7 @@ import android.os.Build;
 import android.util.Base64;
 import android.util.Pair;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -49,6 +50,10 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     private static final long serialVersionUID = 6873634931996113294L;
 
     private static final String TAG = MicrosoftAuthorizationRequest.class.getSimpleName();
+    /**
+     * String for the instance aware extra query parameter.
+     */
+    public static final String INSTANCE_AWARE = "instance_aware";
 
     /**
      * Required.
@@ -64,6 +69,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     /**
      * Correlation ID.
      */
+    @Expose()
     @SerializedName("client-request-id")
     private UUID mCorrelationId;
 
@@ -81,22 +87,28 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     /**
      * The version of the calling library.
      */
+    @Expose()
     @SerializedName("x-client-Ver")
     private String mLibraryVersion;
 
+    @Expose()
     @SerializedName("x-client-SKU")
     private String mLibraryName;
 
+    @Expose()
     @SerializedName("x-client-OS")
     private String mDiagnosticOS;
 
+    @Expose()
     @SerializedName("x-client-CPU")
     private String mDiagnosticCPU;
 
+    @Expose()
     @SerializedName("x-client-DM")
     private String mDiagnosticDM;
 
-    @SerializedName("instance_aware")
+    @Expose()
+    @SerializedName(INSTANCE_AWARE)
     private Boolean mMultipleCloudAware;
 
     protected transient AzureActiveDirectorySlice mSlice;

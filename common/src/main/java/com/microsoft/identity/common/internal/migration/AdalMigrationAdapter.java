@@ -26,14 +26,15 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Base64;
 import android.util.Pair;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.microsoft.identity.common.adal.internal.ADALUserInfo;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
-import com.microsoft.identity.common.adal.internal.ADALUserInfo;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -51,6 +52,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Adapts tokens from the ADAL cache format to the MSAL (common schema) format.
@@ -252,9 +254,9 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
      * @param refreshTokenPair The 'legacy' format pair -- the key & value.
      * @return The resulting MicrosoftRefreshToken.
      */
-    private MicrosoftRefreshToken createMicrosoftRefreshToken(@NonNull final MicrosoftAccount account,
-                                                              final boolean isFrt,
-                                                              @NonNull final Pair<String, ADALTokenCacheItem> refreshTokenPair) {
+    public static MicrosoftRefreshToken createMicrosoftRefreshToken(@NonNull final MicrosoftAccount account,
+                                                                    final boolean isFrt,
+                                                                    @NonNull final Pair<String, ADALTokenCacheItem> refreshTokenPair) {
         final String methodName = ":createMicrosoftRefreshToken";
 
         try {
@@ -307,7 +309,8 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
      * @param refreshToken The credential used to derive the new account.
      * @return The newly created MicrosoftAccount.
      */
-    private MicrosoftAccount createAccount(@NonNull final ADALTokenCacheItem refreshToken) {
+    @Nullable
+    public static MicrosoftAccount createAccount(@NonNull final ADALTokenCacheItem refreshToken) {
         final String methodName = ":createAccount";
         try {
             final String rawIdToken = refreshToken.getRawIdToken();
@@ -469,7 +472,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
      *
      * @return The complete list of known common endpoints.
      */
-    private List<String> getCommonEndpoints() {
+    public static List<String> getCommonEndpoints() {
         final String protocol = "https://";
         final String pathSeparator = "/";
         final String commonPathSegment = "common";
@@ -509,7 +512,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
      *
      * @return True, if the metadata loads successfully. False otherwise.
      */
-    private static boolean loadCloudDiscoveryMetadata() {
+    public static boolean loadCloudDiscoveryMetadata() {
         final String methodName = ":loadCloudDiscoveryMetadata";
         boolean succeeded = true;
 

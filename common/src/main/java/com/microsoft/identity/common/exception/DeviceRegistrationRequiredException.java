@@ -20,11 +20,29 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
 
-public interface IResult {
+package com.microsoft.identity.common.exception;
 
-    boolean getSuccess();
-    IErrorResponse getErrorResponse();
-    ISuccessResponse getSuccessResponse();
+/**
+ *  Internal exception thrown when a device needs to registered to access the required resource (MAM)
+ */
+final public class DeviceRegistrationRequiredException extends BaseException {
+
+
+    // The username for which device needs registration
+    private String mUsername;
+
+    public DeviceRegistrationRequiredException(final String errorCode, final String errorDescription,
+                                               final String userName) {
+        super(errorCode, errorDescription);
+        mUsername = userName;
+    }
+
+    public String getUsername() {
+        return mUsername;
+    }
+
+    public void setUsername(String username) {
+        this.mUsername = username;
+    }
 }

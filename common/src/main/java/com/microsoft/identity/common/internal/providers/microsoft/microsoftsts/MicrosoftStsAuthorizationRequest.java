@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 import android.net.Uri;
 import android.util.Pair;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
@@ -44,6 +45,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     /**
      * Indicates the type of user interaction that is required. The only valid values at this time are 'login', 'none', and 'consent'.
      */
+    @Expose()
     @SerializedName("prompt")
     private String mPrompt;
 
@@ -115,8 +117,6 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
 
         public MicrosoftStsAuthorizationRequest build() {
-            this.setLibraryName("MSAL.Android");
-            this.setLibraryVersion("0.2.1");
             return new MicrosoftStsAuthorizationRequest(this);
         }
     }

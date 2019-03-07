@@ -36,6 +36,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -43,6 +44,7 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -101,11 +103,11 @@ public abstract class BaseController {
         );
     }
 
-
-    protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
-                                                           @NonNull final OperationParameters parameters) {
-        AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
-
+    /**
+     * Pre-filled ALL the fields in AuthorizationRequest.Builder
+     */
+    protected final AuthorizationRequest.Builder initializeAuthorizationRequestBuilder(@NonNull final AuthorizationRequest.Builder builder,
+                                                                                        @NonNull final OperationParameters parameters){
         UUID correlationId = null;
 
         try {
@@ -114,8 +116,7 @@ public abstract class BaseController {
             Logger.error(TAG, "correlation id from diagnostic context is not a UUID", ex);
         }
 
-        AuthorizationRequest.Builder request = builder
-                .setClientId(parameters.getClientId())
+        builder.setClientId(parameters.getClientId())
                 .setRedirectUri(parameters.getRedirectUri())
                 .setCorrelationId(correlationId);
 
@@ -126,18 +127,38 @@ public abstract class BaseController {
             }
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
-            request.setLoginHint(
+            builder.setLoginHint(
                     acquireTokenOperationParameters.getLoginHint()
             ).setExtraQueryParams(
                     acquireTokenOperationParameters.getExtraQueryStringParameters()
             ).setPrompt(
                     acquireTokenOperationParameters.getOpenIdConnectPromptParameter().toString()
-            ).setClaims(parameters.getClaimsRequestJson());
+            ).setClaims(
+                    parameters.getClaimsRequestJson()
+            ).setRequestHeaders(
+                    acquireTokenOperationParameters.getRequestHeaders()
+            );
+
+            // Set the multipleCloudAware and slice fields.
+            if (acquireTokenOperationParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
+                final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority)acquireTokenOperationParameters.getAuthority();
+                ((MicrosoftAuthorizationRequest.Builder) builder)
+                    .setAuthority(requestAuthority.getAuthorityURL())
+                    .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
+                    .setSlice(requestAuthority.mSlice);
+            }
         }
 
-        request.setScope(TextUtils.join(" ", parameters.getScopes()));
+        builder.setScope(TextUtils.join(" ", parameters.getScopes()));
 
-        return request.build();
+        return builder;
+    }
+
+    protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
+                                                           @NonNull final OperationParameters parameters) {
+        AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
+        initializeAuthorizationRequestBuilder(builder, parameters);
+        return builder.build();
     }
 
     protected TokenResult performTokenRequest(final OAuth2Strategy strategy,
@@ -145,9 +166,11 @@ public abstract class BaseController {
                                               final AuthorizationResponse response,
                                               final AcquireTokenOperationParameters parameters)
             throws IOException, ClientException {
+        final String methodName = ":performTokenRequest";
         throwIfNetworkNotAvailable(parameters.getAppContext());
 
         TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
+        logExposedFieldsOfObject(TAG + methodName, tokenRequest);
         tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
 
         TokenResult tokenResult = null;
@@ -253,6 +276,7 @@ public abstract class BaseController {
                     TAG,
                     "Success Result"
             );
+            logExposedFieldsOfObject(TAG, result.getSuccessResponse());
         }else{
             Logger.warn(
                     TAG,
@@ -271,6 +295,7 @@ public abstract class BaseController {
                             "Description: " + result.getErrorResponse().getErrorDescription()
                     );
                 }
+                logExposedFieldsOfObject(TAG, result.getErrorResponse());
             }
         }
 
@@ -292,7 +317,16 @@ public abstract class BaseController {
      */
     protected void logParameters(String tag, Object parameters){
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
-        Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+        if(Logger.getAllowPii()) {
+            Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+        }else{
+            Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
+        }
+    }
+
+    protected void logExposedFieldsOfObject(String tag, Object object){
+        final String TAG = tag + ":" + object.getClass().getSimpleName();
+        Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
     }
 
     protected TokenResult performSilentTokenRequest(
