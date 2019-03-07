@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft;
 
+import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 
 /**
@@ -36,10 +37,15 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
     public final static String SESSION_STATE = "session_state";
 
 
+    @Expose()
     protected String mCorrelationId;
+    @Expose()
     protected String mCloudInstanceName;
+    @Expose()
     protected String mCloudInstanceHostName;
+    @Expose()
     protected String mCloudGraphHostName;
+    @Expose()
     protected String mSessionState;
 
 

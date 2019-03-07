@@ -22,12 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.Date;
 
 public class MicrosoftTokenResponse extends TokenResponse {
+
+    private static final String CLIENT_INFO = "client_info";
+
+    private static final String EXT_EXPIRES_IN = "ext_expires_in";
+
+    private static final String FAMILY_ID = "foci";
 
     /**
      * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
@@ -38,7 +45,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
     /**
      * Information to uniquely identify the tenant and the user _within_ that tenant.
      */
-    @SerializedName("client_info")
+    @SerializedName(CLIENT_INFO)
     private String mClientInfo;
 
     /**
@@ -46,12 +53,15 @@ public class MicrosoftTokenResponse extends TokenResponse {
      */
     private transient String mClientId;
 
-    @SerializedName("ext_expires_in")
+    @Expose()
+    @SerializedName(EXT_EXPIRES_IN)
     private Long mExtendedExpiresIn;
 
     /**
      * Information to uniquely identify the family that the client application belongs to.
      */
+    @Expose()
+    @SerializedName(FAMILY_ID)
     private String mFamilyId;
 
     private String mAuthority;
@@ -70,20 +80,22 @@ public class MicrosoftTokenResponse extends TokenResponse {
     /**
      * The deployment ring of the current request chain.
      */
+    @Expose()
     private String mSpeRing;
 
     /**
      * The age of the RT, according to the server.
      */
+    @Expose()
     private String mRefreshTokenAge;
 
     /**
-     * The error code surfaced by the server.
+     * The error code code set as part of the client telemetry info header.  This likely will not be populated for a successful token response
      */
     private String mServerErrorCode;
 
     /**
-     * The server suberror code.
+     * The server sub error code set as part of the client telemetry info header.  This likely will not be populated for a successful token response
      */
     private String mServerSubErrorCode;
 

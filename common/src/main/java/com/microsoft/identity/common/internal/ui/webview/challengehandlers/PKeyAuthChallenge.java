@@ -61,9 +61,9 @@ public class PKeyAuthChallenge implements Serializable {
      */
     private String mThumbprint = "";
 
-    private String mVersion = null;
+    private String mVersion;
 
-    private String mSubmitUrl = "";
+    private String mSubmitUrl;
 
     /**
      * This parses the redirectURI for challenge components and produces
@@ -83,7 +83,6 @@ public class PKeyAuthChallenge implements Serializable {
         mCertAuthorities = StringExtensions.getStringTokens(
                 parameters.get(PKeyAuthChallengeHandler.RequestField.CertAuthorities.name()),
                 CHALLENGE_REQUEST_CERT_AUTH_DELIMITER);
-        mThumbprint = null;
         mVersion = parameters.get(PKeyAuthChallengeHandler.RequestField.Version.name());
         mSubmitUrl = parameters.get(PKeyAuthChallengeHandler.RequestField.SubmitUrl.name());
     }
