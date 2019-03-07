@@ -151,11 +151,14 @@ public class ExceptionAdapter {
      * @param oAuthSubError
      * @return boolean
      * */
-    private static boolean shouldBeConvertedToUiRequiredException(final String oAuthError,
-                                                                  final String oAuthSubError){
+    private static boolean shouldBeConvertedToUiRequiredException(final String oAuthError){
         // Invalid_grant doesn't necessarily requires UI protocol-wise.
         // We simplify our logic because this layer is also used by MSAL.
         if (oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT)){
+            return true;
+        }
+
+        if (oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED)){
             return true;
         }
 
@@ -179,7 +182,7 @@ public class ExceptionAdapter {
 
         ServiceException outErr;
 
-        if (shouldBeConvertedToUiRequiredException(oAuthError, oAuthSubError)) {
+        if (shouldBeConvertedToUiRequiredException(oAuthError)) {
             outErr = new UiRequiredException(
                     oAuthError,
                     oAuthErrorDescription);

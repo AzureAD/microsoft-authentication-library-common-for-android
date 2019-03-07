@@ -156,7 +156,6 @@ public class ServiceException extends BaseException {
     public ServiceException(final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
         mHttpStatusCode = DEFAULT_STATUS_CODE;
-        mSubErrorCode = "";
     }
 
     /**
@@ -170,6 +169,5 @@ public class ServiceException extends BaseException {
     public ServiceException(final String errorCode, final String errorMessage, final int httpStatusCode, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
         mHttpStatusCode = httpStatusCode;
-        mSubErrorCode = "";
     }
 }
