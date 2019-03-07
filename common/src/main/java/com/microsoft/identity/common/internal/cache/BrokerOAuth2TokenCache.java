@@ -27,7 +27,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -37,6 +36,8 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -82,8 +83,8 @@ public class BrokerOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,
                 GenericTokenResponse extends MicrosoftTokenResponse,
-                GenericAccount extends BaseAccount,
-                GenericRefreshToken extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken>
+                GenericAccount extends MicrosoftAccount,
+                GenericRefreshToken extends MicrosoftRefreshToken>
         extends OAuth2TokenCache<GenericOAuth2Strategy, GenericAuthorizationRequest, GenericTokenResponse> {
 
     private static final String TAG = BrokerOAuth2TokenCache.class.getSimpleName();
@@ -894,5 +895,75 @@ public class BrokerOAuth2TokenCache
         }
 
         return targetCache;
+    }
+
+    /**
+     * Sets the SSO state for the supplied Account, relative to the provided uid.
+     *
+     * @param uidStr       The uid of the app whose SSO token is being inserted.
+     * @param account      The account for which the supplied token is being inserted.
+     * @param refreshToken The token to insert.
+     * @return True if the token was successfully inserted into an app-specific or foci cache.
+     */
+    public boolean setSingleSignOnState(@NonNull final String uidStr,
+                                        @NonNull final GenericAccount account,
+                                        @NonNull final GenericRefreshToken refreshToken) {
+        final String methodName = ":setSingleSignOnState";
+
+        final boolean isFrt = refreshToken.getIsFamilyRefreshToken();
+
+        MsalOAuth2TokenCache targetCache;
+
+        final int uid = Integer.valueOf(uidStr);
+
+        if (isFrt) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Saving tokens to foci cache."
+            );
+
+            targetCache = mFociCache;
+        } else {
+            // If there is an existing cache for this client id, use it. Otherwise, create a new
+            // one based on the supplied uid.
+            targetCache = getTokenCacheForClient(
+                    refreshToken.getClientId(),
+                    refreshToken.getEnvironment()
+            );
+
+            if (null == targetCache) {
+                Logger.verbose(
+                        TAG + methodName,
+                        "Existing cache could not be found. Creating a new one..."
+                );
+
+                targetCache = initializeProcessUidCache(
+                        getContext(),
+                        uid
+                );
+            }
+        }
+
+        final boolean signOnStateWasSet = targetCache.setSingleSignOnState(
+                account,
+                refreshToken
+        );
+
+        if (signOnStateWasSet) {
+            // Update the BrokerApplicationMetadataCache...
+            updateApplicationMetadataCache(
+                    refreshToken.getClientId(),
+                    refreshToken.getEnvironment(),
+                    refreshToken.getFamilyId(),
+                    uid
+            );
+        } else {
+            Logger.warn(
+                    TAG + methodName,
+                    "Failed to save account/refresh token. Skipping."
+            );
+        }
+
+        return signOnStateWasSet;
     }
 }

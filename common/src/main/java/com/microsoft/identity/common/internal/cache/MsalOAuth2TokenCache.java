@@ -204,40 +204,14 @@ public class MsalOAuth2TokenCache
         );
 
         if (isFamilyRefreshToken || isMultiResourceCapable) {
-            // AAD v1 & v2 support multi-resource refresh tokens, allowing us to use
-            // a single refresh token to service all of an account's requests.
-            // To ensure that only one refresh token is maintained for an account,
-            // refresh tokens are cleared from the cache for the account which is about to be
-            // saved (in the event that there was already a refresh token in the cache)
+            final String environment = accountToSave.getEnvironment();
+            final String clientId = refreshTokenToSave.getClientId();
 
-            // AAD v1 & v2 also support the use of family refresh tokens (FRTs).
-            // FRTs allow us to think of 1st party clients as having a shared clientId, though
-            // this isn't *actually* the case. Basically, 1st party tokens in "the family"
-            // are allowed to use one another's MRRTs so long as they match the current account.
-            final int refreshTokensRemoved = removeCredentialsOfTypeForAccount(
-                    accountToSave.getEnvironment(),
-                    isFamilyRefreshToken
-                            // Delete all RTs, irrespective of clientId.
-                            // Please note: this mechanism relies on there being a logically
-                            // separate cache for FOCI inside the broker. If more families are
-                            // added in the future (eg "foci" : "2") this logic will need to be
-                            // modified so that the deletion is scoped to only delete RTs in a
-                            // provided family. This is unimplemented for now, as it complicates the
-                            // api and has only a marginal chance of ever being needed.
-                            // Basically, FOCI is more like true/false than a real "id".
-
-                            // If this cache is running in standalone (no-broker) mode,
-                            // then we can think of this call as saying 'delete all RTs in the cache
-                            // relative to the current account and for all client ids'. Since
-                            // standalone mode only ever serves a single client id, this should be
-                            // OK for now. If TSL support comes later, this approach may need to be
-                            // reevaluated.
-                            ? null
-                            // Delete all RTs relative to this client ID
-                            : refreshTokenToSave.getClientId(),
-                    CredentialType.RefreshToken,
+            final int refreshTokensRemoved = removeRefreshTokensForAccount(
                     accountToSave,
-                    true
+                    isFamilyRefreshToken,
+                    environment,
+                    clientId
             );
 
             Logger.info(
@@ -264,6 +238,47 @@ public class MsalOAuth2TokenCache
         result.setIdToken(idTokenToSave);
 
         return result;
+    }
+
+    private int removeRefreshTokensForAccount(@NonNull final AccountRecord accountToSave,
+                                              final boolean isFamilyRefreshToken,
+                                              @NonNull final String environment,
+                                              @Nullable final String clientId) {
+        // AAD v1 & v2 support multi-resource refresh tokens, allowing us to use
+        // a single refresh token to service all of an account's requests.
+        // To ensure that only one refresh token is maintained for an account,
+        // refresh tokens are cleared from the cache for the account which is about to be
+        // saved (in the event that there was already a refresh token in the cache)
+
+        // AAD v1 & v2 also support the use of family refresh tokens (FRTs).
+        // FRTs allow us to think of 1st party clients as having a shared clientId, though
+        // this isn't *actually* the case. Basically, 1st party tokens in "the family"
+        // are allowed to use one another's MRRTs so long as they match the current account.
+        return removeCredentialsOfTypeForAccount(
+                environment,
+                isFamilyRefreshToken
+                        // Delete all RTs, irrespective of clientId.
+                        // Please note: this mechanism relies on there being a logically
+                        // separate cache for FOCI inside the broker. If more families are
+                        // added in the future (eg "foci" : "2") this logic will need to be
+                        // modified so that the deletion is scoped to only delete RTs in a
+                        // provided family. This is unimplemented for now, as it complicates the
+                        // api and has only a marginal chance of ever being needed.
+                        // Basically, FOCI is more like true/false than a real "id".
+
+                        // If this cache is running in standalone (no-broker) mode,
+                        // then we can think of this call as saying 'delete all RTs in the cache
+                        // relative to the current account and for all client ids'. Since
+                        // standalone mode only ever serves a single client id, this should be
+                        // OK for now. If TSL support comes later, this approach may need to be
+                        // reevaluated.
+                        ? null
+                        // Delete all RTs relative to this client ID
+                        : clientId,
+                CredentialType.RefreshToken,
+                accountToSave,
+                true
+        );
     }
 
     @Override
@@ -1004,9 +1019,38 @@ public class MsalOAuth2TokenCache
                     idToken
             );
 
-            mAccountCredentialCache.saveAccount(accountDto);
-            mAccountCredentialCache.saveCredential(idToken);
-            mAccountCredentialCache.saveCredential(rt);
+            final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
+                    refreshToken.getFamilyId()
+            );
+
+            final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+                    accountDto.getAuthorityType()
+            );
+
+            if (isFamilyRefreshToken || isMultiResourceCapable) {
+                final int refreshTokensRemoved = removeRefreshTokensForAccount(
+                        accountDto,
+                        isFamilyRefreshToken,
+                        accountDto.getEnvironment(),
+                        rt.getClientId()
+                );
+
+                Logger.info(
+                        TAG + methodName,
+                        "Refresh tokens removed: [" + refreshTokensRemoved + "]"
+                );
+
+                if (refreshTokensRemoved > 1) {
+                    Logger.warn(
+                            TAG + methodName,
+                            "Multiple refresh tokens found for Account."
+                    );
+                }
+            }
+
+            saveAccounts(accountDto);
+            saveCredentials(idToken, rt);
+
             return true;
         } catch (ClientException e) {
             Logger.error(
