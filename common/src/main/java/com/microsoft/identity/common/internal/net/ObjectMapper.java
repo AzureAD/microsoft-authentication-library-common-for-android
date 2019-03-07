@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.net;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -57,6 +58,19 @@ public final class ObjectMapper {
      */
     public static String serializeObjectToJsonString(Object object) {
         return new Gson().toJson(object);
+    }
+
+    /**
+     * Serialize object to JSON string.  Only serialize fields marked with the GSON Expose annotation
+     *
+     * @param object Object
+     * @return JSON string
+     */
+    public static String serializeExposedFieldsOfObjectToJsonString(Object object) {
+        GsonBuilder builder = new GsonBuilder();
+        builder.excludeFieldsWithoutExposeAnnotation();
+        Gson gson = builder.create();
+        return gson.toJson(object);
     }
 
     /**

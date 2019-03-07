@@ -102,5 +102,7 @@ public abstract class AuthorizationResult<
         return mAuthorizationErrorResponse;
     }
 
+    public ISuccessResponse getSuccessResponse() { return mAuthorizationResponse; }
+
 }
 

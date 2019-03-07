@@ -22,12 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.request;
 
+import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
 public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
     private RefreshTokenRecord mRefreshToken;
+    @Expose()
     private boolean mForceRefresh;
 
     public RefreshTokenRecord getRefreshToken() {

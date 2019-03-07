@@ -22,25 +22,32 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 public class TokenErrorResponse implements IErrorResponse {
 
+    @Expose()
     private int mStatusCode;
 
     private String mResponseBody;
 
+    @Expose()
     private String mResponseHeadersJson;
 
+    @Expose()
     @SerializedName("error")
     private String mError;
 
+    @Expose()
     @SerializedName("suberror")
     private String mSubError;
 
+    @Expose()
     @SerializedName("error_description")
     private String mErrorDescription;
 
+    @Expose()
     @SerializedName("error_uri")
     private String mErrorUri;
 
