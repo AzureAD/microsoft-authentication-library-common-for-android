@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.exception;
 
-import android.support.annotation.Nullable;
-
 import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.internal.net.HttpResponse;
@@ -76,8 +74,6 @@ public class ServiceException extends BaseException {
      */
     public static final String UNKNOWN_ERROR = "unknown_error";
 
-    private String mSubErrorCode;
-
     private int mHttpStatusCode;
 
     private HashMap<String, String> mHttpResponseBody = null;
@@ -97,12 +93,6 @@ public class ServiceException extends BaseException {
     }
 
     /**
-     * @return The OAuth sub error code for the exception, could be null.
-     */
-    public String getSubErrorCode() {
-        return mSubErrorCode;
-    }
-    /**
      * Gets the response body that may be returned by the service.
      *
      * @return response body map, null if not initialized.
@@ -118,13 +108,6 @@ public class ServiceException extends BaseException {
      */
     public HashMap<String, List<String>> getHttpResponseHeaders() {
         return mHttpResponseHeaders;
-    }
-
-    /**
-     * @@param subErrorCode - The sub error code for the exception.
-     */
-    public void setSubErrorCode(@Nullable final String subErrorCode){
-        mSubErrorCode = subErrorCode;
     }
 
     /**
