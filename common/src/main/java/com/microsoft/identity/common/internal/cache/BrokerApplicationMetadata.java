@@ -29,7 +29,7 @@ public class BrokerApplicationMetadata {
     private static final class SerializedNames {
         public static final String CLIENT_ID = "client_id";
         static final String ENVIRONMENT = "environment";
-        static final String FOCI = "foci";
+        static final String FOCI = "family_id";
         static final String APPLICATION_UID = "application_uid";
     }
 
