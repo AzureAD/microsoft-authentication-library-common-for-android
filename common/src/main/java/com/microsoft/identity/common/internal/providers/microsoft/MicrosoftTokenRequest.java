@@ -33,7 +33,7 @@ public class MicrosoftTokenRequest extends TokenRequest {
     public static final String CODE_VERIFIER = "code_verifier";
     public static final String CLIENT_INFO = "client_info";
     public static final String CORRELATION_ID = "client-request-id";
-    public static final String ID_TOKEN_VERSIOM = "itver";
+    public static final String ID_TOKEN_VERSION = "itver";
     public static final String MAM_VERSION = "mamver";
     public static final String CLAIMS = "claims";
     public static final String INSTANCE_AWARE = "instance_aware";
@@ -56,7 +56,7 @@ public class MicrosoftTokenRequest extends TokenRequest {
     private UUID mCorrelationId;
 
     @Expose()
-    @SerializedName(ID_TOKEN_VERSIOM)
+    @SerializedName(ID_TOKEN_VERSION)
     private String mIdTokenVersion;
 
     @Expose()
@@ -91,7 +91,7 @@ public class MicrosoftTokenRequest extends TokenRequest {
         return this.mClientInfoEnabled;
     }
 
-    public void setCorrelationId(UUID correlationId){
+    public void setCorrelationId(UUID correlationId) {
         mCorrelationId = correlationId;
     }
 
