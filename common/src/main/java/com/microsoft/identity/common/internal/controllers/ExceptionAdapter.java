@@ -111,58 +111,51 @@ public class ExceptionAdapter {
         final String methodName = ":exceptionFromTokenResult";
 
         final TokenErrorResponse tokenErrorResponse;
+        ServiceException outErr = null;
 
         if (tokenResult != null && !tokenResult.getSuccess()) {
             tokenErrorResponse = tokenResult.getErrorResponse();
-
-            BaseException outErr;
 
             if (StringUtil.isEmpty(tokenErrorResponse.getError())) {
                 Logger.warn(
                         TAG + methodName,
                         "Received unknown error"
                 );
-
                 outErr = new ServiceException(
                         ServiceException.UNKNOWN_ERROR,
                         "Request failed, but no error returned back from service.",
                         null
                 );
-            }
-
-            outErr = getExceptionFromOAuthError(
+            } else {
+                outErr = getExceptionFromOAuthError(
                         tokenErrorResponse.getError(),
                         tokenErrorResponse.getSubError(),
                         tokenErrorResponse.getErrorDescription(),
-                    synthesizeHttpResponse(tokenErrorResponse.getStatusCode(),
-                            tokenErrorResponse.getResponseHeadersJson(),
-                            tokenErrorResponse.getResponseBody()));
+                        synthesizeHttpResponse(tokenErrorResponse.getStatusCode(),
+                                tokenErrorResponse.getResponseHeadersJson(),
+                                tokenErrorResponse.getResponseBody()));
+
+            }
 
             applyCliTelemInfo(tokenResult.getCliTelemInfo(), outErr);
         }
 
-        return null;
+        return outErr;
     }
 
     /**
      * Determine if an exception owning the given error codes should be converted into UiRequiredException.
      *
      * @param oAuthError
-     * @param oAuthSubError
      * @return boolean
      * */
     private static boolean shouldBeConvertedToUiRequiredException(final String oAuthError){
         // Invalid_grant doesn't necessarily requires UI protocol-wise.
         // We simplify our logic because this layer is also used by MSAL.
-        if (oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT)){
-            return true;
-        }
 
-        if (oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED)){
-            return true;
-        }
+        return oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT) ||
+                oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED);
 
-        return false;
     }
 
     /**
