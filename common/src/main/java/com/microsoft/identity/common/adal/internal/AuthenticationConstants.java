@@ -976,7 +976,7 @@ public final class AuthenticationConstants {
         /**
          * String to return Msal V2 response.
          */
-        public static final String BROKER_USERINFO_RESULT_V2 = "broker.userinfo.v2";
+        public static final String BROKER_ACCOUNT_RECORD_RESULT_V2 = "broker.account_record.v2";
 
         /**
          * String for ssl prefix.
