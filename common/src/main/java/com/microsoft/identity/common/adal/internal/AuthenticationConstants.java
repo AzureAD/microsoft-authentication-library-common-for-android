@@ -969,9 +969,15 @@ public final class AuthenticationConstants {
         public static final String BROKER_REQUEST_V2 = "broker.request.v2";
 
         /**
-         * String to send Msal V2 Request params.
+         * String to return Msal V2 response.
          */
         public static final String BROKER_RESULT_V2 = "broker.result.v2";
+
+        /**
+         * String to return Msal V2 response.
+         */
+        public static final String BROKER_ACCOUNT_RECORD_RESULT_V2 = "broker.account_record.v2";
+
         /**
          * String for ssl prefix.
          */
