@@ -51,6 +51,16 @@ public class OperationParameters {
     private Authority mAuthority;
     @Expose()
     private String mClaimsRequestJson;
+    @Expose()
+    private SdkType mSdkType = SdkType.MSAL; // default value where we get a v2 id token;
+
+    public SdkType getSdkType() {
+        return mSdkType;
+    }
+
+    public void setSdkType(final SdkType sdkType) {
+        this.mSdkType = sdkType;
+    }
 
     public Context getAppContext() {
         return mAppContext;
