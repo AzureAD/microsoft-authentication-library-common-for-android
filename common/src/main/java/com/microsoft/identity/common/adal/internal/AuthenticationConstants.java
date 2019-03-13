@@ -1118,6 +1118,8 @@ public final class AuthenticationConstants {
          * Token is expired or invalid for all resources and scopes and shouldn't be retried again as-is.
          */
         public static final String BAD_TOKEN = "bad_token";
+
+        public static final String DEVICE_AUTHENTICATION_FAILED = "device_authentication_failed";
     }
 
     /**
