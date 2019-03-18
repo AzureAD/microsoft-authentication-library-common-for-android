@@ -22,17 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ArgumentException;
-import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
@@ -87,24 +84,6 @@ public abstract class BaseController {
 
     public abstract AcquireTokenResult acquireTokenSilent(final AcquireTokenSilentOperationParameters request)
             throws IOException, ClientException, UiRequiredException, ArgumentException, ServiceException;
-
-    protected void throwIfNetworkNotAvailable(final Context context) throws ClientException {
-        final String methodName = ":throwIfNetworkNotAvailable";
-        final ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        final NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-
-        if (networkInfo == null || !networkInfo.isConnected()) {
-            throw new ClientException(
-                    ClientException.DEVICE_NETWORK_NOT_AVAILABLE,
-                    "Device network connection is not available."
-            );
-        }
-
-        Logger.info(
-                TAG + methodName,
-                "Network status: connected"
-        );
-    }
 
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
@@ -170,7 +149,7 @@ public abstract class BaseController {
                                               final AcquireTokenOperationParameters parameters)
             throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
-        throwIfNetworkNotAvailable(parameters.getAppContext());
+        HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAppContext());
 
         TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
@@ -307,7 +286,7 @@ public abstract class BaseController {
                 "Requesting tokens..."
         );
 
-        throwIfNetworkNotAvailable(parameters.getAppContext());
+        HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAppContext());
 
         // Check that the authority is known
         Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parameters.getAuthority());

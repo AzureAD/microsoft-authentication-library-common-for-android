@@ -234,6 +234,16 @@ public final class AuthenticationConstants {
         public static final String AAD_VERSION = "ver";
 
         /**
+         * Constant for  v1 endpoint
+         */
+        public static final String AAD_VERSION_V1 = "1.0";
+
+        /**
+         * Constsnt for v2 endpoint
+         */
+        public static final String AAD_VERSION_V2 = "2.0";
+
+        /**
          * String of preferred user name.
          */
         public static final String AAD_PREFERRED_USERNAME = "preferred_username";
