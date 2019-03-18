@@ -26,7 +26,6 @@ import android.accounts.AccountManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.ADALError;
@@ -41,10 +40,7 @@ import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
-
-import java.util.Map;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CliTelemInfo.RT_AGE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CliTelemInfo.SERVER_ERROR;
@@ -57,6 +53,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
     @Override
     public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult) {
+
+        Logger.verbose(TAG , "Constructing success bundle from Authentication Result.");
 
         final Bundle resultBundle = new Bundle();
 
@@ -127,6 +125,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     @Override
     public Bundle bundleFromBaseException(BaseException baseException) {
 
+        Logger.verbose(TAG , "Constructing error bundle from exception.");
+
         final Bundle resultBundle = new Bundle();
 
         resultBundle.putString(
@@ -159,6 +159,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
         if (exception instanceof UserCancelException) {
 
+            Logger.verbose(TAG , "Setting Bundle result from UserCancelException.");
             setErrorToResultBundle(
                     resultBundle,
                     AccountManager.ERROR_CODE_CANCELED,
@@ -166,6 +167,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
         } else if (exception instanceof ArgumentException) {
 
+            Logger.verbose(TAG , "Setting Bundle result from ArgumentException.");
             setErrorToResultBundle(
                     resultBundle,
                     AccountManager.ERROR_CODE_BAD_ARGUMENTS,
@@ -186,7 +188,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
                     (ServiceException) exception);
 
         } else {
-
+            Logger.verbose(TAG , "Setting Bundle result for Unknown Exception/Bad result.");
             setErrorToResultBundle(
                     resultBundle,
                     AccountManager.ERROR_CODE_BAD_REQUEST,
@@ -215,6 +217,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     private void setClientExceptionPropertiesToBundle(@NonNull final Bundle resultBundle,
                                                       @NonNull final ClientException clientException) {
 
+        Logger.verbose(TAG , "Setting properties from ClientException.");
+
         if (clientException.getErrorCode().equalsIgnoreCase(ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE)) {
 
             setErrorToResultBundle(
@@ -241,6 +245,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
      */
     private void setServiceExceptionPropertiesToBundle(@NonNull final Bundle resultBundle,
                                                        @NonNull final ServiceException serviceException) {
+
+        Logger.verbose(TAG , "Setting properties from ServiceException.");
 
         if (null != serviceException.getHttpResponseBody()) {
             resultBundle.putString(
@@ -294,6 +300,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
      */
     private void setIntuneAppProtectionPropertiesToBundle(@NonNull final Bundle resultBundle,
                                                           @NonNull final IntuneAppProtectionPolicyRequiredException exception) {
+
+        Logger.verbose(TAG , "Setting properties from IntuneAppProtectionPolicyRequiredException.");
 
         resultBundle.putString(
                 AuthenticationConstants.Browser.RESPONSE_ERROR_CODE,
