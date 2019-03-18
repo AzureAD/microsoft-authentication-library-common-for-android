@@ -39,4 +39,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
  public Bundle bundleFromBaseException(BaseException exception) {
   return null;
  }
+
+ @Override
+ public ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle) {
+  return null;
+ }
+
+ @Override
+ public BaseException baseExceptionFromBundle(Bundle resultBundle) {
+  return null;
+ }
 }

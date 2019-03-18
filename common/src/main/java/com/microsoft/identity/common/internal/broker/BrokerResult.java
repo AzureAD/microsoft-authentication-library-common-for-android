@@ -22,111 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import java.io.Serializable;
 
 /**
  * Encapsulates the possible responses from the broker.  Both successful response and error response.
  */
-public class BrokerResult extends TokenResult implements Parcelable {
-
-    private BrokerTokenResponse mBrokerTokenResponse;
-    private BrokerErrorResponse mBrokerErrorResponse;
-
-    /**
-     * Constructor for create successful broker response
-     *
-     * @param tokenResponse
-     */
-    public BrokerResult(BrokerTokenResponse tokenResponse) {
-        this(tokenResponse, null);
-    }
-
-    /**
-     * Constructor for creating an unsuccessful broker response
-     *
-     * @param errorResponse
-     */
-    public BrokerResult(BrokerErrorResponse errorResponse) {
-        this(null, errorResponse);
-    }
-
-    /**
-     * Constructor for creating an BrokerResult
-     * @param brokerTokenResponse
-     * @param brokerErrorResponse
-     */
-    public BrokerResult(BrokerTokenResponse brokerTokenResponse, BrokerErrorResponse brokerErrorResponse) {
-        super(brokerTokenResponse, brokerErrorResponse);
-        mBrokerTokenResponse = brokerTokenResponse;
-        mBrokerErrorResponse = brokerErrorResponse;
-    }
-
-
-    protected BrokerResult(Parcel in) {
-        if (in != null) {
-            setSuccess(in.readInt() != 0);
-            mBrokerTokenResponse = in.readParcelable(BrokerTokenResponse.class.getClassLoader());
-            mBrokerErrorResponse = in.readParcelable(BrokerErrorResponse.class.getClassLoader());
-        }
-
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        if (dest != null) {
-            dest.writeInt((getSuccess() ? 1 : 0));
-            dest.writeParcelable(mBrokerTokenResponse, flags);
-            dest.writeParcelable(mBrokerErrorResponse, flags);
-        }
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public static final Creator<BrokerResult> CREATOR = new Creator<BrokerResult>() {
-        @Override
-        public BrokerResult createFromParcel(Parcel in) {
-            return new BrokerResult(in);
-        }
-
-        @Override
-        public BrokerResult[] newArray(int size) {
-            return new BrokerResult[size];
-        }
-    };
-
-    /**
-     * Indicates whether the broker request was successful or not
-     *
-     * @return
-     */
-    public boolean isSuccessful() {
-        return getSuccess();
-    }
-
-    /**
-     * Gets the token result associated with a successful request
-     *
-     * @return
-     */
-    @Override
-    public BrokerTokenResponse getTokenResponse() {
-        return mBrokerTokenResponse;
-    }
-
-    /**
-     * Gets the error result associated with a failed request
-     *
-     * @return
-     */
-    @Override
-    public BrokerErrorResponse getErrorResponse() {
-        return mBrokerErrorResponse;
-    }
+public class BrokerResult implements Serializable {
 
 }

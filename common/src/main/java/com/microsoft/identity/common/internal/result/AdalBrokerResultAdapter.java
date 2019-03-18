@@ -26,7 +26,6 @@ import android.accounts.AccountManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.ADALError;
@@ -40,11 +39,7 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
-
-import java.util.Map;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CliTelemInfo.RT_AGE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CliTelemInfo.SERVER_ERROR;
@@ -148,6 +143,16 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         mapExceptionToBundle(resultBundle, baseException);
 
         return resultBundle;
+    }
+
+    @Override
+    public ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BaseException baseExceptionFromBundle(Bundle resultBundle) {
+        throw new UnsupportedOperationException();
     }
 
 

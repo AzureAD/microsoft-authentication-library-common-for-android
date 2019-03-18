@@ -23,8 +23,9 @@
 
 package com.microsoft.identity.common.internal.broker;
 
+import android.os.Bundle;
+
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -32,7 +33,7 @@ import java.util.concurrent.TimeoutException;
 public class BrokerResultFuture implements Future<BrokerResult> {
 
     private final CountDownLatch mCountDownLatch = new CountDownLatch(1);
-    private BrokerResult mBrokerResult;
+    private Bundle mResultBundle;
 
     @Override
     public boolean cancel(boolean b) {
@@ -50,23 +51,23 @@ public class BrokerResultFuture implements Future<BrokerResult> {
     }
 
     @Override
-    public BrokerResult get() throws InterruptedException, ExecutionException {
+    public Bundle get() throws InterruptedException {
         mCountDownLatch.await();
-        return mBrokerResult;
+        return mResultBundle;
     }
 
     @Override
-    public BrokerResult get(long l, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
+    public Bundle get(long l, TimeUnit timeUnit) throws InterruptedException, TimeoutException {
         if (mCountDownLatch.await(l, timeUnit)) {
-            return mBrokerResult;
+            return mResultBundle;
         } else {
             throw new TimeoutException();
         }
 
     }
 
-    public void setBrokerResult(BrokerResult result) {
-        mBrokerResult = result;
+    public void setResultBundle(final Bundle resultBundle) {
+        mResultBundle = resultBundle;
         mCountDownLatch.countDown();
     }
 }

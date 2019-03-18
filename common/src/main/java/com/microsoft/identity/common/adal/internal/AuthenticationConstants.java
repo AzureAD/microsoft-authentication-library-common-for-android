@@ -974,11 +974,6 @@ public final class AuthenticationConstants {
         public static final String BROKER_RESULT_V2 = "broker.result.v2";
 
         /**
-         * String to return Msal V2 response.
-         */
-        public static final String BROKER_ACCOUNT_RECORD_RESULT_V2 = "broker.account_record.v2";
-
-        /**
          * String for ssl prefix.
          */
         public static final String REDIRECT_SSL_PREFIX = "https://";

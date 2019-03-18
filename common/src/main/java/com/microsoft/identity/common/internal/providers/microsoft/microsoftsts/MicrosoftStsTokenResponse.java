@@ -22,11 +22,38 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+
+import java.util.Date;
 
 /**
  * {@link TokenResponse} subclass for the Microsoft STS (V2).
  */
 public class MicrosoftStsTokenResponse extends MicrosoftTokenResponse {
+
+    //TODO : See if this can be in MicrosoftTokenResponse
+    @SerializedName("not_before")
+    private Date mExpiresNotBefore;
+
+    @SerializedName("cloud_instance_host_name")
+    private String mCloudInstanceHostName;
+
+    public Date getExpiresNotBefore() {
+        return mExpiresNotBefore;
+    }
+
+    public void setExpiresNotBefore(final Date expiresNotBefore) {
+        mExpiresNotBefore = expiresNotBefore;
+    }
+
+    public String getCloudInstanceHostName() {
+        return mCloudInstanceHostName;
+    }
+
+    public void setCloudInstanceHostName(final String cloudInstanceHostName) {
+        this.mCloudInstanceHostName = cloudInstanceHostName;
+    }
+
 }
