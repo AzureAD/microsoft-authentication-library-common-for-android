@@ -24,12 +24,14 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.DeviceRegistrationRequiredException;
+import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
@@ -127,13 +129,7 @@ public class ExceptionAdapter {
                         null
                 );
             } else {
-                outErr = getExceptionFromOAuthError(
-                        tokenErrorResponse.getError(),
-                        tokenErrorResponse.getSubError(),
-                        tokenErrorResponse.getErrorDescription(),
-                        synthesizeHttpResponse(tokenErrorResponse.getStatusCode(),
-                                tokenErrorResponse.getResponseHeadersJson(),
-                                tokenErrorResponse.getResponseBody()));
+                outErr = getExceptionFromTokenErrorResponse(tokenErrorResponse);
 
             }
 
@@ -158,39 +154,54 @@ public class ExceptionAdapter {
 
     }
 
+    private static boolean isIntunePolicyRequiredError(final String oAuthError, final String oAuthSubError) {
+
+        return  !TextUtils.isEmpty(oAuthError) &&
+                !TextUtils.isEmpty(oAuthSubError) &&
+                oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT) &&
+                oAuthSubError.equalsIgnoreCase(AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED);
+    }
+
     /**
      * Get an exception object from the given oAuth values.
      *
-     * @param oAuthError
-     * @param oAuthSubError
-     * @param oAuthErrorDescription
-     * @param response
+     * @param errorResponse
      * @return ServiceException, UiRequiredException
      * */
-    public static ServiceException getExceptionFromOAuthError(final String oAuthError,
-                                                              final String oAuthSubError,
-                                                              final String oAuthErrorDescription,
-                                                              final HttpResponse response) {
-        final String methodName = ":getExceptionFromOAuthError";
+    public static ServiceException getExceptionFromTokenErrorResponse(final TokenErrorResponse errorResponse) {
+        final String methodName = ":getExceptionFromTokenErrorResponse";
 
-        ServiceException outErr;
+        final ServiceException outErr;
 
-        if (shouldBeConvertedToUiRequiredException(oAuthError)) {
+        if (shouldBeConvertedToUiRequiredException(errorResponse.getError())) {
+
             outErr = new UiRequiredException(
-                    oAuthError,
-                    oAuthErrorDescription);
+                    errorResponse.getError(),
+                    errorResponse.getErrorDescription());
+        }else if(isIntunePolicyRequiredError(errorResponse.getError(), errorResponse.getSubError())){
+
+            outErr = new IntuneAppProtectionPolicyRequiredException(
+                    errorResponse.getError(),
+                    errorResponse.getErrorDescription()
+            );
         }
         else {
             outErr = new ServiceException(
-                    oAuthError,
-                    oAuthErrorDescription,
+                    errorResponse.getError(),
+                    errorResponse.getErrorDescription(),
                     null);
         }
 
-        outErr.setSubErrorCode(oAuthSubError);
+        outErr.setSubErrorCode(errorResponse.getSubError());
 
         try {
-            outErr.setHttpResponse(response);
+            outErr.setHttpResponse(
+                    synthesizeHttpResponse(
+                            errorResponse.getStatusCode(),
+                            errorResponse.getResponseHeadersJson(),
+                            errorResponse.getResponseBody()
+                    )
+            );
         }
         catch (JSONException e) {
             Logger.warn(
@@ -202,8 +213,8 @@ public class ExceptionAdapter {
         return outErr;
     }
 
-    public static void applyCliTelemInfo(@NonNull final CliTelemInfo cliTelemInfo,
-                                          @NonNull final BaseException outErr) {
+    public static void applyCliTelemInfo(@Nullable final CliTelemInfo cliTelemInfo,
+                                         @NonNull final BaseException outErr) {
         if (null != cliTelemInfo) {
             outErr.setSpeRing(cliTelemInfo.getSpeRing());
             outErr.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());

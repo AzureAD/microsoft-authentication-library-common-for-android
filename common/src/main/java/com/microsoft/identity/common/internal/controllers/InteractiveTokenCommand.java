@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.content.Context;
 import android.content.Intent;
 
 import com.microsoft.identity.common.exception.ArgumentException;
@@ -40,12 +39,11 @@ public class InteractiveTokenCommand extends TokenCommand {
 
     private static final String TAG = InteractiveTokenCommand.class.getSimpleName();
 
-    public InteractiveTokenCommand(Context context,
-                                   AcquireTokenOperationParameters parameters,
+    public InteractiveTokenCommand(AcquireTokenOperationParameters parameters,
                                    BaseController controller,
                                    ILocalAuthenticationCallback callback) {
 
-        super(context, parameters, controller, callback);
+        super(parameters, controller, callback);
     }
 
     @Override
