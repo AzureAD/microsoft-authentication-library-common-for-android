@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Pair;
 
 import com.microsoft.identity.common.exception.BaseException;
@@ -85,7 +86,7 @@ public class ApiDispatcher {
                         }
                     }
 
-                    Handler handler = new Handler(command.getContext().getMainLooper());
+                    Handler handler = new Handler(Looper.getMainLooper());
 
                     if (baseException != null) {
                         //Post On Error
@@ -285,7 +286,7 @@ public class ApiDispatcher {
                     }
                 }
 
-                Handler handler = new Handler(command.getContext().getMainLooper());
+                Handler handler = new Handler(Looper.getMainLooper());
 
                 if (baseException != null) {
                     //Post On Error
