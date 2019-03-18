@@ -110,8 +110,6 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
                 authenticationResult.getIdToken()
         );
 
-        setIdTokenClaimstoBundle(resultBundle, authenticationResult.getIdToken());
-
         resultBundle.putString(
                 SPE_RING,
                 authenticationResult.getSpeRing()
@@ -196,59 +194,6 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
             );
         }
 
-    }
-
-    /**
-     * Helper method to add idtoken claims to the bundle
-     */
-    private void setIdTokenClaimstoBundle(@NonNull final Bundle resultBundle,
-                                          @Nullable final String rawIdToken) {
-        final String methodName = "setIdTokenClaimstoBundle";
-
-        if(TextUtils.isEmpty(rawIdToken)){
-            Logger.warn(TAG + methodName, "Authentication result returned empty or null id token, " +
-                    "claims are not added to the result bundle");
-            return;
-        }
-
-        try {
-            final IDToken idToken = new IDToken(rawIdToken);
-            final Map<String, String> claims = idToken.getTokenClaims();
-
-            resultBundle.putString(
-                    AuthenticationConstants.Broker.ACCOUNT_USERINFO_GIVEN_NAME,
-                    claims.get(AuthenticationConstants.OAuth2.ID_TOKEN_GIVEN_NAME)
-            );
-
-            resultBundle.putString(
-                    AuthenticationConstants.Broker.ACCOUNT_USERINFO_FAMILY_NAME,
-                    claims.get(AuthenticationConstants.OAuth2.ID_TOKEN_FAMILY_NAME)
-            );
-
-            String upn = claims.get(AuthenticationConstants.OAuth2.ID_TOKEN_UPN);
-            if (TextUtils.isEmpty(upn)) {
-                upn = claims.get(AuthenticationConstants.OAuth2.ID_TOKEN_EMAIL);
-            }
-
-            resultBundle.putString(
-                    AuthenticationConstants.Broker.ACCOUNT_USERINFO_USERID_DISPLAYABLE,
-                    upn
-            );
-
-            resultBundle.putString(
-                    AuthenticationConstants.Broker.ACCOUNT_LOGIN_HINT,
-                    upn
-            );
-
-            resultBundle.putString(
-                    AuthenticationConstants.Broker.ACCOUNT_USERINFO_IDENTITY_PROVIDER,
-                    SchemaUtil.getIdentityProvider(rawIdToken)
-            );
-        } catch (ServiceException e) {
-            Logger.verbose(
-                    TAG + methodName,
-                    "Exception while decoding IDToken.");
-        }
     }
 
     /**
