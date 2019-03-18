@@ -63,8 +63,8 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
         setAuthority(microsoftStsTokenResponse.getAuthority());
         setSpeRing(microsoftStsTokenResponse.getSpeRing());
         setRefreshTokenAge(microsoftStsTokenResponse.getRefreshTokenAge());
-        setServerErrorCode(microsoftStsTokenResponse.getServerErrorCode());
-        setServerSubErrorCode(microsoftStsTokenResponse.getServerSubErrorCode());
+        setCliTelemErrorCode(microsoftStsTokenResponse.getCliTelemErrorCode());
+        setCliTelemSubErrorCode(microsoftStsTokenResponse.getCliTelemSubErrorCode());
     }
 
     protected BrokerTokenResponse(Parcel in) {
@@ -88,8 +88,8 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
             setCloudInstanceHostName(in.readString());
             setSpeRing(in.readString());
             setRefreshTokenAge(in.readString());
-            setServerErrorCode(in.readString());
-            setServerSubErrorCode(in.readString());
+            setCliTelemErrorCode(in.readString());
+            setCliTelemSubErrorCode(in.readString());
         }
     }
 
@@ -115,8 +115,8 @@ public class BrokerTokenResponse extends MicrosoftStsTokenResponse implements Pa
             dest.writeString(getCloudInstanceHostName());
             dest.writeString(getSpeRing());
             dest.writeString(getRefreshTokenAge());
-            dest.writeString(getServerErrorCode());
-            dest.writeString(getServerSubErrorCode());
+            dest.writeString(getCliTelemErrorCode());
+            dest.writeString(getCliTelemSubErrorCode());
         }
     }
 
