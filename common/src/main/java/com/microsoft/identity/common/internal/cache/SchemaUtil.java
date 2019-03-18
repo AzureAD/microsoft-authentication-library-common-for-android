@@ -158,21 +158,20 @@ public final class SchemaUtil {
                             AuthenticationConstants.OAuth2.AAD_VERSION
                     );
                     if (!TextUtils.isEmpty(aadVersion) &&
-                            aadVersion.equalsIgnoreCase("1.0")) {
+                            aadVersion.equalsIgnoreCase(AuthenticationConstants.OAuth2.AAD_VERSION_V1)) {
 
                         idp = idTokenClaims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
 
                         // For home accounts idp claim is not available, use iss claim instead.
                         if(TextUtils.isEmpty(idp)){
-                            Logger.info(
-                                    TAG + ":" + methodName,
-                                    "idp claim was null, using iss claim")
-                            ;
+                            Logger.info(TAG + ":" + methodName,
+                                    "idp claim was null, using iss claim"
+                            );
                             idp = idTokenClaims.get(MicrosoftIdToken.ISSUER);
                         }
 
                     } else if (!TextUtils.isEmpty(aadVersion) &&
-                            aadVersion.equalsIgnoreCase("2.0")) {
+                            aadVersion.equalsIgnoreCase(AuthenticationConstants.OAuth2.AAD_VERSION_V2)) {
 
                         idp = idTokenClaims.get(MicrosoftIdToken.ISSUER);
                     }
