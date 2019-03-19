@@ -1119,6 +1119,11 @@ public final class AuthenticationConstants {
          */
         public static final String BAD_TOKEN = "bad_token";
 
+        /**
+         * Oauth2 suberror code for invalid_grant.
+         * Failed to do device authentication during a token request.
+         * Broker should make a request to DRS to get the current device status and act accordingly.
+         */
         public static final String DEVICE_AUTHENTICATION_FAILED = "device_authentication_failed";
     }
 
