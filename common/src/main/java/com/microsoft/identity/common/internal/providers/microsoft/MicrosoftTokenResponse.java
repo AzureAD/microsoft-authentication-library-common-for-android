@@ -84,7 +84,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
     private String mSpeRing;
 
     /**
-     * The age of the RT, according to the server.
+     * The age of the RT, according to the server (x-ms-clitelem header).
      */
     @Expose()
     private String mRefreshTokenAge;
@@ -92,12 +92,12 @@ public class MicrosoftTokenResponse extends TokenResponse {
     /**
      * The error code code set as part of the client telemetry info header.  This likely will not be populated for a successful token response
      */
-    private String mServerErrorCode;
+    private String mCliTelemErrorCode;
 
     /**
      * The server sub error code set as part of the client telemetry info header.  This likely will not be populated for a successful token response
      */
-    private String mServerSubErrorCode;
+    private String mCliTelemSubErrorCode;
 
     /**
      * Gets the SPE Ring.
@@ -136,39 +136,39 @@ public class MicrosoftTokenResponse extends TokenResponse {
     }
 
     /**
-     * Gets the server error code.
+     * Gets the server error code returned by the x-ms-clitelem header.
      *
      * @return The server error code to get.
      */
-    public String getServerErrorCode() {
-        return mServerErrorCode;
+    public String getCliTelemErrorCode() {
+        return mCliTelemErrorCode;
     }
 
     /**
-     * Sets the server error code.
+     * Sets the server error code returned by the x-ms-clitelem header.
      *
      * @param serverErrorCode The server error code to set.
      */
-    public void setServerErrorCode(String serverErrorCode) {
-        this.mServerErrorCode = serverErrorCode;
+    public void setCliTelemErrorCode(String serverErrorCode) {
+        this.mCliTelemErrorCode = serverErrorCode;
     }
 
     /**
-     * Gets the server suberror code.
+     * Gets the server suberror code returned by the x-ms-clitelem header.
      *
      * @return The server suberror code to get.
      */
-    public String getServerSubErrorCode() {
-        return mServerSubErrorCode;
+    public String getCliTelemSubErrorCode() {
+        return mCliTelemSubErrorCode;
     }
 
     /**
-     * Sets the server suberror code.
+     * Sets the server suberror code returned by the x-ms-clitelem header.
      *
      * @param serverSubErrorCode The server suberror code to get.
      */
-    public void setServerSubErrorCode(String serverSubErrorCode) {
-        this.mServerSubErrorCode = serverSubErrorCode;
+    public void setCliTelemSubErrorCode(String serverSubErrorCode) {
+        this.mCliTelemSubErrorCode = serverSubErrorCode;
     }
 
     /**
