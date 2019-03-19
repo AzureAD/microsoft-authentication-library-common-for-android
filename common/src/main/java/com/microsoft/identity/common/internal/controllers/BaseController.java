@@ -379,12 +379,19 @@ public abstract class BaseController {
         );
         accessTokenRecord.setTarget(TextUtils.join(" ", requestParameters.getScopes()));
         accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
-        accessTokenRecord.setExpiresOn(
-                String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExpiresIn()))
-        );
-        accessTokenRecord.setExtendedExpiresOn(
-                String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExtExpiresIn()))
-        );
+
+        if (tokenResponse.getExpiresIn() != null) {
+            accessTokenRecord.setExpiresOn(
+                    String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExpiresIn()))
+            );
+        }
+
+        if (tokenResponse.getExtExpiresIn() != null) {
+            accessTokenRecord.setExtendedExpiresOn(
+                    String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExtExpiresIn()))
+            );
+        }
+
         accessTokenRecord.setCachedAt(
                 String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()))
         );

@@ -42,7 +42,6 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
         super(errorCode, errorMessage, throwable);
     }
 
-
     public String getAccountUpn() {
         return mAccountUpn;
     }

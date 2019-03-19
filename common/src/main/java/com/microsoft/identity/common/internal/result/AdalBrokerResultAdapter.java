@@ -39,6 +39,7 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CliTelemInfo.RT_AGE;
@@ -53,6 +54,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     @Override
     public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult) {
 
+        Logger.verbose(TAG , "Constructing success bundle from Authentication Result.");
         final Bundle resultBundle = new Bundle();
 
         IAccountRecord accountRecord = authenticationResult.getAccountRecord();
@@ -122,6 +124,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     @Override
     public Bundle bundleFromBaseException(BaseException baseException) {
 
+        Logger.verbose(TAG , "Constructing error bundle from exception.");
         final Bundle resultBundle = new Bundle();
 
         resultBundle.putString(
@@ -155,7 +158,6 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         throw new UnsupportedOperationException();
     }
 
-
     /**
      * Helper method to map and add errors to Adal specific constants.
      */
@@ -164,6 +166,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
         if (exception instanceof UserCancelException) {
 
+            Logger.verbose(TAG , "Setting Bundle result from UserCancelException.");
             setErrorToResultBundle(
                     resultBundle,
                     AccountManager.ERROR_CODE_CANCELED,
@@ -171,6 +174,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
         } else if (exception instanceof ArgumentException) {
 
+            Logger.verbose(TAG , "Setting Bundle result from ArgumentException.");
             setErrorToResultBundle(
                     resultBundle,
                     AccountManager.ERROR_CODE_BAD_ARGUMENTS,
@@ -191,6 +195,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
                     (ServiceException) exception);
 
         } else {
+
+            Logger.verbose(TAG , "Setting Bundle result for Unknown Exception/Bad result.");
 
             setErrorToResultBundle(
                     resultBundle,
@@ -219,6 +225,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
     private void setClientExceptionPropertiesToBundle(@NonNull final Bundle resultBundle,
                                                       @NonNull final ClientException clientException) {
+        Logger.verbose(TAG , "Setting properties from ClientException.");
 
         if (clientException.getErrorCode().equalsIgnoreCase(ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE)) {
 
@@ -246,6 +253,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
      */
     private void setServiceExceptionPropertiesToBundle(@NonNull final Bundle resultBundle,
                                                        @NonNull final ServiceException serviceException) {
+
+        Logger.verbose(TAG , "Setting properties from ServiceException.");
 
         if (null != serviceException.getHttpResponseBody()) {
             resultBundle.putString(
@@ -299,6 +308,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
      */
     private void setIntuneAppProtectionPropertiesToBundle(@NonNull final Bundle resultBundle,
                                                           @NonNull final IntuneAppProtectionPolicyRequiredException exception) {
+
+        Logger.verbose(TAG , "Setting properties from IntuneAppProtectionPolicyRequiredException.");
 
         resultBundle.putString(
                 AuthenticationConstants.Browser.RESPONSE_ERROR_CODE,
