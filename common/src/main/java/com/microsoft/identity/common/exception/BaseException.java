@@ -140,6 +140,7 @@ public class BaseException extends Exception {
         this.mCliTelemSubErrorCode = cliTelemSubErrorCode;
     }
 
+    @Nullable
     public String getCorrelationId() { return mCorrelationId; }
 
     public void setCorrelationId(@Nullable final String correlationId){
