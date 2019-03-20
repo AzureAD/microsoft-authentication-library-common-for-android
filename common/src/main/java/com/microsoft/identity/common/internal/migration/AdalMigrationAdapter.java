@@ -106,7 +106,6 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
 
     @Override
     public List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> adapt(Map<String, String> cacheItems) {
-        final String methodName = ":adapt";
         final List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
 
         synchronized (sLock) { // To prevent multiple threads from potentially running migration
