@@ -1,6 +1,5 @@
 package com.microsoft.identity.common.internal.migration;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
@@ -10,24 +9,38 @@ import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsRefreshToken;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 
 public class TokenCacheItemMigrationAdapter {
 
     private static final String TAG = TokenCacheItemMigrationAdapter.class.getSimpleName();
+
     public static final String COMMON = "/common";
 
-    private final Context mContext;
-
-    public TokenCacheItemMigrationAdapter(@NonNull final Context context) {
-        mContext = context;
-    }
+    /**
+     * ExecutorService to handle background computation.
+     */
+    public static final ExecutorService sBackgroundExecutor = Executors.newCachedThreadPool();
 
     /**
      * For a list of supplied tokens, filter them to find the 'most preferred' when migrating.
@@ -37,9 +50,9 @@ public class TokenCacheItemMigrationAdapter {
      * @param cacheItems The cache items to migrate.
      * @return The result.
      */
-    public List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> migrateTokens(
+    public static List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> migrateTokens(
             @NonNull final Map<String, String> redirects,
-            @NonNull final List<ADALTokenCacheItem> cacheItems) {
+            @NonNull final Collection<ADALTokenCacheItem> cacheItems) {
         final List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
 
         final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata();
@@ -49,6 +62,7 @@ public class TokenCacheItemMigrationAdapter {
                     cacheItems
             );
 
+            // Key is the clientId
             final Map<String, List<ADALTokenCacheItem>> tokensByClientId = splitTokensByClientId(
                     cacheItemsWithoutDuplicates
             );
@@ -57,15 +71,146 @@ public class TokenCacheItemMigrationAdapter {
                     tokensByClientId
             );
 
+            // Flatten the Lists of tokens...
+            final List<ADALTokenCacheItem> cacheItemsToRenew = new ArrayList<>();
+
+            for (final List<ADALTokenCacheItem> cacheItemList : filteredTokens.values()) {
+                cacheItemsToRenew.addAll(cacheItemList);
+            }
+
             // TODO renew these tokens...
+            result.addAll(renewTokens(redirects, cacheItemsToRenew));
         }
 
         return result;
     }
 
+    private static List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(
+            @NonNull final Map<String, String> redirects,
+            @NonNull final List<ADALTokenCacheItem> filteredTokens) {
+        final List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
+        final int tokenCount = filteredTokens.size();
+
+        // Create a CountDownLatch to parallelize these requests
+        final CountDownLatch latch = new CountDownLatch(tokenCount);
+
+        for (int ii = 0; ii < tokenCount; ii++) {
+            final int subIndex = ii;
+            sBackgroundExecutor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    final ADALTokenCacheItem targetCacheItemToRenew = filteredTokens.get(subIndex);
+
+                    final Pair<MicrosoftAccount, MicrosoftRefreshToken> renewedPair = renewToken(
+                            redirects.get(targetCacheItemToRenew.getClientId()),
+                            targetCacheItemToRenew
+                    );
+
+                    if (null != renewedPair) {
+                        result.add(
+                                renewedPair
+                        );
+                    }
+
+                    latch.countDown();
+                }
+            });
+        }
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            // Shouldn't happen
+            Logger.error(
+                    TAG,
+                    "Interrupted while requesting tokens...",
+                    e
+            );
+            Thread.currentThread().interrupt();
+        }
+
+        return result;
+    }
+
+    @Nullable
+    private static Pair<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
+            @Nullable final String redirectUri,
+            @NonNull final ADALTokenCacheItem targetCacheItemToRenew) {
+        Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair = null;
+
+        if (!StringExtensions.isNullOrBlank(redirectUri)) {
+            try {
+                final String authority = targetCacheItemToRenew.getAuthority();
+                final String clientId = targetCacheItemToRenew.getClientId();
+                final String refreshToken = targetCacheItemToRenew.getRefreshToken();
+
+                final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
+                config.setAuthorityUrl(new URL(authority));
+
+                // Create a correlation_id for the request
+                final UUID correlationId = UUID.randomUUID();
+
+                final String scopes = getScopesForTokenRequest(
+                        targetCacheItemToRenew.getResource()
+                );
+
+                // Create the strategy
+                final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config);
+
+                final MicrosoftStsTokenRequest tokenRequest = createTokenRequest(
+                        clientId,
+                        scopes,
+                        refreshToken,
+                        redirectUri,
+                        strategy,
+                        correlationId,
+                        "2"
+                );
+
+                final TokenResult tokenResult = strategy.requestToken(tokenRequest);
+
+                if (tokenResult.getSuccess()) {
+                    final MicrosoftStsTokenResponse tokenResponse = (MicrosoftStsTokenResponse) tokenResult.getTokenResponse();
+                    tokenResponse.setClientId(clientId);
+
+                    // Create the Account to save...
+                    final MicrosoftAccount account = strategy.createAccount(tokenResponse);
+
+                    // Create the refresh token...
+                    final MicrosoftRefreshToken msStsRt = new MicrosoftStsRefreshToken(tokenResponse);
+                    msStsRt.setEnvironment(
+                            AzureActiveDirectory.getAzureActiveDirectoryCloud(
+                                    new URL(authority)
+                            ).getPreferredCacheHostName()
+                    );
+
+                    resultPair = new Pair<>(account, msStsRt);
+                } else {
+                    Logger.warn(
+                            TAG,
+                            correlationId.toString(),
+                            "TokenRequest was unsuccessful."
+                    );
+
+                    if (null != tokenResult.getErrorResponse()) {
+                        logTokenResultError(correlationId, tokenResult);
+                    }
+                }
+            } catch (Exception e) {
+                Logger.errorPII(
+                        TAG,
+                        "Failed to request new refresh token...",
+                        e
+                );
+            }
+        }
+
+        return resultPair;
+    }
+
     @NonNull
     public static List<ADALTokenCacheItem> filterDuplicateTokens(
-            @NonNull final List<ADALTokenCacheItem> cacheItems) {
+            @NonNull final Collection<ADALTokenCacheItem> cacheItems) {
         final List<ADALTokenCacheItem> cacheItemsFiltered = new ArrayList<>();
 
         // Key is the rt secret value
@@ -277,5 +422,94 @@ public class TokenCacheItemMigrationAdapter {
         }
 
         return result;
+    }
+
+    /**
+     * Prepares the scopes the use in the request. The default scopes for the resource are used.
+     *
+     * @param v1Resource The resource for which scopes should be added.
+     * @return The scopes to include in the token request.
+     * @see <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#the-default-scope">The /.default scope</a>
+     */
+    @NonNull
+    public static String getScopesForTokenRequest(@NonNull final String v1Resource) {
+        final String methodName = ":getScopesForTokenRequest";
+
+        String scopes = v1Resource;
+
+        if (!v1Resource.endsWith("/")) {
+            scopes += "/.default";
+        } else {
+            Logger.warn(
+                    TAG + methodName,
+                    "Redirect already contains postfixed \"/\" - not reappending."
+            );
+
+            scopes += ".default";
+        }
+
+        // Add the default scopes, as they will not be present
+        scopes += " openid profile offline_access";
+
+        return scopes;
+    }
+
+    /**
+     * Create the token request used to refresh the cache RTs.
+     *
+     * @param clientId      The clientId of the app which "owns" this token.
+     * @param scopes        The scopes to include in the request.
+     * @param refreshToken  The token to refresh/
+     * @param redirectUri   The redirect uri for this request.
+     * @param strategy      The strategy to create the TokenRequest.
+     * @param correlationId The correlation id to send in the request.
+     * @return The fully-formed TokenRequest.
+     */
+    @NonNull
+    public static MicrosoftStsTokenRequest createTokenRequest(@NonNull final String clientId,
+                                                              @NonNull final String scopes,
+                                                              @NonNull final String refreshToken,
+                                                              @NonNull final String redirectUri,
+                                                              @NonNull final MicrosoftStsOAuth2Strategy strategy,
+                                                              @Nullable final UUID correlationId,
+                                                              @NonNull final String idTokenVersion) {
+        final MicrosoftStsTokenRequest tokenRequest = strategy.createRefreshTokenRequest();
+
+        // Set the request properties
+        tokenRequest.setClientId(clientId);
+        tokenRequest.setScope(scopes);
+        tokenRequest.setCorrelationId(correlationId);
+        tokenRequest.setRefreshToken(refreshToken);
+        tokenRequest.setRedirectUri(redirectUri);
+        tokenRequest.setIdTokenVersion(idTokenVersion);
+
+        return tokenRequest;
+    }
+
+    /**
+     * Logs errors from the {@link TokenResult}.
+     *
+     * @param correlationId The correlation id of the request.
+     * @param tokenResult   The TokenResult whose errors should be logged.
+     */
+    public static void logTokenResultError(@NonNull final UUID correlationId,
+                                           @NonNull final TokenResult tokenResult) {
+        final TokenErrorResponse tokenErrorResponse = tokenResult.getErrorResponse();
+
+        Logger.warn(
+                TAG,
+                correlationId.toString(),
+                "Status code: ["
+                        + tokenErrorResponse.getStatusCode()
+                        + "]"
+        );
+
+        Logger.warn(
+                TAG,
+                correlationId.toString(),
+                "Error description: ["
+                        + tokenErrorResponse.getErrorDescription()
+                        + "]"
+        );
     }
 }
