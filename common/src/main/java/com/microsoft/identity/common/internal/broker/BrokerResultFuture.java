@@ -30,7 +30,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class BrokerResultFuture implements Future<BrokerResult> {
+public class BrokerResultFuture implements Future<Bundle> {
 
     private final CountDownLatch mCountDownLatch = new CountDownLatch(1);
     private Bundle mResultBundle;
