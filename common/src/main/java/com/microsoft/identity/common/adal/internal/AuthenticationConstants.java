@@ -499,6 +499,16 @@ public final class AuthenticationConstants {
         public static final String QUERY_PROMPT_VALUE = "login";
 
         /**
+         * String of V1 prompt behavior as Always.
+         */
+        public static final String QUERY_PROMPT_V1_ALWAYS = "Always";
+
+        /**
+         * String of V1 prompt behavior as Always.
+         */
+        public static final String QUERY_PROMPT_V1_FORCE_PROMPT = "FORCE_PROMPT";
+
+        /**
          * String of prompt behavior as refresh session.
          */
         public static final String QUERY_PROMPT_REFRESH_SESSION_VALUE = "refresh_session";
