@@ -301,7 +301,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String target) {
         Logger.verbose(TAG, "getCredentialsFilteredBy()");
 
-        Logger.verbose(TAG, "Loading Credentials...");
         final List<Credential> allCredentials = getCredentials();
 
         final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
@@ -326,7 +325,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             throw new IllegalArgumentException("Param [accountToRemove] cannot be null.");
         }
 
-        Logger.verbose(TAG, "Loading Accounts + keys...");
         final Map<String, AccountRecord> accounts = getAccountsWithKeys();
         Logger.info(TAG, "Found [" + accounts.size() + "] Accounts...");
 
@@ -399,6 +397,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
      * @param cacheKey The cache key to inspect.
      * @return The CredentialType or null if a proper type cannot be resolved.
      */
+    @Nullable
     private CredentialType getCredentialTypeForCredentialCacheKey(@NonNull final String cacheKey) {
         if (StringExtensions.isNullOrBlank(cacheKey)) {
             throw new IllegalArgumentException("Param [cacheKey] cannot be null.");
@@ -411,8 +410,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         for (final String credentialTypeStr : CredentialType.valueSet()) {
             credentialTypesLowerCase.add(credentialTypeStr.toLowerCase(Locale.US));
         }
-
-        Logger.info(TAG, "Comparing cache key to known types...");
 
         CredentialType type = null;
         for (final String credentialTypeStr : credentialTypesLowerCase) {
