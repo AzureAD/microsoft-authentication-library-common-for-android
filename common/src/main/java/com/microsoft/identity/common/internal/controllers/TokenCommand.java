@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 
@@ -47,18 +46,15 @@ public class TokenCommand implements TokenOperation {
 
     protected OperationParameters mParameters;
     protected List<BaseController> mControllers;
-    protected Context mContext;
     protected ILocalAuthenticationCallback mCallback;
 
 
     public TokenCommand() {
     }
 
-    public TokenCommand(@NonNull final Context context,
-                        @NonNull final OperationParameters parameters,
+    public TokenCommand(@NonNull final OperationParameters parameters,
                         @NonNull final BaseController controller,
                         @NonNull final ILocalAuthenticationCallback callback) {
-        mContext = context;
         mParameters = parameters;
         mControllers = new ArrayList<>();
         mCallback = callback;
@@ -66,11 +62,9 @@ public class TokenCommand implements TokenOperation {
         mControllers.add(controller);
     }
 
-    public TokenCommand(@NonNull final Context context,
-                        @NonNull final OperationParameters parameters,
+    public TokenCommand(@NonNull final OperationParameters parameters,
                         @NonNull final List<BaseController> controllers,
                         @NonNull final ILocalAuthenticationCallback callback) {
-        mContext = context;
         mParameters = parameters;
         mControllers = controllers;
         mCallback = callback;
@@ -147,14 +141,6 @@ public class TokenCommand implements TokenOperation {
 
     public void setControllers(final List<BaseController> controllers) {
         this.mControllers = controllers;
-    }
-
-    public Context getContext() {
-        return mContext;
-    }
-
-    public void setContext(final Context context) {
-        this.mContext = context;
     }
 
     public ILocalAuthenticationCallback getCallback() {

@@ -20,21 +20,21 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.internal.result;
 
-package com.microsoft.identity.common.exception;
+import com.microsoft.identity.common.internal.request.SdkType;
 
 /**
- * This exception indicates that UI is required for authentication to succeed.
+ * Class which returns creates {@link IBrokerResultAdapter }  based on {@link SdkType}
  */
+public class BrokerResultAdapterFactory {
 
-public final class UiRequiredException extends ServiceException {
+    public static IBrokerResultAdapter getBrokerResultAdapter(final SdkType sdkType) {
 
-    public UiRequiredException(final String errorCode, final String errorMessage) {
-        super(errorCode, errorMessage, null);
+        if (sdkType == SdkType.ADAL) {
+            return new AdalBrokerResultAdapter();
+        } else {
+            return new MsalBrokerResultAdapter();
+        }
     }
-
-    public UiRequiredException(final String errorCode, final String errorMessage, final Throwable throwable) {
-        super(errorCode, errorMessage, throwable);
-    }
-
 }

@@ -29,6 +29,16 @@ public final class ErrorStrings {
     }
 
     /**
+     * Access token doesn't exist and there is no refresh token can be found to redeem access token.
+     */
+    public static final String NO_TOKENS_FOUND = "no_tokens_found";
+
+    /**
+     * The supplied Account cannot be found in the cache.
+     */
+    public static final String NO_ACCOUNT_FOUND = "no_account_found";
+
+    /**
      * There are multiple cache entries found, the sdk cannot pick the correct access token
      * or refresh token from the cache. Likely it's a bug in the sdk when caching tokens or authority
      * is not proviced in the silent request and multiple tokens were found.
@@ -301,9 +311,9 @@ public final class ErrorStrings {
     public static final String INVALID_BROKER_REFRESH_TOKEN = "Broker refresh token is invalid";
 
     /**
-     * Device state of Joined account invalid.
+     * Failed to retreive device state.
      */
-    public static final String DEVICE_STATE_INVALID = "Invalid device state";
+    public static final String ERROR_RETRIEVING_DEVICE_STATE = "Error retrieving device state";
 
     /**
      * Device registration failed.

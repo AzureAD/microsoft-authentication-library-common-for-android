@@ -234,6 +234,16 @@ public final class AuthenticationConstants {
         public static final String AAD_VERSION = "ver";
 
         /**
+         * Constant for  v1 endpoint
+         */
+        public static final String AAD_VERSION_V1 = "1.0";
+
+        /**
+         * Constsnt for v2 endpoint
+         */
+        public static final String AAD_VERSION_V2 = "2.0";
+
+        /**
          * String of preferred user name.
          */
         public static final String AAD_PREFERRED_USERNAME = "preferred_username";
@@ -969,9 +979,15 @@ public final class AuthenticationConstants {
         public static final String BROKER_REQUEST_V2 = "broker.request.v2";
 
         /**
-         * String to send Msal V2 Request params.
+         * String to return Msal V2 response.
          */
         public static final String BROKER_RESULT_V2 = "broker.result.v2";
+
+        /**
+         * String to return Msal V2 response.
+         */
+        public static final String BROKER_ACCOUNT_RECORD_RESULT_V2 = "broker.account_record.v2";
+
         /**
          * String for ssl prefix.
          */
@@ -1102,6 +1118,13 @@ public final class AuthenticationConstants {
          * Token is expired or invalid for all resources and scopes and shouldn't be retried again as-is.
          */
         public static final String BAD_TOKEN = "bad_token";
+
+        /**
+         * Oauth2 suberror code for invalid_grant.
+         * Failed to do device authentication during a token request.
+         * Broker should make a request to DRS to get the current device status and act accordingly.
+         */
+        public static final String DEVICE_AUTHENTICATION_FAILED = "device_authentication_failed";
     }
 
     /**

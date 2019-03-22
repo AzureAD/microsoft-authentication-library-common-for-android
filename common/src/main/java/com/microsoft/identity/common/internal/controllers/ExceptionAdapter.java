@@ -24,13 +24,14 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.DeviceRegistrationRequiredException;
+import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
@@ -99,71 +100,122 @@ public class ExceptionAdapter {
             );
         }
 
-        final TokenResult tokenResult = result.getTokenResult();
+        return exceptionFromTokenResult(result.getTokenResult());
+    }
+
+    /**
+     * Get an exception out of a TokenResult object.
+     *
+     * @param tokenResult
+     * @return ServiceException, UiRequiredException
+     * */
+    public static ServiceException exceptionFromTokenResult(TokenResult tokenResult) {
+        final String methodName = ":exceptionFromTokenResult";
+
         final TokenErrorResponse tokenErrorResponse;
+        ServiceException outErr = null;
 
         if (tokenResult != null && !tokenResult.getSuccess()) {
             tokenErrorResponse = tokenResult.getErrorResponse();
-
-            if (tokenErrorResponse.getError().equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT)) {
-                Logger.warn(
-                        TAG + methodName,
-                        "Received invalid_grant"
-                );
-                final UiRequiredException uiRequiredException = new UiRequiredException(
-                        tokenErrorResponse.getError(),
-                        tokenErrorResponse.getSubError(),
-                        tokenErrorResponse.getErrorDescription()
-                );
-
-
-                applyCliTelemInfo(tokenResult, uiRequiredException);
-
-                return uiRequiredException;
-            }
-
-            ServiceException outErr = null;
 
             if (StringUtil.isEmpty(tokenErrorResponse.getError())) {
                 Logger.warn(
                         TAG + methodName,
                         "Received unknown error"
                 );
-
                 outErr = new ServiceException(
                         ServiceException.UNKNOWN_ERROR,
                         "Request failed, but no error returned back from service.",
                         null
                 );
+            } else {
+                outErr = getExceptionFromTokenErrorResponse(tokenErrorResponse);
+
             }
 
-            if (null == outErr) {
-                outErr = new ServiceException(
-                        tokenErrorResponse.getError(),
-                        tokenErrorResponse.getErrorDescription(),
-                        null
-                );
-            }
-
-            applyCliTelemInfo(tokenResult, outErr);
-
-            applyHttpErrorResponseData(
-                    outErr,
-                    tokenErrorResponse.getStatusCode(),
-                    tokenErrorResponse.getResponseHeadersJson(),
-                    tokenErrorResponse.getResponseBody()
-            );
-
-            return outErr;
+            applyCliTelemInfo(tokenResult.getCliTelemInfo(), outErr);
         }
 
-        return null;
+        return outErr;
     }
 
-    private static void applyCliTelemInfo(@NonNull final TokenResult tokenResult,
-                                          @NonNull final BaseException outErr) {
-        if (null != tokenResult.getCliTelemInfo()) {
-            final CliTelemInfo cliTelemInfo = tokenResult.getCliTelemInfo();
+    /**
+     * Determine if an exception owning the given error codes should be converted into UiRequiredException.
+     *
+     * @param oAuthError
+     * @return boolean
+     * */
+    private static boolean shouldBeConvertedToUiRequiredException(final String oAuthError){
+        // Invalid_grant doesn't necessarily requires UI protocol-wise.
+        // We simplify our logic because this layer is also used by MSAL.
+
+        return oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT) ||
+                oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED);
+
+    }
+
+    private static boolean isIntunePolicyRequiredError(final String oAuthError, final String oAuthSubError) {
+
+        return  !TextUtils.isEmpty(oAuthError) &&
+                !TextUtils.isEmpty(oAuthSubError) &&
+                oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT) &&
+                oAuthSubError.equalsIgnoreCase(AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED);
+    }
+
+    /**
+     * Get an exception object from the given oAuth values.
+     *
+     * @param errorResponse
+     * @return ServiceException, UiRequiredException
+     * */
+    public static ServiceException getExceptionFromTokenErrorResponse(final TokenErrorResponse errorResponse) {
+        final String methodName = ":getExceptionFromTokenErrorResponse";
+
+        final ServiceException outErr;
+
+        if (shouldBeConvertedToUiRequiredException(errorResponse.getError())) {
+
+            outErr = new UiRequiredException(
+                    errorResponse.getError(),
+                    errorResponse.getErrorDescription());
+        }else if(isIntunePolicyRequiredError(errorResponse.getError(), errorResponse.getSubError())){
+
+            outErr = new IntuneAppProtectionPolicyRequiredException(
+                    errorResponse.getError(),
+                    errorResponse.getErrorDescription()
+            );
+        }
+        else {
+            outErr = new ServiceException(
+                    errorResponse.getError(),
+                    errorResponse.getErrorDescription(),
+                    null);
+        }
+
+        outErr.setSubErrorCode(errorResponse.getSubError());
+
+        try {
+            outErr.setHttpResponse(
+                    synthesizeHttpResponse(
+                            errorResponse.getStatusCode(),
+                            errorResponse.getResponseHeadersJson(),
+                            errorResponse.getResponseBody()
+                    )
+            );
+        }
+        catch (JSONException e) {
+            Logger.warn(
+                    TAG + methodName,
+                    "Failed to deserialize error data: status, headers, response body."
+            );
+        }
+
+        return outErr;
+    }
+
+    public static void applyCliTelemInfo(@Nullable final CliTelemInfo cliTelemInfo,
+                                         @NonNull final BaseException outErr) {
+        if (null != cliTelemInfo) {
             outErr.setSpeRing(cliTelemInfo.getSpeRing());
             outErr.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
             outErr.setCliTelemErrorCode(cliTelemInfo.getServerErrorCode());
@@ -171,77 +223,45 @@ public class ExceptionAdapter {
         }
     }
 
-    private static void applyHttpErrorResponseData(@NonNull final ServiceException targetException,
-                                                   final int statusCode,
-                                                   @Nullable String responseHeadersJson,
-                                                   @Nullable String responseBody) {
+    private static HttpResponse synthesizeHttpResponse(final int statusCode,
+                                                       @Nullable String responseHeadersJson,
+                                                       @Nullable String responseBody) {
         final String methodName = ":applyHttpErrorResponseData";
 
         if (null != responseHeadersJson && null != responseBody) {
             try {
-                final HttpResponse synthesizedResponse = new HttpResponse(
+                return new HttpResponse(
                         statusCode,
                         responseBody,
                         HeaderSerializationUtil.fromJson(responseHeadersJson)
                 );
-
-                targetException.setHttpResponse(synthesizedResponse);
-            } catch (JSONException | JsonSyntaxException e) {
+            } catch (JsonSyntaxException e) {
                 Logger.warn(
                         TAG + methodName,
                         "Failed to deserialize error data: status, headers, response body."
                 );
             }
         }
+
+        return null;
     }
 
     public static BaseException baseExceptionFromException(final Exception e) {
-        BaseException msalException = null;
-
         if (e instanceof IOException) {
-            msalException = new ClientException(
+            return new ClientException(
                     ClientException.IO_ERROR,
                     "An IO error occurred with message: " + e.getMessage(),
                     e
             );
         }
 
-        if (e instanceof ClientException) {
-            msalException = new ClientException(
-                    ((ClientException) e).getErrorCode(),
-                    e.getMessage(),
-                    e);
+        if (e instanceof BaseException) {
+            return (BaseException) e;
         }
 
-        if (e instanceof ArgumentException) {
-            ArgumentException argumentException = ((ArgumentException) e);
-            msalException = new ArgumentException(
-                    argumentException.getArgumentName(),
-                    argumentException.getOperationName(),
-                    argumentException.getMessage(),
-                    argumentException
-            );
-        }
-
-        if (e instanceof UiRequiredException) {
-            UiRequiredException uiRequiredException = ((UiRequiredException) e);
-            msalException = new UiRequiredException(
-                    uiRequiredException.getErrorCode(),
-                    uiRequiredException.getSubErrorCode(),
-                    uiRequiredException.getMessage()
-            );
-        }
-
-        if (msalException == null) {
-            msalException = new ClientException(
-                    ClientException.UNKNOWN_ERROR,
-                    e.getMessage(),
-                    e
-            );
-        }
-
-        return msalException;
-
+        return new ClientException(
+                ClientException.UNKNOWN_ERROR,
+                e.getMessage(),
+                e);
     }
-
 }

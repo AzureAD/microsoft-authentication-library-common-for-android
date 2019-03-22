@@ -20,21 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.internal.result;
 
-package com.microsoft.identity.common.exception;
+import android.os.Bundle;
 
-/**
- * This exception indicates that UI is required for authentication to succeed.
- */
+import com.microsoft.identity.common.exception.BaseException;
 
-public final class UiRequiredException extends ServiceException {
+public interface IBrokerResultAdapter {
 
-    public UiRequiredException(final String errorCode, final String errorMessage) {
-        super(errorCode, errorMessage, null);
-    }
+    /**
+     * Returns a success bundle with properties from Authenticator Result.
+     * @param authenticationResult
+     * @return Bundle
+     */
+    Bundle bundleFromAuthenticationResult(ILocalAuthenticationResult authenticationResult);
 
-    public UiRequiredException(final String errorCode, final String errorMessage, final Throwable throwable) {
-        super(errorCode, errorMessage, throwable);
-    }
-
+    /**
+     * Returns an error bundle with properties from Exception.
+     * @param exception
+     * @return
+     */
+    Bundle bundleFromBaseException(BaseException exception);
 }

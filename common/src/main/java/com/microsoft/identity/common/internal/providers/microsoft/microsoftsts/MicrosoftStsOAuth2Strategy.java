@@ -459,8 +459,8 @@ public class MicrosoftStsOAuth2Strategy
                 if (null != tokenResponse && null != cliTelemInfo) {
                     tokenResponse.setSpeRing(cliTelemInfo.getSpeRing());
                     tokenResponse.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
-                    tokenResponse.setServerErrorCode(cliTelemInfo.getServerErrorCode());
-                    tokenResponse.setServerSubErrorCode(cliTelemInfo.getServerSubErrorCode());
+                    tokenResponse.setCliTelemErrorCode(cliTelemInfo.getServerErrorCode());
+                    tokenResponse.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
                 }
             }
         }

@@ -211,7 +211,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String link = url
                 .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-        getActivity().getApplicationContext().startActivity(intent);
+        getActivity().startActivity(intent);
         view.stopLoading();
         Intent resultIntent = new Intent();
         getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
@@ -252,7 +252,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 String link = installLink
                         .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-                getActivity().getApplicationContext().startActivity(intent);
+                getActivity().startActivity(intent);
                 view.stopLoading();
             }
         }, threadSleepForCallingActivity);
