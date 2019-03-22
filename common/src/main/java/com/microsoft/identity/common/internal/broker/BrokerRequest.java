@@ -163,128 +163,256 @@ public class BrokerRequest implements Serializable {
     private String mMsalVersion;
 
 
-    public BrokerRequest() {
+    private BrokerRequest(BrokerRequest.Builder builder) {
+        mAuthority = builder.mAuthority;
+        mScope = builder.mScope;
+        mRedirect = builder.mRedirect;
+        mClientId = builder.mClientId;
+        mHomeAccountId = builder.mHomeAccountId;
+        mLocalAccountId = builder.mLocalAccountId;
+        mUserName = builder.mUserName;
+        mExtraQueryStringParameter = builder.mExtraQueryStringParameter;
+        mCorrelationId = builder.mCorrelationId;
+        mPrompt = builder.mPrompt;
+        mClaims = builder.mClaims;
+        mForceRefresh = builder.mForceRefresh;
+        mApplicationName = builder.mApplicationName;
+        mApplicationVersion = builder.mApplicationVersion;
+        mMsalVersion = builder.mMsalVersion;
 
     }
+
 
     public String getAuthority() {
         return mAuthority;
-    }
-
-    public void setAuthority(String authority) {
-        this.mAuthority = authority;
     }
 
     public String getScope() {
         return mScope;
     }
 
-    public void setScope(String authority) {
-        this.mScope = authority;
-    }
-
     public String getRedirect() {
         return mRedirect;
-    }
-
-    public void setRedirect(String redirect) {
-        this.mRedirect = redirect;
     }
 
     public String getClientId() {
         return mClientId;
     }
 
-    public void setClientId(String clientId) {
-        this.mClientId = clientId;
-    }
-
     public String getHomeAccountId() {
         return mHomeAccountId;
-    }
-
-    public void setHomeAccountId(String userId) {
-        this.mHomeAccountId = userId;
     }
 
     public String getLocalAccountId() {
         return mLocalAccountId;
     }
 
-    public void setLocalAccountId(String localAccountId) {
-        this.mLocalAccountId = localAccountId;
-    }
-
     public String getUserName() {
         return mUserName;
-    }
-
-    public void setUserName(String userName) {
-        this.mUserName = userName;
     }
 
     public String getExtraQueryStringParameter() {
         return mExtraQueryStringParameter;
     }
 
-    public void setExtraQueryStringParameter(String extraQueryStringParameter) {
-        this.mExtraQueryStringParameter = extraQueryStringParameter;
-    }
-
     public String getCorrelationId() {
         return mCorrelationId;
-    }
-
-    public void setCorrelationId(String correlationId) {
-        this.mCorrelationId = correlationId;
     }
 
     public String getPrompt() {
         return mPrompt;
     }
 
-    public void setPrompt(String prompt) {
-        this.mPrompt = prompt;
-    }
-
     public String getClaims() {
         return mClaims;
-    }
-
-    public void setClaims(String claims) {
-        this.mClaims = claims;
     }
 
     public boolean getForceRefresh() {
         return mForceRefresh;
     }
 
-    public void setForceRefresh(boolean forceRefresh) {
-        this.mForceRefresh = forceRefresh;
-    }
-
     public String getApplicationName() {
         return mApplicationName;
-    }
-
-    public void setApplicationName(String applicationName) {
-        this.mApplicationName = applicationName;
     }
 
     public String getApplicationVersion() {
         return mApplicationVersion;
     }
 
-    public void setApplicationVersion(String applicationVersion) {
-        this.mApplicationVersion = applicationVersion;
-    }
-
     public String getMsalVersion() {
         return mMsalVersion;
     }
 
-    public void setMsalVersion(String version) {
-        this.mMsalVersion = version;
+
+    /**
+     * Builder class for Broker Request.
+     */
+    public static class Builder {
+
+        private String mAuthority;
+
+        private String mScope;
+
+        private String mRedirect;
+
+        private String mClientId;
+
+        private String mUserName;
+
+        private String mHomeAccountId;
+
+        private String mLocalAccountId;
+
+        private String mExtraQueryStringParameter;
+
+        private String mCorrelationId;
+
+        private String mPrompt;
+
+        private String mClaims;
+
+        private boolean mForceRefresh;
+
+        private String mApplicationName;
+
+        private String mApplicationVersion;
+
+        private String mMsalVersion;
+
+
+        /**
+         * Authority for the request
+         */
+        public BrokerRequest.Builder authority(@NonNull final String authority) {
+            this.mAuthority = authority;
+            return this;
+        }
+
+        /**
+         * Scopes for the request. This is expected to be of the format
+         * "scope 1 scope2 scope3" with space as a delimiter
+         */
+        public BrokerRequest.Builder scope(@NonNull final String scope) {
+            this.mScope = scope;
+            return this;
+        }
+
+        /**
+         * The redirect uri for the request.
+         * // TODO : See if this is needed.
+         */
+        public BrokerRequest.Builder redirect(@NonNull final String redirect) {
+            this.mRedirect = redirect;
+            return this;
+        }
+
+        /**
+         * The client id of the application.
+         */
+        public BrokerRequest.Builder clientId(@NonNull final String clientId) {
+            this.mClientId = clientId;
+            return this;
+        }
+
+        /**
+         * The username for the request.
+         */
+        public BrokerRequest.Builder username(@@Nullable final String userName) {
+            this.mUserName = userName;
+            return this;
+        }
+
+        /**
+         * Home account id of the user. Needs to be set for silent request
+         */
+        public BrokerRequest.Builder homeAccountId(@@Nullable final String userId) {
+            this.mHomeAccountId = userId;
+            return this;
+        }
+
+        /**
+         * Local account id of the user. Needs to be set for silent request
+         */
+        public BrokerRequest.Builder localAccountId(@@Nullable final String localAccountId) {
+            this.mLocalAccountId = localAccountId;
+            return this;
+        }
+
+        /**
+         * Extra query parameters set for the request.
+         */
+        public BrokerRequest.Builder extraQueryStringParameter(@Nullable final String extraQueryStringParameter) {
+            this.mExtraQueryStringParameter = extraQueryStringParameter;
+            return this;
+        }
+
+        /**
+         * Correlation id for the request, it should ba unique GUID.
+         */
+        public BrokerRequest.Builder correlationId(@Nullable final String correlationId) {
+            this.mCorrelationId = correlationId;
+            return this;
+        }
+
+        /**
+         * Prompt for the request.
+         * {@link com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter}
+         * <p>
+         * Default value : {@link com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter#SELECT_ACCOUNT}
+         */
+        public BrokerRequest.Builder prompt(@Nullable final String prompt) {
+            this.mPrompt = prompt;
+            return this;
+        }
+
+        /**
+         * Claims for the request. This needs to be a valid json string.
+         */
+        public BrokerRequest.Builder claims(@Nullable final String claims) {
+            this.mClaims = claims;
+            return this;
+        }
+
+        /**
+         * Boolean if set, will try to refresh the token instead of using it from cache.
+         */
+        public BrokerRequest.Builder forceRefresh(final boolean forceRefresh) {
+            this.mForceRefresh = forceRefresh;
+            return this;
+        }
+
+        /**
+         * Application package name.
+         */
+        public BrokerRequest.Builder applicationName(@NonNull final String applicationName) {
+            this.mApplicationName = applicationName;
+            return this;
+        }
+
+        /**
+         * Application version.
+         */
+        public BrokerRequest.Builder applicationVersion(@NonNull final String applicationVersion) {
+            this.mApplicationVersion = applicationVersion;
+            return this;
+        }
+
+        /**
+         * Msal version.
+         */
+        @NonNull
+        public BrokerRequest.Builder msalVersion(@NonNull final String version) {
+            this.mMsalVersion = version;
+            return this;
+        }
+
+        /**
+         * Builds and returns a BrokerRequest
+         */
+        public BrokerRequest build(){
+            return new BrokerRequest(this);
+        }
     }
+
 
 }

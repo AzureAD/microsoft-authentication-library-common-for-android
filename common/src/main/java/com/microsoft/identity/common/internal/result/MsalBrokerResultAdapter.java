@@ -41,12 +41,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
  }
 
  @Override
- public ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle) {
+ public AcquireTokenResult acquireTokenResultFromBundle(Bundle resultBundle) {
   return null;
  }
 
- @Override
- public BaseException baseExceptionFromBundle(Bundle resultBundle) {
-  return null;
- }
 }
