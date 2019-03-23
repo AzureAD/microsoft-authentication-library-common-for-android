@@ -208,19 +208,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
+        final String methodName = "#processWebsiteRequest";
         final PackageHelper packageHelper = new PackageHelper(getActivity().getApplicationContext());
         if (url.startsWith(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL)
                 && packageHelper.isPackageInstalledAndEnabled(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)) {
-            Logger.verbose(TAG, "It is a device CA request. Company Portal is installed.");
+            Logger.verbose(TAG + methodName, "It is a device CA request. Company Portal is installed.");
             try {
-                Logger.verbose(TAG, "Sending intent to launch the CompanyPortal.");
-                Intent intent = new Intent();
+                Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
+                final Intent intent = new Intent();
                 intent.setComponent(new ComponentName(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
                         AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 getActivity().getApplicationContext().startActivity(intent);
             } catch (final SecurityException ex) {
-                Logger.warn(TAG, "Failed to launch Company Portal, falling back to browser.");
+                Logger.warn(TAG + methodName, "Failed to launch Company Portal, falling back to browser.");
                 openLinkInBrowser(url);
             }
         } else {
@@ -234,7 +235,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private void openLinkInBrowser(final String url) {
-        //Open url link in browser
+        final String methodName = "#openLinkInBrowser";
+        Logger.verbose(TAG + methodName, "Try to open url link in browser");
         final String link = url
                 .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
@@ -242,7 +244,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
             getActivity().getApplicationContext().startActivity(intent);
         } else {
-            Logger.warn(TAG, "Unable to find an app to resolve the activity.");
+            Logger.warn(TAG + methodName, "Unable to find an app to resolve the activity.");
         }
     }
 

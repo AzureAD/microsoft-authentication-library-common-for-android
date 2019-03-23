@@ -157,8 +157,8 @@ public class PackageHelper {
      * @param packageName the package name to look up.
      * @return true if the package is installed and enabled. Otherwise, returns false.
      */
-    public Boolean isPackageInstalledAndEnabled(final String packageName) {
-        String methodName = "isPackageInstalledAndEnabled";
+    public boolean isPackageInstalledAndEnabled(final String packageName) {
+        final String methodName = "#isPackageInstalledAndEnabled";
         Boolean enabled = false;
         PackageManager pm = mContext.getPackageManager();
         try {
@@ -169,6 +169,8 @@ public class PackageHelper {
         } catch (NameNotFoundException e) {
             Logger.error(TAG + methodName, "Package is not found. Package name: " + packageName, e);
         }
+
+        Logger.verbose(TAG + methodName, " Is package installed and enabled? [" + enabled + "]");
         return enabled;
     }
 
