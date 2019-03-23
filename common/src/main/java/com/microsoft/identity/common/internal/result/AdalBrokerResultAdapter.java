@@ -149,7 +149,12 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     @Override
-    public AcquireTokenResult acquireTokenResultFromBundle(Bundle resultBundle) {
+    public ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BaseException baseExceptionFromBundle(Bundle resultBundle) {
         throw new UnsupportedOperationException();
     }
 

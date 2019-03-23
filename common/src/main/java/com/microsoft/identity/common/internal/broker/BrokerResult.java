@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.io.Serializable;
@@ -30,6 +31,7 @@ import java.io.Serializable;
  * Encapsulates the possible responses from the broker.  Both successful response and error response.
  */
 public class BrokerResult implements Serializable {
+
 
     private class SerializedNames {
         static final String ACCeSS_TOKEN = "broker.accessToken";
@@ -88,6 +90,18 @@ public class BrokerResult implements Serializable {
     @Nullable
     private String mUserName;
 
+    @Nullable
+    /**
+     * Client id of the application
+     */
+    private String mClientId;
+
+    @Nullable
+    /**
+     * Scopes requested
+     */
+    private String mScope;
+
     /**
      * Token type from the response
      */
@@ -141,6 +155,12 @@ public class BrokerResult implements Serializable {
      */
     @Nullable
     private String mRefreshTokenAge;
+
+    /**
+     * Boolean to indicate if the request succeeded without exceptions.
+     */
+    @NonNull
+    private boolean mSuccess;
 
     // Exception parameters
 
@@ -197,5 +217,332 @@ public class BrokerResult implements Serializable {
      */
     @Nullable
     private String mCliTelemSubErrorCode;
+
+
+    private BrokerResult(@NonNull final Builder builder){
+        mAccessToken = builder.mAccessToken;
+        mIdToken = builder.mIdToken;
+        mHomeAccountId = builder.mHomeAccountId;
+        mLocalAccountId = builder.mLocalAccountId;
+        mUserName = builder.mUserName;
+        mTokenType = builder.mTokenType;
+        mClientId = builder.mClientId;
+        mScope = builder.mScope;
+        mClientInfo = builder.mClientInfo;
+        mAuthority = builder.mAuthority;
+        mEnvironment = builder.mEnvironment;
+        mExpiresOn = builder.mExpiresOn;
+        mExtendedExpiresOn = builder.mExtendedExpiresOn;
+        mCachedAt = builder.mCachedAt;
+        mSpeRing = builder.mSpeRing;
+        mRefreshTokenAge = builder.mRefreshTokenAge;
+        mSuccess = builder.mSuccess;
+
+        mErrorCode = builder.mErrorCode;
+        mErrorMessage = builder.mErrorMessage;
+        mCorrelationId = builder.mCorrelationId;
+        mSubErrorCode = builder.mSubErrorCode;
+        mHttpStatusCode = builder.mHttpStatusCode;
+        mHttpResponseBody = builder.mHttpResponseBody;
+        mHttpResponseHeaders = builder.mHttpResponseHeaders;
+        mCliTelemErrorCode = builder.mCliTelemErrorCode;
+        mCliTelemSubErrorCode = builder.mCliTelemSubErrorCode;
+    }
+
+    public String getCliTelemSubErrorCode() {
+        return mCliTelemSubErrorCode;
+    }
+
+    public String getCliTelemErrorCode() {
+        return mCliTelemErrorCode;
+    }
+
+    public String getHttpResponseBody() {
+        return mHttpResponseBody;
+    }
+
+    public String getHttpResponseHeaders() {
+        return mHttpResponseHeaders;
+    }
+
+    public String getHttpStatusCode() {
+        return mHttpStatusCode;
+    }
+
+    public String getSubErrorCode() {
+        return mSubErrorCode;
+    }
+
+    public String getCorrelationId() {
+        return mCorrelationId;
+    }
+
+    public String getErrorMessage() {
+        return mErrorMessage;
+    }
+
+    public String getErrorCode() {
+        return mErrorCode;
+    }
+
+    public boolean isSuccess() {
+        return mSuccess;
+    }
+
+    public String getRefreshTokenAge() {
+        return mRefreshTokenAge;
+    }
+
+    public String getSpeRing() {
+        return mSpeRing;
+    }
+
+    public long getCachedAt() {
+        return mCachedAt;
+    }
+
+    public long getExtendedExpiresOn() {
+        return mExtendedExpiresOn;
+    }
+
+    public long getExpiresOn() {
+        return mExpiresOn;
+    }
+
+    public String getEnvironment() {
+        return mEnvironment;
+    }
+
+    public String getAuthority() {
+        return mAuthority;
+    }
+
+    public String getClientInfo() {
+        return mClientInfo;
+    }
+
+    public String getClientId() {
+        return mClientId;
+    }
+
+    public String getScope(){
+        return mScope;
+    }
+
+    public String getTokenType() {
+        return mTokenType;
+    }
+
+    public String getUserName() {
+        return mUserName;
+    }
+
+    public String getLocalAccountId() {
+        return mLocalAccountId;
+    }
+
+    public String getHomeAccountId() {
+        return mHomeAccountId;
+    }
+
+    public String getIdToken() {
+        return mIdToken;
+    }
+
+    public String getAccessToken() {
+        return mAccessToken;
+    }
+
+    public static class Builder {
+
+        private String mAccessToken;
+
+        private String mIdToken;
+
+        private String mHomeAccountId;
+
+        private String mLocalAccountId;
+
+        private String mUserName;
+
+        private String mTokenType;
+
+        private String mClientId;
+
+        private String mScope;
+
+        private String mClientInfo;
+
+        private String mAuthority;
+
+        private String mEnvironment;
+
+        private long mExpiresOn;
+
+        private long mExtendedExpiresOn;
+
+        private long mCachedAt;
+
+        private String mSpeRing;
+
+        private String mRefreshTokenAge;
+
+        private boolean mSuccess;
+
+        // Exception parameters
+
+        private String mErrorCode;
+
+        private String mErrorMessage;
+
+        private String mCorrelationId;
+
+        private String mSubErrorCode;
+
+        private String mHttpStatusCode;
+
+        private String mHttpResponseHeaders;
+
+        private String mHttpResponseBody;
+
+        private String mCliTelemErrorCode;
+
+        private String mCliTelemSubErrorCode;
+
+
+        public Builder accessToken(@Nullable final String mAccessToken) {
+            this.mAccessToken = mAccessToken;
+            return this;
+        }
+
+        public Builder idToken(@Nullable final String mIdToken) {
+            this.mIdToken = mIdToken;
+            return this;
+        }
+
+        public Builder homeAccountId(@Nullable final String mHomeAccountId) {
+            this.mHomeAccountId = mHomeAccountId;
+            return this;
+        }
+
+        public Builder localAccountId(@Nullable final String mLocalAccountId) {
+            this.mLocalAccountId = mLocalAccountId;
+            return this;
+        }
+
+        public Builder userName(@Nullable final String userName) {
+            this.mUserName = userName;
+            return this;
+        }
+
+        public Builder tokenType(@Nullable final String mTokenType) {
+            this.mTokenType = mTokenType;
+            return this;
+        }
+
+        public Builder clientId(@Nullable final String clientId) {
+            this.mClientId = clientId;
+            return this;
+        }
+
+        public Builder scope(@Nullable final String scope) {
+            this.mClientId = scope;
+            return this;
+        }
+
+        public Builder clientInfo(@Nullable final String mClientInfo) {
+            this.mClientInfo = mClientInfo;
+            return this;
+        }
+
+        public Builder authority(@Nullable final String mAuthority) {
+            this.mAuthority = mAuthority;
+            return this;
+        }
+
+        public Builder environment(@Nullable final String mEnvironment) {
+            this.mEnvironment = mEnvironment;
+            return this;
+        }
+
+        public Builder expiresOn(long mExpiresOn) {
+            this.mExpiresOn = mExpiresOn;
+            return this;
+        }
+
+        public Builder extendedExpiresOn(long mExtendedExpiresOn) {
+            this.mExtendedExpiresOn = mExtendedExpiresOn;
+            return this;
+        }
+
+        public Builder cachedAt(long cachedAt) {
+            this.mCachedAt = cachedAt;
+            return this;
+        }
+
+        public Builder speRing(String speRing) {
+            this.mSpeRing = speRing;
+            return this;
+        }
+
+        public Builder refreshTokenAge(String refreshTokenAge) {
+            this.mRefreshTokenAge = refreshTokenAge;
+            return this;
+        }
+
+        public Builder success(boolean success){
+            this.mSuccess = success;
+            return this;
+        }
+
+        public Builder errorCode(String errorCode) {
+            this.mErrorCode = errorCode;
+            return this;
+        }
+
+        public Builder errorMessage(String errorMessage) {
+            this.mErrorMessage = errorMessage;
+            return this;
+        }
+
+        public Builder correlationId(String correlationId) {
+            this.mCorrelationId = correlationId;
+            return this;
+        }
+
+        public Builder subErrorCode(String subErrorCode) {
+            this.mSubErrorCode = subErrorCode;
+            return this;
+        }
+
+        public Builder httpStatusCode(String httpStatusCode) {
+            this.mHttpStatusCode = httpStatusCode;
+            return this;
+        }
+
+        public Builder httpResponseHeaders(String httpResponseHeaders) {
+            this.mHttpResponseHeaders = httpResponseHeaders;
+            return this;
+        }
+
+        public Builder httpResponseBody(String httpResponseBody) {
+            this.mHttpResponseBody = httpResponseBody;
+            return this;
+        }
+
+        public Builder cliTelemErrorCode(String cliTelemErrorCode) {
+            this.mCliTelemErrorCode = cliTelemErrorCode;
+            return this;
+        }
+
+        public Builder cliTelemSubErrorCode(String cliTelemSubErrorCode) {
+            this.mCliTelemSubErrorCode = cliTelemSubErrorCode;
+            return this;
+        }
+
+        public BrokerResult build(){
+            return new BrokerResult(this);
+        }
+    }
 
 }

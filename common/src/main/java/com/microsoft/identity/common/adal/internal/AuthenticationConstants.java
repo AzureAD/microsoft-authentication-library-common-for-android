@@ -984,6 +984,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_RESULT_V2 = "broker.result.v2";
 
         /**
+         * String to return a true if the request succeeded, false otherwise.
+         */
+        public static final String BROKER_REQUEST_V2_SUCCESS = "broker.request.v2.success";
+
+        /**
          * String for ssl prefix.
          */
         public static final String REDIRECT_SSL_PREFIX = "https://";

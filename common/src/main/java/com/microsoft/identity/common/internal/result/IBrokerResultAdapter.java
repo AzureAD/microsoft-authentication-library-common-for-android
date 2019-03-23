@@ -46,8 +46,16 @@ public interface IBrokerResultAdapter {
      * Returns authentication result from Broker result bundle
      *
      * @param resultBundle
-     * @return {@link AcquireTokenResult}
+     * @return {@link ILocalAuthenticationResult}
      */
-    AcquireTokenResult acquireTokenResultFromBundle(Bundle resultBundle);
+    ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle);
+
+    /**
+     * Returns a BaseException from Broker result bundle.The exception
+     * returned in the callback could also be sub class of {@link BaseException}
+     * @param resultBundle
+     * @return
+     */
+    BaseException baseExceptionFromBundle(Bundle resultBundle);
 
 }
