@@ -159,7 +159,7 @@ public class PackageHelper {
      */
     public boolean isPackageInstalledAndEnabled(final String packageName) {
         final String methodName = "#isPackageInstalledAndEnabled";
-        Boolean enabled = false;
+        boolean enabled = false;
         PackageManager pm = mContext.getPackageManager();
         try {
             ApplicationInfo applicationInfo = pm.getApplicationInfo(packageName, 0);
