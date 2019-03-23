@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -37,6 +38,7 @@ import android.webkit.WebView;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.util.PackageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -206,16 +208,42 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
-        // TODO : check for company portal link and open if available.
-        //Open url link in browser
-        final String link = url
-                .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
-        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-        getActivity().startActivity(intent);
+        final PackageHelper packageHelper = new PackageHelper(getActivity().getApplicationContext());
+        if (url.startsWith(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL)
+                && packageHelper.isPackageInstalledAndEnabled(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+            Logger.verbose(TAG, "It is a device CA request. Company Portal is installed.");
+            try {
+                Logger.verbose(TAG, "Sending intent to launch the CompanyPortal.");
+                Intent intent = new Intent();
+                intent.setComponent(new ComponentName(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
+                        AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                getActivity().getApplicationContext().startActivity(intent);
+            } catch (final SecurityException ex) {
+                Logger.warn(TAG, "Failed to launch Company Portal, falling back to browser.");
+                openLinkInBrowser(url);
+            }
+        } else {
+            openLinkInBrowser(url);
+        }
+
         view.stopLoading();
         Intent resultIntent = new Intent();
         getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
         return true;
+    }
+
+    private void openLinkInBrowser(final String url) {
+        //Open url link in browser
+        final String link = url
+                .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
+        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
+
+        if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+            getActivity().getApplicationContext().startActivity(intent);
+        } else {
+            Logger.warn(TAG, "Unable to find an app to resolve the activity.");
+        }
     }
 
     private boolean processInstallRequest(@NonNull final WebView view, @NonNull final String url) {

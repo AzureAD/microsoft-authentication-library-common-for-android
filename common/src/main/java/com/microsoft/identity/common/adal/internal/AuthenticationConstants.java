@@ -938,6 +938,16 @@ public final class AuthenticationConstants {
         public static final String BROWSER_EXT_INSTALL_PREFIX = "msauth://";
 
         /**
+         * Prefix in the redirect to open external browser to finish the CA auth.
+         */
+        public static final String BROWSER_DEVICE_CA_URL = "browser://go.microsoft.com/fwlink/?LinkId=396941";
+
+        /**
+         * Activity name to launch company portal.
+         */
+        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = "com.microsoft.windowsintune.companyportal.views.SplashActivity";
+
+        /**
          * Redirect URI parameter key to get link to install broker
          */
         public static final String INSTALL_URL_KEY = "app_link";
