@@ -317,7 +317,7 @@ public class BrokerRequest implements Serializable {
         /**
          * The username for the request.
          */
-        public BrokerRequest.Builder username(@@Nullable final String userName) {
+        public BrokerRequest.Builder username(@Nullable final String userName) {
             this.mUserName = userName;
             return this;
         }
@@ -325,7 +325,7 @@ public class BrokerRequest implements Serializable {
         /**
          * Home account id of the user. Needs to be set for silent request
          */
-        public BrokerRequest.Builder homeAccountId(@@Nullable final String userId) {
+        public BrokerRequest.Builder homeAccountId(@Nullable final String userId) {
             this.mHomeAccountId = userId;
             return this;
         }
@@ -333,7 +333,7 @@ public class BrokerRequest implements Serializable {
         /**
          * Local account id of the user. Needs to be set for silent request
          */
-        public BrokerRequest.Builder localAccountId(@@Nullable final String localAccountId) {
+        public BrokerRequest.Builder localAccountId(@Nullable final String localAccountId) {
             this.mLocalAccountId = localAccountId;
             return this;
         }
