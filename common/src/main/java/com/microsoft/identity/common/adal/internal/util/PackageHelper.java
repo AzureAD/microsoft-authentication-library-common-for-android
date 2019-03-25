@@ -152,6 +152,29 @@ public class PackageHelper {
     }
 
     /**
+     * Check if the given package is installed and enabled.
+     *
+     * @param packageName the package name to look up.
+     * @return true if the package is installed and enabled. Otherwise, returns false.
+     */
+    public boolean isPackageInstalledAndEnabled(final String packageName) {
+        final String methodName = "#isPackageInstalledAndEnabled";
+        boolean enabled = false;
+        PackageManager pm = mContext.getPackageManager();
+        try {
+            ApplicationInfo applicationInfo = pm.getApplicationInfo(packageName, 0);
+            if (applicationInfo != null) {
+                enabled = applicationInfo.enabled;
+            }
+        } catch (NameNotFoundException e) {
+            Logger.error(TAG + methodName, "Package is not found. Package name: " + packageName, e);
+        }
+
+        Logger.verbose(TAG + methodName, " Is package installed and enabled? [" + enabled + "]");
+        return enabled;
+    }
+
+    /**
      * Gets redirect uri for broker.
      *
      * @param packageName     application package name
