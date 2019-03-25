@@ -24,10 +24,12 @@ package com.microsoft.identity.common.internal.result;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
@@ -172,9 +174,37 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     @Override
-    public BaseException baseExceptionFromBundle(Bundle resultBundle) {
+    public BaseException baseExceptionFromBundle(@NonNull final Bundle resultBundle) {
+        final BrokerResult brokerResult = (BrokerResult) resultBundle.getSerializable(
+                AuthenticationConstants.Broker.BROKER_RESULT_V2
+        );
+        if (brokerResult == null) {
+            Logger.error(TAG, "Broker Result not returned from Broker, ", null);
+            return new BaseException(ErrorStrings.UNKNOWN_ERROR, "Broker Result not returned from Broker");
+
+        }
+        BaseException baseException = new BaseException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
+        if(TextUtils.isEmpty(brokerResult.getHttpResponseHeaders()) ||
+                TextUtils.isEmpty(brokerResult.getHttpResponseBody())){
+
+            baseException = new ServiceException(brokerResult.getErrorCode(), brokerResult.getErrorMessage(), null);
+           // ((ServiceException)baseException).setHttpResponse(baseException.g);
+        }else {
+            baseException = new BaseException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
+        }
+        baseException.setCliTelemErrorCode(baseException.getCliTelemErrorCode());
+        baseException.setCliTelemSubErrorCode(baseException.getCliTelemErrorCode());
+
+        if(TextUtils.isEmpty(brokerResult.getHttpResponseHeaders()) ||
+                TextUtils.isEmpty(brokerResult.getHttpResponseBody())){
+
+           // ServiceException serviceException = new ServiceException();
+        }
         return null;
+
     }
+
+
 
     /**
      * Helper to get AccessTokenRecord from BrokerResult
