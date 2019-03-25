@@ -80,6 +80,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .clientInfo(accountRecord.getClientInfo())
                 .authority(accessTokenRecord.getAuthority())
                 .environment(accessTokenRecord.getEnvironment())
+                .tenantId(authenticationResult.getTenantId())
                 .expiresOn(Long.parseLong(accessTokenRecord.getExpiresOn()))
                 .extendedExpiresOn(Long.parseLong(accessTokenRecord.getExtendedExpiresOn()))
                 .cachedAt(Long.parseLong(accessTokenRecord.getCachedAt()))
