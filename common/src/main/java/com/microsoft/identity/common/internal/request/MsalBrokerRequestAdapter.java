@@ -41,8 +41,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .redirect(parameters.getRedirectUri())
                 .clientId(parameters.getClientId())
                 .username(parameters.getLoginHint())
-                .extraQueryStringParameter(QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters()))
-                .prompt(parameters.getOpenIdConnectPromptParameter().name())
+                .extraQueryStringParameter(
+                        parameters.getExtraQueryStringParameters() != null ?
+                                QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
+                                : null
+                ).prompt(parameters.getOpenIdConnectPromptParameter().name())
                 .claims(parameters.getClaimsRequestJson())
                 .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
                 .applicationName(parameters.getApplicationName())
@@ -116,15 +119,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         parameters.setAuthority(
                 AdalBrokerRequestAdapter.getRequestAuthorityWithExtraQP(
-                        intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_AUTHORITY),
+                        brokerRequest.getAuthority(),
                         extraQP
                 )
         );
-        if(!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
-            parameters.setExtraQueryStringParameters(
-                    QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter())
-            );
-        }
 
         parameters.setScopes(getScopesAsSet(brokerRequest.getScope()));
 

@@ -259,7 +259,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final AzureActiveDirectoryAuthority requestAuthority
                 = (AzureActiveDirectoryAuthority) Authority.getAuthorityFromAuthorityUrl(authority);
 
-        if (!extraQP.isEmpty()) {
+        if (extraQP != null) {
             AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
             List<Pair<String, String>> extraQPListCopy = new ArrayList<>(extraQP);
 
