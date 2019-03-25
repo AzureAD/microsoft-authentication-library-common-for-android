@@ -68,7 +68,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     @Override
-    public BrokerAcquireTokenOperationParameters brokerParametersFromActivity(@NonNull final Activity callingActivity) {
+    public BrokerAcquireTokenOperationParameters brokerInteractiveParametersFromActivity(@NonNull final Activity callingActivity) {
 
         final BrokerAcquireTokenOperationParameters parameters =
                 new BrokerAcquireTokenOperationParameters();
@@ -250,8 +250,12 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
 
-    private static AzureActiveDirectoryAuthority getRequestAuthorityWithExtraQP(final String authority,
-                                                                                final List<Pair<String, String>> extraQP) {
+    /**
+     * TODO : Refactor to remove this code and move the logic to better place
+     *
+     */
+    public static AzureActiveDirectoryAuthority getRequestAuthorityWithExtraQP(final String authority,
+                                                                               final List<Pair<String, String>> extraQP) {
 
         final AzureActiveDirectoryAuthority requestAuthority
                 = (AzureActiveDirectoryAuthority) Authority.getAuthorityFromAuthorityUrl(authority);

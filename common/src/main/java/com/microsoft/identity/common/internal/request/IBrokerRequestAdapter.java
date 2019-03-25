@@ -34,7 +34,7 @@ public interface IBrokerRequestAdapter {
 
     Bundle bundleFromSilentOperationParameters(AcquireTokenSilentOperationParameters parameters);
 
-    BrokerAcquireTokenOperationParameters brokerParametersFromActivity(Activity callingActivity);
+    BrokerAcquireTokenOperationParameters brokerInteractiveParametersFromActivity(Activity callingActivity);
 
     BrokerAcquireTokenSilentOperationParameters brokerSilentParametersFromBundle(Bundle bundle,
                                                                                  Context context,

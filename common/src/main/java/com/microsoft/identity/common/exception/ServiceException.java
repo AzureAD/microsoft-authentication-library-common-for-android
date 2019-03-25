@@ -141,7 +141,7 @@ public class ServiceException extends BaseException {
             }
 
             if (null != response.getBody()) {
-                    mHttpResponseBody = new HashMap<>(HashMapExtensions.getJsonResponse(response));
+                    mHttpResponseBody = HashMapExtensions.getJsonResponse(response);
             }
         }
     }

@@ -43,6 +43,7 @@ public class BrokerResult implements Serializable {
         static final String CLIENINFO = "broker.clientInfo";
         static final String AUTHORITY = "broker.authority";
         static final String ENVIRONMENT = "broker.environment";
+        static final String TENANT_ID = "broker.tenantId";
         static final String EXPIRES_ON = "broker.expiresOn";
         static final String EXTENDED_EXPIRES_ON = "broker.extendedExpiresOn";
         static final String CACHED_AT = "broker.cachedAt";
@@ -127,6 +128,12 @@ public class BrokerResult implements Serializable {
     private String mEnvironment;
 
     /**
+     * Tenant id
+     */
+    @Nullable
+    private String mTenantId;
+
+    /**
      * Expires on value for the token.
      */
     @Nullable
@@ -192,7 +199,7 @@ public class BrokerResult implements Serializable {
      * Http Status code of the error response
      */
     @Nullable
-    private String mHttpStatusCode;
+    private int mHttpStatusCode;
 
     /**
      * Response headers or the error response in json format
@@ -231,6 +238,7 @@ public class BrokerResult implements Serializable {
         mClientInfo = builder.mClientInfo;
         mAuthority = builder.mAuthority;
         mEnvironment = builder.mEnvironment;
+        mTenantId = builder.mTenantId;
         mExpiresOn = builder.mExpiresOn;
         mExtendedExpiresOn = builder.mExtendedExpiresOn;
         mCachedAt = builder.mCachedAt;
@@ -265,7 +273,7 @@ public class BrokerResult implements Serializable {
         return mHttpResponseHeaders;
     }
 
-    public String getHttpStatusCode() {
+    public int getHttpStatusCode() {
         return mHttpStatusCode;
     }
 
@@ -377,6 +385,8 @@ public class BrokerResult implements Serializable {
 
         private String mEnvironment;
 
+        private String mTenantId;
+
         private long mExpiresOn;
 
         private long mExtendedExpiresOn;
@@ -399,7 +409,7 @@ public class BrokerResult implements Serializable {
 
         private String mSubErrorCode;
 
-        private String mHttpStatusCode;
+        private int mHttpStatusCode;
 
         private String mHttpResponseHeaders;
 
@@ -450,18 +460,23 @@ public class BrokerResult implements Serializable {
             return this;
         }
 
-        public Builder clientInfo(@Nullable final String mClientInfo) {
-            this.mClientInfo = mClientInfo;
+        public Builder clientInfo(@Nullable final String clientInfo) {
+            this.mClientInfo = clientInfo;
             return this;
         }
 
-        public Builder authority(@Nullable final String mAuthority) {
-            this.mAuthority = mAuthority;
+        public Builder authority(@Nullable final String authority) {
+            this.mAuthority = authority;
             return this;
         }
 
-        public Builder environment(@Nullable final String mEnvironment) {
-            this.mEnvironment = mEnvironment;
+        public Builder environment(@Nullable final String environment) {
+            this.mEnvironment = environment;
+            return this;
+        }
+
+        public Builder tenantId(@Nullable final String tenantId){
+            this.mTenantId = tenantId;
             return this;
         }
 
@@ -470,8 +485,8 @@ public class BrokerResult implements Serializable {
             return this;
         }
 
-        public Builder extendedExpiresOn(long mExtendedExpiresOn) {
-            this.mExtendedExpiresOn = mExtendedExpiresOn;
+        public Builder extendedExpiresOn(long extendedExpiresOn) {
+            this.mExtendedExpiresOn = extendedExpiresOn;
             return this;
         }
 
@@ -515,7 +530,7 @@ public class BrokerResult implements Serializable {
             return this;
         }
 
-        public Builder httpStatusCode(String httpStatusCode) {
+        public Builder httpStatusCode(int httpStatusCode) {
             this.mHttpStatusCode = httpStatusCode;
             return this;
         }

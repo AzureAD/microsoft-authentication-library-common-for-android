@@ -62,6 +62,11 @@ public enum OpenIdConnectPromptParameter {
         return this.name().toLowerCase();
     }
 
+    /**
+     * Utility method to map Adal PromptBehavior with OpenIdConnectPromptParameter
+     * @param promptbehavior
+     * @return
+     */
     public static OpenIdConnectPromptParameter _fromPromptBehavior(@NonNull final String promptbehavior){
 
         switch (promptbehavior) {
