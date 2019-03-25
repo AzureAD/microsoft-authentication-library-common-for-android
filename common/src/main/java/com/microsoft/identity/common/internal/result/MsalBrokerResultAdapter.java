@@ -349,6 +349,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         } catch (JSONException e) {
             Logger.warn(TAG, "Unable to parse json");
         }
+        return serviceException;
 
     }
 
