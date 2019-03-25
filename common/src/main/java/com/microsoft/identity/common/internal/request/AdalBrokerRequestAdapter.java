@@ -36,9 +36,8 @@ import android.util.Pair;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
+import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
-import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
@@ -58,12 +57,12 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
     private static final String TAG = AdalBrokerResultAdapter.class.getName();
 
     @Override
-    public Bundle bundleFromAcquireTokenParameters(AcquireTokenOperationParameters parameters) {
+    public BrokerRequest brokerRequestFromAcquireTokenParameters(AcquireTokenOperationParameters parameters) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Bundle bundleFromSilentOperationParameters(AcquireTokenSilentOperationParameters parameters) {
+    public BrokerRequest brokerRequestFromSilentOperationParameters(AcquireTokenSilentOperationParameters parameters) {
         throw new UnsupportedOperationException();
     }
 

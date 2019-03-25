@@ -9,7 +9,6 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Pair;
 
-import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
@@ -32,7 +31,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     private static final String TAG = MsalBrokerRequestAdapter.class.getName();
 
     @Override
-    public Bundle bundleFromAcquireTokenParameters(@NonNull final AcquireTokenOperationParameters parameters) {
+    public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final AcquireTokenOperationParameters parameters) {
 
         Logger.verbose(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
 
@@ -51,17 +50,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .msalVersion(parameters.getSdkVersion())
                 .build();
 
-        final Bundle requestBundle = new Bundle();
-
-        requestBundle.putString(
-                AuthenticationConstants.Broker.BROKER_REQUEST_V2,
-                new Gson().toJson(brokerRequest, BrokerRequest.class));
-
-        return requestBundle;
+        return brokerRequest;
     }
 
     @Override
-    public Bundle bundleFromSilentOperationParameters(@NonNull final AcquireTokenSilentOperationParameters parameters) {
+    public BrokerRequest brokerRequestFromSilentOperationParameters(@NonNull final AcquireTokenSilentOperationParameters parameters) {
 
         Logger.verbose(TAG, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
 
@@ -81,12 +74,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .msalVersion(parameters.getSdkVersion())
                 .build();
 
-        final Bundle requestBundle = new Bundle();
-        requestBundle.putString(
-                AuthenticationConstants.Broker.BROKER_REQUEST_V2,
-                new Gson().toJson(brokerRequest, BrokerRequest.class));
-
-        return requestBundle;
+        return brokerRequest;
     }
 
     @Override
@@ -100,11 +88,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final Intent intent = callingActivity.getIntent();
 
-        final String brokerRequestJson = intent.getStringExtra(
-                AuthenticationConstants.Broker.BROKER_REQUEST_V2
-        );
-
-        final BrokerRequest brokerRequest = new Gson().fromJson(brokerRequestJson, BrokerRequest.class);
+        final BrokerRequest brokerRequest = (BrokerRequest) intent.getSerializableExtra(
+                AuthenticationConstants.Broker.BROKER_REQUEST_V2);
 
         parameters.setActivity(callingActivity);
 
@@ -181,11 +166,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.verbose(TAG, "Constructing BrokerAcquireTokenSilentOperationParameters from result bundle");
 
-        final String brokerRequestJson = bundle.getString(
+        final BrokerRequest brokerRequest = (BrokerRequest) bundle.getSerializable(
                 AuthenticationConstants.Broker.BROKER_REQUEST_V2
         );
-
-        final BrokerRequest brokerRequest = new Gson().fromJson(brokerRequestJson, BrokerRequest.class);
 
         final BrokerAcquireTokenSilentOperationParameters parameters =
                 new BrokerAcquireTokenSilentOperationParameters();
