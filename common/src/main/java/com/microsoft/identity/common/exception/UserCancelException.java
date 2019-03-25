@@ -31,4 +31,8 @@ final public class UserCancelException extends BaseException {
     public UserCancelException() {
         super();
     }
+
+    public UserCancelException(final String errorCode, final String errorMessage){
+        super(errorCode, errorMessage);
+    }
 }

@@ -325,4 +325,9 @@ public final class ErrorStrings {
      */
     public static final String BROKER_REQUEST_CANCELLED = "Broker request cancelled";
 
+    /**
+     * User Cancelled the request.
+     */
+    public static final String USER_CANCELLED = "User cancelled";
+
 }
