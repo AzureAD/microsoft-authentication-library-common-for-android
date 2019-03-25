@@ -34,7 +34,6 @@ import java.io.Serializable;
  */
 public class BrokerResult implements Serializable {
 
-
     private class SerializedNames {
         static final String ACCeSS_TOKEN = "broker.accessToken";
         static final String ID_TOKEN = "broker.idToken";
@@ -349,6 +348,10 @@ public class BrokerResult implements Serializable {
 
     public long getExpiresOn() {
         return mExpiresOn;
+    }
+
+    public String getTenantId() {
+        return mTenantId;
     }
 
     public String getEnvironment() {

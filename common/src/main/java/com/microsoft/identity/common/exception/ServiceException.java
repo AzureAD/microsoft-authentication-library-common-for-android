@@ -128,6 +128,24 @@ public class ServiceException extends BaseException {
     }
 
     /**
+     * Set response headers of the error received from the Service.
+     *
+     * @param responseHeaders
+     */
+    public void setHttpResponseHeaders(final HashMap<String, List<String>> responseHeaders){
+        mHttpResponseHeaders = responseHeaders;
+    }
+
+    /**
+     * Set response body of the error received from the Service.
+     *
+     * @param responseBody
+     */
+    public void setHttpResponseBody(final HashMap<String, String> responseBody){
+        mHttpResponseBody = responseBody;
+    }
+
+    /**
      * Set the http response {@link HttpWebResponse}.
      *
      * @param response HttpWebResponse

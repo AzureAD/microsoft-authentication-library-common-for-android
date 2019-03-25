@@ -28,10 +28,14 @@ import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.exception.UiRequiredException;
+import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -45,6 +49,8 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
+
+import org.json.JSONException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -103,41 +109,29 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .speRing(exception.getSpeRing())
                 .refreshTokenAge(exception.getRefreshTokenAge());
 
-        if(exception instanceof ServiceException) {
-
+        if (exception instanceof ServiceException) {
             builder.subErrorCode(((ServiceException) exception).getSubErrorCode())
                     .httpStatusCode(((ServiceException) exception).getHttpStatusCode())
                     .httpResponseHeaders(
                             HeaderSerializationUtil.toJson((
                                     (ServiceException) exception).getHttpResponseHeaders()
-                            )
-                    )
+                            ))
                     .httpResponseBody(new Gson().toJson(
-                            ((ServiceException) exception).getHttpResponseBody())
-                    );
+                            ((ServiceException) exception).getHttpResponseBody()));
         }
 
-        if(exception instanceof IntuneAppProtectionPolicyRequiredException){
-            /**
-             *   private String mAccountUpn;
-             private String mAccountUserId;
-             private String mTenantId;
-             private String mAuthorityUrl;
-             */
+        if (exception instanceof IntuneAppProtectionPolicyRequiredException) {
             builder.userName(((IntuneAppProtectionPolicyRequiredException) exception).getAccountUpn())
                     .localAccountId(((IntuneAppProtectionPolicyRequiredException) exception).getAccountUserId())
                     .authority(((IntuneAppProtectionPolicyRequiredException) exception).getAuthorityUrl())
                     .tenantId(((IntuneAppProtectionPolicyRequiredException) exception).getTenantId());
         }
 
-
         final Bundle resultBundle = new Bundle();
         resultBundle.putSerializable(AuthenticationConstants.Broker.BROKER_RESULT_V2, builder.build());
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, false);
 
         return resultBundle;
-
-
     }
 
     @Override
@@ -147,7 +141,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 AuthenticationConstants.Broker.BROKER_RESULT_V2
         );
 
-        if(brokerResult == null) {
+        if (brokerResult == null) {
             Logger.error(TAG, "Broker Result not returned from Broker, ", null);
             return null;
         }
@@ -165,51 +159,82 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             );
             return authenticationResult;
         } catch (final ServiceException e) {
-           Logger.error(TAG, "Failed to parse Client Info " , e);
-           return null;
+            Logger.error(TAG, "Failed to parse Client Info ", e);
+            return null;
         }
-
-
 
     }
 
     @Override
     public BaseException baseExceptionFromBundle(@NonNull final Bundle resultBundle) {
+        Logger.verbose(TAG, "Constructing exception from result bundle");
+
         final BrokerResult brokerResult = (BrokerResult) resultBundle.getSerializable(
                 AuthenticationConstants.Broker.BROKER_RESULT_V2
         );
+
         if (brokerResult == null) {
             Logger.error(TAG, "Broker Result not returned from Broker, ", null);
             return new BaseException(ErrorStrings.UNKNOWN_ERROR, "Broker Result not returned from Broker");
 
         }
-        BaseException baseException = new BaseException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
-        if(TextUtils.isEmpty(brokerResult.getHttpResponseHeaders()) ||
-                TextUtils.isEmpty(brokerResult.getHttpResponseBody())){
 
-            baseException = new ServiceException(brokerResult.getErrorCode(), brokerResult.getErrorMessage(), null);
-           // ((ServiceException)baseException).setHttpResponse(baseException.g);
-        }else {
-            baseException = new BaseException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
+        BaseException baseException;
+
+        final String errorCode = brokerResult.getErrorCode();
+
+        if (AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
+                AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode)) {
+
+            Logger.warn(TAG, "Received a UIRequired exception from Broker : " + errorCode);
+            baseException = new UiRequiredException(
+                    errorCode,
+                    brokerResult.getErrorMessage()
+            );
+
+        } else if (AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorCode) ||
+                AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED.
+                        equalsIgnoreCase(brokerResult.getSubErrorCode())) {
+
+            Logger.warn(
+                    TAG,
+                    "Received a IntuneAppProtectionPolicyRequiredException exception from Broker : "
+                            + errorCode);
+            baseException = getIntuneProtectionRequiredException(brokerResult);
+
+        } else if (ErrorStrings.USER_CANCELLED.equalsIgnoreCase(errorCode)) {
+
+            Logger.warn(TAG, "Received a User cancalled exception from Broker : " + errorCode);
+            baseException = new UserCancelException();
+
+        } else if (TextUtils.isEmpty(brokerResult.getHttpResponseHeaders()) ||
+                TextUtils.isEmpty(brokerResult.getHttpResponseBody())) {
+
+            Logger.warn(TAG, "Received a Service exception from Broker : " + errorCode);
+            baseException = getServiceException(brokerResult);
+
+        } else {
+
+            Logger.warn(TAG, "Received a Client exception from Broker : " + errorCode);
+            baseException = new ClientException(
+                    brokerResult.getErrorCode(),
+                    brokerResult.getErrorMessage()
+            );
         }
-        baseException.setCliTelemErrorCode(baseException.getCliTelemErrorCode());
-        baseException.setCliTelemSubErrorCode(baseException.getCliTelemErrorCode());
 
-        if(TextUtils.isEmpty(brokerResult.getHttpResponseHeaders()) ||
-                TextUtils.isEmpty(brokerResult.getHttpResponseBody())){
+        baseException.setCliTelemErrorCode(brokerResult.getCliTelemErrorCode());
+        baseException.setCliTelemSubErrorCode(brokerResult.getCliTelemSubErrorCode());
+        baseException.setCorrelationId(brokerResult.getCorrelationId());
+        baseException.setSpeRing(brokerResult.getSpeRing());
+        baseException.setRefreshTokenAge(brokerResult.getRefreshTokenAge());
 
-           // ServiceException serviceException = new ServiceException();
-        }
         return null;
 
     }
 
 
-
     /**
      * Helper to get AccessTokenRecord from BrokerResult
-     * @param brokerResult
-     * @return
      */
     private AccessTokenRecord getAccessTokenRecord(@NonNull final BrokerResult brokerResult) throws ServiceException {
 
@@ -232,7 +257,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 );
             }
         } catch (MalformedURLException e) {
-            Logger.error(TAG , "Malformed authority url ", e);
+            Logger.error(TAG, "Malformed authority url ", e);
         }
         accessTokenRecord.setClientId(brokerResult.getClientId());
         accessTokenRecord.setSecret(brokerResult.getAccessToken());
@@ -242,11 +267,11 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
 
         accessTokenRecord.setExpiresOn(
-                   String.valueOf(brokerResult.getExpiresOn())
+                String.valueOf(brokerResult.getExpiresOn())
         );
 
         accessTokenRecord.setExtendedExpiresOn(
-                    String.valueOf(brokerResult.getExtendedExpiresOn())
+                String.valueOf(brokerResult.getExtendedExpiresOn())
         );
 
         accessTokenRecord.setCachedAt(
@@ -255,6 +280,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return accessTokenRecord;
     }
 
+    /**
+     * Helper method to retrieve IAccountRecord from BrokerResult
+     */
     private IAccountRecord getAccountRecord(@NonNull final BrokerResult brokerResult) throws ServiceException {
         final ClientInfo clientInfo = new ClientInfo(brokerResult.getClientInfo());
         final MicrosoftStsAccount microsoftStsAccount = new MicrosoftStsAccount(
@@ -263,6 +291,65 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         );
         microsoftStsAccount.setEnvironment(brokerResult.getEnvironment());
         return new AccountRecord(microsoftStsAccount);
+    }
+
+    /**
+     * Helper method to retrieve IntuneAppProtectionPolicyRequiredException from BrokerResult
+     */
+    private IntuneAppProtectionPolicyRequiredException getIntuneProtectionRequiredException(
+            @NonNull final BrokerResult brokerResult) {
+
+        final IntuneAppProtectionPolicyRequiredException exception =
+                new IntuneAppProtectionPolicyRequiredException(
+                        brokerResult.getErrorCode(),
+                        brokerResult.getErrorMessage()
+                );
+        exception.setTenantId(brokerResult.getTenantId());
+        exception.setAuthorityUrl(brokerResult.getAuthority());
+        exception.setAccountUserId(brokerResult.getLocalAccountId());
+        exception.setAccountUpn(brokerResult.getUserName());
+        exception.setSubErrorCode(brokerResult.getSubErrorCode());
+        try {
+            exception.setHttpResponseBody(HashMapExtensions.jsonStringAsMap(
+                    brokerResult.getHttpResponseBody())
+            );
+            if (brokerResult.getHttpResponseHeaders() != null) {
+                exception.setHttpResponseHeaders(
+                        HeaderSerializationUtil.fromJson(
+                                brokerResult.getHttpResponseHeaders())
+                );
+            }
+        } catch (JSONException e) {
+            Logger.warn(TAG, "Unable to parse json");
+        }
+        return exception;
+    }
+
+    /**
+     * Helper method to retrieve ServiceException from BrokerResult
+     */
+    private ServiceException getServiceException(@NonNull final BrokerResult brokerResult) {
+
+        final ServiceException serviceException = new ServiceException(
+                brokerResult.getErrorCode(),
+                brokerResult.getErrorMessage(),
+                null
+        );
+        serviceException.setSubErrorCode(brokerResult.getSubErrorCode());
+        try {
+            serviceException.setHttpResponseBody(
+                    HashMapExtensions.jsonStringAsMap(
+                            brokerResult.getHttpResponseBody())
+            );
+            serviceException.setHttpResponseHeaders(
+                    HeaderSerializationUtil.fromJson(
+                            brokerResult.getHttpResponseHeaders())
+            );
+
+        } catch (JSONException e) {
+            Logger.warn(TAG, "Unable to parse json");
+        }
+
     }
 
 }
