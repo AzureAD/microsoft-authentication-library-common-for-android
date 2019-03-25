@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.broker;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.io.Serializable;
 
 /**
@@ -37,8 +39,10 @@ public class BrokerResult implements Serializable {
         static final String ACCeSS_TOKEN = "broker.accessToken";
         static final String ID_TOKEN = "broker.idToken";
         static final String HOMEACCOUNT_ID = "broker.homeAccountId";
-        static final String LCCAL_ACCOUNT_ID = "broker.localAccountId";
+        static final String LOCAL_ACCOUNT_ID = "broker.localAccountId";
         static final String USERNAME = "broker.username";
+        static final String CLIENT_ID = "broker.clientId";
+        static final String SCOPE = "broker.scope";
         static final String TOKENTYPE = "broker.tokenType";
         static final String CLIENINFO = "broker.clientInfo";
         static final String AUTHORITY = "broker.authority";
@@ -48,6 +52,7 @@ public class BrokerResult implements Serializable {
         static final String CACHED_AT = "broker.cachedAt";
         static final String SPE_RING = "broker.speRing";
         static final String REFRESH_TOKEN_AGE = "broker.refreshTokenAge";
+        static final String SUCCESS = "broker.success";
         static final String ERROR_CODE = "broker.errorCode";
         static final String ERROR_MESSAGE = "broker.errorMessage";
         static final String CORRELATION_ID = "broker.correlationId";
@@ -64,102 +69,121 @@ public class BrokerResult implements Serializable {
      * Access token from the response
      */
     @Nullable
+    @SerializedName(SerializedNames.ACCeSS_TOKEN)
     private String mAccessToken;
 
     /**
      * ID token from the response
      */
     @Nullable
+    @SerializedName(SerializedNames.ID_TOKEN)
     private String mIdToken;
 
     /**
      * Home account id of the user.
      */
     @Nullable
+    @SerializedName(SerializedNames.HOMEACCOUNT_ID)
     private String mHomeAccountId;
 
     /**
      * Local account id or user id of the User
      */
     @Nullable
+    @SerializedName(SerializedNames.LOCAL_ACCOUNT_ID)
     private String mLocalAccountId;
 
     /**
      * Username of the User.
      */
     @Nullable
+    @SerializedName(SerializedNames.USERNAME)
     private String mUserName;
 
-    @Nullable
+
     /**
      * Client id of the application
      */
+    @Nullable
+    @SerializedName(SerializedNames.CLIENT_ID)
     private String mClientId;
 
-    @Nullable
+
     /**
      * Scopes requested
      */
+    @Nullable
+    @SerializedName(SerializedNames.SCOPE)
     private String mScope;
 
     /**
      * Token type from the response
      */
     @Nullable
+    @SerializedName(SerializedNames.TOKENTYPE)
     private String mTokenType;
 
     /**
      * Client Info from the response
      */
     @Nullable
+    @SerializedName(SerializedNames.CLIENINFO)
     private String mClientInfo;
 
     /**
      * Authority from the response.
      */
     @Nullable
+    @SerializedName(SerializedNames.AUTHORITY)
     private String mAuthority;
 
     /**
      * Environment used to cache token.
      */
     @Nullable
+    @SerializedName(SerializedNames.ENVIRONMENT)
     private String mEnvironment;
 
     /**
      * Expires on value for the token.
      */
     @Nullable
+    @SerializedName(SerializedNames.EXPIRES_ON)
     private long mExpiresOn;
 
     /**
      * Extended expires on value for the token
      */
     @Nullable
+    @SerializedName(SerializedNames.EXTENDED_EXPIRES_ON)
     private long mExtendedExpiresOn;
 
     /**
      * Access token cache at time in millis
      */
     @Nullable
+    @SerializedName(SerializedNames.CACHED_AT)
     private long mCachedAt;
 
     /**
      * Client telemetry SPE ring
      */
     @Nullable
+    @SerializedName(SerializedNames.SPE_RING)
     private String mSpeRing;
 
     /**
      * Refresh token age from client telemetry
      */
     @Nullable
+    @SerializedName(SerializedNames.REFRESH_TOKEN_AGE)
     private String mRefreshTokenAge;
 
     /**
      * Boolean to indicate if the request succeeded without exceptions.
      */
     @NonNull
+    @SerializedName(SerializedNames.SUCCESS)
     private boolean mSuccess;
 
     // Exception parameters
@@ -168,54 +192,63 @@ public class BrokerResult implements Serializable {
      * Error code corresponding to any of the {@link com.microsoft.identity.common.exception.ErrorStrings}
      */
     @Nullable
+    @SerializedName(SerializedNames.ERROR_CODE)
     private String mErrorCode;
 
     /**
      * Error message
      */
     @Nullable
+    @SerializedName(SerializedNames.ERROR_MESSAGE)
     private String mErrorMessage;
 
     /**
      * Correlation id of the request
      */
     @Nullable
+    @SerializedName(SerializedNames.CORRELATION_ID)
     private String mCorrelationId;
 
     /**
      * Sub error code from the error response
      */
     @Nullable
+    @SerializedName(SerializedNames.SUB_ERROR_CODE)
     private String mSubErrorCode;
 
     /**
      * Http Status code of the error response
      */
     @Nullable
+    @SerializedName(SerializedNames.HTTP_STATUS_CODE)
     private String mHttpStatusCode;
 
     /**
      * Response headers or the error response in json format
      */
     @Nullable
+    @SerializedName(SerializedNames.HTTP_RESPONSE_HEADERS)
     private String mHttpResponseHeaders;
 
     /**
      * Response body of the error response
      */
     @Nullable
+    @SerializedName(SerializedNames.HTTP_RESPONSE_BODY)
     private String mHttpResponseBody;
 
     /**
      * Client telemetry error code
      */
     @Nullable
+    @SerializedName(SerializedNames.CLI_TELEM_ERRORCODE)
     private String mCliTelemErrorCode;
 
     /**
      * Client telemetry sub error code
      */
     @Nullable
+    @SerializedName(SerializedNames.CLI_TELEM_SUB_ERROR_CODe)
     private String mCliTelemSubErrorCode;
 
 

@@ -24,9 +24,11 @@ package com.microsoft.identity.common.internal.result;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
@@ -45,7 +47,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 
-// TODO : To be implemented.
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     private static final String TAG = MsalBrokerResultAdapter.class.getName();
@@ -92,9 +93,36 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     @Override
-    public BaseException baseExceptionFromBundle(Bundle resultBundle) {
-        return null;
+    public BaseException baseExceptionFromBundle(@NonNull final Bundle resultBundle) {
+        final BrokerResult brokerResult = (BrokerResult) resultBundle.getSerializable(
+                AuthenticationConstants.Broker.BROKER_RESULT_V2
+        );
+        if (brokerResult == null) {
+            Logger.error(TAG, "Broker Result not returned from Broker, ", null);
+            return new BaseException(ErrorStrings.UNKNOWN_ERROR, "Broker Result not returned from Broker");
+
+        }
+        BaseException baseException = new BaseException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
+        if(TextUtils.isEmpty(brokerResult.getHttpResponseHeaders()) ||
+                TextUtils.isEmpty(brokerResult.getHttpResponseBody())){
+
+            baseException = new ServiceException(brokerResult.getErrorCode(), brokerResult.getErrorMessage(), null);
+            ((ServiceException)baseException).setHttpResponse(baseException.g);
+        }else {
+            baseException = new BaseException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
+        }
+        baseException.setCliTelemErrorCode(baseException.getCliTelemErrorCode());
+        baseException.setCliTelemSubErrorCode(baseException.getCliTelemErrorCode());
+
+        if(TextUtils.isEmpty(brokerResult.getHttpResponseHeaders()) ||
+                TextUtils.isEmpty(brokerResult.getHttpResponseBody())){
+
+            ServiceException serviceException = new ServiceException()
+        }
+
     }
+
+
 
     /**
      * Helper to get AccessTokenRecord from BrokerResult
