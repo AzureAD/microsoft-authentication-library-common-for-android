@@ -163,6 +163,7 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
                 acquireTokenOperationParameters.getExtraQueryStringParameters()
         );
 
+        //TODO : Fix this
         // Get Account from AccountManager
 //        Account account = new AccountManagerStorageHelper(
 //                acquireTokenOperationParameters.getAppContext()

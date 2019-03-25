@@ -23,22 +23,20 @@
 
 package com.microsoft.identity.common.internal.request;
 
-import android.accounts.Account;
-import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
 
-public interface IBrokerRequestAdapter {
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 
-    Bundle bundleFromAcquireTokenParameters(AcquireTokenOperationParameters parameters);
+public class BrokerRequestAdapterFactory {
 
-    Bundle bundleFromSilentOperationParameters(AcquireTokenSilentOperationParameters parameters);
+    public static IBrokerRequestAdapter getBrokerRequestAdapter(final Bundle requestBundle) {
 
-    BrokerAcquireTokenOperationParameters brokerParametersFromActivity(Activity callingActivity);
+        if (requestBundle != null &&
+                requestBundle.containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2)) {
 
-    BrokerAcquireTokenSilentOperationParameters brokerSilentParametersFromBundle(Bundle bundle,
-                                                                                 Context context,
-                                                                                 Account account);
-
-
+            return new MsalBrokerRequestAdapter();
+        } else {
+            return new AdalBrokerRequestAdapter();
+        }
+    }
 }
