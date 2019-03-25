@@ -311,13 +311,18 @@ public final class ErrorStrings {
     public static final String INVALID_BROKER_REFRESH_TOKEN = "Broker refresh token is invalid";
 
     /**
-     * Device state of Joined account invalid.
+     * Failed to retreive device state.
      */
-    public static final String DEVICE_STATE_INVALID = "Invalid device state";
+    public static final String ERROR_RETRIEVING_DEVICE_STATE = "Error retrieving device state";
 
     /**
      * Device registration failed.
      */
     public static final String DEVICE_REGISTRATION_FAILED = "Device registration failed";
+
+    /**
+     * Request Cancelled for unknown reasons.
+     */
+    public static final String BROKER_REQUEST_CANCELLED = "Broker request cancelled";
 
 }

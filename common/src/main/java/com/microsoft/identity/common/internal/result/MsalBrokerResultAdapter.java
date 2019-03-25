@@ -26,9 +26,11 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
@@ -42,6 +44,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
+import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -52,20 +55,98 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     private static final String TAG = MsalBrokerResultAdapter.class.getName();
 
     @Override
-    public Bundle bundleFromAuthenticationResult(ILocalAuthenticationResult authenticationResult) {
-        return null;
+    public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult) {
+        Logger.verbose(TAG, "Constructing result bundle from ILocalAuthenticationResult");
+
+        final IAccountRecord accountRecord = authenticationResult.getAccountRecord();
+
+        final AccessTokenRecord accessTokenRecord = authenticationResult.getAccessTokenRecord();
+
+        final BrokerResult brokerResult = new BrokerResult.Builder()
+                .accessToken(authenticationResult.getAccessToken())
+                .idToken(authenticationResult.getIdToken())
+                .homeAccountId(accountRecord.getHomeAccountId())
+                .localAccountId(accountRecord.getLocalAccountId())
+                .userName(accountRecord.getUsername())
+                .tokenType(accessTokenRecord.getAccessTokenType())
+                .clientId(accessTokenRecord.getClientId())
+                .scope(accessTokenRecord.getTarget())
+                .clientInfo(accountRecord.getClientInfo())
+                .authority(accessTokenRecord.getAuthority())
+                .environment(accessTokenRecord.getEnvironment())
+                .expiresOn(Long.parseLong(accessTokenRecord.getExpiresOn()))
+                .extendedExpiresOn(Long.parseLong(accessTokenRecord.getExtendedExpiresOn()))
+                .cachedAt(Long.parseLong(accessTokenRecord.getCachedAt()))
+                .speRing(authenticationResult.getSpeRing())
+                .refreshTokenAge(authenticationResult.getRefreshTokenAge())
+                .success(true)
+                .build();
+
+        final Bundle resultBundle = new Bundle();
+        resultBundle.putSerializable(AuthenticationConstants.Broker.BROKER_RESULT_V2, brokerResult);
+        resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true);
+
+        return resultBundle;
     }
 
     @Override
-    public Bundle bundleFromBaseException(BaseException exception) {
-        return null;
+    public Bundle bundleFromBaseException(@NonNull final BaseException exception) {
+        Logger.verbose(TAG, "Constructing result bundle from BaseException");
+
+        final BrokerResult.Builder builder = new BrokerResult.Builder()
+                .success(false)
+                .errorCode(exception.getErrorCode())
+                .errorMessage(exception.getMessage())
+                .correlationId(exception.getCorrelationId())
+                .cliTelemErrorCode(exception.getCliTelemErrorCode())
+                .cliTelemSubErrorCode(exception.getCliTelemSubErrorCode())
+                .speRing(exception.getSpeRing())
+                .refreshTokenAge(exception.getRefreshTokenAge());
+
+        if(exception instanceof ServiceException) {
+
+            builder.subErrorCode(((ServiceException) exception).getSubErrorCode())
+                    .httpStatusCode(((ServiceException) exception).getHttpStatusCode())
+                    .httpResponseHeaders(
+                            HeaderSerializationUtil.toJson((
+                                    (ServiceException) exception).getHttpResponseHeaders()
+                            )
+                    )
+                    .httpResponseBody(new Gson().toJson(
+                            ((ServiceException) exception).getHttpResponseBody())
+                    );
+        }
+
+        if(exception instanceof IntuneAppProtectionPolicyRequiredException){
+            /**
+             *   private String mAccountUpn;
+             private String mAccountUserId;
+             private String mTenantId;
+             private String mAuthorityUrl;
+             */
+            builder.userName(((IntuneAppProtectionPolicyRequiredException) exception).getAccountUpn())
+                    .localAccountId(((IntuneAppProtectionPolicyRequiredException) exception).getAccountUserId())
+                    .authority(((IntuneAppProtectionPolicyRequiredException) exception).getAuthorityUrl())
+                    .tenantId(((IntuneAppProtectionPolicyRequiredException) exception).getTenantId());
+        }
+
+
+        final Bundle resultBundle = new Bundle();
+        resultBundle.putSerializable(AuthenticationConstants.Broker.BROKER_RESULT_V2, builder.build());
+        resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, false);
+
+        return resultBundle;
+
+
     }
 
     @Override
     public ILocalAuthenticationResult authenticationResultFromBundle(@NonNull final Bundle resultBundle) {
+
         final BrokerResult brokerResult = (BrokerResult) resultBundle.getSerializable(
                 AuthenticationConstants.Broker.BROKER_RESULT_V2
         );
+
         if(brokerResult == null) {
             Logger.error(TAG, "Broker Result not returned from Broker, ", null);
             return null;
@@ -107,7 +188,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 TextUtils.isEmpty(brokerResult.getHttpResponseBody())){
 
             baseException = new ServiceException(brokerResult.getErrorCode(), brokerResult.getErrorMessage(), null);
-            ((ServiceException)baseException).setHttpResponse(baseException.g);
+           // ((ServiceException)baseException).setHttpResponse(baseException.g);
         }else {
             baseException = new BaseException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
         }
@@ -117,8 +198,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if(TextUtils.isEmpty(brokerResult.getHttpResponseHeaders()) ||
                 TextUtils.isEmpty(brokerResult.getHttpResponseBody())){
 
-            ServiceException serviceException = new ServiceException()
+           // ServiceException serviceException = new ServiceException();
         }
+        return null;
 
     }
 

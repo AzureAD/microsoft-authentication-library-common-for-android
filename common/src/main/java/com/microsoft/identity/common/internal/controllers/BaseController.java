@@ -32,6 +32,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.authorities.Authority;
@@ -39,6 +40,7 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -90,7 +92,7 @@ public abstract class BaseController {
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
      */
     protected final AuthorizationRequest.Builder initializeAuthorizationRequestBuilder(@NonNull final AuthorizationRequest.Builder builder,
-                                                                                        @NonNull final OperationParameters parameters){
+                                                                                       @NonNull final OperationParameters parameters) {
         UUID correlationId = null;
 
         try {
@@ -124,11 +126,11 @@ public abstract class BaseController {
 
             // Set the multipleCloudAware and slice fields.
             if (acquireTokenOperationParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
-                final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority)acquireTokenOperationParameters.getAuthority();
+                final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) acquireTokenOperationParameters.getAuthority();
                 ((MicrosoftAuthorizationRequest.Builder) builder)
-                    .setAuthority(requestAuthority.getAuthorityURL())
-                    .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
-                    .setSlice(requestAuthority.mSlice);
+                        .setAuthority(requestAuthority.getAuthorityURL())
+                        .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
+                        .setSlice(requestAuthority.mSlice);
             }
         }
 
@@ -210,32 +212,33 @@ public abstract class BaseController {
 
     /**
      * Log IResult objects.  IResult objects are returned from Authorization and Token Requests
+     *
      * @param tag
      * @param result
      */
-    protected void logResult(String tag, IResult result){
+    protected void logResult(String tag, IResult result) {
 
         final String TAG = tag + ":" + result.getClass().getSimpleName();
 
-        if(result.getSuccess()) {
+        if (result.getSuccess()) {
             Logger.verbose(
                     TAG,
                     "Success Result"
             );
             logExposedFieldsOfObject(TAG, result.getSuccessResponse());
-        }else{
+        } else {
             Logger.warn(
                     TAG,
                     "Failure Result"
             );
-            if(result.getErrorResponse() != null) {
-                if(result.getErrorResponse().getError() != null) {
+            if (result.getErrorResponse() != null) {
+                if (result.getErrorResponse().getError() != null) {
                     Logger.warn(
                             TAG,
                             "Error: " + result.getErrorResponse().getError()
                     );
                 }
-                if(result.getErrorResponse().getErrorDescription() != null) {
+                if (result.getErrorResponse().getErrorDescription() != null) {
                     Logger.warnPII(
                             TAG,
                             "Description: " + result.getErrorResponse().getErrorDescription()
@@ -245,9 +248,9 @@ public abstract class BaseController {
             }
         }
 
-        if(result instanceof AuthorizationResult){
-            AuthorizationResult authResult = (AuthorizationResult)result;
-            if(authResult.getAuthorizationStatus() != null) {
+        if (result instanceof AuthorizationResult) {
+            AuthorizationResult authResult = (AuthorizationResult) result;
+            if (authResult.getAuthorizationStatus() != null) {
                 Logger.verbose(
                         TAG,
                         "Authorization Status: " + authResult.getAuthorizationStatus().toString()
@@ -258,19 +261,20 @@ public abstract class BaseController {
 
     /**
      * Log parameters objects passed to controllers
+     *
      * @param tag
      * @param parameters
      */
-    protected void logParameters(String tag, Object parameters){
+    protected void logParameters(String tag, Object parameters) {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
-        if(Logger.getAllowPii()) {
+        if (Logger.getAllowPii()) {
             Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
-        }else{
+        } else {
             Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
         }
     }
 
-    protected void logExposedFieldsOfObject(String tag, Object object){
+    protected void logExposedFieldsOfObject(String tag, Object object) {
         final String TAG = tag + ":" + object.getClass().getSimpleName();
         Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
     }
@@ -303,8 +307,8 @@ public abstract class BaseController {
         refreshTokenRequest.setRedirectUri(parameters.getRedirectUri());
 
         //NOTE: this should be moved to the strategy; however requires a larger refactor
-        if(parameters.getSdkType() == SdkType.ADAL){
-            ((MicrosoftTokenRequest)refreshTokenRequest).setIdTokenVersion("1");
+        if (parameters.getSdkType() == SdkType.ADAL) {
+            ((MicrosoftTokenRequest) refreshTokenRequest).setIdTokenVersion("1");
         }
 
         if (!StringExtensions.isNullOrBlank(refreshTokenRequest.getScope())) {
@@ -337,7 +341,7 @@ public abstract class BaseController {
         return null == cacheRecord.getAccessToken();
     }
 
-    protected void addDefaultScopes(final OperationParameters operationParameters){
+    protected void addDefaultScopes(final OperationParameters operationParameters) {
         final Set<String> requestScopes = operationParameters.getScopes();
         requestScopes.add(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE);
         requestScopes.add(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE);
@@ -397,6 +401,61 @@ public abstract class BaseController {
                 String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()))
         );
         return accessTokenRecord;
+    }
+
+    /**
+     * Helper method to get a cached account
+     *
+     * @param parameters
+     * @return
+     */
+    protected AccountRecord getCachedAccountRecord(
+            @NonNull final AcquireTokenSilentOperationParameters parameters) throws ClientException {
+        if (parameters.getAccount() == null) {
+            throw new ClientException(
+                    ErrorStrings.NO_ACCOUNT_FOUND,
+                    "No cached accounts found for the supplied homeAccountId and clientId"
+            );
+        }
+
+        final String clientId = parameters.getClientId();
+        final String homeAccountId = parameters.getAccount().getHomeAccountId();
+        final String localAccountId = parameters.getAccount().getLocalAccountId();
+
+        final AccountRecord targetAccount =
+                parameters
+                        .getTokenCache()
+                        .getAccountWithLocalAccountId(
+                                null,
+                                clientId,
+                                localAccountId
+                        );
+
+        if (null == targetAccount) {
+            Logger.info(
+                    TAG,
+                    "No accounts found for clientId ["
+                            + clientId
+                            + ", "
+                            + "]",
+                    null
+            );
+            Logger.errorPII(
+                    TAG,
+                    "No accounts found for clientId, homeAccountId: ["
+                            + clientId
+                            + ", "
+                            + homeAccountId
+                            + "]",
+                    null
+            );
+            throw new ClientException(
+                    ErrorStrings.NO_ACCOUNT_FOUND,
+                    "No cached accounts found for the supplied homeAccountId"
+            );
+        }
+
+        return targetAccount;
     }
 
 }

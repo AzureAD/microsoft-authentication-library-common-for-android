@@ -42,6 +42,8 @@ public class BaseException extends Exception {
 
     private String mErrorCode;
 
+    private String mCorrelationId;
+
     /**
      * Default constructor.
      */
@@ -136,5 +138,12 @@ public class BaseException extends Exception {
 
     public void setCliTelemSubErrorCode(@Nullable final String cliTelemSubErrorCode) {
         this.mCliTelemSubErrorCode = cliTelemSubErrorCode;
+    }
+
+    @Nullable
+    public String getCorrelationId() { return mCorrelationId; }
+
+    public void setCorrelationId(@Nullable final String correlationId){
+        mCorrelationId = correlationId;
     }
 }

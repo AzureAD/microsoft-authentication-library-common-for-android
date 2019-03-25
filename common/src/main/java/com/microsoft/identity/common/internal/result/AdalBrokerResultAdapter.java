@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.ADALError;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ArgumentException;
@@ -259,7 +260,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         if (null != serviceException.getHttpResponseBody()) {
             resultBundle.putString(
                     AuthenticationConstants.OAuth2.HTTP_RESPONSE_BODY,
-                    serviceException.getHttpResponseBody().toString()
+                    new Gson().toJson(serviceException.getHttpResponseBody())
             );
         }
 
