@@ -38,8 +38,8 @@ import com.microsoft.identity.common.internal.logging.Logger;
 public class MicrosoftAuthClient {
 
     private static final String TAG = MicrosoftAuthClient.class.getSimpleName();
-    private static final String MICROSOFT_AUTH_SERVICE_INTENT_FILTER = "com.microsoft.workaccount.brokeraccount.MicrosoftAuth";
-    private static final String MICROSOFT_AUTH_SERVICE_CLASS_NAME = "com.microsoft.workaccount.brokeraccount.MicrosoftAuthService";
+    private static final String MICROSOFT_AUTH_SERVICE_INTENT_FILTER = "com.microsoft.identity.client.MicrosoftAuth";
+    private static final String MICROSOFT_AUTH_SERVICE_CLASS_NAME = "com.microsoft.identity.client.MicrosoftAuthService";
 
     private Context mContext;
     private MicrosoftAuthServiceConnection mMicrosoftAuthServiceConnection;
@@ -95,7 +95,7 @@ public class MicrosoftAuthClient {
      * @return Intent
      */
     private Intent getIntentForAuthService(final Context context) {
-        String currentActiveBrokerPackageName = getCurrentActiveBrokerPackageName(context);
+        final String currentActiveBrokerPackageName = getCurrentActiveBrokerPackageName(context);
         if (currentActiveBrokerPackageName == null || currentActiveBrokerPackageName.length() == 0) {
             return null;
         }

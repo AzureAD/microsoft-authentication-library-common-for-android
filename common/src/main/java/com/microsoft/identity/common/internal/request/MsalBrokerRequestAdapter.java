@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
@@ -51,7 +52,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .build();
 
         final Bundle requestBundle = new Bundle();
-        requestBundle.putSerializable(AuthenticationConstants.Broker.BROKER_REQUEST_V2, brokerRequest);
+
+        requestBundle.putString(
+                AuthenticationConstants.Broker.BROKER_REQUEST_V2,
+                new Gson().toJson(brokerRequest, BrokerRequest.class));
 
         return requestBundle;
     }
@@ -78,7 +82,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .build();
 
         final Bundle requestBundle = new Bundle();
-        requestBundle.putSerializable(AuthenticationConstants.Broker.BROKER_REQUEST_V2, brokerRequest);
+        requestBundle.putString(
+                AuthenticationConstants.Broker.BROKER_REQUEST_V2,
+                new Gson().toJson(brokerRequest, BrokerRequest.class));
 
         return requestBundle;
     }
@@ -94,9 +100,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final Intent intent = callingActivity.getIntent();
 
-        final BrokerRequest brokerRequest = (BrokerRequest) intent.getSerializableExtra(
+        final String brokerRequestJson = intent.getStringExtra(
                 AuthenticationConstants.Broker.BROKER_REQUEST_V2
         );
+
+        final BrokerRequest brokerRequest = new Gson().fromJson(brokerRequestJson, BrokerRequest.class);
 
         parameters.setActivity(callingActivity);
 
@@ -173,9 +181,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.verbose(TAG, "Constructing BrokerAcquireTokenSilentOperationParameters from result bundle");
 
-        final BrokerRequest brokerRequest = (BrokerRequest) bundle.getSerializable(
+        final String brokerRequestJson = bundle.getString(
                 AuthenticationConstants.Broker.BROKER_REQUEST_V2
         );
+
+        final BrokerRequest brokerRequest = new Gson().fromJson(brokerRequestJson, BrokerRequest.class);
 
         final BrokerAcquireTokenSilentOperationParameters parameters =
                 new BrokerAcquireTokenSilentOperationParameters();
