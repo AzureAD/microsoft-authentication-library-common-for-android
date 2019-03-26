@@ -79,7 +79,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
                     "CustomTabsService is supported."
             );
             //create customTabsIntent
-            mCustomTabManager = new CustomTabsManager(mReferencedActivity.get());
+            mCustomTabManager = new CustomTabsManager(mReferencedActivity.get().getApplicationContext());
             mCustomTabManager.bind(browser.getPackageName());
             authIntent = mCustomTabManager.getCustomTabsIntent().intent;
         } else {
