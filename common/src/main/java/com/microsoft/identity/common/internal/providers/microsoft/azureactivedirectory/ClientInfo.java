@@ -32,13 +32,14 @@ import com.microsoft.identity.common.exception.ServiceException;
 
 import org.json.JSONException;
 
+import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.Map;
 
 /**
  * Object representation of client_info returned by AAD's Token Endpoint.
  */
-public class ClientInfo {
+public class ClientInfo implements Serializable {
 
     private static final String UNIQUE_IDENTIFIER = "uid";
     private static final String UNIQUE_TENANT_IDENTIFIER = "utid";
