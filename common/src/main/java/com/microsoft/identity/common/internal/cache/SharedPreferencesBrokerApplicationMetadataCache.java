@@ -84,7 +84,8 @@ public class SharedPreferencesBrokerApplicationMetadataCache
     @Nullable
     @Override
     public BrokerApplicationMetadata getMetadata(@NonNull final String clientId,
-                                                 @NonNull final String environment) {
+                                                 @NonNull final String environment,
+                                                 final int processUid) {
         final String methodName = ":getMetadata";
 
         final List<BrokerApplicationMetadata> allMetadata = getAll();
@@ -92,7 +93,8 @@ public class SharedPreferencesBrokerApplicationMetadataCache
 
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             if (clientId.equals(metadata.getClientId())
-                    && environment.equals(metadata.getEnvironment())) {
+                    && environment.equals(metadata.getEnvironment())
+                    && processUid == metadata.getUid()) {
                 Logger.verbose(
                         TAG + metadata,
                         "Metadata located."
@@ -115,44 +117,6 @@ public class SharedPreferencesBrokerApplicationMetadataCache
         }
 
         return result;
-    }
-
-    @Nullable
-    @Override
-    public synchronized Integer getUidForApp(@NonNull final String clientId,
-                                             @NonNull final String environment) {
-        final String methodName = ":getUidForApp";
-        final BrokerApplicationMetadata applicationMetadata = getMetadata(clientId, environment);
-
-        if (null != applicationMetadata) {
-            Logger.verbose(
-                    TAG + methodName,
-                    "Application uid: ["
-                            + applicationMetadata.getUid()
-                            + "]"
-            );
-        }
-
-        return null == applicationMetadata ? null : applicationMetadata.getUid();
-    }
-
-    @Nullable
-    @Override
-    public String getFamilyId(@NonNull final String clientId,
-                              @NonNull final String environment) {
-        final String methodName = ":getFamilyId";
-        final BrokerApplicationMetadata applicationMetadata = getMetadata(clientId, environment);
-
-        if (null != applicationMetadata) {
-            Logger.verbose(
-                    TAG + methodName,
-                    "Application family id: ["
-                            + applicationMetadata.getFoci()
-                            + "]"
-            );
-        }
-
-        return null == applicationMetadata ? null : applicationMetadata.getFoci();
     }
 
     @Override
