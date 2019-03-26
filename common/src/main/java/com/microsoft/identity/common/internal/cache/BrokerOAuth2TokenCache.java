@@ -883,8 +883,9 @@ public class BrokerOAuth2TokenCache
     /**
      * Returns the TokenCache to use for supplied client and environment.
      *
-     * @param clientId    The target client id.
-     * @param environment The target environment.
+     * @param clientId          The target client id.
+     * @param environment       The target environment.
+     * @param callingProcessUid The uid of the calling process.
      * @return The {@link MsalOAuth2TokenCache} matching the supplied criteria or null, if no matching
      * cache was found.
      */
