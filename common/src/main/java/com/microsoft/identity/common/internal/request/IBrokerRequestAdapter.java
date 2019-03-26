@@ -21,18 +21,26 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.exception;
+package com.microsoft.identity.common.internal.request;
 
-/**
- * MSAL internal exception for user cancelling the flow.
- */
-final public class UserCancelException extends BaseException {
+import android.accounts.Account;
+import android.app.Activity;
+import android.content.Context;
+import android.os.Bundle;
 
-    public UserCancelException() {
-        super();
-    }
+import com.microsoft.identity.common.internal.broker.BrokerRequest;
 
-    public UserCancelException(final String errorCode, final String errorMessage){
-        super(errorCode, errorMessage);
-    }
+public interface IBrokerRequestAdapter {
+
+    BrokerRequest brokerRequestFromAcquireTokenParameters(AcquireTokenOperationParameters parameters);
+
+    BrokerRequest brokerRequestFromSilentOperationParameters(AcquireTokenSilentOperationParameters parameters);
+
+    BrokerAcquireTokenOperationParameters brokerInteractiveParametersFromActivity(Activity callingActivity);
+
+    BrokerAcquireTokenSilentOperationParameters brokerSilentParametersFromBundle(Bundle bundle,
+                                                                                 Context context,
+                                                                                 Account account);
+
+
 }

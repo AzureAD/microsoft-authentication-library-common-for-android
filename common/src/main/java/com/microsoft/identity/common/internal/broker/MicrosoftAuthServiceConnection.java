@@ -26,6 +26,7 @@ package com.microsoft.identity.common.internal.broker;
 import android.content.ComponentName;
 import android.os.IBinder;
 
+import com.microsoft.identity.client.IMicrosoftAuthService;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 

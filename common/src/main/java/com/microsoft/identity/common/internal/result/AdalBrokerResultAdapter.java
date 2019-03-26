@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.ADALError;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ArgumentException;
@@ -55,7 +56,6 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult) {
 
         Logger.verbose(TAG , "Constructing success bundle from Authentication Result.");
-
         final Bundle resultBundle = new Bundle();
 
         IAccountRecord accountRecord = authenticationResult.getAccountRecord();
@@ -126,7 +126,6 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     public Bundle bundleFromBaseException(BaseException baseException) {
 
         Logger.verbose(TAG , "Constructing error bundle from exception.");
-
         final Bundle resultBundle = new Bundle();
 
         resultBundle.putString(
@@ -150,6 +149,15 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         return resultBundle;
     }
 
+    @Override
+    public ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BaseException baseExceptionFromBundle(Bundle resultBundle) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Helper method to map and add errors to Adal specific constants.
@@ -188,7 +196,9 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
                     (ServiceException) exception);
 
         } else {
+
             Logger.verbose(TAG , "Setting Bundle result for Unknown Exception/Bad result.");
+
             setErrorToResultBundle(
                     resultBundle,
                     AccountManager.ERROR_CODE_BAD_REQUEST,
@@ -216,7 +226,6 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
     private void setClientExceptionPropertiesToBundle(@NonNull final Bundle resultBundle,
                                                       @NonNull final ClientException clientException) {
-
         Logger.verbose(TAG , "Setting properties from ClientException.");
 
         if (clientException.getErrorCode().equalsIgnoreCase(ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE)) {
@@ -251,7 +260,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         if (null != serviceException.getHttpResponseBody()) {
             resultBundle.putString(
                     AuthenticationConstants.OAuth2.HTTP_RESPONSE_BODY,
-                    serviceException.getHttpResponseBody().toString()
+                    new Gson().toJson(serviceException.getHttpResponseBody())
             );
         }
 
