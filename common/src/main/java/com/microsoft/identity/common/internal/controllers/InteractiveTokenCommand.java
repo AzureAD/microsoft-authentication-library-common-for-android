@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.controllers;
 import android.content.Intent;
 
 import com.microsoft.identity.common.exception.ArgumentException;
+import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -47,7 +48,7 @@ public class InteractiveTokenCommand extends TokenCommand {
     }
 
     @Override
-    public AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, ClientException, ArgumentException, ServiceException {
+    public AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, BaseException {
         final String methodName = ":execute";
         if (getParameters() instanceof AcquireTokenOperationParameters) {
             Logger.info(

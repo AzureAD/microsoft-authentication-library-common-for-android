@@ -23,6 +23,8 @@
 
 package com.microsoft.identity.common.internal.broker;
 
+import com.microsoft.identity.client.IMicrosoftAuthService;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;

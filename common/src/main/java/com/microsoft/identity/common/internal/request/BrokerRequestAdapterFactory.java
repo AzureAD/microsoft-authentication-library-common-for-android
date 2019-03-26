@@ -21,18 +21,21 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.exception;
+package com.microsoft.identity.common.internal.request;
 
-/**
- * MSAL internal exception for user cancelling the flow.
- */
-final public class UserCancelException extends BaseException {
+import android.os.Bundle;
 
-    public UserCancelException() {
-        super();
-    }
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 
-    public UserCancelException(final String errorCode, final String errorMessage){
-        super(errorCode, errorMessage);
+public class BrokerRequestAdapterFactory {
+
+    public static IBrokerRequestAdapter getBrokerRequestAdapter(final Bundle requestBundle) {
+        if (requestBundle != null &&
+                requestBundle.containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2)) {
+
+            return new MsalBrokerRequestAdapter();
+        } else {
+            return new AdalBrokerRequestAdapter();
+        }
     }
 }

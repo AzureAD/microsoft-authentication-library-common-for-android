@@ -53,6 +53,12 @@ public class OperationParameters {
     private String mClaimsRequestJson;
     @Expose()
     private SdkType mSdkType = SdkType.MSAL; // default value where we get a v2 id token;
+    @Expose()
+    private String mSdkVersion;
+    @Expose()
+    private String mApplicationName;
+    @Expose()
+    private String mApplicationVersion;
 
     public SdkType getSdkType() {
         return mSdkType;
@@ -124,6 +130,30 @@ public class OperationParameters {
 
     public void setClaimsRequest(String claimsRequestJson) {
         mClaimsRequestJson = claimsRequestJson;
+    }
+
+    public String getSdkVersion() {
+        return mSdkVersion;
+    }
+
+    public void setSdkVersion(String sdkVersion) {
+        mSdkVersion = sdkVersion;
+    }
+
+    public String getApplicationName() {
+        return mApplicationName;
+    }
+
+    public void setApplicationName(String applicationName) {
+        mApplicationName = applicationName;
+    }
+
+    public String getApplicationVersion() {
+        return mApplicationVersion;
+    }
+
+    public void setApplicationVersion(String applicationVersion) {
+        mApplicationVersion = applicationVersion;
     }
 
 
