@@ -364,28 +364,17 @@ public class MicrosoftStsOAuth2Strategy
     @Override
     protected HttpResponse performTokenRequest(final MicrosoftStsTokenRequest request) throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
-
-        Logger.verbose(
-                TAG + methodName,
-                "Performing token request..."
-        );
-
-        final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
-        final Map<String, String> headers = new TreeMap<>();
-        headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
-        headers.putAll(Device.getPlatformIdParameters());
-
-        HttpResponse response =  HttpRequest.sendPost(
-                new URL(mTokenEndpoint),
-                headers,
-                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
-                TOKEN_REQUEST_CONTENT_TYPE
-        );
+        HttpResponse response =  super.performTokenRequest(request);
 
         if (response.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED
                 && response.getHeaders() != null
                 && response.getHeaders().containsKey(CHALLENGE_REQUEST_HEADER)) {
             // Received the device certificate challenge request. It is sent in 401 header.
+            final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
+            final Map<String, String> headers = new TreeMap<>();
+            headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+            headers.putAll(Device.getPlatformIdParameters());
+
             String challengeHeader = response.getHeaders().get(CHALLENGE_REQUEST_HEADER).get(0);
             Logger.info(TAG + methodName, "Device certificate challenge request. ");
             Logger.infoPII(TAG + methodName, "Challenge header: " + challengeHeader);
