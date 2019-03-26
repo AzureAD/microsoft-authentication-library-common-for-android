@@ -125,8 +125,7 @@ public abstract class BaseController {
             );
 
             // We don't want to show the SELECT_ACCOUNT page if login_hint is set.
-            if (acquireTokenOperationParameters.getLoginHint() != null &&
-                    acquireTokenOperationParameters.getLoginHint().length() > 0 &&
+            if (!StringExtensions.isNullOrBlank(acquireTokenOperationParameters.getLoginHint()) &&
                     acquireTokenOperationParameters.getOpenIdConnectPromptParameter() == OpenIdConnectPromptParameter.SELECT_ACCOUNT) {
                 builder.setPrompt(null);
             }
