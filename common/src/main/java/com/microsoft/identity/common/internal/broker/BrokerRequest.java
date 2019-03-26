@@ -111,7 +111,7 @@ public class BrokerRequest implements Serializable {
     private String mExtraQueryStringParameter;
 
     /**
-     * Correlation id for the request, it should ba unique GUID.
+     * Correlation id for the request, it should be a unique GUID.
      */
     @NonNull
     @SerializedName(SerializedNames.CORRELATION_ID)

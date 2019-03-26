@@ -30,7 +30,6 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 public class BrokerRequestAdapterFactory {
 
     public static IBrokerRequestAdapter getBrokerRequestAdapter(final Bundle requestBundle) {
-
         if (requestBundle != null &&
                 requestBundle.containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2)) {
 

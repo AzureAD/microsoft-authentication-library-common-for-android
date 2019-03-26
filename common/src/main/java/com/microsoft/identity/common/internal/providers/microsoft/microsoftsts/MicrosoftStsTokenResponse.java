@@ -53,7 +53,7 @@ public class MicrosoftStsTokenResponse extends MicrosoftTokenResponse {
     }
 
     public void setCloudInstanceHostName(final String cloudInstanceHostName) {
-        this.mCloudInstanceHostName = cloudInstanceHostName;
+        mCloudInstanceHostName = cloudInstanceHostName;
     }
 
 }

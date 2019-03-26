@@ -162,15 +162,6 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
         setExtraQueryStringParameters(
                 acquireTokenOperationParameters.getExtraQueryStringParameters()
         );
-
-        //TODO : Fix this
-        // Get Account from AccountManager
-//        Account account = new AccountManagerStorageHelper(
-//                acquireTokenOperationParameters.getAppContext()
-//        ).getAccount(acquireTokenOperationParameters.getLoginHint(),
-//                AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE
-//        );
-//        setAccountManagerAccount(account);
     }
 
     @Override
