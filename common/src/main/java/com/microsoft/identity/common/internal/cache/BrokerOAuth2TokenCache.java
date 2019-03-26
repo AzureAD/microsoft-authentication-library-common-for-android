@@ -378,7 +378,6 @@ public class BrokerOAuth2TokenCache
             // use the foci cache....
             resultRecord = mFociCache.loadByFamilyId(
                     clientId,
-                    target,
                     account
             );
         } else {
