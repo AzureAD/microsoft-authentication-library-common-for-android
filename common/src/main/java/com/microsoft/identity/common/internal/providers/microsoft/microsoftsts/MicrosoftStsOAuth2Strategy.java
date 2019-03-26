@@ -29,6 +29,7 @@ import android.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -361,7 +362,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    protected HttpResponse performTokenRequest(final MicrosoftStsTokenRequest request) throws IOException {
+    protected HttpResponse performTokenRequest(final MicrosoftStsTokenRequest request) throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
 
         Logger.verbose(
@@ -397,8 +398,9 @@ public class MicrosoftStsOAuth2Strategy
                         headers,
                         requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
                         TOKEN_REQUEST_CONTENT_TYPE);
-            } catch (final UnsupportedEncodingException | ClientException exception) {
-                //TODO
+            } catch (final UnsupportedEncodingException exception) {
+                throw new ClientException(ErrorStrings.UNSUPPORTED_ENCODING,
+                    "Unsupported encoding", exception);
             }
         }
 

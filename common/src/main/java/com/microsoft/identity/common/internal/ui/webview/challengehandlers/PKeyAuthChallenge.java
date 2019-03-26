@@ -96,39 +96,27 @@ public class PKeyAuthChallenge implements Serializable {
         mSubmitUrl = parameters.get(PKeyAuthChallengeHandler.RequestField.SubmitUrl.name());
     }
 
+    /**
+     * Create the pkeyauth challenge with headers.
+     * @param header
+     * @param uri
+     * @throws ClientException
+     * @throws UnsupportedEncodingException
+     */
     public PKeyAuthChallenge(@NonNull final String header, @NonNull final String uri)
             throws ClientException, UnsupportedEncodingException {
         validateHeaderForPkeyAuthChallenge(header);
 
-        final String authenticateHeader = header.substring(CHALLENGE_RESPONSE_TYPE.length());
-        ArrayList<String> queryPairs = StringExtensions.splitWithQuotes(authenticateHeader, ',');
-        Map<String, String> headerItems = new HashMap<>();
-
-        for (String queryPair : queryPairs) {
-            ArrayList<String> pair = StringExtensions.splitWithQuotes(queryPair, '=');
-            if (pair.size() == 2 && !StringExtensions.isNullOrBlank(pair.get(0))
-                    && !StringExtensions.isNullOrBlank(pair.get(1))) {
-                String key = pair.get(0);
-                String value = pair.get(1);
-                key = StringExtensions.urlFormDecode(key);
-                value = StringExtensions.urlFormDecode(value);
-                key = key.trim();
-                value = StringExtensions.removeQuoteInHeaderValue(value.trim());
-                headerItems.put(key, value);
-            } else if (pair.size() == 1 && !StringExtensions.isNullOrBlank(pair.get(0))) {
-                // The value list could be null when either no certificate or no permission
-                // for ADFS service account for the Device container in AD.
-                headerItems.put(StringExtensions.urlFormDecode(pair.get(0)).trim(), StringExtensions.urlFormDecode(""));
-            } else {
-                // invalid format
-                throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, authenticateHeader);
-            }
-        }
-
+        final Map<String, String> headerItems = getPkeyAuthHeader(header);
         validatePKeyAuthChallenge(headerItems);
+
         mSubmitUrl = uri;
         mNonce = headerItems.get(PKeyAuthChallengeHandler.RequestField.Nonce.name().toLowerCase(Locale.US));
-         // When pkeyauth header is present, ADFS is always trying to device auth. When hitting token endpoint(device
+        mVersion = headerItems.get(PKeyAuthChallengeHandler.RequestField.Version.name());
+        mContext = headerItems.get(PKeyAuthChallengeHandler.RequestField.Context.name());
+
+
+        // When pkeyauth header is present, ADFS is always trying to device auth. When hitting token endpoint(device
         // challenge will be returned via 401 challenge), ADFS is sending back an empty cert thumbprint when they found
         // the device is not managed. To account for the behavior of how ADFS performs device auth, below code is checking
         // if it's already workplace joined before checking the existence of cert thumbprint or authority from returned challenge.
@@ -138,7 +126,7 @@ public class PKeyAuthChallenge implements Serializable {
             Logger.verbose(TAG, "CertThumbprint exists in the device auth challenge.");
             mThumbprint = headerItems.get(PKeyAuthChallengeHandler.RequestField.CertThumbprint.name());
         } else if (headerItems.containsKey(PKeyAuthChallengeHandler.RequestField.CertAuthorities.name())) {
-            Logger.verbose(TAG , "CertAuthorities exists in the device auth challenge.");
+            Logger.verbose(TAG, "CertAuthorities exists in the device auth challenge.");
             String authorities = headerItems.get(PKeyAuthChallengeHandler.RequestField.CertAuthorities.name());
             mCertAuthorities = StringExtensions.getStringTokens(authorities,
                     CHALLENGE_REQUEST_CERT_AUTH_DELIMETER);
@@ -146,26 +134,12 @@ public class PKeyAuthChallenge implements Serializable {
             throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID,
                     "Both certThumbprint and cert authorities are not present");
         }
-
-        mVersion = headerItems.get(PKeyAuthChallengeHandler.RequestField.Version.name());
-        mContext = headerItems.get(PKeyAuthChallengeHandler.RequestField.Context.name());
     }
 
     private boolean isWorkplaceJoined() {
         @SuppressWarnings("unchecked")
         Class<IDeviceCertificate> certClass = (Class<IDeviceCertificate>) AuthenticationSettings.INSTANCE.getDeviceCertificateProxy();
         return certClass != null;
-    }
-
-    private static void validateHeaderForPkeyAuthChallenge(@NonNull final String header) throws ClientException {
-        if (StringUtil.isEmpty(header)) {
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "header value is empty.");
-        }
-
-        // Header value should start with correct challenge type
-        if (!StringExtensions.hasPrefixInHeader(header, CHALLENGE_RESPONSE_TYPE)) {
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "challenge response type is wrong.");
-        }
     }
 
     public String getNonce() {
@@ -192,7 +166,47 @@ public class PKeyAuthChallenge implements Serializable {
         return mSubmitUrl;
     }
 
-    private static void validatePKeyAuthChallenge(Map<String, String> headerItems) throws
+    private Map<String, String> getPkeyAuthHeader(final String headerStr) throws ClientException, UnsupportedEncodingException {
+        final String authenticateHeader = headerStr.substring(CHALLENGE_RESPONSE_TYPE.length());
+        ArrayList<String> queryPairs = StringExtensions.splitWithQuotes(authenticateHeader, ',');
+        Map<String, String> headerItems = new HashMap<>();
+
+        for (String queryPair : queryPairs) {
+            ArrayList<String> pair = StringExtensions.splitWithQuotes(queryPair, '=');
+            if (pair.size() == 2 && !StringExtensions.isNullOrBlank(pair.get(0))
+                    && !StringExtensions.isNullOrBlank(pair.get(1))) {
+                String key = pair.get(0);
+                String value = pair.get(1);
+                key = StringExtensions.urlFormDecode(key);
+                value = StringExtensions.urlFormDecode(value);
+                key = key.trim();
+                value = StringExtensions.removeQuoteInHeaderValue(value.trim());
+                headerItems.put(key, value);
+            } else if (pair.size() == 1 && !StringExtensions.isNullOrBlank(pair.get(0))) {
+                // The value list could be null when either no certificate or no permission
+                // for ADFS service account for the Device container in AD.
+                headerItems.put(StringExtensions.urlFormDecode(pair.get(0)).trim(), StringExtensions.urlFormDecode(""));
+            } else {
+                // invalid format
+                throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, authenticateHeader);
+            }
+        }
+
+        return headerItems;
+    }
+
+    private void validateHeaderForPkeyAuthChallenge(@NonNull final String header) throws ClientException {
+        if (StringUtil.isEmpty(header)) {
+            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "header value is empty.");
+        }
+
+        // Header value should start with correct challenge type
+        if (!StringExtensions.hasPrefixInHeader(header, CHALLENGE_RESPONSE_TYPE)) {
+            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "challenge response type is wrong.");
+        }
+    }
+
+    private void validatePKeyAuthChallenge(Map<String, String> headerItems) throws
             ClientException {
         if (!(headerItems.containsKey(PKeyAuthChallengeHandler.RequestField.Nonce.name()) || headerItems
                 .containsKey(PKeyAuthChallengeHandler.RequestField.Nonce.name().toLowerCase(Locale.US)))) {

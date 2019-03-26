@@ -105,7 +105,7 @@ public abstract class OAuth2Strategy
      * @return GenericTokenResult
      * @throws IOException thrown when failed or interrupted I/O operations occur.
      */
-    public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException {
+    public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException, ClientException {
         final String methodName = ":requestToken";
 
         Logger.verbose(
@@ -114,11 +114,12 @@ public abstract class OAuth2Strategy
         );
 
         validateTokenRequest(request);
+
         final HttpResponse response = performTokenRequest(request);
         return getTokenResultFromHttpResponse(response);
     }
 
-    protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException {
+    protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
 
         Logger.verbose(
