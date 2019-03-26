@@ -198,7 +198,8 @@ public class BrokerOAuth2TokenCache
             // Save to the processUid cache... or create a new one
             MsalOAuth2TokenCache targetCache = getTokenCacheForClient(
                     idTokenRecord.getClientId(),
-                    idTokenRecord.getEnvironment()
+                    idTokenRecord.getEnvironment(),
+                    mCallingProcessUid
             );
 
             if (null == targetCache) {
@@ -262,7 +263,8 @@ public class BrokerOAuth2TokenCache
             // Try to find an existing cache for this application
             targetCache = getTokenCacheForClient(
                     request.getClientId(),
-                    oAuth2Strategy.getIssuerCacheIdentifier(request)
+                    oAuth2Strategy.getIssuerCacheIdentifier(request),
+                    mCallingProcessUid
             );
 
             if (null == targetCache) {// No existing cache could be found... Make a new one!
@@ -362,7 +364,12 @@ public class BrokerOAuth2TokenCache
                 "Performing lookup in app-specific cache."
         );
 
-        final OAuth2TokenCache targetCache = getTokenCacheForClient(clientId, account.getEnvironment());
+        final OAuth2TokenCache targetCache = getTokenCacheForClient(
+                clientId,
+                account.getEnvironment(),
+                mCallingProcessUid
+        );
+
         final boolean shouldUseFociCache = null == targetCache;
         final ICacheRecord resultRecord;
 
@@ -400,7 +407,8 @@ public class BrokerOAuth2TokenCache
 
         final OAuth2TokenCache targetCache = getTokenCacheForClient(
                 credential.getClientId(),
-                credential.getEnvironment()
+                credential.getEnvironment(),
+                mCallingProcessUid
         );
 
         boolean removed = false;
@@ -439,7 +447,8 @@ public class BrokerOAuth2TokenCache
         if (null != environment) {
             targetCache = getTokenCacheForClient(
                     clientId,
-                    environment
+                    environment,
+                    mCallingProcessUid
             );
 
             if (null == targetCache) {
@@ -496,7 +505,8 @@ public class BrokerOAuth2TokenCache
                     // App is not foci, see if we can find its real cache...
                     final OAuth2TokenCache candidateCache = getTokenCacheForClient(
                             metadata.getClientId(),
-                            metadata.getEnvironment()
+                            metadata.getEnvironment(),
+                            mCallingProcessUid
                     );
 
                     if (null != candidateCache) {
@@ -524,7 +534,8 @@ public class BrokerOAuth2TokenCache
         if (null != environment) {
             OAuth2TokenCache targetCache = getTokenCacheForClient(
                     clientId,
-                    environment
+                    environment,
+                    mCallingProcessUid
             );
 
             if (null != targetCache) {
@@ -570,7 +581,8 @@ public class BrokerOAuth2TokenCache
         if (null != environment) {
             OAuth2TokenCache targetCache = getTokenCacheForClient(
                     clientId,
-                    environment
+                    environment,
+                    mCallingProcessUid
             );
 
             if (null != targetCache) {
@@ -620,7 +632,8 @@ public class BrokerOAuth2TokenCache
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             final OAuth2TokenCache candidateCache = getTokenCacheForClient(
                     metadata.getClientId(),
-                    metadata.getEnvironment()
+                    metadata.getEnvironment(),
+                    metadata.getUid() // Supports v1 broker back-compat which yields all accounts
             );
 
             if (null != candidateCache) {
@@ -682,11 +695,12 @@ public class BrokerOAuth2TokenCache
 
         for (final String clientId : allClientIds) {
             deletionRecordList.add(
-                    removeAccount(
+                    removeAccountInternal(
                             accountRecord.getEnvironment(),
                             clientId,
                             accountRecord.getHomeAccountId(),
-                            null
+                            null,
+                            true
                     )
             );
         }
@@ -728,7 +742,21 @@ public class BrokerOAuth2TokenCache
                                                @Nullable final String clientId,
                                                @Nullable final String homeAccountId,
                                                @Nullable final String realm) {
-        final String methodName = ":removeAccount";
+        return removeAccountInternal(
+                environment,
+                clientId,
+                homeAccountId,
+                realm,
+                false
+        );
+    }
+
+    private AccountDeletionRecord removeAccountInternal(@Nullable final String environment,
+                                                        @Nullable final String clientId,
+                                                        @Nullable final String homeAccountId,
+                                                        @Nullable final String realm,
+                                                        boolean deviceWide) {
+        final String methodName = ":removeAccountInternal";
 
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
         final List<AccountDeletionRecord> deletionRecordList = new ArrayList<>();
@@ -736,7 +764,10 @@ public class BrokerOAuth2TokenCache
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             final OAuth2TokenCache candidateCache = getTokenCacheForClient(
                     metadata.getClientId(),
-                    metadata.getEnvironment()
+                    metadata.getEnvironment(),
+                    deviceWide
+                            ? metadata.getUid() // Supports the removeAccountFromDevice() function
+                            : mCallingProcessUid
             );
 
             if (null != candidateCache) {
@@ -860,12 +891,14 @@ public class BrokerOAuth2TokenCache
      */
     @Nullable
     private MsalOAuth2TokenCache getTokenCacheForClient(@NonNull final String clientId,
-                                                        @NonNull final String environment) {
+                                                        @NonNull final String environment,
+                                                        final int callingProcessUid) {
         final String methodName = ":getTokenCacheForClient";
 
         final BrokerApplicationMetadata metadata = mApplicationMetadataCache.getMetadata(
                 clientId,
-                environment
+                environment,
+                callingProcessUid
         );
 
         MsalOAuth2TokenCache targetCache = null;
@@ -883,7 +916,7 @@ public class BrokerOAuth2TokenCache
             if (isFoci) {
                 targetCache = mFociCache;
             } else {
-                targetCache = initializeProcessUidCache(getContext(), metadata.getUid());
+                targetCache = initializeProcessUidCache(getContext(), callingProcessUid);
             }
         }
 
@@ -928,7 +961,8 @@ public class BrokerOAuth2TokenCache
             // one based on the supplied uid.
             targetCache = getTokenCacheForClient(
                     refreshToken.getClientId(),
-                    refreshToken.getEnvironment()
+                    refreshToken.getEnvironment(),
+                    mCallingProcessUid
             );
 
             if (null == targetCache) {
