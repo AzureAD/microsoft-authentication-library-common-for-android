@@ -32,6 +32,7 @@ import com.microsoft.identity.common.exception.ServiceException;
 
 import org.json.JSONException;
 
+import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.Map;
 
