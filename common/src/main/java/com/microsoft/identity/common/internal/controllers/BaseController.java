@@ -30,6 +30,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ArgumentException;
+import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
@@ -80,12 +81,12 @@ public abstract class BaseController {
     private static final String TAG = BaseController.class.getSimpleName();
 
     public abstract AcquireTokenResult acquireToken(final AcquireTokenOperationParameters request)
-            throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException, ServiceException;
+            throws ExecutionException, InterruptedException, BaseException, IOException;
 
     public abstract void completeAcquireToken(final int requestCode, final int resultCode, final Intent data);
 
     public abstract AcquireTokenResult acquireTokenSilent(final AcquireTokenSilentOperationParameters request)
-            throws IOException, ClientException, UiRequiredException, ArgumentException, ServiceException;
+            throws IOException, BaseException;
 
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
