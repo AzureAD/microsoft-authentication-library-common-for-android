@@ -53,6 +53,8 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
 
     private List<Pair<String, String>> mExtraQueryStringParameters;
 
+    // Device state might not be propagated to MSODS yet, so we might want to wait before re-acquiring PRT.
+    private int mSleepTimeBeforePrtAcquisition;
 
     public Account getAccountManagerAccount() {
         return mAccountManagerAccount;
@@ -126,6 +128,15 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
     public void setExtraQueryStringParameters(final List<Pair<String, String>> mExtraQueryStringParameters) {
         this.mExtraQueryStringParameters = mExtraQueryStringParameters;
     }
+
+    public int getSleepTimeBeforePrtAcquisition(){
+        return mSleepTimeBeforePrtAcquisition;
+    }
+
+    public void setSleepTimeBeforePrtAcquisition(final int sleepTimeBeforePrtAcquisition){
+        mSleepTimeBeforePrtAcquisition = sleepTimeBeforePrtAcquisition;
+    }
+
 
     public BrokerAcquireTokenSilentOperationParameters(){
 
