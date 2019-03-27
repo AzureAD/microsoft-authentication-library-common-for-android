@@ -101,6 +101,7 @@ public class MicrosoftFamilyOAuth2TokenCache
                         && accountRecord.getEnvironment().equals(rtRecord.getEnvironment())
                         && accountRecord.getHomeAccountId().equals(rtRecord.getHomeAccountId())) {
                     rtToReturn = rtRecord;
+                    break;
                 }
             }
         }
