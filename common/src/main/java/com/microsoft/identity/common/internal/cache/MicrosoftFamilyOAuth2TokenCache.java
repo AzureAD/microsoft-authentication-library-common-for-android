@@ -27,18 +27,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.BaseAccount;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
-import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MicrosoftFamilyOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
@@ -58,11 +53,11 @@ public class MicrosoftFamilyOAuth2TokenCache
     public MicrosoftFamilyOAuth2TokenCache(final Context context,
                                            final IAccountCredentialCache accountCredentialCache,
                                            final IAccountCredentialAdapter<
-                                        GenericOAuth2Strategy,
-                                        GenericAuthorizationRequest,
-                                        GenericTokenResponse,
-                                        GenericAccount,
-                                        GenericRefreshToken> accountCredentialAdapter) {
+                                                   GenericOAuth2Strategy,
+                                                   GenericAuthorizationRequest,
+                                                   GenericTokenResponse,
+                                                   GenericAccount,
+                                                   GenericRefreshToken> accountCredentialAdapter) {
         super(context, accountCredentialCache, accountCredentialAdapter);
     }
 
@@ -70,15 +65,11 @@ public class MicrosoftFamilyOAuth2TokenCache
      * Loads the tokens available for the supplied client criteria.
      *
      * @param clientId      The current client's id.
-     * @param target        The desired scopes.
      * @param accountRecord The current account.
-     * @return An ICacheRecord containing the account. If a matching id token is available
-     * (for the provided clientId), it is returned. If a matching access token is available
-     * (for the provided client id), it is also returned. If a matching refresh token is available
+     * @return An ICacheRecord containing the account. If a matching refresh token is available
      * it is returned.
      */
     public ICacheRecord loadByFamilyId(@Nullable final String clientId,
-                                       @Nullable final String target,
                                        @NonNull final AccountRecord accountRecord) {
         final String methodName = ":loadByFamilyId";
 
@@ -89,111 +80,35 @@ public class MicrosoftFamilyOAuth2TokenCache
                 "ClientId[" + clientId + ", " + familyId + "]"
         );
 
-        ICacheRecord result = null;
+        // The following fields must match:
+        // - environment
+        // - home_account_id
+        // - credential_type == RT
+        //
+        // The following fields do not matter:
+        // - clientId doesn't matter (FRT)
+        // - target doesn't matter (FRT)
+        // - realm doesn't matter (MRRT)
 
-        // Try to find a 'perfect match' if possible (clientId & target match)
-        // If no perfect match, fall back on any RT for this app (clientId but no target)
-        if (null != clientId) {
-            result = load(clientId, target, accountRecord);
+        RefreshTokenRecord rtToReturn = null;
 
-            // A result was found... therefore the familyId will be ignored...
-            Logger.warn(
-                    TAG + methodName,
-                    "Credentials located for client id. Skipping family id check."
-            );
-        }
+        // First, filter down to only the refresh tokens...
+        for (final Credential credential : getAccountCredentialCache().getCredentials()) {
+            if (credential instanceof RefreshTokenRecord) {
+                final RefreshTokenRecord rtRecord = (RefreshTokenRecord) credential;
 
-        // If there is no RT for this app, try to find any RT in the family (family id ONLY)
-        if (null == result || null == result.getRefreshToken()) {
-            Logger.warn(
-                    TAG + methodName,
-                    "Matching RT could not be found. Searching for compatible FRT."
-            );
-
-            final List<Credential> allCredentials = getAccountCredentialCache().getCredentials();
-
-            // The following fields must match:
-            // - environment
-            // - home_account_id
-            // - credential_type == RT
-            //
-            // The following fields do not matter:
-            // - clientId doesn't matter (FRT)
-            // - target doesn't matter (FRT)
-            // - realm doesn't matter (MRRT)
-
-            final List<RefreshTokenRecord> allRefreshTokens = new ArrayList<>();
-
-            // First, filter down to only the refresh tokens...
-            for (final Credential credential : allCredentials) {
-                if (credential instanceof RefreshTokenRecord) {
-                    allRefreshTokens.add((RefreshTokenRecord) credential);
-                }
-            }
-
-            Logger.info(
-                    TAG + methodName,
-                    "Found [" + allRefreshTokens.size() + "] RTs"
-            );
-
-            // Iterate over those refresh tokens and see if any are in the family...
-            final List<RefreshTokenRecord> familyRefreshTokens = new ArrayList<>();
-
-            for (final RefreshTokenRecord refreshToken : allRefreshTokens) {
-                if (refreshToken.getFamilyId().equals(familyId)) {
-                    familyRefreshTokens.add(refreshToken);
-                }
-            }
-
-            Logger.info(
-                    TAG + methodName,
-                    "Found [" + familyRefreshTokens.size() + "] foci RTs"
-            );
-
-            // Iterate over the family refresh tokens and filter for the current environment...
-            final List<RefreshTokenRecord> familyRtsForEnvironment = new ArrayList<>();
-
-            for (final RefreshTokenRecord familyRefreshToken : familyRefreshTokens) {
-                if (familyRefreshToken.getEnvironment().equals(accountRecord.getEnvironment())) {
-                    familyRtsForEnvironment.add(familyRefreshToken);
-                }
-            }
-
-            Logger.info(
-                    TAG + methodName,
-                    "Found [" + familyRtsForEnvironment.size() + "] foci RTs"
-            );
-
-            IdTokenRecord idTokenRecord = null;
-            AccessTokenRecord accessTokenRecord = null;
-
-            if (null != result) {
-                // If our first call yielded an id or access token, bring that result 'forward'
-                // and return it with the newly-found FRT... The onus is on the caller to check
-                // if the AT is expired or not...
-                idTokenRecord = result.getIdToken();
-                accessTokenRecord = result.getAccessToken();
-            }
-
-            // Filter for the current user...
-            result = new CacheRecord();
-            ((CacheRecord) result).setAccount(accountRecord);
-
-            for (final RefreshTokenRecord familyRefreshToken : familyRtsForEnvironment) {
-                if (familyRefreshToken.getHomeAccountId().equals(accountRecord.getHomeAccountId())) {
-                    Logger.verbose(
-                            TAG + methodName,
-                            "Compatible FOCI token found."
-                    );
-
-                    ((CacheRecord) result).setRefreshToken(familyRefreshToken);
-                    ((CacheRecord) result).setIdToken(idTokenRecord);
-                    ((CacheRecord) result).setAccessToken(accessTokenRecord);
-
+                if (familyId.equals(rtRecord.getFamilyId())
+                        && accountRecord.getEnvironment().equals(rtRecord.getEnvironment())
+                        && accountRecord.getHomeAccountId().equals(rtRecord.getHomeAccountId())) {
+                    rtToReturn = rtRecord;
                     break;
                 }
             }
         }
+
+        final CacheRecord result = new CacheRecord();
+        result.setAccount(accountRecord);
+        result.setRefreshToken(rtToReturn);
 
         return result;
     }
