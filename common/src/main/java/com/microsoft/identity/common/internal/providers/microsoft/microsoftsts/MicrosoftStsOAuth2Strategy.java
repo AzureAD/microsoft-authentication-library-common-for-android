@@ -52,6 +52,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -379,8 +380,9 @@ public class MicrosoftStsOAuth2Strategy
             Logger.info(TAG + methodName, "Device certificate challenge request. ");
             Logger.infoPII(TAG + methodName, "Challenge header: " + challengeHeader);
             try {
+                final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
                 final URL authority = StringExtensions.getUrl(mTokenEndpoint);
-                final PKeyAuthChallenge pkeyAuthChallenge = new PKeyAuthChallenge(challengeHeader, authority.toString());
+                final PKeyAuthChallenge pkeyAuthChallenge = factory.getPKeyAuthChallenge(challengeHeader, authority.toString());
                 headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
                 response = HttpRequest.sendPost(
                         authority,

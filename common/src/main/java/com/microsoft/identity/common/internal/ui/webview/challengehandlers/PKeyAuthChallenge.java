@@ -21,42 +21,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
-
-import android.support.annotation.NonNull;
-
-import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
-import com.microsoft.identity.common.adal.internal.IDeviceCertificate;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.util.StringUtil;
-
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CHALLENGE_REQUEST_CERT_AUTH_DELIMETER;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE;
-import static com.microsoft.identity.common.exception.ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID;
 
 public class PKeyAuthChallenge implements Serializable {
-    private static final String TAG = PKeyAuthChallenge.class.getSimpleName();
-    /**
-     * Certificate authorities are passed with delimiter.
-     */
-    private static final String CHALLENGE_REQUEST_CERT_AUTH_DELIMITER = ";";
     /**
      * Serial version id.
      */
     private static final long serialVersionUID = 1035116074451575588L;
 
-    private String mNonce = "";
+    private String mNonce;
 
-    private String mContext = "";
+    private String mContext;
 
     /**
      * Authorization endpoint will return accepted authorities.
@@ -68,78 +44,67 @@ public class PKeyAuthChallenge implements Serializable {
     /**
      * Token endpoint will return thumbprint.
      */
-    private String mThumbprint = "";
+    private String mThumbprint;
 
     private String mVersion;
 
     private String mSubmitUrl;
 
-    /**
-     * This parses the redirectURI for challenge components and produces
-     * response object.
-     *
-     * @param redirectUri Location: urn:http-auth:CertAuth?Nonce=<noncevalue>
-     *                    &CertAuthorities=<distinguished names of CAs>&Version=1.0
-     *                    &SubmitUrl=<URL to submit response>&Context=<server state that
-     *                    client must convey back>
-     * @return Return PKeyAuth challenge object
-     */
-    public PKeyAuthChallenge(@NonNull final String redirectUri) throws ClientException {
-        HashMap<String, String> parameters = StringExtensions.getUrlParameters(redirectUri);
-        validatePKeyAuthChallenge(parameters);
-        mNonce = parameters.get(PKeyAuthChallengeHandler.RequestField.Nonce.name().toLowerCase(Locale.US));
-        mContext = parameters.get(PKeyAuthChallengeHandler.RequestField.Context.name());
-        mCertAuthorities = StringExtensions.getStringTokens(
-                parameters.get(PKeyAuthChallengeHandler.RequestField.CertAuthorities.name()),
-                CHALLENGE_REQUEST_CERT_AUTH_DELIMITER);
-        mVersion = parameters.get(PKeyAuthChallengeHandler.RequestField.Version.name());
-        mSubmitUrl = parameters.get(PKeyAuthChallengeHandler.RequestField.SubmitUrl.name());
+    protected PKeyAuthChallenge(final Builder builder) {
+        mNonce = builder.mNonce;
+        mContext = builder.mContext;
+        mCertAuthorities = builder.mCertAuthorities;
+        mThumbprint = builder.mThumbprint;
+        mVersion = builder.mVersion;
+        mSubmitUrl = builder.mSubmitUrl;
     }
 
-    /**
-     * Create the pkeyauth challenge with headers.
-     * @param header
-     * @param uri
-     * @throws ClientException
-     * @throws UnsupportedEncodingException
-     */
-    public PKeyAuthChallenge(@NonNull final String header, @NonNull final String uri)
-            throws ClientException, UnsupportedEncodingException {
-        validateHeaderForPkeyAuthChallenge(header);
 
-        final Map<String, String> headerItems = getPkeyAuthHeader(header);
-        validatePKeyAuthChallenge(headerItems);
+    public static class Builder {
+        private String mNonce = "";
+        private String mContext = "";
+        private List<String> mCertAuthorities;
+        private String mThumbprint = "";
+        private String mVersion;
+        private String mSubmitUrl;
 
-        mSubmitUrl = uri;
-        mNonce = headerItems.get(PKeyAuthChallengeHandler.RequestField.Nonce.name().toLowerCase(Locale.US));
-        mVersion = headerItems.get(PKeyAuthChallengeHandler.RequestField.Version.name());
-        mContext = headerItems.get(PKeyAuthChallengeHandler.RequestField.Context.name());
-
-
-        // When pkeyauth header is present, ADFS is always trying to device auth. When hitting token endpoint(device
-        // challenge will be returned via 401 challenge), ADFS is sending back an empty cert thumbprint when they found
-        // the device is not managed. To account for the behavior of how ADFS performs device auth, below code is checking
-        // if it's already workplace joined before checking the existence of cert thumbprint or authority from returned challenge.
-        if (!isWorkplaceJoined()) {
-            Logger.verbose(TAG, "Device is not workplace joined. ");
-        } else if (!StringExtensions.isNullOrBlank(headerItems.get(PKeyAuthChallengeHandler.RequestField.CertThumbprint.name()))) {
-            Logger.verbose(TAG, "CertThumbprint exists in the device auth challenge.");
-            mThumbprint = headerItems.get(PKeyAuthChallengeHandler.RequestField.CertThumbprint.name());
-        } else if (headerItems.containsKey(PKeyAuthChallengeHandler.RequestField.CertAuthorities.name())) {
-            Logger.verbose(TAG, "CertAuthorities exists in the device auth challenge.");
-            String authorities = headerItems.get(PKeyAuthChallengeHandler.RequestField.CertAuthorities.name());
-            mCertAuthorities = StringExtensions.getStringTokens(authorities,
-                    CHALLENGE_REQUEST_CERT_AUTH_DELIMETER);
-        } else {
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID,
-                    "Both certThumbprint and cert authorities are not present");
+        public Builder setNonce(final String nonce) {
+            mNonce = nonce;
+            return self();
         }
-    }
 
-    private boolean isWorkplaceJoined() {
-        @SuppressWarnings("unchecked")
-        Class<IDeviceCertificate> certClass = (Class<IDeviceCertificate>) AuthenticationSettings.INSTANCE.getDeviceCertificateProxy();
-        return certClass != null;
+        public Builder setContext(final String context) {
+            mContext = context;
+            return self();
+        }
+
+        public Builder setCertAuthorities(final List<String> certAuthorities) {
+            mCertAuthorities = certAuthorities;
+            return self();
+        }
+
+        public Builder setThumbprint(final String thumbprint) {
+            mThumbprint = thumbprint;
+            return self();
+        }
+
+        public Builder setVersion(final String version) {
+            mVersion = version;
+            return self();
+        }
+
+        public Builder setSubmitUrl(final String submitUrl) {
+            mSubmitUrl = submitUrl;
+            return self();
+        }
+
+        public Builder self() {
+            return this;
+        }
+
+        public PKeyAuthChallenge build() {
+            return new PKeyAuthChallenge(this);
+        }
     }
 
     public String getNonce() {
@@ -164,65 +129,5 @@ public class PKeyAuthChallenge implements Serializable {
 
     public String getSubmitUrl() {
         return mSubmitUrl;
-    }
-
-    private Map<String, String> getPkeyAuthHeader(final String headerStr) throws ClientException, UnsupportedEncodingException {
-        final String authenticateHeader = headerStr.substring(CHALLENGE_RESPONSE_TYPE.length());
-        ArrayList<String> queryPairs = StringExtensions.splitWithQuotes(authenticateHeader, ',');
-        Map<String, String> headerItems = new HashMap<>();
-
-        for (String queryPair : queryPairs) {
-            ArrayList<String> pair = StringExtensions.splitWithQuotes(queryPair, '=');
-            if (pair.size() == 2 && !StringExtensions.isNullOrBlank(pair.get(0))
-                    && !StringExtensions.isNullOrBlank(pair.get(1))) {
-                String key = pair.get(0);
-                String value = pair.get(1);
-                key = StringExtensions.urlFormDecode(key);
-                value = StringExtensions.urlFormDecode(value);
-                key = key.trim();
-                value = StringExtensions.removeQuoteInHeaderValue(value.trim());
-                headerItems.put(key, value);
-            } else if (pair.size() == 1 && !StringExtensions.isNullOrBlank(pair.get(0))) {
-                // The value list could be null when either no certificate or no permission
-                // for ADFS service account for the Device container in AD.
-                headerItems.put(StringExtensions.urlFormDecode(pair.get(0)).trim(), StringExtensions.urlFormDecode(""));
-            } else {
-                // invalid format
-                throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, authenticateHeader);
-            }
-        }
-
-        return headerItems;
-    }
-
-    private void validateHeaderForPkeyAuthChallenge(@NonNull final String header) throws ClientException {
-        if (StringUtil.isEmpty(header)) {
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "header value is empty.");
-        }
-
-        // Header value should start with correct challenge type
-        if (!StringExtensions.hasPrefixInHeader(header, CHALLENGE_RESPONSE_TYPE)) {
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "challenge response type is wrong.");
-        }
-    }
-
-    private void validatePKeyAuthChallenge(Map<String, String> headerItems) throws
-            ClientException {
-        if (!(headerItems.containsKey(PKeyAuthChallengeHandler.RequestField.Nonce.name()) || headerItems
-                .containsKey(PKeyAuthChallengeHandler.RequestField.Nonce.name().toLowerCase(Locale.US)))) {
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "Nonce is empty.");
-        }
-        if (!headerItems.containsKey(PKeyAuthChallengeHandler.RequestField.Version.name())) {
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "Version name is empty");
-        }
-        if (!headerItems.containsKey(PKeyAuthChallengeHandler.RequestField.SubmitUrl.name())) {
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "SubmitUrl is empty");
-        }
-        if (!headerItems.containsKey(PKeyAuthChallengeHandler.RequestField.Context.name())) {
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "Context is empty");
-        }
-        if (!headerItems.containsKey(PKeyAuthChallengeHandler.RequestField.CertAuthorities.name())) {
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, "CertAuthorities is empty");
-        }
     }
 }
