@@ -320,4 +320,14 @@ public final class ErrorStrings {
      */
     public static final String DEVICE_REGISTRATION_FAILED = "Device registration failed";
 
+    /**
+     * Request Cancelled for unknown reasons.
+     */
+    public static final String BROKER_REQUEST_CANCELLED = "Broker request cancelled";
+
+    /**
+     * User Cancelled the request.
+     */
+    public static final String USER_CANCELLED = "User cancelled";
+
 }

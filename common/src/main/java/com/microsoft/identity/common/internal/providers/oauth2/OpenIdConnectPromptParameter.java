@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 
 package com.microsoft.identity.common.internal.providers.oauth2;
+
+import android.support.annotation.NonNull;
+
 /**
  * The UI options that developer can pass during interactive token acquisition requests.
  */
@@ -57,5 +60,25 @@ public enum OpenIdConnectPromptParameter {
         }
 
         return this.name().toLowerCase();
+    }
+
+    /**
+     * Utility method to map Adal PromptBehavior with OpenIdConnectPromptParameter
+     * @param promptbehavior
+     * @return
+     */
+    public static OpenIdConnectPromptParameter _fromPromptBehavior(@NonNull final String promptbehavior){
+
+        switch (promptbehavior) {
+            case "Auto":
+            case "REFRESH_SESSION":
+            case "Always":
+                return OpenIdConnectPromptParameter.SELECT_ACCOUNT;
+
+            case "FORCE_PROMPT":
+                return OpenIdConnectPromptParameter.LOGIN;
+            default:
+                return OpenIdConnectPromptParameter.SELECT_ACCOUNT;
+        }
     }
 }

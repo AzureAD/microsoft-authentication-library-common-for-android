@@ -41,6 +41,9 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
     @SerializedName("correlation_id")
     private String mCorrelationId;
 
+    @SerializedName("oAuth_metadata")
+    private String mOAuthErrorMetadata;
+
     /**
      * @return mErrorCodes of the Microsoft token error response.
      */
@@ -95,5 +98,21 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
      */
     public void setCorrelationId(final String correlationId) {
         mCorrelationId = correlationId;
+    }
+
+    /**
+     *
+     * @return mOAuthErrorMetadata of Microsoft token error response
+     */
+    public String getOAuthErrorMetadata() {
+        return mOAuthErrorMetadata;
+    }
+
+    /**
+     *
+     * @param oAuthErrorMetadata of Microsoft token error response
+     */
+    public void setOAuthErrorMetadata(final String oAuthErrorMetadata) {
+        this.mOAuthErrorMetadata = oAuthErrorMetadata;
     }
 }
