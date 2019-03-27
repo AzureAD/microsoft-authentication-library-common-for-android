@@ -36,10 +36,18 @@ public class MicrosoftStsTokenResponse extends MicrosoftTokenResponse {
     @SerializedName("not_before")
     private String mExpiresNotBefore;
 
+    /**
+     * Gets expires not before as String ( epoch time in seconds)
+     * @return
+     */
     public String getExpiresNotBefore() {
         return mExpiresNotBefore;
     }
 
+    /**
+     * Sets expires not before as String ( epoch time in seconds)
+     * @param expiresNotBefore
+     */
     public void setExpiresNotBefore(final String expiresNotBefore) {
         mExpiresNotBefore = expiresNotBefore;
     }
