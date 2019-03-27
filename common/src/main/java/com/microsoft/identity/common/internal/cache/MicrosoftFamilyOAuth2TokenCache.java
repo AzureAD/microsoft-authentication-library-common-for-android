@@ -35,9 +35,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class MicrosoftFamilyOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,
@@ -83,11 +80,6 @@ public class MicrosoftFamilyOAuth2TokenCache
                 "ClientId[" + clientId + ", " + familyId + "]"
         );
 
-        ICacheRecord result = null;
-
-        // Try to find any RT in the family...
-        final List<Credential> allCredentials = getAccountCredentialCache().getCredentials();
-
         // The following fields must match:
         // - environment
         // - home_account_id
@@ -98,64 +90,24 @@ public class MicrosoftFamilyOAuth2TokenCache
         // - target doesn't matter (FRT)
         // - realm doesn't matter (MRRT)
 
-        final List<RefreshTokenRecord> allRefreshTokens = new ArrayList<>();
+        RefreshTokenRecord rtToReturn = null;
 
         // First, filter down to only the refresh tokens...
-        for (final Credential credential : allCredentials) {
+        for (final Credential credential : getAccountCredentialCache().getCredentials()) {
             if (credential instanceof RefreshTokenRecord) {
-                allRefreshTokens.add((RefreshTokenRecord) credential);
+                final RefreshTokenRecord rtRecord = (RefreshTokenRecord) credential;
+
+                if (familyId.equals(rtRecord.getFamilyId())
+                        && accountRecord.getEnvironment().equals(rtRecord.getEnvironment())
+                        && accountRecord.getHomeAccountId().equals(rtRecord.getHomeAccountId())) {
+                    rtToReturn = rtRecord;
+                }
             }
         }
 
-        Logger.info(
-                TAG + methodName,
-                "Found [" + allRefreshTokens.size() + "] RTs"
-        );
-
-        // Iterate over those refresh tokens and see if any are in the family...
-        final List<RefreshTokenRecord> familyRefreshTokens = new ArrayList<>();
-
-        for (final RefreshTokenRecord refreshToken : allRefreshTokens) {
-            if (refreshToken.getFamilyId().equals(familyId)) {
-                familyRefreshTokens.add(refreshToken);
-            }
-        }
-
-        Logger.info(
-                TAG + methodName,
-                "Found [" + familyRefreshTokens.size() + "] foci RTs"
-        );
-
-        // Iterate over the family refresh tokens and filter for the current environment...
-        final List<RefreshTokenRecord> familyRtsForEnvironment = new ArrayList<>();
-
-        for (final RefreshTokenRecord familyRefreshToken : familyRefreshTokens) {
-            if (familyRefreshToken.getEnvironment().equals(accountRecord.getEnvironment())) {
-                familyRtsForEnvironment.add(familyRefreshToken);
-            }
-        }
-
-        Logger.info(
-                TAG + methodName,
-                "Found [" + familyRtsForEnvironment.size() + "] foci RTs"
-        );
-
-        // Filter for the current user...
-        result = new CacheRecord();
-        ((CacheRecord) result).setAccount(accountRecord);
-
-        for (final RefreshTokenRecord familyRefreshToken : familyRtsForEnvironment) {
-            if (familyRefreshToken.getHomeAccountId().equals(accountRecord.getHomeAccountId())) {
-                Logger.verbose(
-                        TAG + methodName,
-                        "Compatible FOCI token found."
-                );
-
-                ((CacheRecord) result).setRefreshToken(familyRefreshToken);
-
-                break;
-            }
-        }
+        final CacheRecord result = new CacheRecord();
+        result.setAccount(accountRecord);
+        result.setRefreshToken(rtToReturn);
 
         return result;
     }
