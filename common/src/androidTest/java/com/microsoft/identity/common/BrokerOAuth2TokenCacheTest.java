@@ -690,13 +690,29 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final List<AccountRecord> xAppAccounts = new ArrayList<>();
 
-        for (final String clientId : clientIds) {
-            xAppAccounts.addAll(
-                    mBrokerOAuth2TokenCache.getAccounts(
-                            ENVIRONMENT,
-                            clientId
-                    )
+        for (final int testUid : testAppUids) {
+            // Create the cache to query...
+            mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
+                    InstrumentationRegistry.getContext(),
+                    testUid,
+                    mApplicationMetadataCache,
+                    new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
+                        @Override
+                        public MsalOAuth2TokenCache getTokenCache(Context context, int bindingProcessUid) {
+                            return initAppUidCache(context, bindingProcessUid);
+                        }
+                    },
+                    mFociCache
             );
+
+            for (final String clientId : clientIds) {
+                final List<AccountRecord> accountsInCache = mBrokerOAuth2TokenCache.getAccounts(
+                        ENVIRONMENT,
+                        clientId
+                );
+
+                xAppAccounts.addAll(accountsInCache);
+            }
         }
 
         assertEquals(
@@ -744,13 +760,29 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final List<AccountRecord> xAppAccounts = new ArrayList<>();
 
-        for (final String clientId : clientIds) {
-            xAppAccounts.addAll(
-                    mBrokerOAuth2TokenCache.getAccounts(
-                            ENVIRONMENT,
-                            clientId
-                    )
+        for (final int testUid : testAppUids) {
+            // Create the cache to query...
+            mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
+                    InstrumentationRegistry.getContext(),
+                    testUid,
+                    mApplicationMetadataCache,
+                    new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
+                        @Override
+                        public MsalOAuth2TokenCache getTokenCache(Context context, int bindingProcessUid) {
+                            return initAppUidCache(context, bindingProcessUid);
+                        }
+                    },
+                    mFociCache
             );
+
+            for (final String clientId : clientIds) {
+                final List<AccountRecord> accountsInCache = mBrokerOAuth2TokenCache.getAccounts(
+                        ENVIRONMENT,
+                        clientId
+                );
+
+                xAppAccounts.addAll(accountsInCache);
+            }
         }
 
         assertEquals(
