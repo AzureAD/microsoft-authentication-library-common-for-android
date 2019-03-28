@@ -219,10 +219,11 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
                     ? ErrorStrings.ENCRYPTION_ERROR
                     : ErrorStrings.DECRYPTION_ERROR;
 
-            throw new RuntimeException(
-                    errorMessage,
-                    encrypt ? null : e
-            );
+            if (encrypt) {
+                throw new RuntimeException(errorMessage);
+            } else {
+                throw new RuntimeException(e);
+            }
         }
 
         return result;
