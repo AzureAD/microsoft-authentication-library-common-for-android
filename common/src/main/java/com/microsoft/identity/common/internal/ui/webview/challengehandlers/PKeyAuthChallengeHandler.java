@@ -88,7 +88,7 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
         return null;
     }
 
-    private Map<String, String> getChallengeHeader(final PKeyAuthChallenge pKeyAuthChallenge) throws ClientException {
+    public static Map<String, String> getChallengeHeader(final PKeyAuthChallenge pKeyAuthChallenge) throws ClientException {
         String authorizationHeaderValue = String.format("%s Context=\"%s\",Version=\"%s\"",
                 AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE, pKeyAuthChallenge.getContext(),
                 pKeyAuthChallenge.getVersion());
@@ -115,8 +115,7 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
                         "%s AuthToken=\"%s\",Context=\"%s\",Version=\"%s\"",
                         AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE, jwt,
                         pKeyAuthChallenge.getContext(), pKeyAuthChallenge.getVersion());
-                Logger.verbosePII(TAG, "Receive challenge response. ",
-                        "Challenge response:" + authorizationHeaderValue);
+                Logger.verbose(TAG, "Receive challenge response. ");
             }
         }
 
@@ -126,7 +125,7 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
         return headers;
     }
 
-    private IDeviceCertificate getWPJAPIInstance(Class<IDeviceCertificate> certClazz)
+    private static IDeviceCertificate getWPJAPIInstance(Class<IDeviceCertificate> certClazz)
             throws ClientException {
         final IDeviceCertificate deviceCertProxy;
         final Constructor<?> constructor;

@@ -47,6 +47,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStra
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -117,7 +118,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (isPkeyAuthUrl(formattedURL)) {
             Logger.verbose(TAG, "WebView detected request for pkeyauth challenge.");
             try {
-                final PKeyAuthChallenge pKeyAuthChallenge = new PKeyAuthChallenge(url);
+                final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
+                final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallenge(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
             } catch (final ClientException exception) {
