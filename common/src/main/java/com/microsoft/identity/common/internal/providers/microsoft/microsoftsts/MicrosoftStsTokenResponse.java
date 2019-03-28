@@ -33,27 +33,25 @@ import java.util.Date;
  */
 public class MicrosoftStsTokenResponse extends MicrosoftTokenResponse {
 
-    //TODO : See if this can be in MicrosoftTokenResponse
     @SerializedName("not_before")
-    private Date mExpiresNotBefore;
+    private String mExpiresNotBefore;
 
-    @SerializedName("cloud_instance_host_name")
-    private String mCloudInstanceHostName;
-
-    public Date getExpiresNotBefore() {
+    /**
+     * Gets expires not before as String ( epoch time in seconds)
+     * @return
+     */
+    public String getExpiresNotBefore() {
         return mExpiresNotBefore;
     }
 
-    public void setExpiresNotBefore(final Date expiresNotBefore) {
+    /**
+     * Sets expires not before as String ( epoch time in seconds)
+     * @param expiresNotBefore
+     */
+    public void setExpiresNotBefore(final String expiresNotBefore) {
         mExpiresNotBefore = expiresNotBefore;
     }
 
-    public String getCloudInstanceHostName() {
-        return mCloudInstanceHostName;
-    }
 
-    public void setCloudInstanceHostName(final String cloudInstanceHostName) {
-        mCloudInstanceHostName = cloudInstanceHostName;
-    }
 
 }
