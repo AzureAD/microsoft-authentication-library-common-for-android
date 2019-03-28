@@ -28,6 +28,7 @@ import android.content.SharedPreferences;
 
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.IOException;
@@ -209,11 +210,19 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             Logger.error(
                     TAG + ":" + methodName,
                     "Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",
-                    null
+                    encrypt
+                            ? null // If we failed to encrypt, don't log the error as it may contain a token
+                            : e // If we failed to decrypt, we couldn't see that secret value so log the error
             );
 
-            // TODO Throw a RuntimeException?
-            result = null;
+            String errorMessage = encrypt
+                    ? ErrorStrings.ENCRYPTION_ERROR
+                    : ErrorStrings.DECRYPTION_ERROR;
+
+            throw new RuntimeException(
+                    errorMessage,
+                    encrypt ? null : e
+            );
         }
 
         return result;
