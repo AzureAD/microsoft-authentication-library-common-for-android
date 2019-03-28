@@ -433,25 +433,31 @@ public class TokenCacheItemMigrationAdapter {
      */
     @NonNull
     public static String getScopesForTokenRequest(@NonNull final String v1Resource) {
-        final String methodName = ":getScopesForTokenRequest";
-
-        String scopes = v1Resource;
-
-        if (!v1Resource.endsWith("/")) {
-            scopes += "/.default";
-        } else {
-            Logger.warn(
-                    TAG + methodName,
-                    "Redirect already contains postfixed \"/\" - not reappending."
-            );
-
-            scopes += ".default";
-        }
+        String scopes = getScopeFromResource(v1Resource);
 
         // Add the default scopes, as they will not be present
         scopes += " openid profile offline_access";
 
         return scopes;
+    }
+
+    /**
+     * Given a v1 resource uri, append '/.default' to convert it to a v2 scope.
+     *
+     * @param resource The v1 resource uri.
+     * @return The v1 resource uri as a scope.
+     */
+    @NonNull
+    public static String getScopeFromResource(@NonNull final String resource) {
+        String resourceScope = resource;
+
+        if (!resourceScope.endsWith("/")) {
+            resourceScope += "/.default";
+        } else {
+            resourceScope += ".default";
+        }
+
+        return resourceScope;
     }
 
     /**
