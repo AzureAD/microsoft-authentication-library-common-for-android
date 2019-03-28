@@ -40,36 +40,11 @@ public interface IBrokerApplicationMetadataCache {
      *
      * @param clientId    The target client id.
      * @param environment The target environment.
+     * @param processUid  The uid of the app calling broker.
      * @return The matching {@link BrokerApplicationMetadata} or null if a match cannot be found.
      */
     @Nullable
-    BrokerApplicationMetadata getMetadata(String clientId, String environment);
-
-    /**
-     * For the supplied criteria, finds the UID associated to it. Note, this value may not match the
-     * value used by the {@link BrokerOAuth2TokenCache} for caching.
-     * <p>
-     * Reasons this value may not match:
-     * - The app has changed its UID through manifest settings.
-     * - The app shares its clientId with another application with a different UID.
-     * - The app is using the FOCI cache.
-     *
-     * @param clientId    The target client id.
-     * @param environment The target environment.
-     * @return The UID for the supplied criteria or null, if no such entry is cached.
-     */
-    @Nullable
-    Integer getUidForApp(String clientId, String environment);
-
-    /**
-     * For the supplied criteria, return the matching family of client id value (FOCI).
-     *
-     * @param clientId    The target client id.
-     * @param environment The target environment.
-     * @return The matching FOCI value or null, if no such entry exists.
-     */
-    @Nullable
-    String getFamilyId(String clientId, String environment);
+    BrokerApplicationMetadata getMetadata(String clientId, String environment, int processUid);
 
     /**
      * Inserts a new entry in the cache.

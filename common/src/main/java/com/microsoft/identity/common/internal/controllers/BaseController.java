@@ -57,6 +57,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.IResult;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
@@ -123,6 +124,12 @@ public abstract class BaseController {
             ).setRequestHeaders(
                     acquireTokenOperationParameters.getRequestHeaders()
             );
+
+            // We don't want to show the SELECT_ACCOUNT page if login_hint is set.
+            if (!StringExtensions.isNullOrBlank(acquireTokenOperationParameters.getLoginHint()) &&
+                    acquireTokenOperationParameters.getOpenIdConnectPromptParameter() == OpenIdConnectPromptParameter.SELECT_ACCOUNT) {
+                builder.setPrompt(null);
+            }
 
             // Set the multipleCloudAware and slice fields.
             if (acquireTokenOperationParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
