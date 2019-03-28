@@ -115,8 +115,7 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
                         "%s AuthToken=\"%s\",Context=\"%s\",Version=\"%s\"",
                         AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE, jwt,
                         pKeyAuthChallenge.getContext(), pKeyAuthChallenge.getVersion());
-                Logger.verbosePII(TAG, "Receive challenge response. ",
-                        "Challenge response:" + authorizationHeaderValue);
+                Logger.verbose(TAG, "Receive challenge response. ");
             }
         }
 
