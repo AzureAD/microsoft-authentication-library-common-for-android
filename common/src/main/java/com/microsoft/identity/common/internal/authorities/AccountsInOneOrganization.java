@@ -27,11 +27,9 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 public class AccountsInOneOrganization extends AzureActiveDirectoryAudience {
 
     public AccountsInOneOrganization() {
-        this.setCloudUrl(AzureActiveDirectory.DEFAULT_CLOUD_URL);
     }
 
     public AccountsInOneOrganization(String tenantId) {
-        this.setCloudUrl(AzureActiveDirectory.DEFAULT_CLOUD_URL);
         this.setTenantId(tenantId);
     }
 
