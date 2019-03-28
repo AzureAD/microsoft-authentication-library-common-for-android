@@ -365,7 +365,7 @@ public class MicrosoftStsOAuth2Strategy
     @Override
     protected HttpResponse performTokenRequest(final MicrosoftStsTokenRequest request) throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
-        HttpResponse response =  super.performTokenRequest(request);
+        final HttpResponse response =  super.performTokenRequest(request);
 
         if (response.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED
                 && response.getHeaders() != null
