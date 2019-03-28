@@ -82,7 +82,7 @@ public class MicrosoftSTSClientCredentialsGrantTest {
         OAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(new MicrosoftStsOAuth2Configuration());
 
         try {
-            TokenResult tokenResult = strategy.requestToken(tr);
+            final TokenResult tokenResult = strategy.requestToken(tr);
 
             assertEquals(true, tokenResult.getSuccess());
         } catch (ClientException exception) {

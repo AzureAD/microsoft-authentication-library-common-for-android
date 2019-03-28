@@ -62,10 +62,10 @@ public class PKeyAuthChallengeFactory {
      */
     public PKeyAuthChallenge getPKeyAuthChallenge(@NonNull final String redirectUri) throws ClientException {
         //get the PKeyAuthChallenge from redirect Uri sent from authorization endpoint
-        HashMap<String, String> parameters = StringExtensions.getUrlParameters(redirectUri);
+        final HashMap<String, String> parameters = StringExtensions.getUrlParameters(redirectUri);
         validatePKeyAuthChallenge(parameters);
 
-        PKeyAuthChallenge.Builder builder = new PKeyAuthChallenge.Builder();
+        final PKeyAuthChallenge.Builder builder = new PKeyAuthChallenge.Builder();
         builder.setNonce(parameters.get(PKeyAuthChallengeHandler.RequestField.Nonce.name().toLowerCase(Locale.US)))
                 .setContext(parameters.get(PKeyAuthChallengeHandler.RequestField.Context.name()))
                 .setCertAuthorities(StringExtensions.getStringTokens(
@@ -92,7 +92,7 @@ public class PKeyAuthChallengeFactory {
         final Map<String, String> headerItems = getPKeyAuthHeader(header);
         validatePKeyAuthChallenge(headerItems);
 
-        PKeyAuthChallenge.Builder builder = new PKeyAuthChallenge.Builder();
+        final PKeyAuthChallenge.Builder builder = new PKeyAuthChallenge.Builder();
         builder.setSubmitUrl(authority)
                 .setNonce(headerItems.get(PKeyAuthChallengeHandler.RequestField.Nonce.name().toLowerCase(Locale.US)))
                 .setVersion(headerItems.get(PKeyAuthChallengeHandler.RequestField.Version.name()))
@@ -159,7 +159,7 @@ public class PKeyAuthChallengeFactory {
 
     private Map<String, String> getPKeyAuthHeader(final String headerStr) throws ClientException, UnsupportedEncodingException {
         final String authenticateHeader = headerStr.substring(CHALLENGE_RESPONSE_TYPE.length());
-        ArrayList<String> queryPairs = StringExtensions.splitWithQuotes(authenticateHeader, ',');
+        final ArrayList<String> queryPairs = StringExtensions.splitWithQuotes(authenticateHeader, ',');
         Map<String, String> headerItems = new HashMap<>();
 
         for (String queryPair : queryPairs) {

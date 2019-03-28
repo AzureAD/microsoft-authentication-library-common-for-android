@@ -371,31 +371,41 @@ public class MicrosoftStsOAuth2Strategy
                 && response.getHeaders() != null
                 && response.getHeaders().containsKey(CHALLENGE_REQUEST_HEADER)) {
             // Received the device certificate challenge request. It is sent in 401 header.
-            final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
-            final Map<String, String> headers = new TreeMap<>();
-            headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
-            headers.putAll(Device.getPlatformIdParameters());
-
-            String challengeHeader = response.getHeaders().get(CHALLENGE_REQUEST_HEADER).get(0);
-            Logger.info(TAG + methodName, "Device certificate challenge request. ");
-            Logger.infoPII(TAG + methodName, "Challenge header: " + challengeHeader);
-            try {
-                final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
-                final URL authority = StringExtensions.getUrl(mTokenEndpoint);
-                final PKeyAuthChallenge pkeyAuthChallenge = factory.getPKeyAuthChallenge(challengeHeader, authority.toString());
-                headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
-                response = HttpRequest.sendPost(
-                        authority,
-                        headers,
-                        requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
-                        TOKEN_REQUEST_CONTENT_TYPE);
-            } catch (final UnsupportedEncodingException exception) {
-                throw new ClientException(ErrorStrings.UNSUPPORTED_ENCODING,
-                    "Unsupported encoding", exception);
-            }
+            Logger.info(TAG + methodName, "Receiving device certificate challenge request. ");
+            return performPKeyAuthRequest(response, request);
         }
 
         return response;
+    }
+
+    private HttpResponse performPKeyAuthRequest(
+            @NonNull final HttpResponse response,
+            @NonNull final MicrosoftStsTokenRequest request)
+            throws IOException, ClientException {
+        final String methodName = "#performPkeyAuthRequest";
+        final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
+        final Map<String, String> headers = new TreeMap<>();
+        headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        headers.putAll(Device.getPlatformIdParameters());
+
+        String challengeHeader = response.getHeaders().get(CHALLENGE_REQUEST_HEADER).get(0);
+        Logger.info(TAG + methodName, "Device certificate challenge request. ");
+        Logger.infoPII(TAG + methodName, "Challenge header: " + challengeHeader);
+        try {
+            final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
+            final URL authority = StringExtensions.getUrl(mTokenEndpoint);
+            final PKeyAuthChallenge pkeyAuthChallenge = factory.getPKeyAuthChallenge(challengeHeader, authority.toString());
+            headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
+            final HttpResponse pkeyAuthResponse = HttpRequest.sendPost(
+                    authority,
+                    headers,
+                    requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
+                    TOKEN_REQUEST_CONTENT_TYPE);
+            return pkeyAuthResponse;
+        } catch (final UnsupportedEncodingException exception) {
+            throw new ClientException(ErrorStrings.UNSUPPORTED_ENCODING,
+                    "Unsupported encoding", exception);
+        }
     }
 
     @Override
