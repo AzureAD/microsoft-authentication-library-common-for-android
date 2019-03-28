@@ -299,7 +299,7 @@ public class MicrosoftStsOAuth2Strategy
 
         if (mConfig.getMultipleCloudsSupported() || request.getMultipleCloudAware()) {
             Logger.verbose(TAG, "get cloud specific authority based on authorization response.");
-            setTokenEndpoint(getCloudSpecificAuthorityBasedOnAuthorizationResponse(response));
+            setTokenEndpoint(getCloudSpecificTenantEndpoint(response));
         }
 
         MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
@@ -415,17 +415,21 @@ public class MicrosoftStsOAuth2Strategy
         return result;
     }
 
-    private String getCloudSpecificAuthorityBasedOnAuthorizationResponse(
+    private String getCloudSpecificTenantEndpoint(
             @NonNull final MicrosoftStsAuthorizationResponse response) {
 
-        final String newAuthority =
-                Uri.parse(mTokenEndpoint)
-                        .buildUpon()
-                        .authority(response.getCloudInstanceHostName())
-                        .build()
-                        .toString();
 
-        return newAuthority;
+        if(!StringUtil.isEmpty(response.getCloudGraphHostName())) {
+            final String updatedTokenEndpoint =
+                    Uri.parse(mTokenEndpoint)
+                            .buildUpon()
+                            .authority(response.getCloudInstanceHostName())
+                            .build()
+                            .toString();
+            return updatedTokenEndpoint;
+        }
+
+        return mTokenEndpoint;
     }
 
 }
