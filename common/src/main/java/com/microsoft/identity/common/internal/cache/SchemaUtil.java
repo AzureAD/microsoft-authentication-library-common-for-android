@@ -27,6 +27,7 @@ import android.text.TextUtils;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
@@ -41,6 +42,7 @@ import java.util.Map;
 public final class SchemaUtil {
 
     private static final String TAG = SchemaUtil.class.getSimpleName();
+    private static final String EXCEPTION_CONSTRUCTING_IDTOKEN = "Exception constructing IDToken. ";
 
     private SchemaUtil() {
         // Utility class.
@@ -142,6 +144,33 @@ public final class SchemaUtil {
         return alternativeAccountId;
     }
 
+    static String getCredentialTypeFromVersion(String idTokenString) {
+        final String methodName = "getCredentialTypeFromVersion";
+
+        // Default is v2
+        String idTokenVersion = CredentialType.IdToken.name();
+
+        if (null != idTokenString) {
+            IDToken idToken;
+            try {
+                idToken = new IDToken(idTokenString);
+                final Map<String, String> idTokenClaims = idToken.getTokenClaims();
+                final String aadVersion = idTokenClaims.get(
+                        AuthenticationConstants.OAuth2.AAD_VERSION
+                );
+
+                if (!TextUtils.isEmpty(aadVersion)
+                        && aadVersion.equalsIgnoreCase(AuthenticationConstants.OAuth2.AAD_VERSION_V1)) {
+                    idTokenVersion = CredentialType.V1IdToken.name();
+                }
+            } catch (ServiceException e) {
+                Logger.warn(TAG + ":" + methodName, EXCEPTION_CONSTRUCTING_IDTOKEN + e.getMessage());
+            }
+        }
+
+        return idTokenVersion;
+    }
+
     public static String getIdentityProvider(final String idTokenString) {
         final String methodName = "getIdentityProvider";
 
@@ -163,7 +192,7 @@ public final class SchemaUtil {
                         idp = idTokenClaims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
 
                         // For home accounts idp claim is not available, use iss claim instead.
-                        if(TextUtils.isEmpty(idp)){
+                        if (TextUtils.isEmpty(idp)) {
                             Logger.info(TAG + ":" + methodName,
                                     "idp claim was null, using iss claim"
                             );
@@ -185,7 +214,7 @@ public final class SchemaUtil {
                     Logger.warn(TAG + ":" + methodName, "IDToken claims were null.");
                 }
             } catch (ServiceException e) {
-                Logger.warn(TAG + ":" + methodName, "Exception constructing IDToken. " + e.getMessage());
+                Logger.warn(TAG + ":" + methodName, EXCEPTION_CONSTRUCTING_IDTOKEN + e.getMessage());
             }
         } else {
             Logger.warn(TAG + ":" + methodName, "IDToken was null.");

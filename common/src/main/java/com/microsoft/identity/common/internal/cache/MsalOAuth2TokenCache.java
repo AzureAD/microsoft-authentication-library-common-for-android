@@ -49,6 +49,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2.AAD_VERSION_V1;
 import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 
@@ -235,7 +236,12 @@ public class MsalOAuth2TokenCache
         result.setAccount(accountToSave);
         result.setAccessToken(accessTokenToSave);
         result.setRefreshToken(refreshTokenToSave);
-        result.setIdToken(idTokenToSave);
+
+        if (idTokenToSave.getCredentialType().equalsIgnoreCase(AAD_VERSION_V1)) {
+            result.setV1IdToken(idTokenToSave);
+        } else {
+            result.setIdToken(idTokenToSave);
+        }
 
         return result;
     }
@@ -370,11 +376,22 @@ public class MsalOAuth2TokenCache
                 null // wildcard (*)
         );
 
+        // Load the v1 IdTokens
+        final List<Credential> v1IdTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                account.getHomeAccountId(),
+                account.getEnvironment(),
+                CredentialType.V1IdToken,
+                clientId,
+                account.getRealm(),
+                null // wildcard (*)
+        );
+
         final CacheRecord result = new CacheRecord();
         result.setAccount(account);
         result.setAccessToken(accessTokens.isEmpty() ? null : (AccessTokenRecord) accessTokens.get(0));
         result.setRefreshToken(refreshTokens.isEmpty() ? null : (RefreshTokenRecord) refreshTokens.get(0));
         result.setIdToken(idTokens.isEmpty() ? null : (IdTokenRecord) idTokens.get(0));
+        result.setV1IdToken(v1IdTokens.isEmpty() ? null : (IdTokenRecord) v1IdTokens.get(0));
 
         return result;
     }
