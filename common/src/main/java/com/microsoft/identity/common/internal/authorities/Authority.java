@@ -209,11 +209,12 @@ public abstract class Authority {
      * Authorities are either known by the developer and communicated to the library via configuration or they
      * are known to Microsoft based on the list of clouds returned from:
      *
-     * @return
+     * @param authority Authority to check against.
+     * @return True if the authority is known to Microsoft or defined in the configuration.
      */
     public static boolean isKnownAuthority(Authority authority) {
         final String methodName = ":isKnownAuthority";
-        boolean knownToDeveloper;
+        boolean knownToDeveloper = false;
         boolean knownToMicrosoft;
 
         if (authority == null) {
@@ -225,7 +226,19 @@ public abstract class Authority {
         }
 
         //Check if authority was added to configuration
-        knownToDeveloper = knownAuthorities.contains(authority);
+        if (authority.getKnownToDeveloper()) {
+            knownToDeveloper = true;
+        } else {
+            for (final Authority currentAuthority : knownAuthorities) {
+                if (currentAuthority.mAuthorityUrl != null &&
+                        authority.getAuthorityURL() != null &&
+                        authority.getAuthorityURL().getAuthority() != null &&
+                        currentAuthority.mAuthorityUrl.toLowerCase().contains(authority.getAuthorityURL().getAuthority().toLowerCase())) {
+                    knownToDeveloper = true;
+                    break;
+                }
+            }
+        }
 
         //Check if authority host is known to Microsoft
         knownToMicrosoft = AzureActiveDirectory.hasCloudHost(authority.getAuthorityURL());
