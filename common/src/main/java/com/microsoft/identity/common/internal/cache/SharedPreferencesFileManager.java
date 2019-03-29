@@ -132,18 +132,28 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         if (null == mStorageHelper) {
             editor.putString(key, value);
         } else {
-            editor.putString(key, encrypt(value));
+            final String encryptedValue = encrypt(value);
+            editor.putString(key, encryptedValue);
         }
 
         editor.commit();
     }
 
     @Override
+    @Nullable
     public final String getString(final String key) {
         String restoredValue = mSharedPreferences.getString(key, null);
 
         if (null != mStorageHelper && !StringExtensions.isNullOrBlank(restoredValue)) {
             restoredValue = decrypt(restoredValue);
+
+            if (StringExtensions.isNullOrBlank(restoredValue)) {
+                Logger.warn(
+                        TAG,
+                        "Failed to decrypt value! "
+                                + "This usually signals an issue with KeyStore or the provided SecretKeys."
+                );
+            }
         }
 
         return restoredValue;
