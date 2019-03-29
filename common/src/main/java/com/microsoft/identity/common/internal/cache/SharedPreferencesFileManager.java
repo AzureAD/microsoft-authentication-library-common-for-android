@@ -25,10 +25,11 @@ package com.microsoft.identity.common.internal.cache;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.IOException;
@@ -188,24 +189,27 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         editor.commit();
     }
 
-    private String encrypt(final String clearText) {
-        final String encryptedValue = encryptDecryptInternal(clearText, true);
-
-        return encryptedValue;
+    @Nullable
+    private String encrypt(@NonNull final String clearText) {
+        return encryptDecryptInternal(clearText, true);
     }
 
-    private String decrypt(final String encryptedBlob) {
-        final String decryptedValue = encryptDecryptInternal(encryptedBlob, false);
-
-        return decryptedValue;
+    @Nullable
+    private String decrypt(@NonNull final String encryptedBlob) {
+        return encryptDecryptInternal(encryptedBlob, false);
     }
 
-    private String encryptDecryptInternal(final String inputText, final boolean encrypt) {
+    @Nullable
+    private String encryptDecryptInternal(
+            @NonNull final String inputText,
+            final boolean encrypt) {
         final String methodName = "encryptDecryptInternal";
 
         String result;
         try {
-            result = encrypt ? mStorageHelper.encrypt(inputText) : mStorageHelper.decrypt(inputText);
+            result = encrypt
+                    ? mStorageHelper.encrypt(inputText)
+                    : mStorageHelper.decrypt(inputText);
         } catch (GeneralSecurityException | IOException e) {
             Logger.error(
                     TAG + ":" + methodName,
@@ -215,15 +219,8 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
                             : e // If we failed to decrypt, we couldn't see that secret value so log the error
             );
 
-            String errorMessage = encrypt
-                    ? ErrorStrings.ENCRYPTION_ERROR
-                    : ErrorStrings.DECRYPTION_ERROR;
-
-            if (encrypt) {
-                throw new RuntimeException(errorMessage);
-            } else {
-                throw new RuntimeException(e);
-            }
+            // TODO determine if an Exception should be thrown here...
+            result = null;
         }
 
         return result;
