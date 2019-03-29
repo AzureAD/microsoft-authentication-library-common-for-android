@@ -230,7 +230,9 @@ public abstract class Authority {
             knownToDeveloper = true;
         } else {
             for (final Authority currentAuthority : knownAuthorities) {
-                if (currentAuthority.mAuthorityUrl != null && authority.getAuthorityURL() != null && authority.getAuthorityURL().getAuthority() != null &&
+                if (currentAuthority.mAuthorityUrl != null &&
+                        authority.getAuthorityURL() != null &&
+                        authority.getAuthorityURL().getAuthority() != null &&
                         currentAuthority.mAuthorityUrl.toLowerCase().contains(authority.getAuthorityURL().getAuthority().toLowerCase())) {
                     knownToDeveloper = true;
                     break;
