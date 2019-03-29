@@ -22,11 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.support.annotation.NonNull;
 import android.webkit.HttpAuthHandler;
 import android.webkit.WebView;
-
-import com.microsoft.identity.common.exception.ClientException;
 
 /**
  * Factory capable of producing different kinds of challenges.
@@ -47,19 +44,5 @@ public final class ChallengeFactory {
                                                  final String host,
                                                  final String realm) {
         return new NtlmChallenge(view, handler, host, realm);
-    }
-
-    /**
-     * Factory method to get new PKeyAuthChallenge object.
-     *
-     * @param redirectUri Location: urn:http-auth:CertAuth?Nonce=<noncevalue>
-     *                    &CertAuthorities=<distinguished names of CAs>&Version=1.0
-     *                    &SubmitUrl=<URL to submit response>&Context=<server state that
-     *                    client must convey back>
-     * @return PKeyAuthChallenge
-     * @throws ClientException if the validation of redirectUri fails.
-     */
-    public static PKeyAuthChallenge getPKeyAuthChallenge(@NonNull final String redirectUri) throws ClientException {
-        return new PKeyAuthChallenge(redirectUri);
     }
 }
