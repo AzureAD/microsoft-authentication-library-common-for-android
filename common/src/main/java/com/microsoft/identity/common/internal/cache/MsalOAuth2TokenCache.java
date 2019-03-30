@@ -49,7 +49,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2.AAD_VERSION_V1;
 import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 
@@ -237,7 +236,7 @@ public class MsalOAuth2TokenCache
         result.setAccessToken(accessTokenToSave);
         result.setRefreshToken(refreshTokenToSave);
 
-        if (idTokenToSave.getCredentialType().equalsIgnoreCase(AAD_VERSION_V1)) {
+        if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenToSave.getCredentialType())) {
             result.setV1IdToken(idTokenToSave);
         } else {
             result.setIdToken(idTokenToSave);
