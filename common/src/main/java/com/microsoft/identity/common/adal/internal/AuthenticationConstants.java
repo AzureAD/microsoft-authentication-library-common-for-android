@@ -610,6 +610,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_VERSION = "broker.version";
 
         /**
+         * The minimum broker version.
+         */
+        public static final String BROKER_V2_VERSION_CODE = "1";
+
+        /**
          * String of broker protocol version with PRT support.
          */
         public static final String BROKER_PROTOCOL_VERSION = "v2";
@@ -1038,6 +1043,11 @@ public final class AuthenticationConstants {
          * String for the package name of the client app.
          */
         public static final String CLIENT_APP_PACKAGE_NAME = "client_app_package_name";
+
+        /**
+         * String for the indicator whether able to connect the auth service.
+         */
+        public static final String AUTH_SERVICE_CONNECT = "auth_service_connect";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.

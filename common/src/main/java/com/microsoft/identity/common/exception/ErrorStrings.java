@@ -330,4 +330,9 @@ public final class ErrorStrings {
      */
     public static final String USER_CANCELLED = "User cancelled";
 
+    /**
+     * The calling app is not supported by the broker.
+     */
+    public static final String UNSUPPORTED_BROKER_VERSION = "unsupported_broker_version";
+
 }
