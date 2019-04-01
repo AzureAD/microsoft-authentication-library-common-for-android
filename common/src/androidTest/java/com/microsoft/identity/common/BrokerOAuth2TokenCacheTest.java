@@ -162,7 +162,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 CLIENT_ID,
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
-                "1"
+                "1",
+                CredentialType.IdToken
         );
 
         mDefaultAppUidTestBundle = new MsalOAuth2TokenCacheTest.AccountCredentialTestBundle(
@@ -179,7 +180,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 CLIENT_ID,
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
-                null
+                null,
+                CredentialType.IdToken
         );
 
         mOtherCacheTestBundles = new ArrayList<>();
@@ -200,7 +202,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                             UUID.randomUUID().toString(),
                             SECRET,
                             MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
-                            null
+                            null,
+                            CredentialType.IdToken
                     )
             );
         }

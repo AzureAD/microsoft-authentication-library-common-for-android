@@ -106,7 +106,16 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             MicrosoftAccount,
             MicrosoftRefreshToken> mockCredentialAdapter;
 
-    AccountCredentialTestBundle defaultTestBundle;
+    /**
+     * For mocking broker responses where ADAL is the connecting client.
+     */
+    AccountCredentialTestBundle defaultTestBundleV1;
+
+    /**
+     * For mocking MSAL & MSAL-with-Broker responses.
+     */
+    AccountCredentialTestBundle defaultTestBundleV2;
+
     IAccountCredentialCache accountCredentialCache;
 
     public static class AccountCredentialTestBundle {
@@ -129,7 +138,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                                     final String clientId, //guid
                                     final String rtSecret,
                                     final String idTokenSecret,
-                                    final String familyId) {
+                                    final String familyId,
+                                    final CredentialType idTokenType) {
             mGeneratedAccount = new AccountRecord();
             mGeneratedAccount.setAuthorityType(authorityType);
             mGeneratedAccount.setLocalAccountId(localAccountId);
@@ -162,7 +172,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             mGeneratedIdToken.setHomeAccountId(homeAccountId);
             mGeneratedIdToken.setEnvironment(environment);
             mGeneratedIdToken.setRealm(realm);
-            mGeneratedIdToken.setCredentialType(CredentialType.IdToken.name());
+            mGeneratedIdToken.setCredentialType(idTokenType.name());
+            //mGeneratedIdToken.setCredentialType(CredentialType.IdToken.name());
             mGeneratedIdToken.setClientId(clientId);
             mGeneratedIdToken.setSecret(idTokenSecret);
             mGeneratedIdToken.setAuthority("https://sts.windows.net/0287f963-2d72-4363-9e3a-5705c5b0f031/");
@@ -176,7 +187,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         MockitoAnnotations.initMocks(this);
 
         // Used by mocks
-        defaultTestBundle = new AccountCredentialTestBundle(
+        defaultTestBundleV2 = new AccountCredentialTestBundle(
                 MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
                 LOCAL_ACCOUNT_ID,
                 USERNAME,
@@ -190,7 +201,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 CLIENT_ID,
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
-                null
+                null,
+                CredentialType.IdToken
         );
 
         // Mocks
@@ -200,7 +212,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                         mockRequest,
                         mockResponse
                 )
-        ).thenReturn(defaultTestBundle.mGeneratedAccount);
+        ).thenReturn(defaultTestBundleV2.mGeneratedAccount);
 
         when(
                 mockCredentialAdapter.createAccessToken(
@@ -208,7 +220,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                         mockRequest,
                         mockResponse
                 )
-        ).thenReturn(defaultTestBundle.mGeneratedAccessToken);
+        ).thenReturn(defaultTestBundleV2.mGeneratedAccessToken);
 
         when(
                 mockCredentialAdapter.createRefreshToken(
@@ -216,7 +228,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                         mockRequest,
                         mockResponse
                 )
-        ).thenReturn(defaultTestBundle.mGeneratedRefreshToken);
+        ).thenReturn(defaultTestBundleV2.mGeneratedRefreshToken);
 
         when(
                 mockCredentialAdapter.createIdToken(
@@ -224,7 +236,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                         mockRequest,
                         mockResponse
                 )
-        ).thenReturn(defaultTestBundle.mGeneratedIdToken);
+        ).thenReturn(defaultTestBundleV2.mGeneratedIdToken);
 
         // Context and related init
         final Context context = InstrumentationRegistry.getTargetContext();
@@ -263,7 +275,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final List<AccountRecord> accounts = accountCredentialCache.getAccounts();
         assertEquals(1, accounts.size());
-        assertEquals(defaultTestBundle.mGeneratedAccount, accounts.get(0));
+        assertEquals(defaultTestBundleV2.mGeneratedAccount, accounts.get(0));
 
         final List<Credential> credentials = accountCredentialCache.getCredentials();
         assertEquals(3, credentials.size());
@@ -284,9 +296,15 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             }
         }
 
-        assertEquals(defaultTestBundle.mGeneratedAccessToken, ats.get(0));
-        assertEquals(defaultTestBundle.mGeneratedRefreshToken, rts.get(0));
-        assertEquals(defaultTestBundle.mGeneratedIdToken, ids.get(0));
+        assertEquals(defaultTestBundleV2.mGeneratedAccessToken, ats.get(0));
+        assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, rts.get(0));
+        assertEquals(defaultTestBundleV2.mGeneratedIdToken, ids.get(0));
+    }
+
+    @Test
+    public void saveTokensV1Compat() {
+        // This test asserts that if an IdToken is returned in the v1 format (broker cases),
+        // it is saved property.
     }
 
     @Test
@@ -309,7 +327,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         accountCredentialCache.saveCredential(accessTokenToClear);
 
         // Set the wider target on the new AT to write...
-        defaultTestBundle.mGeneratedAccessToken.setTarget(extendedScopes);
+        defaultTestBundleV2.mGeneratedAccessToken.setTarget(extendedScopes);
 
         mOauth2TokenCache.save(
                 mockStrategy,
@@ -319,7 +337,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final List<AccountRecord> accounts = accountCredentialCache.getAccounts();
         assertEquals(1, accounts.size());
-        assertEquals(defaultTestBundle.mGeneratedAccount, accounts.get(0));
+        assertEquals(defaultTestBundleV2.mGeneratedAccount, accounts.get(0));
 
         final List<Credential> credentials = accountCredentialCache.getCredentials();
         assertEquals(3, credentials.size());
@@ -340,16 +358,16 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             }
         }
 
-        assertEquals(defaultTestBundle.mGeneratedAccessToken, ats.get(0));
-        assertEquals(defaultTestBundle.mGeneratedRefreshToken, rts.get(0));
-        assertEquals(defaultTestBundle.mGeneratedIdToken, ids.get(0));
+        assertEquals(defaultTestBundleV2.mGeneratedAccessToken, ats.get(0));
+        assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, rts.get(0));
+        assertEquals(defaultTestBundleV2.mGeneratedIdToken, ids.get(0));
     }
 
     @Test
     public void saveAccountDirect() {
         mOauth2TokenCache.save(
-                defaultTestBundle.mGeneratedAccount,
-                defaultTestBundle.mGeneratedIdToken
+                defaultTestBundleV2.mGeneratedAccount,
+                defaultTestBundleV2.mGeneratedIdToken
         );
 
         final AccountRecord account = mOauth2TokenCache.getAccount(
@@ -373,12 +391,12 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertNull(cacheRecord.getRefreshToken());
 
         assertEquals(
-                defaultTestBundle.mGeneratedAccount,
+                defaultTestBundleV2.mGeneratedAccount,
                 cacheRecord.getAccount()
         );
 
         assertEquals(
-                defaultTestBundle.mGeneratedIdToken,
+                defaultTestBundleV2.mGeneratedIdToken,
                 cacheRecord.getIdToken()
         );
     }
@@ -429,7 +447,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                             CLIENT_ID,
                             SECRET,
                             MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
-                            null
+                            null,
+                            CredentialType.IdToken
                     )
             );
         }
@@ -537,7 +556,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                             CLIENT_ID,
                             SECRET,
                             MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
-                            null
+                            null,
+                            CredentialType.IdToken
                     )
             );
         }
@@ -616,7 +636,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                             CLIENT_ID,
                             SECRET,
                             MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
-                            null
+                            null,
+                            CredentialType.IdToken
                     )
             );
         }
@@ -749,15 +770,15 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        assertEquals(defaultTestBundle.mGeneratedAccount, result.getAccount());
-        assertEquals(defaultTestBundle.mGeneratedAccessToken, result.getAccessToken());
-        assertEquals(defaultTestBundle.mGeneratedRefreshToken, result.getRefreshToken());
-        assertEquals(defaultTestBundle.mGeneratedIdToken, result.getIdToken());
+        assertEquals(defaultTestBundleV2.mGeneratedAccount, result.getAccount());
+        assertEquals(defaultTestBundleV2.mGeneratedAccessToken, result.getAccessToken());
+        assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, result.getRefreshToken());
+        assertEquals(defaultTestBundleV2.mGeneratedIdToken, result.getIdToken());
 
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                defaultTestBundle.mGeneratedAccount
+                defaultTestBundleV2.mGeneratedAccount
         );
 
         assertEquals(result, secondaryLoad);
@@ -777,13 +798,13 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                defaultTestBundle.mGeneratedAccount
+                defaultTestBundleV2.mGeneratedAccount
         );
 
-        assertEquals(defaultTestBundle.mGeneratedAccount, secondaryLoad.getAccount());
+        assertEquals(defaultTestBundleV2.mGeneratedAccount, secondaryLoad.getAccount());
         assertNull(secondaryLoad.getAccessToken());
-        assertEquals(defaultTestBundle.mGeneratedRefreshToken, secondaryLoad.getRefreshToken());
-        assertEquals(defaultTestBundle.mGeneratedIdToken, secondaryLoad.getIdToken());
+        assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, secondaryLoad.getRefreshToken());
+        assertEquals(defaultTestBundleV2.mGeneratedIdToken, secondaryLoad.getIdToken());
     }
 
     @Test
@@ -800,13 +821,13 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                defaultTestBundle.mGeneratedAccount
+                defaultTestBundleV2.mGeneratedAccount
         );
 
-        assertEquals(defaultTestBundle.mGeneratedAccount, secondaryLoad.getAccount());
-        assertEquals(defaultTestBundle.mGeneratedAccessToken, secondaryLoad.getAccessToken());
+        assertEquals(defaultTestBundleV2.mGeneratedAccount, secondaryLoad.getAccount());
+        assertEquals(defaultTestBundleV2.mGeneratedAccessToken, secondaryLoad.getAccessToken());
         assertNull(secondaryLoad.getRefreshToken());
-        assertEquals(defaultTestBundle.mGeneratedIdToken, secondaryLoad.getIdToken());
+        assertEquals(defaultTestBundleV2.mGeneratedIdToken, secondaryLoad.getIdToken());
     }
 
     @Test
@@ -823,12 +844,12 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                defaultTestBundle.mGeneratedAccount
+                defaultTestBundleV2.mGeneratedAccount
         );
 
-        assertEquals(defaultTestBundle.mGeneratedAccount, secondaryLoad.getAccount());
-        assertEquals(defaultTestBundle.mGeneratedAccessToken, secondaryLoad.getAccessToken());
-        assertEquals(defaultTestBundle.mGeneratedRefreshToken, secondaryLoad.getRefreshToken());
+        assertEquals(defaultTestBundleV2.mGeneratedAccount, secondaryLoad.getAccount());
+        assertEquals(defaultTestBundleV2.mGeneratedAccessToken, secondaryLoad.getAccessToken());
+        assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, secondaryLoad.getRefreshToken());
         assertNull(secondaryLoad.getIdToken());
     }
 
