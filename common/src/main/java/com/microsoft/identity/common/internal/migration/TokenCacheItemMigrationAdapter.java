@@ -78,7 +78,6 @@ public class TokenCacheItemMigrationAdapter {
                 cacheItemsToRenew.addAll(cacheItemList);
             }
 
-            // TODO renew these tokens...
             result.addAll(renewTokens(redirects, cacheItemsToRenew));
         }
 
