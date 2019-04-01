@@ -27,6 +27,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Base64;
 import android.util.Log;
@@ -157,7 +158,7 @@ public class StorageHelper implements IStorageHelper {
      *                TODO: Remove this suppression: https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html
      */
     @SuppressLint("TrulyRandom")
-    public StorageHelper(Context context) {
+    public StorageHelper(@NonNull final Context context) {
         mContext = context.getApplicationContext();
         mRandom = new SecureRandom();
     }
