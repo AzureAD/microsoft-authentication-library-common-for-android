@@ -170,13 +170,16 @@ public final class AuthorizationActivity extends Activity {
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
+        final String methodName = "#onCreate";
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.common_activity_authentication);
         if (savedInstanceState == null) {
+            Logger.verbose(TAG + methodName, "Extract state from the intent bundle.");
             extractState(getIntent().getExtras());
         } else {
             // If activity is killed by the os, savedInstance will be the saved bundle.
+            Logger.verbose(TAG + methodName, "Extract state from the saved bundle.");
             extractState(savedInstanceState);
         }
 
@@ -188,8 +191,8 @@ public final class AuthorizationActivity extends Activity {
                 public void run() {
                     // load blank first to avoid error for not loading webView
                     mWebView.loadUrl("about:blank");
-                    Logger.verbose(TAG, "Launching embedded WebView for acquiring auth code.");
-                    Logger.verbosePII(TAG, "The start url is " + mAuthorizationRequestUrl);
+                    Logger.verbose(TAG + methodName, "Launching embedded WebView for acquiring auth code.");
+                    Logger.verbosePII(TAG + methodName, "The start url is " + mAuthorizationRequestUrl);
                     mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
                 }
             });
@@ -262,6 +265,13 @@ public final class AuthorizationActivity extends Activity {
                }
            }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        final String methodName = "#onDestroy";
+        Logger.verbose(TAG + methodName, "");
+        super.onDestroy();
     }
 
     private void sendResult(int resultCode, Intent intent) {
