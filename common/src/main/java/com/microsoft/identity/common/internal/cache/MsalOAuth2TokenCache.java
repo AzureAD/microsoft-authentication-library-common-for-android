@@ -533,7 +533,7 @@ public class MsalOAuth2TokenCache
                 "Found " + accountsForEnvironment.size() + " accounts for this environment"
         );
 
-        // Grab the Credentials for this app...
+        // Grab the Credentials for this app...start with the v2 IdTokens....
         final List<Credential> appCredentials =
                 mAccountCredentialCache.getCredentialsFilteredBy(
                         null, // homeAccountId
@@ -543,6 +543,18 @@ public class MsalOAuth2TokenCache
                         null, // realm
                         null // target
                 );
+
+        // And also grab any V1IdTokens....
+        appCredentials.addAll(
+                mAccountCredentialCache.getCredentialsFilteredBy(
+                        null, // homeAccountId
+                        environment,
+                        CredentialType.V1IdToken,
+                        clientId,
+                        null, // realm
+                        null // target
+                )
+        );
 
         // For each Account with an associated RT, add it to the result List...
         for (final AccountRecord account : accountsForEnvironment) {
