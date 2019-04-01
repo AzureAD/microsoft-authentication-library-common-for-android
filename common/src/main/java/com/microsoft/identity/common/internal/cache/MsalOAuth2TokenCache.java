@@ -706,6 +706,14 @@ public class MsalOAuth2TokenCache
                 isRealmAgnostic
         );
 
+        final int v1IdsRemoved = removeCredentialsOfTypeForAccount(
+                environment,
+                clientId,
+                CredentialType.V1IdToken,
+                targetAccount,
+                isRealmAgnostic
+        );
+
         final List<AccountRecord> deletedAccounts = new ArrayList<>();
 
         if (isRealmAgnostic) {
@@ -731,7 +739,8 @@ public class MsalOAuth2TokenCache
         final String[][] logInfo = new String[][]{
                 {"Access tokens", String.valueOf(atsRemoved)},
                 {"Refresh tokens", String.valueOf(rtsRemoved)},
-                {"Id tokens", String.valueOf(idsRemoved)},
+                {"Id tokens (v1)", String.valueOf(v1IdsRemoved)},
+                {"Id tokens (v2)", String.valueOf(idsRemoved)},
                 {"Accounts", String.valueOf(deletedAccounts.size())}
         };
 
