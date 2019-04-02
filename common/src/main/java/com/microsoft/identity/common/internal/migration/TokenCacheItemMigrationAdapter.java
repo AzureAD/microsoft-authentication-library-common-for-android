@@ -41,6 +41,7 @@ public class TokenCacheItemMigrationAdapter {
      * ExecutorService to handle background computation.
      */
     public static final ExecutorService sBackgroundExecutor = Executors.newCachedThreadPool();
+    private static final String RESOURCE_DEFAULT_SCOPE = "/.default";
 
     /**
      * For a list of supplied tokens, filter them to find the 'most preferred' when migrating.
@@ -448,15 +449,7 @@ public class TokenCacheItemMigrationAdapter {
      */
     @NonNull
     public static String getScopeFromResource(@NonNull final String resource) {
-        String resourceScope = resource;
-
-        if (!resourceScope.endsWith("/")) {
-            resourceScope += "/.default";
-        } else {
-            resourceScope += ".default";
-        }
-
-        return resourceScope;
+        return resource + RESOURCE_DEFAULT_SCOPE;
     }
 
     /**
