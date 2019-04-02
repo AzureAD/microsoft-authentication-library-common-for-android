@@ -28,7 +28,9 @@ import android.support.annotation.Nullable;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
+import com.microsoft.identity.common.internal.request.SdkType;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -47,14 +49,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private String mRefreshTokenAge;
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord) {
-        mAccessTokenRecord = cacheRecord.getAccessToken();
-        mAccountRecord = cacheRecord.getAccount();
-        if (cacheRecord.getIdToken() != null) {
-            mRawIdToken = cacheRecord.getIdToken().getSecret();
-        }
-        if (cacheRecord.getRefreshToken() != null) {
-            mRefreshToken = cacheRecord.getRefreshToken().getSecret();
-        }
+        this(cacheRecord, SdkType.MSAL); // default sdk type as MSAL
     }
 
     public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
@@ -65,7 +60,23 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
         mRefreshToken = refreshToken;
         mRawIdToken = rawIdToken;
         mAccountRecord = accountRecord;
+    }
 
+    public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord, @NonNull SdkType sdkType){
+        mAccessTokenRecord = cacheRecord.getAccessToken();
+        mAccountRecord = cacheRecord.getAccount();
+
+        if (cacheRecord.getRefreshToken() != null) {
+            mRefreshToken = cacheRecord.getRefreshToken().getSecret();
+        }
+
+        final IdTokenRecord idTokenRecord = sdkType == SdkType.ADAL ?
+                cacheRecord.getV1IdToken() :
+                cacheRecord.getIdToken();
+
+        if (idTokenRecord != null) {
+            mRawIdToken =  idTokenRecord.getSecret();
+        }
     }
 
     @Override

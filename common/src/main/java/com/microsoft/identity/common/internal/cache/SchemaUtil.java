@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -144,13 +145,13 @@ public final class SchemaUtil {
         return alternativeAccountId;
     }
 
-    static String getCredentialTypeFromVersion(String idTokenString) {
+    public static String getCredentialTypeFromVersion(@Nullable final String idTokenString) {
         final String methodName = "getCredentialTypeFromVersion";
 
         // Default is v2
         String idTokenVersion = CredentialType.IdToken.name();
 
-        if (null != idTokenString) {
+        if (!TextUtils.isEmpty(idTokenString)) {
             IDToken idToken;
             try {
                 idToken = new IDToken(idTokenString);
