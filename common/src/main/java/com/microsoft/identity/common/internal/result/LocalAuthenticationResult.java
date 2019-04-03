@@ -24,11 +24,15 @@ package com.microsoft.identity.common.internal.result;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
+import com.microsoft.identity.common.internal.request.SdkType;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -46,15 +50,10 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private String mSpeRing;
     private String mRefreshTokenAge;
 
+    private static final String TAG = LocalAuthenticationResult.class.getName();
+
     public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord) {
-        mAccessTokenRecord = cacheRecord.getAccessToken();
-        mAccountRecord = cacheRecord.getAccount();
-        if (cacheRecord.getIdToken() != null) {
-            mRawIdToken = cacheRecord.getIdToken().getSecret();
-        }
-        if (cacheRecord.getRefreshToken() != null) {
-            mRefreshToken = cacheRecord.getRefreshToken().getSecret();
-        }
+        this(cacheRecord, SdkType.MSAL); // default sdk type as MSAL
     }
 
     public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
@@ -65,6 +64,31 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
         mRefreshToken = refreshToken;
         mRawIdToken = rawIdToken;
         mAccountRecord = accountRecord;
+    }
+
+    public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord, @NonNull SdkType sdkType){
+        mAccessTokenRecord = cacheRecord.getAccessToken();
+        mAccountRecord = cacheRecord.getAccount();
+
+        if (cacheRecord.getRefreshToken() != null) {
+            mRefreshToken = cacheRecord.getRefreshToken().getSecret();
+        }
+
+        final IdTokenRecord idTokenRecord = sdkType == SdkType.ADAL ?
+                cacheRecord.getV1IdToken() :
+                cacheRecord.getIdToken();
+        if (idTokenRecord != null) {
+            mRawIdToken =  idTokenRecord.getSecret();
+            Logger.verbose(TAG, "Id Token type: " +
+                    idTokenRecord.getCredentialType());
+        }
+
+        Logger.verbose(TAG, "Constructing LocalAuthentication result" +
+                ", AccessTokenRecord null: " + (mAccessTokenRecord == null) +
+                ", AccountRecord null: " + (mAccountRecord == null) +
+                ", RefreshTokenRecord null or empty: " + TextUtils.isEmpty(mRefreshToken) +
+                ", IdTokenRecord null: " + (idTokenRecord == null)
+        );
 
     }
 

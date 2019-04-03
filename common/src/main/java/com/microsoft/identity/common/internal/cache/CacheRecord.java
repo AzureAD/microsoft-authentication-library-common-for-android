@@ -33,6 +33,7 @@ public class CacheRecord implements ICacheRecord {
     private AccessTokenRecord mAccessToken;
     private RefreshTokenRecord mRefreshToken;
     private IdTokenRecord mIdToken;
+    private IdTokenRecord mV1IdToken;
 
     public void setAccount(final AccountRecord account) {
         mAccount = account;
@@ -68,6 +69,15 @@ public class CacheRecord implements ICacheRecord {
     @Override
     public IdTokenRecord getIdToken() {
         return mIdToken;
+    }
+
+    public void setV1IdToken(final IdTokenRecord idToken) {
+        mV1IdToken = idToken;
+    }
+
+    @Override
+    public IdTokenRecord getV1IdToken() {
+        return mV1IdToken;
     }
 
     //CHECKSTYLE:OFF

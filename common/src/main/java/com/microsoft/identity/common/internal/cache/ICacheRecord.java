@@ -60,4 +60,10 @@ public interface ICacheRecord {
      */
     IdTokenRecord getIdToken();
 
+    /**
+     * Gets the {@link IdTokenRecord} in v1 format.
+     * @return
+     */
+    IdTokenRecord getV1IdToken();
+
 }

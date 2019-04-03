@@ -222,8 +222,8 @@ public class BrokerOAuth2TokenCache
         }
 
         updateApplicationMetadataCache(
-                result.getIdToken().getClientId(),
-                result.getIdToken().getEnvironment(),
+                result.getAccessToken().getClientId(),
+                result.getAccessToken().getEnvironment(),
                 familyId,
                 mCallingProcessUid
         );
@@ -286,8 +286,8 @@ public class BrokerOAuth2TokenCache
         );
 
         updateApplicationMetadataCache(
-                result.getIdToken().getClientId(),
-                result.getIdToken().getEnvironment(),
+                result.getRefreshToken().getClientId(),
+                result.getRefreshToken().getEnvironment(),
                 result.getRefreshToken().getFamilyId(),
                 mCallingProcessUid
         );

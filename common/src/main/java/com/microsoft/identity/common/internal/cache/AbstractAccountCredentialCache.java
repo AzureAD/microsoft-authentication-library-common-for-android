@@ -56,10 +56,11 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 credentialClass = RefreshTokenRecord.class;
                 break;
             case IdToken:
+            case V1IdToken:
                 credentialClass = IdTokenRecord.class;
                 break;
             default:
-                Logger.warn(TAG, "Could not match CredentialType to class."
+                Logger.warn(TAG, "Could not match CredentialType to class. "
                         + "Did you forget to update this method with a new type?");
                 if (null != cacheKey) {
                     Logger.warnPII(TAG, "Sought key was: [" + cacheKey + "]");
