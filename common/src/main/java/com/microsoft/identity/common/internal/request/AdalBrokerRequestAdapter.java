@@ -115,8 +115,8 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         );
 
         // set redirect uri using caller package name
-        parameters.setRedirectUri(BrokerValidator.getBrokerRedirectUri(
-                parameters.getAppContext(), parameters.getCallerPackageName())
+        parameters.setRedirectUri(
+                AuthenticationConstants.Broker.BROKER_REDIRECT_URI
         );
 
         parameters.setLoginHint(intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_NAME));

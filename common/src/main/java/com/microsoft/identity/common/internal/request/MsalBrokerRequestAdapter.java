@@ -129,10 +129,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         parameters.setClientId(brokerRequest.getClientId());
 
         // set redirect uri using caller package name
-        parameters.setRedirectUri(BrokerValidator.getBrokerRedirectUri(
-                parameters.getAppContext(),
-                parameters.getCallerPackageName())
-        );
+        parameters.setRedirectUri(brokerRequest.getRedirect());
 
         parameters.setLoginHint(brokerRequest.getUserName());
 
