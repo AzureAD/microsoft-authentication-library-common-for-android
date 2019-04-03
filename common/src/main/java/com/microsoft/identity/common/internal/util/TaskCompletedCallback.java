@@ -23,6 +23,6 @@
 
 package com.microsoft.identity.common.internal.util;
 
-public interface TaskCompletedListener<T> {
+public interface TaskCompletedCallback<T> {
     void onTaskCompleted(T t);
 }
