@@ -303,7 +303,8 @@ public abstract class BaseController {
         HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAppContext());
 
         // Check that the authority is known
-        Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parameters.getAuthority());
+        final Authority.KnownAuthorityResult authorityResult =
+                Authority.getKnownAuthorityResult(parameters.getAuthority());
 
         if (!authorityResult.getKnown()) {
             throw authorityResult.getClientException();
