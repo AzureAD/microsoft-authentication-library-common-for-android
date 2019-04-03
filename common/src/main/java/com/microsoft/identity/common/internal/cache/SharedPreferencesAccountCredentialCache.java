@@ -156,7 +156,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             clazz = AccessTokenRecord.class;
         } else if (CredentialType.RefreshToken == type) {
             clazz = RefreshTokenRecord.class;
-        } else if (CredentialType.IdToken == type) {
+        } else if (CredentialType.IdToken == type || CredentialType.V1IdToken == type) {
             clazz = IdTokenRecord.class;
         } else {
             // TODO Log a warning, throw an Exception?
@@ -424,6 +424,9 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                     break;
                 } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.IdToken.name())) {
                     type = CredentialType.IdToken;
+                    break;
+                } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.V1IdToken.name())) {
+                    type = CredentialType.V1IdToken;
                     break;
                 } else {
                     // TODO Log a warning and skip this value?
