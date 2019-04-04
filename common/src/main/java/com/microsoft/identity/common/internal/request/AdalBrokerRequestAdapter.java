@@ -114,9 +114,8 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY)
         );
 
-        // set redirect uri using caller package name
-        parameters.setRedirectUri(BrokerValidator.getBrokerRedirectUri(
-                parameters.getAppContext(), parameters.getCallerPackageName())
+        parameters.setRedirectUri(
+                intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_REDIRECT)
         );
 
         parameters.setLoginHint(intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_NAME));
@@ -163,9 +162,8 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         );
         parameters.setCallerUId(callingAppUid);
 
-        parameters.setCallerPackageName(
-                getPackageNameFromBundle(bundle, context)
-        );
+        final String packageName = getPackageNameFromBundle(bundle, context);
+        parameters.setCallerPackageName(packageName);
 
         parameters.setCallerAppVersion(
                 bundle.getString(AuthenticationConstants.AAD.APP_VERSION)
@@ -195,6 +193,14 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY
         );
         parameters.setClientId(clientId);
+
+        String redirectUri = bundle.getString(
+                AuthenticationConstants.Broker.ACCOUNT_REDIRECT);
+        // Adal might not pass in the redirect uri, in that case calculate from broker validator
+        if(TextUtils.isEmpty(redirectUri)){
+            redirectUri = BrokerValidator.getBrokerRedirectUri(context, packageName);
+        }
+        parameters.setRedirectUri(redirectUri);
 
         parameters.setForceRefresh(Boolean.parseBoolean(
                 bundle.getString(AuthenticationConstants.Broker.BROKER_FORCE_REFRESH))

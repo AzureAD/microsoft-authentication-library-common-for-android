@@ -27,6 +27,7 @@ import android.text.TextUtils;
 import android.util.Pair;
 
 import com.microsoft.identity.common.exception.ArgumentException;
+import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
 
 import java.util.List;
@@ -213,6 +214,14 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
                     "mCallerPackageName", "Caller package name is not set"
             );
         }
+        if(!BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAppContext(), getCallerPackageName())){
+            throw new ArgumentException(
+                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
+                    "mRedirectUri", "The redirect URI doesn't match the uri" +
+                    " generated with caller package name and signature"
+            );
+        }
+
         if (!(getTokenCache() instanceof BrokerOAuth2TokenCache)) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
