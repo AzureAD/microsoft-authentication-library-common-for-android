@@ -39,7 +39,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join( " ", parameters.getScopes()))
-                .redirect(parameters.getRedirectUri())
+                .redirect(getRedirectUri(parameters))
                 .clientId(parameters.getClientId())
                 .username(parameters.getLoginHint())
                 .extraQueryStringParameter(
@@ -233,7 +233,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Helper method to get redirect uri from parameters, calculates from package signature if not available.
      */
-    private String getRedirectUri(@NonNull AcquireTokenSilentOperationParameters parameters) {
+    private String getRedirectUri(@NonNull OperationParameters parameters) {
         if (TextUtils.isEmpty(parameters.getRedirectUri())) {
             return BrokerValidator.getBrokerRedirectUri(
                     parameters.getAppContext(),
