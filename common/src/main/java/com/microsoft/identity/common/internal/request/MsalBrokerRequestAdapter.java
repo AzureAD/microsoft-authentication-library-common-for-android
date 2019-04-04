@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Pair;
 
@@ -65,7 +66,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join( " ", parameters.getScopes()))
-                .redirect(parameters.getRedirectUri())
+                .redirect(getRedirectUri(parameters))
                 .clientId(parameters.getClientId())
                 .homeAccountId(parameters.getAccount().getHomeAccountId())
                 .localAccountId(parameters.getAccount().getLocalAccountId())
@@ -218,11 +219,27 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return parameters;
     }
 
-    private Set<String> getScopesAsSet(final String scopeString) {
+    /**
+     * Helper method to transforn scopes string to Set
+     */
+    private Set<String> getScopesAsSet(@Nullable final String scopeString) {
         if (TextUtils.isEmpty(scopeString)) {
             return new HashSet<>();
         }
         final String[] scopes = scopeString.split(" ");
         return new HashSet<>(Arrays.asList(scopes));
+    }
+
+    /**
+     * Helper method to get redirect uri from parameters, calculates from package signature if not available.
+     */
+    private String getRedirectUri(@NonNull AcquireTokenSilentOperationParameters parameters) {
+        if (TextUtils.isEmpty(parameters.getRedirectUri())) {
+            return BrokerValidator.getBrokerRedirectUri(
+                    parameters.getAppContext(),
+                    parameters.getApplicationName()
+            );
+        }
+        return parameters.getRedirectUri();
     }
 }
