@@ -29,6 +29,7 @@ import android.text.TextUtils;
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
+import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -205,8 +206,17 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         } else if (ErrorStrings.USER_CANCELLED.equalsIgnoreCase(errorCode)) {
 
-            Logger.warn(TAG, "Received a User cancalled exception from Broker : " + errorCode);
+            Logger.warn(TAG, "Received a User cancelled exception from Broker : " + errorCode);
             baseException = new UserCancelException();
+
+        } else if(ArgumentException.ILLEGAL_ARGUMENT_ERROR_CODE.equalsIgnoreCase(errorCode)) {
+
+            Logger.warn(TAG, "Received a Argument exception from Broker : " + errorCode);
+            baseException = new ArgumentException(
+                    ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+                    errorCode,
+                    brokerResult.getErrorMessage()
+            );
 
         } else if (!TextUtils.isEmpty(brokerResult.getHttpResponseHeaders()) ||
                 !TextUtils.isEmpty(brokerResult.getHttpResponseBody())) {
@@ -229,7 +239,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         baseException.setSpeRing(brokerResult.getSpeRing());
         baseException.setRefreshTokenAge(brokerResult.getRefreshTokenAge());
 
-        return null;
+        return baseException;
 
     }
 
