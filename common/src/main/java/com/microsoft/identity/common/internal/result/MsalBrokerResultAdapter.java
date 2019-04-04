@@ -208,8 +208,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             Logger.warn(TAG, "Received a User cancalled exception from Broker : " + errorCode);
             baseException = new UserCancelException();
 
-        } else if (TextUtils.isEmpty(brokerResult.getHttpResponseHeaders()) ||
-                TextUtils.isEmpty(brokerResult.getHttpResponseBody())) {
+        } else if (!TextUtils.isEmpty(brokerResult.getHttpResponseHeaders()) ||
+                !TextUtils.isEmpty(brokerResult.getHttpResponseBody())) {
 
             Logger.warn(TAG, "Received a Service exception from Broker : " + errorCode);
             baseException = getServiceException(brokerResult);
@@ -339,12 +339,16 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         serviceException.setSubErrorCode(brokerResult.getSubErrorCode());
         try {
             serviceException.setHttpResponseBody(
-                    HashMapExtensions.jsonStringAsMap(
-                            brokerResult.getHttpResponseBody())
+                    brokerResult.getHttpResponseBody() != null ?
+                            HashMapExtensions.jsonStringAsMap(
+                                    brokerResult.getHttpResponseBody()) :
+                            null
             );
             serviceException.setHttpResponseHeaders(
-                    HeaderSerializationUtil.fromJson(
-                            brokerResult.getHttpResponseHeaders())
+                    brokerResult.getHttpResponseHeaders() != null ?
+                            HeaderSerializationUtil.fromJson(
+                                    brokerResult.getHttpResponseHeaders()) :
+                            null
             );
 
         } catch (JSONException e) {
