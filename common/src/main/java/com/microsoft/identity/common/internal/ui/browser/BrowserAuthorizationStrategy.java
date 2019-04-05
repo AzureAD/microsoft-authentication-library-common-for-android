@@ -95,15 +95,18 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
         authIntent.setData(requestUrl);
 
-        mReferencedActivity.get().startActivity(
-                AuthorizationActivity.createStartIntent(
-                        mReferencedActivity.get().getApplicationContext(),
-                        authIntent,
-                        mResultIntent,
-                        requestUrl.toString(),
-                        mAuthorizationRequest.getRedirectUri(),
-                        mAuthorizationRequest.getRequestHeaders(),
-                        AuthorizationAgent.BROWSER));
+        final Intent intent = AuthorizationActivity.createStartIntent(
+                mReferencedActivity.get().getApplicationContext(),
+                authIntent,
+                mResultIntent,
+                requestUrl.toString(),
+                mAuthorizationRequest.getRedirectUri(),
+                mAuthorizationRequest.getRequestHeaders(),
+                AuthorizationAgent.BROWSER);
+        // singleTask launchMode is required for the authorization redirect is from an external browser
+        // in the browser authorization flow
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        mReferencedActivity.get().startActivity(intent);
 
         return mAuthorizationResultFuture;
     }

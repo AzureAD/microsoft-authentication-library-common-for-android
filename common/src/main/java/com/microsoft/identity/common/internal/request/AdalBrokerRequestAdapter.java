@@ -39,6 +39,7 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
@@ -107,7 +108,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         String resource = intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_RESOURCE);
         Set<String> scopes = new HashSet<>();
-        scopes.add(getScopeFromResource(resource));
+        scopes.add(TokenCacheItemMigrationAdapter.getScopeFromResource(resource));
         parameters.setScopes(scopes);
 
         parameters.setClientId(intent.getStringExtra(
@@ -186,7 +187,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.ACCOUNT_RESOURCE
         );
         Set<String> scopes = new HashSet<>();
-        scopes.add(getScopeFromResource(resource));
+        scopes.add(TokenCacheItemMigrationAdapter.getScopeFromResource(resource));
         parameters.setScopes(scopes);
 
         final String clientId = bundle.getString(
@@ -310,16 +311,5 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
 
         return requestAuthority;
-    }
-
-    private static String getScopeFromResource(final String resource) {
-        final String defaultString = ".default ";
-        final String slashString = "/";
-        if (TextUtils.isEmpty(resource)) {
-            return null;
-        }
-        return resource.endsWith(slashString) ?
-                resource + defaultString :
-                resource + slashString + defaultString;
     }
 }
