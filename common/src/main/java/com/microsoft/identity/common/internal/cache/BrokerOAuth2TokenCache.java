@@ -615,6 +615,12 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
+    @Override
+    public List<IdTokenRecord> getIdTokensForAccount(String clientId, AccountRecord accountRecord) {
+        // TODO implement
+        return null;
+    }
+
     /**
      * Broker-only API. Fetches AccountRecords from all provided caches - makes NO GUARANTEES
      * as to whether or not an AT/RT pair exists for these Accounts.

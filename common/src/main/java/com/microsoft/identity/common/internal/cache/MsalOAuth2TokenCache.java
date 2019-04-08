@@ -44,7 +44,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -421,7 +420,11 @@ public class MsalOAuth2TokenCache
                 )
         );
 
-        result.addAll((Collection<? extends IdTokenRecord>) idTokens);
+        for (final Credential credential : idTokens) {
+            if (credential instanceof IdTokenRecord) {
+                result.add((IdTokenRecord) credential);
+            }
+        }
 
         return Collections.unmodifiableList(result);
     }
