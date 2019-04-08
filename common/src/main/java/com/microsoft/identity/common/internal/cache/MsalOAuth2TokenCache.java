@@ -44,6 +44,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -393,6 +394,36 @@ public class MsalOAuth2TokenCache
         result.setV1IdToken(v1IdTokens.isEmpty() ? null : (IdTokenRecord) v1IdTokens.get(0));
 
         return result;
+    }
+
+    @Override
+    public List<IdTokenRecord> getIdTokensForAccount(@Nullable String clientId,
+                                                     @NonNull AccountRecord accountRecord) {
+        final List<IdTokenRecord> result = new ArrayList<>();
+
+        final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                accountRecord.getHomeAccountId(),
+                accountRecord.getEnvironment(),
+                CredentialType.IdToken,
+                clientId, // If null, behaves as wildcard
+                null, // wildcard (*)
+                null // wildcard (*)
+        );
+
+        idTokens.addAll(
+                mAccountCredentialCache.getCredentialsFilteredBy(
+                        accountRecord.getHomeAccountId(),
+                        accountRecord.getEnvironment(),
+                        CredentialType.V1IdToken,
+                        clientId,
+                        null, // wildcard (*)
+                        null // wildcard (*)
+                )
+        );
+
+        result.addAll((Collection<? extends IdTokenRecord>) idTokens);
+
+        return Collections.unmodifiableList(result);
     }
 
     @Override

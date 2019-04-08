@@ -135,6 +135,17 @@ public abstract class OAuth2TokenCache
     public abstract List<AccountRecord> getAccounts(final String environment, final String clientId);
 
     /**
+     * Gets an immutable List of IdTokenRecords for the supplied AccountRecord.
+     *
+     * @param clientId      The client id of the app to query.
+     * @param accountRecord The AccountRecord for which IdTokenRecords should be loaded.
+     * @return An immutable List of IdTokenRecords.
+     */
+    public abstract List<IdTokenRecord> getIdTokensForAccount(final String clientId,
+                                                              final AccountRecord accountRecord
+    );
+
+    /**
      * Removes the Account (and its associated Credentials) matching the supplied criteria.
      *
      * @param environment   The environment to which the targeted Account is associated.
