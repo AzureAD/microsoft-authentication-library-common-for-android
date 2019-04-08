@@ -610,9 +610,24 @@ public final class AuthenticationConstants {
         public static final String BROKER_VERSION = "broker.version";
 
         /**
-         * The minimum broker version.
+         * The broker protocol version this sdk supports.
          */
-        public static final String BROKER_V2_VERSION_CODE = "1";
+        public static final String BROKER_PROTOCOL_VERSION_CODE = "2.0";
+
+        /**
+         * The key of broker protocol version.
+         */
+        public static final String BROKER_PROTOCOL_VERSION_KEY = "broker.protocol.version.name";
+
+        /**
+         * The key of minimum broker protocol version the application requires.
+         */
+        public static final String REQUIRED_BROKER_PROTOCOL_VERSION_KEY = "required.broker.protocol.version.name";
+
+        /**
+         * The key of broker protocol version in common.
+         */
+        public static final String COMMON_BROKER_PROTOCOL_VERSION_KEY = "common.broker.protocol.version.name";
 
         /**
          * String of broker protocol version with PRT support.

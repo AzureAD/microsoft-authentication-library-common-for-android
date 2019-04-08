@@ -18,6 +18,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -227,5 +228,23 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
         final String[] scopes = scopeString.split(" ");
         return new HashSet<>(Arrays.asList(scopes));
+    }
+
+    /**
+     * Create the request bundle for IMicrosoftAuthService.hello().
+     * @param parameters AcquireTokenSilentOperationParameters
+     * @return request bundle
+     */
+    public Bundle getBrokerHelloBundle(@NonNull final AcquireTokenSilentOperationParameters parameters) {
+        final Bundle requestBundle = new Bundle();
+        requestBundle.putString(AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_KEY,
+                AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);
+
+        if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {
+            requestBundle.putString(AuthenticationConstants.Broker.REQUIRED_BROKER_PROTOCOL_VERSION_KEY,
+                    parameters.getRequiredBrokerProtocolVersion());
+        }
+
+        return requestBundle;
     }
 }

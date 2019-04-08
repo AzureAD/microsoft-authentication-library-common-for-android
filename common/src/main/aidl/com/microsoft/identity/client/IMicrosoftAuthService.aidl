@@ -29,7 +29,7 @@ package com.microsoft.identity.client;
  */
 interface IMicrosoftAuthService {
 
-    Bundle connect(in Bundle bundle);
+    Bundle hello(in Bundle bundle);
 
     Bundle getAccounts();
 
