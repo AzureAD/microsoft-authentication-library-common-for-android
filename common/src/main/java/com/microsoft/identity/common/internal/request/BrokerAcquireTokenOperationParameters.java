@@ -22,10 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.request;
 
-import android.accounts.AccountAuthenticatorResponse;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.exception.ArgumentException;
+import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
 
 public class BrokerAcquireTokenOperationParameters extends AcquireTokenOperationParameters {
@@ -121,10 +121,12 @@ public class BrokerAcquireTokenOperationParameters extends AcquireTokenOperation
                     "mClientId", "Client Id is not set"
             );
         }
-        if (TextUtils.isEmpty(getRedirectUri())) {
+
+        if(!BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAppContext(), getCallerPackageName())){
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
-                    "mRedirectUri", "Redirect Uri is not set"
+                    "mRedirectUri", "The redirect URI doesn't match the uri" +
+                    " generated with caller package name and signature"
             );
         }
         // If the request type is BROKER_RT_REQUEST, it means the caller here would be broker itself so

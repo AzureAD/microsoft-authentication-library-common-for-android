@@ -235,7 +235,12 @@ public class MsalOAuth2TokenCache
         result.setAccount(accountToSave);
         result.setAccessToken(accessTokenToSave);
         result.setRefreshToken(refreshTokenToSave);
-        result.setIdToken(idTokenToSave);
+
+        if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenToSave.getCredentialType())) {
+            result.setV1IdToken(idTokenToSave);
+        } else {
+            result.setIdToken(idTokenToSave);
+        }
 
         return result;
     }
@@ -370,11 +375,22 @@ public class MsalOAuth2TokenCache
                 null // wildcard (*)
         );
 
+        // Load the v1 IdTokens
+        final List<Credential> v1IdTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                account.getHomeAccountId(),
+                account.getEnvironment(),
+                CredentialType.V1IdToken,
+                clientId,
+                account.getRealm(),
+                null // wildcard (*)
+        );
+
         final CacheRecord result = new CacheRecord();
         result.setAccount(account);
         result.setAccessToken(accessTokens.isEmpty() ? null : (AccessTokenRecord) accessTokens.get(0));
         result.setRefreshToken(refreshTokens.isEmpty() ? null : (RefreshTokenRecord) refreshTokens.get(0));
         result.setIdToken(idTokens.isEmpty() ? null : (IdTokenRecord) idTokens.get(0));
+        result.setV1IdToken(v1IdTokens.isEmpty() ? null : (IdTokenRecord) v1IdTokens.get(0));
 
         return result;
     }
@@ -517,7 +533,7 @@ public class MsalOAuth2TokenCache
                 "Found " + accountsForEnvironment.size() + " accounts for this environment"
         );
 
-        // Grab the Credentials for this app...
+        // Grab the Credentials for this app...start with the v2 IdTokens....
         final List<Credential> appCredentials =
                 mAccountCredentialCache.getCredentialsFilteredBy(
                         null, // homeAccountId
@@ -527,6 +543,18 @@ public class MsalOAuth2TokenCache
                         null, // realm
                         null // target
                 );
+
+        // And also grab any V1IdTokens....
+        appCredentials.addAll(
+                mAccountCredentialCache.getCredentialsFilteredBy(
+                        null, // homeAccountId
+                        environment,
+                        CredentialType.V1IdToken,
+                        clientId,
+                        null, // realm
+                        null // target
+                )
+        );
 
         // For each Account with an associated RT, add it to the result List...
         for (final AccountRecord account : accountsForEnvironment) {
@@ -678,6 +706,14 @@ public class MsalOAuth2TokenCache
                 isRealmAgnostic
         );
 
+        final int v1IdsRemoved = removeCredentialsOfTypeForAccount(
+                environment,
+                clientId,
+                CredentialType.V1IdToken,
+                targetAccount,
+                isRealmAgnostic
+        );
+
         final List<AccountRecord> deletedAccounts = new ArrayList<>();
 
         if (isRealmAgnostic) {
@@ -703,7 +739,8 @@ public class MsalOAuth2TokenCache
         final String[][] logInfo = new String[][]{
                 {"Access tokens", String.valueOf(atsRemoved)},
                 {"Refresh tokens", String.valueOf(rtsRemoved)},
-                {"Id tokens", String.valueOf(idsRemoved)},
+                {"Id tokens (v1)", String.valueOf(v1IdsRemoved)},
+                {"Id tokens (v2)", String.valueOf(idsRemoved)},
                 {"Accounts", String.valueOf(deletedAccounts.size())}
         };
 

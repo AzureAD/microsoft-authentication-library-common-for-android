@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Pair;
 
@@ -39,7 +40,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join( " ", parameters.getScopes()))
-                .redirect(parameters.getRedirectUri())
+                .redirect(getRedirectUri(parameters))
                 .clientId(parameters.getClientId())
                 .username(parameters.getLoginHint())
                 .extraQueryStringParameter(
@@ -48,6 +49,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                                 : null
                 ).prompt(parameters.getOpenIdConnectPromptParameter().name())
                 .claims(parameters.getClaimsRequestJson())
+                .forceRefresh(!TextUtils.isEmpty(parameters.getClaimsRequestJson()))
                 .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
@@ -65,13 +67,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join( " ", parameters.getScopes()))
-                .redirect(parameters.getRedirectUri())
+                .redirect(getRedirectUri(parameters))
                 .clientId(parameters.getClientId())
                 .homeAccountId(parameters.getAccount().getHomeAccountId())
                 .localAccountId(parameters.getAccount().getLocalAccountId())
                 .username(parameters.getAccount().getUsername())
                 .claims(parameters.getClaimsRequestJson())
-                .forceRefresh(parameters.getForceRefresh())
+                .forceRefresh(parameters.getForceRefresh() || !TextUtils.isEmpty(parameters.getClaimsRequestJson()))
                 .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
@@ -110,7 +112,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         parameters.setCallerAppVersion(brokerRequest.getApplicationVersion());
 
-
         List<Pair<String, String>> extraQP = new ArrayList<>();
 
         if (!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
@@ -129,11 +130,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         parameters.setClientId(brokerRequest.getClientId());
 
-        // set redirect uri using caller package name
-        parameters.setRedirectUri(BrokerValidator.getBrokerRedirectUri(
-                parameters.getAppContext(),
-                parameters.getCallerPackageName())
-        );
+        parameters.setRedirectUri(brokerRequest.getRedirect());
 
         parameters.setLoginHint(brokerRequest.getUserName());
 
@@ -205,6 +202,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 getScopesAsSet(brokerRequest.getScope())
         );
 
+        parameters.setRedirectUri(brokerRequest.getRedirect());
+
         parameters.setClientId(brokerRequest.getClientId());
 
         parameters.setForceRefresh(brokerRequest.getForceRefresh());
@@ -222,7 +221,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return parameters;
     }
 
-    private Set<String> getScopesAsSet(final String scopeString) {
+    /**
+     * Helper method to transforn scopes string to Set
+     */
+    private Set<String> getScopesAsSet(@Nullable final String scopeString) {
         if (TextUtils.isEmpty(scopeString)) {
             return new HashSet<>();
         }
@@ -246,5 +248,18 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
 
         return requestBundle;
+    }
+
+    /**
+     * Helper method to get redirect uri from parameters, calculates from package signature if not available.
+     */
+    private String getRedirectUri(@NonNull OperationParameters parameters) {
+        if (TextUtils.isEmpty(parameters.getRedirectUri())) {
+            return BrokerValidator.getBrokerRedirectUri(
+                    parameters.getAppContext(),
+                    parameters.getApplicationName()
+            );
+        }
+        return parameters.getRedirectUri();
     }
 }

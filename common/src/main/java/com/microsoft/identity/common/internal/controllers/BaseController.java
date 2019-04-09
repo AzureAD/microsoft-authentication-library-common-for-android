@@ -29,12 +29,10 @@ import android.text.TextUtils;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
@@ -42,6 +40,7 @@ import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -203,7 +202,10 @@ public abstract class BaseController {
             );
 
             // Create a new AuthenticationResult to hold the saved record
-            final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(savedRecord);
+            final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
+                    savedRecord,
+                    parameters.getSdkType()
+            );
 
             // Set the client telemetry...
             if (null != tokenResult.getCliTelemInfo()) {
@@ -301,7 +303,8 @@ public abstract class BaseController {
         HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAppContext());
 
         // Check that the authority is known
-        Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parameters.getAuthority());
+        final Authority.KnownAuthorityResult authorityResult =
+                Authority.getKnownAuthorityResult(parameters.getAuthority());
 
         if (!authorityResult.getKnown()) {
             throw authorityResult.getClientException();
@@ -340,12 +343,19 @@ public abstract class BaseController {
         return tokenCache.save(strategy, request, tokenResponse);
     }
 
-    protected boolean refreshTokenIsNull(ICacheRecord cacheRecord) {
+    protected boolean refreshTokenIsNull(final ICacheRecord cacheRecord) {
         return null == cacheRecord.getRefreshToken();
     }
 
-    protected boolean accessTokenIsNull(ICacheRecord cacheRecord) {
+    protected boolean accessTokenIsNull(final ICacheRecord cacheRecord) {
         return null == cacheRecord.getAccessToken();
+    }
+
+    protected boolean idTokenIsNull(final ICacheRecord cacheRecord, final SdkType sdkType) {
+        final IdTokenRecord idTokenRecord = (sdkType == SdkType.ADAL) ?
+                cacheRecord.getV1IdToken() : cacheRecord.getIdToken();
+
+        return null == idTokenRecord;
     }
 
     protected void addDefaultScopes(final OperationParameters operationParameters) {

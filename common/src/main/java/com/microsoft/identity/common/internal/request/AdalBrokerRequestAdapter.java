@@ -39,6 +39,7 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
@@ -107,16 +108,15 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         String resource = intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_RESOURCE);
         Set<String> scopes = new HashSet<>();
-        scopes.add(getScopeFromResource(resource));
+        scopes.add(TokenCacheItemMigrationAdapter.getScopeFromResource(resource));
         parameters.setScopes(scopes);
 
         parameters.setClientId(intent.getStringExtra(
                 AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY)
         );
 
-        // set redirect uri using caller package name
-        parameters.setRedirectUri(BrokerValidator.getBrokerRedirectUri(
-                parameters.getAppContext(), parameters.getCallerPackageName())
+        parameters.setRedirectUri(
+                intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_REDIRECT)
         );
 
         parameters.setLoginHint(intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_NAME));
@@ -163,9 +163,8 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         );
         parameters.setCallerUId(callingAppUid);
 
-        parameters.setCallerPackageName(
-                getPackageNameFromBundle(bundle, context)
-        );
+        final String packageName = getPackageNameFromBundle(bundle, context);
+        parameters.setCallerPackageName(packageName);
 
         parameters.setCallerAppVersion(
                 bundle.getString(AuthenticationConstants.AAD.APP_VERSION)
@@ -188,13 +187,21 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.ACCOUNT_RESOURCE
         );
         Set<String> scopes = new HashSet<>();
-        scopes.add(getScopeFromResource(resource));
+        scopes.add(TokenCacheItemMigrationAdapter.getScopeFromResource(resource));
         parameters.setScopes(scopes);
 
         final String clientId = bundle.getString(
                 AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY
         );
         parameters.setClientId(clientId);
+
+        String redirectUri = bundle.getString(
+                AuthenticationConstants.Broker.ACCOUNT_REDIRECT);
+        // Adal might not pass in the redirect uri, in that case calculate from broker validator
+        if(TextUtils.isEmpty(redirectUri)){
+            redirectUri = BrokerValidator.getBrokerRedirectUri(context, packageName);
+        }
+        parameters.setRedirectUri(redirectUri);
 
         parameters.setForceRefresh(Boolean.parseBoolean(
                 bundle.getString(AuthenticationConstants.Broker.BROKER_FORCE_REFRESH))
@@ -304,16 +311,5 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
 
         return requestAuthority;
-    }
-
-    private static String getScopeFromResource(final String resource) {
-        final String defaultString = ".default ";
-        final String slashString = "/";
-        if (TextUtils.isEmpty(resource)) {
-            return null;
-        }
-        return resource.endsWith(slashString) ?
-                resource + defaultString :
-                resource + slashString + defaultString;
     }
 }

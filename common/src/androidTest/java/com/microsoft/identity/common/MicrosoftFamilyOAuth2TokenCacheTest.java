@@ -29,6 +29,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MicrosoftFamilyOAuth2TokenCache;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -99,7 +100,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 CLIENT_ID,
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
-                "1"
+                "1",
+                CredentialType.IdToken
         );
 
         when(
@@ -209,7 +211,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 CLIENT_ID,
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
-                "1"
+                "1",
+                CredentialType.IdToken
         );
 
         when(
@@ -265,7 +268,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 CLIENT_ID + "2",
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
-                "1"
+                "1",
+                CredentialType.IdToken
         );
 
         when(

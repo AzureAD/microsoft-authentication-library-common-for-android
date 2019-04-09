@@ -28,6 +28,9 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Base64;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -195,6 +198,14 @@ public class BrokerValidator {
         }
 
         return selfSignedCert;
+    }
+
+
+    public static boolean isValidBrokerRedirect(@Nullable final String redirectUri,
+                                                @NonNull final Context context,
+                                                @NonNull final String packageName){
+        return !TextUtils.isEmpty(redirectUri) &&
+                redirectUri.equalsIgnoreCase(getBrokerRedirectUri(context, packageName));
     }
 
 
