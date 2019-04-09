@@ -53,7 +53,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private static final String TAG = LocalAuthenticationResult.class.getName();
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord) {
-        this(cacheRecord, SdkType.MSAL);
+        this(cacheRecord, SdkType.MSAL); // default sdk type as MSAL
     }
 
     public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
