@@ -1,3 +1,13 @@
+Version 0.0.9
+-------------
+- Bugfix: Resolves COMMON/#379
+    * ClientInfo must implement Serializable so that ADAL/AuthenticationResult can be serialized.
+- AndroidX Interop:
+    * This release will not be code signed; Jetfier & AGP < 5.1.1 are failing to compile due to tooling bugs.
+    * For more information see:
+        - https://issuetracker.google.com/issues/115556774
+        - https://issuetracker.google.com/issues/119183822
+
 Version 0.0.8
 -------------
 - Bugfix: Resolves COMMON/#343
