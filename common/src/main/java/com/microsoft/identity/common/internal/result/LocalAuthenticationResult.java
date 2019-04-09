@@ -53,7 +53,14 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private static final String TAG = LocalAuthenticationResult.class.getName();
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord) {
-        this(cacheRecord, SdkType.MSAL); // default sdk type as MSAL
+        // For all AAD requests, we hit the V2 endpoint, so the id token returned will be of version 2.0 (V2 )
+        // However for B2C we might get back v1 id tokens, so set SDKType to ADAL if getV1IdToken() is not null.
+        this(
+                cacheRecord,
+                cacheRecord.getV1IdToken() != null ?
+                        SdkType.ADAL :
+                        SdkType.MSAL
+        );
     }
 
     public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
