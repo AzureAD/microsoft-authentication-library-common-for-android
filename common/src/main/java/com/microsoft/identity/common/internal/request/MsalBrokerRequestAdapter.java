@@ -243,7 +243,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);
 
         if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {
-            requestBundle.putString(AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION,
+            requestBundle.putString(AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
                     parameters.getRequiredBrokerProtocolVersion());
         }
 

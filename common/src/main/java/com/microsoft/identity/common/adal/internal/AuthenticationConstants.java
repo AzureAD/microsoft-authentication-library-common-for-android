@@ -622,7 +622,7 @@ public final class AuthenticationConstants {
         /**
          * The key of minimum broker protocol version the client requires.
          */
-        public static final String CLIENT_CONFIGURED_MINIMUM_BP_VERSION = "required.broker.protocol.version.name";
+        public static final String CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY = "required.broker.protocol.version.name";
 
         /**
          * The key of negotiated broker protocol version between broker client and broker service.
