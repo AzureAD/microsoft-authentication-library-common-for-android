@@ -239,11 +239,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      */
     public static Bundle getBrokerHelloBundle(@NonNull final AcquireTokenSilentOperationParameters parameters) {
         final Bundle requestBundle = new Bundle();
-        requestBundle.putString(AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_KEY,
+        requestBundle.putString(AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
                 AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);
 
         if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {
-            requestBundle.putString(AuthenticationConstants.Broker.REQUIRED_BROKER_PROTOCOL_VERSION_KEY,
+            requestBundle.putString(AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION,
                     parameters.getRequiredBrokerProtocolVersion());
         }
 

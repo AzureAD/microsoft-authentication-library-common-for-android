@@ -38,7 +38,7 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
         return mRequiredBrokerProtocolVersion;
     }
 
-    public void setRequiredBrokerProtocalVersion(final String requiredBrokerProtocolVersion) {
+    public void setRequiredBrokerProtocolVersion(final String requiredBrokerProtocolVersion) {
         mRequiredBrokerProtocolVersion = requiredBrokerProtocolVersion;
     }
 
