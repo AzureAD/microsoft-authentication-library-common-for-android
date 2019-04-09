@@ -235,7 +235,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * @param parameters AcquireTokenSilentOperationParameters
      * @return request bundle
      */
-    public Bundle getBrokerHelloBundle(@NonNull final AcquireTokenSilentOperationParameters parameters) {
+    public static Bundle getBrokerHelloBundle(@NonNull final AcquireTokenSilentOperationParameters parameters) {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_KEY,
                 AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);
