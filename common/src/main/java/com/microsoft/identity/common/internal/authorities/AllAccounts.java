@@ -29,7 +29,6 @@ public class AllAccounts extends AzureActiveDirectoryAudience {
     public static final String ALL_ACCOUNTS_TENANT_ID = "common";
 
     public AllAccounts() {
-        this.setCloudUrl(AzureActiveDirectory.DEFAULT_CLOUD_URL);
         this.setTenantId(ALL_ACCOUNTS_TENANT_ID);
     }
 }

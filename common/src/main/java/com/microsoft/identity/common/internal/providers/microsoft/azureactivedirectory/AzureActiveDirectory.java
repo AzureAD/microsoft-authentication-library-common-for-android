@@ -28,12 +28,14 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
 
 import org.json.JSONException;
+import org.w3c.dom.EntityReference;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -58,16 +60,17 @@ public class AzureActiveDirectory
     // Constants used to parse cloud discovery document metadata
     private static final String TENANT_DISCOVERY_ENDPOINT = "tenant_discovery_endpoint";
     private static final String METADATA = "metadata";
-    private static final String AAD_INSTANCE_DISCOVERY_ENDPOINT = "https://login.microsoftonline.com/common/discovery/instance";
+    private static final String AAD_INSTANCE_DISCOVERY_ENDPOINT = "/common/discovery/instance";
     private static final String API_VERSION = "api-version";
     private static final String API_VERSION_VALUE = "1.1";
     private static final String AUTHORIZATION_ENDPOINT = "authorization_endpoint";
     private static final String AUTHORIZATION_ENDPOINT_VALUE = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
-    public static final String DEFAULT_CLOUD_URL = "https://login.microsoftonline.com";
+
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
 
     static boolean sIsInitialized = false;
+    static Environment sEnvironment = Environment.Production;
 
     @Override
     public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(AzureActiveDirectoryOAuth2Configuration config) {
@@ -84,6 +87,10 @@ public class AzureActiveDirectory
 
     public static boolean isInitialized() {
         return sIsInitialized;
+    }
+
+    public static void setEnvironment(Environment environment){
+        sEnvironment = environment;
     }
 
     /**
@@ -135,9 +142,17 @@ public class AzureActiveDirectory
         sIsInitialized = true;
     }
 
+    public static String getDefaultCloudUrl(){
+        if(sEnvironment == Environment.PreProduction) {
+            return AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL;
+        }else{
+            return AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL;
+        }
+    }
+
     public static void performCloudDiscovery() throws IOException {
 
-        Uri instanceDiscoveryRequestUri = Uri.parse(AAD_INSTANCE_DISCOVERY_ENDPOINT);
+        Uri instanceDiscoveryRequestUri = Uri.parse(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT);
 
         instanceDiscoveryRequestUri = instanceDiscoveryRequestUri
                 .buildUpon()
