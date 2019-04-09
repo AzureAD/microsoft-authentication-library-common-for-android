@@ -22,14 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-
 public class AnyOrganizationalAccount extends AzureActiveDirectoryAudience {
 
     public AnyOrganizationalAccount() {
-        this.setCloudUrl(AzureActiveDirectory.DEFAULT_CLOUD_URL);
         this.setTenantId(AzureActiveDirectoryAudience.ORGANIZATIONS);
-
     }
 
     public AnyOrganizationalAccount(String cloudUrl) {
