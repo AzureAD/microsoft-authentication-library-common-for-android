@@ -750,6 +750,17 @@ public class BrokerOAuth2TokenCache
         );
     }
 
+    /**
+     * Tests if a clientId is 'known' to the cache. A clientId is known if a token has been
+     * previously saved to the cache with it.
+     *
+     * @param clientId The clientId whose known status should be queried.
+     * @return True if this clientId is known. False otherwise.
+     */
+    public boolean isClientIdKnownToCache(@NonNull final String clientId) {
+        return getAllClientIds().contains(clientId);
+    }
+
     private AccountDeletionRecord removeAccountInternal(@Nullable final String environment,
                                                         @Nullable final String clientId,
                                                         @Nullable final String homeAccountId,
