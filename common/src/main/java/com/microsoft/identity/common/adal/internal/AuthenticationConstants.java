@@ -610,7 +610,7 @@ public final class AuthenticationConstants {
         public static final String BROKER_VERSION = "broker.version";
 
         /**
-         * The maximum broker protocol version this sdk supports.
+         * The maximum broker protocol version that common supports.
          */
         public static final String BROKER_PROTOCOL_VERSION_CODE = "2.0";
 
@@ -1058,11 +1058,6 @@ public final class AuthenticationConstants {
          * String for the package name of the client app.
          */
         public static final String CLIENT_APP_PACKAGE_NAME = "client_app_package_name";
-
-        /**
-         * String for the indicator whether able to connect the auth service.
-         */
-        public static final String AUTH_SERVICE_CONNECT = "auth_service_connect";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.
