@@ -610,6 +610,26 @@ public final class AuthenticationConstants {
         public static final String BROKER_VERSION = "broker.version";
 
         /**
+         * The maximum broker protocol version that common supports.
+         */
+        public static final String BROKER_PROTOCOL_VERSION_CODE = "2.0";
+
+        /**
+         * The key of maximum broker protocol version that client advertised.
+         */
+        public static final String CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY = "broker.protocol.version.name";
+
+        /**
+         * The key of minimum broker protocol version the client requires.
+         */
+        public static final String CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY = "required.broker.protocol.version.name";
+
+        /**
+         * The key of negotiated broker protocol version between broker client and broker service.
+         */
+        public static final String NEGOTIATED_BP_VERSION_KEY = "common.broker.protocol.version.name";
+
+        /**
          * String of broker protocol version with PRT support.
          */
         public static final String BROKER_PROTOCOL_VERSION = "v2";
