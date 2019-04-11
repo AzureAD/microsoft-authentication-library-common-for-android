@@ -32,6 +32,16 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
     @Expose()
     private boolean mForceRefresh;
 
+    private String mRequiredBrokerProtocolVersion;
+
+    public String getRequiredBrokerProtocolVersion() {
+        return mRequiredBrokerProtocolVersion;
+    }
+
+    public void setRequiredBrokerProtocolVersion(final String requiredBrokerProtocolVersion) {
+        mRequiredBrokerProtocolVersion = requiredBrokerProtocolVersion;
+    }
+
     public RefreshTokenRecord getRefreshToken() {
         return mRefreshToken;
     }
