@@ -812,8 +812,8 @@ public class BrokerOAuth2TokenCache
                             environment,
                             CredentialType.RefreshToken,
                             recordPair.second,
-                            null,
-                            null
+                            null, // wildcard (*)
+                            null // wildcard (*)
                     );
 
             if (null != refreshTokens.get(0)) {
