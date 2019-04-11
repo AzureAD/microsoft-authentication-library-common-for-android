@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -79,6 +80,49 @@ public class SharedPreferencesBrokerApplicationMetadataCache
         );
 
         return allClientIds;
+    }
+
+    @Override
+    public Set<String> getAllFociClientIds() {
+        return getAllFociClientIds(false);
+    }
+
+    @Override
+    public Set<String> getAllNonFociClientIds() {
+        return getAllFociClientIds(true);
+    }
+
+    /**
+     * Returns a list of FoCI clientIds or non-FoCI clientIds if inverseMatch is true.
+     *
+     * @param inverseMatch If false, match FoCI. If true, match non-FoCI.
+     * @return
+     */
+    private Set<String> getAllFociClientIds(boolean inverseMatch) {
+        final String methodName = ":getAllFociClientIds";
+
+        final Set<String> allFociClientIds = new HashSet<>();
+
+        for (final BrokerApplicationMetadata metadata : getAll()) {
+            if (!inverseMatch) { // match FoCI
+                if (!TextUtils.isEmpty(metadata.getFoci())) {
+                    allFociClientIds.add(metadata.getClientId());
+                }
+            } else { // match non FoCI
+                if (TextUtils.isEmpty(metadata.getFoci())) {
+                    allFociClientIds.add(metadata.getClientId());
+                }
+            }
+        }
+
+        Logger.verbose(
+                TAG + methodName,
+                "Found ["
+                        + allFociClientIds.size()
+                        + "] client ids."
+        );
+
+        return allFociClientIds;
     }
 
     @Nullable

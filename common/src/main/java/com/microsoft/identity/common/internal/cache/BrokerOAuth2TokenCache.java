@@ -26,6 +26,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
+import android.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
@@ -34,7 +35,9 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -759,6 +762,70 @@ public class BrokerOAuth2TokenCache
      */
     public boolean isClientIdKnownToCache(@NonNull final String clientId) {
         return getAllClientIds().contains(clientId);
+    }
+
+    /**
+     * Returns the List of FoCI users in the cache. This API is provided so that the broker may
+     * **internally** query the cache for known users, such that the broker may verify an
+     * unknown clientId is a part of the FoCI family.
+     * <p>
+     * Please note, the ICacheRecords returned by this query are NOT fully populated. Only the
+     * {@link GenericAccount} and {@link GenericRefreshToken} will be returned.
+     * will be resutned.
+     *
+     * @param environment The environment whose accounts should be queried.
+     * @return A List of ICacheRecords for the FoCI accounts.
+     */
+    @SuppressWarnings("unchecked")
+    public List<ICacheRecord> getFociCacheRecords(@NonNull final String environment) {
+        final List<ICacheRecord> fociCacheRecords = new ArrayList<>();
+
+        final List<Pair<AccountRecord, String>> fociAccounts = new ArrayList<>();
+
+        final Set<String> fociClientIds = mApplicationMetadataCache.getAllFociClientIds();
+
+        for (final String fociClientId : fociClientIds) {
+            // Get the list of all of the accounts for this client...
+            final List<AccountRecord> clientAccounts = mFociCache.getAccounts(
+                    environment,
+                    fociClientId
+            );
+
+            // Add them as Pairs...
+            for (final AccountRecord record : clientAccounts) {
+                fociAccounts.add(
+                        new Pair<>(
+                                record,
+                                fociClientId
+                        )
+                );
+            }
+        }
+
+        // For each account, load its refresh token and add it to the result List...
+        for (final Pair<AccountRecord, String> recordPair : fociAccounts) {
+            // Load the refresh token for this account...
+            final List<Credential> refreshTokens = mFociCache
+                    .getAccountCredentialCache()
+                    .getCredentialsFilteredBy(
+                            recordPair.first.getHomeAccountId(),
+                            environment,
+                            CredentialType.RefreshToken,
+                            recordPair.second,
+                            null,
+                            null
+                    );
+
+            if (null != refreshTokens.get(0)) {
+                final CacheRecord cacheRecord = new CacheRecord();
+                cacheRecord.setAccount(recordPair.first);
+                cacheRecord.setRefreshToken((RefreshTokenRecord) refreshTokens.get(0));
+
+                fociCacheRecords.add(cacheRecord);
+            }
+        }
+
+        return fociCacheRecords;
     }
 
     private AccountDeletionRecord removeAccountInternal(@Nullable final String environment,

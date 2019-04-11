@@ -415,6 +415,46 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
+    public void testGetFociCacheRecords() throws ClientException {
+        configureMocksForFoci();
+
+        final ICacheRecord result = mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final List<ICacheRecord> fociCacheRecords = mBrokerOAuth2TokenCache.getFociCacheRecords(
+                ENVIRONMENT
+        );
+
+        assertNotNull(fociCacheRecords);
+        assertFalse(fociCacheRecords.isEmpty());
+        assertEquals(
+                result.getRefreshToken(),
+                fociCacheRecords.get(0).getRefreshToken()
+        );
+    }
+
+    @Test
+    public void testGetFociCacheRecordsEmpty() throws ClientException {
+        configureMocksForAppUid();
+
+        final ICacheRecord result = mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final List<ICacheRecord> fociCacheRecords = mBrokerOAuth2TokenCache.getFociCacheRecords(
+                ENVIRONMENT
+        );
+
+        assertNotNull(fociCacheRecords);
+        assertTrue(fociCacheRecords.isEmpty());
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void testCanSaveIntoAppUidCache() throws ClientException {
         configureMocksForAppUid();
