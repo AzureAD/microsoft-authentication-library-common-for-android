@@ -122,13 +122,6 @@ public class BrokerAcquireTokenOperationParameters extends AcquireTokenOperation
             );
         }
 
-        if(!BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAppContext(), getCallerPackageName())){
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
-                    "mRedirectUri", "The redirect URI doesn't match the uri" +
-                    " generated with caller package name and signature"
-            );
-        }
         // If the request type is BROKER_RT_REQUEST, it means the caller here would be broker itself so
         // calling package name and calling uid will be null, otherwise we need to validate that these are
         // not null for successfully storing tokens in cache.
@@ -150,6 +143,13 @@ public class BrokerAcquireTokenOperationParameters extends AcquireTokenOperation
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                         "AcquireTokenSilentOperationParameters",
                         "OAuth2Cache not an instance of BrokerOAuth2TokenCache"
+                );
+            }
+            if(!BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAppContext(), getCallerPackageName())){
+                throw new ArgumentException(
+                        ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+                        "mRedirectUri", "The redirect URI doesn't match the uri" +
+                        " generated with caller package name and signature"
                 );
             }
         }
