@@ -80,7 +80,7 @@ public class AcquireTokenOperationParameters extends OperationParameters {
     }
 
     public void setLoginHint(String loginHint) {
-        this.mLoginHint = loginHint;
+        this.mLoginHint = loginHint.trim();
     }
 
     public String getLoginHint() {
