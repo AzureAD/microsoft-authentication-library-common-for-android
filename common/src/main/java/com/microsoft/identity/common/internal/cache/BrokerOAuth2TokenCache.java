@@ -34,7 +34,9 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -748,6 +750,71 @@ public class BrokerOAuth2TokenCache
                 realm,
                 false
         );
+    }
+
+    /**
+     * Tests if a clientId is 'known' to the cache. A clientId is known if a token has been
+     * previously saved to the cache with it.
+     *
+     * @param clientId The clientId whose known status should be queried.
+     * @return True if this clientId is known. False otherwise.
+     */
+    public boolean isClientIdKnownToCache(@NonNull final String clientId) {
+        return getAllClientIds().contains(clientId);
+    }
+
+    /**
+     * Returns the List of FoCI users in the cache. This API is provided so that the broker may
+     * **internally** query the cache for known users, such that the broker may verify an
+     * unknown clientId is a part of the FoCI family.
+     * <p>
+     * Please note, the ICacheRecords returned by this query are NOT fully populated. Only the
+     * {@link GenericAccount} and {@link GenericRefreshToken} will be returned.
+     * will be resutned.
+     *
+     * @return A List of ICacheRecords for the FoCI accounts.
+     */
+    @SuppressWarnings("unchecked")
+    public List<ICacheRecord> getFociCacheRecords() {
+        final List<ICacheRecord> result = new ArrayList<>();
+
+        final List<BrokerApplicationMetadata> allFociApplicationMetadata =
+                mApplicationMetadataCache.getAllFociApplicationMetadata();
+
+        for (final BrokerApplicationMetadata fociAppMetadata : allFociApplicationMetadata) {
+            // Load all the accounts
+            final List<AccountRecord> accounts = mFociCache.getAccounts(
+                    fociAppMetadata.getEnvironment(),
+                    fociAppMetadata.getClientId()
+            );
+
+            // For each account, load the RT
+            for (final AccountRecord account : accounts) {
+                final List<Credential> refreshTokens =
+                        mFociCache
+                                .getAccountCredentialCache()
+                                .getCredentialsFilteredBy(
+                                        account.getHomeAccountId(),
+                                        account.getEnvironment(),
+                                        CredentialType.RefreshToken,
+                                        fociAppMetadata.getClientId(),
+                                        null, // wildcard (*)
+                                        null // wildcard (*)
+                                );
+
+                // Construct the ICacheRecord
+                if (!refreshTokens.isEmpty()) {
+                    final CacheRecord cacheRecord = new CacheRecord();
+                    cacheRecord.setAccount(account);
+                    cacheRecord.setRefreshToken((RefreshTokenRecord) refreshTokens.get(0));
+
+                    // Add it to the result
+                    result.add(cacheRecord);
+                }
+            }
+        }
+
+        return result;
     }
 
     private AccountDeletionRecord removeAccountInternal(@Nullable final String environment,
