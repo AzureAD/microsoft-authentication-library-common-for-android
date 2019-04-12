@@ -26,7 +26,6 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
-import android.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
@@ -773,59 +772,49 @@ public class BrokerOAuth2TokenCache
      * {@link GenericAccount} and {@link GenericRefreshToken} will be returned.
      * will be resutned.
      *
-     * @param environment The environment whose accounts should be queried.
      * @return A List of ICacheRecords for the FoCI accounts.
      */
     @SuppressWarnings("unchecked")
-    public List<ICacheRecord> getFociCacheRecords(@NonNull final String environment) {
-        final List<ICacheRecord> fociCacheRecords = new ArrayList<>();
+    public List<ICacheRecord> getFociCacheRecords() {
+        final List<ICacheRecord> result = new ArrayList<>();
 
-        final List<Pair<AccountRecord, String>> fociAccounts = new ArrayList<>();
+        final List<BrokerApplicationMetadata> allFociApplicationMetadata =
+                mApplicationMetadataCache.getAllFociApplicationMetadata();
 
-        final Set<String> fociClientIds = mApplicationMetadataCache.getAllFociClientIds();
-
-        for (final String fociClientId : fociClientIds) {
-            // Get the list of all of the accounts for this client...
-            final List<AccountRecord> clientAccounts = mFociCache.getAccounts(
-                    environment,
-                    fociClientId
+        for (final BrokerApplicationMetadata fociAppMetadata : allFociApplicationMetadata) {
+            // Load all the accounts
+            final List<AccountRecord> accounts = mFociCache.getAccounts(
+                    fociAppMetadata.getEnvironment(),
+                    fociAppMetadata.getClientId()
             );
 
-            // Add them as Pairs...
-            for (final AccountRecord record : clientAccounts) {
-                fociAccounts.add(
-                        new Pair<>(
-                                record,
-                                fociClientId
-                        )
-                );
+            // For each account, load the RT
+            for (final AccountRecord account : accounts) {
+                final List<Credential> refreshTokens =
+                        mFociCache
+                                .getAccountCredentialCache()
+                                .getCredentialsFilteredBy(
+                                        account.getHomeAccountId(),
+                                        account.getEnvironment(),
+                                        CredentialType.RefreshToken,
+                                        fociAppMetadata.getClientId(),
+                                        null, // wildcard (*)
+                                        null // wildcard (*)
+                                );
+
+                // Construct the ICacheRecord
+                if (!refreshTokens.isEmpty()) {
+                    final CacheRecord cacheRecord = new CacheRecord();
+                    cacheRecord.setAccount(account);
+                    cacheRecord.setRefreshToken((RefreshTokenRecord) refreshTokens.get(0));
+
+                    // Add it to the result
+                    result.add(cacheRecord);
+                }
             }
         }
 
-        // For each account, load its refresh token and add it to the result List...
-        for (final Pair<AccountRecord, String> recordPair : fociAccounts) {
-            // Load the refresh token for this account...
-            final List<Credential> refreshTokens = mFociCache
-                    .getAccountCredentialCache()
-                    .getCredentialsFilteredBy(
-                            recordPair.first.getHomeAccountId(),
-                            environment,
-                            CredentialType.RefreshToken,
-                            recordPair.second,
-                            null, // wildcard (*)
-                            null // wildcard (*)
-                    );
-
-            if (null != refreshTokens.get(0)) {
-                final CacheRecord cacheRecord = new CacheRecord();
-                cacheRecord.setAccount(recordPair.first);
-                cacheRecord.setRefreshToken((RefreshTokenRecord) refreshTokens.get(0));
-
-                fociCacheRecords.add(cacheRecord);
-            }
-        }
-
-        return fociCacheRecords;
+        return result;
     }
 
     private AccountDeletionRecord removeAccountInternal(@Nullable final String environment,

@@ -424,9 +424,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        final List<ICacheRecord> fociCacheRecords = mBrokerOAuth2TokenCache.getFociCacheRecords(
-                ENVIRONMENT
-        );
+        final List<ICacheRecord> fociCacheRecords = mBrokerOAuth2TokenCache.getFociCacheRecords();
 
         assertNotNull(fociCacheRecords);
         assertFalse(fociCacheRecords.isEmpty());
@@ -446,9 +444,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        final List<ICacheRecord> fociCacheRecords = mBrokerOAuth2TokenCache.getFociCacheRecords(
-                ENVIRONMENT
-        );
+        final List<ICacheRecord> fociCacheRecords = mBrokerOAuth2TokenCache.getFociCacheRecords();
 
         assertNotNull(fociCacheRecords);
         assertTrue(fociCacheRecords.isEmpty());
