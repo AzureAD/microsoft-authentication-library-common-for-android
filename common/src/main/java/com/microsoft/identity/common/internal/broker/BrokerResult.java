@@ -562,12 +562,12 @@ public class BrokerResult implements Serializable {
             return this;
         }
 
-        public Builder errorCode(String errorCode) { // TODO What is this? NOT Oauth specific...
+        public Builder errorCode(String errorCode) {
             this.mErrorCode = errorCode;
             return this;
         }
 
-        public Builder errorMessage(String errorMessage) { // TODO What is this? NOT OAuth2 specific...
+        public Builder errorMessage(String errorMessage) {
             this.mErrorMessage = errorMessage;
             return this;
         }
