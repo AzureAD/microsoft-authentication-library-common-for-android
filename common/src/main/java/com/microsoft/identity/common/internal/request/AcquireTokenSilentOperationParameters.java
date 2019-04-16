@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.request;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
@@ -38,7 +41,7 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
         return mRequiredBrokerProtocolVersion;
     }
 
-    public void setRequiredBrokerProtocolVersion(final String requiredBrokerProtocolVersion) {
+    public void setRequiredBrokerProtocolVersion(@NonNull final String requiredBrokerProtocolVersion) {
         mRequiredBrokerProtocolVersion = requiredBrokerProtocolVersion;
     }
 
@@ -46,7 +49,7 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
         return mRefreshToken;
     }
 
-    public void setRefreshToken(final RefreshTokenRecord refreshToken) {
+    public void setRefreshToken(@Nullable final RefreshTokenRecord refreshToken) {
         mRefreshToken = refreshToken;
     }
 
