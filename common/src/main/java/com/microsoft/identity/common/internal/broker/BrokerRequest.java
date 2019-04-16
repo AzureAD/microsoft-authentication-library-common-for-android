@@ -70,7 +70,6 @@ public class BrokerRequest implements Serializable {
 
     /**
      * The redirect uri for the request.
-     * // TODO : See if this is needed.
      */
     @NonNull
     @SerializedName(SerializedNames.REDIRECT)
