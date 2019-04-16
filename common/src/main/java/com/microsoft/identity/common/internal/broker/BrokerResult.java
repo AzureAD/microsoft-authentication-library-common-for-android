@@ -35,7 +35,7 @@ import java.io.Serializable;
 public class BrokerResult implements Serializable {
 
     private class SerializedNames {
-        static final String ACCeSS_TOKEN = "broker.accessToken";
+        static final String ACCESS_TOKEN = "broker.accessToken";
         static final String ID_TOKEN = "broker.idToken";
         static final String HOMEACCOUNT_ID = "broker.homeAccountId";
         static final String LOCAL_ACCOUNT_ID = "broker.localAccountId";
@@ -69,7 +69,7 @@ public class BrokerResult implements Serializable {
      * Access token from the response
      */
     @Nullable
-    @SerializedName(SerializedNames.ACCeSS_TOKEN)
+    @SerializedName(SerializedNames.ACCESS_TOKEN)
     private String mAccessToken;
 
     /**
