@@ -34,7 +34,6 @@ import java.io.Serializable;
  */
 public class BrokerRequest implements Serializable {
 
-
     private class SerializedNames {
         final static String AUTHORITY = "authority";
         final static String SCOPE = "scopes";
@@ -242,7 +241,6 @@ public class BrokerRequest implements Serializable {
         return mMsalVersion;
     }
 
-
     /**
      * Builder class for Broker Request.
      */
@@ -412,6 +410,4 @@ public class BrokerRequest implements Serializable {
             return new BrokerRequest(this);
         }
     }
-
-
 }
