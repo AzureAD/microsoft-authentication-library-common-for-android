@@ -36,7 +36,8 @@ import java.util.List;
 public class ServiceException extends BaseException {
 
     /**
-     * This request is missing a required parameter, includes an invalid parameter, includes a parameter more than
+     * This request is missing a required parameter, includes an invalid parameter, includes a
+     * parameter more than
      * once, or is otherwise malformed.
      */
     public static final String INVALID_REQUEST = "invalid_request";
@@ -72,11 +73,12 @@ public class ServiceException extends BaseException {
     public static final String INVALID_INSTANCE = "invalid_instance";
 
     /**
-     * Request to server failed, but no error and error_description is returned back from the service.
+     * Request to server failed, but no error and error_description is returned back from the
+     * service.
      */
     public static final String UNKNOWN_ERROR = "unknown_error";
 
-    private String mSubErrorCode;
+    private String mOauthSubErrorCode;
 
     private int mHttpStatusCode;
 
@@ -85,7 +87,8 @@ public class ServiceException extends BaseException {
     private HashMap<String, List<String>> mHttpResponseHeaders = null;
 
     /**
-     * When {@link java.net.SocketTimeoutException} is thrown, no status code will be caught. Will use 0 instead.
+     * When {@link java.net.SocketTimeoutException} is thrown, no status code will be caught.
+     * Will use 0 instead.
      */
     public static final int DEFAULT_STATUS_CODE = 0;
 
@@ -99,9 +102,10 @@ public class ServiceException extends BaseException {
     /**
      * @return The OAuth sub error code for the exception, could be null.
      */
-    public String getSubErrorCode() {
-        return mSubErrorCode;
+    public String getOAuthSubErrorCode() {
+        return mOauthSubErrorCode;
     }
+
     /**
      * Gets the response body that may be returned by the service.
      *
@@ -121,10 +125,10 @@ public class ServiceException extends BaseException {
     }
 
     /**
-     * @@param subErrorCode - The sub error code for the exception.
+     * @param subErrorCode - The sub error code for the exception.
      */
-    public void setSubErrorCode(@Nullable final String subErrorCode){
-        mSubErrorCode = subErrorCode;
+    public void setOauthSubErrorCode(@Nullable final String subErrorCode) {
+        mOauthSubErrorCode = subErrorCode;
     }
 
     /**
@@ -132,7 +136,7 @@ public class ServiceException extends BaseException {
      *
      * @param responseHeaders
      */
-    public void setHttpResponseHeaders(final HashMap<String, List<String>> responseHeaders){
+    public void setHttpResponseHeaders(final HashMap<String, List<String>> responseHeaders) {
         mHttpResponseHeaders = responseHeaders;
     }
 
@@ -141,7 +145,7 @@ public class ServiceException extends BaseException {
      *
      * @param responseBody
      */
-    public void setHttpResponseBody(final HashMap<String, String> responseBody){
+    public void setHttpResponseBody(final HashMap<String, String> responseBody) {
         mHttpResponseBody = responseBody;
     }
 
@@ -159,7 +163,7 @@ public class ServiceException extends BaseException {
             }
 
             if (null != response.getBody()) {
-                    mHttpResponseBody = HashMapExtensions.getJsonResponse(response);
+                mHttpResponseBody = HashMapExtensions.getJsonResponse(response);
             }
         }
     }
@@ -171,7 +175,9 @@ public class ServiceException extends BaseException {
      * @param errorMessage String
      * @param throwable    Throwable
      */
-    public ServiceException(final String errorCode, final String errorMessage, final Throwable throwable) {
+    public ServiceException(final String errorCode,
+                            final String errorMessage,
+                            final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
         mHttpStatusCode = DEFAULT_STATUS_CODE;
     }
@@ -184,7 +190,10 @@ public class ServiceException extends BaseException {
      * @param httpStatusCode int
      * @param throwable      Throwable
      */
-    public ServiceException(final String errorCode, final String errorMessage, final int httpStatusCode, final Throwable throwable) {
+    public ServiceException(final String errorCode,
+                            final String errorMessage,
+                            final int httpStatusCode,
+                            final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
         mHttpStatusCode = httpStatusCode;
     }

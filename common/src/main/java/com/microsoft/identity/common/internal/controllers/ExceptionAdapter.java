@@ -192,7 +192,7 @@ public class ExceptionAdapter {
                     null);
         }
 
-        outErr.setSubErrorCode(errorResponse.getSubError());
+        outErr.setOauthSubErrorCode(errorResponse.getSubError());
 
         try {
             outErr.setHttpResponse(

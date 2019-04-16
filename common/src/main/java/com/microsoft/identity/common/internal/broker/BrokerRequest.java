@@ -34,23 +34,22 @@ import java.io.Serializable;
  */
 public class BrokerRequest implements Serializable {
 
-
     private class SerializedNames {
-        final static String AUTHORITY = "account.authority";
-        final static String SCOPE = "account.scope";
-        final static String REDIRECT = "account.redirect";
-        final static String CLIENT_ID = "account.clientid";
-        final static String HOME_ACCOUNT_ID = "account.homeAccountId";
-        final static String LOCAL_ACCOUNT_ID = "account.localAccountId";
-        final static String USERNAME = "account.username";
-        final static String EXTRA_QUERY_STRING_PARAMETER = "account.extra.query.param";
-        final static String CORRELATION_ID = "account.correlationid";
-        final static String PROMPT = "account.prompt";
-        final static String CLAIMS = "account.claims";
-        final static String FORCE_REFRESH = "force.refresh";
-        final static String APPLICATION_NAME = "application.name";
-        final static String APPLICATION_VERSION = "application.version";
-        final static String MSAL_VERSION = "msal.version";
+        final static String AUTHORITY = "authority";
+        final static String SCOPE = "scopes";
+        final static String REDIRECT = "redirect_uri";
+        final static String CLIENT_ID = "client_id";
+        final static String HOME_ACCOUNT_ID = "home_account_id";
+        final static String LOCAL_ACCOUNT_ID = "local_account_id";
+        final static String USERNAME = "username";
+        final static String EXTRA_QUERY_STRING_PARAMETER = "extra_query_param";
+        final static String CORRELATION_ID = "correlation_id";
+        final static String PROMPT = "prompt";
+        final static String CLAIMS = "claims";
+        final static String FORCE_REFRESH = "force_refresh";
+        final static String CLIENT_APP_NAME = "client_app_name";
+        final static String CLIENT_APP_VERSION = "client_app_version";
+        final static String CLIENT_VERSION = "client_version";
     }
 
     /**
@@ -70,7 +69,6 @@ public class BrokerRequest implements Serializable {
 
     /**
      * The redirect uri for the request.
-     * // TODO : See if this is needed.
      */
     @NonNull
     @SerializedName(SerializedNames.REDIRECT)
@@ -145,21 +143,21 @@ public class BrokerRequest implements Serializable {
      * Application package name.
      */
     @NonNull
-    @SerializedName(SerializedNames.APPLICATION_NAME)
+    @SerializedName(SerializedNames.CLIENT_APP_NAME)
     private String mApplicationName;
 
     /**
      * Application version.
      */
     @NonNull
-    @SerializedName((SerializedNames.APPLICATION_VERSION))
+    @SerializedName((SerializedNames.CLIENT_APP_VERSION))
     private String mApplicationVersion;
 
     /**
      * Msal version.
      */
     @NonNull
-    @SerializedName(SerializedNames.MSAL_VERSION)
+    @SerializedName(SerializedNames.CLIENT_VERSION)
     private String mMsalVersion;
 
 
@@ -242,7 +240,6 @@ public class BrokerRequest implements Serializable {
     public String getMsalVersion() {
         return mMsalVersion;
     }
-
 
     /**
      * Builder class for Broker Request.
@@ -409,10 +406,8 @@ public class BrokerRequest implements Serializable {
         /**
          * Builds and returns a BrokerRequest
          */
-        public BrokerRequest build(){
+        public BrokerRequest build() {
             return new BrokerRequest(this);
         }
     }
-
-
 }
