@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.request;
 
 import android.app.Activity;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Pair;
 
 import com.google.gson.annotations.Expose;
@@ -48,7 +50,7 @@ public class AcquireTokenOperationParameters extends OperationParameters {
         return mAuthorizationAgent;
     }
 
-    public void setAuthorizationAgent(AuthorizationAgent authorizationAgent) {
+    public void setAuthorizationAgent(@Nullable final AuthorizationAgent authorizationAgent) {
         mAuthorizationAgent = authorizationAgent;
     }
 
@@ -59,7 +61,7 @@ public class AcquireTokenOperationParameters extends OperationParameters {
         return mActivity;
     }
 
-    public void setActivity(Activity mActivity) {
+    public void setActivity(@NonNull final Activity mActivity) {
         this.mActivity = mActivity;
     }
 
@@ -67,7 +69,7 @@ public class AcquireTokenOperationParameters extends OperationParameters {
         return mExtraQueryStringParameters;
     }
 
-    public void setExtraQueryStringParameters(List<Pair<String, String>> mExtraQueryStringParameters) {
+    public void setExtraQueryStringParameters(@Nullable final List<Pair<String, String>> mExtraQueryStringParameters) {
         this.mExtraQueryStringParameters = mExtraQueryStringParameters;
     }
 
@@ -75,12 +77,12 @@ public class AcquireTokenOperationParameters extends OperationParameters {
         return mExtraScopesToConsent;
     }
 
-    public void setExtraScopesToConsent(List<String> mExtraScopesToConsent) {
+    public void setExtraScopesToConsent(@Nullable final List<String> mExtraScopesToConsent) {
         this.mExtraScopesToConsent = mExtraScopesToConsent;
     }
 
-    public void setLoginHint(String loginHint) {
-        this.mLoginHint = loginHint.trim();
+    public void setLoginHint(@Nullable final String loginHint) {
+        this.mLoginHint = loginHint != null ? loginHint.trim() : loginHint;
     }
 
     public String getLoginHint() {
@@ -91,7 +93,7 @@ public class AcquireTokenOperationParameters extends OperationParameters {
         return mOpenIdConnectPromptParameter;
     }
 
-    public void setOpenIdConnectPromptParameter(OpenIdConnectPromptParameter openIdConnectPromptParameter) {
+    public void setOpenIdConnectPromptParameter(@Nullable final OpenIdConnectPromptParameter openIdConnectPromptParameter) {
         mOpenIdConnectPromptParameter = openIdConnectPromptParameter;
     }
 
@@ -99,7 +101,7 @@ public class AcquireTokenOperationParameters extends OperationParameters {
         return mRequestHeaders;
     }
 
-    public void setRequestHeaders(HashMap<String, String> requestHeaders) {
+    public void setRequestHeaders(@Nullable final HashMap<String, String> requestHeaders) {
         this.mRequestHeaders = requestHeaders;
     }
 }
