@@ -94,9 +94,19 @@ public class TokenCacheItemMigrationAdapter {
         return result;
     }
 
-    public static boolean renewFociTokens(final String clientId,
-                                          final String redirectUri,
-                                          final ICacheRecord cacheRecord)
+    /**
+     * Testing whether the given client ID can use the cached foci to refresh token.
+     *
+     * @param clientId String of the given client id.
+     * @param redirectUri redirect url string of the given client id.
+     * @param cacheRecord Foci cache record.
+     * @return true if the given client id can use the cached foci token. False, otherwise.
+     * @throws ClientException
+     * @throws IOException
+     */
+    public static boolean tryFociTokenWithGivenClientId(final String clientId,
+                                                        final String redirectUri,
+                                                        final ICacheRecord cacheRecord)
             throws ClientException, IOException {
         final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
 
@@ -104,8 +114,10 @@ public class TokenCacheItemMigrationAdapter {
         final Uri.Builder requestUrlBuilder = new Uri.Builder();
         final String tenantId = cacheRecord.getAccount().getRealm();
         requestUrlBuilder.scheme(REDIRECT_SSL_PREFIX)
-                .authority(cacheRecord.getRefreshToken().getEnvironment()).appendPath(StringUtil.isEmpty(tenantId) ? "common" : tenantId);
-        URL authorityUrl = new URL(requestUrlBuilder.build().toString());
+                .authority(cacheRecord.getRefreshToken().getEnvironment())
+                .appendPath(StringUtil.isEmpty(tenantId) ? "common" : tenantId);
+        final URL authorityUrl = new URL(requestUrlBuilder.build().toString());
+
         //set the token endpoint for the configuration
         config.setAuthorityUrl(authorityUrl);
 
