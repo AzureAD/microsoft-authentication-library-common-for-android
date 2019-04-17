@@ -636,21 +636,13 @@ public class MsalOAuth2TokenCache
         Logger.infoPII(
                 TAG + methodName,
                 "Environment: [" + environment + "]"
-        );
+                        + "\n"
+                        + "ClientId: [" + clientId + "]"
+                        + "\n"
+                        + "HomeAccountId: [" + homeAccountId + "]"
+                        + "\n"
+                        + "Realm: [" + realm + "]"
 
-        Logger.infoPII(
-                TAG + methodName,
-                "ClientId: [" + clientId + "]"
-        );
-
-        Logger.infoPII(
-                TAG + methodName,
-                "HomeAccountId: [" + homeAccountId + "]"
-        );
-
-        Logger.infoPII(
-                TAG + methodName,
-                "Realm: [" + realm + "]"
         );
 
         final AccountRecord targetAccount;

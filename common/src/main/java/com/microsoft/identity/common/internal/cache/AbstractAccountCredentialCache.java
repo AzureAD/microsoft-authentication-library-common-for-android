@@ -42,6 +42,7 @@ import java.util.Set;
 public abstract class AbstractAccountCredentialCache implements IAccountCredentialCache {
 
     private static final String TAG = AbstractAccountCredentialCache.class.getSimpleName();
+    private static final String NEW_LINE = "\n";
 
     @Nullable
     protected Class<? extends Credential> getTargetClassForCredentialType(@Nullable String cacheKey,
@@ -79,8 +80,12 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
 
-        Logger.verbose(TAG, "Account lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]");
-        Logger.verbose(TAG, "Account lookup filtered by realm? [" + mustMatchOnRealm + "]");
+        Logger.verbose(
+                TAG,
+                "Account lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]"
+                        + NEW_LINE
+                        + "Account lookup filtered by realm? [" + mustMatchOnRealm + "]"
+        );
 
         final List<AccountRecord> matchingAccounts = new ArrayList<>();
 
@@ -103,6 +108,12 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 matchingAccounts.add(account);
             }
         }
+
+        Logger.verbose(
+                TAG,
+                "Found [" + matchingAccounts.size() + "] matching accounts"
+        );
+
         return matchingAccounts;
     }
 
@@ -120,11 +131,18 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final boolean mustMatchOnClientId = !StringExtensions.isNullOrBlank(clientId);
         final boolean mustMatchOnCredentialType = null != credentialType;
 
-        Logger.verbose(TAG, "Credential lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]");
-        Logger.verbose(TAG, "Credential lookup filtered by realm? [" + mustMatchOnRealm + "]");
-        Logger.verbose(TAG, "Credential lookup filtered by target? [" + mustMatchOnTarget + "]");
-        Logger.verbose(TAG, "Credential lookup filtered by clientId? [" + mustMatchOnClientId + "]");
-        Logger.verbose(TAG, "Credential lookup filtered by credential type? [" + mustMatchOnCredentialType + "]");
+        Logger.verbose(
+                TAG,
+                "Credential lookup filtered by home_account_id? [" + mustMatchOnHomeAccountId + "]"
+                        + NEW_LINE
+                        + "Credential lookup filtered by realm? [" + mustMatchOnRealm + "]"
+                        + NEW_LINE
+                        + "Credential lookup filtered by target? [" + mustMatchOnTarget + "]"
+                        + NEW_LINE
+                        + "Credential lookup filtered by clientId? [" + mustMatchOnClientId + "]"
+                        + NEW_LINE
+                        + "Credential lookup filtered by credential type? [" + mustMatchOnCredentialType + "]"
+        );
 
         final List<Credential> matchingCredentials = new ArrayList<>();
 
