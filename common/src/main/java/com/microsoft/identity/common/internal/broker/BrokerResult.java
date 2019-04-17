@@ -67,7 +67,7 @@ public class BrokerResult implements Serializable {
         /**
          * The OAuth2 suberror.
          */
-        static final String OAUTH_SUB_ERROR = "sub_error_code";
+        static final String OAUTH_SUB_ERROR = "oauth_sub_error";
         static final String HTTP_RESPONSE_CODE = "http_response_code";
         static final String HTTP_HEADERS = "http_response_headers";
         static final String HTTP_RESPONSE_BODY = "http_response_body";
