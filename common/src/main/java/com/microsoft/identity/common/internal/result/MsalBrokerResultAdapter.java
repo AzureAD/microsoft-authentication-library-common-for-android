@@ -58,7 +58,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_ACCOUNTS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 
 
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
@@ -385,7 +385,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             accountRecordString.add(recordInGson);
         }
 
-        resultBundle.putStringArrayList(BROKER_RESULT_ACCOUNTS, accountRecordString);
+        resultBundle.putStringArrayList(BROKER_ACCOUNTS, accountRecordString);
         return resultBundle;
     }
 
@@ -395,7 +395,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * @return List of AccountRecord
      */
     public static List<AccountRecord> getAccountRecordListFromBundle(@NonNull final Bundle bundle) {
-        final ArrayList<String> accountsList = bundle.getStringArrayList(BROKER_RESULT_ACCOUNTS);
+        final ArrayList<String> accountsList = bundle.getStringArrayList(BROKER_ACCOUNTS);
         final List<AccountRecord> result = new ArrayList<>();
         if (accountsList == null) {
             //The bundle does not contain the BROKER_RESULT_ACCOUNTS value.
