@@ -108,6 +108,12 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 matchingAccounts.add(account);
             }
         }
+
+        Logger.verbose(
+                TAG,
+                "Found [" + matchingAccounts.size() + "] matching accounts"
+        );
+
         return matchingAccounts;
     }
 
