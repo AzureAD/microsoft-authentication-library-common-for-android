@@ -38,6 +38,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX;
+import static com.microsoft.identity.common.internal.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 
 public class TokenCacheItemMigrationAdapter {
@@ -108,6 +109,7 @@ public class TokenCacheItemMigrationAdapter {
                                                         final String redirectUri,
                                                         final ICacheRecord cacheRecord)
             throws ClientException, IOException {
+        final String methodName = ":tryFociTokenWithGivenClientId";
         final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
 
         //Get authority url
@@ -115,7 +117,7 @@ public class TokenCacheItemMigrationAdapter {
         final String tenantId = cacheRecord.getAccount().getRealm();
         requestUrlBuilder.scheme(REDIRECT_SSL_PREFIX)
                 .authority(cacheRecord.getRefreshToken().getEnvironment())
-                .appendPath(StringUtil.isEmpty(tenantId) ? "common" : tenantId);
+                .appendPath(StringUtil.isEmpty(tenantId) ? ALL_ACCOUNTS_TENANT_ID : tenantId);
         final URL authorityUrl = new URL(requestUrlBuilder.build().toString());
 
         //set the token endpoint for the configuration
@@ -130,6 +132,10 @@ public class TokenCacheItemMigrationAdapter {
         // Create a correlation_id for the request
         final UUID correlationId = UUID.randomUUID();
 
+        Logger.verbose(TAG + methodName,
+                "Create the token request with correlationId ["
+                        + correlationId
+                        + "]");
         final MicrosoftStsTokenRequest tokenRequest = createTokenRequest(
                 clientId,
                 scopes,
@@ -140,7 +146,18 @@ public class TokenCacheItemMigrationAdapter {
                 "2"
         );
 
+        Logger.verbose(TAG + methodName,
+                "Start refreshing token with correlationId ["
+                        + correlationId
+                        + "]");
         final TokenResult tokenResult = strategy.requestToken(tokenRequest);
+
+        Logger.verbose(TAG + methodName,
+                "Is the client ID able to use the foci? ["
+                        + tokenResult.getSuccess()
+                        + "] with correlationId ["
+                        + correlationId
+                        + "]");
 
         return tokenResult.getSuccess();
     }
