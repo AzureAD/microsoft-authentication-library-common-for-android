@@ -94,5 +94,10 @@ public final class Device {
          * The String representing the device model.
          */
         public static final String DEVICE_MODEL = "x-client-DM";
+
+        /**
+         * String for the broker version.
+         */
+        public static final String BROKER_VERSION = "x-client-brkrver";
     }
 }
