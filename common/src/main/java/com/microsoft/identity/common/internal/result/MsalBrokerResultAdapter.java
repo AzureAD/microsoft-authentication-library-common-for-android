@@ -116,7 +116,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .refreshTokenAge(exception.getRefreshTokenAge());
 
         if (exception instanceof ServiceException) {
-            builder.subErrorCode(((ServiceException) exception).getSubErrorCode())
+            builder.oauthSubErrorCode(((ServiceException) exception).getOAuthSubErrorCode())
                     .httpStatusCode(((ServiceException) exception).getHttpStatusCode())
                     .httpResponseHeaders(
                             HeaderSerializationUtil.toJson((
@@ -323,7 +323,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         exception.setAuthorityUrl(brokerResult.getAuthority());
         exception.setAccountUserId(brokerResult.getLocalAccountId());
         exception.setAccountUpn(brokerResult.getUserName());
-        exception.setSubErrorCode(brokerResult.getSubErrorCode());
+        exception.setOauthSubErrorCode(brokerResult.getSubErrorCode());
         try {
             exception.setHttpResponseBody(HashMapExtensions.jsonStringAsMap(
                     brokerResult.getHttpResponseBody())
@@ -350,7 +350,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 brokerResult.getErrorMessage(),
                 null
         );
-        serviceException.setSubErrorCode(brokerResult.getSubErrorCode());
+        serviceException.setOauthSubErrorCode(brokerResult.getSubErrorCode());
         try {
             serviceException.setHttpResponseBody(
                     brokerResult.getHttpResponseBody() != null ?

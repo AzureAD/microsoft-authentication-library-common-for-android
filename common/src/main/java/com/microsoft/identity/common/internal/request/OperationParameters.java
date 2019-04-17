@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.request;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.exception.ArgumentException;
@@ -64,7 +66,7 @@ public class OperationParameters {
         return mSdkType;
     }
 
-    public void setSdkType(final SdkType sdkType) {
+    public void setSdkType(@Nullable final SdkType sdkType) {
         this.mSdkType = sdkType;
     }
 
@@ -72,7 +74,7 @@ public class OperationParameters {
         return mAppContext;
     }
 
-    public void setAppContext(Context mAppContext) {
+    public void setAppContext(@NonNull final Context mAppContext) {
         this.mAppContext = mAppContext;
     }
 
@@ -80,7 +82,7 @@ public class OperationParameters {
         return mScopes;
     }
 
-    public void setScopes(Set<String> mScopes) {
+    public void setScopes(@NonNull final Set<String> mScopes) {
         this.mScopes = mScopes;
     }
 
@@ -88,7 +90,7 @@ public class OperationParameters {
         return clientId;
     }
 
-    public void setClientId(String clientId) {
+    public void setClientId(@NonNull final String clientId) {
         this.clientId = clientId;
     }
 
@@ -96,11 +98,11 @@ public class OperationParameters {
         return redirectUri;
     }
 
-    public void setRedirectUri(String redirectUri) {
+    public void setRedirectUri(@NonNull final String redirectUri) {
         this.redirectUri = redirectUri;
     }
 
-    public void setTokenCache(OAuth2TokenCache cache) {
+    public void setTokenCache(@NonNull final OAuth2TokenCache cache) {
         this.mTokenCache = cache;
     }
 
@@ -112,11 +114,11 @@ public class OperationParameters {
         return mAuthority;
     }
 
-    public void setAuthority(Authority authority) {
+    public void setAuthority(@NonNull final Authority authority) {
         this.mAuthority = authority;
     }
 
-    public void setAccount(final IAccountRecord account) {
+    public void setAccount(@Nullable final IAccountRecord account) {
         mAccount = account;
     }
 
@@ -128,7 +130,7 @@ public class OperationParameters {
         return mClaimsRequestJson;
     }
 
-    public void setClaimsRequest(String claimsRequestJson) {
+    public void setClaimsRequest(@Nullable final String claimsRequestJson) {
         mClaimsRequestJson = claimsRequestJson;
     }
 
@@ -136,7 +138,7 @@ public class OperationParameters {
         return mSdkVersion;
     }
 
-    public void setSdkVersion(String sdkVersion) {
+    public void setSdkVersion(@Nullable final String sdkVersion) {
         mSdkVersion = sdkVersion;
     }
 
@@ -144,7 +146,7 @@ public class OperationParameters {
         return mApplicationName;
     }
 
-    public void setApplicationName(String applicationName) {
+    public void setApplicationName(@Nullable final String applicationName) {
         mApplicationName = applicationName;
     }
 
@@ -152,7 +154,7 @@ public class OperationParameters {
         return mApplicationVersion;
     }
 
-    public void setApplicationVersion(String applicationVersion) {
+    public void setApplicationVersion(@Nullable final String applicationVersion) {
         mApplicationVersion = applicationVersion;
     }
 
