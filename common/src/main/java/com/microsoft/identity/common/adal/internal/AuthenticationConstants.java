@@ -1062,12 +1062,12 @@ public final class AuthenticationConstants {
         /**
          * String of account environment key.
          */
-        public static final String ENVIRONMENT_KEY = "environment.key";
+        public static final String ENVIRONMENT = "environment";
 
         /**
          * String to return account list from broker.
          */
-        public static final String BROKER_ACCOUNTS = "broker.accounts";
+        public static final String BROKER_ACCOUNTS = "broker_accounts";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.
