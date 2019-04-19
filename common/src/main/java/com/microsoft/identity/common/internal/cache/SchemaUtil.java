@@ -259,4 +259,45 @@ public final class SchemaUtil {
 
         return homeAccountId;
     }
+
+    /**
+     * Get tenant id claim from Id token , if not present returns the tenant id from client info
+     * @param clientInfoString : ClientInfo
+     * @param idTokenString : Id Token
+     * @return tenantId
+     */
+    public static String getTenantId(@Nullable final String clientInfoString,
+                                     @Nullable final String idTokenString) {
+
+        String tenantId = "";
+
+        try {
+            if (!TextUtils.isEmpty(idTokenString) && !TextUtils.isEmpty(clientInfoString)) {
+                final IDToken idToken = new IDToken(idTokenString);
+                final ClientInfo clientInfo = new ClientInfo(clientInfoString);
+                final Map<String, String> claims = idToken.getTokenClaims();
+
+                if (!TextUtils.isEmpty(claims.get(AzureActiveDirectoryIdToken.TENANT_ID))) {
+                    tenantId = claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
+                } else if (!TextUtils.isEmpty(clientInfo.getUtid())) {
+                    Logger.warn(TAG, "realm is not returned from server. Use utid as realm.");
+                    tenantId = clientInfo.getUtid();
+                } else {
+                    Logger.warn(TAG,
+                            "realm and utid is not returned from server. " +
+                                    "Using empty string as default tid."
+                    );
+                }
+            }
+        } catch (final ServiceException e) {
+            Logger.error(
+                    TAG,
+                    "Failed to construct IDToken or ClientInfo",
+                    e
+            );
+        }
+
+        return tenantId;
+
+    }
 }

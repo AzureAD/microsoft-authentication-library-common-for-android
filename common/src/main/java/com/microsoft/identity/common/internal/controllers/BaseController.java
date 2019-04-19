@@ -34,6 +34,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
@@ -46,6 +47,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -368,7 +370,7 @@ public abstract class BaseController {
         operationParameters.setScopes(requestScopes);
     }
 
-    public static AccessTokenRecord getAccessTokenRecord(@NonNull final MicrosoftStsTokenResponse tokenResponse,
+    public  AccessTokenRecord getAccessTokenRecord(@NonNull final MicrosoftStsTokenResponse tokenResponse,
                                                          @NonNull final OperationParameters requestParameters) {
         final String methodName = ":getAccessTokenRecord";
 
@@ -377,11 +379,16 @@ public abstract class BaseController {
         try {
             final ClientInfo clientInfo = new ClientInfo(tokenResponse.getClientInfo());
             accessTokenRecord.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            accessTokenRecord.setRealm(clientInfo.getUtid());
+            accessTokenRecord.setRealm(SchemaUtil.getTenantId(
+                    tokenResponse.getClientInfo(),
+                    tokenResponse.getIdToken()
+                    )
+            );
             final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.
                     getAzureActiveDirectoryCloud(
                             requestParameters.getAuthority().getAuthorityURL()
                     );
+
             if (cloudEnv != null) {
                 Logger.info(TAG, "Using preferred cache host name...");
                 accessTokenRecord.setEnvironment(cloudEnv.getPreferredCacheHostName());
@@ -473,6 +480,14 @@ public abstract class BaseController {
         }
 
         return targetAccount;
+    }
+
+    protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse){
+        final String tenantId = SchemaUtil.getTenantId(
+                microsoftTokenResponse.getClientInfo(),
+                microsoftTokenResponse.getIdToken()
+        );
+        return tenantId.equalsIgnoreCase(AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID);
     }
 
 }

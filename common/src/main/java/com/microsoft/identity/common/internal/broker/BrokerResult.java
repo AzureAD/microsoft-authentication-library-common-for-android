@@ -37,6 +37,7 @@ public class BrokerResult implements Serializable {
     private class SerializedNames {
         static final String ACCESS_TOKEN = "access_token";
         static final String ID_TOKEN = "id_token";
+        static final String REFRESH_TOKEN = "refresh_token";
         static final String HOME_ACCOUNT_ID = "home_account_id";
         static final String LOCAL_ACCOUNT_ID = "local_account_id";
         static final String USERNAME = "username";
@@ -93,6 +94,13 @@ public class BrokerResult implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.ID_TOKEN)
     private String mIdToken;
+
+    /**
+     * Refresh Token  from the response
+     */
+    @Nullable
+    @SerializedName(SerializedNames.REFRESH_TOKEN)
+    private String mRefreshToken;
 
     /**
      * Home account id of the user.
@@ -277,6 +285,7 @@ public class BrokerResult implements Serializable {
     private BrokerResult(@NonNull final Builder builder) {
         mAccessToken = builder.mAccessToken;
         mIdToken = builder.mIdToken;
+        mRefreshToken = builder.mRefreshToken;
         mHomeAccountId = builder.mHomeAccountId;
         mLocalAccountId = builder.mLocalAccountId;
         mUserName = builder.mUserName;
@@ -405,6 +414,10 @@ public class BrokerResult implements Serializable {
         return mHomeAccountId;
     }
 
+    public String getRefreshToken(){
+        return mRefreshToken;
+    }
+
     public String getIdToken() {
         return mIdToken;
     }
@@ -418,6 +431,8 @@ public class BrokerResult implements Serializable {
         private String mAccessToken;
 
         private String mIdToken;
+
+        private String mRefreshToken;
 
         private String mHomeAccountId;
 
@@ -472,23 +487,28 @@ public class BrokerResult implements Serializable {
         private String mCliTelemSubErrorCode;
 
 
-        public Builder accessToken(@Nullable final String mAccessToken) {
-            this.mAccessToken = mAccessToken;
+        public Builder accessToken(@Nullable final String accessToken) {
+            this.mAccessToken = accessToken;
             return this;
         }
 
-        public Builder idToken(@Nullable final String mIdToken) {
-            this.mIdToken = mIdToken;
+        public Builder idToken(@Nullable final String idToken) {
+            this.mIdToken = idToken;
             return this;
         }
 
-        public Builder homeAccountId(@Nullable final String mHomeAccountId) {
-            this.mHomeAccountId = mHomeAccountId;
+        public Builder refreshToken(@Nullable final String refreshToken) {
+            this.mRefreshToken = refreshToken;
             return this;
         }
 
-        public Builder localAccountId(@Nullable final String mLocalAccountId) {
-            this.mLocalAccountId = mLocalAccountId;
+        public Builder homeAccountId(@Nullable final String homeAccountId) {
+            this.mHomeAccountId = homeAccountId;
+            return this;
+        }
+
+        public Builder localAccountId(@Nullable final String localAccountId) {
+            this.mLocalAccountId = localAccountId;
             return this;
         }
 
@@ -497,8 +517,8 @@ public class BrokerResult implements Serializable {
             return this;
         }
 
-        public Builder tokenType(@Nullable final String mTokenType) {
-            this.mTokenType = mTokenType;
+        public Builder tokenType(@Nullable final String tokenType) {
+            this.mTokenType = tokenType;
             return this;
         }
 

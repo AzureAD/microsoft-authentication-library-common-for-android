@@ -72,6 +72,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final BrokerResult brokerResult = new BrokerResult.Builder()
                 .accessToken(authenticationResult.getAccessToken())
                 .idToken(authenticationResult.getIdToken())
+                .refreshToken(authenticationResult.getRefreshToken())
                 .homeAccountId(accountRecord.getHomeAccountId())
                 .localAccountId(accountRecord.getLocalAccountId())
                 .userName(accountRecord.getUsername())
@@ -155,7 +156,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             final IAccountRecord accountRecord = getAccountRecord(brokerResult);
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
                     accessTokenRecord,
-                    null,
+                    brokerResult.getRefreshToken(),
                     brokerResult.getIdToken(),
                     accountRecord
             );
@@ -254,7 +255,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         try {
             final ClientInfo clientInfo = new ClientInfo(brokerResult.getClientInfo());
             accessTokenRecord.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            accessTokenRecord.setRealm(clientInfo.getUtid());
+            accessTokenRecord.setRealm(
+                    SchemaUtil.getTenantId(brokerResult.getClientInfo(),
+                    brokerResult.getIdToken())
+            );
 
             final URL authorityUrl = new URL(brokerResult.getAuthority());
             final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.
