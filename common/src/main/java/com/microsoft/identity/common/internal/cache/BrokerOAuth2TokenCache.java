@@ -1003,11 +1003,10 @@ public class BrokerOAuth2TokenCache
      * @param uidStr       The uid of the app whose SSO token is being inserted.
      * @param account      The account for which the supplied token is being inserted.
      * @param refreshToken The token to insert.
-     * @return True if the token was successfully inserted into an app-specific or foci cache.
      */
-    public boolean setSingleSignOnState(@NonNull final String uidStr,
-                                        @NonNull final GenericAccount account,
-                                        @NonNull final GenericRefreshToken refreshToken) {
+    public void setSingleSignOnState(@NonNull final String uidStr,
+                                     @NonNull final GenericAccount account,
+                                     @NonNull final GenericRefreshToken refreshToken) {
         final String methodName = ":setSingleSignOnState";
 
         final boolean isFrt = refreshToken.getIsFamilyRefreshToken();
@@ -1044,27 +1043,22 @@ public class BrokerOAuth2TokenCache
                 );
             }
         }
-
-        final boolean signOnStateWasSet = targetCache.setSingleSignOnState(
-                account,
-                refreshToken
-        );
-
-        if (signOnStateWasSet) {
-            // Update the BrokerApplicationMetadataCache...
+        try {
+             targetCache.setSingleSignOnState(
+                    account,
+                    refreshToken
+            );
             updateApplicationMetadataCache(
                     refreshToken.getClientId(),
                     refreshToken.getEnvironment(),
                     refreshToken.getFamilyId(),
                     uid
             );
-        } else {
+        } catch (ClientException e) {
             Logger.warn(
                     TAG + methodName,
                     "Failed to save account/refresh token. Skipping."
             );
         }
-
-        return signOnStateWasSet;
     }
 }

@@ -35,6 +35,7 @@ import com.microsoft.identity.common.adal.internal.cache.CacheKey;
 import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
@@ -163,7 +164,14 @@ public class ADALOAuth2TokenCache
         // TODO At some point, the type-safety of this call needs to get beefed-up
         Logger.info(TAG + ":" + methodName, "Syncing SSO state to caches...");
         for (final IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> sharedSsoCache : mSharedSSOCaches) {
-            sharedSsoCache.setSingleSignOnState(account, refreshToken);
+            try {
+                sharedSsoCache.setSingleSignOnState(account, refreshToken);
+            } catch (ClientException e) {
+                Logger.errorPII(TAG,
+                        "Exception setting single sing on state for account " + account.getUsername(),
+                        e
+                );
+            }
         }
 
         return null; // Returning null, since the ADAL cache's schema doesn't support this return type.

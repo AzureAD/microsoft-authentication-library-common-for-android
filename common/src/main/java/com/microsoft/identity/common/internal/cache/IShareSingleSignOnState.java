@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.cache;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
 /**
@@ -36,7 +37,7 @@ public interface IShareSingleSignOnState<T extends BaseAccount, U extends Refres
      * @param account      T
      * @param refreshToken U
      */
-    boolean setSingleSignOnState(T account, U refreshToken);
+    void setSingleSignOnState(T account, U refreshToken) throws ClientException;
 
     /**
      * Get the single sign on state.
