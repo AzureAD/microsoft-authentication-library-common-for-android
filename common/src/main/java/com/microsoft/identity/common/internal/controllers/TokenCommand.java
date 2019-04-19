@@ -29,8 +29,10 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.internal.request.OperationParameters;
@@ -101,9 +103,14 @@ public class TokenCommand implements TokenOperation {
 
                     return result;
                 }
-            } catch (UiRequiredException e) {
+            } catch (UiRequiredException | ClientException e) {
                 if (e.getErrorCode().equals(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT) // was invalid_grant
                         && mControllers.size() > ii + 1) { // isn't the last controller we can try
+                    continue;
+                } else if ((e.getErrorCode().equals(ErrorStrings.NO_TOKENS_FOUND)
+                        || e.getErrorCode().equals(ErrorStrings.NO_ACCOUNT_FOUND))
+                        && mControllers.size() > ii + 1) {
+                    //if no token or account for this silent call, we should continue to the next silent call.
                     continue;
                 } else {
                     throw e;

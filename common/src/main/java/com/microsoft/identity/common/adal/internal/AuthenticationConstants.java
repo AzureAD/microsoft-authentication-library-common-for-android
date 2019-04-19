@@ -1060,6 +1060,16 @@ public final class AuthenticationConstants {
         public static final String CLIENT_APP_PACKAGE_NAME = "client_app_package_name";
 
         /**
+         * String of account environment key.
+         */
+        public static final String ENVIRONMENT = "environment";
+
+        /**
+         * String to return account list from broker.
+         */
+        public static final String BROKER_ACCOUNTS = "broker_accounts";
+
+        /**
          * Bundle identifiers for x-ms-clitelem info.
          */
         public static final class CliTelemInfo {

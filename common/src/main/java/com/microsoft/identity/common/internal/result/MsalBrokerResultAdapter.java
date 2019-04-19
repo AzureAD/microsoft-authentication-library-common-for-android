@@ -55,6 +55,10 @@ import org.json.JSONException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 
 
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
@@ -368,4 +372,41 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     }
 
+    /**
+     * Get the bundle from the AccountRecord list.
+     * @param records List of AccountRecord
+     * @return Bundle
+     */
+    public Bundle bundleFromAccountRecordList(@NonNull final List<AccountRecord> records) {
+        final Bundle resultBundle = new Bundle();
+        ArrayList<String> accountRecordString = new ArrayList<>();
+        for (AccountRecord record : records) {
+            final String recordInGson = new Gson().toJson(record, AccountRecord.class);
+            accountRecordString.add(recordInGson);
+        }
+
+        resultBundle.putStringArrayList(BROKER_ACCOUNTS, accountRecordString);
+        return resultBundle;
+    }
+
+    /**
+     * Get the AccountRecord list from bundle.
+     * @param bundle Bundle
+     * @return List of AccountRecord
+     */
+    public static List<AccountRecord> getAccountRecordListFromBundle(@NonNull final Bundle bundle) {
+        final ArrayList<String> accountsList = bundle.getStringArrayList(BROKER_ACCOUNTS);
+        final List<AccountRecord> result = new ArrayList<>();
+        if (accountsList == null) {
+            //The bundle does not contain the BROKER_RESULT_ACCOUNTS value.
+            return null;
+        }
+
+        for (final String accountJson : accountsList) {
+            final AccountRecord accountRecord = new Gson().fromJson(accountJson, AccountRecord.class);
+            result.add(accountRecord);
+        }
+
+        return result;
+    }
 }
