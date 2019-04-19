@@ -168,7 +168,7 @@ public class ADALOAuth2TokenCache
                 sharedSsoCache.setSingleSignOnState(account, refreshToken);
             } catch (ClientException e) {
                 Logger.errorPII(TAG,
-                        "Exception setting single sing on state for account " + account.getUsername(),
+                        "Exception setting single sign on state for account " + account.getUsername(),
                         e
                 );
             }
