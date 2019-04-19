@@ -42,6 +42,7 @@ public class BrokerResult implements Serializable {
         static final String LOCAL_ACCOUNT_ID = "local_account_id";
         static final String USERNAME = "username";
         static final String CLIENT_ID = "client_id";
+        static final String FAMILY_ID = "family_id";
         static final String SCOPES = "scopes";
         static final String TOKEN_TYPE = "token_type";
         static final String CLIENT_INFO = "client_info";
@@ -130,6 +131,13 @@ public class BrokerResult implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.CLIENT_ID)
     private String mClientId;
+
+    /**
+     * Information to uniquely identify the family that the client application belongs to.
+     */
+    @Nullable
+    @SerializedName(SerializedNames.FAMILY_ID)
+    private String mFamilyId;
 
 
     /**
@@ -291,6 +299,7 @@ public class BrokerResult implements Serializable {
         mUserName = builder.mUserName;
         mTokenType = builder.mTokenType;
         mClientId = builder.mClientId;
+        mFamilyId = builder.mFamilyId;
         mScope = builder.mScope;
         mClientInfo = builder.mClientInfo;
         mAuthority = builder.mAuthority;
@@ -394,6 +403,10 @@ public class BrokerResult implements Serializable {
         return mClientId;
     }
 
+    public String getFamilyId() {
+        return mFamilyId;
+    }
+
     public String getScope() {
         return mScope;
     }
@@ -443,6 +456,8 @@ public class BrokerResult implements Serializable {
         private String mTokenType;
 
         private String mClientId;
+
+        private String mFamilyId;
 
         private String mScope;
 
@@ -524,6 +539,11 @@ public class BrokerResult implements Serializable {
 
         public Builder clientId(@Nullable final String clientId) {
             this.mClientId = clientId;
+            return this;
+        }
+
+        public Builder familyId(@Nullable final String familyId) {
+            this.mFamilyId = familyId;
             return this;
         }
 

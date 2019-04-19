@@ -78,6 +78,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .userName(accountRecord.getUsername())
                 .tokenType(accessTokenRecord.getAccessTokenType())
                 .clientId(accessTokenRecord.getClientId())
+                .familyId(authenticationResult.getFamilyId())
                 .scope(accessTokenRecord.getTarget())
                 .clientInfo(accountRecord.getClientInfo())
                 .authority(accessTokenRecord.getAuthority())
@@ -158,6 +159,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     accessTokenRecord,
                     brokerResult.getRefreshToken(),
                     brokerResult.getIdToken(),
+                    brokerResult.getFamilyId(),
                     accountRecord
             );
             return authenticationResult;
