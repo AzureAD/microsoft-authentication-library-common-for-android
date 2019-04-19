@@ -36,6 +36,7 @@ public interface IShareSingleSignOnState<T extends BaseAccount, U extends Refres
      *
      * @param account      T
      * @param refreshToken U
+     * @throws ClientException
      */
     void setSingleSignOnState(T account, U refreshToken) throws ClientException;
 

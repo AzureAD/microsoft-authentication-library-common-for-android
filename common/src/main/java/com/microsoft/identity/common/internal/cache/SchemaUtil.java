@@ -266,6 +266,7 @@ public final class SchemaUtil {
      * @param idTokenString : Id Token
      * @return tenantId
      */
+    @Nullable
     public static String getTenantId(@Nullable final String clientInfoString,
                                      @Nullable final String idTokenString) {
 
