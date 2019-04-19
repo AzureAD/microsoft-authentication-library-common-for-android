@@ -297,10 +297,9 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public boolean setSingleSignOnState(final BaseAccount account, final RefreshToken refreshToken) {
+    public void setSingleSignOnState(final BaseAccount account, final RefreshToken refreshToken) {
         // Unimplemented
         Logger.warn(TAG, "setSingleSignOnState was called, but is not implemented.");
-        return false;
     }
 
     @Override
