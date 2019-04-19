@@ -203,10 +203,9 @@ public class BrokerValidator {
 
     public static boolean isValidBrokerRedirect(@Nullable final String redirectUri,
                                                 @NonNull final Context context,
-                                                @NonNull final String packageName){
-        return true ;
-//        !TextUtils.isEmpty(redirectUri) &&
-//                redirectUri.equalsIgnoreCase(getBrokerRedirectUri(context, packageName));
+                                                @NonNull final String packageName) {
+        return !TextUtils.isEmpty(redirectUri) &&
+                redirectUri.equalsIgnoreCase(getBrokerRedirectUri(context, packageName));
     }
 
 
@@ -218,10 +217,9 @@ public class BrokerValidator {
      * @return String : Broker Redirect Uri
      */
     public static String getBrokerRedirectUri(final Context context, final String packageName) {
-        return "msal9851987a-55e5-46e2-8d70-75f8dc060f21://auth";
-//        final PackageHelper info = new PackageHelper(context.getPackageManager());
-//        final String signatureDigest = info.getCurrentSignatureForPackage(packageName);
-//        return PackageHelper.getBrokerRedirectUrl(packageName,
-//                signatureDigest);
+        final PackageHelper info = new PackageHelper(context.getPackageManager());
+        final String signatureDigest = info.getCurrentSignatureForPackage(packageName);
+        return PackageHelper.getBrokerRedirectUrl(packageName,
+                signatureDigest);
     }
 }
