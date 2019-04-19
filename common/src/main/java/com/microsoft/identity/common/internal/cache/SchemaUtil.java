@@ -269,7 +269,7 @@ public final class SchemaUtil {
     public static String getTenantId(@Nullable final String clientInfoString,
                                      @Nullable final String idTokenString) {
 
-        String tenantId = "";
+        String tenantId = null;
 
         try {
             if (!TextUtils.isEmpty(idTokenString) && !TextUtils.isEmpty(clientInfoString)) {
@@ -290,7 +290,7 @@ public final class SchemaUtil {
                 }
             }
         } catch (final ServiceException e) {
-            Logger.error(
+            Logger.errorPII(
                     TAG,
                     "Failed to construct IDToken or ClientInfo",
                     e

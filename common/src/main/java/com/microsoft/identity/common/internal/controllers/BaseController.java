@@ -370,8 +370,8 @@ public abstract class BaseController {
         operationParameters.setScopes(requestScopes);
     }
 
-    public  AccessTokenRecord getAccessTokenRecord(@NonNull final MicrosoftStsTokenResponse tokenResponse,
-                                                         @NonNull final OperationParameters requestParameters) {
+    public AccessTokenRecord getAccessTokenRecord(@NonNull final MicrosoftStsTokenResponse tokenResponse,
+                                                  @NonNull final OperationParameters requestParameters) {
         final String methodName = ":getAccessTokenRecord";
 
         final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
@@ -487,7 +487,8 @@ public abstract class BaseController {
                 microsoftTokenResponse.getClientInfo(),
                 microsoftTokenResponse.getIdToken()
         );
-        return tenantId.equalsIgnoreCase(AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID);
+        return !TextUtils.isEmpty(tenantId) &&
+                tenantId.equalsIgnoreCase(AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID);
     }
 
 }
