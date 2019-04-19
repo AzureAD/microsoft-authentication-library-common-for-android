@@ -82,8 +82,6 @@ public abstract class BaseController {
 
     private static final String TAG = BaseController.class.getSimpleName();
 
-    private static final int REQUEST_TIMEOUT_IN_MINUTES =
-
     public abstract AcquireTokenResult acquireToken(final AcquireTokenOperationParameters request)
             throws ExecutionException, InterruptedException, BaseException, IOException;
 
