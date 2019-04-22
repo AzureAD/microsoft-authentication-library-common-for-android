@@ -35,6 +35,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -176,11 +177,15 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
 
         if (null != mStorageHelper) {
-            for (final Map.Entry<String, String> entry : entries.entrySet()) {
+            final Iterator<Map.Entry<String, String>> iterator = entries.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                final Map.Entry<String, String> entry = iterator.next();
                 final String decryptedValue = decrypt(entry.getValue());
 
                 if (TextUtils.isEmpty(decryptedValue)) {
                     logWarningAndRemoveKey(entry.getKey());
+                    iterator.remove();
                     continue;
                 }
 
