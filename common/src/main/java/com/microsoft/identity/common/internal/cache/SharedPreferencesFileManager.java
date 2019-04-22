@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -148,15 +149,21 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             restoredValue = decrypt(restoredValue);
 
             if (StringExtensions.isNullOrBlank(restoredValue)) {
-                Logger.warn(
-                        TAG,
-                        "Failed to decrypt value! "
-                                + "This usually signals an issue with KeyStore or the provided SecretKeys."
-                );
+                logWarningAndRemoveKey(key);
             }
         }
 
         return restoredValue;
+    }
+
+    private void logWarningAndRemoveKey(String key) {
+        Logger.warn(
+                TAG,
+                "Failed to decrypt value! "
+                        + "This usually signals an issue with KeyStore or the provided SecretKeys."
+        );
+
+        remove(key);
     }
 
     @Override
@@ -170,7 +177,14 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
         if (null != mStorageHelper) {
             for (final Map.Entry<String, String> entry : entries.entrySet()) {
-                entry.setValue(decrypt(entry.getValue()));
+                final String decryptedValue = decrypt(entry.getValue());
+
+                if (TextUtils.isEmpty(decryptedValue)) {
+                    logWarningAndRemoveKey(entry.getKey());
+                    continue;
+                }
+
+                entry.setValue(decryptedValue);
             }
         }
 
@@ -179,8 +193,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
     @Override
     public final boolean contains(final String key) {
-        final boolean contains = mSharedPreferences.contains(key);
-        return contains;
+        return !TextUtils.isEmpty(getString(key));
     }
 
     @SuppressLint("ApplySharedPref")
@@ -194,9 +207,21 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     @SuppressLint("ApplySharedPref")
     @Override
     public void remove(final String key) {
+        Logger.info(
+                TAG,
+                "Removing cache key"
+        );
+
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.remove(key);
         editor.commit();
+
+        Logger.infoPII(
+                TAG,
+                "Removed cache key ["
+                        + key
+                        + "]"
+        );
     }
 
     @Nullable
