@@ -55,6 +55,10 @@ import org.json.JSONException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 
 
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
@@ -93,7 +97,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .build();
 
         final Bundle resultBundle = new Bundle();
-        resultBundle.putSerializable(AuthenticationConstants.Broker.BROKER_RESULT_V2, brokerResult);
+        resultBundle.putString(
+                AuthenticationConstants.Broker.BROKER_RESULT_V2,
+                new Gson().toJson(brokerResult, BrokerResult.class)
+        );
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true);
 
         return resultBundle;
@@ -132,7 +139,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         final Bundle resultBundle = new Bundle();
-        resultBundle.putSerializable(AuthenticationConstants.Broker.BROKER_RESULT_V2, builder.build());
+        resultBundle.putString(
+                AuthenticationConstants.Broker.BROKER_RESULT_V2,
+                new Gson().toJson(builder.build(), BrokerResult.class)
+        );
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, false);
 
         return resultBundle;
@@ -141,8 +151,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     @Override
     public ILocalAuthenticationResult authenticationResultFromBundle(@NonNull final Bundle resultBundle) {
 
-        final BrokerResult brokerResult = (BrokerResult) resultBundle.getSerializable(
-                AuthenticationConstants.Broker.BROKER_RESULT_V2
+        final BrokerResult brokerResult = new Gson().fromJson(
+                resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2),
+                BrokerResult.class
         );
 
         if (brokerResult == null) {
@@ -174,8 +185,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public BaseException baseExceptionFromBundle(@NonNull final Bundle resultBundle) {
         Logger.verbose(TAG, "Constructing exception from result bundle");
 
-        final BrokerResult brokerResult = (BrokerResult) resultBundle.getSerializable(
-                AuthenticationConstants.Broker.BROKER_RESULT_V2
+        final BrokerResult brokerResult = new Gson().fromJson(
+                resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2),
+                BrokerResult.class
         );
 
         if (brokerResult == null) {
@@ -374,4 +386,41 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     }
 
+    /**
+     * Get the bundle from the AccountRecord list.
+     * @param records List of AccountRecord
+     * @return Bundle
+     */
+    public Bundle bundleFromAccountRecordList(@NonNull final List<AccountRecord> records) {
+        final Bundle resultBundle = new Bundle();
+        ArrayList<String> accountRecordString = new ArrayList<>();
+        for (AccountRecord record : records) {
+            final String recordInGson = new Gson().toJson(record, AccountRecord.class);
+            accountRecordString.add(recordInGson);
+        }
+
+        resultBundle.putStringArrayList(BROKER_ACCOUNTS, accountRecordString);
+        return resultBundle;
+    }
+
+    /**
+     * Get the AccountRecord list from bundle.
+     * @param bundle Bundle
+     * @return List of AccountRecord
+     */
+    public static List<AccountRecord> getAccountRecordListFromBundle(@NonNull final Bundle bundle) {
+        final ArrayList<String> accountsList = bundle.getStringArrayList(BROKER_ACCOUNTS);
+        final List<AccountRecord> result = new ArrayList<>();
+        if (accountsList == null) {
+            //The bundle does not contain the BROKER_RESULT_ACCOUNTS value.
+            return null;
+        }
+
+        for (final String accountJson : accountsList) {
+            final AccountRecord accountRecord = new Gson().fromJson(accountJson, AccountRecord.class);
+            result.add(accountRecord);
+        }
+
+        return result;
+    }
 }
