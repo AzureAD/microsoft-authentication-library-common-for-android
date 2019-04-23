@@ -1,3 +1,8 @@
+Version 0.0.10-alpha
+- Adds support for declared non-tfp B2C authorities
+- Fix setting correct id token for B2C if v1 id token is returned
+- Fix incorrect parsing of not_before as Date
+
 Version 0.0.9
 -------------
 - Bugfix: Resolves COMMON/#379
