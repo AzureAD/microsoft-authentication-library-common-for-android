@@ -95,7 +95,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .build();
 
         final Bundle resultBundle = new Bundle();
-        resultBundle.putSerializable(AuthenticationConstants.Broker.BROKER_RESULT_V2, brokerResult);
+        resultBundle.putString(
+                AuthenticationConstants.Broker.BROKER_RESULT_V2,
+                new Gson().toJson(brokerResult, BrokerResult.class)
+        );
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true);
 
         return resultBundle;
@@ -134,7 +137,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         final Bundle resultBundle = new Bundle();
-        resultBundle.putSerializable(AuthenticationConstants.Broker.BROKER_RESULT_V2, builder.build());
+        resultBundle.putString(
+                AuthenticationConstants.Broker.BROKER_RESULT_V2,
+                new Gson().toJson(builder.build(), BrokerResult.class)
+        );
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, false);
 
         return resultBundle;
@@ -143,8 +149,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     @Override
     public ILocalAuthenticationResult authenticationResultFromBundle(@NonNull final Bundle resultBundle) {
 
-        final BrokerResult brokerResult = (BrokerResult) resultBundle.getSerializable(
-                AuthenticationConstants.Broker.BROKER_RESULT_V2
+        final BrokerResult brokerResult = new Gson().fromJson(
+                resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2),
+                BrokerResult.class
         );
 
         if (brokerResult == null) {
@@ -175,8 +182,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public BaseException baseExceptionFromBundle(@NonNull final Bundle resultBundle) {
         Logger.verbose(TAG, "Constructing exception from result bundle");
 
-        final BrokerResult brokerResult = (BrokerResult) resultBundle.getSerializable(
-                AuthenticationConstants.Broker.BROKER_RESULT_V2
+        final BrokerResult brokerResult = new Gson().fromJson(
+                resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2),
+                BrokerResult.class
         );
 
         if (brokerResult == null) {
