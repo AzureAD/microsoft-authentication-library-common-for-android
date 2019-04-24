@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -100,7 +101,7 @@ public class MsalOAuth2TokenCache
      * @param accessTokenRecord The {@link AccessTokenRecord} to store.
      * @return The {@link ICacheRecord} result of this save action.
      * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
-     * @see BrokerOAuth2TokenCache#save(AccountRecord, IdTokenRecord, AccessTokenRecord, String)
+     * @see OAuth2TokenCache#save(AccountRecord, IdTokenRecord)
      */
     ICacheRecord save(@NonNull AccountRecord accountRecord,
                       @NonNull IdTokenRecord idTokenRecord,
@@ -603,6 +604,61 @@ public class MsalOAuth2TokenCache
         );
 
         return Collections.unmodifiableList(accountsForThisApp);
+    }
+
+    @Override
+    public List<ICacheRecord> getAccountsWithIdTokens(@Nullable final String environment,
+                                                      @NonNull final String clientId) {
+        final String methodName = ":getAccountsWithIdTokens";
+        final List<ICacheRecord> result = new ArrayList<>();
+
+        final List<AccountRecord> allMatchingAccounts = getAccounts(
+                environment,
+                clientId
+        );
+
+        for (final AccountRecord accountRecord : allMatchingAccounts) {
+            final List<IdTokenRecord> idTokensForAccount = getIdTokensForAccount(
+                    clientId,
+                    accountRecord
+            );
+
+            // Construct the cache record....
+            final CacheRecord cacheRecord = new CacheRecord();
+            cacheRecord.setAccount(accountRecord);
+
+            // Set the IdTokens...
+            final Iterator<IdTokenRecord> idTokenIterator = idTokensForAccount.iterator();
+
+            while (idTokenIterator.hasNext()) {
+                final IdTokenRecord idTokenRecord = idTokenIterator.next();
+                final CredentialType currentType = CredentialType.fromString(
+                        idTokenRecord.getCredentialType()
+                );
+
+                if (CredentialType.V1IdToken == currentType) {
+                    cacheRecord.setV1IdToken(idTokenRecord);
+                } else if (CredentialType.IdToken == currentType) {
+                    cacheRecord.setIdToken(idTokenRecord);
+                } else {
+                    Logger.warn(
+                            TAG + methodName,
+                            "Unrecognized IdToken type: ["
+                                    + idTokenRecord.getCredentialType()
+                    );
+                }
+            }
+
+            result.add(cacheRecord);
+
+        }
+
+        Logger.info(
+                TAG + methodName,
+                "Found " + result.size() + " accounts with IdTokens"
+        );
+
+        return Collections.unmodifiableList(result);
     }
 
     /**

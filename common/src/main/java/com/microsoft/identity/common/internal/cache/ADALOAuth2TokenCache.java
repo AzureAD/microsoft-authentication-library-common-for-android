@@ -222,7 +222,16 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public List<IdTokenRecord> getIdTokensForAccount(String clientId, AccountRecord accountRecord) {
+    public List<ICacheRecord> getAccountsWithIdTokens(final String environment,
+                                                      final String clientId) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public List<IdTokenRecord> getIdTokensForAccount(final String clientId,
+                                                     final AccountRecord accountRecord) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );

@@ -907,4 +907,35 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertNull(secondaryLoad.getV1IdToken());
     }
 
+    @Test
+    public void getAccountsWithIdTokens() throws ClientException {
+        final ICacheRecord result = mOauth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final List<ICacheRecord> records = mOauth2TokenCache.getAccountsWithIdTokens(
+                ENVIRONMENT,
+                CLIENT_ID
+        );
+
+        assertEquals(1, records.size());
+        assertNotNull(records.get(0));
+        assertNotNull(records.get(0).getAccount());
+        assertNotNull(records.get(0).getIdToken());
+        assertNull(records.get(0).getV1IdToken());
+        assertNull(records.get(0).getAccessToken());
+        assertNull(records.get(0).getRefreshToken());
+    }
+
+    @Test
+    public void getAccountsWithIdTokensV1() {
+        // TODO
+    }
+
+    public void getAccoutsWithIdTokensEmpty() {
+        // TODO
+    }
+
 }

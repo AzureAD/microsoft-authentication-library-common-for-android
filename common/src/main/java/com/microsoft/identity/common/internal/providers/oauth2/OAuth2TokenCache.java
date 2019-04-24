@@ -135,6 +135,19 @@ public abstract class OAuth2TokenCache
     public abstract List<AccountRecord> getAccounts(final String environment, final String clientId);
 
     /**
+     * Gets an immutable List of ICacheRecords for this app which have RefreshTokens in the cache.
+     * Please note, these records are sparse: no access_tokens or refresh_tokens will be returned.
+     *
+     * @param clientId    The current application.
+     * @param environment The current environment.
+     * @return An immutable List of ICacheRecords.
+     */
+    public abstract List<ICacheRecord> getAccountsWithIdTokens(
+            final String environment,
+            final String clientId
+    );
+
+    /**
      * Gets an immutable List of IdTokenRecords for the supplied AccountRecord.
      *
      * @param clientId      The client id of the app to query.

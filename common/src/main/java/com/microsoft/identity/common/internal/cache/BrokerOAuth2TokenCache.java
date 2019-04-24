@@ -618,6 +618,12 @@ public class BrokerOAuth2TokenCache
     }
 
     @Override
+    public List<ICacheRecord> getAccountsWithIdTokens(String environment, String clientId) {
+        // TODO implement
+        return null;
+    }
+
+    @Override
     public List<IdTokenRecord> getIdTokensForAccount(String clientId, AccountRecord accountRecord) {
         // TODO implement
         return null;
