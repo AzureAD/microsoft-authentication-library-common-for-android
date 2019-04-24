@@ -33,9 +33,9 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFuture;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
 import java.io.UnsupportedEncodingException;
@@ -49,7 +49,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     private CustomTabsManager mCustomTabManager;
     private WeakReference<Activity> mReferencedActivity;
     private PendingIntent mResultIntent;
-    private AuthorizationResultFuture mAuthorizationResultFuture;
+    private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
@@ -68,7 +68,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         checkNotDisposed();
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
-        mAuthorizationResultFuture = new AuthorizationResultFuture();
+        mAuthorizationResultFuture = new ResultFuture();
         final Browser browser = BrowserSelector.select(mReferencedActivity.get().getApplicationContext());
 
         //ClientException will be thrown if no browser found.
@@ -122,7 +122,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         if (requestCode == BROWSER_FLOW) {
             dispose();
             final AuthorizationResult result = mOAuth2Strategy.getAuthorizationResultFactory().createAuthorizationResult(resultCode, data, mAuthorizationRequest);
-            mAuthorizationResultFuture.setAuthorizationResult(result);
+            mAuthorizationResultFuture.setResult(result);
         } else {
             Logger.warnPII(TAG, "Unknown request code " + requestCode);
         }

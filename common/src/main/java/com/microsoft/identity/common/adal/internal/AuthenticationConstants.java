@@ -123,6 +123,11 @@ public final class AuthenticationConstants {
          * Sub error returned by server representing the user cancel the auth flow.
          */
         public static final String SUB_ERROR_UI_CANCEL = "cancel";
+
+        /**
+         * V2 endpoint for logging the user out in browser.
+         */
+        public static final String LOGOUT_ENDPOINT_V2 = "https://login.microsoftonline.com/common/oauth2/v2.0/logout";
     }
 
     /**
