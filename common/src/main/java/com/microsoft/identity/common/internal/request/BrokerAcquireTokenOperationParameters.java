@@ -145,7 +145,8 @@ public class BrokerAcquireTokenOperationParameters extends AcquireTokenOperation
                         "OAuth2Cache not an instance of BrokerOAuth2TokenCache"
                 );
             }
-            if(!BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAppContext(), getCallerPackageName())){
+            if(SdkType.MSAL == getSdkType() &&
+                    !BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAppContext(), getCallerPackageName())){
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                         "mRedirectUri", "The redirect URI doesn't match the uri" +
