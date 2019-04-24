@@ -88,49 +88,15 @@ public class BrowserDescriptor implements Serializable {
         }
 
         if (!StringUtil.isEmpty(mVersionLowerBound)
-                && compareSemanticVersion(browser.getVersion(), mVersionLowerBound) == -1) {
+                && StringUtil.compareSemanticVersion(browser.getVersion(), mVersionLowerBound) == -1) {
             return false;
         }
 
         if (!StringUtil.isEmpty(mVersionUpperBound)
-                && compareSemanticVersion(browser.getVersion(), mVersionUpperBound) == 1) {
+                && StringUtil.compareSemanticVersion(browser.getVersion(), mVersionUpperBound) == 1) {
             return false;
         }
 
         return true;
     }
-
-    /**
-     * The function to compare the two versions.
-     *
-     * @param thisVersion
-     * @param thatVersion
-     * @return int -1 if thisVersion is smaller than thatVersion,
-     *         1 if thisVersion is larger than thatVersion,
-     *         0 if thisVersion is equal to thatVersion.
-     */
-    private int compareSemanticVersion(
-            @NonNull final String thisVersion,
-            @NonNull final String thatVersion) {
-        final String[] thisParts = thisVersion.split("\\.");
-        final String[] thatParts = thatVersion.split("\\.");
-        final int length = Math.max(thisParts.length, thatParts.length);
-        for(int i = 0; i < length; i++) {
-            int thisPart = i < thisParts.length ?
-                    Integer.parseInt(thisParts[i]) : 0;
-            int thatPart = i < thatParts.length ?
-                    Integer.parseInt(thatParts[i]) : 0;
-
-            if(thisPart < thatPart) {
-                return -1;
-            }
-
-            if(thisPart > thatPart) {
-                return 1;
-            }
-        }
-
-        return 0;
-    }
-
 }
