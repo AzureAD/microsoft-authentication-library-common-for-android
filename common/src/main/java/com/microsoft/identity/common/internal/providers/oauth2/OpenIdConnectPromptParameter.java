@@ -71,12 +71,12 @@ public enum OpenIdConnectPromptParameter {
             case "Auto":
             case "REFRESH_SESSION":
             case "Always":
-                return OpenIdConnectPromptParameter.SELECT_ACCOUNT;
+                return OpenIdConnectPromptParameter.NONE;
 
             case "FORCE_PROMPT":
                 return OpenIdConnectPromptParameter.LOGIN;
             default:
-                return OpenIdConnectPromptParameter.SELECT_ACCOUNT;
+                return OpenIdConnectPromptParameter.NONE;
         }
     }
 }
