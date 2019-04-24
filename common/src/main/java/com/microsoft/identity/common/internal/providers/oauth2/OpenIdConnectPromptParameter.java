@@ -70,13 +70,15 @@ public enum OpenIdConnectPromptParameter {
         switch (promptBehavior) {
             case "Auto":
             case "REFRESH_SESSION":
+            // This case is exclusively for ADAL without Broker, where user is prompted to enter credentials.
+            // With Broker, this is treated a Auto.
             case "Always":
-                return OpenIdConnectPromptParameter.SELECT_ACCOUNT;
+                return OpenIdConnectPromptParameter.NONE;
 
             case "FORCE_PROMPT":
                 return OpenIdConnectPromptParameter.LOGIN;
             default:
-                return OpenIdConnectPromptParameter.SELECT_ACCOUNT;
+                return OpenIdConnectPromptParameter.NONE;
         }
     }
 }
