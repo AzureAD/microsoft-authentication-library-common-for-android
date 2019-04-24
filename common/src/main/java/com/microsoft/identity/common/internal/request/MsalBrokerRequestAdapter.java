@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
@@ -19,6 +20,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,8 +95,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final Intent intent = callingActivity.getIntent();
 
-        final BrokerRequest brokerRequest = (BrokerRequest) intent.getSerializableExtra(
-                AuthenticationConstants.Broker.BROKER_REQUEST_V2);
+        final BrokerRequest brokerRequest = new Gson().fromJson(
+                intent.getStringExtra(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
+                BrokerRequest.class);
 
         parameters.setActivity(callingActivity);
 
@@ -161,9 +164,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.verbose(TAG, "Constructing BrokerAcquireTokenSilentOperationParameters from result bundle");
 
-        final BrokerRequest brokerRequest = (BrokerRequest) bundle.getSerializable(
-                AuthenticationConstants.Broker.BROKER_REQUEST_V2
-        );
+        final BrokerRequest brokerRequest = new Gson().fromJson(
+                bundle.getString(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
+                BrokerRequest.class);
 
         final BrokerAcquireTokenSilentOperationParameters parameters =
                 new BrokerAcquireTokenSilentOperationParameters();
@@ -229,6 +232,24 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
         final String[] scopes = scopeString.split(" ");
         return new HashSet<>(Arrays.asList(scopes));
+    }
+
+    /**
+     * Create the request bundle for IMicrosoftAuthService.hello().
+     * @param parameters AcquireTokenSilentOperationParameters
+     * @return request bundle
+     */
+    public static Bundle getBrokerHelloBundle(@NonNull final AcquireTokenSilentOperationParameters parameters) {
+        final Bundle requestBundle = new Bundle();
+        requestBundle.putString(AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
+                AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);
+
+        if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {
+            requestBundle.putString(AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
+                    parameters.getRequiredBrokerProtocolVersion());
+        }
+
+        return requestBundle;
     }
 
     /**

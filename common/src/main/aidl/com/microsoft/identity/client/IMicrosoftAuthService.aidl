@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 
 package com.microsoft.identity.client;
+
 /**
  * Broker Account service APIs provided by the broker app. Those APIs will be responsible for interacting with the
  * account manager API. Calling app does not need to request for contacts permission if the broker installed on the
@@ -29,13 +30,15 @@ package com.microsoft.identity.client;
  */
 interface IMicrosoftAuthService {
 
-    Bundle connect(in Bundle bundle);
+    Bundle hello(in Bundle bundle);
 
-    Bundle getAccounts();
+    Bundle getAccounts(in Bundle bundle);
 
     Bundle acquireTokenSilently(in Bundle requestBundle);
 
     Intent getIntentForInteractiveRequest();
 
-    void removeAccounts();
+    Bundle removeAccount(in Bundle bundle);
+
+    Bundle signOutFromSharedDevice(in Bundle bundle);
 }
