@@ -72,7 +72,7 @@ public enum OpenIdConnectPromptParameter {
      */
     public static OpenIdConnectPromptParameter _fromPromptBehavior(@Nullable final String promptBehavior) {
 
-        return !TextUtils.isEmpty(promptBehavior) && promptBehavior.equals("FORCE_PROMPT") ?
+        return promptBehavior != null && promptBehavior.equals("FORCE_PROMPT") ?
                 OpenIdConnectPromptParameter.LOGIN :
                 OpenIdConnectPromptParameter.NONE;
     }
