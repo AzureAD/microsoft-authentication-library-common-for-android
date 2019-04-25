@@ -23,6 +23,9 @@
 
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
+
 /**
  * The UI options that developer can pass during interactive token acquisition requests.
  */
@@ -60,25 +63,17 @@ public enum OpenIdConnectPromptParameter {
         return this.name().toLowerCase();
     }
 
+
+
     /**
      * Utility method to map Adal PromptBehavior with OpenIdConnectPromptParameter
      * @param promptBehavior
      * @return
      */
-    public static OpenIdConnectPromptParameter _fromPromptBehavior(final String promptBehavior){
+    public static OpenIdConnectPromptParameter _fromPromptBehavior(@Nullable final String promptBehavior) {
 
-        switch (promptBehavior) {
-            case "Auto":
-            case "REFRESH_SESSION":
-            // This case is exclusively for ADAL without Broker, where user is prompted to enter credentials.
-            // With Broker, this is treated a Auto.
-            case "Always":
-                return OpenIdConnectPromptParameter.NONE;
-
-            case "FORCE_PROMPT":
-                return OpenIdConnectPromptParameter.LOGIN;
-            default:
-                return OpenIdConnectPromptParameter.NONE;
-        }
+        return !TextUtils.isEmpty(promptBehavior) && promptBehavior.equals("FORCE_PROMPT") ?
+                OpenIdConnectPromptParameter.LOGIN :
+                OpenIdConnectPromptParameter.NONE;
     }
 }
