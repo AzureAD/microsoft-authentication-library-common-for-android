@@ -252,9 +252,11 @@ public class MsalOAuth2TokenCache
         // Add the result to the result List
         result.add(savedRecord);
 
-        final List<AccountRecord> corollaryAccounts = getCorollaryAccounts(
-                savedRecord.getRefreshToken().getClientId(),
-                savedRecord.getAccount() // This account wil be the 0th element in the result.
+        final List<AccountRecord> corollaryAccounts = new ArrayList<>(
+                getCorollaryAccounts(
+                        savedRecord.getRefreshToken().getClientId(),
+                        savedRecord.getAccount() // This account wil be the 0th element in the result.
+                )
         );
 
         if (!corollaryAccounts.isEmpty()) {
@@ -615,7 +617,7 @@ public class MsalOAuth2TokenCache
             }
         }
 
-        return result;
+        return Collections.unmodifiableList(result);
     }
 
     @Override
@@ -789,7 +791,7 @@ public class MsalOAuth2TokenCache
             }
         }
 
-        return corollaryAccounts;
+        return Collections.unmodifiableList(corollaryAccounts);
     }
 
     @Override
