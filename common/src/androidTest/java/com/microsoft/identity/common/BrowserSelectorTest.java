@@ -32,6 +32,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
 import android.net.Uri;
+import android.os.Build;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.microsoft.identity.common.exception.ClientException;
@@ -128,7 +129,7 @@ public class BrowserSelectorTest {
     }
 
     @Test
-    public void testSelect_versionNotSupportedBrowser() throws NameNotFoundException, ClientException {
+    public void testSelect_versionNotSupportedBrowser() throws NameNotFoundException {
         setBrowserList(CHROME, FIREFOX);
         when(mContext.getPackageManager().resolveActivity(BROWSER_INTENT, 0))
                 .thenReturn(CHROME.mResolveInfo);
@@ -158,7 +159,7 @@ public class BrowserSelectorTest {
             return;
         }
 
-        List<ResolveInfo> resolveInfos = new ArrayList<>();
+        final List<ResolveInfo> resolveInfos = new ArrayList<>();
 
         for (TestBrowser browser : browsers) {
             when(mPackageManager.getPackageInfo(
@@ -168,12 +169,16 @@ public class BrowserSelectorTest {
             resolveInfos.add(browser.mResolveInfo);
         }
 
+        int queryFlag = PackageManager.GET_RESOLVED_FILTER;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            queryFlag |= PackageManager.MATCH_DEFAULT_ONLY;
+        }
+
         when(mPackageManager.queryIntentActivities(
                 BROWSER_INTENT,
-                PackageManager.GET_RESOLVED_FILTER))
+                queryFlag))
                 .thenReturn(resolveInfos);
     }
-
 
     private static class TestBrowser {
         final String mPackageName;
