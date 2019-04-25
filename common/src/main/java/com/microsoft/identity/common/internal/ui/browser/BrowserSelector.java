@@ -55,12 +55,12 @@ public class BrowserSelector {
      */
     public static Browser select(final Context context, final List<BrowserDescriptor> browserSafeList) throws ClientException {
         final List<Browser> allBrowsers = getAllBrowsers(context);
+        Logger.verbose(TAG, "Select the browser to launch.");
 
         for (Browser browser : allBrowsers) {
             for (BrowserDescriptor browserDescriptor : browserSafeList) {
                 if (browserDescriptor.matches(browser)) {
-                    Logger.verbose(TAG, "Select the browser to launch.");
-                    Logger.verbosePII(
+                    Logger.verbose(
                             TAG,
                             "Browser's package name: "
                                     + browser.getPackageName()
