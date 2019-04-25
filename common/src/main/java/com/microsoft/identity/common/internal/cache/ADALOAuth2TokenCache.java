@@ -35,6 +35,7 @@ import com.microsoft.identity.common.adal.internal.cache.CacheKey;
 import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
@@ -170,6 +171,13 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
+    public List<ICacheRecord> saveAndLoadAggregatedAccountData(AzureActiveDirectoryOAuth2Strategy oAuth2Strategy, AzureActiveDirectoryAuthorizationRequest request, AzureActiveDirectoryTokenResponse response) throws ClientException {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
     public ICacheRecord save(final AccountRecord accountRecord,
                              final IdTokenRecord idTokenRecord) {
         throw new UnsupportedOperationException(
@@ -205,9 +213,9 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public AccountRecord getAccountWithLocalAccountId(final String environment,
-                                                      final String clientId,
-                                                      final String localAccountId) {
+    public AccountRecord getAccountByLocalAccountId(final String environment,
+                                                    final String clientId,
+                                                    final String localAccountId) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
@@ -216,6 +224,13 @@ public class ADALOAuth2TokenCache
     @Override
     public List<AccountRecord> getAccounts(final String environment,
                                            final String clientId) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public List<AccountRecord> getCorollaryAccounts(String clientId, AccountRecord accountRecord) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );

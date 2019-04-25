@@ -656,7 +656,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        final AccountRecord account = mBrokerOAuth2TokenCache.getAccountWithLocalAccountId(
+        final AccountRecord account = mBrokerOAuth2TokenCache.getAccountByLocalAccountId(
                 ENVIRONMENT,
                 CLIENT_ID,
                 LOCAL_ACCOUNT_ID
@@ -675,7 +675,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        final AccountRecord account = mBrokerOAuth2TokenCache.getAccountWithLocalAccountId(
+        final AccountRecord account = mBrokerOAuth2TokenCache.getAccountByLocalAccountId(
                 ENVIRONMENT,
                 CLIENT_ID,
                 LOCAL_ACCOUNT_ID

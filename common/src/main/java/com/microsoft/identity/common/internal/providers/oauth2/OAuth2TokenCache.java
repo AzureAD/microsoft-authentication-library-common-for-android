@@ -65,6 +65,26 @@ public abstract class OAuth2TokenCache
                                       final V response) throws ClientException;
 
     /**
+     * Saves the credentials and tokens returned by the service to the cache and returns all of
+     * the AccountRecords associated to the target home_account_id for the target client_id and
+     * environment. Please note, only the ICacheRecord associated to *this* save() action is
+     * fully-formed (returning both the access_token and refresh_token in the payload),
+     * all other ICacheRecords in the result will be sparse, containing only the AccountRecord
+     * and IdTokenRecord.
+     *
+     * @param oAuth2Strategy The strategy used to create the token request.
+     * @param request        The request used to acquire tokens and credentials.
+     * @param response       The response received from the IdP/STS.
+     * @return A {@link List} of {@link ICacheRecord} associated with this principal, client_id,
+     * and environment.
+     * @throws ClientException If tokens cannot be successfully saved.
+     */
+    public abstract List<ICacheRecord> saveAndLoadAggregatedAccountData(
+            final T oAuth2Strategy,
+            final U request,
+            final V response) throws ClientException;
+
+    /**
      * Saves the supplied Account and Credential in the cache.
      *
      * @param accountRecord The AccountRecord to save.
@@ -120,9 +140,9 @@ public abstract class OAuth2TokenCache
      * @param localAccountId The local account id of the targeted account.
      * @return The sought AccountRecord or null if it cannot be found.
      */
-    public abstract AccountRecord getAccountWithLocalAccountId(final String environment,
-                                                               final String clientId,
-                                                               final String localAccountId
+    public abstract AccountRecord getAccountByLocalAccountId(final String environment,
+                                                             final String clientId,
+                                                             final String localAccountId
     );
 
     /**
@@ -132,7 +152,23 @@ public abstract class OAuth2TokenCache
      * @param environment The current environment.
      * @return An immutable List of AccountRecords.
      */
-    public abstract List<AccountRecord> getAccounts(final String environment, final String clientId);
+    public abstract List<AccountRecord> getAccounts(final String environment,
+                                                    final String clientId
+    );
+
+    /**
+     * For a provided {@link AccountRecord} and clientId, find other AccountRecords which share a
+     * home_account_id and environment.
+     * <p>
+     * The originally provided AccountRecord will be provided in the result as the 0th element.
+     *
+     * @param clientId      The current application.
+     * @param accountRecord The AccountRecord whose corollary AccountRecords should be loaded.
+     * @return
+     */
+    public abstract List<AccountRecord> getCorollaryAccounts(final String clientId,
+                                                             final AccountRecord accountRecord
+    );
 
     /**
      * Gets an immutable List of ICacheRecords for this app which have RefreshTokens in the cache.

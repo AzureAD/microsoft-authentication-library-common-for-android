@@ -68,9 +68,9 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
     static final String CACHED_AT = "0";
     static final String EXPIRES_ON = "0";
     static final String SECRET = "3642fe2f-2c46-4824-9f27-e44b0e3e1278";
+    static final String REALM2 = "20d3e9fa-982a-40bc-bea4-26bbe3fd332e";
 
     private static final String ENVIRONMENT_LEGACY = "login.windows.net";
-    private static final String REALM2 = "20d3e9fa-982a-40bc-bea4-26bbe3fd332e";
     private static final String REALM3 = "fc5171ec-2889-4ba6-bd1f-216fe87a8613";
 
     // The names of the SharedPreferences file on disk - must match SharedPreferencesAccountCredentialCache declaration to test impl

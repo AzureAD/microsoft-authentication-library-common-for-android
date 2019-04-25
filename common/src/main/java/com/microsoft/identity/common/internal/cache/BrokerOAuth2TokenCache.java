@@ -297,6 +297,12 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
+    @Override
+    public List<ICacheRecord> saveAndLoadAggregatedAccountData(GenericOAuth2Strategy oAuth2Strategy, GenericAuthorizationRequest request, GenericTokenResponse response) throws ClientException {
+        // TODO implement
+        return null;
+    }
+
     private void updateApplicationMetadataCache(@NonNull final String clientId,
                                                 @NonNull final String environment,
                                                 @Nullable final String familyId,
@@ -522,10 +528,10 @@ public class BrokerOAuth2TokenCache
 
     @Override
     @Nullable
-    public AccountRecord getAccountWithLocalAccountId(@Nullable final String environment,
-                                                      @NonNull final String clientId,
-                                                      @NonNull final String localAccountId) {
-        final String methodName = ":getAccountWithLocalAccountId";
+    public AccountRecord getAccountByLocalAccountId(@Nullable final String environment,
+                                                    @NonNull final String clientId,
+                                                    @NonNull final String localAccountId) {
+        final String methodName = ":getAccountByLocalAccountId";
 
         Logger.verbose(
                 TAG + methodName,
@@ -540,13 +546,13 @@ public class BrokerOAuth2TokenCache
             );
 
             if (null != targetCache) {
-                return targetCache.getAccountWithLocalAccountId(
+                return targetCache.getAccountByLocalAccountId(
                         environment,
                         clientId,
                         localAccountId
                 );
             } else {
-                return mFociCache.getAccountWithLocalAccountId(
+                return mFociCache.getAccountByLocalAccountId(
                         environment,
                         clientId,
                         localAccountId
@@ -561,7 +567,7 @@ public class BrokerOAuth2TokenCache
             while (null == result && cacheIterator.hasNext()) {
                 result = cacheIterator
                         .next()
-                        .getAccountWithLocalAccountId(
+                        .getAccountByLocalAccountId(
                                 environment,
                                 clientId,
                                 localAccountId
@@ -615,6 +621,12 @@ public class BrokerOAuth2TokenCache
         }
 
         return result;
+    }
+
+    @Override
+    public List<AccountRecord> getCorollaryAccounts(String clientId, AccountRecord accountRecord) {
+        // TODO
+        return null;
     }
 
     @Override

@@ -246,6 +246,73 @@ public class MsalOAuth2TokenCache
         return result;
     }
 
+    @Override
+    public List<ICacheRecord> saveAndLoadAggregatedAccountData(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
+                                                               @NonNull final GenericAuthorizationRequest request,
+                                                               @NonNull final GenericTokenResponse response) throws ClientException {
+        final String methodName = ":saveAndLoadAggregatedAccountData";
+        final List<ICacheRecord> result = new ArrayList<>();
+
+        // Save and get the result
+        final ICacheRecord savedRecord = save(oAuth2Strategy, request, response);
+
+        // Add the result to the result List
+        result.add(savedRecord);
+
+        final List<AccountRecord> corollaryAccounts = getCorollaryAccounts(
+                savedRecord.getRefreshToken().getClientId(),
+                savedRecord.getAccount() // This account wil be the 0th element in the result.
+        );
+
+        if (!corollaryAccounts.isEmpty()) {
+            // Remove the first element from the List since it is already contained in the result List
+            corollaryAccounts.remove(0);
+
+            // Iterate over the rest of the Accounts to build up the final result
+            for (final AccountRecord acct : corollaryAccounts) {
+                final List<IdTokenRecord> acctIdTokens = getIdTokensForAccount(
+                        savedRecord.getRefreshToken().getClientId(),
+                        acct
+                );
+
+                if (acctIdTokens.size() > new CredentialType[]{
+                        CredentialType.IdToken,
+                        CredentialType.V1IdToken
+                }.length) { // We shouldn't have more idtokens than types of idtokens... 1 each
+                    Logger.warn(
+                            TAG + methodName,
+                            "Found more IdTokens than expected."
+                                    + "\nFound: [" + acctIdTokens.size() + "]"
+                    );
+                }
+
+                final CacheRecord associatedRecord = new CacheRecord();
+                associatedRecord.setAccount(acct);
+
+                for (final IdTokenRecord idTokenRecord : acctIdTokens) {
+                    final CredentialType thisCredentialType = CredentialType.fromString(
+                            idTokenRecord.getCredentialType()
+                    );
+
+                    if (CredentialType.IdToken == thisCredentialType) {
+                        associatedRecord.setIdToken(idTokenRecord);
+                    } else if (CredentialType.V1IdToken == thisCredentialType) {
+                        associatedRecord.setV1IdToken(idTokenRecord);
+                    } else {
+                        Logger.warn(
+                                TAG + methodName,
+                                "Unrecognized IdToken type: " + thisCredentialType
+                        );
+                    }
+                }
+
+                result.add(associatedRecord);
+            }
+        }
+
+        return result;
+    }
+
     private int removeRefreshTokensForAccount(@NonNull final AccountRecord accountToSave,
                                               final boolean isFamilyRefreshToken,
                                               @NonNull final String environment,
@@ -517,10 +584,10 @@ public class MsalOAuth2TokenCache
 
     @Override
     @Nullable
-    public AccountRecord getAccountWithLocalAccountId(@Nullable final String environment,
-                                                      @NonNull final String clientId,
-                                                      @NonNull final String localAccountId) {
-        final String methodName = ":getAccountWithLocalAccountId";
+    public AccountRecord getAccountByLocalAccountId(@Nullable final String environment,
+                                                    @NonNull final String clientId,
+                                                    @NonNull final String localAccountId) {
+        final String methodName = ":getAccountByLocalAccountId";
 
         final List<AccountRecord> accounts = getAccounts(environment, clientId);
 
@@ -604,6 +671,38 @@ public class MsalOAuth2TokenCache
         );
 
         return Collections.unmodifiableList(accountsForThisApp);
+    }
+
+    @Override
+    public List<AccountRecord> getCorollaryAccounts(@NonNull final String clientId,
+                                                    @NonNull final AccountRecord accountRecord) {
+        final List<AccountRecord> corollaryAccounts = new ArrayList<>();
+
+        // Add the supplied AccountRecord as the 0th element...
+        corollaryAccounts.add(accountRecord);
+
+        // Grab all the accounts which might match
+        final List<AccountRecord> allMatchingAccountsByHomeId =
+                mAccountCredentialCache.getAccountsFilteredBy(
+                        accountRecord.getHomeAccountId(),
+                        accountRecord.getEnvironment(),
+                        null // realm
+                );
+
+        // Grab all of the AccountRecords associated with this clientId
+        final List<AccountRecord> allAppAccounts = getAccounts(
+                accountRecord.getEnvironment(),
+                clientId
+        );
+
+        // Iterate and populate
+        for (final AccountRecord acct : allAppAccounts) {
+            if (allMatchingAccountsByHomeId.contains(acct) && !accountRecord.equals(acct)) {
+                corollaryAccounts.add(acct);
+            }
+        }
+
+        return corollaryAccounts;
     }
 
     @Override

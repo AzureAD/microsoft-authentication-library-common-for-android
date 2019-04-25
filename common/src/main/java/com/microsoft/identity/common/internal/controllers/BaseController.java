@@ -442,7 +442,7 @@ public abstract class BaseController {
         final AccountRecord targetAccount =
                 parameters
                         .getTokenCache()
-                        .getAccountWithLocalAccountId(
+                        .getAccountByLocalAccountId(
                                 null,
                                 clientId,
                                 localAccountId
