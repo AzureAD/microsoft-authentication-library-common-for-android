@@ -110,6 +110,22 @@ public abstract class OAuth2TokenCache
     );
 
     /**
+     * Loads the tokens for the supplied Account into the result {@link ICacheRecord} - this will
+     * be the first element in the result List. Subsequent ICacheRecords are sparse records for
+     * other authorized tenants.
+     *
+     * @param clientId The ClientId of the current app.
+     * @param target   The 'target' (scopes) the requested token should contain.
+     * @param account  The Account whose Credentials should be loaded.
+     * @return The resulting ICacheRecord. Entries may be empty if not present in the cache.
+     */
+    public abstract List<ICacheRecord> loadWithAggregatedAccountData(
+            final String clientId,
+            final String target,
+            final AccountRecord account
+    );
+
+    /**
      * Removes the supplied Credential from the cache.
      *
      * @param credential The Credential to remove.
@@ -133,6 +149,20 @@ public abstract class OAuth2TokenCache
     );
 
     /**
+     * Returns sparse ICacheRecords (containing only AccountRecord + IdTokenRecord) based on the
+     * supplied criteria.
+     *
+     * @param environment   The environment to which the sought AccountRecord is associated.
+     * @param clientId      The clientId to which the sought AccountRecord is associated.
+     * @param homeAccountId The homeAccountId of the sought AccountRecord.
+     * @return An unmodifiable List of ICacheRecords matching the supplid criteria.
+     */
+    public abstract List<ICacheRecord> getAccountsWithAggregatedAccountData(final String environment,
+                                                                            final String clientId,
+                                                                            final String homeAccountId
+    );
+
+    /**
      * Returns the AccountRecord matching the supplied criteria.
      *
      * @param environment    The environment to which the sought IAccount is associated.
@@ -143,6 +173,20 @@ public abstract class OAuth2TokenCache
     public abstract AccountRecord getAccountByLocalAccountId(final String environment,
                                                              final String clientId,
                                                              final String localAccountId
+    );
+
+    /**
+     * Returns the ICacheRecord matching the supplied criteria.
+     *
+     * @param environment    The environment to which the sought IAccount is associated.
+     * @param clientId       The clientId to which the sought IAccount is associated.
+     * @param localAccountId The local account id of the targeted account.
+     * @return The sought AccountRecord or null if it cannot be found.
+     */
+    public abstract ICacheRecord getAccountWithAggregatedAccountDataByLocalAccountId(
+            final String environment,
+            final String clientId,
+            final String localAccountId
     );
 
     /**

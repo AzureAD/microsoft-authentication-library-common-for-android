@@ -409,6 +409,12 @@ public class BrokerOAuth2TokenCache
     }
 
     @Override
+    public List<ICacheRecord> loadWithAggregatedAccountData(String clientId, String target, AccountRecord account) {
+        // TODO implement
+        return null;
+    }
+
+    @Override
     public boolean removeCredential(@NonNull final Credential credential) {
         final String methodName = ":removeCredential";
 
@@ -497,6 +503,12 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
+    @Override
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(String environment, String clientId, String homeAccountId) {
+        // TODO implement
+        return null;
+    }
+
     private List<OAuth2TokenCache> getTokenCachesForClientId(@NonNull final String clientId) {
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
         final List<OAuth2TokenCache> result = new ArrayList<>();
@@ -576,6 +588,12 @@ public class BrokerOAuth2TokenCache
 
             return result;
         }
+    }
+
+    @Override
+    public ICacheRecord getAccountWithAggregatedAccountDataByLocalAccountId(String environment, String clientId, String localAccountId) {
+        // TODO
+        return null;
     }
 
     @SuppressWarnings(UNCHECKED)

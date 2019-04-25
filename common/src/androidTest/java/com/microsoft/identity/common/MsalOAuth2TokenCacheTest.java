@@ -683,6 +683,94 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
+    public void getAccountByLocalAccountIdWithAggregatedData() throws ClientException {
+        // Save an Account into the cache
+        mOauth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final ICacheRecord resultRecord =
+                mOauth2TokenCache.getAccountWithAggregatedAccountDataByLocalAccountId(
+                        ENVIRONMENT,
+                        CLIENT_ID,
+                        LOCAL_ACCOUNT_ID
+                );
+
+        assertNotNull(resultRecord);
+        assertNotNull(resultRecord.getAccount());
+        assertNotNull(resultRecord.getIdToken());
+        assertNull(resultRecord.getV1IdToken());
+        assertNull(resultRecord.getAccessToken());
+        assertNull(resultRecord.getRefreshToken());
+    }
+
+    @Test
+    public void getAccountByLocalAccountIdWithAggregatedDataV1() throws ClientException {
+        // Save an Account into the cache
+        loadTestBundleIntoCache(defaultTestBundleV1);
+
+        final ICacheRecord resultRecord =
+                mOauth2TokenCache.getAccountWithAggregatedAccountDataByLocalAccountId(
+                        ENVIRONMENT,
+                        CLIENT_ID,
+                        LOCAL_ACCOUNT_ID
+                );
+
+        assertNotNull(resultRecord);
+        assertNotNull(resultRecord.getAccount());
+        assertNotNull(resultRecord.getV1IdToken());
+        assertNull(resultRecord.getIdToken());
+        assertNull(resultRecord.getAccessToken());
+        assertNull(resultRecord.getRefreshToken());
+    }
+
+    @Test
+    public void getAccountsWithAggregatedAccountData() throws ClientException {
+        loadTestBundleIntoCache(defaultTestBundleV2);
+
+        final List<ICacheRecord> cacheRecords =
+                mOauth2TokenCache.getAccountsWithAggregatedAccountData(
+                        ENVIRONMENT,
+                        CLIENT_ID,
+                        HOME_ACCOUNT_ID
+                );
+
+        assertEquals(1, cacheRecords.size());
+
+        final ICacheRecord cacheRecord = cacheRecords.get(0);
+
+        assertNotNull(cacheRecord.getAccount());
+        assertNotNull(cacheRecord.getIdToken());
+        assertNull(cacheRecord.getAccessToken());
+        assertNull(cacheRecord.getRefreshToken());
+        assertNull(cacheRecord.getV1IdToken());
+    }
+
+    @Test
+    public void getAccountsWithAggregatedAccountDataV1() throws ClientException {
+        loadTestBundleIntoCache(defaultTestBundleV1);
+
+        final List<ICacheRecord> cacheRecords =
+                mOauth2TokenCache.getAccountsWithAggregatedAccountData(
+                        ENVIRONMENT,
+                        CLIENT_ID,
+                        HOME_ACCOUNT_ID
+                );
+
+        assertEquals(1, cacheRecords.size());
+
+        final ICacheRecord cacheRecord = cacheRecords.get(0);
+
+        assertNotNull(cacheRecord.getAccount());
+        assertNotNull(cacheRecord.getV1IdToken());
+        assertNull(cacheRecord.getAccessToken());
+        assertNull(cacheRecord.getRefreshToken());
+        assertNull(cacheRecord.getIdToken());
+    }
+
+    @Test
     public void getAccountCacheEmpty() {
         final AccountRecord account = mOauth2TokenCache.getAccount(
                 ENVIRONMENT,
@@ -977,6 +1065,58 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         );
 
         assertEquals(result, secondaryLoad);
+    }
+
+    @Test
+    public void loadTokensWithAggregatedData() throws ClientException {
+        final ICacheRecord result = loadTestBundleIntoCache(defaultTestBundleV2);
+
+        assertEquals(defaultTestBundleV2.mGeneratedAccount, result.getAccount());
+        assertEquals(defaultTestBundleV2.mGeneratedAccessToken, result.getAccessToken());
+        assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, result.getRefreshToken());
+        assertEquals(defaultTestBundleV2.mGeneratedIdToken, result.getIdToken());
+
+        final List<ICacheRecord> secondaryLoad =
+                mOauth2TokenCache.loadWithAggregatedAccountData(
+                        CLIENT_ID,
+                        TARGET,
+                        defaultTestBundleV2.mGeneratedAccount
+                );
+
+        assertEquals(1, secondaryLoad.size());
+
+        final ICacheRecord secondaryResult = secondaryLoad.get(0);
+
+        assertEquals(defaultTestBundleV2.mGeneratedAccount, secondaryResult.getAccount());
+        assertEquals(defaultTestBundleV2.mGeneratedAccessToken, secondaryResult.getAccessToken());
+        assertEquals(defaultTestBundleV2.mGeneratedIdToken, secondaryResult.getIdToken());
+        assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, secondaryResult.getRefreshToken());
+    }
+
+    @Test
+    public void loadTokensWithAggregatedDataV1() throws ClientException {
+        final ICacheRecord result = loadTestBundleIntoCache(defaultTestBundleV1);
+
+        assertEquals(defaultTestBundleV1.mGeneratedAccount, result.getAccount());
+        assertEquals(defaultTestBundleV1.mGeneratedAccessToken, result.getAccessToken());
+        assertEquals(defaultTestBundleV1.mGeneratedRefreshToken, result.getRefreshToken());
+        assertEquals(defaultTestBundleV1.mGeneratedIdToken, result.getV1IdToken());
+
+        final List<ICacheRecord> secondaryLoad =
+                mOauth2TokenCache.loadWithAggregatedAccountData(
+                        CLIENT_ID,
+                        TARGET,
+                        defaultTestBundleV1.mGeneratedAccount
+                );
+
+        assertEquals(1, secondaryLoad.size());
+
+        final ICacheRecord secondaryResult = secondaryLoad.get(0);
+
+        assertEquals(defaultTestBundleV1.mGeneratedAccount, secondaryResult.getAccount());
+        assertEquals(defaultTestBundleV1.mGeneratedAccessToken, secondaryResult.getAccessToken());
+        assertEquals(defaultTestBundleV1.mGeneratedIdToken, secondaryResult.getV1IdToken());
+        assertEquals(defaultTestBundleV1.mGeneratedRefreshToken, secondaryResult.getRefreshToken());
     }
 
     @Test

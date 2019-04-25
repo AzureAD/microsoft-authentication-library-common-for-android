@@ -196,6 +196,13 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
+    public List<ICacheRecord> loadWithAggregatedAccountData(String clientId, String target, AccountRecord account) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
     public boolean removeCredential(Credential credential) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
@@ -213,9 +220,23 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(String environment, String clientId, String homeAccountId) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
     public AccountRecord getAccountByLocalAccountId(final String environment,
                                                     final String clientId,
                                                     final String localAccountId) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public ICacheRecord getAccountWithAggregatedAccountDataByLocalAccountId(String environment, String clientId, String localAccountId) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );

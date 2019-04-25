@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -236,12 +235,7 @@ public class MsalOAuth2TokenCache
         result.setAccount(accountToSave);
         result.setAccessToken(accessTokenToSave);
         result.setRefreshToken(refreshTokenToSave);
-
-        if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenToSave.getCredentialType())) {
-            result.setV1IdToken(idTokenToSave);
-        } else {
-            result.setIdToken(idTokenToSave);
-        }
+        setToCacheRecord(result, idTokenToSave);
 
         return result;
     }
@@ -250,7 +244,6 @@ public class MsalOAuth2TokenCache
     public List<ICacheRecord> saveAndLoadAggregatedAccountData(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
                                                                @NonNull final GenericAuthorizationRequest request,
                                                                @NonNull final GenericTokenResponse response) throws ClientException {
-        final String methodName = ":saveAndLoadAggregatedAccountData";
         final List<ICacheRecord> result = new ArrayList<>();
 
         // Save and get the result
@@ -270,47 +263,46 @@ public class MsalOAuth2TokenCache
 
             // Iterate over the rest of the Accounts to build up the final result
             for (final AccountRecord acct : corollaryAccounts) {
-                final List<IdTokenRecord> acctIdTokens = getIdTokensForAccount(
-                        savedRecord.getRefreshToken().getClientId(),
-                        acct
+                result.add(
+                        getSparseCacheRecordForAccount(
+                                savedRecord.getRefreshToken().getClientId(),
+                                acct
+                        )
                 );
-
-                if (acctIdTokens.size() > new CredentialType[]{
-                        CredentialType.IdToken,
-                        CredentialType.V1IdToken
-                }.length) { // We shouldn't have more idtokens than types of idtokens... 1 each
-                    Logger.warn(
-                            TAG + methodName,
-                            "Found more IdTokens than expected."
-                                    + "\nFound: [" + acctIdTokens.size() + "]"
-                    );
-                }
-
-                final CacheRecord associatedRecord = new CacheRecord();
-                associatedRecord.setAccount(acct);
-
-                for (final IdTokenRecord idTokenRecord : acctIdTokens) {
-                    final CredentialType thisCredentialType = CredentialType.fromString(
-                            idTokenRecord.getCredentialType()
-                    );
-
-                    if (CredentialType.IdToken == thisCredentialType) {
-                        associatedRecord.setIdToken(idTokenRecord);
-                    } else if (CredentialType.V1IdToken == thisCredentialType) {
-                        associatedRecord.setV1IdToken(idTokenRecord);
-                    } else {
-                        Logger.warn(
-                                TAG + methodName,
-                                "Unrecognized IdToken type: " + thisCredentialType
-                        );
-                    }
-                }
-
-                result.add(associatedRecord);
             }
         }
 
         return result;
+    }
+
+    private final ICacheRecord getSparseCacheRecordForAccount(@NonNull final String clientId,
+                                                              @NonNull final AccountRecord acct) {
+        final String methodName = ":getSparseCacheRecordForAccount";
+
+        final List<IdTokenRecord> acctIdTokens = getIdTokensForAccount(
+                clientId,
+                acct
+        );
+
+        if (acctIdTokens.size() > new CredentialType[]{
+                CredentialType.IdToken,
+                CredentialType.V1IdToken
+        }.length) { // We shouldn't have more idtokens than types of idtokens... 1 each
+            Logger.warn(
+                    TAG + methodName,
+                    "Found more IdTokens than expected."
+                            + "\nFound: [" + acctIdTokens.size() + "]"
+            );
+        }
+
+        final CacheRecord associatedRecord = new CacheRecord();
+        associatedRecord.setAccount(acct);
+
+        for (final IdTokenRecord idTokenRecord : acctIdTokens) {
+            setToCacheRecord(associatedRecord, idTokenRecord);
+        }
+
+        return associatedRecord;
     }
 
     private int removeRefreshTokensForAccount(@NonNull final AccountRecord accountToSave,
@@ -464,6 +456,34 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
+    public List<ICacheRecord> loadWithAggregatedAccountData(@NonNull final String clientId,
+                                                            @Nullable final String target,
+                                                            @NonNull AccountRecord account) {
+        final List<ICacheRecord> result = new ArrayList<>();
+
+        final ICacheRecord primaryCacheRecord = load(clientId, target, account);
+
+        // Set this result as the 0th entry in the result...
+        result.add(primaryCacheRecord);
+
+        final List<ICacheRecord> corollaryCacheRecords = getAccountsWithAggregatedAccountData(
+                account.getEnvironment(),
+                clientId,
+                account.getHomeAccountId()
+        );
+
+        // corollaryCacheRecords will contain the original element that we've already added to
+        // our result so skip that element, but add the rest...
+        for (final ICacheRecord cacheRecord : corollaryCacheRecords) {
+            if (!account.equals(cacheRecord.getAccount())) {
+                result.add(cacheRecord);
+            }
+        }
+
+        return result;
+    }
+
+    @Override
     public List<IdTokenRecord> getIdTokensForAccount(@Nullable String clientId,
                                                      @NonNull AccountRecord accountRecord) {
         final List<IdTokenRecord> result = new ArrayList<>();
@@ -500,34 +520,27 @@ public class MsalOAuth2TokenCache
     @Override
     public boolean removeCredential(final Credential credential) {
         final String methodName = ":removeCredential";
+
         Logger.info(
                 TAG + methodName,
                 "Removing credential..."
         );
+
         Logger.infoPII(
                 TAG + methodName,
                 "ClientId: [" + credential.getClientId() + "]"
+                        + "\n"
+                        + "CredentialType: [" + credential.getCredentialType() + "]"
+                        + "\n"
+                        + "CachedAt: [" + credential.getCachedAt() + "]"
+                        + "\n"
+                        + "Environment: [" + credential.getEnvironment() + "]"
+                        + "\n"
+                        + "HomeAccountId: [" + credential.getHomeAccountId() + "]"
+                        + "\n"
+                        + "IsExpired?: [" + credential.isExpired() + "]"
         );
-        Logger.infoPII(
-                TAG + methodName,
-                "CredentialType: [" + credential.getCredentialType() + "]"
-        );
-        Logger.infoPII(
-                TAG + methodName,
-                "CachedAt: [" + credential.getCachedAt() + "]"
-        );
-        Logger.infoPII(
-                TAG + methodName,
-                "Environment: [" + credential.getEnvironment() + "]"
-        );
-        Logger.infoPII(
-                TAG + methodName,
-                "HomeAccountId: [" + credential.getHomeAccountId() + "]"
-        );
-        Logger.infoPII(
-                TAG + methodName,
-                "IsExpired?: [" + credential.isExpired() + "]"
-        );
+
         return mAccountCredentialCache.removeCredential(credential);
     }
 
@@ -542,21 +555,12 @@ public class MsalOAuth2TokenCache
         Logger.infoPII(
                 TAG + methodName,
                 "Environment: [" + environment + "]"
-        );
-
-        Logger.infoPII(
-                TAG + methodName,
-                "ClientId: [" + clientId + "]"
-        );
-
-        Logger.infoPII(
-                TAG + methodName,
-                "HomeAccountId: [" + homeAccountId + "]"
-        );
-
-        Logger.infoPII(
-                TAG + methodName,
-                "Realm: [" + realm + "]"
+                        + "\n"
+                        + "ClientId: [" + clientId + "]"
+                        + "\n"
+                        + "HomeAccountId: [" + homeAccountId + "]"
+                        + "\n"
+                        + "Realm: [" + realm + "]"
         );
 
         final List<AccountRecord> allAccounts = getAccounts(environment, clientId);
@@ -583,6 +587,38 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(@Nullable String environment,
+                                                                   @NonNull String clientId,
+                                                                   @NonNull String homeAccountId) {
+        final List<ICacheRecord> result = new ArrayList<>();
+
+        final AccountRecord anyMatchingAccount = getAccount(
+                environment,
+                clientId,
+                homeAccountId,
+                null // realm
+        );
+
+        if (null != anyMatchingAccount) {
+            final List<AccountRecord> corollaryAccounts = getCorollaryAccounts(
+                    clientId,
+                    anyMatchingAccount
+            );
+
+            for (final AccountRecord accountRecord : corollaryAccounts) {
+                result.add(
+                        getSparseCacheRecordForAccount(
+                                clientId,
+                                accountRecord
+                        )
+                );
+            }
+        }
+
+        return result;
+    }
+
+    @Override
     @Nullable
     public AccountRecord getAccountByLocalAccountId(@Nullable final String environment,
                                                     @NonNull final String clientId,
@@ -606,6 +642,60 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
+    @Nullable
+    public ICacheRecord getAccountWithAggregatedAccountDataByLocalAccountId(
+            @Nullable String environment,
+            @NonNull String clientId,
+            @NonNull String localAccountId) {
+        CacheRecord result = null;
+
+        final AccountRecord acct = getAccountByLocalAccountId(
+                environment,
+                clientId,
+                localAccountId
+        );
+
+        if (null != acct) {
+            final List<IdTokenRecord> acctIdTokens = getIdTokensForAccount(
+                    clientId,
+                    acct
+            );
+
+            result = new CacheRecord();
+            result.setAccount(acct);
+
+            for (final IdTokenRecord idTokenRecord : acctIdTokens) {
+                setToCacheRecord(result, idTokenRecord);
+            }
+        }
+
+        return result;
+    }
+
+    private void setToCacheRecord(@NonNull final CacheRecord target,
+                                  @NonNull final IdTokenRecord idTokenRecord) {
+        final String methodName = ":setToCacheRecord";
+
+        final CredentialType type = CredentialType.fromString(
+                idTokenRecord.getCredentialType()
+        );
+
+        if (null != type) {
+            if (CredentialType.V1IdToken == type) {
+                target.setV1IdToken(idTokenRecord);
+            } else if (CredentialType.IdToken == type) {
+                target.setIdToken(idTokenRecord);
+            } else {
+                Logger.warn(
+                        TAG + methodName,
+                        "Unrecognized IdToken type: "
+                                + idTokenRecord.getCredentialType()
+                );
+            }
+        }
+    }
+
+    @Override
     public List<AccountRecord> getAccounts(@Nullable final String environment,
                                            @NonNull final String clientId) {
         final String methodName = ":getAccounts";
@@ -613,11 +703,8 @@ public class MsalOAuth2TokenCache
         Logger.infoPII(
                 TAG + methodName,
                 "Environment: [" + environment + "]"
-        );
-
-        Logger.infoPII(
-                TAG + methodName,
-                "ClientId: [" + clientId + "]"
+                        + "\n"
+                        + "ClientId: [" + clientId + "]"
         );
 
         final List<AccountRecord> accountsForThisApp = new ArrayList<>();
@@ -727,25 +814,8 @@ public class MsalOAuth2TokenCache
             cacheRecord.setAccount(accountRecord);
 
             // Set the IdTokens...
-            final Iterator<IdTokenRecord> idTokenIterator = idTokensForAccount.iterator();
-
-            while (idTokenIterator.hasNext()) {
-                final IdTokenRecord idTokenRecord = idTokenIterator.next();
-                final CredentialType currentType = CredentialType.fromString(
-                        idTokenRecord.getCredentialType()
-                );
-
-                if (CredentialType.V1IdToken == currentType) {
-                    cacheRecord.setV1IdToken(idTokenRecord);
-                } else if (CredentialType.IdToken == currentType) {
-                    cacheRecord.setIdToken(idTokenRecord);
-                } else {
-                    Logger.warn(
-                            TAG + methodName,
-                            "Unrecognized IdToken type: ["
-                                    + idTokenRecord.getCredentialType()
-                    );
-                }
+            for (IdTokenRecord idTokenRecord : idTokensForAccount) {
+                setToCacheRecord(cacheRecord, idTokenRecord);
             }
 
             result.add(cacheRecord);
@@ -778,11 +848,8 @@ public class MsalOAuth2TokenCache
         Logger.infoPII(
                 TAG + methodName,
                 "HomeAccountId: [" + accountHomeId + "]"
-        );
-
-        Logger.infoPII(
-                TAG + methodName,
-                "Environment: [" + accountEnvironment + "]"
+                        + "\n"
+                        + "Environment: [" + accountEnvironment + "]"
         );
 
         for (final Credential credential : appCredentials) {
@@ -825,21 +892,12 @@ public class MsalOAuth2TokenCache
         Logger.infoPII(
                 TAG + methodName,
                 "Environment: [" + environment + "]"
-        );
-
-        Logger.infoPII(
-                TAG + methodName,
-                "ClientId: [" + clientId + "]"
-        );
-
-        Logger.infoPII(
-                TAG + methodName,
-                "HomeAccountId: [" + homeAccountId + "]"
-        );
-
-        Logger.infoPII(
-                TAG + methodName,
-                "Realm: [" + realm + "]"
+                        + "\n"
+                        + "ClientId: [" + clientId + "]"
+                        + "\n"
+                        + "HomeAccountId: [" + homeAccountId + "]"
+                        + "\n"
+                        + "Realm: [" + realm + "]"
         );
 
         final AccountRecord targetAccount;
