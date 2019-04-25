@@ -13,7 +13,10 @@ import android.content.pm.Signature;
 import android.net.Uri;
 import android.support.test.runner.AndroidJUnit4;
 
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
+import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 
 import java.nio.charset.Charset;
@@ -27,6 +30,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -80,13 +85,50 @@ public class BrowserSelectorTest {
     }
 
     @Test
-    public void testSelect_selectDefaultBrowser() throws NameNotFoundException {
+    public void testSelect_getAllBrowser() throws NameNotFoundException {
         setBrowserList(CHROME, FIREFOX);
         when(mContext.getPackageManager().resolveActivity(BROWSER_INTENT, 0))
                 .thenReturn(CHROME.mResolveInfo);
         List<Browser> allBrowsers = BrowserSelector.getAllBrowsers(mContext);
-        assertTrue(allBrowsers.get(0).getPackageName().equals(CHROME.mPackageName));
-        assertTrue(allBrowsers.get(1).getPackageName().equals(FIREFOX.mPackageName));
+        assert(allBrowsers.get(0).getPackageName().equals(CHROME.mPackageName));
+        assert(allBrowsers.get(1).getPackageName().equals(FIREFOX.mPackageName));
+    }
+
+    @Test
+    public void testSelect_noMatchingBrowser() throws NameNotFoundException {
+        setBrowserList(CHROME, FIREFOX);
+        when(mContext.getPackageManager().resolveActivity(BROWSER_INTENT, 0))
+                .thenReturn(CHROME.mResolveInfo);
+        final List<BrowserDescriptor> browserSafelist = new ArrayList<>();
+        try {
+            BrowserSelector.select(mContext, browserSafelist);
+        } catch (final ClientException exception) {
+            assertNotNull(exception);
+            assert(exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
+        }
+    }
+
+    @Test
+    public void testSelect_versionNotSupportedBrowser() throws NameNotFoundException, ClientException {
+        setBrowserList(CHROME, FIREFOX);
+        when(mContext.getPackageManager().resolveActivity(BROWSER_INTENT, 0))
+                .thenReturn(CHROME.mResolveInfo);
+        List<BrowserDescriptor> browserSafelist = new ArrayList<>();
+        browserSafelist.add(
+                new BrowserDescriptor(
+                        "com.android.chrome",
+                        "ChromeSignature",
+                        true,
+                        "51",
+                        null)
+        );
+
+        try {
+            BrowserSelector.select(mContext, browserSafelist);
+        } catch (final ClientException exception) {
+            assertNotNull(exception);
+            assert(exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
+        }
     }
 
     /**
