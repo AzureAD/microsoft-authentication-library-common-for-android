@@ -27,10 +27,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
+import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
@@ -58,8 +60,24 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
         if (validatedAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
             Logger.info(TAG, "Use webView for authorization.");
             return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(parameters.getActivity(), resultIntent));
-        } else {
+        } else if (validatedAuthorizationAgent == AuthorizationAgent.DEFAULT) {
+            // When the authorization agent is set to DEFAULT,
             // Use device browser auth flow as default.
+            // Fall back to webview if no browser found.
+            try {
+                BrowserSelector.select(parameters.getAppContext(), parameters.getBrowserSafeList());
+            } catch (final ClientException exception) {
+                Logger.info(TAG, "No supported browser available found. Fallback to the webView authorization agent.");
+                if (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND)) {
+                    return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(parameters.getActivity(), resultIntent));
+                }
+            }
+
+            Logger.info(TAG, "Use browser for authorization.");
+            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(parameters.getActivity(), resultIntent);
+            browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
+            return (GenericAuthorizationStrategy) browserAuthorizationStrategy;
+        } else {
             Logger.info(TAG, "Use browser for authorization.");
             final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(parameters.getActivity(), resultIntent);
             browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
