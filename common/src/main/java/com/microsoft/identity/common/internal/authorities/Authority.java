@@ -23,6 +23,9 @@
 package com.microsoft.identity.common.internal.authorities;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
@@ -85,47 +88,101 @@ public abstract class Authority {
             throw new IllegalArgumentException("Invalid authority URL");
         }
 
-        Uri authorityUri = Uri.parse(authUrl.toString());
-        List<String> pathSegments = authorityUri.getPathSegments();
+        final Uri authorityUri = Uri.parse(authUrl.toString());
+        final List<String> pathSegments = authorityUri.getPathSegments();
 
         if (pathSegments.size() == 0) {
             return new UnknownAuthority();
         }
 
-        String authorityType = pathSegments.get(0);
-        Authority authority = null;
+        Authority authority = null; // Our result object...
 
-        switch (authorityType.toLowerCase()) {
-            case ADFS_PATH_SEGMENT:
-                //Return new Azure Active Directory Federation Services Authority
-                Logger.verbose(
-                        TAG + methodName,
-                        "Authority type is ADFS"
-                );
-                authority = new ActiveDirectoryFederationServicesAuthority(authorityUrl);
-                break;
-            case B2C_PATH_SEGMENT:
-                //Return new B2C Authority
-                Logger.verbose(
-                        TAG + methodName,
-                        "Authority type is B2C"
-                );
+        if (authorityIsKnownFromConfiguration(authorityUrl)) {
+            final Authority configuredAuthority = getEquivalentConfiguredAuthority(authorityUrl);
+            final String authorityTypeStr = configuredAuthority.mAuthorityTypeString;
+            if ("B2C".equalsIgnoreCase(authorityTypeStr)) {
                 authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
-                break;
-            default:
-                Logger.verbose(
-                        TAG + methodName,
-                        "Authority type default: AAD"
-                );
-                AzureActiveDirectoryAudience audience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(
-                        authorityUri.getScheme() + "://" + authorityUri.getHost(),
-                        pathSegments.get(0)
-                );
-                authority = new AzureActiveDirectoryAuthority(audience);
-                break;
+            } else {
+                authority = createAadAuthority(authorityUri, pathSegments);
+            }
+        } else {
+            String authorityType = pathSegments.get(0);
+
+            switch (authorityType.toLowerCase()) {
+                case ADFS_PATH_SEGMENT:
+                    //Return new Azure Active Directory Federation Services Authority
+                    Logger.verbose(
+                            TAG + methodName,
+                            "Authority type is ADFS"
+                    );
+                    authority = new ActiveDirectoryFederationServicesAuthority(authorityUrl);
+                    break;
+                case B2C_PATH_SEGMENT:
+                    //Return new B2C Authority
+                    Logger.verbose(
+                            TAG + methodName,
+                            "Authority type is B2C"
+                    );
+                    authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
+                    break;
+                default:
+                    Logger.verbose(
+                            TAG + methodName,
+                            "Authority type default: AAD"
+                    );
+                    authority = createAadAuthority(authorityUri, pathSegments);
+                    break;
+            }
         }
 
         return authority;
+    }
+
+    @Nullable
+    private static Authority getEquivalentConfiguredAuthority(@NonNull final String authorityStr) {
+        Authority result = null;
+
+        try {
+            final URL authorityUrl = new URL(authorityStr);
+            final String httpAuthority = authorityUrl.getAuthority();
+
+            // Iterate over all of the developer trusted authorities and check if the authorities
+            // are the same...
+            for (final Authority currentAuthority : knownAuthorities) {
+                if (!TextUtils.isEmpty(currentAuthority.mAuthorityUrl)) {
+                    final URL currentAuthorityUrl = new URL(currentAuthority.mAuthorityUrl);
+                    final String currentHttpAuthority = currentAuthorityUrl.getAuthority();
+
+                    if (httpAuthority.equalsIgnoreCase(currentHttpAuthority)) {
+                        result = currentAuthority;
+                        break;
+                    }
+                }
+            }
+        } catch (MalformedURLException e) {
+            // Shouldn't happen
+            Logger.errorPII(
+                    TAG,
+                    "Error parsing authority",
+                    e
+            );
+        }
+
+        return result;
+    }
+
+    private static boolean authorityIsKnownFromConfiguration(@NonNull final String authorityStr) {
+        return null != getEquivalentConfiguredAuthority(authorityStr);
+    }
+
+    private static Authority createAadAuthority(@NonNull final Uri authorityUri,
+                                                @NonNull final List<String> pathSegments) {
+        AzureActiveDirectoryAudience audience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(
+                authorityUri.getScheme() + "://" + authorityUri.getHost(),
+                pathSegments.get(0)
+        );
+
+        return new AzureActiveDirectoryAuthority(audience);
     }
 
     public abstract OAuth2Strategy createOAuth2Strategy();
@@ -209,11 +266,12 @@ public abstract class Authority {
      * Authorities are either known by the developer and communicated to the library via configuration or they
      * are known to Microsoft based on the list of clouds returned from:
      *
-     * @return
+     * @param authority Authority to check against.
+     * @return True if the authority is known to Microsoft or defined in the configuration.
      */
     public static boolean isKnownAuthority(Authority authority) {
         final String methodName = ":isKnownAuthority";
-        boolean knownToDeveloper;
+        boolean knownToDeveloper = false;
         boolean knownToMicrosoft;
 
         if (authority == null) {
@@ -225,7 +283,23 @@ public abstract class Authority {
         }
 
         //Check if authority was added to configuration
-        knownToDeveloper = knownAuthorities.contains(authority);
+        if (authority.getKnownToDeveloper()) {
+            knownToDeveloper = true;
+        } else {
+            for (final Authority currentAuthority : knownAuthorities) {
+                if (currentAuthority.mAuthorityUrl != null &&
+                        authority.getAuthorityURL() != null &&
+                        authority.getAuthorityURL().getAuthority() != null &&
+                        currentAuthority.mAuthorityUrl.toLowerCase().contains(
+                                authority
+                                        .getAuthorityURL()
+                                        .getAuthority()
+                                        .toLowerCase())) {
+                    knownToDeveloper = true;
+                    break;
+                }
+            }
+        }
 
         //Check if authority host is known to Microsoft
         knownToMicrosoft = AzureActiveDirectory.hasCloudHost(authority.getAuthorityURL());

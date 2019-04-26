@@ -45,6 +45,11 @@ public enum CredentialType {
     IdToken,
 
     /**
+     * V1IdToken.
+     */
+    V1IdToken,
+
+    /**
      * Password.
      */
     Password,

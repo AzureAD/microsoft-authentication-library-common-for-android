@@ -64,6 +64,10 @@ public class MicrosoftTokenResponse extends TokenResponse {
     @SerializedName(FAMILY_ID)
     private String mFamilyId;
 
+    @Expose()
+    @SerializedName("cloud_instance_host_name")
+    private String mCloudInstanceHostName;
+
     private String mAuthority;
 
     // The token returned is cached with this authority as key.
@@ -259,6 +263,24 @@ public class MicrosoftTokenResponse extends TokenResponse {
      */
     public void setClientId(final String clientId) {
         mClientId = clientId;
+    }
+
+    /**
+     * Gets cloud instance host name
+     *
+     * @return mCloudInstanceHostName
+     */
+    public String getCloudInstanceHostName() {
+        return mCloudInstanceHostName;
+    }
+
+    /**
+     * Sets cloud instance host name
+     *
+     * @param cloudInstanceHostName
+     */
+    public void setCloudInstanceHostName(final String cloudInstanceHostName) {
+        mCloudInstanceHostName = cloudInstanceHostName;
     }
 
     //CHECKSTYLE:OFF

@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.net.Uri;
+import android.text.TextUtils;
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
@@ -33,6 +34,7 @@ import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -105,7 +107,7 @@ public abstract class OAuth2Strategy
      * @return GenericTokenResult
      * @throws IOException thrown when failed or interrupted I/O operations occur.
      */
-    public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException {
+    public GenericTokenResult requestToken(final GenericTokenRequest request) throws IOException, ClientException {
         final String methodName = ":requestToken";
 
         Logger.verbose(
@@ -114,11 +116,12 @@ public abstract class OAuth2Strategy
         );
 
         validateTokenRequest(request);
+
         final HttpResponse response = performTokenRequest(request);
         return getTokenResultFromHttpResponse(response);
     }
 
-    protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException {
+    protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
 
         Logger.verbose(
@@ -129,6 +132,14 @@ public abstract class OAuth2Strategy
         final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
         final Map<String, String> headers = new TreeMap<>();
         headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+
+        if(request instanceof MicrosoftTokenRequest &&
+                !TextUtils.isEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())){
+            headers.put(
+                    Device.PlatformIdParameters.BROKER_VERSION,
+                    ((MicrosoftTokenRequest) request).getBrokerVersion()
+            );
+        }
         headers.putAll(Device.getPlatformIdParameters());
 
         return HttpRequest.sendPost(

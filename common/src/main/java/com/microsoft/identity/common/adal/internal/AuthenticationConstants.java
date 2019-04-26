@@ -610,6 +610,26 @@ public final class AuthenticationConstants {
         public static final String BROKER_VERSION = "broker.version";
 
         /**
+         * The maximum broker protocol version that common supports.
+         */
+        public static final String BROKER_PROTOCOL_VERSION_CODE = "2.0";
+
+        /**
+         * The key of maximum broker protocol version that client advertised.
+         */
+        public static final String CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY = "broker.protocol.version.name";
+
+        /**
+         * The key of minimum broker protocol version the client requires.
+         */
+        public static final String CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY = "required.broker.protocol.version.name";
+
+        /**
+         * The key of negotiated broker protocol version between broker client and broker service.
+         */
+        public static final String NEGOTIATED_BP_VERSION_KEY = "common.broker.protocol.version.name";
+
+        /**
          * String of broker protocol version with PRT support.
          */
         public static final String BROKER_PROTOCOL_VERSION = "v2";
@@ -982,21 +1002,20 @@ public final class AuthenticationConstants {
          */
         public static final String CALLER_INFO_PACKAGE = "caller.info.package";
 
-        // TODO : See if these can be moved to common shared constants
         /**
          * String to send Msal V2 Request params.
          */
-        public static final String BROKER_REQUEST_V2 = "broker.request.v2";
+        public static final String BROKER_REQUEST_V2 = "broker_request_v2";
 
         /**
          * String to return Msal V2 response.
          */
-        public static final String BROKER_RESULT_V2 = "broker.result.v2";
+        public static final String BROKER_RESULT_V2 = "broker_result_v2";
 
         /**
-         * String to return Msal V2 response.
+         * String to return a true if the request succeeded, false otherwise.
          */
-        public static final String BROKER_ACCOUNT_RECORD_RESULT_V2 = "broker.account_record.v2";
+        public static final String BROKER_REQUEST_V2_SUCCESS = "broker_request_v2_success";
 
         /**
          * String for ssl prefix.
@@ -1038,6 +1057,16 @@ public final class AuthenticationConstants {
          * String for the package name of the client app.
          */
         public static final String CLIENT_APP_PACKAGE_NAME = "client_app_package_name";
+
+        /**
+         * String of account environment key.
+         */
+        public static final String ENVIRONMENT = "environment";
+
+        /**
+         * String to return account list from broker.
+         */
+        public static final String BROKER_ACCOUNTS = "broker_accounts";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.

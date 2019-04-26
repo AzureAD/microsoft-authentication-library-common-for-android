@@ -1,12 +1,17 @@
 package com.microsoft.identity.common.internal.migration;
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -17,7 +22,10 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,6 +37,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX;
+import static com.microsoft.identity.common.internal.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 
 public class TokenCacheItemMigrationAdapter {
@@ -83,6 +93,73 @@ public class TokenCacheItemMigrationAdapter {
         }
 
         return result;
+    }
+
+    /**
+     * Testing whether the given client ID can use the cached foci to refresh token.
+     *
+     * @param clientId String of the given client id.
+     * @param redirectUri redirect url string of the given client id.
+     * @param cacheRecord Foci cache record.
+     * @return true if the given client id can use the cached foci token. False, otherwise.
+     * @throws ClientException
+     * @throws IOException
+     */
+    public static boolean tryFociTokenWithGivenClientId(final String clientId,
+                                                        final String redirectUri,
+                                                        final ICacheRecord cacheRecord)
+            throws ClientException, IOException {
+        final String methodName = ":tryFociTokenWithGivenClientId";
+        final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
+
+        //Get authority url
+        final Uri.Builder requestUrlBuilder = new Uri.Builder();
+        final String tenantId = cacheRecord.getAccount().getRealm();
+        requestUrlBuilder.scheme(REDIRECT_SSL_PREFIX)
+                .authority(cacheRecord.getRefreshToken().getEnvironment())
+                .appendPath(StringUtil.isEmpty(tenantId) ? ALL_ACCOUNTS_TENANT_ID : tenantId);
+        final URL authorityUrl = new URL(requestUrlBuilder.build().toString());
+
+        //set the token endpoint for the configuration
+        config.setAuthorityUrl(authorityUrl);
+
+        // Create the strategy
+        final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config);
+
+        final String refreshToken = cacheRecord.getRefreshToken().getSecret();
+        final String scopes = cacheRecord.getRefreshToken().getTarget();
+
+        // Create a correlation_id for the request
+        final UUID correlationId = UUID.randomUUID();
+
+        Logger.verbose(TAG + methodName,
+                "Create the token request with correlationId ["
+                        + correlationId
+                        + "]");
+        final MicrosoftStsTokenRequest tokenRequest = createTokenRequest(
+                clientId,
+                scopes,
+                refreshToken,
+                redirectUri,
+                strategy,
+                correlationId,
+                "2"
+        );
+
+        Logger.verbose(TAG + methodName,
+                "Start refreshing token with correlationId ["
+                        + correlationId
+                        + "]");
+        final TokenResult tokenResult = strategy.requestToken(tokenRequest);
+
+        Logger.verbose(TAG + methodName,
+                "Is the client ID able to use the foci? ["
+                        + tokenResult.getSuccess()
+                        + "] with correlationId ["
+                        + correlationId
+                        + "]");
+
+        return tokenResult.getSuccess();
     }
 
     private static List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(

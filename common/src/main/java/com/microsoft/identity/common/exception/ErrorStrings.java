@@ -320,4 +320,25 @@ public final class ErrorStrings {
      */
     public static final String DEVICE_REGISTRATION_FAILED = "Device registration failed";
 
+    /**
+     * Request Cancelled for unknown reasons.
+     */
+    public static final String BROKER_REQUEST_CANCELLED = "Broker request cancelled";
+
+    /**
+     * User Cancelled the request.
+     */
+    public static final String USER_CANCELLED = "User cancelled";
+
+    /**
+     * The calling app is not supported by the broker.
+     */
+    public static final String UNSUPPORTED_BROKER_VERSION = "unsupported_broker_version";
+
+    /**
+     * User couldn't complete the authorization request within max time limit
+     *{@link com.microsoft.identity.common.internal.controllers.BaseController#AUTH_REQUEST_TIMEOUT_IN_MINUTES}
+     */
+    public static final String AUTH_REQUEST_TIMED_OUT = "User failed to complete Auth Request in maximum allotted time";
+
 }

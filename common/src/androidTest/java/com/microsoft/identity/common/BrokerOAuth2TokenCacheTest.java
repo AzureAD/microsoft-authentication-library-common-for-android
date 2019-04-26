@@ -162,7 +162,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 CLIENT_ID,
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
-                "1"
+                "1",
+                CredentialType.IdToken
         );
 
         mDefaultAppUidTestBundle = new MsalOAuth2TokenCacheTest.AccountCredentialTestBundle(
@@ -179,7 +180,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 CLIENT_ID,
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
-                null
+                null,
+                CredentialType.IdToken
         );
 
         mOtherCacheTestBundles = new ArrayList<>();
@@ -200,7 +202,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                             UUID.randomUUID().toString(),
                             SECRET,
                             MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
-                            null
+                            null,
+                            CredentialType.IdToken
                     )
             );
         }
@@ -381,6 +384,70 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
     private void configureMocksForAppUid() {
         configureMocks(mDefaultAppUidTestBundle);
+    }
+
+    @Test
+    public void testKnownClientIdsNonFoci() throws ClientException {
+        configureMocksForAppUid();
+
+        final ICacheRecord result = mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final String targetClientId = result.getRefreshToken().getClientId();
+        assertTrue(mBrokerOAuth2TokenCache.isClientIdKnownToCache(targetClientId));
+    }
+
+    @Test
+    public void testKnownClientIdsFoci() throws ClientException {
+        configureMocksForFoci();
+
+        final ICacheRecord result = mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final String targetClientId = result.getRefreshToken().getClientId();
+        assertTrue(mBrokerOAuth2TokenCache.isClientIdKnownToCache(targetClientId));
+    }
+
+    @Test
+    public void testGetFociCacheRecords() throws ClientException {
+        configureMocksForFoci();
+
+        final ICacheRecord result = mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final List<ICacheRecord> fociCacheRecords = mBrokerOAuth2TokenCache.getFociCacheRecords();
+
+        assertNotNull(fociCacheRecords);
+        assertFalse(fociCacheRecords.isEmpty());
+        assertEquals(
+                result.getRefreshToken(),
+                fociCacheRecords.get(0).getRefreshToken()
+        );
+    }
+
+    @Test
+    public void testGetFociCacheRecordsEmpty() throws ClientException {
+        configureMocksForAppUid();
+
+        final ICacheRecord result = mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final List<ICacheRecord> fociCacheRecords = mBrokerOAuth2TokenCache.getFociCacheRecords();
+
+        assertNotNull(fociCacheRecords);
+        assertTrue(fociCacheRecords.isEmpty());
     }
 
     @Test

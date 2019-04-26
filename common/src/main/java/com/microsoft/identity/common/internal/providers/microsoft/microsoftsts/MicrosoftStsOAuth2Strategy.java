@@ -28,10 +28,13 @@ import android.support.annotation.Nullable;
 import android.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
@@ -48,17 +51,25 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorRespons
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeFactory;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField.X_MS_CLITELEM;
+import static com.microsoft.identity.common.internal.controllers.BaseController.logResult;
 
 public class MicrosoftStsOAuth2Strategy
         extends OAuth2Strategy
@@ -93,7 +104,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public String getIssuerCacheIdentifier(MicrosoftStsAuthorizationRequest request) {
+    public String getIssuerCacheIdentifier(@NonNull final MicrosoftStsAuthorizationRequest request) {
         final String methodName = ":getIssuerCacheIdentifier";
 
         final URL authority = request.getAuthority();
@@ -299,7 +310,7 @@ public class MicrosoftStsOAuth2Strategy
 
         if (mConfig.getMultipleCloudsSupported() || request.getMultipleCloudAware()) {
             Logger.verbose(TAG, "get cloud specific authority based on authorization response.");
-            setTokenEndpoint(getCloudSpecificAuthorityBasedOnAuthorizationResponse(response));
+            setTokenEndpoint(getCloudSpecificTenantEndpoint(response));
         }
 
         MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
@@ -353,6 +364,54 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
+    protected HttpResponse performTokenRequest(final MicrosoftStsTokenRequest request)
+            throws IOException, ClientException {
+        final String methodName = ":performTokenRequest";
+        final HttpResponse response = super.performTokenRequest(request);
+
+        if (response.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED
+                && response.getHeaders() != null
+                && response.getHeaders().containsKey(CHALLENGE_REQUEST_HEADER)) {
+            // Received the device certificate challenge request. It is sent in 401 header.
+            Logger.info(TAG + methodName, "Receiving device certificate challenge request. ");
+
+            return performPKeyAuthRequest(response, request);
+        }
+
+        return response;
+    }
+
+    private HttpResponse performPKeyAuthRequest(
+            @NonNull final HttpResponse response,
+            @NonNull final MicrosoftStsTokenRequest request)
+            throws IOException, ClientException {
+        final String methodName = "#performPkeyAuthRequest";
+        final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
+        final Map<String, String> headers = new TreeMap<>();
+        headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        headers.putAll(Device.getPlatformIdParameters());
+
+        String challengeHeader = response.getHeaders().get(CHALLENGE_REQUEST_HEADER).get(0);
+        Logger.info(TAG + methodName, "Device certificate challenge request. ");
+        Logger.infoPII(TAG + methodName, "Challenge header: " + challengeHeader);
+        try {
+            final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
+            final URL authority = StringExtensions.getUrl(mTokenEndpoint);
+            final PKeyAuthChallenge pkeyAuthChallenge = factory.getPKeyAuthChallenge(challengeHeader, authority.toString());
+            headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
+            final HttpResponse pkeyAuthResponse = HttpRequest.sendPost(
+                    authority,
+                    headers,
+                    requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
+                    TOKEN_REQUEST_CONTENT_TYPE);
+            return pkeyAuthResponse;
+        } catch (final UnsupportedEncodingException exception) {
+            throw new ClientException(ErrorStrings.UNSUPPORTED_ENCODING,
+                    "Unsupported encoding", exception);
+        }
+    }
+
+    @Override
     @NonNull
     protected TokenResult getTokenResultFromHttpResponse(@NonNull final HttpResponse response) {
         final String methodName = ":getTokenResultFromHttpResponse";
@@ -389,6 +448,8 @@ public class MicrosoftStsOAuth2Strategy
 
         final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
 
+        logResult(TAG, result);
+
         if (null != response.getHeaders()) {
             final Map<String, List<String>> responseHeaders = response.getHeaders();
 
@@ -415,17 +476,20 @@ public class MicrosoftStsOAuth2Strategy
         return result;
     }
 
-    private String getCloudSpecificAuthorityBasedOnAuthorizationResponse(
+    private String getCloudSpecificTenantEndpoint(
             @NonNull final MicrosoftStsAuthorizationResponse response) {
+        if (!StringUtil.isEmpty(response.getCloudGraphHostName())) {
+            final String updatedTokenEndpoint =
+                    Uri.parse(mTokenEndpoint)
+                            .buildUpon()
+                            .authority(response.getCloudInstanceHostName())
+                            .build()
+                            .toString();
 
-        final String newAuthority =
-                Uri.parse(mTokenEndpoint)
-                        .buildUpon()
-                        .authority(response.getCloudInstanceHostName())
-                        .build()
-                        .toString();
+            return updatedTokenEndpoint;
+        }
 
-        return newAuthority;
+        return mTokenEndpoint;
     }
 
 }

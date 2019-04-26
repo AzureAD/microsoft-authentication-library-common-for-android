@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.support.annotation.NonNull;
 
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -154,13 +153,23 @@ public class MicrosoftStsAccountCredentialAdapter
             final IdTokenRecord idToken = new IdTokenRecord();
             // Required fields
             idToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
+
             if (null != response.getAuthority()) {
-                idToken.setEnvironment(strategy.getIssuerCacheIdentifierFromAuthority(new URL(response.getAuthority())));
+                idToken.setEnvironment(
+                        strategy.getIssuerCacheIdentifierFromAuthority(
+                                new URL(response.getAuthority())
+                        )
+                );
             } else {
                 idToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
             }
+
             idToken.setRealm(getRealm(strategy, response));
-            idToken.setCredentialType(CredentialType.IdToken.name());
+            idToken.setCredentialType(
+                    SchemaUtil.getCredentialTypeFromVersion(
+                            response.getIdToken()
+                    )
+            );
             idToken.setClientId(request.getClientId());
             idToken.setSecret(response.getIdToken());
 

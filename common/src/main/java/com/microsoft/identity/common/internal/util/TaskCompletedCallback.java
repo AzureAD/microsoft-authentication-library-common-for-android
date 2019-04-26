@@ -13,7 +13,7 @@
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OsR
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -21,22 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package com.microsoft.identity.common.internal.broker;
-import com.microsoft.identity.common.internal.broker.BrokerRequest;
-import com.microsoft.identity.common.internal.broker.BrokerResult;
-/**
- * Broker Account service APIs provided by the broker app. Those APIs will be responsible for interacting with the
- * account manager API. Calling app does not need to request for contacts permission if the broker installed on the
- * device has the support for the bound service.
- */
-interface IMicrosoftAuthService {
-    Bundle getCapabilities();
+package com.microsoft.identity.common.internal.util;
 
-    Bundle getBrokerUsers();
-
-    BrokerResult acquireTokenSilently(in BrokerRequest brokerRequest);
-
-    Intent getIntentForInteractiveRequest();
-
-    void removeAccounts();
+public interface TaskCompletedCallback<T> {
+    void onTaskCompleted(T t);
 }

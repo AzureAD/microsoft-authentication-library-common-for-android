@@ -36,6 +36,21 @@ public interface IBrokerApplicationMetadataCache {
     Set<String> getAllClientIds();
 
     /**
+     * @return The Set of all FoCI clientIds.
+     */
+    Set<String> getAllFociClientIds();
+
+    /**
+     * @return The Set of all non-FoCI clientIds.
+     */
+    Set<String> getAllNonFociClientIds();
+
+    /**
+     * @return All of the BrokerApplicationMetadata where the app is FoCI.
+     */
+    List<BrokerApplicationMetadata> getAllFociApplicationMetadata();
+
+    /**
      * For the supplied criteria, return the {@link BrokerApplicationMetadata} which corresponds to it.
      *
      * @param clientId    The target client id.

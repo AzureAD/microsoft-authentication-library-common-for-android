@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.authorities;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 
 public abstract class AzureActiveDirectoryAudience {
 
@@ -36,9 +37,14 @@ public abstract class AzureActiveDirectoryAudience {
     public static final String ORGANIZATIONS = "organizations";
     public static final String CONSUMERS = "consumers";
     public static final String ALL = "common";
+    public static final String MSA_MEGA_TENANT_ID = "9188040d-6c67-4c5b-b112-36a304b66dad";
 
     public String getCloudUrl() {
-        return mCloudUrl;
+        if(mCloudUrl == null){
+            return AzureActiveDirectory.getDefaultCloudUrl();
+        }else {
+            return mCloudUrl;
+        }
     }
 
     public void setCloudUrl(String cloudUrl) {

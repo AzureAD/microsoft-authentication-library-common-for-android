@@ -24,11 +24,15 @@ package com.microsoft.identity.common.internal.result;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
+import com.microsoft.identity.common.internal.request.SdkType;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -39,32 +43,60 @@ import java.util.concurrent.TimeUnit;
  */
 public class LocalAuthenticationResult implements ILocalAuthenticationResult {
 
-    private String mRawIdToken = null;
+    private String mRawIdToken;
     private AccessTokenRecord mAccessTokenRecord;
     private IAccountRecord mAccountRecord;
-    private String mRefreshToken = null;
+    private String mRefreshToken;
+    private String mFamilyId;
     private String mSpeRing;
     private String mRefreshTokenAge;
 
+    private static final String TAG = LocalAuthenticationResult.class.getName();
+
     public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord) {
-        mAccessTokenRecord = cacheRecord.getAccessToken();
-        mAccountRecord = cacheRecord.getAccount();
-        if (cacheRecord.getIdToken() != null) {
-            mRawIdToken = cacheRecord.getIdToken().getSecret();
-        }
-        if (cacheRecord.getRefreshToken() != null) {
-            mRefreshToken = cacheRecord.getRefreshToken().getSecret();
-        }
+        this(cacheRecord, SdkType.MSAL); // default sdk type as MSAL
     }
 
     public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
                                      @Nullable String refreshToken,
                                      @Nullable String rawIdToken,
+                                     @Nullable String familyId,
                                      @NonNull IAccountRecord accountRecord) {
         mAccessTokenRecord = accessTokenRecord;
         mRefreshToken = refreshToken;
         mRawIdToken = rawIdToken;
+        mFamilyId = familyId;
         mAccountRecord = accountRecord;
+    }
+
+    public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord, @NonNull SdkType sdkType) {
+        mAccessTokenRecord = cacheRecord.getAccessToken();
+        mAccountRecord = cacheRecord.getAccount();
+
+        if (cacheRecord.getRefreshToken() != null) {
+            mRefreshToken = cacheRecord.getRefreshToken().getSecret();
+        }
+
+        final IdTokenRecord idTokenRecord = sdkType == SdkType.ADAL ?
+                cacheRecord.getV1IdToken() :
+                cacheRecord.getIdToken();
+        if (idTokenRecord != null) {
+            mRawIdToken = idTokenRecord.getSecret();
+            Logger.verbose(TAG, "Id Token type: " +
+                    idTokenRecord.getCredentialType());
+        } else if (cacheRecord.getV1IdToken() != null) {
+            // For all AAD requests, we hit the V2 endpoint, so the id token returned will be of version 2.0 (V2 )
+            // However for B2C we might get back v1 id tokens, so check if getV1IdToken() is not null and add it
+            Logger.verbose(TAG, "V1 Id Token returned here, ");
+            mRawIdToken = cacheRecord.getV1IdToken().getSecret();
+        }
+
+        Logger.verbose(TAG, "Constructing LocalAuthentication result" +
+                ", AccessTokenRecord null: " + (mAccessTokenRecord == null) +
+                ", AccountRecord null: " + (mAccountRecord == null) +
+                ", RefreshTokenRecord null or empty: " + TextUtils.isEmpty(mRefreshToken) +
+                ", IdTokenRecord null: " + (idTokenRecord == null)
+        );
 
     }
 
@@ -145,6 +177,12 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     @Override
     public String getRefreshTokenAge() {
         return mRefreshTokenAge;
+    }
+
+    @Nullable
+    @Override
+    public String getFamilyId() {
+        return mFamilyId;
     }
 
     /**

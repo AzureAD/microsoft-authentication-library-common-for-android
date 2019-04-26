@@ -22,6 +22,10 @@
 //  THE SOFTWARE.
 
 package com.microsoft.identity.common.internal.providers.oauth2;
+
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
+
 /**
  * The UI options that developer can pass during interactive token acquisition requests.
  */
@@ -57,5 +61,19 @@ public enum OpenIdConnectPromptParameter {
         }
 
         return this.name().toLowerCase();
+    }
+
+
+
+    /**
+     * Utility method to map Adal PromptBehavior with OpenIdConnectPromptParameter
+     * @param promptBehavior
+     * @return
+     */
+    public static OpenIdConnectPromptParameter _fromPromptBehavior(@Nullable final String promptBehavior) {
+
+        return promptBehavior != null && promptBehavior.equals("FORCE_PROMPT") ?
+                OpenIdConnectPromptParameter.LOGIN :
+                OpenIdConnectPromptParameter.NONE;
     }
 }

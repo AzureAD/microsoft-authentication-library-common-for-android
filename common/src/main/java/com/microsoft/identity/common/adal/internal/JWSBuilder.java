@@ -159,8 +159,7 @@ public class JWSBuilder {
             // redundant but current ADFS code base is looking for
             String headerJsonString = gson.toJson(header);
             String claimsJsonString = gson.toJson(claims);
-            Logger.verbosePII(TAG + methodName, "Generate client certificate challenge response JWS Header. ",
-                    "Header: " + headerJsonString);
+            Logger.verbose(TAG + methodName, "Generate client certificate challenge response JWS Header. ");
             signingInput = StringExtensions.encodeBase64URLSafeString(headerJsonString
                     .getBytes(AuthenticationConstants.ENCODING_UTF8))
                     + "."

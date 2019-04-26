@@ -22,11 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
@@ -41,6 +43,7 @@ import java.util.Map;
 public final class SchemaUtil {
 
     private static final String TAG = SchemaUtil.class.getSimpleName();
+    private static final String EXCEPTION_CONSTRUCTING_IDTOKEN = "Exception constructing IDToken. ";
 
     private SchemaUtil() {
         // Utility class.
@@ -142,6 +145,33 @@ public final class SchemaUtil {
         return alternativeAccountId;
     }
 
+    public static String getCredentialTypeFromVersion(@Nullable final String idTokenString) {
+        final String methodName = "getCredentialTypeFromVersion";
+
+        // Default is v2
+        String idTokenVersion = CredentialType.IdToken.name();
+
+        if (!TextUtils.isEmpty(idTokenString)) {
+            IDToken idToken;
+            try {
+                idToken = new IDToken(idTokenString);
+                final Map<String, String> idTokenClaims = idToken.getTokenClaims();
+                final String aadVersion = idTokenClaims.get(
+                        AuthenticationConstants.OAuth2.AAD_VERSION
+                );
+
+                if (!TextUtils.isEmpty(aadVersion)
+                        && aadVersion.equalsIgnoreCase(AuthenticationConstants.OAuth2.AAD_VERSION_V1)) {
+                    idTokenVersion = CredentialType.V1IdToken.name();
+                }
+            } catch (ServiceException e) {
+                Logger.warn(TAG + ":" + methodName, EXCEPTION_CONSTRUCTING_IDTOKEN + e.getMessage());
+            }
+        }
+
+        return idTokenVersion;
+    }
+
     public static String getIdentityProvider(final String idTokenString) {
         final String methodName = "getIdentityProvider";
 
@@ -163,7 +193,7 @@ public final class SchemaUtil {
                         idp = idTokenClaims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
 
                         // For home accounts idp claim is not available, use iss claim instead.
-                        if(TextUtils.isEmpty(idp)){
+                        if (TextUtils.isEmpty(idp)) {
                             Logger.info(TAG + ":" + methodName,
                                     "idp claim was null, using iss claim"
                             );
@@ -185,7 +215,7 @@ public final class SchemaUtil {
                     Logger.warn(TAG + ":" + methodName, "IDToken claims were null.");
                 }
             } catch (ServiceException e) {
-                Logger.warn(TAG + ":" + methodName, "Exception constructing IDToken. " + e.getMessage());
+                Logger.warn(TAG + ":" + methodName, EXCEPTION_CONSTRUCTING_IDTOKEN + e.getMessage());
             }
         } else {
             Logger.warn(TAG + ":" + methodName, "IDToken was null.");
@@ -228,5 +258,47 @@ public final class SchemaUtil {
         }
 
         return homeAccountId;
+    }
+
+    /**
+     * Get tenant id claim from Id token , if not present returns the tenant id from client info
+     * @param clientInfoString : ClientInfo
+     * @param idTokenString : Id Token
+     * @return tenantId
+     */
+    @Nullable
+    public static String getTenantId(@Nullable final String clientInfoString,
+                                     @Nullable final String idTokenString) {
+
+        String tenantId = null;
+
+        try {
+            if (!TextUtils.isEmpty(idTokenString) && !TextUtils.isEmpty(clientInfoString)) {
+                final IDToken idToken = new IDToken(idTokenString);
+                final ClientInfo clientInfo = new ClientInfo(clientInfoString);
+                final Map<String, String> claims = idToken.getTokenClaims();
+
+                if (!TextUtils.isEmpty(claims.get(AzureActiveDirectoryIdToken.TENANT_ID))) {
+                    tenantId = claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
+                } else if (!TextUtils.isEmpty(clientInfo.getUtid())) {
+                    Logger.warn(TAG, "realm is not returned from server. Use utid as realm.");
+                    tenantId = clientInfo.getUtid();
+                } else {
+                    Logger.warn(TAG,
+                            "realm and utid is not returned from server. " +
+                                    "Using empty string as default tid."
+                    );
+                }
+            }
+        } catch (final ServiceException e) {
+            Logger.errorPII(
+                    TAG,
+                    "Failed to construct IDToken or ClientInfo",
+                    e
+            );
+        }
+
+        return tenantId;
+
     }
 }

@@ -30,7 +30,7 @@ public class ArgumentException extends BaseException {
     public final static String SCOPE_ARGUMENT_NAME = "scopes";
     public final static String IACCOUNT_ARGUMENT_NAME = "account";
 
-    private final static String ILLEGAL_ARGUMENT_ERROR_CODE = "illegal_argument_exception";
+    public final static String ILLEGAL_ARGUMENT_ERROR_CODE = "illegal_argument_exception";
 
     private String mOperationName;
     private String mArgumentName;

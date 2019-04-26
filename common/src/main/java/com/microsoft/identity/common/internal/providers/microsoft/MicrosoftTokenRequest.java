@@ -79,6 +79,9 @@ public class MicrosoftTokenRequest extends TokenRequest {
     @SerializedName(CLIENT_APP_VERSION)
     private String mClientAppVersion;
 
+    // Sent as part of headers if available, so marking it transient.
+    private transient String mBrokerVersion;
+
     public String getCodeVerifier() {
         return this.mCodeVerifier;
     }
@@ -147,4 +150,11 @@ public class MicrosoftTokenRequest extends TokenRequest {
         this.mMamVersion = mamVersion;
     }
 
+    public String getBrokerVersion() {
+        return mBrokerVersion;
+    }
+
+    public void setBrokerVersion(final String brokerVersion) {
+        this.mBrokerVersion = brokerVersion;
+    }
 }
