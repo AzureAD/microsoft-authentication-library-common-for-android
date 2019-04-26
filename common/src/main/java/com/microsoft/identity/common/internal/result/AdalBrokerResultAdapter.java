@@ -305,7 +305,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
         resultBundle.putString(
                 AuthenticationConstants.Browser.RESPONSE_ERROR_CODE,
-                ADALError.AUTH_FAILED_INTUNE_POLICY_REQUIRED.getDescription()
+                ADALError.AUTH_FAILED_INTUNE_POLICY_REQUIRED.name()
         );
         resultBundle.putString(
                 AuthenticationConstants.Broker.ACCOUNT_USERINFO_TENANTID,
