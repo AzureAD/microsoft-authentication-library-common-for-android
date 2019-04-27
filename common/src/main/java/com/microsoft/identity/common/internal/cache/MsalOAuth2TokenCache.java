@@ -241,9 +241,10 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public List<ICacheRecord> saveAndLoadAggregatedAccountData(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
-                                                               @NonNull final GenericAuthorizationRequest request,
-                                                               @NonNull final GenericTokenResponse response) throws ClientException {
+    public List<ICacheRecord> saveAndLoadAggregatedAccountData(
+            @NonNull final GenericOAuth2Strategy oAuth2Strategy,
+            @NonNull final GenericAuthorizationRequest request,
+            @NonNull final GenericTokenResponse response) throws ClientException {
         final List<ICacheRecord> result = new ArrayList<>();
 
         // Save and get the result
