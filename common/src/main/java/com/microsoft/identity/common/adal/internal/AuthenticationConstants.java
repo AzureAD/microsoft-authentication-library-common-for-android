@@ -1019,6 +1019,25 @@ public final class AuthenticationConstants {
         public static final String BROKER_RESULT_V2 = "broker.result.v2";
 
         /**
+         * String to return the broker account mode.
+         * This is used to determine what PublicClientApplication MSAL will return to its caller.
+         */
+        public static final String BROKER_ACCOUNT_MODE = "broker.account.mode";
+
+        /**
+         * Represents MSAL's single account mode.
+         * In this mode, there will be only one signed-in account in this device (meaning that other accounts will not be able to acquire token.)
+         * See SingleAccountPublicClientApplication for more details.
+         */
+        public static final String BROKER_ACCOUNT_MODE_SINGLE_ACCOUNT = "broker.account.mode.single.account";
+
+        /**
+         * Represents MSAL's multiple account mode.
+         * See MultipleAccountPublicClientApplication for more details.
+         */
+        public static final String BROKER_ACCOUNT_MODE_MULTIPLE_ACCOUNT = "broker.account.mode.multiple.account";
+
+        /**
          * String to return a true if the request succeeded, false otherwise.
          */
         public static final String BROKER_REQUEST_V2_SUCCESS = "broker.request.v2.success";
@@ -1073,6 +1092,11 @@ public final class AuthenticationConstants {
          * String to return account list from broker.
          */
         public static final String BROKER_ACCOUNTS = "broker_accounts";
+
+        /**
+         * String to return current account from broker (only available in shared device mode)
+         */
+        public static final String BROKER_CURRENT_ACCOUNT = "broker_current_account";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.
