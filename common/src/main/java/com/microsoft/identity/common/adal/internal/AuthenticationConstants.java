@@ -1022,20 +1022,20 @@ public final class AuthenticationConstants {
          * String to return the broker account mode.
          * This is used to determine what PublicClientApplication MSAL will return to its caller.
          */
-        public static final String BROKER_ACCOUNT_MODE = "broker.account.mode";
+        public static final String BROKER_ACCOUNT_MODE = "broker_account_mode";
 
         /**
          * Represents MSAL's single account mode.
          * In this mode, there will be only one signed-in account in this device (meaning that other accounts will not be able to acquire token.)
          * See SingleAccountPublicClientApplication for more details.
          */
-        public static final String BROKER_ACCOUNT_MODE_SINGLE_ACCOUNT = "broker.account.mode.single.account";
+        public static final String BROKER_ACCOUNT_MODE_SINGLE_ACCOUNT = "broker_account_mode_single_account";
 
         /**
          * Represents MSAL's multiple account mode.
          * See MultipleAccountPublicClientApplication for more details.
          */
-        public static final String BROKER_ACCOUNT_MODE_MULTIPLE_ACCOUNT = "broker.account.mode.multiple.account";
+        public static final String BROKER_ACCOUNT_MODE_MULTIPLE_ACCOUNT = "broker_account_mode_multiple_account";
 
         /**
          * String to return a true if the request succeeded, false otherwise.

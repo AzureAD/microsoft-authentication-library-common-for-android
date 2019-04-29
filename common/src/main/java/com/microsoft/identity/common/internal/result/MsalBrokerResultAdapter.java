@@ -436,7 +436,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * @param bundle Bundle
      * @return Account mode.
      */
-    public static String getAccountModeFromBundle(@NonNull final Bundle bundle) {
+    public static String accountModeFromBundle(@NonNull final Bundle bundle) {
         final String accountMode = bundle.getString(BROKER_ACCOUNT_MODE);
 
         if (accountMode == null) {
@@ -467,7 +467,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * @param bundle Bundle
      * @return AccountRecord of the current account. This could be null.
      */
-    public static AccountRecord getCurrentAccountFromBundle(@NonNull final Bundle bundle) {
+    public static AccountRecord currentAccountFromBundle(@NonNull final Bundle bundle) {
         final String accountJson = bundle.getString(BROKER_CURRENT_ACCOUNT);
 
         if (accountJson == null) {
