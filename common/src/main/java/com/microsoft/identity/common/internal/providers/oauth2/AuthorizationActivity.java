@@ -19,6 +19,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.controllers.ApiDispatcher;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
@@ -78,11 +79,8 @@ public final class AuthorizationActivity extends Activity {
 
     private AuthorizationAgent mAuthorizationAgent;
 
-    private PendingIntent mResultIntent;
-
     public static Intent createStartIntent(final Context context,
                                            final Intent authIntent,
-                                           @NonNull final PendingIntent resultIntent,
                                            final String requestUrl,
                                            final String redirectUri,
                                            final HashMap<String, String> requestHeaders,
@@ -93,7 +91,6 @@ public final class AuthorizationActivity extends Activity {
         intent.putExtra(KEY_AUTH_REDIRECT_URI, redirectUri);
         intent.putExtra(KEY_REQUEST_HEADERS, requestHeaders);
         intent.putExtra(KEY_AUTH_AUTHORIZATION_AGENT, authorizationAgent);
-        intent.putExtra(KEY_RESULT_INTENT, resultIntent);
         intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         return intent;
     }
@@ -153,7 +150,6 @@ public final class AuthorizationActivity extends Activity {
         mRedirectUri = state.getString(KEY_AUTH_REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
         mAuthorizationAgent = (AuthorizationAgent) state.getSerializable(KEY_AUTH_AUTHORIZATION_AGENT);
-        mResultIntent = state.getParcelable(KEY_RESULT_INTENT);
     }
 
     /**
@@ -274,21 +270,12 @@ public final class AuthorizationActivity extends Activity {
         super.onDestroy();
     }
 
-    private void sendResult(int resultCode, Intent intent) {
-        if (mResultIntent == null) {
-            Logger.error(TAG, "Result intent is null", null);
-            return;
-        }
-
-        intent.putExtra(AuthorizationStrategy.REQUEST_CODE, AuthorizationStrategy.BROWSER_FLOW);
-        intent.putExtra(AuthorizationStrategy.RESULT_CODE, resultCode);
-        try {
-            mResultIntent.send(this, 0, intent);
-        } catch (final PendingIntent.CanceledException exception) {
-            Logger.error(TAG, "Failed to send completion intent", exception);
-        }
-        //PendingIntent is a global reference used across apps. Need to call cancel() to remove it.
-        mResultIntent.cancel();
+    private void sendResult(int resultCode, final Intent resultIntent) {
+        ApiDispatcher.completeInteractive(
+                AuthorizationStrategy.BROWSER_FLOW,
+                resultCode,
+                resultIntent
+        );
     }
 
     private void completeAuthorization() {
@@ -325,7 +312,6 @@ public final class AuthorizationActivity extends Activity {
     protected void onSaveInstanceState(final Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(KEY_AUTH_INTENT, mAuthIntent);
-        outState.putParcelable(KEY_RESULT_INTENT, mResultIntent);
         outState.putBoolean(KEY_BROWSER_FLOW_STARTED, mBrowserFlowStarted);
         outState.putBoolean(KEY_PKEYAUTH_STATUS, mPkeyAuthStatus);
         outState.putSerializable(KEY_AUTH_AUTHORIZATION_AGENT, mAuthorizationAgent);
