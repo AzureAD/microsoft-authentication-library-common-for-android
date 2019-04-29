@@ -200,14 +200,14 @@ public class BrokerValidator {
         return selfSignedCert;
     }
 
-
     public static boolean isValidBrokerRedirect(@Nullable final String redirectUri,
                                                 @NonNull final Context context,
-                                                @NonNull final String packageName){
+                                                @NonNull final String packageName,
+                                                @NonNull final String clientId){
         return !TextUtils.isEmpty(redirectUri) &&
-                redirectUri.equalsIgnoreCase(getBrokerRedirectUri(context, packageName));
+                    (redirectUri.equalsIgnoreCase(getBrokerRedirectUri(context, packageName)) ||
+                     redirectUri.equalsIgnoreCase(getMsalRedirectUri(clientId)));
     }
-
 
     /**
      * Helper method to get Broker Redirect Uri
@@ -221,5 +221,15 @@ public class BrokerValidator {
         final String signatureDigest = info.getCurrentSignatureForPackage(packageName);
         return PackageHelper.getBrokerRedirectUrl(packageName,
                 signatureDigest);
+    }
+
+    /**
+     * Helper method to get MSAL Redirect Uri
+     *
+     * @param clientId
+     * @return String : MSAL Redirect Uri
+     */
+    public static String getMsalRedirectUri(@NonNull final String clientId){
+        return "msal" + clientId + "://auth";
     }
 }
