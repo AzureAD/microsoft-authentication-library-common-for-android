@@ -40,6 +40,7 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.util.List;
 import java.util.concurrent.Future;
 
 public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
@@ -49,12 +50,17 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     private CustomTabsManager mCustomTabManager;
     private WeakReference<Activity> mReferencedActivity;
     private AuthorizationResultFuture mAuthorizationResultFuture;
+    private List<BrowserDescriptor> mBrowserSafeList;
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
     public BrowserAuthorizationStrategy(@NonNull Activity activity) {
         mReferencedActivity = new WeakReference<>(activity);
+    }
+
+    public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
+        mBrowserSafeList = browserSafeList;
     }
 
     @Override
@@ -67,7 +73,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
         mAuthorizationResultFuture = new AuthorizationResultFuture();
-        final Browser browser = BrowserSelector.select(mReferencedActivity.get().getApplicationContext());
+        final Browser browser = BrowserSelector.select(mReferencedActivity.get().getApplicationContext(), mBrowserSafeList);
 
         //ClientException will be thrown if no browser found.
         Intent authIntent;
