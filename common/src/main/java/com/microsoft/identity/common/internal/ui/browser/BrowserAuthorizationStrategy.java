@@ -49,16 +49,14 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
 
     private CustomTabsManager mCustomTabManager;
     private WeakReference<Activity> mReferencedActivity;
-    private PendingIntent mResultIntent;
     private AuthorizationResultFuture mAuthorizationResultFuture;
     private List<BrowserDescriptor> mBrowserSafeList;
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
-    public BrowserAuthorizationStrategy(@NonNull Activity activity, @NonNull Intent resultIntent) {
+    public BrowserAuthorizationStrategy(@NonNull Activity activity) {
         mReferencedActivity = new WeakReference<>(activity);
-        mResultIntent = PendingIntent.getActivity(activity.getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
@@ -104,7 +102,6 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         final Intent intent = AuthorizationActivity.createStartIntent(
                 mReferencedActivity.get().getApplicationContext(),
                 authIntent,
-                mResultIntent,
                 requestUrl.toString(),
                 mAuthorizationRequest.getRedirectUri(),
                 mAuthorizationRequest.getRequestHeaders(),
@@ -127,7 +124,12 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == BROWSER_FLOW) {
             dispose();
-            final AuthorizationResult result = mOAuth2Strategy.getAuthorizationResultFactory().createAuthorizationResult(resultCode, data, mAuthorizationRequest);
+            final AuthorizationResult result = mOAuth2Strategy
+                    .getAuthorizationResultFactory().createAuthorizationResult(
+                            resultCode,
+                            data,
+                            mAuthorizationRequest
+                    );
             mAuthorizationResultFuture.setAuthorizationResult(result);
         } else {
             Logger.warnPII(TAG, "Unknown request code " + requestCode);
