@@ -57,14 +57,11 @@ public class ApiDispatcher {
                 "Beginning interactive request"
         );
         synchronized (sLock) {
+            // Send a broadcast to cancel if any active auth request is present.
+            command.getParameters().getAppContext().sendBroadcast(
+                            new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
+            );
 
-            if(!sInteractiveExecutor.isTerminated()){
-                Logger.info(TAG, "An auth request is already in progress, sending broadcast to cancel the request ");
-                command.getParameters().getAppContext().
-                        sendBroadcast(
-                                new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
-                        );
-            }
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
