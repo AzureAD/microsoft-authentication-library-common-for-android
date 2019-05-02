@@ -222,7 +222,7 @@ public abstract class OAuth2TokenCache
      * @param environment The current environment.
      * @return An immutable List of ICacheRecords.
      */
-    public abstract List<ICacheRecord> getAccountsWithIdTokens(
+    public abstract List<ICacheRecord> getAccountsWithAggregatedAccountData(
             final String environment,
             final String clientId
     );

@@ -140,6 +140,52 @@ public class MsalOAuth2TokenCache
         return result;
     }
 
+    // TODO Add unit test
+    @NonNull
+    List<ICacheRecord> saveAndLoadAggregatedAccountData(
+            @NonNull AccountRecord accountRecord,
+            @NonNull IdTokenRecord idTokenRecord,
+            @NonNull AccessTokenRecord accessTokenRecord) throws ClientException {
+        return mergeCacheRecordWithCorollaryAccounts(
+                save(accountRecord, idTokenRecord, accessTokenRecord)
+        );
+    }
+
+    @NonNull
+    private List<ICacheRecord> mergeCacheRecordWithCorollaryAccounts(
+            @NonNull final ICacheRecord savedCacheRecord) {
+        final List<ICacheRecord> result = new ArrayList<>();
+        // Whatever ICacheRecord you provide will _always_ be the first element in the result List.
+        result.add(savedCacheRecord);
+
+        final List<AccountRecord> corollaryAccounts = new ArrayList<>(
+                getCorollaryAccounts(
+                        savedCacheRecord
+                                .getRefreshToken()
+                                .getClientId(),
+                        savedCacheRecord
+                                .getAccount() // This account wil be the 0th element in the result.
+                )
+        );
+
+        if (!corollaryAccounts.isEmpty()) {
+            // Remove the first element from the List since it is already contained in the result List
+            corollaryAccounts.remove(0);
+
+            // Iterate over the rest of the Accounts to build up the final result
+            for (final AccountRecord acct : corollaryAccounts) {
+                result.add(
+                        getSparseCacheRecordForAccount(
+                                savedCacheRecord.getRefreshToken().getClientId(),
+                                acct
+                        )
+                );
+            }
+        }
+
+        return result;
+    }
+
     @Override
     public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
                              @NonNull final GenericAuthorizationRequest request,
@@ -241,45 +287,26 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
+    @NonNull
     public List<ICacheRecord> saveAndLoadAggregatedAccountData(
             @NonNull final GenericOAuth2Strategy oAuth2Strategy,
             @NonNull final GenericAuthorizationRequest request,
             @NonNull final GenericTokenResponse response) throws ClientException {
-        final List<ICacheRecord> result = new ArrayList<>();
-
-        // Save and get the result
-        final ICacheRecord savedRecord = save(oAuth2Strategy, request, response);
-
-        // Add the result to the result List
-        result.add(savedRecord);
-
-        final List<AccountRecord> corollaryAccounts = new ArrayList<>(
-                getCorollaryAccounts(
-                        savedRecord.getRefreshToken().getClientId(),
-                        savedRecord.getAccount() // This account wil be the 0th element in the result.
-                )
+        return mergeCacheRecordWithCorollaryAccounts(
+                save(oAuth2Strategy, request, response)
         );
-
-        if (!corollaryAccounts.isEmpty()) {
-            // Remove the first element from the List since it is already contained in the result List
-            corollaryAccounts.remove(0);
-
-            // Iterate over the rest of the Accounts to build up the final result
-            for (final AccountRecord acct : corollaryAccounts) {
-                result.add(
-                        getSparseCacheRecordForAccount(
-                                savedRecord.getRefreshToken().getClientId(),
-                                acct
-                        )
-                );
-            }
-        }
-
-        return result;
     }
 
-    private final ICacheRecord getSparseCacheRecordForAccount(@NonNull final String clientId,
-                                                              @NonNull final AccountRecord acct) {
+    /**
+     * Given an AccountRecord and associated client_id, load a sparse ICacheRecord containing
+     * the provided AccountRecord and its accompanying IdTokens.
+     *
+     * @param clientId The client_id relative to which IdTokens should be loaded.
+     * @param acct     The target AccountRecord.
+     * @return A sparse ICacheRecord containing the provided AccountRecord and its IdTokens.
+     */
+    private ICacheRecord getSparseCacheRecordForAccount(@NonNull final String clientId,
+                                                        @NonNull final AccountRecord acct) {
         final String methodName = ":getSparseCacheRecordForAccount";
 
         final List<IdTokenRecord> acctIdTokens = getIdTokensForAccount(
@@ -675,6 +702,13 @@ public class MsalOAuth2TokenCache
         return result;
     }
 
+    /**
+     * Given a CacheRecord and IdTokenRecord, set the IdToken on the cache record in the field
+     * corresponding to the IdToken's version.
+     *
+     * @param target        The CacheRecord into which said IdToken should be placed.
+     * @param idTokenRecord The IdToken to associate.
+     */
     private void setToCacheRecord(@NonNull final CacheRecord target,
                                   @NonNull final IdTokenRecord idTokenRecord) {
         final String methodName = ":setToCacheRecord";
@@ -796,9 +830,9 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public List<ICacheRecord> getAccountsWithIdTokens(@Nullable final String environment,
-                                                      @NonNull final String clientId) {
-        final String methodName = ":getAccountsWithIdTokens";
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(@Nullable final String environment,
+                                                                   @NonNull final String clientId) {
+        final String methodName = ":getAccountsWithAggregatedAccountData";
         final List<ICacheRecord> result = new ArrayList<>();
 
         final List<AccountRecord> allMatchingAccounts = getAccounts(

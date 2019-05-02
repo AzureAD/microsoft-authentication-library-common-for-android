@@ -1216,7 +1216,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        final List<ICacheRecord> records = mOauth2TokenCache.getAccountsWithIdTokens(
+        final List<ICacheRecord> records = mOauth2TokenCache.getAccountsWithAggregatedAccountData(
                 ENVIRONMENT,
                 CLIENT_ID
         );
@@ -1237,7 +1237,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     public void getAccountsWithIdTokensV1() throws ClientException {
         final ICacheRecord result = loadTestBundleIntoCache(defaultTestBundleV1);
 
-        final List<ICacheRecord> records = mOauth2TokenCache.getAccountsWithIdTokens(
+        final List<ICacheRecord> records = mOauth2TokenCache.getAccountsWithAggregatedAccountData(
                 ENVIRONMENT,
                 CLIENT_ID
         );
@@ -1256,7 +1256,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void getAccoutsWithIdTokensEmpty() {
-        final List<ICacheRecord> records = mOauth2TokenCache.getAccountsWithIdTokens(
+        final List<ICacheRecord> records = mOauth2TokenCache.getAccountsWithAggregatedAccountData(
                 ENVIRONMENT,
                 CLIENT_ID
         );
