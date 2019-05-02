@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Pair;
 
 import com.google.gson.annotations.Expose;
@@ -156,8 +157,12 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
 
         if (mSlice != null) {
-            uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
-            uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDC());
+            if(!TextUtils.isEmpty(mSlice.getSlice())) {
+                uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
+            }
+            if(!TextUtils.isEmpty(mSlice.getDC())) {
+                uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDC());
+            }
         }
 
         return uriBuilder.build();
