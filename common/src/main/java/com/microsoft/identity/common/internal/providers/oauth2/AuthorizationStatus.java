@@ -37,6 +37,11 @@ public enum AuthorizationStatus {
     USER_CANCEL,
 
     /**
+     * Sdk cancelled Auth floe
+     */
+    SDK_CANCEL,
+
+    /**
      * Returned URI contains error.
      */
     FAIL,

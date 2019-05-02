@@ -33,7 +33,6 @@ import com.microsoft.identity.common.adal.internal.JWSBuilder;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -82,7 +81,10 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
             Intent resultIntent = new Intent();
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, e);
             //TODO log the request info
-            mChallengeCallback.onChallengeResponseReceived(AuthorizationStrategy.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
+            mChallengeCallback.onChallengeResponseReceived(
+                    AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION,
+                    resultIntent
+            );
         }
 
         return null;

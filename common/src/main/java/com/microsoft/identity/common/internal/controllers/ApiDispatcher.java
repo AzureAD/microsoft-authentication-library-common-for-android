@@ -31,6 +31,7 @@ import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -56,6 +57,14 @@ public class ApiDispatcher {
                 "Beginning interactive request"
         );
         synchronized (sLock) {
+
+            if(!sInteractiveExecutor.isTerminated()){
+                Logger.info(TAG, "An auth request is already in progress, sending broadcast to cancel the request ");
+                command.getParameters().getAppContext().
+                        sendBroadcast(
+                                new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
+                        );
+            }
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
