@@ -32,7 +32,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAutho
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.HashMap;
@@ -72,6 +71,15 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                         AuthorizationStatus.USER_CANCEL,
                         MicrosoftAuthorizationErrorResponse.USER_CANCEL,
                         MicrosoftAuthorizationErrorResponse.USER_CANCELLED_FLOW
+                );
+                break;
+
+            case AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL:
+                Logger.verbose(TAG, null, "SDK cancelled the authorization request.");
+                result = createAuthorizationResultWithErrorResponse(
+                        AuthorizationStatus.SDK_CANCEL,
+                        MicrosoftAuthorizationErrorResponse.SDK_AUTH_CANCEL,
+                        MicrosoftAuthorizationErrorResponse.SDK_CANCELLED_FLOW
                 );
                 break;
 
@@ -118,6 +126,8 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                                 AuthenticationConstants.Broker.INSTALL_UPN_KEY)
                         );
                 break;
+
+
 
             default:
                 result = createAuthorizationResultWithErrorResponse(

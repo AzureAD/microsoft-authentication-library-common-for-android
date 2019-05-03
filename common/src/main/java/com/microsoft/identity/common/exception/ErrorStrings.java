@@ -335,10 +335,4 @@ public final class ErrorStrings {
      */
     public static final String UNSUPPORTED_BROKER_VERSION = "unsupported_broker_version";
 
-    /**
-     * User couldn't complete the authorization request within max time limit
-     *{@link com.microsoft.identity.common.internal.controllers.BaseController#AUTH_REQUEST_TIMEOUT_IN_MINUTES}
-     */
-    public static final String AUTH_REQUEST_TIMED_OUT = "User failed to complete Auth Request in maximum allotted time";
-
 }

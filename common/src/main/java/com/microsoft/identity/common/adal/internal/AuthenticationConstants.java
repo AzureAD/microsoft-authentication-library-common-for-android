@@ -165,6 +165,12 @@ public final class AuthenticationConstants {
          * Device registration in broker apps.
          */
         public static final int BROWSER_CODE_DEVICE_REGISTER = 2007;
+
+        /**
+         * Represents that SDK signalled to cancelled the auth flow as app
+         * launched a new interactive auth request
+         */
+        public static final int BROWSER_CODE_SDK_CANCEL = 2008;
     }
 
     /**

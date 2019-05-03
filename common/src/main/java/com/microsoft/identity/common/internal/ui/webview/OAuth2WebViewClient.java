@@ -111,7 +111,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                 description);
 
         // Send the result back to the calling activity
-        mCompletionCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
+        mCompletionCallback.onChallengeResponseReceived(
+                AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR,
+                resultIntent
+        );
     }
 
     @Override
@@ -130,7 +133,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                 error.toString());
 
         // Send the result back to the calling activity
-        mCompletionCallback.onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_ERROR, resultIntent);
+        mCompletionCallback.onChallengeResponseReceived(
+                AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR,
+                resultIntent
+        );
     }
 
     @Override
