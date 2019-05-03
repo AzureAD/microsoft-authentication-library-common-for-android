@@ -32,7 +32,11 @@ interface IMicrosoftAuthService {
 
     Bundle hello(in Bundle bundle);
 
+    Bundle getAccountMode();
+
     Bundle getAccounts(in Bundle bundle);
+
+    Bundle getCurrentAccount();
 
     Bundle acquireTokenSilently(in Bundle requestBundle);
 

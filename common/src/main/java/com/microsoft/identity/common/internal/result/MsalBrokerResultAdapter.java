@@ -49,6 +49,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
+
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 
 import org.json.JSONException;
@@ -59,7 +60,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
-
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNT_MODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_CURRENT_ACCOUNT;
 
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
@@ -416,5 +418,63 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         return result;
+    }
+
+    /**
+     * Get a bundle from an Account Mode string.
+     * @param accountMode an Account Mode string.
+     * @return Bundle
+     */
+    public Bundle bundleFromAccountMode(@NonNull final String accountMode) {
+        final Bundle resultBundle = new Bundle();
+        resultBundle.putString(BROKER_ACCOUNT_MODE, accountMode);
+        return resultBundle;
+    }
+
+    /**
+     * Get Account mode from bundle.
+     * @param bundle Bundle
+     * @return Account mode.
+     */
+    public static String accountModeFromBundle(@NonNull final Bundle bundle) {
+        final String accountMode = bundle.getString(BROKER_ACCOUNT_MODE);
+
+        if (accountMode == null) {
+            // Return default mode.
+            Logger.verbose(TAG, "Unexpected value: account mode is not set.");
+            return AuthenticationConstants.Broker.BROKER_ACCOUNT_MODE_MULTIPLE_ACCOUNT;
+        }
+
+        return accountMode;
+    }
+
+    /**
+     * Get a bundle from current account's AccountRecord.
+     * @param record current account's AccountRecord.
+     * @return Bundle
+     */
+    public static Bundle bundleFromCurrentAccount(@NonNull final AccountRecord record) {
+        final Bundle resultBundle = new Bundle();
+
+        final String recordInGson = new Gson().toJson(record, AccountRecord.class);
+        resultBundle.putString(BROKER_CURRENT_ACCOUNT, recordInGson);
+
+        return resultBundle;
+    }
+
+    /**
+     * Get current account's AccountRecord from bundle.
+     * @param bundle Bundle
+     * @return AccountRecord of the current account. This could be null.
+     */
+    public static AccountRecord currentAccountFromBundle(@NonNull final Bundle bundle) {
+        final String accountJson = bundle.getString(BROKER_CURRENT_ACCOUNT);
+
+        if (accountJson == null) {
+            //The bundle does not contain the BROKER_CURRENT_ACCOUNT value.
+            return null;
+        }
+
+        return new Gson().fromJson(accountJson, AccountRecord.class);
     }
 }
