@@ -71,6 +71,7 @@ import com.microsoft.identity.common.internal.util.DateUtilities;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -195,11 +196,14 @@ public abstract class BaseController {
                     TAG + methodName,
                     "Token request was successful"
             );
-            final ICacheRecord savedRecord = tokenCache.save(
+
+            // TODO this is the new result that will become the TenantProfile...
+            final List<ICacheRecord> savedRecords = tokenCache.saveAndLoadAggregatedAccountData(
                     strategy,
                     getAuthorizationRequest(strategy, parameters),
                     tokenResult.getTokenResponse()
             );
+            final ICacheRecord savedRecord = savedRecords.get(0);
 
             // Create a new AuthenticationResult to hold the saved record
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
@@ -331,16 +335,20 @@ public abstract class BaseController {
         return strategy.requestToken(refreshTokenRequest);
     }
 
-    protected ICacheRecord saveTokens(final OAuth2Strategy strategy,
-                                      final AuthorizationRequest request,
-                                      final TokenResponse tokenResponse,
-                                      final OAuth2TokenCache tokenCache) throws ClientException {
+    protected List<ICacheRecord> saveTokens(final OAuth2Strategy strategy,
+                                            final AuthorizationRequest request,
+                                            final TokenResponse tokenResponse,
+                                            final OAuth2TokenCache tokenCache) throws ClientException {
         final String methodName = ":saveTokens";
         Logger.verbose(
                 TAG + methodName,
                 "Saving tokens..."
         );
-        return tokenCache.save(strategy, request, tokenResponse);
+        return tokenCache.saveAndLoadAggregatedAccountData(
+                strategy,
+                request,
+                tokenResponse
+        );
     }
 
     protected boolean refreshTokenIsNull(final ICacheRecord cacheRecord) {
