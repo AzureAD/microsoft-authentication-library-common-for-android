@@ -305,8 +305,8 @@ public class MsalOAuth2TokenCache
      * @param acct     The target AccountRecord.
      * @return A sparse ICacheRecord containing the provided AccountRecord and its IdTokens.
      */
-    private ICacheRecord getSparseCacheRecordForAccount(@NonNull final String clientId,
-                                                        @NonNull final AccountRecord acct) {
+    ICacheRecord getSparseCacheRecordForAccount(@NonNull final String clientId,
+                                                @NonNull final AccountRecord acct) {
         final String methodName = ":getSparseCacheRecordForAccount";
 
         final List<IdTokenRecord> acctIdTokens = getIdTokensForAccount(
@@ -488,7 +488,7 @@ public class MsalOAuth2TokenCache
     @Override
     public List<ICacheRecord> loadWithAggregatedAccountData(@NonNull final String clientId,
                                                             @Nullable final String target,
-                                                            @NonNull AccountRecord account) {
+                                                            @NonNull final AccountRecord account) {
         final List<ICacheRecord> result = new ArrayList<>();
 
         final ICacheRecord primaryCacheRecord = load(clientId, target, account);
@@ -617,9 +617,9 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public List<ICacheRecord> getAccountsWithAggregatedAccountData(@Nullable String environment,
-                                                                   @NonNull String clientId,
-                                                                   @NonNull String homeAccountId) {
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(@Nullable final String environment,
+                                                                   @NonNull final String clientId,
+                                                                   @NonNull final String homeAccountId) {
         final List<ICacheRecord> result = new ArrayList<>();
 
         final AccountRecord anyMatchingAccount = getAccount(
