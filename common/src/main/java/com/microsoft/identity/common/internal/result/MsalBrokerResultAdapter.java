@@ -209,7 +209,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     brokerResult.getErrorMessage()
             );
 
-        } else if (AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorCode) ||
+        } else if (AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorCode) &&
                 AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED.
                         equalsIgnoreCase(brokerResult.getSubErrorCode())) {
 
