@@ -2,13 +2,13 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
-import android.support.v4.app.NotificationCompat;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebSettings;
@@ -19,17 +19,16 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.controllers.ApiDispatcher;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.util.StringUtil;
-import java.util.Map;
 
-import java.util.UUID;
-import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Map;
 
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR;
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_DESCRIPTION;
@@ -55,10 +54,9 @@ public final class AuthorizationActivity extends Activity {
     static final String KEY_AUTH_AUTHORIZATION_AGENT = "authorizationAgent";
 
     @VisibleForTesting
-    static final String KEY_RESULT_INTENT = "resultIntent";
-
-    @VisibleForTesting
     static final String KEY_REQUEST_HEADERS = "requestHeaders";
+
+    public static final String CANCEL_INTERACTIVE_REQUEST_ACTION = "cancel_interactive_request_action";
 
     private static final String TAG = AuthorizationActivity.class.getSimpleName();
 
@@ -78,11 +76,17 @@ public final class AuthorizationActivity extends Activity {
 
     private AuthorizationAgent mAuthorizationAgent;
 
-    private PendingIntent mResultIntent;
+    private BroadcastReceiver mCancelRequestReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Logger.info(TAG, "Received Authorization flow cancel request from SDK");
+            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
+            finish();
+        }
+    };
 
     public static Intent createStartIntent(final Context context,
                                            final Intent authIntent,
-                                           @NonNull final PendingIntent resultIntent,
                                            final String requestUrl,
                                            final String redirectUri,
                                            final HashMap<String, String> requestHeaders,
@@ -93,7 +97,6 @@ public final class AuthorizationActivity extends Activity {
         intent.putExtra(KEY_AUTH_REDIRECT_URI, redirectUri);
         intent.putExtra(KEY_REQUEST_HEADERS, requestHeaders);
         intent.putExtra(KEY_AUTH_AUTHORIZATION_AGENT, authorizationAgent);
-        intent.putExtra(KEY_RESULT_INTENT, resultIntent);
         intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         return intent;
     }
@@ -153,7 +156,6 @@ public final class AuthorizationActivity extends Activity {
         mRedirectUri = state.getString(KEY_AUTH_REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
         mAuthorizationAgent = (AuthorizationAgent) state.getSerializable(KEY_AUTH_AUTHORIZATION_AGENT);
-        mResultIntent = state.getParcelable(KEY_RESULT_INTENT);
     }
 
     /**
@@ -172,8 +174,13 @@ public final class AuthorizationActivity extends Activity {
     protected void onCreate(final Bundle savedInstanceState) {
         final String methodName = "#onCreate";
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.common_activity_authentication);
+
+        // Register Broadcast receiver to cancel the auth request
+        // if another incoming request is lauched by the app
+        registerReceiver(mCancelRequestReceiver,
+                new IntentFilter(CANCEL_INTERACTIVE_REQUEST_ACTION));
+
         if (savedInstanceState == null) {
             Logger.verbose(TAG + methodName, "Extract state from the intent bundle.");
             extractState(getIntent().getExtras());
@@ -254,7 +261,7 @@ public final class AuthorizationActivity extends Activity {
                } else {
                    final Intent resultIntent = new Intent();
                    resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, new ClientException(ErrorStrings.AUTHORIZATION_INTENT_IS_NULL));
-                   sendResult(AuthorizationStrategy.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
+                   sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
                    finish();
                }
            } else {
@@ -271,24 +278,16 @@ public final class AuthorizationActivity extends Activity {
     protected void onDestroy() {
         final String methodName = "#onDestroy";
         Logger.verbose(TAG + methodName, "");
+        unregisterReceiver(mCancelRequestReceiver);
         super.onDestroy();
     }
 
-    private void sendResult(int resultCode, Intent intent) {
-        if (mResultIntent == null) {
-            Logger.error(TAG, "Result intent is null", null);
-            return;
-        }
-
-        intent.putExtra(AuthorizationStrategy.REQUEST_CODE, AuthorizationStrategy.BROWSER_FLOW);
-        intent.putExtra(AuthorizationStrategy.RESULT_CODE, resultCode);
-        try {
-            mResultIntent.send(this, 0, intent);
-        } catch (final PendingIntent.CanceledException exception) {
-            Logger.error(TAG, "Failed to send completion intent", exception);
-        }
-        //PendingIntent is a global reference used across apps. Need to call cancel() to remove it.
-        mResultIntent.cancel();
+    private void sendResult(int resultCode, final Intent resultIntent) {
+        ApiDispatcher.completeInteractive(
+                AuthorizationStrategy.BROWSER_FLOW,
+                resultCode,
+                resultIntent
+        );
     }
 
     private void completeAuthorization() {
@@ -296,13 +295,13 @@ public final class AuthorizationActivity extends Activity {
         final String url = getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
         final Intent resultIntent = createResultIntent(url);
         if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL))) {
-            sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE, resultIntent);
+            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, resultIntent);
         } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE))
                 && resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE).equalsIgnoreCase("cancel")) {
             //when the user click the "cancel" button in the UI, server will send the the redirect uri with "cancel" error sub-code and redirects back to the calling app
-            sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
+            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, resultIntent);
         } else {
-            sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_ERROR, resultIntent);
+            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
         }
 
         finish();
@@ -312,20 +311,15 @@ public final class AuthorizationActivity extends Activity {
         Logger.info(TAG, "Authorization flow is canceled by user");
         final Intent resultIntent = new Intent();
         resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        sendResult(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
+        sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
         finish();
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
 
     @Override
     protected void onSaveInstanceState(final Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(KEY_AUTH_INTENT, mAuthIntent);
-        outState.putParcelable(KEY_RESULT_INTENT, mResultIntent);
         outState.putBoolean(KEY_BROWSER_FLOW_STARTED, mBrowserFlowStarted);
         outState.putBoolean(KEY_PKEYAUTH_STATUS, mPkeyAuthStatus);
         outState.putSerializable(KEY_AUTH_AUTHORIZATION_AGENT, mAuthorizationAgent);

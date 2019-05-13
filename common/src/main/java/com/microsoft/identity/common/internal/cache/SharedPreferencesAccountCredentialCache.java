@@ -286,7 +286,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(TAG, "Loading Credentials...");
         final Map<String, Credential> allCredentials = getCredentialsWithKeys();
         final List<Credential> creds = new ArrayList<>(allCredentials.values());
-        Logger.verbose(TAG, "Found [" + creds.size() + "] Credentials");
         return creds;
     }
 
@@ -326,7 +325,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         }
 
         final Map<String, AccountRecord> accounts = getAccountsWithKeys();
-        Logger.info(TAG, "Found [" + accounts.size() + "] Accounts...");
 
         boolean accountRemoved = false;
         for (final Map.Entry<String, AccountRecord> entry : accounts.entrySet()) {
@@ -352,9 +350,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             throw new IllegalArgumentException("Param [credentialToRemove] cannot be null.");
         }
 
-        Logger.verbose(TAG, "Loading Credentials + keys...");
         final Map<String, Credential> credentials = getCredentialsWithKeys();
-        Logger.info(TAG, "Found [" + credentials.size() + "] Credentials...");
 
         boolean credentialRemoved = false;
         for (final Map.Entry<String, Credential> entry : credentials.entrySet()) {

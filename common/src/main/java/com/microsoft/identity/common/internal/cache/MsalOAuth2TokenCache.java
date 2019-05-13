@@ -636,21 +636,13 @@ public class MsalOAuth2TokenCache
         Logger.infoPII(
                 TAG + methodName,
                 "Environment: [" + environment + "]"
-        );
+                        + "\n"
+                        + "ClientId: [" + clientId + "]"
+                        + "\n"
+                        + "HomeAccountId: [" + homeAccountId + "]"
+                        + "\n"
+                        + "Realm: [" + realm + "]"
 
-        Logger.infoPII(
-                TAG + methodName,
-                "ClientId: [" + clientId + "]"
-        );
-
-        Logger.infoPII(
-                TAG + methodName,
-                "HomeAccountId: [" + homeAccountId + "]"
-        );
-
-        Logger.infoPII(
-                TAG + methodName,
-                "Realm: [" + realm + "]"
         );
 
         final AccountRecord targetAccount;
@@ -1040,66 +1032,52 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public boolean setSingleSignOnState(final GenericAccount account,
-                                        final GenericRefreshToken refreshToken) {
+    public void setSingleSignOnState(final GenericAccount account,
+                                     final GenericRefreshToken refreshToken) throws ClientException {
         final String methodName = "setSingleSignOnState";
 
-        try {
-            final AccountRecord accountDto = mAccountCredentialAdapter.asAccount(account);
-            final RefreshTokenRecord rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
-            final IdTokenRecord idToken = mAccountCredentialAdapter.asIdToken(account, refreshToken);
+        final AccountRecord accountDto = mAccountCredentialAdapter.asAccount(account);
+        final RefreshTokenRecord rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
+        final IdTokenRecord idToken = mAccountCredentialAdapter.asIdToken(account, refreshToken);
 
-            validateCacheArtifacts(
+        validateCacheArtifacts(
+                accountDto,
+                null,
+                rt,
+                idToken
+        );
+
+        final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
+                refreshToken.getFamilyId()
+        );
+
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+                accountDto.getAuthorityType()
+        );
+
+        if (isFamilyRefreshToken || isMultiResourceCapable) {
+            final int refreshTokensRemoved = removeRefreshTokensForAccount(
                     accountDto,
-                    null,
-                    rt,
-                    idToken
+                    isFamilyRefreshToken,
+                    accountDto.getEnvironment(),
+                    rt.getClientId()
             );
 
-            final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
-                    refreshToken.getFamilyId()
+            Logger.info(
+                    TAG + methodName,
+                    "Refresh tokens removed: [" + refreshTokensRemoved + "]"
             );
 
-            final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
-                    accountDto.getAuthorityType()
-            );
-
-            if (isFamilyRefreshToken || isMultiResourceCapable) {
-                final int refreshTokensRemoved = removeRefreshTokensForAccount(
-                        accountDto,
-                        isFamilyRefreshToken,
-                        accountDto.getEnvironment(),
-                        rt.getClientId()
-                );
-
-                Logger.info(
+            if (refreshTokensRemoved > 1) {
+                Logger.warn(
                         TAG + methodName,
-                        "Refresh tokens removed: [" + refreshTokensRemoved + "]"
+                        "Multiple refresh tokens found for Account."
                 );
-
-                if (refreshTokensRemoved > 1) {
-                    Logger.warn(
-                            TAG + methodName,
-                            "Multiple refresh tokens found for Account."
-                    );
-                }
             }
-
-            saveAccounts(accountDto);
-            saveCredentials(idToken, rt);
-
-            return true;
-        } catch (ClientException e) {
-            Logger.error(
-                    TAG + ":" + methodName,
-                    "",
-                    new IllegalArgumentException(
-                            "Cannot set SSO state. Invalid or inadequate Account and/or token provided. (See logs)",
-                            e
-                    )
-            );
-            return false;
         }
+
+        saveAccounts(accountDto);
+        saveCredentials(idToken, rt);
     }
 
     @Override
