@@ -62,7 +62,7 @@ public class HttpCache {
     public static boolean initialize(@NonNull final File cacheDirectory,
                                      @NonNull final String cacheFileName,
                                      final long maxSizeBytes) {
-        final String methondName = ":initialize (3 arg)";
+        final String methodName = ":initialize (3 arg)";
         boolean success = true;
 
         try {
@@ -71,7 +71,7 @@ public class HttpCache {
         } catch (IOException e) {
             success = false;
             Logger.error(
-                    TAG + methondName,
+                    TAG + methodName,
                     "HTTP Response cache installation failed.",
                     e
             );
