@@ -62,7 +62,7 @@ public class HttpCache {
     public static boolean initialize(@NonNull final File cacheDirectory,
                                      @NonNull final String cacheFileName,
                                      final long maxSizeBytes) {
-        final String methodName = ":initialize (3 arg)";
+        final String methodName = ":initialize (File, Filename, Capacity)";
         boolean success = false;
 
         try {
