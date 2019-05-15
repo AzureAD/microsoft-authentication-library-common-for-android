@@ -32,7 +32,7 @@ interface IMicrosoftAuthService {
 
     Bundle hello(in Bundle bundle);
 
-    Bundle getAccountMode();
+    Bundle getDeviceMode();
 
     Bundle getAccounts(in Bundle bundle);
 
@@ -44,5 +44,5 @@ interface IMicrosoftAuthService {
 
     Bundle removeAccount(in Bundle bundle);
 
-    Bundle signOutFromSharedDevice(in Bundle bundle);
+    Bundle removeAccountFromSharedDevice(in Bundle bundle);
 }
