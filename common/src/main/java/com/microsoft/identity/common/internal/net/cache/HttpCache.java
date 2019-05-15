@@ -63,13 +63,13 @@ public class HttpCache {
                                      @NonNull final String cacheFileName,
                                      final long maxSizeBytes) {
         final String methodName = ":initialize (3 arg)";
-        boolean success = true;
+        boolean success = false;
 
         try {
             final File httpCacheDir = new File(cacheDirectory, cacheFileName);
             HttpResponseCache.install(httpCacheDir, maxSizeBytes);
+            success = true;
         } catch (IOException e) {
-            success = false;
             Logger.error(
                     TAG + methodName,
                     "HTTP Response cache installation failed.",
