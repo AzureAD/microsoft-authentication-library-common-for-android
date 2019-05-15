@@ -69,7 +69,7 @@ public class HttpCache {
             final File httpCacheDir = new File(cacheDirectory, cacheFileName);
             HttpResponseCache.install(httpCacheDir, maxSizeBytes);
             success = true;
-        } catch (IOException e) {
+        } catch (final IOException e) {
             Logger.error(
                     TAG + methodName,
                     "HTTP Response cache installation failed.",
