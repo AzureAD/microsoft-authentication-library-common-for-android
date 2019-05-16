@@ -330,6 +330,10 @@ public abstract class BaseController {
         refreshTokenRequest.setRefreshToken(parameters.getRefreshToken().getSecret());
         refreshTokenRequest.setRedirectUri(parameters.getRedirectUri());
 
+        if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
+            ((MicrosoftTokenRequest)refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
+        }
+
         //NOTE: this should be moved to the strategy; however requires a larger refactor
         if (parameters.getSdkType() == SdkType.ADAL) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setIdTokenVersion("1");
