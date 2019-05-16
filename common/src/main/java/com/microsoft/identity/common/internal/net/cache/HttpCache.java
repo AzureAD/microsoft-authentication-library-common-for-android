@@ -43,7 +43,7 @@ public class HttpCache {
     /**
      * The default name of the HTTP/S cache on disk.
      */
-    public static final String DEFAULT_HTTP_CACHE_NAME = "com.microsoft.identitiy.http-cache";
+    public static final String DEFAULT_HTTP_CACHE_NAME = "com.microsoft.identity.http-cache";
 
     /**
      * The default size of the HTTP/S cache on disk.
