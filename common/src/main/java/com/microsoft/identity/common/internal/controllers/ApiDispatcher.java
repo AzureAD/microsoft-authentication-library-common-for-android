@@ -109,10 +109,10 @@ public class ApiDispatcher {
     }
 
     public static void removeAccount(final RemoveAccountCommand command) {
-        final String methodName = ":getAccounts";
+        final String methodName = ":removeAccount";
         Logger.verbose(
                 TAG + methodName,
-                "Beginning load accounts."
+                "Beginning remove account."
         );
         sSilentExecutor.execute(new Runnable() {
             @Override
