@@ -40,8 +40,8 @@ public class RemoveAccountCommand implements Command<Boolean> {
     protected TaskCompletedCallbackWithError mCallback;
 
     public RemoveAccountCommand(@NonNull final OperationParameters parameters,
-                              @NonNull final BaseController controller,
-                              @NonNull final TaskCompletedCallbackWithError callback) {
+                                @NonNull final BaseController controller,
+                                @NonNull final TaskCompletedCallbackWithError callback) {
         mParameters = parameters;
         mControllers = new ArrayList<>();
         mCallback = callback;
@@ -50,8 +50,8 @@ public class RemoveAccountCommand implements Command<Boolean> {
     }
 
     public RemoveAccountCommand(@NonNull final OperationParameters parameters,
-                              @NonNull final List<BaseController> controllers,
-                              @NonNull final TaskCompletedCallbackWithError callback) {
+                                @NonNull final List<BaseController> controllers,
+                                @NonNull final TaskCompletedCallbackWithError callback) {
         mParameters = parameters;
         mControllers = controllers;
         mCallback = callback;

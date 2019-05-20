@@ -71,7 +71,6 @@ public class ApiDispatcher {
                 try {
                     //Try executing request
                     result = command.execute();
-
                 } catch (final Exception e) {
                     //Capture any resulting exception and map to MsalException type
                     Logger.errorPII(
