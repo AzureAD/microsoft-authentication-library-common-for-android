@@ -1,3 +1,10 @@
+Version 0.0.10
+-------------
+- Adds support HTTP response caching
+- Bugfixes:
+    * Pass claims in non-joined acquireTokenSilentCall
+    * Fixes the assertion check for IntuneAppProtectionPolicyRequiredException
+
 Version 0.0.10-alpha
 -------------
 - Adds support for declared non-tfp B2C authorities
