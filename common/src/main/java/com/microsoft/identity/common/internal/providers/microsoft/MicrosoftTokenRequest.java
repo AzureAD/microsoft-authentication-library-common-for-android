@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 
@@ -32,6 +33,12 @@ public class MicrosoftTokenRequest extends TokenRequest {
     public static final String CODE_VERIFIER = "code_verifier";
     public static final String CLIENT_INFO = "client_info";
     public static final String CORRELATION_ID = "client-request-id";
+    public static final String ID_TOKEN_VERSION = "itver";
+    public static final String MAM_VERSION = "mamver";
+    public static final String CLAIMS = "claims";
+    public static final String INSTANCE_AWARE = "instance_aware";
+    public static final String CLIENT_APP_NAME = "x-app-name";
+    public static final String CLIENT_APP_VERSION = "x-app-ver";
 
     public MicrosoftTokenRequest() {
         mClientInfoEnabled = "1";
@@ -40,11 +47,40 @@ public class MicrosoftTokenRequest extends TokenRequest {
     @SerializedName(CODE_VERIFIER)
     private String mCodeVerifier;
 
+    @Expose()
     @SerializedName(CLIENT_INFO)
     private String mClientInfoEnabled;
 
+    @Expose()
     @SerializedName(CORRELATION_ID)
     private UUID mCorrelationId;
+
+    @Expose()
+    @SerializedName(ID_TOKEN_VERSION)
+    private String mIdTokenVersion;
+
+    @Expose()
+    @SerializedName(MAM_VERSION)
+    private String mMamVersion;
+
+    @Expose()
+    @SerializedName(CLAIMS)
+    private String mClaims;
+
+    @Expose()
+    @SerializedName(INSTANCE_AWARE)
+    private String mInstanceAware;
+
+    @Expose()
+    @SerializedName(CLIENT_APP_NAME)
+    private String mClientAppName;
+
+    @Expose()
+    @SerializedName(CLIENT_APP_VERSION)
+    private String mClientAppVersion;
+
+    // Sent as part of headers if available, so marking it transient.
+    private transient String mBrokerVersion;
 
     public String getCodeVerifier() {
         return this.mCodeVerifier;
@@ -58,11 +94,67 @@ public class MicrosoftTokenRequest extends TokenRequest {
         return this.mClientInfoEnabled;
     }
 
-    public void setCorrelationId(UUID correlationId){
+    public void setCorrelationId(UUID correlationId) {
         mCorrelationId = correlationId;
     }
 
     public UUID getCorrelationId() {
         return mCorrelationId;
+    }
+
+    public String getIdTokenVersion() {
+        return mIdTokenVersion;
+    }
+
+    public void setIdTokenVersion(final String mIdTokenVersion) {
+        this.mIdTokenVersion = mIdTokenVersion;
+    }
+
+    public String getClaims() {
+        return mClaims;
+    }
+
+    public void setClaims(final String claims) {
+        this.mClaims = claims;
+    }
+
+    public String getInstanceAware() {
+        return mInstanceAware;
+    }
+
+    public void setInstanceAware(final String instanceAware) {
+        this.mInstanceAware = instanceAware;
+    }
+
+    public String getClientAppName() {
+        return mClientAppName;
+    }
+
+    public void setClientAppName(String clientAppName) {
+        this.mClientAppName = clientAppName;
+    }
+
+    public String getClientAppVersion() {
+        return mClientAppVersion;
+    }
+
+    public void setClientAppVersion(final String clientAppVersion) {
+        this.mClientAppVersion = clientAppVersion;
+    }
+
+    public String getMamVersion() {
+        return mMamVersion;
+    }
+
+    public void setMamversion(final String mamVersion) {
+        this.mMamVersion = mamVersion;
+    }
+
+    public String getBrokerVersion() {
+        return mBrokerVersion;
+    }
+
+    public void setBrokerVersion(final String brokerVersion) {
+        this.mBrokerVersion = brokerVersion;
     }
 }

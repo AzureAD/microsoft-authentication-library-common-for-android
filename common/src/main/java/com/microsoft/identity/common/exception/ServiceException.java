@@ -22,8 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.exception;
 
+import android.support.annotation.Nullable;
+
 import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 
 import org.json.JSONException;
 
@@ -32,6 +35,51 @@ import java.util.List;
 
 public class ServiceException extends BaseException {
 
+    /**
+     * This request is missing a required parameter, includes an invalid parameter, includes a
+     * parameter more than
+     * once, or is otherwise malformed.
+     */
+    public static final String INVALID_REQUEST = "invalid_request";
+
+    /**
+     * The client is not authorized to request an authorization code.
+     */
+    public static final String UNAUTHORIZED_CLIENT = "unauthorized_client";
+
+    /**
+     * The resource owner or authorization server denied the request.
+     */
+    public static final String ACCESS_DENIED = "access_denied";
+
+    /**
+     * The request scope is invalid, unknown or malformed.
+     */
+    public static final String INVALID_SCOPE = "invalid_scope";
+
+    /**
+     * Represents 500/503/504 error codes.
+     */
+    public static final String SERVICE_NOT_AVAILABLE = "service_not_available";
+
+    /**
+     * Represents {@link java.net.SocketTimeoutException}.
+     */
+    public static final String REQUEST_TIMEOUT = "request_timeout";
+
+    /**
+     * AuthorityMetadata validation failed.
+     */
+    public static final String INVALID_INSTANCE = "invalid_instance";
+
+    /**
+     * Request to server failed, but no error and error_description is returned back from the
+     * service.
+     */
+    public static final String UNKNOWN_ERROR = "unknown_error";
+
+    private String mOauthSubErrorCode;
+
     private int mHttpStatusCode;
 
     private HashMap<String, String> mHttpResponseBody = null;
@@ -39,15 +87,23 @@ public class ServiceException extends BaseException {
     private HashMap<String, List<String>> mHttpResponseHeaders = null;
 
     /**
-     * When {@link java.net.SocketTimeoutException} is thrown, no status code will be caught. Will use 0 instead.
+     * When {@link java.net.SocketTimeoutException} is thrown, no status code will be caught.
+     * Will use 0 instead.
      */
-    static final int DEFAULT_STATUS_CODE = 0;
+    public static final int DEFAULT_STATUS_CODE = 0;
 
     /**
      * @return The http status code for the request sent to the service.
      */
     public int getHttpStatusCode() {
         return mHttpStatusCode;
+    }
+
+    /**
+     * @return The OAuth sub error code for the exception, could be null.
+     */
+    public String getOAuthSubErrorCode() {
+        return mOauthSubErrorCode;
     }
 
     /**
@@ -69,24 +125,45 @@ public class ServiceException extends BaseException {
     }
 
     /**
+     * @param subErrorCode - The sub error code for the exception.
+     */
+    public void setOauthSubErrorCode(@Nullable final String subErrorCode) {
+        mOauthSubErrorCode = subErrorCode;
+    }
+
+    /**
+     * Set response headers of the error received from the Service.
+     *
+     * @param responseHeaders
+     */
+    public void setHttpResponseHeaders(final HashMap<String, List<String>> responseHeaders) {
+        mHttpResponseHeaders = responseHeaders;
+    }
+
+    /**
+     * Set response body of the error received from the Service.
+     *
+     * @param responseBody
+     */
+    public void setHttpResponseBody(final HashMap<String, String> responseBody) {
+        mHttpResponseBody = responseBody;
+    }
+
+    /**
      * Set the http response {@link HttpWebResponse}.
      *
      * @param response HttpWebResponse
      */
-    public void setHttpResponse(final HttpWebResponse response) {
+    public void setHttpResponse(final HttpResponse response) throws JSONException {
         if (null != response) {
             mHttpStatusCode = response.getStatusCode();
 
-            if (null != response.getResponseHeaders()) {
-                mHttpResponseHeaders = new HashMap<>(response.getResponseHeaders());
+            if (null != response.getHeaders()) {
+                mHttpResponseHeaders = new HashMap<>(response.getHeaders());
             }
 
             if (null != response.getBody()) {
-                try {
-                    mHttpResponseBody = new HashMap<>(HashMapExtensions.getJsonResponse(response));
-                } catch (final JSONException exception) {
-                    //Log.e(CommonCoreBaseException.class.getSimpleName(), ADALError.SERVER_INVALID_JSON_RESPONSE.toString(), exception);
-                }
+                mHttpResponseBody = HashMapExtensions.getJsonResponse(response);
             }
         }
     }
@@ -98,7 +175,9 @@ public class ServiceException extends BaseException {
      * @param errorMessage String
      * @param throwable    Throwable
      */
-    public ServiceException(final String errorCode, final String errorMessage, final Throwable throwable) {
+    public ServiceException(final String errorCode,
+                            final String errorMessage,
+                            final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
         mHttpStatusCode = DEFAULT_STATUS_CODE;
     }
@@ -111,7 +190,10 @@ public class ServiceException extends BaseException {
      * @param httpStatusCode int
      * @param throwable      Throwable
      */
-    public ServiceException(final String errorCode, final String errorMessage, final int httpStatusCode, final Throwable throwable) {
+    public ServiceException(final String errorCode,
+                            final String errorMessage,
+                            final int httpStatusCode,
+                            final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
         mHttpStatusCode = httpStatusCode;
     }

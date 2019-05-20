@@ -43,27 +43,36 @@ public class BrowserSelector {
     private static final String TAG = BrowserSelector.class.getSimpleName();
     private static final String SCHEME_HTTP = "http";
     private static final String SCHEME_HTTPS = "https";
-    private static final String CUSTOM_TABS_SERVICE_ACTION = "android.support.customtabs.action.CustomTabsService";
 
     /**
      * Searches through all browsers for the best match.
      * Browsers are evaluated in the order returned by the package manager,
      * which should indirectly match the user's preferences.
-     * First browser in the list will be preferred no matter weather or not the custom tabs supported.
+     * First matched browser in the list will be preferred no matter weather or not the custom tabs supported.
      *
      * @param context {@link Context} to use for accessing {@link PackageManager}.
      * @return Browser selected to use.
      */
-    public static Browser select(final Context context) throws ClientException {
+    public static Browser select(final Context context, final List<BrowserDescriptor> browserSafeList) throws ClientException {
         final List<Browser> allBrowsers = getAllBrowsers(context);
-        if (!allBrowsers.isEmpty()) {
-            Logger.verbose(TAG, "Select the browser to launch.");
-            Logger.verbosePII(TAG, "Browser's package name: " + allBrowsers.get(0).getPackageName() + " version: " + allBrowsers.get(0).getVersion());
-            return allBrowsers.get(0);
-        } else {
-            Logger.error(TAG, "No available browser installed on the device.", null);
-            throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
+        Logger.verbose(TAG, "Select the browser to launch.");
+
+        for (Browser browser : allBrowsers) {
+            for (BrowserDescriptor browserDescriptor : browserSafeList) {
+                if (browserDescriptor.matches(browser)) {
+                    Logger.verbose(
+                            TAG,
+                            "Browser's package name: "
+                                    + browser.getPackageName()
+                                    + " version: "
+                                    + browser.getVersion());
+                    return browser;
+                }
+            }
         }
+
+        Logger.error(TAG, "No available browser installed on the device.", null);
+        throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
     }
 
     /**
@@ -118,7 +127,9 @@ public class BrowserSelector {
     }
 
     private static boolean isCustomTabsServiceSupported(@NonNull final Context context, @NonNull final PackageInfo packageInfo) {
-        Intent serviceIntent = new Intent(CUSTOM_TABS_SERVICE_ACTION);
+        // https://issuetracker.google.com/issues/119183822
+        // When above AndroidX issue is fixed, switch back to CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION
+        Intent serviceIntent = new Intent(new StringBuilder("android").append(".support.customtabs.action.CustomTabsService").toString());
         serviceIntent.setPackage(packageInfo.packageName);
         List<ResolveInfo> resolveInfos = context.getPackageManager().queryIntentServices(serviceIntent, 0);
         return !(resolveInfos == null || resolveInfos.isEmpty());

@@ -22,16 +22,32 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class TokenErrorResponse {
+public class TokenErrorResponse implements IErrorResponse {
 
+    @Expose()
+    private int mStatusCode;
+
+    private String mResponseBody;
+
+    @Expose()
+    private String mResponseHeadersJson;
+
+    @Expose()
     @SerializedName("error")
     private String mError;
 
+    @Expose()
+    @SerializedName("suberror")
+    private String mSubError;
+
+    @Expose()
     @SerializedName("error_description")
     private String mErrorDescription;
 
+    @Expose()
     @SerializedName("error_uri")
     private String mErrorUri;
 
@@ -47,6 +63,20 @@ public class TokenErrorResponse {
      */
     public void setError(final String error) {
         mError = error;
+    }
+
+    /**
+     * @return mSubError of the suberror response.
+     */
+    public String getSubError() {
+        return mSubError;
+    }
+
+    /**
+     * @param subError suberror string of the token error response.
+     */
+    public void setSubError(final String subError) {
+        mSubError = subError;
     }
 
     /**
@@ -77,15 +107,72 @@ public class TokenErrorResponse {
         mErrorUri = errorUri;
     }
 
+    /**
+     * Gets the response status code.
+     *
+     * @return The status code to get.
+     */
+    public int getStatusCode() {
+        return mStatusCode;
+    }
+
+    /**
+     * Sets the response status code.
+     *
+     * @param statusCode The status code to set.
+     */
+    public void setStatusCode(final int statusCode) {
+        this.mStatusCode = statusCode;
+    }
+
+    /**
+     * Gets the response body.
+     *
+     * @return The response body to get.
+     */
+    public String getResponseBody() {
+        return mResponseBody;
+    }
+
+    /**
+     * Sets the response body.
+     *
+     * @param responseBody The response body to set.
+     */
+    public void setResponseBody(final String responseBody) {
+        this.mResponseBody = responseBody;
+    }
+
+    /**
+     * Gets the response headers.
+     *
+     * @return The response headers to get.
+     */
+    public String getResponseHeadersJson() {
+        return mResponseHeadersJson;
+    }
+
+    /**
+     * Sets the response headers.
+     *
+     * @param responseHeadersJson The response headers to set.
+     */
+    public void setResponseHeadersJson(final String responseHeadersJson) {
+        this.mResponseHeadersJson = responseHeadersJson;
+    }
+
     //CHECKSTYLE:OFF
     @Override
     public String toString() {
         return "TokenErrorResponse{" +
-                "mError='" + mError + '\'' +
+                "mStatusCode=" + mStatusCode +
+                ", mResponseBody='" + mResponseBody + '\'' +
+                ", mResponseHeadersJson=" + mResponseHeadersJson +
+                ", mError='" + mError + '\'' +
+                ", mSubError='" + mSubError + '\'' +
                 ", mErrorDescription='" + mErrorDescription + '\'' +
                 ", mErrorUri='" + mErrorUri + '\'' +
                 '}';
     }
     //CHECKSTYLE:ON
-
 }

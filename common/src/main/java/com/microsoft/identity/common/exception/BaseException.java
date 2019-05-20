@@ -22,16 +22,32 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.exception;
 
+import android.support.annotation.Nullable;
+
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
 public class BaseException extends Exception {
 
+    @Nullable
+    private String mSpeRing;
+
+    @Nullable
+    private String mRefreshTokenAge;
+
+    @Nullable
+    private String mCliTelemErrorCode;
+
+    @Nullable
+    private String mCliTelemSubErrorCode;
+
     private String mErrorCode;
+
+    private String mCorrelationId;
 
     /**
      * Default constructor.
      */
-    BaseException() {
+    protected BaseException() {
     }
 
     /**
@@ -86,5 +102,48 @@ public class BaseException extends Exception {
         }
 
         return null;
+    }
+
+    @Nullable
+    public String getSpeRing() {
+        return mSpeRing;
+    }
+
+    public void setSpeRing(@Nullable final String speRing) {
+        this.mSpeRing = speRing;
+    }
+
+    @Nullable
+    public String getRefreshTokenAge() {
+        return mRefreshTokenAge;
+    }
+
+    public void setRefreshTokenAge(@Nullable final String refreshTokenAge) {
+        this.mRefreshTokenAge = refreshTokenAge;
+    }
+
+    @Nullable
+    public String getCliTelemErrorCode() {
+        return mCliTelemErrorCode;
+    }
+
+    public void setCliTelemErrorCode(@Nullable final String cliTelemErrorCode) {
+        this.mCliTelemErrorCode = cliTelemErrorCode;
+    }
+
+    @Nullable
+    public String getCliTelemSubErrorCode() {
+        return mCliTelemSubErrorCode;
+    }
+
+    public void setCliTelemSubErrorCode(@Nullable final String cliTelemSubErrorCode) {
+        this.mCliTelemSubErrorCode = cliTelemSubErrorCode;
+    }
+
+    @Nullable
+    public String getCorrelationId() { return mCorrelationId; }
+
+    public void setCorrelationId(@Nullable final String correlationId){
+        mCorrelationId = correlationId;
     }
 }

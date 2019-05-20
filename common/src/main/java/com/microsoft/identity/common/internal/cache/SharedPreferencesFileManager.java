@@ -25,6 +25,9 @@ package com.microsoft.identity.common.internal.cache;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -32,6 +35,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -130,21 +134,37 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         if (null == mStorageHelper) {
             editor.putString(key, value);
         } else {
-            editor.putString(key, encrypt(value));
+            final String encryptedValue = encrypt(value);
+            editor.putString(key, encryptedValue);
         }
 
         editor.commit();
     }
 
     @Override
+    @Nullable
     public final String getString(final String key) {
         String restoredValue = mSharedPreferences.getString(key, null);
 
         if (null != mStorageHelper && !StringExtensions.isNullOrBlank(restoredValue)) {
             restoredValue = decrypt(restoredValue);
+
+            if (StringExtensions.isNullOrBlank(restoredValue)) {
+                logWarningAndRemoveKey(key);
+            }
         }
 
         return restoredValue;
+    }
+
+    private void logWarningAndRemoveKey(String key) {
+        Logger.warn(
+                TAG,
+                "Failed to decrypt value! "
+                        + "This usually signals an issue with KeyStore or the provided SecretKeys."
+        );
+
+        remove(key);
     }
 
     @Override
@@ -157,8 +177,19 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
 
         if (null != mStorageHelper) {
-            for (final Map.Entry<String, String> entry : entries.entrySet()) {
-                entry.setValue(decrypt(entry.getValue()));
+            final Iterator<Map.Entry<String, String>> iterator = entries.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                final Map.Entry<String, String> entry = iterator.next();
+                final String decryptedValue = decrypt(entry.getValue());
+
+                if (TextUtils.isEmpty(decryptedValue)) {
+                    logWarningAndRemoveKey(entry.getKey());
+                    iterator.remove();
+                    continue;
+                }
+
+                entry.setValue(decryptedValue);
             }
         }
 
@@ -167,8 +198,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
     @Override
     public final boolean contains(final String key) {
-        final boolean contains = mSharedPreferences.contains(key);
-        return contains;
+        return !TextUtils.isEmpty(getString(key));
     }
 
     @SuppressLint("ApplySharedPref")
@@ -182,37 +212,54 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     @SuppressLint("ApplySharedPref")
     @Override
     public void remove(final String key) {
+        Logger.info(
+                TAG,
+                "Removing cache key"
+        );
+
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.remove(key);
         editor.commit();
+
+        Logger.infoPII(
+                TAG,
+                "Removed cache key ["
+                        + key
+                        + "]"
+        );
     }
 
-    private String encrypt(final String clearText) {
-        final String encryptedValue = encryptDecryptInternal(clearText, true);
-
-        return encryptedValue;
+    @Nullable
+    private String encrypt(@NonNull final String clearText) {
+        return encryptDecryptInternal(clearText, true);
     }
 
-    private String decrypt(final String encryptedBlob) {
-        final String decryptedValue = encryptDecryptInternal(encryptedBlob, false);
-
-        return decryptedValue;
+    @Nullable
+    private String decrypt(@NonNull final String encryptedBlob) {
+        return encryptDecryptInternal(encryptedBlob, false);
     }
 
-    private String encryptDecryptInternal(final String inputText, final boolean encrypt) {
+    @Nullable
+    private String encryptDecryptInternal(
+            @NonNull final String inputText,
+            final boolean encrypt) {
         final String methodName = "encryptDecryptInternal";
 
         String result;
         try {
-            result = encrypt ? mStorageHelper.encrypt(inputText) : mStorageHelper.decrypt(inputText);
+            result = encrypt
+                    ? mStorageHelper.encrypt(inputText)
+                    : mStorageHelper.decrypt(inputText);
         } catch (GeneralSecurityException | IOException e) {
             Logger.error(
                     TAG + ":" + methodName,
                     "Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",
-                    null
+                    encrypt
+                            ? null // If we failed to encrypt, don't log the error as it may contain a token
+                            : e // If we failed to decrypt, we couldn't see that secret value so log the error
             );
 
-            // TODO Throw a RuntimeException?
+            // TODO determine if an Exception should be thrown here...
             result = null;
         }
 

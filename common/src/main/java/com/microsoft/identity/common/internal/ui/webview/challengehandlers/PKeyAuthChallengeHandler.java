@@ -33,7 +33,6 @@ import com.microsoft.identity.common.adal.internal.JWSBuilder;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -44,14 +43,14 @@ import java.util.Map;
 public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAuthChallenge, Void> {
     private static final String TAG = PKeyAuthChallengeHandler.class.getSimpleName();
     private WebView mWebView;
-    private IChallengeCompletionCallback mChallengeCallback;
+    private IAuthorizationCompletionCallback mChallengeCallback;
 
     /**
      * @param view
      * @param completionCallback
      */
     public PKeyAuthChallengeHandler(@NonNull final WebView view,
-                                    @NonNull IChallengeCompletionCallback completionCallback) {
+                                    @NonNull IAuthorizationCompletionCallback completionCallback) {
         mWebView = view;
         mChallengeCallback = completionCallback;
     }
@@ -82,18 +81,21 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
             Intent resultIntent = new Intent();
             resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, e);
             //TODO log the request info
-            mChallengeCallback.onChallengeResponseReceived(AuthorizationStrategy.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
+            mChallengeCallback.onChallengeResponseReceived(
+                    AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION,
+                    resultIntent
+            );
         }
 
         return null;
     }
 
-    private Map<String, String> getChallengeHeader(final PKeyAuthChallenge pKeyAuthChallenge) throws ClientException {
+    public static Map<String, String> getChallengeHeader(final PKeyAuthChallenge pKeyAuthChallenge) throws ClientException {
         String authorizationHeaderValue = String.format("%s Context=\"%s\",Version=\"%s\"",
                 AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE, pKeyAuthChallenge.getContext(),
                 pKeyAuthChallenge.getVersion());
 
-        // If not device cert exists, alias or privatekey will not exist on the device
+        // If not device cert exists, alias or private key will not exist on the device
         Class<IDeviceCertificate> certClazz = (Class<IDeviceCertificate>) AuthenticationSettings.INSTANCE
                 .getDeviceCertificateProxy();
         if (certClazz != null) {
@@ -105,15 +107,17 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
                 if (privateKey == null) {
                     throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION);
                 }
-                String jwt = (new JWSBuilder()).generateSignedJWT(pKeyAuthChallenge.getNonce(), pKeyAuthChallenge.getThumbprint(),
-                        privateKey, deviceCertProxy.getRSAPublicKey(),
+                final String jwt = (new JWSBuilder()).generateSignedJWT(
+                        pKeyAuthChallenge.getNonce(),
+                        pKeyAuthChallenge.getSubmitUrl(),
+                        privateKey,
+                        deviceCertProxy.getRSAPublicKey(),
                         deviceCertProxy.getCertificate());
                 authorizationHeaderValue = String.format(
                         "%s AuthToken=\"%s\",Context=\"%s\",Version=\"%s\"",
                         AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE, jwt,
                         pKeyAuthChallenge.getContext(), pKeyAuthChallenge.getVersion());
-                Logger.verbosePII(TAG, "Receive challenge response. ",
-                        "Challenge response:" + authorizationHeaderValue);
+                Logger.verbose(TAG, "Receive challenge response. ");
             }
         }
 
@@ -123,7 +127,7 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
         return headers;
     }
 
-    private IDeviceCertificate getWPJAPIInstance(Class<IDeviceCertificate> certClazz)
+    private static IDeviceCertificate getWPJAPIInstance(Class<IDeviceCertificate> certClazz)
             throws ClientException {
         final IDeviceCertificate deviceCertProxy;
         final Constructor<?> constructor;

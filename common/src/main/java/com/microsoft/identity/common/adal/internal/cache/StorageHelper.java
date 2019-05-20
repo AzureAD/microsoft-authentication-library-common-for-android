@@ -27,6 +27,8 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Base64;
 import android.util.Log;
 
@@ -156,7 +158,7 @@ public class StorageHelper implements IStorageHelper {
      *                TODO: Remove this suppression: https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html
      */
     @SuppressLint("TrulyRandom")
-    public StorageHelper(Context context) {
+    public StorageHelper(@NonNull final Context context) {
         mContext = context.getApplicationContext();
         mRandom = new SecureRandom();
     }
@@ -287,8 +289,23 @@ public class StorageHelper implements IStorageHelper {
     @Override
     public synchronized SecretKey loadSecretKeyForEncryption() throws IOException,
             GeneralSecurityException {
-        final byte[] secretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
+        final String pkgName = mContext.getPackageName();
+        final byte[] secretKeyData = getSecretKeyData(pkgName);
         return loadSecretKeyForEncryption(secretKeyData == null ? VERSION_ANDROID_KEY_STORE : VERSION_USER_DEFINED);
+    }
+
+    @Nullable
+    private byte[] getSecretKeyData(@Nullable final String pkgName) {
+        byte[] secretKeyData;
+
+        if (AuthenticationSettings.INSTANCE.getBrokerSecretKeys().containsKey(pkgName)) {
+            // The current app runtime is the broker; load its secret keys...
+            secretKeyData = AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(pkgName);
+        } else { // We are not the broker, proceed as usual.
+            secretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
+        }
+
+        return secretKeyData;
     }
 
     @Override
@@ -318,7 +335,7 @@ public class StorageHelper implements IStorageHelper {
     private synchronized SecretKey getKeyOrCreate(final String keyVersion)
             throws GeneralSecurityException, IOException {
         if (VERSION_USER_DEFINED.equals(keyVersion)) {
-            return getSecretKey(AuthenticationSettings.INSTANCE.getSecretKeyData());
+            return getSecretKey(getSecretKeyData(mContext.getPackageName()));
         }
 
         try {
@@ -351,7 +368,7 @@ public class StorageHelper implements IStorageHelper {
     private synchronized SecretKey getKey(final String keyVersion) throws GeneralSecurityException, IOException {
         switch (keyVersion) {
             case VERSION_USER_DEFINED:
-                return getSecretKey(AuthenticationSettings.INSTANCE.getSecretKeyData());
+                return getSecretKey(getSecretKeyData(mContext.getPackageName()));
             case VERSION_ANDROID_KEY_STORE:
 
                 if (mSecretKeyFromAndroidKeyStore != null) {

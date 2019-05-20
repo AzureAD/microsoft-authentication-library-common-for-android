@@ -23,8 +23,10 @@
 package com.microsoft.identity.common.internal.ui.webview;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
@@ -56,7 +58,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      *
      * @param activity The app activity which invoke the interactive auth request.
      */
-    public EmbeddedWebViewAuthorizationStrategy(Activity activity) {
+    public EmbeddedWebViewAuthorizationStrategy(@NonNull Activity activity) {
         mReferencedActivity = new WeakReference<>(activity);
     }
 
@@ -77,8 +79,9 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                 null,
                 requestUrl.toString(),
                 mAuthorizationRequest.getRedirectUri(),
+                mAuthorizationRequest.getRequestHeaders(),
                 AuthorizationAgent.WEBVIEW);
-        mReferencedActivity.get().startActivityForResult(authIntent, BROWSER_FLOW);
+        mReferencedActivity.get().startActivity(authIntent);
         return mAuthorizationResultFuture;
     }
 

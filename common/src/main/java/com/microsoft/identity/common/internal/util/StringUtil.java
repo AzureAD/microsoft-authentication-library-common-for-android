@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
+import android.support.annotation.NonNull;
+import android.util.Pair;
+
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -76,7 +81,7 @@ public final class StringUtil {
         char tempDelimiter = Character.MIN_VALUE;
 
         for (String s : toJoin) {
-            if(tempDelimiter != Character.MIN_VALUE) {
+            if (tempDelimiter != Character.MIN_VALUE) {
                 builder.append(tempDelimiter);
             }
             tempDelimiter = delimiter;
@@ -84,5 +89,68 @@ public final class StringUtil {
         }
 
         return builder.toString();
+    }
+
+    /**
+     * Parses the supplied home_account_id to extract the uid, utid.
+     *
+     * @param homeAccountId The home_account_id to inspect.
+     * @return A Pair of Strings representing the uid/utid of the supplied home_account_id.
+     * Return value cannot be null, but its values (pair.first, pair.second) may be.
+     */
+    public static Pair<String, String> getTenantInfo(@NonNull final String homeAccountId) {
+        // Split this value by its parts... <uid>.<utid>
+        final int EXPECTED_LENGTH = 2;
+        final int INDEX_UID = 0;
+        final int INDEX_UTID = 1;
+
+        final String[] uidUtidArray = homeAccountId.split("\\.");
+
+        String uid = null;
+        String utid = null;
+
+        if (EXPECTED_LENGTH == uidUtidArray.length
+                && !StringExtensions.isNullOrBlank(uidUtidArray[INDEX_UID])
+                && !StringExtensions.isNullOrBlank(uidUtidArray[INDEX_UTID])) {
+            uid = uidUtidArray[INDEX_UID];
+            utid = uidUtidArray[INDEX_UTID];
+        }
+
+        return new Pair<>(uid, utid);
+    }
+
+    /**
+     * The function to compare the two versions.
+     *
+     * @param thisVersion
+     * @param thatVersion
+     * @return int -1 if thisVersion is smaller than thatVersion,
+     *         1 if thisVersion is larger than thatVersion,
+     *         0 if thisVersion is equal to thatVersion.
+     */
+    public static int compareSemanticVersion(final String thisVersion, final String thatVersion) {
+        if(thatVersion == null) {
+            return 1;
+        }
+
+        final String[] thisParts = thisVersion.split("\\.");
+        final String[] thatParts = thatVersion.split("\\.");
+        final int length = Math.max(thisParts.length, thatParts.length);
+        for(int i = 0; i < length; i++) {
+            int thisPart = i < thisParts.length ?
+                    Integer.parseInt(thisParts[i]) : 0;
+            int thatPart = i < thatParts.length ?
+                    Integer.parseInt(thatParts[i]) : 0;
+
+            if(thisPart < thatPart) {
+                return -1;
+            }
+
+            if(thisPart > thatPart) {
+                return 1;
+            }
+        }
+
+        return 0;
     }
 }

@@ -22,12 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.google.gson.annotations.Expose;
+
 /**
  * Class to encapsulate Authorization Result errors.
  */
-public class AuthorizationErrorResponse {
+public class AuthorizationErrorResponse implements IErrorResponse{
 
+    @Expose()
     private String mError;
+    @Expose()
     private String mErrorDescription;
 
     /**

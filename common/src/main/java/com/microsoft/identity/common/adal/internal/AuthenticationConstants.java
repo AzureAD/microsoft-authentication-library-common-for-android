@@ -47,7 +47,7 @@ public final class AuthenticationConstants {
     /**
      * The Constant ENCODING_UTF8.
      */
-    public static final String ENCODING_UTF8 = "UTF_8";
+    public static final String ENCODING_UTF8 = "UTF-8";
 
     /**
      * Bundle message.
@@ -78,6 +78,11 @@ public final class AuthenticationConstants {
          * Represents the error code returned from webview.
          */
         public static final String RESPONSE_ERROR_CODE = "com.microsoft.aad.adal:BrowserErrorCode";
+
+        /**
+         * Represents the error subcode returned from webview.
+         */
+        public static final String RESPONSE_ERROR_SUBCODE = "com.microsoft.aad.adal:BrowserErrorSubCode";
 
         /**
          * Represents the error message returned from webview.
@@ -113,6 +118,11 @@ public final class AuthenticationConstants {
          * Used as the key to send back request id.
          */
         public static final String REQUEST_ID = "com.microsoft.aad.adal:RequestId";
+
+        /**
+         * Sub error returned by server representing the user cancel the auth flow.
+         */
+        public static final String SUB_ERROR_UI_CANCEL = "cancel";
     }
 
     /**
@@ -155,6 +165,12 @@ public final class AuthenticationConstants {
          * Device registration in broker apps.
          */
         public static final int BROWSER_CODE_DEVICE_REGISTER = 2007;
+
+        /**
+         * Represents that SDK signalled to cancelled the auth flow as app
+         * launched a new interactive auth request
+         */
+        public static final int BROWSER_CODE_SDK_CANCEL = 2008;
     }
 
     /**
@@ -217,6 +233,26 @@ public final class AuthenticationConstants {
          * String value used to indicate client_info is requested from the token endpoint.
          */
         public static final String CLIENT_INFO_TRUE = "1";
+
+        /**
+         * String of AAD version.
+         */
+        public static final String AAD_VERSION = "ver";
+
+        /**
+         * Constant for  v1 endpoint
+         */
+        public static final String AAD_VERSION_V1 = "1.0";
+
+        /**
+         * Constsnt for v2 endpoint
+         */
+        public static final String AAD_VERSION_V2 = "2.0";
+
+        /**
+         * String of preferred user name.
+         */
+        public static final String AAD_PREFERRED_USERNAME = "preferred_username";
 
         /**
          * String of code.
@@ -378,8 +414,14 @@ public final class AuthenticationConstants {
          */
         public static final String CLAIMS = "claims";
 
+        /**
+         * String as JSON key to send client capabilities.
+         */
         public static final String CLIENT_CAPABILITIES_CLAIMS_LIST = "xms_cc";
 
+        /**
+         * String as JSON key to send access token claims.
+         */
         public static final String CLIENT_CAPABILITY_ACCESS_TOKEN = "access_token";
 
         /**
@@ -390,6 +432,11 @@ public final class AuthenticationConstants {
          * session key JWE.
          */
         public static final String SESSION_KEY_JWE = "session_key_jwe";
+
+        /**
+         * String as Query parameter key to send a V1 request to V2 endpoint
+         */
+        public static final String IT_VER_PARAM = "itver";
     }
 
     /**
@@ -567,6 +614,26 @@ public final class AuthenticationConstants {
          * String of broker version.
          */
         public static final String BROKER_VERSION = "broker.version";
+
+        /**
+         * The maximum broker protocol version that common supports.
+         */
+        public static final String BROKER_PROTOCOL_VERSION_CODE = "2.0";
+
+        /**
+         * The key of maximum broker protocol version that client advertised.
+         */
+        public static final String CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY = "broker.protocol.version.name";
+
+        /**
+         * The key of minimum broker protocol version the client requires.
+         */
+        public static final String CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY = "required.broker.protocol.version.name";
+
+        /**
+         * The key of negotiated broker protocol version between broker client and broker service.
+         */
+        public static final String NEGOTIATED_BP_VERSION_KEY = "common.broker.protocol.version.name";
 
         /**
          * String of broker protocol version with PRT support.
@@ -842,13 +909,13 @@ public final class AuthenticationConstants {
          * Apk packagename that will install AD-Authenticator. It is used to
          * query if this app installed or not from package manager.
          */
-        public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
+        public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = BuildConfig.COMPANY_PORTAL_APP_PACKAGE_NAME;//"com.microsoft.windowsintune.companyportal";
 
         /**
          * Signature info for Intune Company portal app that installs authenticator
          * component.
          */
-        public static final String COMPANY_PORTAL_APP_SIGNATURE = "1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
+        public static final String COMPANY_PORTAL_APP_SIGNATURE = BuildConfig.COMPANY_PORTAL_APP_SIGNATURE;//"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
 
         /**
          * Signature info for Azure authenticator app that installs authenticator
@@ -897,6 +964,26 @@ public final class AuthenticationConstants {
         public static final String BROWSER_EXT_INSTALL_PREFIX = "msauth://";
 
         /**
+         * Prefix in the redirect to open external browser to finish the CA auth.
+         */
+        public static final String BROWSER_DEVICE_CA_URL = "browser://go.microsoft.com/fwlink/?LinkId=396941";
+
+        /**
+         * Activity name to launch company portal.
+         */
+        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = "com.microsoft.windowsintune.companyportal.views.SplashActivity";
+
+        /**
+         * Redirect URI parameter key to get link to install broker
+         */
+        public static final String INSTALL_URL_KEY = "app_link";
+
+        /**
+         * Redirect URI parameter key to get the upn
+         */
+        public static final String INSTALL_UPN_KEY = "username";
+
+        /**
          * PRT nonce.
          */
         public static final String PRT_NONCE = "nonce";
@@ -920,6 +1007,21 @@ public final class AuthenticationConstants {
          * String for caller package.
          */
         public static final String CALLER_INFO_PACKAGE = "caller.info.package";
+
+        /**
+         * String to send Msal V2 Request params.
+         */
+        public static final String BROKER_REQUEST_V2 = "broker_request_v2";
+
+        /**
+         * String to return Msal V2 response.
+         */
+        public static final String BROKER_RESULT_V2 = "broker_result_v2";
+
+        /**
+         * String to return a true if the request succeeded, false otherwise.
+         */
+        public static final String BROKER_REQUEST_V2_SUCCESS = "broker_request_v2_success";
 
         /**
          * String for ssl prefix.
@@ -963,6 +1065,16 @@ public final class AuthenticationConstants {
         public static final String CLIENT_APP_PACKAGE_NAME = "client_app_package_name";
 
         /**
+         * String of account environment key.
+         */
+        public static final String ENVIRONMENT = "environment";
+
+        /**
+         * String to return account list from broker.
+         */
+        public static final String BROKER_ACCOUNTS = "broker_accounts";
+
+        /**
          * Bundle identifiers for x-ms-clitelem info.
          */
         public static final class CliTelemInfo {
@@ -991,6 +1103,30 @@ public final class AuthenticationConstants {
         }
     }
 
+    public static final class OAuth2Scopes{
+
+        /**
+         * Scope to get get open id connect ID token
+         */
+        public static final String OPEN_ID_SCOPE = "openid";
+
+        /**
+         * Scope to give the app access to get resources on behalf of user for an extended time.
+         * App can receive refresh tokens using this scope.
+         */
+        public static final String OFFLINE_ACCESS_SCOPE = "offline_access";
+
+        /**
+         * Scope to get user profile information as a part Id token
+         */
+        public static final String PROFILE_SCOPE = "profile";
+
+        /**
+         * Custom scope used to get PRT
+         */
+        public static final String AZA_SCOPE = "aza";
+    }
+
     /**
      * Represents the oauth2 error code.
      */
@@ -1005,12 +1141,35 @@ public final class AuthenticationConstants {
          */
         public static final String UNAUTHORIZED_CLIENT = "unauthorized_client";
 
+        /**
+         * The refresh token used to redeem access token is invalid and auth code request is needed.
+         * @deprecated This is deprecated in V2, but is kept here due to this bug https://identitydivision.visualstudio.com/Engineering/_workitems/edit/597793.
+         */
+        public static final String INTERACTION_REQUIRED = "interaction_required";
+    }
+
+    /**
+     * Represents the oauth2 sub error code.
+     */
+    public static final class OAuth2SubErrorCode {
 
         /**
          * Oauth2 suberror code for Intune App Protection Policy required.
          */
         public static final String PROTECTION_POLICY_REQUIRED = "protection_policy_required";
 
+        /**
+         * Oauth2 suberror code for invalid_grant.
+         * Token is expired or invalid for all resources and scopes and shouldn't be retried again as-is.
+         */
+        public static final String BAD_TOKEN = "bad_token";
+
+        /**
+         * Oauth2 suberror code for invalid_grant.
+         * Failed to do device authentication during a token request.
+         * Broker should make a request to DRS to get the current device status and act accordingly.
+         */
+        public static final String DEVICE_AUTHENTICATION_FAILED = "device_authentication_failed";
     }
 
     /**

@@ -22,12 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.Date;
 
 public class MicrosoftTokenResponse extends TokenResponse {
+
+    private static final String CLIENT_INFO = "client_info";
+
+    private static final String EXT_EXPIRES_IN = "ext_expires_in";
+
+    private static final String FAMILY_ID = "foci";
 
     /**
      * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
@@ -38,7 +45,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
     /**
      * Information to uniquely identify the tenant and the user _within_ that tenant.
      */
-    @SerializedName("client_info")
+    @SerializedName(CLIENT_INFO)
     private String mClientInfo;
 
     /**
@@ -46,16 +53,126 @@ public class MicrosoftTokenResponse extends TokenResponse {
      */
     private transient String mClientId;
 
-    @SerializedName("ext_expires_in")
+    @Expose()
+    @SerializedName(EXT_EXPIRES_IN)
     private Long mExtendedExpiresIn;
 
     /**
      * Information to uniquely identify the family that the client application belongs to.
      */
+    @Expose()
+    @SerializedName(FAMILY_ID)
     private String mFamilyId;
 
-    protected Long getExtendedExpiresIn() {
-        return mExtendedExpiresIn;
+    @Expose()
+    @SerializedName("cloud_instance_host_name")
+    private String mCloudInstanceHostName;
+
+    private String mAuthority;
+
+    // The token returned is cached with this authority as key.
+    // We expect the subsequent requests to AcquireToken will use this authority as the authority parameter,
+    // otherwise the AcquireTokenSilent will fail
+    public final String getAuthority() {
+        return mAuthority;
+    }
+
+    public void setAuthority(final String authority) {
+        mAuthority = authority;
+    }
+
+    /**
+     * The deployment ring of the current request chain.
+     */
+    @Expose()
+    private String mSpeRing;
+
+    /**
+     * The age of the RT, according to the server (x-ms-clitelem header).
+     */
+    @Expose()
+    private String mRefreshTokenAge;
+
+    /**
+     * The error code code set as part of the client telemetry info header.  This likely will not be populated for a successful token response
+     */
+    private String mCliTelemErrorCode;
+
+    /**
+     * The server sub error code set as part of the client telemetry info header.  This likely will not be populated for a successful token response
+     */
+    private String mCliTelemSubErrorCode;
+
+    /**
+     * Gets the SPE Ring.
+     *
+     * @return The SPE Ring to get.
+     */
+    public String getSpeRing() {
+        return mSpeRing;
+    }
+
+    /**
+     * Sets the SPE Ring.
+     *
+     * @param speRing The SPR Ring to set.
+     */
+    public void setSpeRing(String speRing) {
+        this.mSpeRing = speRing;
+    }
+
+    /**
+     * Gets the refresh token age.
+     *
+     * @return The refresh token age to get.
+     */
+    public String getRefreshTokenAge() {
+        return mRefreshTokenAge;
+    }
+
+    /**
+     * Sets the refresh token age.
+     *
+     * @param refreshTokenAge The refresh token age to set.
+     */
+    public void setRefreshTokenAge(String refreshTokenAge) {
+        this.mRefreshTokenAge = refreshTokenAge;
+    }
+
+    /**
+     * Gets the server error code returned by the x-ms-clitelem header.
+     *
+     * @return The server error code to get.
+     */
+    public String getCliTelemErrorCode() {
+        return mCliTelemErrorCode;
+    }
+
+    /**
+     * Sets the server error code returned by the x-ms-clitelem header.
+     *
+     * @param serverErrorCode The server error code to set.
+     */
+    public void setCliTelemErrorCode(String serverErrorCode) {
+        this.mCliTelemErrorCode = serverErrorCode;
+    }
+
+    /**
+     * Gets the server suberror code returned by the x-ms-clitelem header.
+     *
+     * @return The server suberror code to get.
+     */
+    public String getCliTelemSubErrorCode() {
+        return mCliTelemSubErrorCode;
+    }
+
+    /**
+     * Sets the server suberror code returned by the x-ms-clitelem header.
+     *
+     * @param serverSubErrorCode The server suberror code to get.
+     */
+    public void setCliTelemSubErrorCode(String serverSubErrorCode) {
+        this.mCliTelemSubErrorCode = serverSubErrorCode;
     }
 
     /**
@@ -146,6 +263,24 @@ public class MicrosoftTokenResponse extends TokenResponse {
      */
     public void setClientId(final String clientId) {
         mClientId = clientId;
+    }
+
+    /**
+     * Gets cloud instance host name
+     *
+     * @return mCloudInstanceHostName
+     */
+    public String getCloudInstanceHostName() {
+        return mCloudInstanceHostName;
+    }
+
+    /**
+     * Sets cloud instance host name
+     *
+     * @param cloudInstanceHostName
+     */
+    public void setCloudInstanceHostName(final String cloudInstanceHostName) {
+        mCloudInstanceHostName = cloudInstanceHostName;
     }
 
     //CHECKSTYLE:OFF

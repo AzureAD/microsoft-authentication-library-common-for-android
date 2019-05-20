@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft;
 
+import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 
 /**
@@ -30,7 +31,23 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResp
  */
 public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
 
-    private String mCorrelationId;
+    public final static String CLOUD_INSTANCE_NAME = "cloud_instance_name";
+    public final static String CLOUD_INSTANCE_HOST_NAME = "cloud_instance_host_name";
+    public final static String CLOUD_GRAPH_HOST_NAME = "cloud_graph_host_name";
+    public final static String SESSION_STATE = "session_state";
+
+
+    @Expose()
+    protected String mCorrelationId;
+    @Expose()
+    protected String mCloudInstanceName;
+    @Expose()
+    protected String mCloudInstanceHostName;
+    @Expose()
+    protected String mCloudGraphHostName;
+    @Expose()
+    protected String mSessionState;
+
 
     /**
      * Constructor of {@link MicrosoftAuthorizationResponse}.
@@ -59,5 +76,15 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
     public void setCorrelationId(final String correlationId) {
         mCorrelationId = correlationId;
     }
+
+    public String getCloudInstanceName() { return mCloudInstanceName;}
+
+    public String getCloudInstanceHostName() { return mCloudInstanceHostName;}
+
+    public String getCloudGraphHostName() { return mCloudGraphHostName;}
+
+    public String getSessionState() { return mSessionState;}
+
+
 
 }

@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.net;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -57,6 +58,19 @@ public final class ObjectMapper {
      */
     public static String serializeObjectToJsonString(Object object) {
         return new Gson().toJson(object);
+    }
+
+    /**
+     * Serialize object to JSON string.  Only serialize fields marked with the GSON Expose annotation
+     *
+     * @param object Object
+     * @return JSON string
+     */
+    public static String serializeExposedFieldsOfObjectToJsonString(Object object) {
+        GsonBuilder builder = new GsonBuilder();
+        builder.excludeFieldsWithoutExposeAnnotation();
+        Gson gson = builder.create();
+        return gson.toJson(object);
     }
 
     /**
@@ -107,39 +121,11 @@ public final class ObjectMapper {
      * Method to serialize the object into a map.
      *
      * @param object Object
-     * @return Map<String                                                                                                                               ,                                                                                                                                                                                                                                                               String>
+     * @return Map<String,Object>
      */
-    public static Map<String, String> serializeObjectHashMap(final Object object) throws UnsupportedEncodingException {
+    public static Map<String, Object> serializeObjectHashMap(final Object object) {
         String json = ObjectMapper.serializeObjectToJsonString(object);
-        return serializeNestedJsonToMap(json);
-    }
-
-    public static Map<String, String> serializeNestedJsonToMap(final String jsonString) throws UnsupportedEncodingException {
-        if (StringUtil.isEmpty(jsonString)) {
-            return null;
-        }
-
-        final Map<String, String> objectMap = new HashMap<>();
-        Type stringMap = new TypeToken<TreeMap<String, Object>>() {
-        }.getType();
-        TreeMap<String, Object> fields = new Gson().fromJson(jsonString, stringMap);
-        Iterator<TreeMap.Entry<String, Object>> iterator = fields.entrySet().iterator();
-
-        while (iterator.hasNext()) {
-            TreeMap.Entry<String, Object> entry = iterator.next();
-            if (entry.getValue() instanceof String
-                    && !StringUtil.isEmpty(entry.getKey())
-                    && !StringUtil.isEmpty((String) entry.getValue())) {
-                objectMap.put(URLDecoder.decode(entry.getKey(), ENCODING_SCHEME), URLDecoder.decode((String) entry.getValue(), ENCODING_SCHEME));
-            } else {
-                final Map<String, String> hashMap = serializeNestedJsonToMap(entry.getValue().toString());
-                if (hashMap != null) {
-                    objectMap.putAll(hashMap);
-                }
-            }
-        }
-
-        return objectMap;
+        return new Gson().fromJson(json, Map.class);
     }
 
 

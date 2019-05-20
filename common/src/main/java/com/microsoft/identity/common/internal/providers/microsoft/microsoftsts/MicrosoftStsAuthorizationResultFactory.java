@@ -44,6 +44,7 @@ import java.util.HashMap;
 public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultFactory<MicrosoftStsAuthorizationResult, MicrosoftStsAuthorizationRequest> {
 
     private static final String TAG = MicrosoftStsAuthorizationResultFactory.class.getSimpleName();
+    protected static final String ERROR_SUBCODE = "error_subcode";
 
     /**
      * Constant key to get authorization request final url from intent.
@@ -51,18 +52,35 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
     public static final String MSSTS_AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
 
     @Override
-    public MicrosoftStsAuthorizationResult createAuthorizationResult(final int resultCode, final Intent data, final MicrosoftStsAuthorizationRequest request) {
+    public MicrosoftStsAuthorizationResult createAuthorizationResult(final int resultCode,
+                                                                     final Intent data,
+                                                                     final MicrosoftStsAuthorizationRequest request) {
         if (data == null) {
-            return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
-                    MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED, MicrosoftAuthorizationErrorResponse.NULL_INTENT);
+            return createAuthorizationResultWithErrorResponse(
+                    AuthorizationStatus.FAIL,
+                    MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
+                    MicrosoftAuthorizationErrorResponse.NULL_INTENT
+            );
         }
 
         MicrosoftStsAuthorizationResult result;
         switch (resultCode) {
             case AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL:
                 Logger.verbose(TAG, null, "User cancel the authorization request in UI.");
-                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.USER_CANCEL,
-                        MicrosoftAuthorizationErrorResponse.USER_CANCEL, MicrosoftAuthorizationErrorResponse.USER_CANCELLED_FLOW);
+                result = createAuthorizationResultWithErrorResponse(
+                        AuthorizationStatus.USER_CANCEL,
+                        MicrosoftAuthorizationErrorResponse.USER_CANCEL,
+                        MicrosoftAuthorizationErrorResponse.USER_CANCELLED_FLOW
+                );
+                break;
+
+            case AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL:
+                Logger.verbose(TAG, null, "SDK cancelled the authorization request.");
+                result = createAuthorizationResultWithErrorResponse(
+                        AuthorizationStatus.SDK_CANCEL,
+                        MicrosoftAuthorizationErrorResponse.SDK_AUTH_CANCEL,
+                        MicrosoftAuthorizationErrorResponse.SDK_CANCELLED_FLOW
+                );
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE:
@@ -73,14 +91,50 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
             case AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR:
                 // This is purely client side error, possible return could be chrome_not_installed or the request intent is
                 // not resolvable
-                final String error = data.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE);
-                final String errorDescription = data.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE);
-                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL, error, errorDescription);
+                final String error = data.getStringExtra(
+                        AuthenticationConstants.Browser.RESPONSE_ERROR_CODE
+                );
+                final String errorSubcode = data.getStringExtra(
+                        AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE
+                );
+                final String errorDescription = data.getStringExtra(
+                        AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE
+                );
+                result = createAuthorizationResultWithErrorResponse(
+                        AuthorizationStatus.FAIL,
+                        error,
+                        errorSubcode,
+                        errorDescription
+                );
                 break;
 
-            default:
+            case AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME:
+                Logger.verbose(TAG, "Device needs to have broker installed, we expect the apps to call us"
+                        + "back when the broker is installed");
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
-                        MicrosoftAuthorizationErrorResponse.UNKNOWN_ERROR, MicrosoftAuthorizationErrorResponse.UNKNOWN_RESULT_CODE);
+                        MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
+                        MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED);
+                break;
+
+            case AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER:
+                Logger.verbose(TAG, "Device Registration needed, need to start WPJ");
+                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                        MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED,
+                        MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED);
+                // Set username returned from the service
+                result.getAuthorizationErrorResponse().setUserName(data.getStringExtra(
+                                AuthenticationConstants.Broker.INSTALL_UPN_KEY)
+                        );
+                break;
+
+
+
+            default:
+                result = createAuthorizationResultWithErrorResponse(
+                        AuthorizationStatus.FAIL,
+                        MicrosoftAuthorizationErrorResponse.UNKNOWN_ERROR,
+                        MicrosoftAuthorizationErrorResponse.UNKNOWN_RESULT_CODE
+                );
         }
 
         return result;
@@ -88,10 +142,25 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
 
     private MicrosoftStsAuthorizationResult createAuthorizationResultWithErrorResponse(final AuthorizationStatus authStatus,
                                                                                        final String error,
+                                                                                       final String errorSubcode,
                                                                                        final String errorDescription) {
         Logger.info(TAG, "Error is returned from webview redirect");
-        Logger.infoPII(TAG, "error: " + error + " errorDescription: " + errorDescription);
-        MicrosoftStsAuthorizationErrorResponse errorResponse = new MicrosoftStsAuthorizationErrorResponse(error, errorDescription);
+        Logger.infoPII(TAG, "error: " + error
+                + "error subcode:" + errorSubcode
+                + " errorDescription: " + errorDescription);
+        MicrosoftStsAuthorizationErrorResponse errorResponse
+                = new MicrosoftStsAuthorizationErrorResponse(error, errorSubcode, errorDescription);
+        return new MicrosoftStsAuthorizationResult(authStatus, errorResponse);
+    }
+
+    private MicrosoftStsAuthorizationResult createAuthorizationResultWithErrorResponse(final AuthorizationStatus authStatus,
+                                                                                       final String error,
+                                                                                       final String errorDescription) {
+        Logger.info(TAG, "Error is returned from webview redirect");
+        Logger.infoPII(TAG, "error: " + error
+                + " errorDescription: " + errorDescription);
+        MicrosoftStsAuthorizationErrorResponse errorResponse
+                = new MicrosoftStsAuthorizationErrorResponse(error, errorDescription);
         return new MicrosoftStsAuthorizationResult(authStatus, errorResponse);
     }
 
@@ -101,42 +170,60 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
 
         if (urlParameters == null || urlParameters.isEmpty()) {
             Logger.warn(TAG, "Invalid server response, empty query string from the webview redirect.");
-            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+            result = createAuthorizationResultWithErrorResponse(
+                    AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
-                    MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
+                    MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE
+            );
         } else if (urlParameters.containsKey(CODE)) {
-            result = validateAndCreateAuthorizationResult(urlParameters.get(CODE), urlParameters.get(STATE), requestStateParameter);
+            result = validateAndCreateAuthorizationResult(urlParameters, requestStateParameter);
         } else if (urlParameters.containsKey(ERROR)) {
-            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
-                    urlParameters.get(ERROR), urlParameters.get(ERROR_DESCRIPTION));
+            result = createAuthorizationResultWithErrorResponse(
+                    AuthorizationStatus.FAIL,
+                    urlParameters.get(ERROR),
+                    urlParameters.get(ERROR_SUBCODE),
+                    urlParameters.get(ERROR_DESCRIPTION)
+            );
         } else {
-            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+            result = createAuthorizationResultWithErrorResponse(
+                    AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
-                    MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
+                    MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE
+            );
         }
 
         return result;
     }
 
-    private MicrosoftStsAuthorizationResult validateAndCreateAuthorizationResult(final String code,
-                                                                                 final String state,
+    private MicrosoftStsAuthorizationResult validateAndCreateAuthorizationResult(final HashMap<String, String> urlParameters,
                                                                                  final String requestStateParameter) {
         MicrosoftStsAuthorizationResult result;
+        final String state = urlParameters.get(STATE);
+        final String code = urlParameters.get(CODE);
 
         if (StringUtil.isEmpty(state)) {
             Logger.warn(TAG, "State parameter is not returned from the webview redirect.");
-            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+            result = createAuthorizationResultWithErrorResponse(
+                    AuthorizationStatus.FAIL,
                     ErrorStrings.STATE_MISMATCH,
-                    MicrosoftAuthorizationErrorResponse.STATE_NOT_RETURNED);
+                    MicrosoftAuthorizationErrorResponse.STATE_NOT_RETURNED
+            );
         } else if (StringUtil.isEmpty(requestStateParameter) || !requestStateParameter.equals(state)) {
             Logger.warn(TAG, "State parameter returned from the redirect is not same as the one sent in request.");
-            result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
-                    ErrorStrings.STATE_MISMATCH, MicrosoftAuthorizationErrorResponse.STATE_NOT_THE_SAME);
+            result = createAuthorizationResultWithErrorResponse(
+                    AuthorizationStatus.FAIL,
+                    ErrorStrings.STATE_MISMATCH,
+                    MicrosoftAuthorizationErrorResponse.STATE_NOT_THE_SAME
+            );
         } else {
 
             Logger.info(TAG, "Auth code is successfully returned from webview redirect.");
-            MicrosoftStsAuthorizationResponse authResponse = new MicrosoftStsAuthorizationResponse(code, state);
-            result = new MicrosoftStsAuthorizationResult(AuthorizationStatus.SUCCESS, authResponse);
+            MicrosoftStsAuthorizationResponse authResponse =
+                    new MicrosoftStsAuthorizationResponse(code, state, urlParameters);
+            result = new MicrosoftStsAuthorizationResult(
+                    AuthorizationStatus.SUCCESS,
+                    authResponse
+            );
         }
 
         return result;

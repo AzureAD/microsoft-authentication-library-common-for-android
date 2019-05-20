@@ -29,6 +29,16 @@ public final class ErrorStrings {
     }
 
     /**
+     * Access token doesn't exist and there is no refresh token can be found to redeem access token.
+     */
+    public static final String NO_TOKENS_FOUND = "no_tokens_found";
+
+    /**
+     * The supplied Account cannot be found in the cache.
+     */
+    public static final String NO_ACCOUNT_FOUND = "no_account_found";
+
+    /**
      * There are multiple cache entries found, the sdk cannot pick the correct access token
      * or refresh token from the cache. Likely it's a bug in the sdk when caching tokens or authority
      * is not proviced in the silent request and multiple tokens were found.
@@ -279,4 +289,50 @@ public final class ErrorStrings {
      * No available browser installed on the device.
      */
     public static final String NO_AVAILABLE_BROWSER_FOUND = "No available browser installed on the device.";
+
+    /**
+     * Refresh token request failed.
+     */
+    public static final String AUTH_REFRESH_FAILED = "Refresh token request failed";
+
+    /**
+     * STK patching failed.
+     */
+    public static final String STK_PATCHING_FAILED = "STK patching failed";
+
+    /**
+     * Primary refresh token request failed.
+     */
+    public static final String BROKER_PRT_REFRESH_FAILED = "Failed to refresh PRT";
+
+    /**
+     * Broker RT is invalid
+     */
+    public static final String INVALID_BROKER_REFRESH_TOKEN = "Broker refresh token is invalid";
+
+    /**
+     * Failed to retreive device state.
+     */
+    public static final String ERROR_RETRIEVING_DEVICE_STATE = "Error retrieving device state";
+
+    /**
+     * Device registration failed.
+     */
+    public static final String DEVICE_REGISTRATION_FAILED = "Device registration failed";
+
+    /**
+     * Request Cancelled for unknown reasons.
+     */
+    public static final String BROKER_REQUEST_CANCELLED = "Broker request cancelled";
+
+    /**
+     * User Cancelled the request.
+     */
+    public static final String USER_CANCELLED = "User cancelled";
+
+    /**
+     * The calling app is not supported by the broker.
+     */
+    public static final String UNSUPPORTED_BROKER_VERSION = "unsupported_broker_version";
+
 }

@@ -27,6 +27,7 @@ import android.os.Build;
 import android.util.Base64;
 import android.util.Pair;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -49,6 +50,10 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     private static final long serialVersionUID = 6873634931996113294L;
 
     private static final String TAG = MicrosoftAuthorizationRequest.class.getSimpleName();
+    /**
+     * String for the instance aware extra query parameter.
+     */
+    public static final String INSTANCE_AWARE = "instance_aware";
 
     /**
      * Required.
@@ -64,32 +69,47 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     /**
      * Correlation ID.
      */
+    @Expose()
     @SerializedName("client-request-id")
     private UUID mCorrelationId;
 
     /**
      * Used to secure authorization code grants via Proof Key for Code Exchange (PKCE) from a native client.
      */
-    @SerializedName("pkceChallenge")
-    private PkceChallenge mPkceChallenge;
+    private transient PkceChallenge mPkceChallenge;
+
+    @SerializedName("code_challenge")
+    private String mCodeChallenge;
+
+    @SerializedName("code_challenge_method")
+    private String mCodeChallengeMethod;
 
     /**
      * The version of the calling library.
      */
+    @Expose()
     @SerializedName("x-client-Ver")
     private String mLibraryVersion;
 
+    @Expose()
     @SerializedName("x-client-SKU")
     private String mLibraryName;
 
+    @Expose()
     @SerializedName("x-client-OS")
     private String mDiagnosticOS;
 
+    @Expose()
     @SerializedName("x-client-CPU")
     private String mDiagnosticCPU;
 
+    @Expose()
     @SerializedName("x-client-DM")
     private String mDiagnosticDM;
+
+    @Expose()
+    @SerializedName(INSTANCE_AWARE)
+    private Boolean mMultipleCloudAware;
 
     protected transient AzureActiveDirectorySlice mSlice;
 
@@ -105,12 +125,16 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mCorrelationId = builder.mCorrelationId;
 
         mPkceChallenge = PkceChallenge.newPkceChallenge();
+        mCodeChallengeMethod = mPkceChallenge.getCodeChallengeMethod();
+        mCodeChallenge = mPkceChallenge.getCodeChallenge();
         mState = generateEncodedState();
 
         if (builder.mSlice != null) {
             mSlice = builder.mSlice;
         }
         mFlightParameters = builder.mFlightParameters;
+
+        mMultipleCloudAware = builder.mMultipleCloudAware;
 
         //Initialize the diagnostic properties.
 
@@ -153,6 +177,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         private Map<String, String> mFlightParameters = new HashMap<>();
 
+        private Boolean mMultipleCloudAware;
+
         public Builder() {
         }
 
@@ -183,6 +209,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         public B setFlightParameters(Map<String, String> flightParameters) {
             mFlightParameters = flightParameters;
+            return self();
+        }
+
+        public B setMultipleCloudAware(boolean multipleCloudAware) {
+            mMultipleCloudAware = multipleCloudAware;
             return self();
         }
 
@@ -226,6 +257,12 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         return mDiagnosticDM;
     }
 
+    public Boolean getMultipleCloudAware() {return mMultipleCloudAware;}
+
+    public String getCodeChallenge() { return mCodeChallenge;}
+
+    public String getCodeChallengeMethod() { return mCodeChallengeMethod;}
+
     public static String generateEncodedState() {
         final UUID stateUUID1 = UUID.randomUUID();
         final UUID stateUUID2 = UUID.randomUUID();
@@ -256,8 +293,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
         Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
-        for (Map.Entry<String, String> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
-            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
+        for (Map.Entry<String, Object> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
         }
 
         // Add extra qp, if present...

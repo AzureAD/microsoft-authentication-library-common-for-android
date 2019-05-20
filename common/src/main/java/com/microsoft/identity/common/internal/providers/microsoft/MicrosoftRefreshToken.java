@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.providers.microsoft;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ServiceException;
@@ -36,8 +38,21 @@ public class MicrosoftRefreshToken extends RefreshToken {
     private String mFamilyId;
     private String mScope;
     private String mClientId;
-    private boolean mIsFamilyRefreshToken;
     private String mEnvironment;
+
+    public MicrosoftRefreshToken(final String rawRefreshToken,
+                                 final ClientInfo clientInfo,
+                                 final String scope,
+                                 final String clientId,
+                                 final String environment,
+                                 @Nullable String familyId) {
+        super(rawRefreshToken);
+        mClientInfo = clientInfo;
+        mScope = scope;
+        mClientId = clientId;
+        mEnvironment = environment;
+        mFamilyId = familyId;
+    }
 
     /**
      * Constructs a new MicrosoftRefreshToken instance.
@@ -51,7 +66,6 @@ public class MicrosoftRefreshToken extends RefreshToken {
             mFamilyId = tokenResponse.getFamilyId();
             mScope = tokenResponse.getScope();
             mClientId = tokenResponse.getClientId();
-            mIsFamilyRefreshToken = !StringExtensions.isNullOrBlank(mFamilyId);
         } catch (ServiceException e) {
             // TODO handle this properly
             throw new RuntimeException(e);
@@ -96,7 +110,7 @@ public class MicrosoftRefreshToken extends RefreshToken {
      * @return true if this token is family refresh token, false otherwise.
      */
     public boolean getIsFamilyRefreshToken() {
-        return mIsFamilyRefreshToken;
+        return !TextUtils.isEmpty(mFamilyId);
     }
 
     /**

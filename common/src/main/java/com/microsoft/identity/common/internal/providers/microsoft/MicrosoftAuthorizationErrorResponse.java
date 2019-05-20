@@ -41,6 +41,11 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
     public static final String USER_CANCEL = "user_cancelled";
 
     /**
+     * Error string to return if the request is cancelled by the SDK.
+     */
+    public static final String SDK_AUTH_CANCEL = "auth_cancelled_by_sdk";
+
+    /**
      * Error string to return if intent passed is null.
      */
     public static final String NULL_INTENT = "Received null intent";
@@ -54,6 +59,11 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
      * Error description string to return if the user cancelled the flow.
      */
     public static final String USER_CANCELLED_FLOW = "User pressed device back button to cancel the flow.";
+
+    /**
+     * Error description string to return if the user cancelled the flow.
+     */
+    public static final String SDK_CANCELLED_FLOW = "Sdk cancelled the auth flow as the app launched a new interactive auth request.";
 
     /**
      * Error string to return if the state parameter from authorization endpoint doesn't match with the request state.
@@ -81,6 +91,16 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
     public static final String BROKER_NEEDS_TO_BE_INSTALLED = "Device needs to have broker installed";
 
     /**
+     * Error string to indicate that the device needs to be registered
+     */
+    public static final String DEVICE_REGISTRATION_NEEDED = "Device needs to be registered to access the resource";
+
+    /**
+     * Set when the account needs to be workplace joined to access the resource.
+     */
+    private String mUserName;
+
+    /**
      * Constructor of {@link MicrosoftAuthorizationErrorResponse}.
      *
      * @param error            error string returned from the Authorization Server.
@@ -90,4 +110,11 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
         super(error, errorDescription);
     }
 
+    public String getUserName() {
+        return mUserName;
+    }
+
+    public void setUserName(String userName) {
+        this.mUserName = userName;
+    }
 }

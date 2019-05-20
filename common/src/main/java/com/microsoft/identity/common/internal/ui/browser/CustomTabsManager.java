@@ -24,10 +24,14 @@ package com.microsoft.identity.common.internal.ui.browser;
 
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.customtabs.CustomTabsCallback;
 import android.support.customtabs.CustomTabsClient;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.customtabs.CustomTabsServiceConnection;
+import android.support.customtabs.CustomTabsSession;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -42,29 +46,51 @@ import java.util.concurrent.atomic.AtomicReference;
 public class CustomTabsManager {
     private static final String TAG = CustomTabsManager.class.getSimpleName();
 
-    public CustomTabsIntent getCustomTabsIntent() {
-        return mCustomTabsIntent;
-    }
-
-    private CustomTabsIntent mCustomTabsIntent;
-    private CustomTabsServiceConnection mCustomTabsServiceConnection;
-    private final WeakReference<Activity> mActivityRef;
-    private final AtomicReference<CustomTabsClient> mCustomTabsClient;
-    private boolean mCustomTabsServiceIsBound;
-    private final CountDownLatch mClientLatch;
-
     /**
      * Wait for at most this amount of time for the browser connection to be established.
      */
     private static final long CUSTOM_TABS_MAX_CONNECTION_TIMEOUT = 1L;
 
+    private final CountDownLatch mClientLatch;
+
+    private final WeakReference<Context> mContextRef;
+
+    private final AtomicReference<CustomTabsClient> mCustomTabsClient;
+
+    private boolean mCustomTabsServiceIsBound;
+
+    private CustomTabsIntent mCustomTabsIntent;
+
+    private CustomTabsServiceConnection mCustomTabsServiceConnection = new CustomTabsServiceConnection() {
+        @Override
+        public void onCustomTabsServiceConnected(final ComponentName name, final CustomTabsClient client) {
+            Logger.info(TAG, "CustomTabsService is connected");
+            client.warmup(0L);
+            mCustomTabsServiceIsBound = true;
+            mCustomTabsClient.set(client);
+            mClientLatch.countDown();
+        }
+
+        @Override
+        public void onServiceDisconnected(final ComponentName name) {
+            Logger.info(TAG, "CustomTabsService is disconnected");
+            mCustomTabsServiceIsBound = false;
+            mCustomTabsClient.set(null);
+            mClientLatch.countDown();
+        }
+    };
+
+    public CustomTabsIntent getCustomTabsIntent() {
+        return mCustomTabsIntent;
+    }
+
     /**
      * Constructor of CustomTabManager.
      *
-     * @param activity Instance of calling activity.
+     * @param context Instance of calling activity.
      */
-    public CustomTabsManager(@NonNull final Activity activity) {
-        mActivityRef = new WeakReference<>(activity);
+    public CustomTabsManager(@NonNull final Context context) {
+        mContextRef = new WeakReference<>(context);
         mCustomTabsClient = new AtomicReference<>();
         mClientLatch = new CountDownLatch(1);
     }
@@ -74,40 +100,39 @@ public class CustomTabsManager {
      * Waits until the {@link CustomTabsServiceConnection} is connected.
      */
     public synchronized void bind(@NonNull String browserPackage) {
-        if (mCustomTabsServiceConnection != null) {
-            return;
-        }
-
-        mCustomTabsServiceConnection = new CustomTabsServiceConnection() {
-            @Override
-            public void onCustomTabsServiceConnected(ComponentName name, CustomTabsClient client) {
-                Logger.info(TAG, "CustomTabsService is connected");
-                client.warmup(0L);
-                mCustomTabsServiceIsBound = true;
-                mCustomTabsClient.set(client);
-                mClientLatch.countDown();
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                Logger.info(TAG, "CustomTabsService is disconnected");
-                mCustomTabsServiceIsBound = false;
-                mCustomTabsClient.set(null);
-                //mClientLatch.countDown();
-            }
-        };
-
         // Initiate the service-bind action
-        if (mActivityRef.get().getApplicationContext() == null
-                || !CustomTabsClient.bindCustomTabsService(mActivityRef.get(), browserPackage, mCustomTabsServiceConnection)) {
+        if (mContextRef.get() == null
+                || !CustomTabsClient.bindCustomTabsService(mContextRef.get(), browserPackage, mCustomTabsServiceConnection)) {
             Logger.info(TAG, "Unable to bind custom tabs service");
             mClientLatch.countDown();
         }
 
         // Create the Intent used to launch the Url
-        final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(getClient().newSession(null));
+        final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(createSession(null));
         mCustomTabsIntent = builder.setShowTitle(true).build();
         mCustomTabsIntent.intent.setPackage(browserPackage);
+    }
+
+    /**
+     * Creates a {@link android.support.customtabs.CustomTabsSession custom tab session} for
+     * use with a custom tab intent with optional callback. If no custom tab supporting browser
+     * is available, this will return {@code null}.
+     * @param callback
+     * @return CustomTabsSession custom tab session
+     */
+    private CustomTabsSession createSession(@Nullable final CustomTabsCallback callback) {
+        final CustomTabsClient client = getClient();
+        if (client == null) {
+            Logger.warn(TAG, "Failed to create custom tabs session with null CustomTabClient.");
+            return null;
+        }
+
+        final CustomTabsSession session = client.newSession(callback);
+        if (session == null) {
+            Logger.warn(TAG, "Failed to create custom tabs session through custom tabs client.");
+        }
+
+        return session;
     }
 
     /**
@@ -130,12 +155,8 @@ public class CustomTabsManager {
      * Method to unbind custom tabs service {@link android.support.customtabs.CustomTabsService}.
      */
     public synchronized void unbind() {
-        if (mCustomTabsServiceConnection == null) {
-            return;
-        }
-
-        if (mActivityRef.get() != null && mCustomTabsServiceIsBound) {
-            mActivityRef.get().unbindService(mCustomTabsServiceConnection);
+        if (mContextRef.get() != null && mCustomTabsServiceIsBound) {
+            mContextRef.get().unbindService(mCustomTabsServiceConnection);
         }
 
         mCustomTabsServiceIsBound = false;

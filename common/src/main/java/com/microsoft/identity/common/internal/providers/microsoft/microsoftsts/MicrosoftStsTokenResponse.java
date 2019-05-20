@@ -22,11 +22,36 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+
+import java.util.Date;
 
 /**
  * {@link TokenResponse} subclass for the Microsoft STS (V2).
  */
 public class MicrosoftStsTokenResponse extends MicrosoftTokenResponse {
+
+    @SerializedName("not_before")
+    private String mExpiresNotBefore;
+
+    /**
+     * Gets expires not before as String ( epoch time in seconds)
+     * @return
+     */
+    public String getExpiresNotBefore() {
+        return mExpiresNotBefore;
+    }
+
+    /**
+     * Sets expires not before as String ( epoch time in seconds)
+     * @param expiresNotBefore
+     */
+    public void setExpiresNotBefore(final String expiresNotBefore) {
+        mExpiresNotBefore = expiresNotBefore;
+    }
+
+
+
 }
