@@ -36,6 +36,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Command class to call controllers to load accounts and return the account list to
+ * {@see com.microsoft.identity.common.internal.controllers.ApiDispatcher}.
+ */
 public class LoadAccountCommand implements Command<List<AccountRecord>> {
     private static final String TAG = LoadAccountCommand.class.getSimpleName();
 

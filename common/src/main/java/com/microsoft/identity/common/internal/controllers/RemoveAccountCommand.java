@@ -32,6 +32,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Command class to call controllers to remove the account and return the result to
+ * {@see com.microsoft.identity.common.internal.controllers.ApiDispatcher}.
+ */
 public class RemoveAccountCommand implements Command<Boolean> {
     private static final String TAG = RemoveAccountCommand.class.getSimpleName();
 
