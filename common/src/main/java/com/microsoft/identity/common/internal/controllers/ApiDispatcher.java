@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.controllers;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.util.Pair;
 
 import com.microsoft.identity.common.exception.BaseException;
@@ -52,7 +53,7 @@ public class ApiDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
 
-    public static void getAccounts(final LoadAccountCommand command) {
+    public static void getAccounts(@NonNull final LoadAccountCommand command) {
         final String methodName = ":getAccounts";
         Logger.verbose(
                 TAG + methodName,
@@ -78,11 +79,7 @@ public class ApiDispatcher {
                             "Silent request failed with Exception",
                             e
                     );
-                    if (e instanceof BaseException) {
-                        baseException = (BaseException) e;
-                    } else {
-                        baseException = ExceptionAdapter.baseExceptionFromException(e);
-                    }
+                    baseException = ExceptionAdapter.baseExceptionFromException(e);
                 }
 
                 if (baseException != null) {
@@ -100,7 +97,7 @@ public class ApiDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            command.getCallback().onSuccess(finalAccountsList);
+                            command.getCallback().onTaskCompleted(finalAccountsList);
                         }
                     });
                 }
@@ -108,7 +105,7 @@ public class ApiDispatcher {
         });
     }
 
-    public static void removeAccount(final RemoveAccountCommand command) {
+    public static void removeAccount(@NonNull final RemoveAccountCommand command) {
         final String methodName = ":removeAccount";
         Logger.verbose(
                 TAG + methodName,
@@ -134,11 +131,7 @@ public class ApiDispatcher {
                             "Silent request failed with Exception",
                             e
                     );
-                    if (e instanceof BaseException) {
-                        baseException = (BaseException) e;
-                    } else {
-                        baseException = ExceptionAdapter.baseExceptionFromException(e);
-                    }
+                    baseException = ExceptionAdapter.baseExceptionFromException(e);
                 }
 
                 if (baseException != null) {
@@ -155,7 +148,7 @@ public class ApiDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            command.getCallback().onSuccess(finalResult);
+                            command.getCallback().onTaskCompleted(finalResult);
                         }
                     });
                 }

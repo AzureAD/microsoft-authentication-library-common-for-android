@@ -32,16 +32,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class RemoveAccountCommand {
+public class RemoveAccountCommand implements Command<Boolean> {
     private static final String TAG = RemoveAccountCommand.class.getSimpleName();
 
     protected OperationParameters mParameters;
     protected List<BaseController> mControllers;
-    protected IAccountCallback mCallback;
+    protected TaskCompletedCallbackWithError mCallback;
 
     public RemoveAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final BaseController controller,
-                              @NonNull final IAccountCallback callback) {
+                              @NonNull final TaskCompletedCallbackWithError callback) {
         mParameters = parameters;
         mControllers = new ArrayList<>();
         mCallback = callback;
@@ -51,7 +51,7 @@ public class RemoveAccountCommand {
 
     public RemoveAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final List<BaseController> controllers,
-                              @NonNull final IAccountCallback callback) {
+                              @NonNull final TaskCompletedCallbackWithError callback) {
         mParameters = parameters;
         mControllers = controllers;
         mCallback = callback;
@@ -73,15 +73,15 @@ public class RemoveAccountCommand {
         mControllers = controllers;
     }
 
-    public IAccountCallback getCallback() {
+    public TaskCompletedCallbackWithError getCallback() {
         return mCallback;
     }
 
-    public void setCallback(IAccountCallback callback) {
+    public void setCallback(TaskCompletedCallbackWithError callback) {
         this.mCallback = callback;
     }
 
-    public boolean execute() throws BaseException, InterruptedException, ExecutionException, RemoteException {
+    public Boolean execute() throws BaseException, InterruptedException, ExecutionException, RemoteException {
         final String methodName = ":execute";
 
         boolean result = false;

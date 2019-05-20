@@ -22,18 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-public interface IAccountCallback<T> {
-    /**
-     * Called once succeed and pass the result object.
-     *
-     * @param result the success result.
-     */
-    void onSuccess(T result);
+import com.microsoft.identity.common.internal.util.TaskCompletedCallback;
 
-    /**
-     * Called once exception thrown.
-     *
-     * @param exception
-     */
-    void onError(Exception exception);
+public interface TaskCompletedCallbackWithError<T, U> extends TaskCompletedCallback<T> {
+    void onError(U error);
 }

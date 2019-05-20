@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.controllers;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Intent;
-import android.graphics.Path;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;

@@ -111,15 +111,12 @@ public class MicrosoftAuthClient {
         return authServiceToBind;
     }
 
-    private boolean isMicrosoftAuthServiceSupported(@NonNull final Context context, @NonNull final String packageName) {
-        if (packageName == null || packageName.length() == 0) {
-            return false;
-        }
+    private boolean isMicrosoftAuthServiceSupported(@NonNull final PackageManager packageManager,
+                                                    @NonNull final String packageName) {
         final Intent microsoftAuthServiceIntent = new Intent(MICROSOFT_AUTH_SERVICE_INTENT_FILTER);
         microsoftAuthServiceIntent.setPackage(packageName);
         microsoftAuthServiceIntent.setClassName(packageName, MICROSOFT_AUTH_SERVICE_CLASS_NAME);
 
-        final PackageManager packageManager = context.getPackageManager();
         final List<ResolveInfo> infos = packageManager.queryIntentServices(microsoftAuthServiceIntent, 0);
         return infos != null && infos.size() > 0;
     }
@@ -132,15 +129,11 @@ public class MicrosoftAuthClient {
      * @param context
      * @return String
      */
-    private String getCurrentActiveBrokerPackageName(final Context context) {
+    private String getCurrentActiveBrokerPackageName(@NonNull final Context context) {
         AuthenticatorDescription[] authenticators = AccountManager.get(context).getAuthenticatorTypes();
         for (AuthenticatorDescription authenticator : authenticators) {
             if (authenticator.type.equals(AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE)
-                    || isMicrosoftAuthServiceSupported(context, authenticator.packageName)) {
-                //TODO Fixing the potential issue here
-                // when V1 Authenticator is set as primary broker and V2 Intune CP installed.
-                // The user may not able to finish the device auth.
-                // Solution: return the package with MicrosoftAuthService supported.
+                    && isMicrosoftAuthServiceSupported(context.getPackageManager(), authenticator.packageName)) {
                 return authenticator.packageName;
             }
         }
