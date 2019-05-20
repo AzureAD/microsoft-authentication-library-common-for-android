@@ -32,10 +32,10 @@ import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.net.cache.HttpCache;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
 
 import org.json.JSONException;
-import org.w3c.dom.EntityReference;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -56,7 +56,6 @@ import java.util.concurrent.ConcurrentMap;
 public class AzureActiveDirectory
         extends IdentityProvider<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryOAuth2Configuration> {
 
-
     // Constants used to parse cloud discovery document metadata
     private static final String TENANT_DISCOVERY_ENDPOINT = "tenant_discovery_endpoint";
     private static final String METADATA = "metadata";
@@ -65,7 +64,6 @@ public class AzureActiveDirectory
     private static final String API_VERSION_VALUE = "1.1";
     private static final String AUTHORIZATION_ENDPOINT = "authorization_endpoint";
     private static final String AUTHORIZATION_ENDPOINT_VALUE = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
-
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
 
@@ -89,7 +87,7 @@ public class AzureActiveDirectory
         return sIsInitialized;
     }
 
-    public static void setEnvironment(Environment environment){
+    public static void setEnvironment(Environment environment) {
         sEnvironment = environment;
     }
 
@@ -142,10 +140,10 @@ public class AzureActiveDirectory
         sIsInitialized = true;
     }
 
-    public static String getDefaultCloudUrl(){
-        if(sEnvironment == Environment.PreProduction) {
+    public static String getDefaultCloudUrl() {
+        if (sEnvironment == Environment.PreProduction) {
             return AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL;
-        }else{
+        } else {
             return AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL;
         }
     }
@@ -160,13 +158,24 @@ public class AzureActiveDirectory
                 .appendQueryParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
                 .build();
 
-        HttpResponse response = HttpRequest.sendGet(new URL(instanceDiscoveryRequestUri.toString()), new HashMap<String, String>());
+        HttpResponse response = HttpRequest.sendGet(
+                new URL(instanceDiscoveryRequestUri.toString()),
+                new HashMap<String, String>()
+        );
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             Log.d("Discovery", "Error getting cloud information");
         } else {
+            // Our request was successful. Flush the HTTP cache to disk. Should only happen once
+            // per app launch. Instance Discovery Metadata will be cached in-memory
+            // until the app is killed.
+            HttpCache.flush();
 
-            AzureActiveDirectoryInstanceResponse instanceResponse = ObjectMapper.deserializeJsonStringToObject(response.getBody(), AzureActiveDirectoryInstanceResponse.class);
+            AzureActiveDirectoryInstanceResponse instanceResponse =
+                    ObjectMapper.deserializeJsonStringToObject(
+                            response.getBody(),
+                            AzureActiveDirectoryInstanceResponse.class
+                    );
 
             for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
                 cloud.setIsValidated(true); // Mark the deserialized Clouds as validated
