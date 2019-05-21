@@ -49,6 +49,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
+
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 
 import org.json.JSONException;
@@ -59,7 +60,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
-
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_CURRENT_ACCOUNT;
 
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
@@ -422,5 +424,55 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         return result;
+    }
+
+    /**
+     * Get a bundle from an Account Mode string.
+     * @param isSharedDevice true if this device is registered as shared. False otherwise.
+     * @return Bundle
+     */
+    public Bundle bundleFromDeviceMode(@NonNull final boolean isSharedDevice) {
+        final Bundle resultBundle = new Bundle();
+        resultBundle.putBoolean(BROKER_DEVICE_MODE, isSharedDevice);
+        return resultBundle;
+    }
+
+    /**
+     * Get Device mode from bundle.
+     * @param bundle Bundle
+     * @return Account mode.
+     */
+    public static boolean deviceModeFromBundle(@NonNull final Bundle bundle) {
+        return bundle.getBoolean(BROKER_DEVICE_MODE);
+    }
+
+    /**
+     * Get a bundle from current account's AccountRecord.
+     * @param record current account's AccountRecord.
+     * @return Bundle
+     */
+    public static Bundle bundleFromCurrentAccount(@NonNull final AccountRecord record) {
+        final Bundle resultBundle = new Bundle();
+
+        final String recordInGson = new Gson().toJson(record, AccountRecord.class);
+        resultBundle.putString(BROKER_CURRENT_ACCOUNT, recordInGson);
+
+        return resultBundle;
+    }
+
+    /**
+     * Get current account's AccountRecord from bundle.
+     * @param bundle Bundle
+     * @return AccountRecord of the current account. This could be null.
+     */
+    public static AccountRecord currentAccountFromBundle(@NonNull final Bundle bundle) {
+        final String accountJson = bundle.getString(BROKER_CURRENT_ACCOUNT);
+
+        if (accountJson == null) {
+            //The bundle does not contain the BROKER_CURRENT_ACCOUNT value.
+            return null;
+        }
+
+        return new Gson().fromJson(accountJson, AccountRecord.class);
     }
 }
