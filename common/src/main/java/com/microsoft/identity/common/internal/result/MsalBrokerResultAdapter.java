@@ -60,7 +60,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNT_MODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_CURRENT_ACCOUNT;
 
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
@@ -428,30 +428,22 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     /**
      * Get a bundle from an Account Mode string.
-     * @param accountMode an Account Mode string.
+     * @param isSharedDevice true if this device is registered as shared. False otherwise.
      * @return Bundle
      */
-    public Bundle bundleFromAccountMode(@NonNull final String accountMode) {
+    public Bundle bundleFromDeviceMode(@NonNull final boolean isSharedDevice) {
         final Bundle resultBundle = new Bundle();
-        resultBundle.putString(BROKER_ACCOUNT_MODE, accountMode);
+        resultBundle.putBoolean(BROKER_DEVICE_MODE, isSharedDevice);
         return resultBundle;
     }
 
     /**
-     * Get Account mode from bundle.
+     * Get Device mode from bundle.
      * @param bundle Bundle
      * @return Account mode.
      */
-    public static String accountModeFromBundle(@NonNull final Bundle bundle) {
-        final String accountMode = bundle.getString(BROKER_ACCOUNT_MODE);
-
-        if (accountMode == null) {
-            // Return default mode.
-            Logger.verbose(TAG, "Unexpected value: account mode is not set.");
-            return AuthenticationConstants.Broker.BROKER_ACCOUNT_MODE_MULTIPLE_ACCOUNT;
-        }
-
-        return accountMode;
+    public static boolean deviceModeFromBundle(@NonNull final Bundle bundle) {
+        return bundle.getBoolean(BROKER_DEVICE_MODE);
     }
 
     /**
