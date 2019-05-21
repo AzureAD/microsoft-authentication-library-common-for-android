@@ -214,7 +214,8 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
                     "mCallerPackageName", "Caller package name is not set"
             );
         }
-        if(!BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAppContext(), getCallerPackageName())){
+        if(SdkType.MSAL == getSdkType() &&
+                !BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAppContext(), getCallerPackageName())){
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                     "mRedirectUri", "The redirect URI doesn't match the uri" +

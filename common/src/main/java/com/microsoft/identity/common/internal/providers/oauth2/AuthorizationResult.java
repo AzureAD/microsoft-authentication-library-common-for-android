@@ -31,7 +31,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
  */
 public abstract class AuthorizationResult<
         GenericAuthorizationResponse extends AuthorizationResponse,
-        GenericAuthorizationErrorResponse extends AuthorizationErrorResponse> implements IResult{
+        GenericAuthorizationErrorResponse extends AuthorizationErrorResponse> implements IResult {
 
     private AuthorizationStatus mAuthorizationStatus;
     private GenericAuthorizationResponse mAuthorizationResponse;
@@ -98,11 +98,13 @@ public abstract class AuthorizationResult<
         mAuthorizationStatus = authStatus;
     }
 
-    public IErrorResponse getErrorResponse(){
+    public IErrorResponse getErrorResponse() {
         return mAuthorizationErrorResponse;
     }
 
-    public ISuccessResponse getSuccessResponse() { return mAuthorizationResponse; }
+    public ISuccessResponse getSuccessResponse() {
+        return mAuthorizationResponse;
+    }
 
 }
 

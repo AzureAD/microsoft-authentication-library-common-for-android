@@ -37,6 +37,7 @@ public abstract class AzureActiveDirectoryAudience {
     public static final String ORGANIZATIONS = "organizations";
     public static final String CONSUMERS = "consumers";
     public static final String ALL = "common";
+    public static final String MSA_MEGA_TENANT_ID = "9188040d-6c67-4c5b-b112-36a304b66dad";
 
     public String getCloudUrl() {
         if(mCloudUrl == null){

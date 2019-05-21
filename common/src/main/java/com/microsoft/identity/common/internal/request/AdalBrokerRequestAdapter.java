@@ -35,6 +35,7 @@ import android.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
@@ -97,12 +98,17 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_EXTRA_QUERY_PARAM)
         );
 
-        parameters.setAuthority(
-                getRequestAuthorityWithExtraQP(
-                        intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_AUTHORITY),
-                        extraQP
-                )
+        final AzureActiveDirectoryAuthority authority = getRequestAuthorityWithExtraQP(
+                intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_AUTHORITY),
+                extraQP
         );
+        // V1 endpoint always add an organizational account if the tenant id is common.
+        // We need to explicitly add tenant id as organizations if we want similar behavior from V2 endpoint
+
+        if(authority.getAudience().getTenantId().equalsIgnoreCase(AzureActiveDirectoryAudience.ALL)){
+            authority.getAudience().setTenantId(AzureActiveDirectoryAudience.ORGANIZATIONS);
+        }
+        parameters.setAuthority(authority);
 
         parameters.setExtraQueryStringParameters(extraQP);
 

@@ -73,7 +73,7 @@ public final class Device {
         /**
          * The String representing the sdk platform version.
          */
-        public static final String PRODUCT_VERSION = "0.3.0";
+        public static final String PRODUCT_VERSION = "0.3.1";
 
         /**
          * The String representing the sdk version.
@@ -94,5 +94,10 @@ public final class Device {
          * The String representing the device model.
          */
         public static final String DEVICE_MODEL = "x-client-DM";
+
+        /**
+         * String for the broker version.
+         */
+        public static final String BROKER_VERSION = "x-client-brkrver";
     }
 }

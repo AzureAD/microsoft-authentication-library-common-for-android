@@ -49,7 +49,6 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
 
     private static final String TAG = EmbeddedWebViewAuthorizationStrategy.class.getSimpleName();
     private WeakReference<Activity> mReferencedActivity;
-    private PendingIntent mResultIntent;
     private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
@@ -59,9 +58,8 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      *
      * @param activity The app activity which invoke the interactive auth request.
      */
-    public EmbeddedWebViewAuthorizationStrategy(@NonNull Activity activity, @NonNull Intent resultIntent) {
+    public EmbeddedWebViewAuthorizationStrategy(@NonNull Activity activity) {
         mReferencedActivity = new WeakReference<>(activity);
-        mResultIntent = PendingIntent.getActivity(activity.getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     /**
@@ -79,7 +77,6 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         final Intent authIntent = AuthorizationActivity.createStartIntent(
                 mReferencedActivity.get().getApplicationContext(),
                 null,
-                mResultIntent,
                 requestUrl.toString(),
                 mAuthorizationRequest.getRedirectUri(),
                 mAuthorizationRequest.getRequestHeaders(),

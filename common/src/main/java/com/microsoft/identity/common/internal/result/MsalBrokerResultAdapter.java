@@ -78,11 +78,13 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final BrokerResult brokerResult = new BrokerResult.Builder()
                 .accessToken(authenticationResult.getAccessToken())
                 .idToken(authenticationResult.getIdToken())
+                .refreshToken(authenticationResult.getRefreshToken())
                 .homeAccountId(accountRecord.getHomeAccountId())
                 .localAccountId(accountRecord.getLocalAccountId())
                 .userName(accountRecord.getUsername())
                 .tokenType(accessTokenRecord.getAccessTokenType())
                 .clientId(accessTokenRecord.getClientId())
+                .familyId(authenticationResult.getFamilyId())
                 .scope(accessTokenRecord.getTarget())
                 .clientInfo(accountRecord.getClientInfo())
                 .authority(accessTokenRecord.getAuthority())
@@ -168,8 +170,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             final IAccountRecord accountRecord = getAccountRecord(brokerResult);
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
                     accessTokenRecord,
-                    null,
+                    brokerResult.getRefreshToken(),
                     brokerResult.getIdToken(),
+                    brokerResult.getFamilyId(),
                     accountRecord
             );
             return authenticationResult;
@@ -208,7 +211,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     brokerResult.getErrorMessage()
             );
 
-        } else if (AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorCode) ||
+        } else if (AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorCode) &&
                 AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED.
                         equalsIgnoreCase(brokerResult.getSubErrorCode())) {
 
@@ -268,7 +271,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         try {
             final ClientInfo clientInfo = new ClientInfo(brokerResult.getClientInfo());
             accessTokenRecord.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            accessTokenRecord.setRealm(clientInfo.getUtid());
+            accessTokenRecord.setRealm(
+                    SchemaUtil.getTenantId(brokerResult.getClientInfo(),
+                    brokerResult.getIdToken())
+            );
 
             final URL authorityUrl = new URL(brokerResult.getAuthority());
             final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.

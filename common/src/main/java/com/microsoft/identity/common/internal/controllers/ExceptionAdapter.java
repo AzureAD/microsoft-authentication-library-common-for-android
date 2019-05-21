@@ -88,6 +88,13 @@ public class ExceptionAdapter {
                                 ServiceException.DEFAULT_STATUS_CODE,
                                 null
                         );
+
+                    case SDK_CANCEL:
+                        return new ClientException(
+                                authorizationErrorResponse.getError(),
+                                authorizationErrorResponse.getErrorDescription()
+                        );
+
                     case USER_CANCEL:
                         return new UserCancelException();
 

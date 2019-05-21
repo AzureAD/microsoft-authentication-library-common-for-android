@@ -43,10 +43,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class LocalAuthenticationResult implements ILocalAuthenticationResult {
 
-    private String mRawIdToken = null;
+    private String mRawIdToken;
     private AccessTokenRecord mAccessTokenRecord;
     private IAccountRecord mAccountRecord;
-    private String mRefreshToken = null;
+    private String mRefreshToken;
+    private String mFamilyId;
     private String mSpeRing;
     private String mRefreshTokenAge;
 
@@ -59,10 +60,12 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
                                      @Nullable String refreshToken,
                                      @Nullable String rawIdToken,
+                                     @Nullable String familyId,
                                      @NonNull IAccountRecord accountRecord) {
         mAccessTokenRecord = accessTokenRecord;
         mRefreshToken = refreshToken;
         mRawIdToken = rawIdToken;
+        mFamilyId = familyId;
         mAccountRecord = accountRecord;
     }
 
@@ -174,6 +177,12 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     @Override
     public String getRefreshTokenAge() {
         return mRefreshTokenAge;
+    }
+
+    @Nullable
+    @Override
+    public String getFamilyId() {
+        return mFamilyId;
     }
 
     /**

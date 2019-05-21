@@ -25,7 +25,9 @@ package com.microsoft.identity.common.internal.migration;
 import android.util.Pair;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.IShareSingleSignOnState;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
 import java.util.Map;
@@ -33,6 +35,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TokenMigrationUtility<T extends BaseAccount, U extends RefreshToken> {
+
+    private static final String TAG = TokenMigrationUtility.class.getName();
 
     /**
      * ExecutorService to handle background computation.
@@ -61,10 +65,18 @@ public class TokenMigrationUtility<T extends BaseAccount, U extends RefreshToken
                 // Iterate over the adapted accounts/tokens, incrementing if successfully added to
                 // the cache.
                 for (final Pair<T, U> accountTokenPair : adapter.adapt(credentials)) {
-                    accountsAdded += destination.setSingleSignOnState(
-                            accountTokenPair.first,
-                            accountTokenPair.second
-                    ) ? 1 : 0;
+                    try {
+                        destination.setSingleSignOnState(
+                                accountTokenPair.first,
+                                accountTokenPair.second
+                        );
+                        accountsAdded ++;
+                    } catch (ClientException e) {
+                        Logger.warn(
+                                TAG,
+                                "Failed to save account/refresh token . Skipping "
+                        );
+                    }
                 }
 
                 // Migration is complete, trigger the callback with added Account total.

@@ -40,6 +40,7 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.util.List;
 import java.util.concurrent.Future;
 
 public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
@@ -48,15 +49,18 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
 
     private CustomTabsManager mCustomTabManager;
     private WeakReference<Activity> mReferencedActivity;
-    private PendingIntent mResultIntent;
     private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
+    private List<BrowserDescriptor> mBrowserSafeList;
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
-    public BrowserAuthorizationStrategy(@NonNull Activity activity, @NonNull Intent resultIntent) {
+    public BrowserAuthorizationStrategy(@NonNull Activity activity) {
         mReferencedActivity = new WeakReference<>(activity);
-        mResultIntent = PendingIntent.getActivity(activity.getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
+        mBrowserSafeList = browserSafeList;
     }
 
     @Override
@@ -68,8 +72,8 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         checkNotDisposed();
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
-        mAuthorizationResultFuture = new ResultFuture();
-        final Browser browser = BrowserSelector.select(mReferencedActivity.get().getApplicationContext());
+        mAuthorizationResultFuture = new ResultFuture<>();
+        final Browser browser = BrowserSelector.select(mReferencedActivity.get().getApplicationContext(), mBrowserSafeList);
 
         //ClientException will be thrown if no browser found.
         Intent authIntent;
@@ -98,7 +102,6 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         final Intent intent = AuthorizationActivity.createStartIntent(
                 mReferencedActivity.get().getApplicationContext(),
                 authIntent,
-                mResultIntent,
                 requestUrl.toString(),
                 mAuthorizationRequest.getRedirectUri(),
                 mAuthorizationRequest.getRequestHeaders(),
@@ -121,7 +124,12 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == BROWSER_FLOW) {
             dispose();
-            final AuthorizationResult result = mOAuth2Strategy.getAuthorizationResultFactory().createAuthorizationResult(resultCode, data, mAuthorizationRequest);
+            final AuthorizationResult result = mOAuth2Strategy
+                    .getAuthorizationResultFactory().createAuthorizationResult(
+                            resultCode,
+                            data,
+                            mAuthorizationRequest
+                    );
             mAuthorizationResultFuture.setResult(result);
         } else {
             Logger.warnPII(TAG, "Unknown request code " + requestCode);
