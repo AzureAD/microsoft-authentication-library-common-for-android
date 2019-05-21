@@ -28,7 +28,6 @@ import android.support.annotation.NonNull;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -36,62 +35,29 @@ import java.util.concurrent.ExecutionException;
  * Command class to call controllers to remove the account and return the result to
  * {@see com.microsoft.identity.common.internal.controllers.ApiDispatcher}.
  */
-public class RemoveAccountCommand implements Command<Boolean> {
+public class RemoveAccountCommand extends BaseAccountCommand<Boolean> {
     private static final String TAG = RemoveAccountCommand.class.getSimpleName();
-
-    protected OperationParameters mParameters;
-    protected List<BaseController> mControllers;
-    protected TaskCompletedCallbackWithError mCallback;
 
     public RemoveAccountCommand(@NonNull final OperationParameters parameters,
                                 @NonNull final BaseController controller,
                                 @NonNull final TaskCompletedCallbackWithError callback) {
-        mParameters = parameters;
-        mControllers = new ArrayList<>();
-        mCallback = callback;
-
-        mControllers.add(controller);
+        super(parameters, controller, callback);
     }
 
     public RemoveAccountCommand(@NonNull final OperationParameters parameters,
                                 @NonNull final List<BaseController> controllers,
                                 @NonNull final TaskCompletedCallbackWithError callback) {
-        mParameters = parameters;
-        mControllers = controllers;
-        mCallback = callback;
+        super(parameters, controllers, callback);
     }
 
-    public OperationParameters getParameters() {
-        return mParameters;
-    }
-
-    public void setParameters(OperationParameters parameters) {
-        mParameters = parameters;
-    }
-
-    public List<BaseController> getControllers() {
-        return mControllers;
-    }
-
-    public void setControllers(List<BaseController> controllers) {
-        mControllers = controllers;
-    }
-
-    public TaskCompletedCallbackWithError getCallback() {
-        return mCallback;
-    }
-
-    public void setCallback(TaskCompletedCallbackWithError callback) {
-        this.mCallback = callback;
-    }
-
+    @Override
     public Boolean execute() throws BaseException, InterruptedException, ExecutionException, RemoteException {
         final String methodName = ":execute";
 
         boolean result = false;
 
-        for (int ii = 0; ii < mControllers.size(); ii++) {
-            final BaseController controller = mControllers.get(ii);
+        for (int ii = 0; ii < getControllers().size(); ii++) {
+            final BaseController controller = getControllers().get(ii);
             com.microsoft.identity.common.internal.logging.Logger.verbose(
                     TAG + methodName,
                     "Executing with controller: "

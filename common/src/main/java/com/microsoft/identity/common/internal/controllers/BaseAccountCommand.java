@@ -22,57 +22,59 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
-import android.os.RemoteException;
 import android.support.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-/**
- * Command class to call controllers to load accounts and return the account list to
- * {@see com.microsoft.identity.common.internal.controllers.ApiDispatcher}.
- */
-public class LoadAccountCommand extends BaseAccountCommand<List<AccountRecord>> {
-    private static final String TAG = LoadAccountCommand.class.getSimpleName();
+public abstract class BaseAccountCommand<T> implements Command<T> {
+    private OperationParameters mParameters;
+    private List<BaseController> mControllers;
+    private TaskCompletedCallbackWithError mCallback;
 
-    public LoadAccountCommand(@NonNull final OperationParameters parameters,
+    public BaseAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final BaseController controller,
                               @NonNull final TaskCompletedCallbackWithError callback) {
-        super(parameters, controller, callback);
+        mParameters = parameters;
+        mControllers = new ArrayList<>();
+        mCallback = callback;
+
+        mControllers.add(controller);
     }
 
-    public LoadAccountCommand(@NonNull final OperationParameters parameters,
+    public BaseAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final List<BaseController> controllers,
                               @NonNull final TaskCompletedCallbackWithError callback) {
-        super(parameters, controllers, callback);
+        mParameters = parameters;
+        mControllers = controllers;
+        mCallback = callback;
     }
 
-    @Override
-    public List<AccountRecord> execute()
-            throws ClientException, InterruptedException, ExecutionException, RemoteException, OperationCanceledException, IOException, AuthenticatorException {
-        final String methodName = ":execute";
-
-        List<AccountRecord> result = new ArrayList<>();
-
-        for (int ii = 0; ii < getControllers().size(); ii++) {
-            final BaseController controller = getControllers().get(ii);
-            com.microsoft.identity.common.internal.logging.Logger.verbose(
-                    TAG + methodName,
-                    "Executing with controller: "
-                            + controller.getClass().getSimpleName()
-            );
-
-            result.addAll(controller.getAccounts(getParameters()));
-        }
-
-        return result;
+    public OperationParameters getParameters() {
+        return mParameters;
     }
+
+    public void setParameters(OperationParameters parameters) {
+        mParameters = parameters;
+    }
+
+    public List<BaseController> getControllers() {
+        return mControllers;
+    }
+
+    public void setControllers(List<BaseController> controllers) {
+        mControllers = controllers;
+    }
+
+    public TaskCompletedCallbackWithError getCallback() {
+        return mCallback;
+    }
+
+    public void setCallback(TaskCompletedCallbackWithError callback) {
+        this.mCallback = callback;
+    }
+
+    public abstract T execute() throws Exception;
 }
