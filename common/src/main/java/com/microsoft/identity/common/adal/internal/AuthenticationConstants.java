@@ -776,6 +776,11 @@ public final class AuthenticationConstants {
         public static final String ACCOUNT_NAME = "account.name";
 
         /**
+         * String of key for account name.
+         */
+        public static final String ACCOUNT_HOME_ACCOUNT_ID = "account.home.account.id";
+
+        /**
          * String of key for account id token.
          */
         public static final String ACCOUNT_IDTOKEN = "account.idtoken";

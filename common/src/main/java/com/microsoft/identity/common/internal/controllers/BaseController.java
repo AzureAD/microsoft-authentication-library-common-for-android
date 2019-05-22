@@ -22,7 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
 import android.content.Intent;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
@@ -73,6 +76,7 @@ import com.microsoft.identity.common.internal.util.DateUtilities;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -93,6 +97,10 @@ public abstract class BaseController {
 
     public abstract AcquireTokenResult acquireTokenSilent(final AcquireTokenSilentOperationParameters request)
             throws IOException, BaseException;
+
+    public abstract List<AccountRecord> getAccounts(final OperationParameters parameters) throws ClientException, InterruptedException, ExecutionException, RemoteException, OperationCanceledException, IOException, AuthenticatorException;
+
+    public abstract boolean removeAccount(final OperationParameters parameters) throws BaseException, InterruptedException, ExecutionException, RemoteException;
 
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
