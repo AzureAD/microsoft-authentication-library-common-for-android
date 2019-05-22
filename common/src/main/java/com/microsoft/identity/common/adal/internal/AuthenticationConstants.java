@@ -123,6 +123,11 @@ public final class AuthenticationConstants {
          * Sub error returned by server representing the user cancel the auth flow.
          */
         public static final String SUB_ERROR_UI_CANCEL = "cancel";
+
+        /**
+         * V2 endpoint for logging the user out in browser.
+         */
+        public static final String LOGOUT_ENDPOINT_V2 = "https://login.microsoftonline.com/common/oauth2/v2.0/logout";
     }
 
     /**
@@ -1024,6 +1029,12 @@ public final class AuthenticationConstants {
         public static final String BROKER_RESULT_V2 = "broker_result_v2";
 
         /**
+         * Represents the broker device mode boolean (true = shared device mode).
+         * This is used to determine what PublicClientApplication MSAL will return to its caller.
+         */
+        public static final String BROKER_DEVICE_MODE = "broker_device_mode";
+
+        /**
          * String to return a true if the request succeeded, false otherwise.
          */
         public static final String BROKER_REQUEST_V2_SUCCESS = "broker_request_v2_success";
@@ -1078,6 +1089,11 @@ public final class AuthenticationConstants {
          * String to return account list from broker.
          */
         public static final String BROKER_ACCOUNTS = "broker_accounts";
+
+        /**
+         * String to return current account from broker (only available in shared device mode)
+         */
+        public static final String BROKER_CURRENT_ACCOUNT = "broker_current_account";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.
