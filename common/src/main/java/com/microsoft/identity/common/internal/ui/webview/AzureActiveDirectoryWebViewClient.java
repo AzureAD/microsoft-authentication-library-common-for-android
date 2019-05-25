@@ -244,7 +244,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
 
         if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
-            getActivity().getApplicationContext().startActivity(intent);
+            this.getActivity().startActivity(intent);
         } else {
             Logger.warn(TAG + methodName, "Unable to find an app to resolve the activity.");
         }
