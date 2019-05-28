@@ -622,8 +622,52 @@ public class BrokerOAuth2TokenCache
             @Nullable final String environment,
             @NonNull final String clientId,
             @NonNull final String homeAccountId) {
-        // TODO implement
-        return null;
+        final String methodName = ":getAccountsWithAggregatedAccountData";
+
+        final List<ICacheRecord> result;
+        OAuth2TokenCache targetCache;
+
+        if (null != environment) {
+            targetCache = getTokenCacheForClient(
+                    clientId,
+                    environment,
+                    mCallingProcessUid
+            );
+
+            if (null == targetCache) {
+                Logger.verbose(
+                        TAG + methodName,
+                        "Falling back to FoCI cache..."
+                );
+
+                targetCache = mFociCache;
+            }
+
+            result = targetCache.getAccountsWithAggregatedAccountData(
+                    environment,
+                    clientId,
+                    homeAccountId
+            );
+        } else {
+            // If no environment was specified, return all of the accounts across all of the envs...
+            // Callers should really specify an environment...
+            final List<OAuth2TokenCache> caches = getTokenCachesForClientId(clientId);
+
+            // Declare a new List to which we will add all of our results...
+            result = new ArrayList<>();
+
+            for (final OAuth2TokenCache cache : caches) {
+                result.addAll(
+                        cache.getAccountsWithAggregatedAccountData(
+                                environment,
+                                clientId,
+                                homeAccountId
+                        )
+                );
+            }
+        }
+
+        return result;
     }
 
     private List<OAuth2TokenCache> getTokenCachesForClientId(@NonNull final String clientId) {
@@ -799,21 +843,89 @@ public class BrokerOAuth2TokenCache
     }
 
     @Override
-    public List<AccountRecord> getCorollaryAccounts(String clientId, AccountRecord accountRecord) {
-        // TODO
-        return null;
+    public List<AccountRecord> getCorollaryAccounts(@NonNull final String clientId,
+                                                    @NonNull final AccountRecord accountRecord) {
+        final OAuth2TokenCache cache = getTokenCacheForClient(
+                clientId,
+                accountRecord.getEnvironment(),
+                mCallingProcessUid
+        );
+
+        return cache.getCorollaryAccounts(
+                clientId,
+                accountRecord
+        );
     }
 
     @Override
-    public List<ICacheRecord> getAccountsWithAggregatedAccountData(String environment, String clientId) {
-        // TODO implement
-        return null;
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(@Nullable String environment,
+                                                                   @NonNull String clientId) {
+        final String methodName = ":getAccountsWithAggregatedAccountData";
+
+        final List<ICacheRecord> result;
+        OAuth2TokenCache targetCache;
+
+        if (null != environment) {
+            targetCache = getTokenCacheForClient(
+                    clientId,
+                    environment,
+                    mCallingProcessUid
+            );
+
+            if (null == targetCache) {
+                Logger.verbose(
+                        TAG + methodName,
+                        "Falling back to FoCI cache..."
+                );
+
+                targetCache = mFociCache;
+            }
+
+            result = targetCache.getAccountsWithAggregatedAccountData(environment, clientId);
+        } else {
+            // If no environment was specified, return all of the accounts across all of the envs...
+            // Callers should really specify an environment...
+            final List<OAuth2TokenCache> caches = getTokenCachesForClientId(clientId);
+
+            // Declare a new List to which we will add all of our results...
+            result = new ArrayList<>();
+
+            for (final OAuth2TokenCache cache : caches) {
+                result.addAll(cache.getAccountsWithAggregatedAccountData(environment, clientId));
+            }
+        }
+
+        return result;
     }
 
     @Override
-    public List<IdTokenRecord> getIdTokensForAccount(String clientId, AccountRecord accountRecord) {
-        // TODO implement
-        return null;
+    public List<IdTokenRecord> getIdTokensForAccount(@Nullable String clientId,
+                                                     @NonNull final AccountRecord accountRecord) {
+        List<IdTokenRecord> result;
+
+        final String accountEnv = accountRecord.getEnvironment();
+
+        if (null != clientId) {
+            final OAuth2TokenCache cache = getTokenCacheForClient(
+                    clientId,
+                    accountEnv,
+                    mCallingProcessUid
+            );
+
+            result = cache.getIdTokensForAccount(
+                    clientId,
+                    accountRecord
+            );
+        } else {
+            // If the client id was null... then presumably we want to aggregate the IdTokens across
+            // apps... why would you want that? For now, throw an Exception and see if anyone requests
+            // this feature...
+            throw new UnsupportedOperationException(
+                    "Aggregating IdTokens across ClientIds is not supported - do you have a feature request?"
+            );
+        }
+
+        return result;
     }
 
     /**
@@ -1243,7 +1355,7 @@ public class BrokerOAuth2TokenCache
             }
         }
         try {
-             targetCache.setSingleSignOnState(
+            targetCache.setSingleSignOnState(
                     account,
                     refreshToken
             );
