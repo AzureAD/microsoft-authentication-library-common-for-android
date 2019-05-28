@@ -298,7 +298,7 @@ public class BrokerOAuth2TokenCache
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings(UNCHECKED)
     public List<ICacheRecord> saveAndLoadAggregatedAccountData(
             @NonNull final GenericOAuth2Strategy oAuth2Strategy,
             @NonNull final GenericAuthorizationRequest request,
@@ -479,7 +479,7 @@ public class BrokerOAuth2TokenCache
      * @param account  The Account whose Credentials should be loaded.
      * @return A List of ICacheRecords for the supplied filter criteria.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings(UNCHECKED)
     @Override
     public List<ICacheRecord> loadWithAggregatedAccountData(@NonNull final String clientId,
                                                             @Nullable final String target,
@@ -1085,7 +1085,7 @@ public class BrokerOAuth2TokenCache
      *
      * @return A List of ICacheRecords for the FoCI accounts.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings(UNCHECKED)
     public List<ICacheRecord> getFociCacheRecords() {
         final List<ICacheRecord> result = new ArrayList<>();
 
