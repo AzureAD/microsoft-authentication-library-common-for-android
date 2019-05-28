@@ -69,6 +69,7 @@ import java.util.UUID;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField.X_MS_CLITELEM;
+import static com.microsoft.identity.common.internal.controllers.BaseController.logResult;
 
 public class MicrosoftStsOAuth2Strategy
         extends OAuth2Strategy
@@ -103,7 +104,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public String getIssuerCacheIdentifier(MicrosoftStsAuthorizationRequest request) {
+    public String getIssuerCacheIdentifier(@NonNull final MicrosoftStsAuthorizationRequest request) {
         final String methodName = ":getIssuerCacheIdentifier";
 
         final URL authority = request.getAuthority();
@@ -363,15 +364,17 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    protected HttpResponse performTokenRequest(final MicrosoftStsTokenRequest request) throws IOException, ClientException {
+    protected HttpResponse performTokenRequest(final MicrosoftStsTokenRequest request)
+            throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
-        final HttpResponse response =  super.performTokenRequest(request);
+        final HttpResponse response = super.performTokenRequest(request);
 
         if (response.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED
                 && response.getHeaders() != null
                 && response.getHeaders().containsKey(CHALLENGE_REQUEST_HEADER)) {
             // Received the device certificate challenge request. It is sent in 401 header.
             Logger.info(TAG + methodName, "Receiving device certificate challenge request. ");
+
             return performPKeyAuthRequest(response, request);
         }
 
@@ -445,6 +448,8 @@ public class MicrosoftStsOAuth2Strategy
 
         final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
 
+        logResult(TAG, result);
+
         if (null != response.getHeaders()) {
             final Map<String, List<String>> responseHeaders = response.getHeaders();
 
@@ -473,15 +478,14 @@ public class MicrosoftStsOAuth2Strategy
 
     private String getCloudSpecificTenantEndpoint(
             @NonNull final MicrosoftStsAuthorizationResponse response) {
-
-
-        if(!StringUtil.isEmpty(response.getCloudGraphHostName())) {
+        if (!StringUtil.isEmpty(response.getCloudGraphHostName())) {
             final String updatedTokenEndpoint =
                     Uri.parse(mTokenEndpoint)
                             .buildUpon()
                             .authority(response.getCloudInstanceHostName())
                             .build()
                             .toString();
+
             return updatedTokenEndpoint;
         }
 

@@ -164,7 +164,14 @@ public class ADALOAuth2TokenCache
         // TODO At some point, the type-safety of this call needs to get beefed-up
         Logger.info(TAG + ":" + methodName, "Syncing SSO state to caches...");
         for (final IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken> sharedSsoCache : mSharedSSOCaches) {
-            sharedSsoCache.setSingleSignOnState(account, refreshToken);
+            try {
+                sharedSsoCache.setSingleSignOnState(account, refreshToken);
+            } catch (ClientException e) {
+                Logger.errorPII(TAG,
+                        "Exception setting single sign on state for account " + account.getUsername(),
+                        e
+                );
+            }
         }
 
         return null; // Returning null, since the ADAL cache's schema doesn't support this return type.
@@ -341,10 +348,9 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public boolean setSingleSignOnState(final BaseAccount account, final RefreshToken refreshToken) {
+    public void setSingleSignOnState(final BaseAccount account, final RefreshToken refreshToken) {
         // Unimplemented
         Logger.warn(TAG, "setSingleSignOnState was called, but is not implemented.");
-        return false;
     }
 
     @Override

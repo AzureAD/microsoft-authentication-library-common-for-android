@@ -188,9 +188,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
             //If user clicked the "Back" button in the webview
             if (!StringUtil.isEmpty(parameters.get(ERROR_SUBCODE)) && parameters.get(ERROR_SUBCODE).equalsIgnoreCase(SUB_ERROR_UI_CANCEL)) {
-                getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
+                getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
             } else {
-                getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_ERROR, resultIntent);
+                getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
             }
 
             view.stopLoading();
@@ -200,7 +200,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
             //TODO log request info
             getCompletionCallback().onChallengeResponseReceived(
-                    AuthorizationStrategy.UIResponse.AUTH_CODE_COMPLETE,
+                    AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE,
                     resultIntent);
             view.stopLoading();
             //the TokenTask should be processed at after the authorization process in the upper calling layer.
@@ -221,7 +221,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 intent.setComponent(new ComponentName(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
                         AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                getActivity().getApplicationContext().startActivity(intent);
+                getActivity().startActivity(intent);
             } catch (final SecurityException ex) {
                 Logger.warn(TAG + methodName, "Failed to launch Company Portal, falling back to browser.");
                 openLinkInBrowser(url);
@@ -232,7 +232,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         view.stopLoading();
         Intent resultIntent = new Intent();
-        getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_CANCEL, resultIntent);
+        getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
         return true;
     }
 
@@ -244,7 +244,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
 
         if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
-            getActivity().getApplicationContext().startActivity(intent);
+            getActivity().startActivity(intent);
         } else {
             Logger.warn(TAG + methodName, "Unable to find an app to resolve the activity.");
         }
@@ -259,7 +259,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.verbose(TAG, "Install link is null or empty, Return to caller with BROWSER_CODE_DEVICE_REGISTER");
             resultIntent.putExtra(AuthenticationConstants.Broker.INSTALL_UPN_KEY, userName);
             getCompletionCallback().onChallengeResponseReceived(
-                    AuthorizationStrategy.UIResponse.BROWSER_CODE_DEVICE_REGISTER,
+                    AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER,
                     resultIntent
             );
             view.stopLoading();
@@ -267,7 +267,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
 
         Logger.verbose(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
-        getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.BROKER_REQUEST_RESUME, resultIntent);
+        getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME, resultIntent);
 
         // Having thread sleep for 1 second for calling activity to receive the result from
         // prepareForBrokerResumeRequest, thus the receiver for listening broker result return
@@ -324,7 +324,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE, errorCode);
         resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, errorMessage);
         //TODO log request info
-        getCompletionCallback().onChallengeResponseReceived(AuthorizationStrategy.UIResponse.AUTH_CODE_ERROR, resultIntent);
+        getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)

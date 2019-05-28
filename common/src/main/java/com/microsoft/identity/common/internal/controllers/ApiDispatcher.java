@@ -25,17 +25,21 @@ package com.microsoft.identity.common.internal.controllers;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.util.Pair;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -49,6 +53,108 @@ public class ApiDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
 
+    public static void getAccounts(@NonNull final LoadAccountCommand command) {
+        final String methodName = ":getAccounts";
+        Logger.verbose(
+                TAG + methodName,
+                "Beginning load accounts."
+        );
+        sSilentExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                initializeDiagnosticContext();
+
+                List<AccountRecord> result = null;
+                BaseException baseException = null;
+                Handler handler = new Handler(Looper.getMainLooper());
+
+                try {
+                    //Try executing request
+                    result = command.execute();
+                } catch (final Exception e) {
+                    //Capture any resulting exception and map to MsalException type
+                    Logger.errorPII(
+                            TAG + methodName,
+                            "Silent request failed with Exception",
+                            e
+                    );
+                    baseException = ExceptionAdapter.baseExceptionFromException(e);
+                }
+
+                if (baseException != null) {
+                    //Post On Error
+                    final BaseException finalException = baseException;
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            command.getCallback().onError(finalException);
+                        }
+                    });
+                } else {
+                    final List<AccountRecord> finalAccountsList = result;
+
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            command.getCallback().onTaskCompleted(finalAccountsList);
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    public static void removeAccount(@NonNull final RemoveAccountCommand command) {
+        final String methodName = ":removeAccount";
+        Logger.verbose(
+                TAG + methodName,
+                "Beginning remove account."
+        );
+        sSilentExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                initializeDiagnosticContext();
+
+                boolean result = false;
+                BaseException baseException = null;
+                Handler handler = new Handler(Looper.getMainLooper());
+
+                try {
+                    //Try executing request
+                    result = command.execute();
+
+                } catch (final Exception e) {
+                    //Capture any resulting exception and map to MsalException type
+                    Logger.errorPII(
+                            TAG + methodName,
+                            "Silent request failed with Exception",
+                            e
+                    );
+                    baseException = ExceptionAdapter.baseExceptionFromException(e);
+                }
+
+                if (baseException != null) {
+                    //Post On Error
+                    final BaseException finalException = baseException;
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            command.getCallback().onError(finalException);
+                        }
+                    });
+                } else {
+                    final boolean finalResult = result;
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            command.getCallback().onTaskCompleted(finalResult);
+                        }
+                    });
+                }
+            }
+        });
+    }
+
     public static void beginInteractive(final InteractiveTokenCommand command) {
         final String methodName = ":beginInteractive";
         Logger.verbose(
@@ -56,6 +162,11 @@ public class ApiDispatcher {
                 "Beginning interactive request"
         );
         synchronized (sLock) {
+            // Send a broadcast to cancel if any active auth request is present.
+            command.getParameters().getAppContext().sendBroadcast(
+                            new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
+            );
+
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {

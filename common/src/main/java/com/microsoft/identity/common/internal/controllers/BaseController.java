@@ -22,7 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
 import android.content.Intent;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
@@ -34,6 +37,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
@@ -46,6 +50,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -84,10 +89,18 @@ public abstract class BaseController {
     public abstract AcquireTokenResult acquireToken(final AcquireTokenOperationParameters request)
             throws ExecutionException, InterruptedException, BaseException, IOException;
 
-    public abstract void completeAcquireToken(final int requestCode, final int resultCode, final Intent data);
+    public abstract void completeAcquireToken(
+            final int requestCode,
+            final int resultCode,
+            final Intent data
+    );
 
     public abstract AcquireTokenResult acquireTokenSilent(final AcquireTokenSilentOperationParameters request)
             throws IOException, BaseException;
+
+    public abstract List<AccountRecord> getAccounts(final OperationParameters parameters) throws ClientException, InterruptedException, ExecutionException, RemoteException, OperationCanceledException, IOException, AuthenticatorException;
+
+    public abstract boolean removeAccount(final OperationParameters parameters) throws BaseException, InterruptedException, ExecutionException, RemoteException;
 
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
@@ -153,10 +166,10 @@ public abstract class BaseController {
         return builder.build();
     }
 
-    protected TokenResult performTokenRequest(final OAuth2Strategy strategy,
-                                              final AuthorizationRequest request,
-                                              final AuthorizationResponse response,
-                                              final AcquireTokenOperationParameters parameters)
+    protected TokenResult performTokenRequest(@NonNull final OAuth2Strategy strategy,
+                                              @NonNull final AuthorizationRequest request,
+                                              @NonNull final AuthorizationResponse response,
+                                              @NonNull final AcquireTokenOperationParameters parameters)
             throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
         HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAppContext());
@@ -165,10 +178,9 @@ public abstract class BaseController {
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
         tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
 
-        TokenResult tokenResult = null;
+        TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
-        tokenResult = strategy.requestToken(tokenRequest);
-
+        logResult(TAG, tokenResult);
 
         return tokenResult;
     }
@@ -185,6 +197,8 @@ public abstract class BaseController {
                 "Renewing access token..."
         );
         parameters.setRefreshToken(cacheRecord.getRefreshToken());
+
+        logParameters(TAG, parameters);
 
         final TokenResult tokenResult = performSilentTokenRequest(strategy, parameters);
         acquireTokenSilentResult.setTokenResult(tokenResult);
@@ -226,11 +240,11 @@ public abstract class BaseController {
     /**
      * Log IResult objects.  IResult objects are returned from Authorization and Token Requests
      *
-     * @param tag
-     * @param result
+     * @param tag    The log tag to use.
+     * @param result The result object to log.
      */
-    protected void logResult(String tag, IResult result) {
-
+    public static void logResult(@NonNull final String tag,
+                                 @NonNull final IResult result) {
         final String TAG = tag + ":" + result.getClass().getSimpleName();
 
         if (result.getSuccess()) {
@@ -238,12 +252,14 @@ public abstract class BaseController {
                     TAG,
                     "Success Result"
             );
+
             logExposedFieldsOfObject(TAG, result.getSuccessResponse());
         } else {
             Logger.warn(
                     TAG,
                     "Failure Result"
             );
+
             if (result.getErrorResponse() != null) {
                 if (result.getErrorResponse().getError() != null) {
                     Logger.warn(
@@ -251,18 +267,21 @@ public abstract class BaseController {
                             "Error: " + result.getErrorResponse().getError()
                     );
                 }
+
                 if (result.getErrorResponse().getErrorDescription() != null) {
                     Logger.warnPII(
                             TAG,
                             "Description: " + result.getErrorResponse().getErrorDescription()
                     );
                 }
+
                 logExposedFieldsOfObject(TAG, result.getErrorResponse());
             }
         }
 
         if (result instanceof AuthorizationResult) {
             AuthorizationResult authResult = (AuthorizationResult) result;
+
             if (authResult.getAuthorizationStatus() != null) {
                 Logger.verbose(
                         TAG,
@@ -275,11 +294,12 @@ public abstract class BaseController {
     /**
      * Log parameters objects passed to controllers
      *
-     * @param tag
-     * @param parameters
+     * @param tag        The log tag to use.
+     * @param parameters The request parameters to log.
      */
     protected void logParameters(String tag, Object parameters) {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
+
         if (Logger.getAllowPii()) {
             Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
         } else {
@@ -287,16 +307,16 @@ public abstract class BaseController {
         }
     }
 
-    protected void logExposedFieldsOfObject(String tag, Object object) {
+    protected static void logExposedFieldsOfObject(@NonNull final String tag,
+                                                   @NonNull final Object object) {
         final String TAG = tag + ":" + object.getClass().getSimpleName();
         Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
     }
 
     protected TokenResult performSilentTokenRequest(
-            final OAuth2Strategy strategy,
-            final AcquireTokenSilentOperationParameters parameters)
+            @NonNull final OAuth2Strategy strategy,
+            @NonNull final AcquireTokenSilentOperationParameters parameters)
             throws ClientException, IOException {
-
         final String methodName = ":performSilentTokenRequest";
 
         Logger.verbose(
@@ -320,6 +340,10 @@ public abstract class BaseController {
         refreshTokenRequest.setRefreshToken(parameters.getRefreshToken().getSecret());
         refreshTokenRequest.setRedirectUri(parameters.getRedirectUri());
 
+        if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
+            ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
+        }
+
         //NOTE: this should be moved to the strategy; however requires a larger refactor
         if (parameters.getSdkType() == SdkType.ADAL) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setIdTokenVersion("1");
@@ -335,15 +359,17 @@ public abstract class BaseController {
         return strategy.requestToken(refreshTokenRequest);
     }
 
-    protected List<ICacheRecord> saveTokens(final OAuth2Strategy strategy,
-                                            final AuthorizationRequest request,
-                                            final TokenResponse tokenResponse,
-                                            final OAuth2TokenCache tokenCache) throws ClientException {
+    protected List<ICacheRecord> saveTokens(@NonNull final OAuth2Strategy strategy,
+                                            @NonNull final AuthorizationRequest request,
+                                            @NonNull final TokenResponse tokenResponse,
+                                            @NonNull final OAuth2TokenCache tokenCache) throws ClientException {
         final String methodName = ":saveTokens";
+
         Logger.verbose(
                 TAG + methodName,
                 "Saving tokens..."
         );
+
         return tokenCache.saveAndLoadAggregatedAccountData(
                 strategy,
                 request,
@@ -351,22 +377,23 @@ public abstract class BaseController {
         );
     }
 
-    protected boolean refreshTokenIsNull(final ICacheRecord cacheRecord) {
+    protected boolean refreshTokenIsNull(@NonNull final ICacheRecord cacheRecord) {
         return null == cacheRecord.getRefreshToken();
     }
 
-    protected boolean accessTokenIsNull(final ICacheRecord cacheRecord) {
+    protected boolean accessTokenIsNull(@NonNull final ICacheRecord cacheRecord) {
         return null == cacheRecord.getAccessToken();
     }
 
-    protected boolean idTokenIsNull(final ICacheRecord cacheRecord, final SdkType sdkType) {
+    protected boolean idTokenIsNull(@NonNull final ICacheRecord cacheRecord,
+                                    @NonNull final SdkType sdkType) {
         final IdTokenRecord idTokenRecord = (sdkType == SdkType.ADAL) ?
                 cacheRecord.getV1IdToken() : cacheRecord.getIdToken();
 
         return null == idTokenRecord;
     }
 
-    protected void addDefaultScopes(final OperationParameters operationParameters) {
+    protected void addDefaultScopes(@NonNull final OperationParameters operationParameters) {
         final Set<String> requestScopes = operationParameters.getScopes();
         requestScopes.add(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE);
         requestScopes.add(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE);
@@ -376,8 +403,8 @@ public abstract class BaseController {
         operationParameters.setScopes(requestScopes);
     }
 
-    public static AccessTokenRecord getAccessTokenRecord(@NonNull final MicrosoftStsTokenResponse tokenResponse,
-                                                         @NonNull final OperationParameters requestParameters) {
+    public AccessTokenRecord getAccessTokenRecord(@NonNull final MicrosoftStsTokenResponse tokenResponse,
+                                                  @NonNull final OperationParameters requestParameters) {
         final String methodName = ":getAccessTokenRecord";
 
         final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
@@ -385,11 +412,16 @@ public abstract class BaseController {
         try {
             final ClientInfo clientInfo = new ClientInfo(tokenResponse.getClientInfo());
             accessTokenRecord.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            accessTokenRecord.setRealm(clientInfo.getUtid());
+            accessTokenRecord.setRealm(SchemaUtil.getTenantId(
+                    tokenResponse.getClientInfo(),
+                    tokenResponse.getIdToken()
+                    )
+            );
             final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.
                     getAzureActiveDirectoryCloud(
                             requestParameters.getAuthority().getAuthorityURL()
                     );
+
             if (cloudEnv != null) {
                 Logger.info(TAG, "Using preferred cache host name...");
                 accessTokenRecord.setEnvironment(cloudEnv.getPreferredCacheHostName());
@@ -425,6 +457,7 @@ public abstract class BaseController {
         accessTokenRecord.setCachedAt(
                 String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()))
         );
+
         return accessTokenRecord;
     }
 
@@ -481,6 +514,14 @@ public abstract class BaseController {
         }
 
         return targetAccount;
+    }
+
+    protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
+        final String tenantId = SchemaUtil.getTenantId(
+                microsoftTokenResponse.getClientInfo(),
+                microsoftTokenResponse.getIdToken()
+        );
+        return AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(tenantId);
     }
 
 }

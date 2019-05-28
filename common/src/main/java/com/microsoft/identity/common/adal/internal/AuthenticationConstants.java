@@ -170,6 +170,12 @@ public final class AuthenticationConstants {
          * Device registration in broker apps.
          */
         public static final int BROWSER_CODE_DEVICE_REGISTER = 2007;
+
+        /**
+         * Represents that SDK signalled to cancelled the auth flow as app
+         * launched a new interactive auth request
+         */
+        public static final int BROWSER_CODE_SDK_CANCEL = 2008;
     }
 
     /**
@@ -770,6 +776,11 @@ public final class AuthenticationConstants {
         public static final String ACCOUNT_NAME = "account.name";
 
         /**
+         * String of key for account name.
+         */
+        public static final String ACCOUNT_HOME_ACCOUNT_ID = "account.home.account.id";
+
+        /**
          * String of key for account id token.
          */
         public static final String ACCOUNT_IDTOKEN = "account.idtoken";
@@ -1007,21 +1018,26 @@ public final class AuthenticationConstants {
          */
         public static final String CALLER_INFO_PACKAGE = "caller.info.package";
 
-        // TODO : See if these can be moved to common shared constants
         /**
          * String to send Msal V2 Request params.
          */
-        public static final String BROKER_REQUEST_V2 = "broker.request.v2";
+        public static final String BROKER_REQUEST_V2 = "broker_request_v2";
 
         /**
          * String to return Msal V2 response.
          */
-        public static final String BROKER_RESULT_V2 = "broker.result.v2";
+        public static final String BROKER_RESULT_V2 = "broker_result_v2";
+
+        /**
+         * Represents the broker device mode boolean (true = shared device mode).
+         * This is used to determine what PublicClientApplication MSAL will return to its caller.
+         */
+        public static final String BROKER_DEVICE_MODE = "broker_device_mode";
 
         /**
          * String to return a true if the request succeeded, false otherwise.
          */
-        public static final String BROKER_REQUEST_V2_SUCCESS = "broker.request.v2.success";
+        public static final String BROKER_REQUEST_V2_SUCCESS = "broker_request_v2_success";
 
         /**
          * String for ssl prefix.
@@ -1073,6 +1089,11 @@ public final class AuthenticationConstants {
          * String to return account list from broker.
          */
         public static final String BROKER_ACCOUNTS = "broker_accounts";
+
+        /**
+         * String to return current account from broker (only available in shared device mode)
+         */
+        public static final String BROKER_CURRENT_ACCOUNT = "broker_current_account";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.

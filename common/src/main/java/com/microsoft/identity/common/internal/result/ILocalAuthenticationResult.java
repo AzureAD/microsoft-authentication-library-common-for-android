@@ -114,4 +114,12 @@ public interface ILocalAuthenticationResult {
      */
     @Nullable
     String getRefreshTokenAge();
+
+
+    /**
+     * Information to uniquely identify the family that the client application belongs to.
+     *
+     */
+    @Nullable
+    String getFamilyId();
 }

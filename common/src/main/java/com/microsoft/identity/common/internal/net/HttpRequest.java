@@ -179,6 +179,7 @@ public final class HttpRequest {
     private HttpResponse executeHttpSend() throws IOException {
         final HttpURLConnection urlConnection = setupConnection();
         urlConnection.setRequestMethod(mRequestMethod);
+        urlConnection.setUseCaches(true);
         setRequestBody(urlConnection, mRequestContent, mRequestContentType);
 
         InputStream responseStream = null;

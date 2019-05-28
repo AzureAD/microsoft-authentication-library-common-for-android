@@ -203,7 +203,7 @@ public class BrokerValidator {
 
     public static boolean isValidBrokerRedirect(@Nullable final String redirectUri,
                                                 @NonNull final Context context,
-                                                @NonNull final String packageName){
+                                                @NonNull final String packageName) {
         return !TextUtils.isEmpty(redirectUri) &&
                 redirectUri.equalsIgnoreCase(getBrokerRedirectUri(context, packageName));
     }
