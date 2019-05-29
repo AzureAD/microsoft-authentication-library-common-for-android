@@ -35,6 +35,7 @@ import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallba
 import com.microsoft.identity.common.internal.request.SdkType;
 
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -50,11 +51,13 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private String mFamilyId;
     private String mSpeRing;
     private String mRefreshTokenAge;
+    private List<ICacheRecord> mCompleteResultFromCache;
 
     private static final String TAG = LocalAuthenticationResult.class.getName();
 
-    public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord) {
-        this(cacheRecord, SdkType.MSAL); // default sdk type as MSAL
+    public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
+                                     @NonNull final List<ICacheRecord> completeResultFromCache) {
+        this(lastAuthorized, completeResultFromCache, SdkType.MSAL); // default sdk type as MSAL
     }
 
     public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
@@ -67,6 +70,13 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
         mRawIdToken = rawIdToken;
         mFamilyId = familyId;
         mAccountRecord = accountRecord;
+    }
+
+    public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
+                                     @NonNull final List<ICacheRecord> completeResultFromCache,
+                                     @NonNull final SdkType sdkType) {
+        this(lastAuthorized, SdkType.MSAL);
+        mCompleteResultFromCache = completeResultFromCache;
     }
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord, @NonNull SdkType sdkType) {
@@ -183,6 +193,11 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     @Override
     public String getFamilyId() {
         return mFamilyId;
+    }
+
+    @Override
+    public List<ICacheRecord> getCacheRecordWithTenantProfileData() {
+        return mCompleteResultFromCache;
     }
 
     /**

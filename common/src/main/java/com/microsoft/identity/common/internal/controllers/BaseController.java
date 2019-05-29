@@ -222,7 +222,7 @@ public abstract class BaseController {
             // Create a new AuthenticationResult to hold the saved record
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
                     savedRecord,
-                    parameters.getSdkType()
+                    savedRecords
             );
 
             // Set the client telemetry...
