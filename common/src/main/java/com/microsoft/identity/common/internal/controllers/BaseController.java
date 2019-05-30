@@ -95,12 +95,15 @@ public abstract class BaseController {
             final Intent data
     );
 
-    public abstract AcquireTokenResult acquireTokenSilent(final AcquireTokenSilentOperationParameters request)
-            throws IOException, BaseException;
+    public abstract AcquireTokenResult acquireTokenSilent(
+            final AcquireTokenSilentOperationParameters request) throws IOException, BaseException;
 
-    public abstract List<AccountRecord> getAccounts(final OperationParameters parameters) throws ClientException, InterruptedException, ExecutionException, RemoteException, OperationCanceledException, IOException, AuthenticatorException;
+    public abstract List<ICacheRecord> getAccounts(final OperationParameters parameters)
+            throws ClientException, InterruptedException, ExecutionException, RemoteException,
+            OperationCanceledException, IOException, AuthenticatorException;
 
-    public abstract boolean removeAccount(final OperationParameters parameters) throws BaseException, InterruptedException, ExecutionException, RemoteException;
+    public abstract boolean removeAccount(final OperationParameters parameters)
+            throws BaseException, InterruptedException, ExecutionException, RemoteException;
 
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
