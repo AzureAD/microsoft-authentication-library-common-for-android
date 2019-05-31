@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
@@ -63,20 +64,8 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
     }
 
     @Override
-    protected String getDisplayableId(final Map<String, String> claims) {
-
-        if (!StringExtensions.isNullOrBlank(claims.get(MicrosoftStsIdToken.PREFERRED_USERNAME))) {
-            return claims.get(MicrosoftStsIdToken.PREFERRED_USERNAME);
-        } else if (!StringExtensions.isNullOrBlank(claims.get(MicrosoftStsIdToken.EMAIL))) {
-            return claims.get(MicrosoftStsIdToken.EMAIL);
-        } else if(!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.UPN))){
-
-            // TODO : Temporary Hack to read and store V1 id token in Cache for V2 request
-            return claims.get(AzureActiveDirectoryIdToken.UPN);
-        } else {
-            Logger.warn(TAG, "The preferred username is not returned from the IdToken.");
-            return "Missing from the token response";
-        }
+    protected String getDisplayableId(@NonNull final Map<String, ?> claims) {
+        return SchemaUtil.getDisplayableId(claims);
     }
 
 }

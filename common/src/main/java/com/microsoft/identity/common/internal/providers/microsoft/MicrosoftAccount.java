@@ -125,7 +125,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
         }
     }
 
-    protected abstract String getDisplayableId(final Map<String, String> claims);
+    protected abstract String getDisplayableId(final Map<String, ?> claims);
 
     private String getUniqueId(final Map<String, String> claims) {
         final String methodName = "getUniqueId";

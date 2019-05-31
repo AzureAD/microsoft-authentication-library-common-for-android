@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
@@ -33,6 +34,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsIdToken;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
 import java.util.Map;
@@ -44,6 +46,7 @@ public final class SchemaUtil {
 
     private static final String TAG = SchemaUtil.class.getSimpleName();
     private static final String EXCEPTION_CONSTRUCTING_IDTOKEN = "Exception constructing IDToken. ";
+    public static final String MISSING_FROM_THE_TOKEN_RESPONSE = "Missing from the token response";
 
     private SchemaUtil() {
         // Utility class.
@@ -262,8 +265,9 @@ public final class SchemaUtil {
 
     /**
      * Get tenant id claim from Id token , if not present returns the tenant id from client info
+     *
      * @param clientInfoString : ClientInfo
-     * @param idTokenString : Id Token
+     * @param idTokenString    : Id Token
      * @return tenantId
      */
     @Nullable
@@ -300,5 +304,19 @@ public final class SchemaUtil {
 
         return tenantId;
 
+    }
+
+    public static String getDisplayableId(@NonNull final Map<String, ?> claims) {
+        if (!StringExtensions.isNullOrBlank((String) claims.get(MicrosoftStsIdToken.PREFERRED_USERNAME))) {
+            return (String) claims.get(MicrosoftStsIdToken.PREFERRED_USERNAME);
+        } else if (!StringExtensions.isNullOrBlank((String) claims.get(MicrosoftStsIdToken.EMAIL))) {
+            return (String) claims.get(MicrosoftStsIdToken.EMAIL);
+        } else if (!StringExtensions.isNullOrBlank((String) claims.get(AzureActiveDirectoryIdToken.UPN))) {
+            // TODO : Temporary Hack to read and store V1 id token in Cache for V2 request
+            return (String) claims.get(AzureActiveDirectoryIdToken.UPN);
+        } else {
+            Logger.warn(TAG, "The preferred username is not returned from the IdToken.");
+            return MISSING_FROM_THE_TOKEN_RESPONSE;
+        }
     }
 }
