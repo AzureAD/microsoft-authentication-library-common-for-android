@@ -27,6 +27,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.exception.ArgumentException;
@@ -38,6 +39,7 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -54,6 +56,7 @@ import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 
 import org.json.JSONException;
 
+import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -465,7 +468,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * @param bundle Bundle
      * @return AccountRecord of the current account. This could be null.
      */
-    public static AccountRecord currentAccountFromBundle(@NonNull final Bundle bundle) {
+    public static List<ICacheRecord> currentAccountFromBundle(@NonNull final Bundle bundle) {
         final String accountJson = bundle.getString(BROKER_CURRENT_ACCOUNT);
 
         if (accountJson == null) {
@@ -473,6 +476,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             return null;
         }
 
-        return new Gson().fromJson(accountJson, AccountRecord.class);
+        final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>(){}.getType();
+        return new Gson().fromJson(accountJson, listOfCacheRecords);
     }
 }
