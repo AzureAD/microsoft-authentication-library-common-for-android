@@ -258,7 +258,7 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public List<AccountRecord> getCorollaryAccounts(String clientId, AccountRecord accountRecord) {
+    public List<AccountRecord> getAllTenantAccountsForAccountByClientId(String clientId, AccountRecord accountRecord) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );

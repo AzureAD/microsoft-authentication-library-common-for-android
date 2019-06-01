@@ -210,8 +210,8 @@ public abstract class OAuth2TokenCache
      * @param accountRecord The AccountRecord whose corollary AccountRecords should be loaded.
      * @return
      */
-    public abstract List<AccountRecord> getCorollaryAccounts(final String clientId,
-                                                             final AccountRecord accountRecord
+    public abstract List<AccountRecord> getAllTenantAccountsForAccountByClientId(final String clientId,
+                                                                                 final AccountRecord accountRecord
     );
 
     /**

@@ -147,20 +147,22 @@ public class MsalOAuth2TokenCache
             @NonNull AccountRecord accountRecord,
             @NonNull IdTokenRecord idTokenRecord,
             @NonNull AccessTokenRecord accessTokenRecord) throws ClientException {
-        return mergeCacheRecordWithCorollaryAccounts(
+        // Use the just-saved ICacheRecord to locate other cache records belonging to this
+        // principal which may be associated to another tenant
+        return mergeCacheRecordWithOtherTenantCacheRecords(
                 save(accountRecord, idTokenRecord, accessTokenRecord)
         );
     }
 
     @NonNull
-    private List<ICacheRecord> mergeCacheRecordWithCorollaryAccounts(
+    private List<ICacheRecord> mergeCacheRecordWithOtherTenantCacheRecords(
             @NonNull final ICacheRecord savedCacheRecord) {
         final List<ICacheRecord> result = new ArrayList<>();
         // Whatever ICacheRecord you provide will _always_ be the first element in the result List.
         result.add(savedCacheRecord);
 
-        final List<AccountRecord> corollaryAccounts = new ArrayList<>(
-                getCorollaryAccounts(
+        final List<AccountRecord> accountsInOtherTenants = new ArrayList<>(
+                getAllTenantAccountsForAccountByClientId(
                         savedCacheRecord
                                 .getRefreshToken()
                                 .getClientId(),
@@ -169,12 +171,12 @@ public class MsalOAuth2TokenCache
                 )
         );
 
-        if (!corollaryAccounts.isEmpty()) {
+        if (!accountsInOtherTenants.isEmpty()) {
             // Remove the first element from the List since it is already contained in the result List
-            corollaryAccounts.remove(0);
+            accountsInOtherTenants.remove(0);
 
             // Iterate over the rest of the Accounts to build up the final result
-            for (final AccountRecord acct : corollaryAccounts) {
+            for (final AccountRecord acct : accountsInOtherTenants) {
                 result.add(
                         getSparseCacheRecordForAccount(
                                 savedCacheRecord.getRefreshToken().getClientId(),
@@ -293,7 +295,7 @@ public class MsalOAuth2TokenCache
             @NonNull final GenericOAuth2Strategy oAuth2Strategy,
             @NonNull final GenericAuthorizationRequest request,
             @NonNull final GenericTokenResponse response) throws ClientException {
-        return mergeCacheRecordWithCorollaryAccounts(
+        return mergeCacheRecordWithOtherTenantCacheRecords(
                 save(oAuth2Strategy, request, response)
         );
     }
@@ -630,7 +632,7 @@ public class MsalOAuth2TokenCache
         );
 
         if (null != anyMatchingAccount) {
-            final List<AccountRecord> corollaryAccounts = getCorollaryAccounts(
+            final List<AccountRecord> corollaryAccounts = getAllTenantAccountsForAccountByClientId(
                     clientId,
                     anyMatchingAccount
             );
@@ -798,12 +800,12 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public List<AccountRecord> getCorollaryAccounts(@NonNull final String clientId,
-                                                    @NonNull final AccountRecord accountRecord) {
-        final List<AccountRecord> corollaryAccounts = new ArrayList<>();
+    public List<AccountRecord> getAllTenantAccountsForAccountByClientId(@NonNull final String clientId,
+                                                                        @NonNull final AccountRecord accountRecord) {
+        final List<AccountRecord> allTenantAccounts = new ArrayList<>();
 
         // Add the supplied AccountRecord as the 0th element...
-        corollaryAccounts.add(accountRecord);
+        allTenantAccounts.add(accountRecord);
 
         // Grab all the accounts which might match
         final List<AccountRecord> allMatchingAccountsByHomeId =
@@ -822,11 +824,11 @@ public class MsalOAuth2TokenCache
         // Iterate and populate
         for (final AccountRecord acct : allAppAccounts) {
             if (allMatchingAccountsByHomeId.contains(acct) && !accountRecord.equals(acct)) {
-                corollaryAccounts.add(acct);
+                allTenantAccounts.add(acct);
             }
         }
 
-        return Collections.unmodifiableList(corollaryAccounts);
+        return Collections.unmodifiableList(allTenantAccounts);
     }
 
     @Override

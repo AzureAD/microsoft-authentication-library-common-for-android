@@ -843,15 +843,15 @@ public class BrokerOAuth2TokenCache
     }
 
     @Override
-    public List<AccountRecord> getCorollaryAccounts(@NonNull final String clientId,
-                                                    @NonNull final AccountRecord accountRecord) {
+    public List<AccountRecord> getAllTenantAccountsForAccountByClientId(@NonNull final String clientId,
+                                                                        @NonNull final AccountRecord accountRecord) {
         final OAuth2TokenCache cache = getTokenCacheForClient(
                 clientId,
                 accountRecord.getEnvironment(),
                 mCallingProcessUid
         );
 
-        return cache.getCorollaryAccounts(
+        return cache.getAllTenantAccountsForAccountByClientId(
                 clientId,
                 accountRecord
         );
