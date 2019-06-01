@@ -234,8 +234,8 @@ public abstract class OAuth2TokenCache
      * @param accountRecord The AccountRecord for which IdTokenRecords should be loaded.
      * @return An immutable List of IdTokenRecords.
      */
-    public abstract List<IdTokenRecord> getIdTokensForAccount(final String clientId,
-                                                              final AccountRecord accountRecord
+    public abstract List<IdTokenRecord> getIdTokensForAccountRecord(final String clientId,
+                                                                    final AccountRecord accountRecord
     );
 
     /**

@@ -899,8 +899,8 @@ public class BrokerOAuth2TokenCache
     }
 
     @Override
-    public List<IdTokenRecord> getIdTokensForAccount(@Nullable String clientId,
-                                                     @NonNull final AccountRecord accountRecord) {
+    public List<IdTokenRecord> getIdTokensForAccountRecord(@Nullable String clientId,
+                                                           @NonNull final AccountRecord accountRecord) {
         List<IdTokenRecord> result;
 
         final String accountEnv = accountRecord.getEnvironment();
@@ -912,7 +912,7 @@ public class BrokerOAuth2TokenCache
                     mCallingProcessUid
             );
 
-            result = cache.getIdTokensForAccount(
+            result = cache.getIdTokensForAccountRecord(
                     clientId,
                     accountRecord
             );

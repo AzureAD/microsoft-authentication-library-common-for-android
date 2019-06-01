@@ -309,7 +309,7 @@ public class MsalOAuth2TokenCache
                                                 @NonNull final AccountRecord acct) {
         final String methodName = ":getSparseCacheRecordForAccount";
 
-        final List<IdTokenRecord> acctIdTokens = getIdTokensForAccount(
+        final List<IdTokenRecord> acctIdTokens = getIdTokensForAccountRecord(
                 clientId,
                 acct
         );
@@ -514,8 +514,8 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
-    public List<IdTokenRecord> getIdTokensForAccount(@Nullable String clientId,
-                                                     @NonNull AccountRecord accountRecord) {
+    public List<IdTokenRecord> getIdTokensForAccountRecord(@Nullable String clientId,
+                                                           @NonNull AccountRecord accountRecord) {
         final List<IdTokenRecord> result = new ArrayList<>();
 
         final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
@@ -686,7 +686,7 @@ public class MsalOAuth2TokenCache
         );
 
         if (null != acct) {
-            final List<IdTokenRecord> acctIdTokens = getIdTokensForAccount(
+            final List<IdTokenRecord> acctIdTokens = getIdTokensForAccountRecord(
                     clientId,
                     acct
             );
@@ -841,7 +841,7 @@ public class MsalOAuth2TokenCache
         );
 
         for (final AccountRecord accountRecord : allMatchingAccounts) {
-            final List<IdTokenRecord> idTokensForAccount = getIdTokensForAccount(
+            final List<IdTokenRecord> idTokensForAccount = getIdTokensForAccountRecord(
                     clientId,
                     accountRecord
             );
