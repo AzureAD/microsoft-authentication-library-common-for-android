@@ -51,6 +51,7 @@ import java.util.Set;
 
 import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
+import static com.microsoft.identity.common.internal.dto.CredentialType.ID_TOKEN_TYPES;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class MsalOAuth2TokenCache
@@ -314,10 +315,8 @@ public class MsalOAuth2TokenCache
                 acct
         );
 
-        if (acctIdTokens.size() > new CredentialType[]{
-                CredentialType.IdToken,
-                CredentialType.V1IdToken
-        }.length) { // We shouldn't have more idtokens than types of idtokens... 1 each
+        if (acctIdTokens.size() > ID_TOKEN_TYPES.length) {
+            // We shouldn't have more idtokens than types of idtokens... 1 each
             Logger.warn(
                     TAG + methodName,
                     "Found more IdTokens than expected."
