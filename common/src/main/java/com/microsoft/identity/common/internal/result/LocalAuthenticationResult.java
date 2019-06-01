@@ -75,7 +75,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
                                      @NonNull final List<ICacheRecord> completeResultFromCache,
                                      @NonNull final SdkType sdkType) {
-        this(lastAuthorized, SdkType.MSAL);
+        this(lastAuthorized, sdkType);
         mCompleteResultFromCache = completeResultFromCache;
     }
 
