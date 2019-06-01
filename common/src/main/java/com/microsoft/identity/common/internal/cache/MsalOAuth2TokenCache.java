@@ -300,7 +300,8 @@ public class MsalOAuth2TokenCache
 
     /**
      * Given an AccountRecord and associated client_id, load a sparse ICacheRecord containing
-     * the provided AccountRecord and its accompanying IdTokens.
+     * the provided AccountRecord and its accompanying IdTokens. "Sparse" here indicates that any
+     * accompanying access tokens or refresh tokens will not be loaded into the ICacheRecord.
      *
      * @param clientId The client_id relative to which IdTokens should be loaded.
      * @param acct     The target AccountRecord.
