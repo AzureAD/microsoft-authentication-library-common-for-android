@@ -225,7 +225,8 @@ public abstract class BaseController {
             // Create a new AuthenticationResult to hold the saved record
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
                     savedRecord,
-                    savedRecords
+                    savedRecords,
+                    SdkType.MSAL
             );
 
             // Set the client telemetry...

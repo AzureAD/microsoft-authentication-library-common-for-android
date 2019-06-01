@@ -55,11 +55,6 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
 
     private static final String TAG = LocalAuthenticationResult.class.getName();
 
-    public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
-                                     @NonNull final List<ICacheRecord> completeResultFromCache) {
-        this(lastAuthorized, completeResultFromCache, SdkType.MSAL); // default sdk type as MSAL
-    }
-
     public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
                                      @Nullable String refreshToken,
                                      @Nullable String rawIdToken,
