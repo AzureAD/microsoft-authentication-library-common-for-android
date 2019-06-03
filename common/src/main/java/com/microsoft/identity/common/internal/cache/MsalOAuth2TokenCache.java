@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.cache;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -102,6 +103,7 @@ public class MsalOAuth2TokenCache
      * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
      * @see BrokerOAuth2TokenCache#save(AccountRecord, IdTokenRecord, AccessTokenRecord, String)
      */
+    @VisibleForTesting
     ICacheRecord save(@NonNull AccountRecord accountRecord,
                       @NonNull IdTokenRecord idTokenRecord,
                       @NonNull AccessTokenRecord accessTokenRecord) throws ClientException {
@@ -134,8 +136,13 @@ public class MsalOAuth2TokenCache
 
         final CacheRecord result = new CacheRecord();
         result.setAccount(accountRecord);
-        result.setIdToken(idTokenRecord);
         result.setAccessToken(accessTokenRecord);
+
+        if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
+            result.setV1IdToken(idTokenRecord);
+        } else {
+            result.setIdToken(idTokenRecord);
+        }
 
         return result;
     }
@@ -327,7 +334,11 @@ public class MsalOAuth2TokenCache
 
             // Set them as the result outputs
             result.setAccount(accountToSave);
-            result.setIdToken(idTokenToSave);
+            if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenToSave.getCredentialType())) {
+                result.setV1IdToken(idTokenToSave);
+            } else {
+                result.setIdToken(idTokenToSave);
+            }
         }
 
         return result;
