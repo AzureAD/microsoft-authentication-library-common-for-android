@@ -134,8 +134,13 @@ public class MsalOAuth2TokenCache
 
         final CacheRecord result = new CacheRecord();
         result.setAccount(accountRecord);
-        result.setIdToken(idTokenRecord);
         result.setAccessToken(accessTokenRecord);
+
+        if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
+            result.setV1IdToken(idTokenRecord);
+        } else {
+            result.setIdToken(idTokenRecord);
+        }
 
         return result;
     }
@@ -327,7 +332,11 @@ public class MsalOAuth2TokenCache
 
             // Set them as the result outputs
             result.setAccount(accountToSave);
-            result.setIdToken(idTokenToSave);
+            if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenToSave.getCredentialType())) {
+                result.setV1IdToken(idTokenToSave);
+            } else {
+                result.setIdToken(idTokenToSave);
+            }
         }
 
         return result;
