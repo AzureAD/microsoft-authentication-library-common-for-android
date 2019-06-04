@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.cache;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
