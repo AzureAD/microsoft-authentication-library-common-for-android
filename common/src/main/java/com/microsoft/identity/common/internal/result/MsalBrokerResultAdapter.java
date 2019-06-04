@@ -392,38 +392,38 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     /**
-     * Get the bundle from the AccountRecord list.
-     * @param records List of AccountRecord
+     * Get the bundle from the ICacheRecord list.
+     * @param records List of ICacheRecord
      * @return Bundle
      */
-    public Bundle bundleFromAccountRecordList(@NonNull final List<AccountRecord> records) {
+    public Bundle bundleFromCacheRecordList(@NonNull final List<ICacheRecord> records) {
         final Bundle resultBundle = new Bundle();
-        ArrayList<String> accountRecordString = new ArrayList<>();
-        for (AccountRecord record : records) {
-            final String recordInGson = new Gson().toJson(record, AccountRecord.class);
-            accountRecordString.add(recordInGson);
+        ArrayList<String> cacheRecordString = new ArrayList<>();
+        for (ICacheRecord record : records) {
+            final String recordInGson = new Gson().toJson(record, ICacheRecord.class);
+            cacheRecordString.add(recordInGson);
         }
 
-        resultBundle.putStringArrayList(BROKER_ACCOUNTS, accountRecordString);
+        resultBundle.putStringArrayList(BROKER_ACCOUNTS, cacheRecordString);
         return resultBundle;
     }
 
     /**
-     * Get the AccountRecord list from bundle.
+     * Get the CacheRecord list from bundle.
      * @param bundle Bundle
-     * @return List of AccountRecord
+     * @return List of CacheRecord
      */
-    public static List<AccountRecord> getAccountRecordListFromBundle(@NonNull final Bundle bundle) {
+    public static List<ICacheRecord> getCacheRecordListFromBundle(@NonNull final Bundle bundle) {
         final ArrayList<String> accountsList = bundle.getStringArrayList(BROKER_ACCOUNTS);
-        final List<AccountRecord> result = new ArrayList<>();
+        final List<ICacheRecord> result = new ArrayList<>();
         if (accountsList == null) {
             //The bundle does not contain the BROKER_RESULT_ACCOUNTS value.
             return null;
         }
 
         for (final String accountJson : accountsList) {
-            final AccountRecord accountRecord = new Gson().fromJson(accountJson, AccountRecord.class);
-            result.add(accountRecord);
+            final ICacheRecord cacheRecord = new Gson().fromJson(accountJson, ICacheRecord.class);
+            result.add(cacheRecord);
         }
 
         return result;
