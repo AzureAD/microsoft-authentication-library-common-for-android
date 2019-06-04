@@ -900,13 +900,19 @@ public class BrokerOAuth2TokenCache
     }
 
     @Override
-    public List<IdTokenRecord> getIdTokensForAccountRecord(@Nullable String clientId,
+    public List<IdTokenRecord> getIdTokensForAccountRecord(@NonNull final String clientId,
                                                            @NonNull final AccountRecord accountRecord) {
-        List<IdTokenRecord> result;
-
+        final List<IdTokenRecord> result;
         final String accountEnv = accountRecord.getEnvironment();
 
-        if (null != clientId) {
+        if (null == clientId) {
+            // If the client id was null... then presumably we want to aggregate the IdTokens across
+            // apps... why would you want that? For now, throw an Exception and see if anyone requests
+            // this feature...
+            throw new UnsupportedOperationException(
+                    "Aggregating IdTokens across ClientIds is not supported - do you have a feature request?"
+            );
+        } else {
             final OAuth2TokenCache cache = getTokenCacheForClient(
                     clientId,
                     accountEnv,
@@ -916,13 +922,6 @@ public class BrokerOAuth2TokenCache
             result = cache.getIdTokensForAccountRecord(
                     clientId,
                     accountRecord
-            );
-        } else {
-            // If the client id was null... then presumably we want to aggregate the IdTokens across
-            // apps... why would you want that? For now, throw an Exception and see if anyone requests
-            // this feature...
-            throw new UnsupportedOperationException(
-                    "Aggregating IdTokens across ClientIds is not supported - do you have a feature request?"
             );
         }
 
