@@ -432,6 +432,10 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 result.getRefreshToken(),
                 fociCacheRecords.get(0).getRefreshToken()
         );
+        assertEquals(
+                result.getIdToken(),
+                fociCacheRecords.get(0).getIdToken()
+        );
     }
 
     @Test
