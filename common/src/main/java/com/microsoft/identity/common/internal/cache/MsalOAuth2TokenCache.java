@@ -103,7 +103,6 @@ public class MsalOAuth2TokenCache
      * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
      * @see BrokerOAuth2TokenCache#save(AccountRecord, IdTokenRecord, AccessTokenRecord, String)
      */
-    @VisibleForTesting
     ICacheRecord save(@NonNull AccountRecord accountRecord,
                       @NonNull IdTokenRecord idTokenRecord,
                       @NonNull AccessTokenRecord accessTokenRecord) throws ClientException {

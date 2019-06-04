@@ -324,18 +324,18 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
-    public void saveTokensOverloadMethodV1Compat() {
+    public void save2ArgOverloadMethodV1Compat() {
         // This test asserts that if an IdToken is returned in the v1 format (broker cases),
-        // it is saved property.
+        // it is saved properly.
 
-         mOauth2TokenCache.save(defaultTestBundleV1.mGeneratedAccount, defaultTestBundleV1.mGeneratedIdToken);
+        mOauth2TokenCache.save(defaultTestBundleV1.mGeneratedAccount, defaultTestBundleV1.mGeneratedIdToken);
 
         final List<AccountRecord> accounts = accountCredentialCache.getAccounts();
         assertEquals(1, accounts.size());
         assertEquals(defaultTestBundleV1.mGeneratedAccount, accounts.get(0));
 
         final List<Credential> credentials = accountCredentialCache.getCredentials();
-        assertEquals(3, credentials.size());
+        assertEquals(1, credentials.size());
 
         final List<Credential> rts = new ArrayList<>();
         final List<Credential> ats = new ArrayList<>();
@@ -352,11 +352,9 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 fail();
             }
         }
-
-        assertEquals(defaultTestBundleV1.mGeneratedAccessToken, ats.get(0));
-        assertEquals(defaultTestBundleV1.mGeneratedRefreshToken, rts.get(0));
         assertEquals(defaultTestBundleV1.mGeneratedIdToken, ids.get(0));
     }
+
 
     @Test
     public void saveTokensWithIntersect() throws Exception {
