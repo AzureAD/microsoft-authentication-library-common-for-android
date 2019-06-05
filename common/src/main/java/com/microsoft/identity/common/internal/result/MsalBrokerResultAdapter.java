@@ -39,6 +39,7 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
+import com.microsoft.identity.common.internal.cache.CacheRecord;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -399,9 +400,11 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public Bundle bundleFromCacheRecordList(@NonNull final List<ICacheRecord> records) {
         final Bundle resultBundle = new Bundle();
         ArrayList<String> cacheRecordString = new ArrayList<>();
-        for (ICacheRecord record : records) {
-            final String recordInGson = new Gson().toJson(record, ICacheRecord.class);
-            cacheRecordString.add(recordInGson);
+        if (records != null && !records.isEmpty()) {
+            for (ICacheRecord record : records) {
+                final String recordInGson = new Gson().toJson(record, CacheRecord.class);
+                cacheRecordString.add(recordInGson);
+            }
         }
 
         resultBundle.putStringArrayList(BROKER_ACCOUNTS, cacheRecordString);
@@ -416,13 +419,13 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public static List<ICacheRecord> getCacheRecordListFromBundle(@NonNull final Bundle bundle) {
         final ArrayList<String> accountsList = bundle.getStringArrayList(BROKER_ACCOUNTS);
         final List<ICacheRecord> result = new ArrayList<>();
-        if (accountsList == null) {
+        if (accountsList == null || accountsList.isEmpty()) {
             //The bundle does not contain the BROKER_RESULT_ACCOUNTS value.
-            return null;
+            return result;
         }
 
         for (final String accountJson : accountsList) {
-            final ICacheRecord cacheRecord = new Gson().fromJson(accountJson, ICacheRecord.class);
+            final ICacheRecord cacheRecord = new Gson().fromJson(accountJson, CacheRecord.class);
             result.add(cacheRecord);
         }
 
