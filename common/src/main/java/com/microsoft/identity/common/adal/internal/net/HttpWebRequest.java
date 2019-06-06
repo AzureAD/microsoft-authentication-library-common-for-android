@@ -109,7 +109,7 @@ public class HttpWebRequest {
         HttpURLConnection.setFollowRedirects(true);
         final HttpURLConnection connection = HttpUrlConnectionFactory.createHttpUrlConnection(mUrl);
         connection.setConnectTimeout(CONNECT_TIME_OUT);
-        connection.setRequestProperty("Connection", "close");
+        //connection.setRequestProperty("Connection", "close");
 
 
         // Apply the request headers

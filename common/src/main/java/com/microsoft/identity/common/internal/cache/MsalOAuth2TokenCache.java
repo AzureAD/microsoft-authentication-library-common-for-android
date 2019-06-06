@@ -27,8 +27,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
+import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -37,10 +40,15 @@ import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +59,7 @@ import java.util.Set;
 
 import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
+import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class MsalOAuth2TokenCache
@@ -243,6 +252,100 @@ public class MsalOAuth2TokenCache
         }
 
         return result;
+    }
+
+    /**
+     * Factory method for creating an instance of MsalOAuth2TokenCache
+     *
+     * NOTE: Currently this is configured for AAD v2 as the only IDP
+     * @param context The Application Context
+     * @return
+     */
+    public static MsalOAuth2TokenCache<
+            MicrosoftStsOAuth2Strategy,
+            MicrosoftStsAuthorizationRequest,
+            MicrosoftStsTokenResponse,
+            MicrosoftAccount,
+            MicrosoftRefreshToken> create(@NonNull final Context context) {
+        final String methodName = ":initCommonCache";
+        com.microsoft.identity.common.internal.logging.Logger.verbose(
+                TAG + methodName,
+                "Creating MsalOAuth2TokenCache"
+        );
+        // Init the new-schema cache
+        final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
+        final IStorageHelper storageHelper = new StorageHelper(context);
+        final ISharedPreferencesFileManager sharedPreferencesFileManager =
+                new SharedPreferencesFileManager(
+                        context,
+                        DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
+                        storageHelper
+                );
+        final IAccountCredentialCache accountCredentialCache =
+                new SharedPreferencesAccountCredentialCache(
+                        cacheKeyValueDelegate,
+                        sharedPreferencesFileManager
+                );
+        final MicrosoftStsAccountCredentialAdapter accountCredentialAdapter =
+                new MicrosoftStsAccountCredentialAdapter();
+
+        return new MsalOAuth2TokenCache<>(
+                context,
+                accountCredentialCache,
+                accountCredentialAdapter
+        );
+    }
+
+    /**
+     * Helper method to get a cached account
+     *
+     * @param account
+     * @return
+     */
+    protected AccountRecord getCachedAccountRecord(
+            @NonNull final GenericAccount account) throws ClientException {
+        if (account == null) {
+            throw new ClientException(
+                    ErrorStrings.NO_ACCOUNT_FOUND,
+                    "No cached accounts found for the supplied homeAccountId and clientId"
+            );
+        }
+
+        final String clientId = "TODO";//parameters.getClientId();
+        final String homeAccountId = account.getHomeAccountId();
+        final String localAccountId = account.getLocalAccountId();
+
+        final AccountRecord targetAccount = getAccountWithLocalAccountId(
+                                null,
+                                clientId,
+                                localAccountId
+                        );
+
+        if (null == targetAccount) {
+            Logger.info(
+                    TAG,
+                    "No accounts found for clientId ["
+                            + clientId
+                            + ", "
+                            + "]",
+                    null
+            );
+            Logger.errorPII(
+                    TAG,
+                    "No accounts found for clientId, homeAccountId: ["
+                            + clientId
+                            + ", "
+                            + homeAccountId
+                            + "]",
+                    null
+            );
+            throw new ClientException(
+                    ErrorStrings.NO_ACCOUNT_FOUND,
+                    "No cached accounts found for the supplied homeAccountId"
+            );
+        }
+
+        return targetAccount;
     }
 
     private int removeRefreshTokensForAccount(@NonNull final AccountRecord accountToSave,
