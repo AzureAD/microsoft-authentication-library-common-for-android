@@ -58,8 +58,8 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
     public AzureActiveDirectoryAccount(@NonNull final IDToken idToken,
                                        @NonNull final ClientInfo clientInfo) {
         super(idToken, clientInfo);
-        final Map<String, String> claims = idToken.getTokenClaims();
-        mIdentityProvider = claims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
+        final Map<String, ?> claims = idToken.getTokenClaims();
+        mIdentityProvider = (String) claims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
         Logger.verbose(TAG, "Init: " + TAG);
     }
 
