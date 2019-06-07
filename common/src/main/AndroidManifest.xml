@@ -6,7 +6,7 @@
 
 
     <application>
-        <-- used by webview to enable Negotiate Challenge handling see https://chromium.googlesource.com/chromium/src/+/master/docs/webview_policies.md -->
+        <!-- used by webview to enable Negotiate Challenge handling see https://chromium.googlesource.com/chromium/src/+/master/docs/webview_policies.md -->
         <meta-data
             android:name="android.content.APP_RESTRICTIONS"
             android:resource="@xml/webview_app_restrictions" />
