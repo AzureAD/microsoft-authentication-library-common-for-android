@@ -37,7 +37,8 @@ public class TelemetryConfiguration implements Serializable {
     @SerializedName("enable_debug")
     private boolean mDebugEnabled = false;
 
-    private ITelemetryReceiver mCallback;
+    TelemetryConfiguration() {
+    }
 
     /**
      * @return true to if the pii telemetry is enabled; false otherwise.
@@ -96,21 +97,5 @@ public class TelemetryConfiguration implements Serializable {
      */
     public void setDebugEnabled(boolean debugEnabled) {
         mDebugEnabled = debugEnabled;
-    }
-
-    /**
-     * @return TelemetryCallback object
-     */
-    public ITelemetryReceiver getCallback() {
-        return mCallback;
-    }
-
-    /**
-     * Invoked when telemetry data is received.
-     *
-     * @param callback TelemetryCallback
-     */
-    public void setCallback(final ITelemetryReceiver callback) {
-        mCallback = callback;
     }
 }

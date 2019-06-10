@@ -23,14 +23,45 @@
 
 package com.microsoft.identity.common.internal.telemetry;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class EventValueMap {
-    private String mEvent;
-    private Properties mProperties;
+    private Map<String, Properties> mEventValueMap;
 
-    public EventValueMap(String event, Properties properties) {
-        mEvent = event;
-        mProperties = properties;
+    public EventValueMap() {
+        mEventValueMap = new HashMap<>();
+    }
+
+    public EventValueMap(final String event, final Properties properties) {
+        mEventValueMap = new HashMap<>();
+        mEventValueMap.put(event, properties);
+    }
+
+    public void put(final String event, final Properties properties) {
+        if (mEventValueMap != null) {
+            //TODO initialize the event with start time
+            mEventValueMap.put(
+                    event,
+                    mEventValueMap.get(event) == null ?
+                            properties :
+                            mEventValueMap.get(event).put(properties)
+            );
+        } else {
+            mEventValueMap = new HashMap<>();
+            mEventValueMap.put(event, properties);
+        }
+    }
+
+    public Map<String, Properties> getEventValueMap() {
+        return mEventValueMap;
+    }
+
+    public void put(final EventValueMap eventValueMap) {
+        if (mEventValueMap == null) {
+            mEventValueMap = new HashMap<>();
+        }
+
+        mEventValueMap.putAll(eventValueMap.getEventValueMap());
     }
 }

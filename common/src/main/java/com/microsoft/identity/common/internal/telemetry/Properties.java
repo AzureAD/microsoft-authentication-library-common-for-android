@@ -32,14 +32,24 @@ import java.util.Map;
 public class Properties {
     private Map<String, String> mProperties;
 
-    Properties(Map<String, String> properties) {
+    Properties(final Map<String, String> properties) {
         mProperties = properties;
     }
 
-    public Properties put(String key, String value) {
+    public Properties put(final String key, final String value) {
         if (mProperties == null) {
             mProperties = new HashMap<>();
-            mProperties.put(key, value);
+        }
+
+        mProperties.put(key, value);
+        return this;
+    }
+
+    public Properties put(final Properties appendProperties) {
+        if (mProperties == null) {
+            mProperties = appendProperties.getProperties();
+        } else {
+            mProperties.putAll(appendProperties.getProperties());
         }
 
         return this;

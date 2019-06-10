@@ -32,6 +32,8 @@ import android.support.annotation.Nullable;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -40,20 +42,30 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 public class Telemetry {
     static volatile Telemetry singleton = null;
     private TelemetryDispatcher mTelemetryDispatcher;
-    private Context mContext;
+    private RequestValueMap mRequestMap;
     private TelemetryConfiguration mDefaultConfiguration;
-    private ExecutorService mNetworkExecutor;
     private final TelemetryContext mTelemetryContext;
     private final static ExecutorService sTelemetryExecutor = Executors.newCachedThreadPool();
 
-    private Telemetry(final Context context,
-                      final TelemetryConfiguration configuration,
-                      final ExecutorService networkExecutor,
+    private Telemetry(final TelemetryConfiguration configuration,
                       final TelemetryContext telemetryContext) {
-        mContext = context;
         mDefaultConfiguration = configuration;
-        mNetworkExecutor = networkExecutor;
         mTelemetryContext = telemetryContext;
+    }
+
+    public static Telemetry with(Context context) {
+        if (singleton == null) {
+            if (context == null) {
+                throw new IllegalArgumentException("Context must not be null.");
+            }
+            synchronized (Telemetry.class) {
+                if (singleton == null) {
+                    Builder builder = new Builder(context);
+                    singleton = builder.build();
+                }
+            }
+        }
+        return singleton;
     }
 
     /**
@@ -75,33 +87,6 @@ public class Telemetry {
 
         // set this dispatcher
         mTelemetryDispatcher = new TelemetryDispatcher(receiver);
-    }
-
-    public static Telemetry with(Context context) {
-        if (singleton == null) {
-            if (context == null) {
-                throw new IllegalArgumentException("Context must not be null.");
-            }
-            synchronized (Telemetry.class) {
-                if (singleton == null) {
-                    Builder builder = new Builder(context);
-
-                    try {
-                        String packageName = context.getPackageName();
-                        int flags = context.getPackageManager().getApplicationInfo(packageName, 0).flags;
-                        boolean debugging = (flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
-                        if (debugging) {
-                            //TODO
-                            //builder.logLevel(LogLevel.INFO);
-                        }
-                    } catch (PackageManager.NameNotFoundException ignored) {
-                    }
-
-                    singleton = builder.build();
-                }
-            }
-        }
-        return singleton;
     }
 
     public void track(final @NonNull String event,
@@ -139,8 +124,51 @@ public class Telemetry {
                 });
     }
 
+    public void track(String eventName, Map<String, String> properties) {
+
+    }
+
     public void flush(final String requestId) {
-        //TODO
+        if (null == mTelemetryDispatcher) {
+            return;
+        }
+
+        synchronized (this) {
+
+            // check for orphaned events...
+            final List<Event> orphanedEvents = collateOrphanedEvents(requestId);
+            // Add the OrphanedEvents to the existing IEventList
+            if (null == mCompletedEvents.get(requestId)) {
+                Logger.warning(TAG, null, "No completed Events returned for RequestId.");
+                return;
+            }
+
+            mCompletedEvents.get(requestId).addAll(orphanedEvents);
+
+            final List<Event> eventsToFlush = mCompletedEvents.remove(requestId);
+
+            if (mTelemetryOnFailureOnly) {
+                // iterate over Events, if the ApiEvent was successful, don't dispatch
+                boolean shouldRemoveEvents = false;
+
+                for (Event event : eventsToFlush) {
+                    if (event instanceof ApiEvent) {
+                        ApiEvent apiEvent = (ApiEvent) event;
+                        shouldRemoveEvents = apiEvent.wasSuccessful();
+                        break;
+                    }
+                }
+
+                if (shouldRemoveEvents) {
+                    eventsToFlush.clear();
+                }
+            }
+
+            if (!eventsToFlush.isEmpty()) {
+                //append the telemetry context.
+                mTelemetryDispatcher.dispatch(eventsToFlush);
+            }
+        }
     }
 
     /**
@@ -149,10 +177,7 @@ public class Telemetry {
     public static class Builder {
         private Context mContext;
         private TelemetryConfiguration mDefaultConfiguration;
-        private ExecutorService mNetworkExecutor;
         private TelemetryContext mTelemetryContext;
-        // int flushQueueSize: should we add the limits for events to trigger flush automatically?
-        // TimeUnit timeUnit:  should we add the time interval to flush automatically?
 
         public Builder(final Context context) {
             if (context == null) {
@@ -178,18 +203,6 @@ public class Telemetry {
             mDefaultConfiguration = configuration;
             return this;
         }
-
-        /**
-         * Specify the executor service for making network calls in the background.
-         */
-        public Builder networkExecutor(final ExecutorService networkExecutor) {
-            if (networkExecutor == null) {
-                throw new IllegalArgumentException("Executor service must not be null.");
-            }
-            mNetworkExecutor = networkExecutor;
-            return this;
-        }
-
         /**
          * Create a {@link Telemetry} client.
          */
@@ -197,9 +210,7 @@ public class Telemetry {
             mTelemetryContext = TelemetryContext.create(mContext);
 
             return new Telemetry(
-                    mContext,
                     mDefaultConfiguration,
-                    mNetworkExecutor,
                     mTelemetryContext
             );
         }
