@@ -416,12 +416,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * @param bundle Bundle
      * @return List of CacheRecord
      */
-    public static List<ICacheRecord> getCacheRecordListFromBundle(@NonNull final Bundle bundle) {
+    public static List<ICacheRecord> getCacheRecordListFromBundle(@NonNull final Bundle bundle)
+            throws ClientException {
         final ArrayList<String> accountsList = bundle.getStringArrayList(BROKER_ACCOUNTS);
         final List<ICacheRecord> result = new ArrayList<>();
-        if (accountsList == null || accountsList.isEmpty()) {
+        if (accountsList == null) {
             //The bundle does not contain the BROKER_RESULT_ACCOUNTS value.
-            return result;
+            throw new ClientException(ErrorStrings.NO_ACCOUNT_FOUND,
+                    "No account found. The bundle does not contain the BROKER_RESULT_ACCOUNTS value.");
         }
 
         for (final String accountJson : accountsList) {
