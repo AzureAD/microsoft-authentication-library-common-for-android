@@ -254,7 +254,7 @@ public abstract class OAuth2TokenCache
     );
 
     /**
-     *
+     * Removes all entries from the cache.
      */
     public abstract void clearAll();
 
