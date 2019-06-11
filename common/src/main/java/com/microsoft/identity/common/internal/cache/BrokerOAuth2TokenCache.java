@@ -81,6 +81,7 @@ import static com.microsoft.identity.common.internal.cache.SharedPreferencesAcco
  * @param <GenericAccount>              The Account type to use.
  * @param <GenericRefreshToken>         The RefreshToken type to use.
  */
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class BrokerOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,
@@ -899,13 +900,19 @@ public class BrokerOAuth2TokenCache
     }
 
     @Override
-    public List<IdTokenRecord> getIdTokensForAccountRecord(@Nullable String clientId,
+    public List<IdTokenRecord> getIdTokensForAccountRecord(@NonNull final String clientId,
                                                            @NonNull final AccountRecord accountRecord) {
-        List<IdTokenRecord> result;
-
+        final List<IdTokenRecord> result;
         final String accountEnv = accountRecord.getEnvironment();
 
-        if (null != clientId) {
+        if (null == clientId) {
+            // If the client id was null... then presumably we want to aggregate the IdTokens across
+            // apps... why would you want that? For now, throw an Exception and see if anyone requests
+            // this feature...
+            throw new UnsupportedOperationException(
+                    "Aggregating IdTokens across ClientIds is not supported - do you have a feature request?"
+            );
+        } else {
             final OAuth2TokenCache cache = getTokenCacheForClient(
                     clientId,
                     accountEnv,
@@ -915,13 +922,6 @@ public class BrokerOAuth2TokenCache
             result = cache.getIdTokensForAccountRecord(
                     clientId,
                     accountRecord
-            );
-        } else {
-            // If the client id was null... then presumably we want to aggregate the IdTokens across
-            // apps... why would you want that? For now, throw an Exception and see if anyone requests
-            // this feature...
-            throw new UnsupportedOperationException(
-                    "Aggregating IdTokens across ClientIds is not supported - do you have a feature request?"
             );
         }
 
@@ -1087,6 +1087,8 @@ public class BrokerOAuth2TokenCache
      */
     @SuppressWarnings(UNCHECKED)
     public List<ICacheRecord> getFociCacheRecords() {
+        final String methodName = ":getFociCacheRecords";
+
         final List<ICacheRecord> result = new ArrayList<>();
 
         final List<BrokerApplicationMetadata> allFociApplicationMetadata =
@@ -1101,16 +1103,48 @@ public class BrokerOAuth2TokenCache
 
             // For each account, load the RT
             for (final AccountRecord account : accounts) {
+                final String homeAccountId = account.getHomeAccountId();
+                final String environment = account.getEnvironment();
+                final String clientId = fociAppMetadata.getClientId();
+                final String realm = account.getRealm();
+
+                // Load the refresh token (1 per user per environment)
                 final List<Credential> refreshTokens =
                         mFociCache
                                 .getAccountCredentialCache()
                                 .getCredentialsFilteredBy(
-                                        account.getHomeAccountId(),
-                                        account.getEnvironment(),
+                                        homeAccountId,
+                                        environment,
                                         CredentialType.RefreshToken,
-                                        fociAppMetadata.getClientId(),
+                                        clientId,
                                         null, // wildcard (*)
                                         null // wildcard (*)
+                                );
+
+                // Load the V1IdToken (v1 if adal used)
+                final List<Credential> v1IdTokens =
+                        mFociCache
+                                .getAccountCredentialCache()
+                                .getCredentialsFilteredBy(
+                                        homeAccountId,
+                                        environment,
+                                        CredentialType.V1IdToken,
+                                        clientId,
+                                        realm,
+                                        null
+                                );
+
+                // Load the IdToken
+                final List<Credential> idTokens =
+                        mFociCache
+                                .getAccountCredentialCache()
+                                .getCredentialsFilteredBy(
+                                        homeAccountId,
+                                        environment,
+                                        CredentialType.IdToken,
+                                        clientId,
+                                        realm,
+                                        null
                                 );
 
                 // Construct the ICacheRecord
@@ -1118,6 +1152,40 @@ public class BrokerOAuth2TokenCache
                     final CacheRecord cacheRecord = new CacheRecord();
                     cacheRecord.setAccount(account);
                     cacheRecord.setRefreshToken((RefreshTokenRecord) refreshTokens.get(0));
+
+                    // Add the V1IdToken (if exists, should have 1 if ADAL used)
+                    if (!v1IdTokens.isEmpty()) {
+                        Logger.verbose(
+                                TAG + methodName,
+                                "Found ["
+                                        + v1IdTokens.size()
+                                        + "] V1IdTokens"
+                        );
+
+                        cacheRecord.setV1IdToken((IdTokenRecord) v1IdTokens.get(0));
+                    } else {
+                        Logger.warn(
+                                TAG + methodName,
+                                "No V1IdTokens exist for this account."
+                        );
+                    }
+
+                    // Add the IdTokens (if exists, should have 1 if MSAL used)
+                    if (!idTokens.isEmpty()) {
+                        Logger.verbose(
+                                TAG + methodName,
+                                "Found ["
+                                        + idTokens.size()
+                                        + "] IdTokens"
+                        );
+
+                        cacheRecord.setIdToken((IdTokenRecord) idTokens.get(0));
+                    } else {
+                        Logger.warn(
+                                TAG + methodName,
+                                "No IdTokens exist for this account."
+                        );
+                    }
 
                     // Add it to the result
                     result.add(cacheRecord);

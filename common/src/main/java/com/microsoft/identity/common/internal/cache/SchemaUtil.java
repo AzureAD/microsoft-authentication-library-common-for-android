@@ -64,10 +64,10 @@ public final class SchemaUtil {
         String issuer = null;
 
         if (null != idToken) {
-            final Map<String, String> idTokenClaims = idToken.getTokenClaims();
+            final Map<String, ?> idTokenClaims = idToken.getTokenClaims();
 
             if (null != idTokenClaims) {
-                issuer = idTokenClaims.get(MicrosoftIdToken.ISSUER);
+                issuer = (String) idTokenClaims.get(MicrosoftIdToken.ISSUER);
                 Logger.verbosePII(TAG + ":" + methodName, "Issuer: " + issuer);
 
                 if (null == issuer) {
@@ -95,10 +95,10 @@ public final class SchemaUtil {
         String avatarUrl = null;
 
         if (null != idToken) {
-            final Map<String, String> idTokenClaims = idToken.getTokenClaims();
+            final Map<String, ?> idTokenClaims = idToken.getTokenClaims();
 
             if (null != idTokenClaims) {
-                avatarUrl = idTokenClaims.get(IDToken.PICTURE);
+                avatarUrl = (String) idTokenClaims.get(IDToken.PICTURE);
 
                 Logger.verbosePII(TAG + ":" + methodName, "Avatar URL: " + avatarUrl);
 
@@ -128,10 +128,10 @@ public final class SchemaUtil {
         String alternativeAccountId = null;
 
         if (null != idToken) {
-            final Map<String, String> idTokenClaims = idToken.getTokenClaims();
+            final Map<String, ?> idTokenClaims = idToken.getTokenClaims();
 
             if (null != idTokenClaims) {
-                alternativeAccountId = idTokenClaims.get("altsecid");
+                alternativeAccountId = (String) idTokenClaims.get("altsecid");
 
                 Logger.verbosePII(TAG + ":" + methodName, "alternative_account_id: " + alternativeAccountId);
 
@@ -158,8 +158,8 @@ public final class SchemaUtil {
             IDToken idToken;
             try {
                 idToken = new IDToken(idTokenString);
-                final Map<String, String> idTokenClaims = idToken.getTokenClaims();
-                final String aadVersion = idTokenClaims.get(
+                final Map<String, ?> idTokenClaims = idToken.getTokenClaims();
+                final String aadVersion = (String) idTokenClaims.get(
                         AuthenticationConstants.OAuth2.AAD_VERSION
                 );
 
@@ -184,29 +184,29 @@ public final class SchemaUtil {
             IDToken idToken;
             try {
                 idToken = new IDToken(idTokenString);
-                final Map<String, String> idTokenClaims = idToken.getTokenClaims();
+                final Map<String, ?> idTokenClaims = idToken.getTokenClaims();
 
                 if (null != idTokenClaims) {
-                    final String aadVersion = idTokenClaims.get(
+                    final String aadVersion = (String) idTokenClaims.get(
                             AuthenticationConstants.OAuth2.AAD_VERSION
                     );
                     if (!TextUtils.isEmpty(aadVersion) &&
                             aadVersion.equalsIgnoreCase(AuthenticationConstants.OAuth2.AAD_VERSION_V1)) {
 
-                        idp = idTokenClaims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
+                        idp = (String) idTokenClaims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
 
                         // For home accounts idp claim is not available, use iss claim instead.
                         if (TextUtils.isEmpty(idp)) {
                             Logger.info(TAG + ":" + methodName,
                                     "idp claim was null, using iss claim"
                             );
-                            idp = idTokenClaims.get(MicrosoftIdToken.ISSUER);
+                            idp = (String) idTokenClaims.get(MicrosoftIdToken.ISSUER);
                         }
 
                     } else if (!TextUtils.isEmpty(aadVersion) &&
                             aadVersion.equalsIgnoreCase(AuthenticationConstants.OAuth2.AAD_VERSION_V2)) {
 
-                        idp = idTokenClaims.get(MicrosoftIdToken.ISSUER);
+                        idp = (String) idTokenClaims.get(MicrosoftIdToken.ISSUER);
                     }
 
                     Logger.verbosePII(TAG + ":" + methodName, "idp: " + idp);
@@ -280,10 +280,10 @@ public final class SchemaUtil {
             if (!TextUtils.isEmpty(idTokenString) && !TextUtils.isEmpty(clientInfoString)) {
                 final IDToken idToken = new IDToken(idTokenString);
                 final ClientInfo clientInfo = new ClientInfo(clientInfoString);
-                final Map<String, String> claims = idToken.getTokenClaims();
+                final Map<String, ?> claims = idToken.getTokenClaims();
 
-                if (!TextUtils.isEmpty(claims.get(AzureActiveDirectoryIdToken.TENANT_ID))) {
-                    tenantId = claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
+                if (!TextUtils.isEmpty((CharSequence) claims.get(AzureActiveDirectoryIdToken.TENANT_ID))) {
+                    tenantId = (String) claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
                 } else if (!TextUtils.isEmpty(clientInfo.getUtid())) {
                     Logger.warn(TAG, "realm is not returned from server. Use utid as realm.");
                     tenantId = clientInfo.getUtid();

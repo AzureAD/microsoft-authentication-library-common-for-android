@@ -83,15 +83,15 @@ public abstract class MicrosoftAccount extends BaseAccount {
         Logger.verbose(TAG, "Init: " + TAG);
         mIDToken = idToken;
         mRawClientInfo = clientInfo.getRawClientInfo();
-        final Map<String, String> claims = idToken.getTokenClaims();
+        final Map<String, ?> claims = idToken.getTokenClaims();
         mUniqueId = getUniqueId(claims);
         mDisplayableId = getDisplayableId(claims);
-        mName = claims.get(AzureActiveDirectoryIdToken.NAME);
-        mGivenName = claims.get(AzureActiveDirectoryIdToken.GIVEN_NAME);
-        mFamilyName = claims.get(AzureActiveDirectoryIdToken.FAMILY_NAME);
-        mMiddleName = claims.get(AzureActiveDirectoryIdToken.MIDDLE_NAME);
-        if (!StringUtil.isEmpty(claims.get(AzureActiveDirectoryIdToken.TENANT_ID))) {
-            mTenantId = claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
+        mName = (String) claims.get(AzureActiveDirectoryIdToken.NAME);
+        mGivenName = (String) claims.get(AzureActiveDirectoryIdToken.GIVEN_NAME);
+        mFamilyName = (String) claims.get(AzureActiveDirectoryIdToken.FAMILY_NAME);
+        mMiddleName = (String) claims.get(AzureActiveDirectoryIdToken.MIDDLE_NAME);
+        if (!StringUtil.isEmpty((String) claims.get(AzureActiveDirectoryIdToken.TENANT_ID))) {
+            mTenantId = (String) claims.get(AzureActiveDirectoryIdToken.TENANT_ID);
         } else if (!StringUtil.isEmpty(clientInfo.getUtid())) {
             Logger.warnPII(TAG, "realm is not returned from server. Use utid as realm.");
             mTenantId = clientInfo.getUtid();
@@ -107,8 +107,8 @@ public abstract class MicrosoftAccount extends BaseAccount {
 
         long mPasswordExpiration = 0;
 
-        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.PASSWORD_EXPIRATION))) {
-            mPasswordExpiration = Long.parseLong(claims.get(AzureActiveDirectoryIdToken.PASSWORD_EXPIRATION));
+        if (!StringExtensions.isNullOrBlank((String) claims.get(AzureActiveDirectoryIdToken.PASSWORD_EXPIRATION))) {
+            mPasswordExpiration = Long.parseLong((String) claims.get(AzureActiveDirectoryIdToken.PASSWORD_EXPIRATION));
         }
 
         if (mPasswordExpiration > 0) {
@@ -120,24 +120,24 @@ public abstract class MicrosoftAccount extends BaseAccount {
         }
 
         mPasswordChangeUrl = null;
-        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.PASSWORD_CHANGE_URL))) {
-            mPasswordChangeUrl = Uri.parse(claims.get(AzureActiveDirectoryIdToken.PASSWORD_CHANGE_URL));
+        if (!StringExtensions.isNullOrBlank((String) claims.get(AzureActiveDirectoryIdToken.PASSWORD_CHANGE_URL))) {
+            mPasswordChangeUrl = Uri.parse((String) claims.get(AzureActiveDirectoryIdToken.PASSWORD_CHANGE_URL));
         }
     }
 
     protected abstract String getDisplayableId(final Map<String, ?> claims);
 
-    private String getUniqueId(final Map<String, String> claims) {
+    private String getUniqueId(final Map<String, ?> claims) {
         final String methodName = "getUniqueId";
 
         String uniqueId = null;
 
-        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.OBJECT_ID))) {
+        if (!StringExtensions.isNullOrBlank((String) claims.get(AzureActiveDirectoryIdToken.OBJECT_ID))) {
             Logger.info(TAG + ":" + methodName, "Using ObjectId as uniqueId");
-            uniqueId = claims.get(AzureActiveDirectoryIdToken.OBJECT_ID);
-        } else if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.SUBJECT))) {
+            uniqueId = (String) claims.get(AzureActiveDirectoryIdToken.OBJECT_ID);
+        } else if (!StringExtensions.isNullOrBlank((String) claims.get(AzureActiveDirectoryIdToken.SUBJECT))) {
             Logger.info(TAG + ":" + methodName, "Using Subject as uniqueId");
-            uniqueId = claims.get(AzureActiveDirectoryIdToken.SUBJECT);
+            uniqueId = (String) claims.get(AzureActiveDirectoryIdToken.SUBJECT);
         }
 
         return uniqueId;

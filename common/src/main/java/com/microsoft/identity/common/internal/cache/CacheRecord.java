@@ -29,6 +29,14 @@ import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
 public class CacheRecord implements ICacheRecord {
 
+    public static class GsonSerializedNames {
+        public static final String PROPERTY_ACCOUNT = "mAccount";
+        public static final String PROPERTY_ACCESS_TOKEN = "mAccessToken";
+        public static final String PROPERTY_REFRESH_TOKEN = "mRefreshToken";
+        public static final String PROPERTY_ID_TOKEN = "mIdToken";
+        public static final String PROPERTY_V1_ID_TOKEN = "mV1IdToken";
+    }
+
     private AccountRecord mAccount;
     private AccessTokenRecord mAccessToken;
     private RefreshTokenRecord mRefreshToken;

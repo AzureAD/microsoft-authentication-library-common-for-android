@@ -44,7 +44,7 @@ public class AzureActiveDirectoryB2CIdToken extends IDToken {
     }
 
     @Override
-    public Map<String, String> getTokenClaims() {
+    public Map<String, ?> getTokenClaims() {
         return super.getTokenClaims();
     }
 }

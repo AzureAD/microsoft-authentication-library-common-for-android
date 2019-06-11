@@ -214,7 +214,6 @@ public abstract class BaseController {
                     "Token request was successful"
             );
 
-            // TODO this is the new result that will become the TenantProfile...
             final List<ICacheRecord> savedRecords = tokenCache.saveAndLoadAggregatedAccountData(
                     strategy,
                     getAuthorizationRequest(strategy, parameters),
