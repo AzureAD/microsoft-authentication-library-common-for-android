@@ -318,45 +318,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     /**
-     * Get the bundle from the ICacheRecord list.
-     *
-     * @param cacheRecords List of ICacheRecord
-     * @return Bundle
-     */
-    public Bundle bundleFromCacheRecordList(@NonNull final List<ICacheRecord> cacheRecords) {
-        final Bundle resultBundle = new Bundle();
-        if (cacheRecords != null) {
-            final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
-            }.getType();
-            final String recordInGson = new Gson().toJson(cacheRecords, listOfCacheRecords);
-            resultBundle.putString(BROKER_ACCOUNTS, recordInGson);
-        }
-        return resultBundle;
-    }
-
-    /**
-     * Get the ICacheRecord list from bundle.
-     *
-     * @param bundle Bundle
-     * @return List of CacheRecord
-     */
-    public static List<ICacheRecord> getCacheRecordListFromBundle(@NonNull final Bundle bundle)
-            throws ClientException {
-
-        final String accountJson = bundle.getString(BROKER_ACCOUNTS);
-
-        if (accountJson == null) {
-            //The bundle does not contain the BROKER_RESULT_ACCOUNTS value.
-            throw new ClientException(ErrorStrings.NO_ACCOUNT_FOUND,
-                    "No account found. The bundle does not contain the BROKER_RESULT_ACCOUNTS value.");
-        }
-
-        final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
-        }.getType();
-        return new Gson().fromJson(accountJson, listOfCacheRecords);
-    }
-
-    /**
      * Get a bundle from an Account Mode string.
      *
      * @param isSharedDevice true if this device is registered as shared. False otherwise.
@@ -398,17 +359,17 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     /**
-     * Get current account's AccountRecord from bundle.
+     * Get current account's ICacheRecord from bundle.
      *
      * @param bundle Bundle
      * @return List<ICacheRecord> of the current account. This could be null.
      */
-    public static List<ICacheRecord> currentAccountFromBundle(@NonNull final Bundle bundle) {
+    public static List<ICacheRecord> currentAccountFromBundle(@NonNull final Bundle bundle) throws ClientException {
         final String accountJson = bundle.getString(BROKER_CURRENT_ACCOUNT);
 
         if (accountJson == null) {
-            //The bundle does not contain the BROKER_CURRENT_ACCOUNT value.
-            return null;
+            throw new ClientException(ErrorStrings.NO_ACCOUNT_FOUND,
+                    "No account found. The bundle does not contain the BROKER_CURRENT_ACCOUNT value.");
         }
 
         GsonBuilder builder = new GsonBuilder();
