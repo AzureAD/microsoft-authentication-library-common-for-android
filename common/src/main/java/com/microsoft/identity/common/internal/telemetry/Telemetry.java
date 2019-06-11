@@ -24,15 +24,12 @@ package com.microsoft.identity.common.internal.telemetry;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,7 +39,7 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 public class Telemetry {
     static volatile Telemetry singleton = null;
     private TelemetryDispatcher mTelemetryDispatcher;
-    private RequestValueMap mRequestMap;
+    private Map<String, Map<String, BaseEvent>> mRequestMap; //Map<requestId, Map<eventName, event object>>;
     private TelemetryConfiguration mDefaultConfiguration;
     private final TelemetryContext mTelemetryContext;
     private final static ExecutorService sTelemetryExecutor = Executors.newCachedThreadPool();
@@ -51,6 +48,7 @@ public class Telemetry {
                       final TelemetryContext telemetryContext) {
         mDefaultConfiguration = configuration;
         mTelemetryContext = telemetryContext;
+        mRequestMap = new HashMap<>();
     }
 
     public static Telemetry with(Context context) {
@@ -89,43 +87,57 @@ public class Telemetry {
         mTelemetryDispatcher = new TelemetryDispatcher(receiver);
     }
 
-    public void track(final @NonNull String event,
-                      final @Nullable Properties properties,
-                      final @NonNull String requestId,
-                      final @Nullable TelemetryConfiguration options) {
+    public void track(final @NonNull String requestId, final BaseEvent event) {
+        track(requestId, event.getClass().getSimpleName(), event, null);
+    }
 
-        if (StringUtil.isEmpty(event)) {
-            throw new IllegalArgumentException("event must not be null or empty.");
+    public void track(final @NonNull String requestId,
+                      final @NonNull String eventName,
+                      final @NonNull String propertyKey,
+                      final @Nullable String propertyValue) {
+        if (StringUtil.isEmpty(requestId)) {
+            throw new IllegalArgumentException("request id must not be null or empty.");
+        }
+
+        if (StringUtil.isEmpty(eventName)) {
+            throw new IllegalArgumentException("event name must not be null or empty.");
+        }
+
+        if (StringUtil.isEmpty(propertyKey)) {
+            throw new IllegalArgumentException("eventName must not be null or empty.");
         }
 
         sTelemetryExecutor.submit(
                 new Runnable() {
                     @Override
                     public void run() {
-                        final TelemetryConfiguration finalOptions;
-                        if (options == null) {
-                            finalOptions = mDefaultConfiguration;
-                        } else {
-                            finalOptions = options;
-                        }
-
-                        final Properties finalProperties;
-                        if (properties == null) {
-                            finalProperties = new Properties(new HashMap<String, String>());
-                        } else {
-                            finalProperties = properties;
-                        }
-
-                        //enqueue the properties to the event of the requestId
-//                        TrackPayload.Builder builder =
-//                                new TrackPayload.Builder().event(event).properties(finalProperties);
-//                        fillAndEnqueue(builder, finalOptions);
+                        //TODO
                     }
                 });
     }
 
-    public void track(String eventName, Map<String, String> properties) {
+    public void track(final String requestId,
+                      final String eventName,
+                      final BaseEvent event,
+                      final TelemetryConfiguration options) {
+        if (StringUtil.isEmpty(requestId)) {
+            throw new IllegalArgumentException("requestId must not be null or empty.");
+        }
 
+        sTelemetryExecutor.submit(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        //Overwrite the telemetry configuration if the passed-in options is not null.
+                        if (options != null) {
+                            mDefaultConfiguration = options;
+                        }
+
+                        if (null != event) {
+                            //TODO
+                        }
+                    }
+                });
     }
 
     public void flush(final String requestId) {
@@ -134,40 +146,7 @@ public class Telemetry {
         }
 
         synchronized (this) {
-
-            // check for orphaned events...
-            final List<Event> orphanedEvents = collateOrphanedEvents(requestId);
-            // Add the OrphanedEvents to the existing IEventList
-            if (null == mCompletedEvents.get(requestId)) {
-                Logger.warning(TAG, null, "No completed Events returned for RequestId.");
-                return;
-            }
-
-            mCompletedEvents.get(requestId).addAll(orphanedEvents);
-
-            final List<Event> eventsToFlush = mCompletedEvents.remove(requestId);
-
-            if (mTelemetryOnFailureOnly) {
-                // iterate over Events, if the ApiEvent was successful, don't dispatch
-                boolean shouldRemoveEvents = false;
-
-                for (Event event : eventsToFlush) {
-                    if (event instanceof ApiEvent) {
-                        ApiEvent apiEvent = (ApiEvent) event;
-                        shouldRemoveEvents = apiEvent.wasSuccessful();
-                        break;
-                    }
-                }
-
-                if (shouldRemoveEvents) {
-                    eventsToFlush.clear();
-                }
-            }
-
-            if (!eventsToFlush.isEmpty()) {
-                //append the telemetry context.
-                mTelemetryDispatcher.dispatch(eventsToFlush);
-            }
+            //Get the list of events belonging to the request id.
         }
     }
 

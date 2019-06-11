@@ -28,6 +28,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 
 import com.microsoft.identity.common.BuildConfig;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.platform.Device;
 
 import java.util.Map;
@@ -39,7 +40,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * It is attached to every outgoing telemetry calls.
  *
  */
-public class TelemetryContext extends ValueMap {
+public class TelemetryContext extends Properties {
+    private static final String TAG = TelemetryContext.class.getSimpleName();
+
     // App
     private static final String APP_NAME_KEY = "app_name";
     private static final String APP_VERSION_KEY = "app_version";
@@ -60,7 +63,7 @@ public class TelemetryContext extends ValueMap {
     private static final String OS_VERSION_KEY = "os_version";
     private static final String TIMEZONE_KEY = "timezone";
 
-    TelemetryContext(Map<String, Object> delegate) {
+    TelemetryContext(ConcurrentHashMap<String, String> delegate) {
         super(delegate);
     }
 
@@ -70,7 +73,7 @@ public class TelemetryContext extends ValueMap {
      * is thread safe.
      */
     static synchronized TelemetryContext create(final Context context) {
-        TelemetryContext telemetryContext = new TelemetryContext(new ConcurrentHashMap<String, Object>());
+        TelemetryContext telemetryContext = new TelemetryContext(new ConcurrentHashMap<String, String>());
         telemetryContext.putApp(context);
         telemetryContext.putDevice();
         telemetryContext.putLibrary();
@@ -83,13 +86,13 @@ public class TelemetryContext extends ValueMap {
         try {
             PackageManager packageManager = context.getPackageManager();
             PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
-            Map<String, Object> app = new ConcurrentHashMap<>();
-            put(APP_NAME_KEY, packageInfo.applicationInfo.loadLabel(packageManager));
+            put(APP_NAME_KEY, packageInfo.applicationInfo.loadLabel(packageManager).toString());
             put(APP_VERSION_KEY, packageInfo.versionName);
             put(APP_PACKAGE_NAME_KEY, packageInfo.packageName);
             put(APP_BUILD_KEY, String.valueOf(packageInfo.versionCode));
-        } catch (PackageManager.NameNotFoundException e) {
-            // ignore
+        } catch (final PackageManager.NameNotFoundException e) {
+            //Not throw the exception to break the auth request when getting the app's telemetry
+            Logger.warn(TAG, "Unable to find the app's package name from PackageManager.");
         }
     }
 

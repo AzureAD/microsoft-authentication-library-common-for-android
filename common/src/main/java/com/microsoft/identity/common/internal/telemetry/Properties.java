@@ -23,22 +23,41 @@
 
 package com.microsoft.identity.common.internal.telemetry;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Class for the event properties.
+ * The base class for the event properties.
  */
 public class Properties {
-    private Map<String, String> mProperties;
+    /*
+    There are several choices for the type of Map.
+    ╔═══════════════╦═══════════════════╦═══════════════════╦═════════════════════╗
+    ║   Property    ║     HashMap       ║    Hashtable      ║  ConcurrentHashMap  ║
+    ╠═══════════════╬═══════════════════╬═══════════════════╩═════════════════════╣
+    ║      Null     ║     allowed       ║              not allowed                ║
+    ║  values/keys  ║                   ║                                         ║
+    ╠═══════════════╬═══════════════════╬═════════════════════════════════════════╣
+    ║Is thread-safe ║       no          ║                  yes                    ║
+    ╠═══════════════╬═══════════════════╬═══════════════════╦═════════════════════╣
+    ║     Lock      ║       not         ║ locks the whole   ║ locks the portion   ║
+    ║  mechanism    ║    applicable     ║       map         ║                     ║
+    ╠═══════════════╬═══════════════════╩═══════════════════╬═════════════════════╣
+    ║   Iterator    ║               fail-fast               ║ weakly consistent   ║
+    ╚═══════════════╩═══════════════════════════════════════╩═════════════════════╝
+     */
+    private ConcurrentHashMap<String, String> mProperties;
 
-    Properties(final Map<String, String> properties) {
+    Properties(final ConcurrentHashMap<String, String> properties) {
         mProperties = properties;
+    }
+
+    Properties() {
+        mProperties = new ConcurrentHashMap<>();
     }
 
     public Properties put(final String key, final String value) {
         if (mProperties == null) {
-            mProperties = new HashMap<>();
+            mProperties = new ConcurrentHashMap<>();
         }
 
         mProperties.put(key, value);
@@ -55,7 +74,7 @@ public class Properties {
         return this;
     }
 
-    public Map<String, String> getProperties() {
+    public ConcurrentHashMap<String, String> getProperties() {
         return mProperties;
     }
 }
