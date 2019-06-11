@@ -381,6 +381,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     /**
      * Get a bundle from current account's List<ICacheRecord>.
+     * 
      * @param cacheRecords current account's List<ICacheRecord>.
      * @return Bundle
      */
