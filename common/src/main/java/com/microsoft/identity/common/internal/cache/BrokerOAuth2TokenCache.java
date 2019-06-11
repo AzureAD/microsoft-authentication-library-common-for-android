@@ -1063,6 +1063,13 @@ public class BrokerOAuth2TokenCache
         );
     }
 
+    @Override
+    public void clearAll() {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
     /**
      * Tests if a clientId is 'known' to the cache. A clientId is known if a token has been
      * previously saved to the cache with it.

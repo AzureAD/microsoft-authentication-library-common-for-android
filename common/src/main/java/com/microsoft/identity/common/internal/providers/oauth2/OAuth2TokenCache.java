@@ -254,6 +254,11 @@ public abstract class OAuth2TokenCache
     );
 
     /**
+     *
+     */
+    public abstract void clearAll();
+
+    /**
      * Returns a Set of all of the ClientIds which have tokens stored in this cache.
      *
      * @return A Set of ClientIds.

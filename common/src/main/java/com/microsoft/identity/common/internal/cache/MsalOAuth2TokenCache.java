@@ -1041,6 +1041,18 @@ public class MsalOAuth2TokenCache
     }
 
     @Override
+    public void clearAll() {
+        final String methodName = ":clearAll";
+
+        Logger.warn(
+                TAG + methodName,
+                "Clearing cache."
+        );
+
+        mAccountCredentialCache.clearAll();
+    }
+
+    @Override
     protected Set<String> getAllClientIds() {
         final String methodName = ":getAllClientIds";
 

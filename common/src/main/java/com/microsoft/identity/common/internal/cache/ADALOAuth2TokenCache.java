@@ -291,6 +291,13 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
+    public void clearAll() {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
     protected Set<String> getAllClientIds() {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
