@@ -41,17 +41,10 @@ import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
-import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.ICacheRecordGsonAdapter;
@@ -59,8 +52,6 @@ import com.microsoft.identity.common.internal.util.ICacheRecordGsonAdapter;
 import org.json.JSONException;
 
 import java.lang.reflect.Type;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -259,71 +250,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         baseException.setRefreshTokenAge(brokerResult.getRefreshTokenAge());
 
         return baseException;
-
-    }
-
-
-    /**
-     * Helper to get AccessTokenRecord from BrokerResult
-     */
-    private AccessTokenRecord getAccessTokenRecord(@NonNull final BrokerResult brokerResult) throws ServiceException {
-
-        final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
-
-        try {
-            final ClientInfo clientInfo = new ClientInfo(brokerResult.getClientInfo());
-            accessTokenRecord.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            accessTokenRecord.setRealm(
-                    SchemaUtil.getTenantId(brokerResult.getClientInfo(),
-                            brokerResult.getIdToken())
-            );
-
-            final URL authorityUrl = new URL(brokerResult.getAuthority());
-            final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.
-                    getAzureActiveDirectoryCloud(authorityUrl);
-            if (cloudEnv != null) {
-                Logger.info(TAG, "Using preferred cache host name...");
-                accessTokenRecord.setEnvironment(cloudEnv.getPreferredCacheHostName());
-            } else {
-                accessTokenRecord.setEnvironment(
-                        authorityUrl.getHost()
-                );
-            }
-        } catch (MalformedURLException e) {
-            Logger.error(TAG, "Malformed authority url ", e);
-        }
-        accessTokenRecord.setClientId(brokerResult.getClientId());
-        accessTokenRecord.setSecret(brokerResult.getAccessToken());
-        accessTokenRecord.setAccessTokenType(brokerResult.getTokenType());
-        accessTokenRecord.setAuthority(brokerResult.getAuthority());
-        accessTokenRecord.setTarget(brokerResult.getScope());
-        accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
-
-        accessTokenRecord.setExpiresOn(
-                String.valueOf(brokerResult.getExpiresOn())
-        );
-
-        accessTokenRecord.setExtendedExpiresOn(
-                String.valueOf(brokerResult.getExtendedExpiresOn())
-        );
-
-        accessTokenRecord.setCachedAt(
-                String.valueOf(brokerResult.getCachedAt())
-        );
-        return accessTokenRecord;
-    }
-
-    /**
-     * Helper method to retrieve IAccountRecord from BrokerResult
-     */
-    private IAccountRecord getAccountRecord(@NonNull final BrokerResult brokerResult) throws ServiceException {
-        final ClientInfo clientInfo = new ClientInfo(brokerResult.getClientInfo());
-        final MicrosoftStsAccount microsoftStsAccount = new MicrosoftStsAccount(
-                new IDToken(brokerResult.getIdToken()),
-                clientInfo
-        );
-        microsoftStsAccount.setEnvironment(brokerResult.getEnvironment());
-        return new AccountRecord(microsoftStsAccount);
     }
 
     /**
@@ -331,7 +257,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      */
     private IntuneAppProtectionPolicyRequiredException getIntuneProtectionRequiredException(
             @NonNull final BrokerResult brokerResult) {
-
         final IntuneAppProtectionPolicyRequiredException exception =
                 new IntuneAppProtectionPolicyRequiredException(
                         brokerResult.getErrorCode(),
@@ -362,13 +287,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * Helper method to retrieve ServiceException from BrokerResult
      */
     private ServiceException getServiceException(@NonNull final BrokerResult brokerResult) {
-
         final ServiceException serviceException = new ServiceException(
                 brokerResult.getErrorCode(),
                 brokerResult.getErrorMessage(),
                 null
         );
+
         serviceException.setOauthSubErrorCode(brokerResult.getSubErrorCode());
+
         try {
             serviceException.setHttpResponseBody(
                     brokerResult.getHttpResponseBody() != null ?
@@ -417,6 +343,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public static List<AccountRecord> getAccountRecordListFromBundle(@NonNull final Bundle bundle) {
         final ArrayList<String> accountsList = bundle.getStringArrayList(BROKER_ACCOUNTS);
         final List<AccountRecord> result = new ArrayList<>();
+
         if (accountsList == null) {
             //The bundle does not contain the BROKER_RESULT_ACCOUNTS value.
             return null;
