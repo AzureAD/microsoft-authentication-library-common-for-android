@@ -31,6 +31,9 @@ import com.microsoft.identity.common.internal.cache.ICacheRecord;
 
 import java.lang.reflect.Type;
 
+/**
+ * Custom Gson Deserializer to handle ICacheRecord -> CacheRecord (concrete class) mapping.
+ */
 public class ICacheRecordGsonAdapter implements JsonDeserializer<ICacheRecord> {
 
     @Override
