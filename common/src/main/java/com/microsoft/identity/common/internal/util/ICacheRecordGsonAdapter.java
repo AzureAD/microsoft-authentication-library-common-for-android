@@ -25,47 +25,21 @@ package com.microsoft.identity.common.internal.util;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.internal.cache.CacheRecord;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.IdTokenRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
 import java.lang.reflect.Type;
 
+/**
+ * Custom Gson Deserializer to handle ICacheRecord -> CacheRecord (concrete class) mapping.
+ */
 public class ICacheRecordGsonAdapter implements JsonDeserializer<ICacheRecord> {
 
     @Override
     public ICacheRecord deserialize(final JsonElement json,
                                     final Type typeOfT,
                                     final JsonDeserializationContext context) throws JsonParseException {
-        // TODO See if this can be simplified
-        final JsonObject iCacheRecord = json.getAsJsonObject();
-
-        final JsonElement accountRecordJsonElement = iCacheRecord.get(CacheRecord.GsonSerializedNames.PROPERTY_ACCOUNT);
-        final JsonElement accessTokenJsonElement = iCacheRecord.get(CacheRecord.GsonSerializedNames.PROPERTY_ACCESS_TOKEN);
-        final JsonElement refreshTokenJsonElement = iCacheRecord.get(CacheRecord.GsonSerializedNames.PROPERTY_REFRESH_TOKEN);
-        final JsonElement idTokenJsonElement = iCacheRecord.get(CacheRecord.GsonSerializedNames.PROPERTY_ID_TOKEN);
-        final JsonElement v1IdTokenJsonElement = iCacheRecord.get(CacheRecord.GsonSerializedNames.PROPERTY_V1_ID_TOKEN);
-
-        // Assemble the native types
-        final AccountRecord accountRecord = context.deserialize(accountRecordJsonElement, AccountRecord.class);
-        final AccessTokenRecord accessTokenRecord = context.deserialize(accessTokenJsonElement, AccessTokenRecord.class);
-        final RefreshTokenRecord refreshTokenRecord = context.deserialize(refreshTokenJsonElement, RefreshTokenRecord.class);
-        final IdTokenRecord idTokenRecord = context.deserialize(idTokenJsonElement, IdTokenRecord.class);
-        final IdTokenRecord v1IdTokenRecord = context.deserialize(v1IdTokenJsonElement, IdTokenRecord.class);
-
-        // Set them on the result
-        final CacheRecord cacheRecord = new CacheRecord();
-        cacheRecord.setAccount(accountRecord);
-        cacheRecord.setAccessToken(accessTokenRecord);
-        cacheRecord.setRefreshToken(refreshTokenRecord);
-        cacheRecord.setIdToken(idTokenRecord);
-        cacheRecord.setV1IdToken(v1IdTokenRecord);
-
-        return cacheRecord;
+        return context.deserialize(json, CacheRecord.class);
     }
 }
