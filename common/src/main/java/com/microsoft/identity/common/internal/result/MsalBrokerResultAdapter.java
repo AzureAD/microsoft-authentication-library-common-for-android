@@ -318,47 +318,42 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     /**
-     * Get the bundle from the AccountRecord list.
+     * Get the bundle from the ICacheRecord list.
      *
-     * @param records List of AccountRecord
+     * @param cacheRecords List of ICacheRecord
      * @return Bundle
      */
-    public Bundle bundleFromCacheRecordList(@NonNull final List<ICacheRecord> records) {
+    public Bundle bundleFromCacheRecordList(@NonNull final List<ICacheRecord> cacheRecords) {
         final Bundle resultBundle = new Bundle();
-        ArrayList<String> cacheRecordString = new ArrayList<>();
-        if (records != null && !records.isEmpty()) {
-            for (ICacheRecord record : records) {
-                final String recordInGson = new Gson().toJson(record, CacheRecord.class);
-                cacheRecordString.add(recordInGson);
-            }
+        if (cacheRecords != null) {
+            final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
+            }.getType();
+            final String recordInGson = new Gson().toJson(cacheRecords, listOfCacheRecords);
+            resultBundle.putString(BROKER_ACCOUNTS, recordInGson);
         }
-
-        resultBundle.putStringArrayList(BROKER_ACCOUNTS, cacheRecordString);
         return resultBundle;
     }
 
     /**
-     * Get the AccountRecord list from bundle.
+     * Get the ICacheRecord list from bundle.
      *
      * @param bundle Bundle
      * @return List of CacheRecord
      */
     public static List<ICacheRecord> getCacheRecordListFromBundle(@NonNull final Bundle bundle)
             throws ClientException {
-        final ArrayList<String> accountsList = bundle.getStringArrayList(BROKER_ACCOUNTS);
-        final List<ICacheRecord> result = new ArrayList<>();
-        if (accountsList == null) {
+
+        final String accountJson = bundle.getString(BROKER_ACCOUNTS);
+
+        if (accountJson == null) {
             //The bundle does not contain the BROKER_RESULT_ACCOUNTS value.
             throw new ClientException(ErrorStrings.NO_ACCOUNT_FOUND,
                     "No account found. The bundle does not contain the BROKER_RESULT_ACCOUNTS value.");
         }
 
-        for (final String accountJson : accountsList) {
-            final ICacheRecord cacheRecord = new Gson().fromJson(accountJson, CacheRecord.class);
-            result.add(cacheRecord);
-        }
-
-        return result;
+        final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
+        }.getType();
+        return new Gson().fromJson(accountJson, listOfCacheRecords);
     }
 
     /**
