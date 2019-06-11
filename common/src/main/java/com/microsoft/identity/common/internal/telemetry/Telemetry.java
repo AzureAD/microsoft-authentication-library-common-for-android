@@ -24,12 +24,17 @@ package com.microsoft.identity.common.internal.telemetry;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,17 +42,21 @@ import java.util.concurrent.Executors;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 public class Telemetry {
+    private final static String TAG = Telemetry.class.getSimpleName();
     static volatile Telemetry singleton = null;
     private TelemetryDispatcher mTelemetryDispatcher;
     private Map<String, Map<String, BaseEvent>> mRequestMap; //Map<requestId, Map<eventName, event object>>;
     private TelemetryConfiguration mDefaultConfiguration;
     private final TelemetryContext mTelemetryContext;
+    private final boolean mIsDebugging;
     private final static ExecutorService sTelemetryExecutor = Executors.newCachedThreadPool();
 
     private Telemetry(final TelemetryConfiguration configuration,
-                      final TelemetryContext telemetryContext) {
+                      final TelemetryContext telemetryContext,
+                      final boolean isDebugging) {
         mDefaultConfiguration = configuration;
         mTelemetryContext = telemetryContext;
+        mIsDebugging = isDebugging;
         mRequestMap = new HashMap<>();
     }
 
@@ -64,6 +73,14 @@ public class Telemetry {
             }
         }
         return singleton;
+    }
+
+    public Map<String, Map<String, BaseEvent>> getRequestMap() {
+        return mRequestMap;
+    }
+
+    public Map<String, BaseEvent> getTelemetryMap(final String requestId) {
+        return mRequestMap.get(requestId);
     }
 
     /**
@@ -146,7 +163,18 @@ public class Telemetry {
         }
 
         synchronized (this) {
-            //Get the list of events belonging to the request id.
+            List<Map<String, String>> result = new ArrayList<>();
+            //check the configuration
+            if (!mDefaultConfiguration.isDebugEnabled() && mIsDebugging) {
+                return;
+            }
+
+            //Add the telemetry context map
+            result.add(mTelemetryContext.getProperties());
+
+            //Append all the events of the request id
+
+            //call the dispatcher to pass the result to the receiver
         }
     }
 
@@ -157,6 +185,7 @@ public class Telemetry {
         private Context mContext;
         private TelemetryConfiguration mDefaultConfiguration;
         private TelemetryContext mTelemetryContext;
+        private Boolean mIsDebugging;
 
         public Builder(final Context context) {
             if (context == null) {
@@ -168,6 +197,17 @@ public class Telemetry {
             mContext = context.getApplicationContext();
             if (mContext == null) {
                 throw new IllegalArgumentException("Application context must not be null.");
+            }
+
+            mTelemetryContext = TelemetryContext.create(mContext);
+
+            try {
+                String packageName = context.getPackageName();
+                int flags = context.getPackageManager().getApplicationInfo(packageName, 0).flags;
+                mIsDebugging = (flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+            } catch (final PackageManager.NameNotFoundException exception) {
+                Logger.warn(TAG, "The application is not found from PackageManager.");
+                mIsDebugging = true;
             }
         }
 
@@ -186,11 +226,10 @@ public class Telemetry {
          * Create a {@link Telemetry} client.
          */
         public Telemetry build() {
-            mTelemetryContext = TelemetryContext.create(mContext);
-
             return new Telemetry(
                     mDefaultConfiguration,
-                    mTelemetryContext
+                    mTelemetryContext,
+                    mIsDebugging
             );
         }
     }

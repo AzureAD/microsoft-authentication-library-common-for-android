@@ -10,5 +10,9 @@ public class HttpEvent extends BaseEvent {
     public static final String HTTP_API_VERSION = "api_version";
     public static final String REQUEST_ID_HEADER = "x_ms_request_id";
 
+    // Network
+    private static final String NETWORK_CONNECTION_KEY = "network_connection";
+    private static final String NETWORK_POWER_OPTIMIZATION_KEY = "network_carrier";
+
     //TODO
 }

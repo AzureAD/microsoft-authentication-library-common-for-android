@@ -55,9 +55,6 @@ public class TelemetryContext extends Properties {
     // Library
     private static final String LIBRARY_NAME_KEY = "library_name";
     private static final String LIBRARY_VERSION_KEY = "library_version";
-    // Network
-    private static final String NETWORK_CONNECTION_KEY = "network_connection";
-    private static final String NETWORK_POWER_OPTIMIZATION_KEY = "network_carrier";
     // OS
     private static final String OS_NAME_KEY = "os_name";
     private static final String OS_VERSION_KEY = "os_version";
