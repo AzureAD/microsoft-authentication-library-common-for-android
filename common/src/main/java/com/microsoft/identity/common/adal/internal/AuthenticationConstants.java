@@ -821,6 +821,21 @@ public final class AuthenticationConstants {
         public static final String ACCOUNT_USERINFO_TENANTID = "account.userinfo.tenantid";
 
         /**
+         * String of key for environment.
+         */
+        public static final String ACCOUNT_USERINFO_ENVIRONMENT = "account.userinfo.environment";
+
+        /**
+         * String of key for authority type.
+         */
+        public static final String ACCOUNT_USERINFO_AUTHORITY_TYPE = "account.userinfo.authority.type";
+
+        /**
+         * String of key for account id token record.
+         */
+        public static final String ACCOUNT_USERINFO_ID_TOKEN = "account.userinfo.id.token";
+
+        /**
          * String of key for adal version.
          */
         public static final String ADAL_VERSION_KEY = "adal.version.key";

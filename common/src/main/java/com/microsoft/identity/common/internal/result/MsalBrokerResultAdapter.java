@@ -380,16 +380,18 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     /**
-     * Get a bundle from current account's AccountRecord.
-     *
-     * @param record current account's AccountRecord.
+     * Get a bundle from current account's List<ICacheRecord>.
+     * @param cacheRecords current account's List<ICacheRecord>.
      * @return Bundle
      */
-    public static Bundle bundleFromCurrentAccount(@NonNull final AccountRecord record) {
+    public static Bundle bundleFromCurrentAccount(@NonNull final List<ICacheRecord> cacheRecords) {
         final Bundle resultBundle = new Bundle();
 
-        final String recordInGson = new Gson().toJson(record, AccountRecord.class);
-        resultBundle.putString(BROKER_CURRENT_ACCOUNT, recordInGson);
+        if (cacheRecords != null) {
+            final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>(){}.getType();
+            final String recordInGson = new Gson().toJson(cacheRecords, listOfCacheRecords);
+            resultBundle.putString(BROKER_CURRENT_ACCOUNT, recordInGson);
+        }
 
         return resultBundle;
     }
@@ -398,7 +400,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * Get current account's AccountRecord from bundle.
      *
      * @param bundle Bundle
-     * @return AccountRecord of the current account. This could be null.
+     * @return List<ICacheRecord> of the current account. This could be null.
      */
     public static List<ICacheRecord> currentAccountFromBundle(@NonNull final Bundle bundle) {
         final String accountJson = bundle.getString(BROKER_CURRENT_ACCOUNT);
@@ -408,8 +410,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             return null;
         }
 
-        final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
-        }.getType();
-        return new Gson().fromJson(accountJson, listOfCacheRecords);
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter());
+
+        final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {}.getType();
+        return builder.create().fromJson(accountJson, listOfCacheRecords);
     }
 }
