@@ -150,14 +150,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     @Override
     public ILocalAuthenticationResult authenticationResultFromBundle(@NonNull final Bundle resultBundle) {
-        final BrokerResult brokerResult =
-                new GsonBuilder()
-                        .registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter())
-                        .create()
-                        .fromJson(
-                                resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2),
-                                BrokerResult.class
-                        );
+        final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
 
         if (brokerResult == null) {
             Logger.error(TAG, "Broker Result not returned from Broker, ", null);
@@ -177,14 +170,21 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     }
 
+    public static BrokerResult brokerResultFromBundle(@NonNull final Bundle resultBundle) {
+        return new GsonBuilder()
+                .registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter())
+                .create()
+                .fromJson(
+                        resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2),
+                        BrokerResult.class
+                );
+    }
+
     @Override
     public BaseException baseExceptionFromBundle(@NonNull final Bundle resultBundle) {
         Logger.verbose(TAG, "Constructing exception from result bundle");
 
-        final BrokerResult brokerResult = new Gson().fromJson(
-                resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2),
-                BrokerResult.class
-        );
+        final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
 
         if (brokerResult == null) {
             Logger.error(TAG, "Broker Result not returned from Broker, ", null);
@@ -379,16 +379,20 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     /**
-     * Get a bundle from current account's AccountRecord.
+     * Get a bundle from current account's List<ICacheRecord>.
      *
-     * @param record current account's AccountRecord.
+     * @param cacheRecords current account's List<ICacheRecord>.
      * @return Bundle
      */
-    public static Bundle bundleFromCurrentAccount(@NonNull final AccountRecord record) {
+    public static Bundle bundleFromCurrentAccount(@NonNull final List<ICacheRecord> cacheRecords) {
         final Bundle resultBundle = new Bundle();
 
-        final String recordInGson = new Gson().toJson(record, AccountRecord.class);
-        resultBundle.putString(BROKER_CURRENT_ACCOUNT, recordInGson);
+        if (cacheRecords != null) {
+            final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
+            }.getType();
+            final String recordInGson = new Gson().toJson(cacheRecords, listOfCacheRecords);
+            resultBundle.putString(BROKER_CURRENT_ACCOUNT, recordInGson);
+        }
 
         return resultBundle;
     }
@@ -397,7 +401,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * Get current account's AccountRecord from bundle.
      *
      * @param bundle Bundle
-     * @return AccountRecord of the current account. This could be null.
+     * @return List<ICacheRecord> of the current account. This could be null.
      */
     public static List<ICacheRecord> currentAccountFromBundle(@NonNull final Bundle bundle) {
         final String accountJson = bundle.getString(BROKER_CURRENT_ACCOUNT);
@@ -407,8 +411,11 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             return null;
         }
 
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter());
+
         final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
         }.getType();
-        return new Gson().fromJson(accountJson, listOfCacheRecords);
+        return builder.create().fromJson(accountJson, listOfCacheRecords);
     }
 }
