@@ -24,14 +24,12 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 
 import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.DeviceRegistrationRequiredException;
-import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
@@ -161,13 +159,6 @@ public class ExceptionAdapter {
 
     }
 
-    private static boolean isIntunePolicyRequiredError(final String oAuthError, final String oAuthSubError) {
-
-        return  !TextUtils.isEmpty(oAuthError) &&
-                !TextUtils.isEmpty(oAuthSubError) &&
-                oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT) &&
-                oAuthSubError.equalsIgnoreCase(AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED);
-    }
 
     /**
      * Get an exception object from the given oAuth values.
@@ -185,14 +176,7 @@ public class ExceptionAdapter {
             outErr = new UiRequiredException(
                     errorResponse.getError(),
                     errorResponse.getErrorDescription());
-        }else if(isIntunePolicyRequiredError(errorResponse.getError(), errorResponse.getSubError())){
-
-            outErr = new IntuneAppProtectionPolicyRequiredException(
-                    errorResponse.getError(),
-                    errorResponse.getErrorDescription()
-            );
-        }
-        else {
+        } else {
             outErr = new ServiceException(
                     errorResponse.getError(),
                     errorResponse.getErrorDescription(),
