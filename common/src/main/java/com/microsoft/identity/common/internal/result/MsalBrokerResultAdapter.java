@@ -40,6 +40,7 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
+import com.microsoft.identity.common.internal.cache.CacheRecord;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -317,47 +318,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     /**
-     * Get the bundle from the AccountRecord list.
-     *
-     * @param records List of AccountRecord
-     * @return Bundle
-     */
-    public Bundle bundleFromAccountRecordList(@NonNull final List<AccountRecord> records) {
-        final Bundle resultBundle = new Bundle();
-        ArrayList<String> accountRecordString = new ArrayList<>();
-        for (AccountRecord record : records) {
-            final String recordInGson = new Gson().toJson(record, AccountRecord.class);
-            accountRecordString.add(recordInGson);
-        }
-
-        resultBundle.putStringArrayList(BROKER_ACCOUNTS, accountRecordString);
-        return resultBundle;
-    }
-
-    /**
-     * Get the AccountRecord list from bundle.
-     *
-     * @param bundle Bundle
-     * @return List of AccountRecord
-     */
-    public static List<AccountRecord> getAccountRecordListFromBundle(@NonNull final Bundle bundle) {
-        final ArrayList<String> accountsList = bundle.getStringArrayList(BROKER_ACCOUNTS);
-        final List<AccountRecord> result = new ArrayList<>();
-
-        if (accountsList == null) {
-            //The bundle does not contain the BROKER_RESULT_ACCOUNTS value.
-            return null;
-        }
-
-        for (final String accountJson : accountsList) {
-            final AccountRecord accountRecord = new Gson().fromJson(accountJson, AccountRecord.class);
-            result.add(accountRecord);
-        }
-
-        return result;
-    }
-
-    /**
      * Get a bundle from an Account Mode string.
      *
      * @param isSharedDevice true if this device is registered as shared. False otherwise.
@@ -399,17 +359,17 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     /**
-     * Get current account's AccountRecord from bundle.
+     * Get current account's ICacheRecord from bundle.
      *
      * @param bundle Bundle
      * @return List<ICacheRecord> of the current account. This could be null.
      */
-    public static List<ICacheRecord> currentAccountFromBundle(@NonNull final Bundle bundle) {
+    public static List<ICacheRecord> currentAccountFromBundle(@NonNull final Bundle bundle) throws ClientException {
         final String accountJson = bundle.getString(BROKER_CURRENT_ACCOUNT);
 
         if (accountJson == null) {
-            //The bundle does not contain the BROKER_CURRENT_ACCOUNT value.
-            return null;
+            throw new ClientException(ErrorStrings.NO_ACCOUNT_FOUND,
+                    "No account found. The bundle does not contain the BROKER_CURRENT_ACCOUNT value.");
         }
 
         GsonBuilder builder = new GsonBuilder();
