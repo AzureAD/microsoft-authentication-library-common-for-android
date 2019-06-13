@@ -234,6 +234,24 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
+    public List<ICacheRecord> saveAndLoadAggregatedAccountData(
+            @NonNull final AccountRecord accountRecord,
+            @NonNull final IdTokenRecord idTokenRecord,
+            @NonNull final AccessTokenRecord accessTokenRecord,
+            @Nullable final String familyId) throws ClientException {
+        // TODO Wire this up _for real_
+        final ICacheRecord cacheRecord = save(
+                accountRecord,
+                idTokenRecord,
+                accessTokenRecord,
+                familyId
+        );
+
+        return new ArrayList<ICacheRecord>() {{
+            add(cacheRecord);
+        }};
+    }
+
     @Override
     public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
                              @NonNull final GenericAuthorizationRequest request,
