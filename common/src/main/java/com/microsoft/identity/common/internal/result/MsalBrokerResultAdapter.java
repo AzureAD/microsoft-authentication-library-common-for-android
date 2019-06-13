@@ -349,13 +349,16 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final Bundle resultBundle = new Bundle();
 
         if (cacheRecords != null) {
-            final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
-            }.getType();
-            final String recordInGson = new Gson().toJson(cacheRecords, listOfCacheRecords);
-            resultBundle.putString(BROKER_CURRENT_ACCOUNT, recordInGson);
+            resultBundle.putString(BROKER_CURRENT_ACCOUNT, getJsonStringFromICacheRecordList(cacheRecords));
         }
 
         return resultBundle;
+    }
+
+    public static String getJsonStringFromICacheRecordList(List<ICacheRecord> cacheRecords) {
+        final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
+        }.getType();
+        return new Gson().toJson(cacheRecords, listOfCacheRecords);
     }
 
     /**
@@ -372,6 +375,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     "No account found. The bundle does not contain the BROKER_CURRENT_ACCOUNT value.");
         }
 
+        return getICacheRecordListFromJsonString(accountJson);
+    }
+
+    public static List<ICacheRecord> getICacheRecordListFromJsonString(String accountJson) {
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter());
 
