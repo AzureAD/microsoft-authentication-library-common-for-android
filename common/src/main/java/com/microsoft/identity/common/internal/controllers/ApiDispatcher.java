@@ -356,7 +356,12 @@ public class ApiDispatcher {
     }
 
     public static void completeInteractive(int requestCode, int resultCode, final Intent data) {
-        sCommand.notify(requestCode, resultCode, data);
+        final String methodName = ":completeInteractive";
+        if(sCommand != null) {
+            sCommand.notify(requestCode, resultCode, data);
+        }else {
+            Logger.warn(TAG + methodName, "sCommand is null, No interactive call in progress to complete.");
+        }
     }
 
     public static void submitSilent(final TokenCommand command) {
