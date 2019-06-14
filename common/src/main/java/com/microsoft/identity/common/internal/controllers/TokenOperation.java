@@ -24,11 +24,7 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
 
-import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.io.IOException;

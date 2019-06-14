@@ -432,6 +432,10 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 result.getRefreshToken(),
                 fociCacheRecords.get(0).getRefreshToken()
         );
+        assertEquals(
+                result.getIdToken(),
+                fociCacheRecords.get(0).getIdToken()
+        );
     }
 
     @Test
@@ -656,7 +660,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        final AccountRecord account = mBrokerOAuth2TokenCache.getAccountWithLocalAccountId(
+        final AccountRecord account = mBrokerOAuth2TokenCache.getAccountByLocalAccountId(
                 ENVIRONMENT,
                 CLIENT_ID,
                 LOCAL_ACCOUNT_ID
@@ -675,7 +679,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mockResponse
         );
 
-        final AccountRecord account = mBrokerOAuth2TokenCache.getAccountWithLocalAccountId(
+        final AccountRecord account = mBrokerOAuth2TokenCache.getAccountByLocalAccountId(
                 ENVIRONMENT,
                 CLIENT_ID,
                 LOCAL_ACCOUNT_ID

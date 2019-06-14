@@ -58,8 +58,8 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
     public AzureActiveDirectoryAccount(@NonNull final IDToken idToken,
                                        @NonNull final ClientInfo clientInfo) {
         super(idToken, clientInfo);
-        final Map<String, String> claims = idToken.getTokenClaims();
-        mIdentityProvider = claims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
+        final Map<String, ?> claims = idToken.getTokenClaims();
+        mIdentityProvider = (String) claims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
         Logger.verbose(TAG, "Init: " + TAG);
     }
 
@@ -85,17 +85,17 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
     }
 
     @Override
-    protected String getDisplayableId(Map<String, String> claims) {
+    protected String getDisplayableId(Map<String, ?> claims) {
         final String methodName = "getDisplayableId";
 
         String displayableId = null;
 
-        if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.UPN))) {
+        if (!StringExtensions.isNullOrBlank((String) claims.get(AzureActiveDirectoryIdToken.UPN))) {
             Logger.info(TAG + ":" + methodName, "Returning upn as displayableId");
-            displayableId = claims.get(AzureActiveDirectoryIdToken.UPN);
-        } else if (!StringExtensions.isNullOrBlank(claims.get(AzureActiveDirectoryIdToken.EMAIL))) {
+            displayableId = (String) claims.get(AzureActiveDirectoryIdToken.UPN);
+        } else if (!StringExtensions.isNullOrBlank((String) claims.get(AzureActiveDirectoryIdToken.EMAIL))) {
             Logger.info(TAG + ":" + methodName, "Returning email as displayableId");
-            displayableId = claims.get(AzureActiveDirectoryIdToken.EMAIL);
+            displayableId = (String) claims.get(AzureActiveDirectoryIdToken.EMAIL);
         }
 
         return displayableId;

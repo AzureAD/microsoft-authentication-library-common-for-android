@@ -64,6 +64,8 @@ public enum CredentialType {
      */
     Certificate;
 
+    public static final CredentialType[] ID_TOKEN_TYPES = new CredentialType[]{IdToken, V1IdToken};
+
     /**
      * Get the credential type name set.
      *

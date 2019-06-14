@@ -30,7 +30,7 @@ import android.util.Pair;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.UserCancelException;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
@@ -64,7 +64,7 @@ public class ApiDispatcher {
             public void run() {
                 initializeDiagnosticContext();
 
-                List<AccountRecord> result = null;
+                List<ICacheRecord> result = null;
                 BaseException baseException = null;
                 Handler handler = new Handler(Looper.getMainLooper());
 
@@ -91,7 +91,7 @@ public class ApiDispatcher {
                         }
                     });
                 } else {
-                    final List<AccountRecord> finalAccountsList = result;
+                    final List<ICacheRecord> finalAccountsList = result;
 
                     handler.post(new Runnable() {
                         @Override
@@ -164,7 +164,7 @@ public class ApiDispatcher {
         synchronized (sLock) {
             // Send a broadcast to cancel if any active auth request is present.
             command.getParameters().getAppContext().sendBroadcast(
-                            new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
+                    new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
             );
 
             sInteractiveExecutor.execute(new Runnable() {

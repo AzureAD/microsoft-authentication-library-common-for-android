@@ -95,12 +95,15 @@ public abstract class BaseController {
             final Intent data
     );
 
-    public abstract AcquireTokenResult acquireTokenSilent(final AcquireTokenSilentOperationParameters request)
-            throws IOException, BaseException;
+    public abstract AcquireTokenResult acquireTokenSilent(
+            final AcquireTokenSilentOperationParameters request) throws IOException, BaseException;
 
-    public abstract List<AccountRecord> getAccounts(final OperationParameters parameters) throws ClientException, InterruptedException, ExecutionException, RemoteException, OperationCanceledException, IOException, AuthenticatorException;
+    public abstract List<ICacheRecord> getAccounts(final OperationParameters parameters)
+            throws ClientException, InterruptedException, ExecutionException, RemoteException,
+            OperationCanceledException, IOException, AuthenticatorException;
 
-    public abstract boolean removeAccount(final OperationParameters parameters) throws BaseException, InterruptedException, ExecutionException, RemoteException;
+    public abstract boolean removeAccount(final OperationParameters parameters)
+            throws BaseException, InterruptedException, ExecutionException, RemoteException;
 
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
@@ -211,16 +214,18 @@ public abstract class BaseController {
                     "Token request was successful"
             );
 
-            final ICacheRecord savedRecord = tokenCache.save(
+            final List<ICacheRecord> savedRecords = tokenCache.saveAndLoadAggregatedAccountData(
                     strategy,
                     getAuthorizationRequest(strategy, parameters),
                     tokenResult.getTokenResponse()
             );
+            final ICacheRecord savedRecord = savedRecords.get(0);
 
             // Create a new AuthenticationResult to hold the saved record
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
                     savedRecord,
-                    parameters.getSdkType()
+                    savedRecords,
+                    SdkType.MSAL
             );
 
             // Set the client telemetry...
@@ -339,7 +344,7 @@ public abstract class BaseController {
         refreshTokenRequest.setRedirectUri(parameters.getRedirectUri());
 
         if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
-            ((MicrosoftTokenRequest)refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
+            ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
         }
 
         //NOTE: this should be moved to the strategy; however requires a larger refactor
@@ -357,10 +362,10 @@ public abstract class BaseController {
         return strategy.requestToken(refreshTokenRequest);
     }
 
-    protected ICacheRecord saveTokens(@NonNull final OAuth2Strategy strategy,
-                                      @NonNull final AuthorizationRequest request,
-                                      @NonNull final TokenResponse tokenResponse,
-                                      @NonNull final OAuth2TokenCache tokenCache) throws ClientException {
+    protected List<ICacheRecord> saveTokens(@NonNull final OAuth2Strategy strategy,
+                                            @NonNull final AuthorizationRequest request,
+                                            @NonNull final TokenResponse tokenResponse,
+                                            @NonNull final OAuth2TokenCache tokenCache) throws ClientException {
         final String methodName = ":saveTokens";
 
         Logger.verbose(
@@ -368,7 +373,11 @@ public abstract class BaseController {
                 "Saving tokens..."
         );
 
-        return tokenCache.save(strategy, request, tokenResponse);
+        return tokenCache.saveAndLoadAggregatedAccountData(
+                strategy,
+                request,
+                tokenResponse
+        );
     }
 
     protected boolean refreshTokenIsNull(@NonNull final ICacheRecord cacheRecord) {
@@ -477,7 +486,7 @@ public abstract class BaseController {
         final AccountRecord targetAccount =
                 parameters
                         .getTokenCache()
-                        .getAccountWithLocalAccountId(
+                        .getAccountByLocalAccountId(
                                 null,
                                 clientId,
                                 localAccountId
@@ -510,7 +519,7 @@ public abstract class BaseController {
         return targetAccount;
     }
 
-    protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse){
+    protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
         final String tenantId = SchemaUtil.getTenantId(
                 microsoftTokenResponse.getClientInfo(),
                 microsoftTokenResponse.getIdToken()

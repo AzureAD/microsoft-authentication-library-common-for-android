@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-
 public class AllAccounts extends AzureActiveDirectoryAudience {
 
     public static final String ALL_ACCOUNTS_TENANT_ID = "common";

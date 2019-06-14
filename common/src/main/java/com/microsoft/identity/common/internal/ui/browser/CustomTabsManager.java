@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.browser;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.support.annotation.NonNull;
