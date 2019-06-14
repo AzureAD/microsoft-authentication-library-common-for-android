@@ -234,12 +234,12 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     public List<ICacheRecord> saveAndLoadAggregatedAccountData(
             @NonNull final AccountRecord accountRecord,
             @NonNull final IdTokenRecord idTokenRecord,
             @NonNull final AccessTokenRecord accessTokenRecord,
             @Nullable final String familyId) throws ClientException {
-        // TODO Wire this up _for real_
         final ICacheRecord cacheRecord = save(
                 accountRecord,
                 idTokenRecord,
@@ -247,9 +247,22 @@ public class BrokerOAuth2TokenCache
                 familyId
         );
 
-        return new ArrayList<ICacheRecord>() {{
-            add(cacheRecord);
-        }};
+        final String clientId = cacheRecord.getAccessToken().getClientId();
+        final String target = cacheRecord.getAccessToken().getTarget();
+        final String environment = cacheRecord.getAccessToken().getEnvironment();
+
+        // Now get the cache we just saved to....
+        final MsalOAuth2TokenCache cache = getTokenCacheForClient(
+                clientId,
+                environment,
+                mCallingProcessUid
+        );
+
+        return (List<ICacheRecord>) cache.loadWithAggregatedAccountData(
+                clientId,
+                target,
+                cacheRecord.getAccount()
+        );
     }
 
     @Override
