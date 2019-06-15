@@ -37,6 +37,9 @@ public class TelemetryConfiguration implements Serializable {
     @SerializedName("enable_debug")
     private boolean mDebugEnabled = false;
 
+    @SerializedName("enable_telemetry")
+    private boolean mTelemetryEnabled = true;
+
     TelemetryConfiguration() {
     }
 
@@ -57,7 +60,7 @@ public class TelemetryConfiguration implements Serializable {
      *
      * @param piiEnabled true to enable the pii telemetry; false otherwise.
      */
-    public void setPiiEnabled(boolean piiEnabled) {
+    public void setPiiEnabled(final boolean piiEnabled) {
         mPiiEnabled = piiEnabled;
     }
 
@@ -76,7 +79,7 @@ public class TelemetryConfiguration implements Serializable {
      *
      * @param notifyOnFailureOnly true to enable telemetry when error occurred, false otherwise.
      */
-    public void setNotifyOnFailureOnly(boolean notifyOnFailureOnly) {
+    public void setNotifyOnFailureOnly(final boolean notifyOnFailureOnly) {
         mNotifyOnFailureOnly = notifyOnFailureOnly;
     }
 
@@ -95,7 +98,15 @@ public class TelemetryConfiguration implements Serializable {
      *
      * @param debugEnabled true to enable debugging for telemetry, false otherwise.
      */
-    public void setDebugEnabled(boolean debugEnabled) {
+    public void setDebugEnabled(final boolean debugEnabled) {
         mDebugEnabled = debugEnabled;
+    }
+
+    public boolean isTelemetryEnabled() {
+        return mTelemetryEnabled;
+    }
+
+    public void enableTelemetry(final boolean telemetryEnabled) {
+        mTelemetryEnabled = telemetryEnabled;
     }
 }

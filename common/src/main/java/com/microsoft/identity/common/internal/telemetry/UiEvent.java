@@ -1,8 +1,41 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry;
 
-public class UiEvent extends BaseEvent {
-    public static final String USER_CANCEL = "user_cancel";
-    public static final String HTTP_USER_AGENT = "user_agent"; //webview or browser
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
-    //TODO
+public class UiEvent extends BaseEvent {
+    private static final String TAG = UiEvent.class.getSimpleName();
+
+    public UiEvent() {
+        super();
+        putEventName(TELEMETRY_EVENT_UI_EVENT);
+    }
+
+    /*
+    TELEMETRY_KEY_UI_CANCELLED
+    HTTP_USER_AGENT
+    TELEMETRY_KEY_LOGIN_HINT
+    TELEMETRY_KEY_NTLM_HANDLED ?
+     */
 }

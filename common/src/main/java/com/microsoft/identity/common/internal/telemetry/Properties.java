@@ -29,22 +29,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * The base class for the event properties.
  */
 public class Properties {
-    /*
-    There are several choices for the type of Map.
-    ╔═══════════════╦═══════════════════╦═══════════════════╦═════════════════════╗
-    ║   Property    ║     HashMap       ║    Hashtable      ║  ConcurrentHashMap  ║
-    ╠═══════════════╬═══════════════════╬═══════════════════╩═════════════════════╣
-    ║      Null     ║     allowed       ║              not allowed                ║
-    ║  values/keys  ║                   ║                                         ║
-    ╠═══════════════╬═══════════════════╬═════════════════════════════════════════╣
-    ║Is thread-safe ║       no          ║                  yes                    ║
-    ╠═══════════════╬═══════════════════╬═══════════════════╦═════════════════════╣
-    ║     Lock      ║       not         ║ locks the whole   ║ locks the portion   ║
-    ║  mechanism    ║    applicable     ║       map         ║                     ║
-    ╠═══════════════╬═══════════════════╩═══════════════════╬═════════════════════╣
-    ║   Iterator    ║               fail-fast               ║ weakly consistent   ║
-    ╚═══════════════╩═══════════════════════════════════════╩═════════════════════╝
-     */
     private ConcurrentHashMap<String, String> mProperties;
 
     Properties(final ConcurrentHashMap<String, String> properties) {
@@ -61,6 +45,16 @@ public class Properties {
         }
 
         mProperties.put(key, value);
+        return this;
+    }
+
+    public Properties remove(final String key) {
+        mProperties.remove(key);
+        return this;
+    }
+
+    public Properties remove(final String key, final String value) {
+        mProperties.remove(key, value);
         return this;
     }
 

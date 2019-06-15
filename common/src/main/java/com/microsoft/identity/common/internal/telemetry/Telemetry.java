@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -45,7 +46,7 @@ public class Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
     static volatile Telemetry singleton = null;
     private TelemetryDispatcher mTelemetryDispatcher;
-    private Map<String, Map<String, BaseEvent>> mRequestMap; //Map<requestId, Map<eventName, event object>>;
+    private Map<String, Properties> mAggregatedTelemetryMap;
     private TelemetryConfiguration mDefaultConfiguration;
     private final TelemetryContext mTelemetryContext;
     private final boolean mIsDebugging;
@@ -57,7 +58,7 @@ public class Telemetry {
         mDefaultConfiguration = configuration;
         mTelemetryContext = telemetryContext;
         mIsDebugging = isDebugging;
-        mRequestMap = new HashMap<>();
+        mAggregatedTelemetryMap = new HashMap<>();
     }
 
     public static Telemetry with(Context context) {
@@ -75,12 +76,8 @@ public class Telemetry {
         return singleton;
     }
 
-    public Map<String, Map<String, BaseEvent>> getRequestMap() {
-        return mRequestMap;
-    }
-
-    public Map<String, BaseEvent> getTelemetryMap(final String requestId) {
-        return mRequestMap.get(requestId);
+    public Map<String, Properties> getRequestMap() {
+        return mAggregatedTelemetryMap;
     }
 
     /**
@@ -128,7 +125,14 @@ public class Telemetry {
                 new Runnable() {
                     @Override
                     public void run() {
-                        //TODO
+                        //enqueue the event
+                        final String key = getPropertyKey(requestId, eventName);
+                        if (mAggregatedTelemetryMap.get(key) == null)
+                        {
+                            mAggregatedTelemetryMap.put(key, new Properties().put(propertyKey, propertyValue));
+                        } else {
+                            mAggregatedTelemetryMap.get(key).put(propertyKey, propertyValue);
+                        }
                     }
                 });
     }
@@ -151,7 +155,14 @@ public class Telemetry {
                         }
 
                         if (null != event) {
-                            //TODO
+                            //enqueue the event
+                            final String key = getPropertyKey(requestId, eventName);
+                            if (mAggregatedTelemetryMap.get(key) == null)
+                            {
+                                mAggregatedTelemetryMap.put(key, event);
+                            } else {
+                                mAggregatedTelemetryMap.get(key).put(event);
+                            }
                         }
                     }
                 });
@@ -232,6 +243,13 @@ public class Telemetry {
                     mIsDebugging
             );
         }
+    }
+
+    private String getPropertyKey(@NonNull final String requestId, @NonNull final String eventName) {
+        final List<String> key = new LinkedList<>();
+        key.add(requestId);
+        key.add(eventName);
+        return StringUtil.join('_', key);
     }
 
     /**

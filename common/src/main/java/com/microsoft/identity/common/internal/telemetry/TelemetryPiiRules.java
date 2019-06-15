@@ -20,50 +20,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-
 package com.microsoft.identity.common.internal.telemetry;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-public class TelemetryDispatcher {
-    private final ITelemetryReceiver mEventReceiver;
-
-    /**
-     * Constructs a new EventDispatcher.
-     *
-     * @param receiver the {@link ITelemetryReceiver} to receive {@link Telemetry} data.
-     */
-    TelemetryDispatcher(final ITelemetryReceiver receiver) {
-        mEventReceiver = receiver;
-    }
-
-    /**
-     * Returns the {@link ITelemetryReceiver} to which telemetry data is dispatched.
-     *
-     * @return the event receiver.
-     */
-    ITelemetryReceiver getReceiver() {
-        return mEventReceiver;
-    }
-
-    /**
-     * Dispatches the {@link Telemetry} instances associated to receiver.
-     *
-     * @param eventsToPublish the Events to publish.
-     */
-    void dispatch(final List<Properties> eventsToPublish) {
-        if (null == mEventReceiver) {
-            return;
-        }
-
-        final Map<String, String> eventsForPublication = new HashMap<>();
-
-        for (final Properties event : eventsToPublish) {
-            eventsForPublication.putAll(event.getProperties());
-        }
-
-        mEventReceiver.onTelemetryReceived(eventsForPublication);
+public class TelemetryPiiRules {
+    //enum of pii properties names based on TelemetryEventStrings
+    public boolean isPii (final String propertyName) {
+        //TODO
+        throw new UnsupportedOperationException("Not implemented");
     }
 }

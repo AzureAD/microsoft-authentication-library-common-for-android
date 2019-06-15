@@ -52,6 +52,7 @@ public class TelemetryContext extends Properties {
     private static final String DEVICE_MANUFACTURER_KEY = "device_manufacturer";
     private static final String DEVICE_MODEL_KEY = "device_model";
     private static final String DEVICE_NAME_KEY = "device_name";
+    private static final String DEVICE_ID_KEY = "device_id";
     // Library
     private static final String LIBRARY_NAME_KEY = "library_name";
     private static final String LIBRARY_VERSION_KEY = "library_version";
