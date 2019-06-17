@@ -676,6 +676,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_FINAL_URL = "adal.final.url";
 
         /**
+         * String of the default browser package name.
+         */
+        public static final String DEFAULT_BROWSER_PACKAGE_NAME = "default.browser.package.name";
+
+        /**
          * String of account initial request.
          */
         public static final String ACCOUNT_INITIAL_REQUEST = "account.initial.request";
@@ -1104,11 +1109,6 @@ public final class AuthenticationConstants {
          * String to return account list from broker.
          */
         public static final String BROKER_ACCOUNTS = "broker_accounts";
-
-        /**
-         * String to return current account from broker (only available in shared device mode)
-         */
-        public static final String BROKER_CURRENT_ACCOUNT = "broker_current_account";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.

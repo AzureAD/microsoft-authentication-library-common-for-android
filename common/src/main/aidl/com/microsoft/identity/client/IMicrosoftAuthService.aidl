@@ -42,7 +42,7 @@ interface IMicrosoftAuthService {
 
     Bundle getDeviceMode();
 
-    Bundle getCurrentAccount();
+    Bundle getCurrentAccount(in Bundle bundle);
 
     Bundle removeAccountFromSharedDevice(in Bundle bundle);
 }
