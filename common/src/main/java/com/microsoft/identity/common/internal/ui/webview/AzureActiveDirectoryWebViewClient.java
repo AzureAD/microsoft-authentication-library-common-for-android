@@ -213,6 +213,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodName = "#processWebsiteRequest";
         final PackageHelper packageHelper = new PackageHelper(getActivity().getApplicationContext());
         if (url.startsWith(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL)
+                && packageHelper.isPackageInstalledAndEnabled(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)
                 && packageHelper.isPackageInstalledAndEnabled(AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME)
                 && AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE.equals(
                 packageHelper.getCurrentSignatureForPackage(AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME))) {
