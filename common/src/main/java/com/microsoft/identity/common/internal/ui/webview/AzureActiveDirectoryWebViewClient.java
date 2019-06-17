@@ -217,6 +217,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 && packageHelper.isPackageInstalledAndEnabled(AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME)
                 && AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE.equals(
                 packageHelper.getCurrentSignatureForPackage(AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME))) {
+            // TODO: This flow should really check if the Microsoft Intune or the Company Portal apps are installed,
+            // which is the correct client app to launch depending on the enrollment, and launch that app, to permanently skip the browser.
+            // Also it must handle 3rd party MDMs as appropriate, which will depend on the browser flow determining the authority.
             Logger.verbose(TAG + methodName, "It is a device CA request on IPPhone. Company Portal is installed.");
             try {
                 Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
