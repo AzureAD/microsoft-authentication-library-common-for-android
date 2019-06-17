@@ -939,6 +939,23 @@ public final class AuthenticationConstants {
         public static final String AZURE_AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
 
         /**
+         * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
+         * The only supported detection of this phone is the application install state.
+         * The Microsoft Intune app depends on the browser opening the fwlink, and in the app manifest registers to handle the URL.
+         * In the 1906 both apps will be installed on COBO devices, but the MDM CA link must open the browser to then open Microsoft Intune.
+         * On IP Phones devices (without a browser) the Company Portal must be launched.
+         * App name of Teams Phone app to detect it for the MDM Device CA redirect.
+         */
+        public static final String IPPHONE_APP_PACKAGE_NAME = "com.microsoft.skype.teams.ipphone";
+
+        /**
+         * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
+         * The only supported detection of this phone is the application install state.
+         * App signature of Teams Phone app to detect it for the MDM Device CA redirect.
+         */
+        public static final String IPPHONE_APP_SIGNATURE = "fcg80qvoM1YMKJZibjBwQcDfOno=";
+
+        /**
          * The value for pkeyauth redirect.
          */
         public static final String PKEYAUTH_REDIRECT = "urn:http-auth:PKeyAuth";
