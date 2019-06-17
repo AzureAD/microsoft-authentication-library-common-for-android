@@ -54,6 +54,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftToken
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
@@ -121,6 +122,19 @@ public abstract class BaseController {
 
         if (parameters instanceof AcquireTokenOperationParameters) {
             AcquireTokenOperationParameters acquireTokenOperationParameters = (AcquireTokenOperationParameters) parameters;
+            // Set the multipleCloudAware and slice fields.
+            if (acquireTokenOperationParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
+                final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) acquireTokenOperationParameters.getAuthority();
+                ((MicrosoftAuthorizationRequest.Builder) builder)
+                        .setAuthority(requestAuthority.getAuthorityURL())
+                        .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
+                        .setSlice(requestAuthority.mSlice);
+            }
+
+            if(builder instanceof MicrosoftStsAuthorizationRequest.Builder){
+                ((MicrosoftStsAuthorizationRequest.Builder)builder).setTokenScope(TextUtils.join(" ", parameters.getScopes()));
+            }
+
             if (acquireTokenOperationParameters.getExtraScopesToConsent() != null) {
                 parameters.getScopes().addAll(acquireTokenOperationParameters.getExtraScopesToConsent());
             }
@@ -144,14 +158,7 @@ public abstract class BaseController {
                 builder.setPrompt(null);
             }
 
-            // Set the multipleCloudAware and slice fields.
-            if (acquireTokenOperationParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
-                final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) acquireTokenOperationParameters.getAuthority();
-                ((MicrosoftAuthorizationRequest.Builder) builder)
-                        .setAuthority(requestAuthority.getAuthorityURL())
-                        .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
-                        .setSlice(requestAuthority.mSlice);
-            }
+
         }
 
         builder.setScope(TextUtils.join(" ", parameters.getScopes()));
@@ -395,6 +402,7 @@ public abstract class BaseController {
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
         operationParameters.setScopes(requestScopes);
+
     }
 
     public AccessTokenRecord getAccessTokenRecord(@NonNull final MicrosoftStsTokenResponse tokenResponse,

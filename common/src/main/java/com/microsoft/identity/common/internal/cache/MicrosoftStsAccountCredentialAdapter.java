@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.support.annotation.NonNull;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -85,7 +86,14 @@ public class MicrosoftStsAccountCredentialAdapter
                 accessToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
             }
             accessToken.setClientId(request.getClientId());
-            accessToken.setTarget(request.getScope());
+            /*
+            ===============================================================
+            NOTE: When requesting tokens for resources other than MS Graph or AAD Graph the default scopes
+            openid, profile and offline_access are not returned.  They need to be written into the cache anyway
+            to avoid cache misses.
+            ===============================================================
+             */
+            accessToken.setTarget(getTarget(response.getScope()));
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
             accessToken.setExpiresOn(String.valueOf(expiresOn));
             accessToken.setSecret(response.getAccessToken());
@@ -103,6 +111,21 @@ public class MicrosoftStsAccountCredentialAdapter
         } catch (ServiceException | MalformedURLException e) {
             // TODO handle this properly
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Returns the correct target based on whether the default scopes were returned or not
+     * @param responseScope
+     * @return
+     */
+    private String getTarget(String responseScope){
+        if(responseScope.contains(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE)){
+            return responseScope;
+        }else{
+            return responseScope + " " + AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE
+                    + " " + AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE
+                    + " " + AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE;
         }
     }
 
