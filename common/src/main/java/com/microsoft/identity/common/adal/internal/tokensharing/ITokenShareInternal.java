@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
-import com.microsoft.identity.common.exception.BaseException;
-
 public interface ITokenShareInternal {
 
     /**
@@ -34,10 +32,10 @@ public interface ITokenShareInternal {
      * @return The {@link com.microsoft.identity.common.adal.internal.tokensharing.TokenCacheItem}
      * serialized to JSON.
      */
-    String getFamilyRefreshToken(String oid) throws BaseException;
+    String getFamilyRefreshToken(String oid) throws Exception;
 
     /**
      * @param tokenCacheItemJson
      */
-    void saveFamilyRefreshToken(String tokenCacheItemJson) throws BaseException;
+    void saveFamilyRefreshToken(String tokenCacheItemJson) throws Exception;
 }

@@ -23,11 +23,21 @@
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
 import android.support.annotation.NonNull;
+import android.util.Pair;
 
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+
+import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.renewToken;
+import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.sBackgroundExecutor;
 
 public class TokenShareUtility implements ITokenShareInternal {
 
@@ -85,17 +95,34 @@ public class TokenShareUtility implements ITokenShareInternal {
     }
 
     @Override
-    public void saveFamilyRefreshToken(String tokenCacheItemJson) throws BaseException {
-        final TokenCacheItem cacheItemToSave = SSOStateSerializer.deserialize(tokenCacheItemJson);
+    public void saveFamilyRefreshToken(final String tokenCacheItemJson) throws Exception {
+        final Future<Pair<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
+                sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
+                    @Override
+                    public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
+                        final TokenCacheItem cacheItemToRenew = SSOStateSerializer.deserialize(tokenCacheItemJson);
+                        return renewToken("", cacheItemToRenew);
+                    }
+                });
 
-        // The supplied TokenCacheItem will be in the v1 format, convert it to v2 and save it...
-        // TODO How does this work for information we don't have? Such as homeTenantId?
+        final Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair = resultFuture.get();
+
+        // If an error is encountered while requesting new tokens, null is returned
+        // Check the result, before proceeding to save into the cache...
+        if (null != resultPair) {
+            mTokenCache.setSingleSignOnState(
+                    resultPair.first,
+                    resultPair.second
+            );
+        }
     }
 
     private static TokenCacheItem adapt(@NonNull final IdTokenRecord idTokenRecord,
                                         @NonNull final RefreshTokenRecord refreshTokenRecord) {
         final TokenCacheItem tokenCacheItem = new TokenCacheItem();
         tokenCacheItem.setAuthority(idTokenRecord.getAuthority());
+        // TODO set clientId to _this_ runtime
+        // TODO set the resource to be the scopes (adapted)
         tokenCacheItem.setRefreshToken(refreshTokenRecord.getSecret());
         tokenCacheItem.setRawIdToken(idTokenRecord.getSecret());
         tokenCacheItem.setFamilyClientId(refreshTokenRecord.getFamilyId());

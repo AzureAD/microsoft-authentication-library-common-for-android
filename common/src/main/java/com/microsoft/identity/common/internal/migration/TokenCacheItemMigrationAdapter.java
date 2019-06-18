@@ -208,7 +208,7 @@ public class TokenCacheItemMigrationAdapter {
     }
 
     @Nullable
-    private static Pair<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
+    public static Pair<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
             @Nullable final String redirectUri,
             @NonNull final ITokenCacheItem targetCacheItemToRenew) {
         Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair = null;
