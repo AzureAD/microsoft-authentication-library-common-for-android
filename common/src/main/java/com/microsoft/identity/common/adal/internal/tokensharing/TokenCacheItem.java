@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
+import com.microsoft.identity.common.internal.cache.ITokenCacheItem;
+
 import java.io.Serializable;
 
 /**
@@ -34,14 +36,13 @@ import java.io.Serializable;
  * jsonObj.add(OAuth2.ID_TOKEN, new JsonPrimitive(tokenCacheItem.getRawIdToken()));
  * jsonObj.add(OAuth2.ADAL_CLIENT_FAMILY_ID, new JsonPrimitive(tokenCacheItem.getFamilyClientId()));
  */
-public class TokenCacheItem implements Serializable {
+public class TokenCacheItem implements ITokenCacheItem, Serializable {
 
+    private String mClientId;
     private String mAuthority;
-
     private String mRefreshtoken;
-
+    private String mResource;
     private String mRawIdToken;
-
     private String mFamilyClientId;
 
     /**
@@ -49,15 +50,6 @@ public class TokenCacheItem implements Serializable {
      */
     public TokenCacheItem() {
         // Intentionally left blank
-    }
-
-    /**
-     * Get the authority.
-     *
-     * @return authority url string.
-     */
-    public String getAuthority() {
-        return mAuthority;
     }
 
     /**
@@ -69,13 +61,30 @@ public class TokenCacheItem implements Serializable {
         mAuthority = authority;
     }
 
+    @Override
+    public String getAuthority() {
+        return mAuthority;
+    }
+
     /**
-     * Get the refresh token string.
-     *
-     * @return the refresh token string.
+     * @param clientId
      */
-    public String getRefreshToken() {
-        return mRefreshtoken;
+    public void setClientId(final String clientId) {
+        mClientId = clientId;
+    }
+
+    @Override
+    public String getClientId() {
+        return mClientId;
+    }
+
+    public void setResource(final String resource) {
+        mResource = resource;
+    }
+
+    @Override
+    public String getResource() {
+        return mResource;
     }
 
     /**
@@ -87,13 +96,9 @@ public class TokenCacheItem implements Serializable {
         mRefreshtoken = refreshToken;
     }
 
-    /**
-     * Get raw ID token.
-     *
-     * @return raw ID token string.
-     */
-    public String getRawIdToken() {
-        return mRawIdToken;
+    @Override
+    public String getRefreshToken() {
+        return mRefreshtoken;
     }
 
     /**
@@ -106,12 +111,12 @@ public class TokenCacheItem implements Serializable {
     }
 
     /**
-     * Get family client identifier.
+     * Get raw ID token.
      *
-     * @return the family client ID string.
+     * @return raw ID token string.
      */
-    public final String getFamilyClientId() {
-        return mFamilyClientId;
+    public String getRawIdToken() {
+        return mRawIdToken;
     }
 
     /**
@@ -121,6 +126,15 @@ public class TokenCacheItem implements Serializable {
      */
     public final void setFamilyClientId(final String familyClientId) {
         mFamilyClientId = familyClientId;
+    }
+
+    /**
+     * Get family client identifier.
+     *
+     * @return the family client ID string.
+     */
+    public final String getFamilyClientId() {
+        return mFamilyClientId;
     }
 
 }

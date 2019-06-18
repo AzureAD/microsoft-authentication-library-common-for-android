@@ -34,7 +34,7 @@ import com.microsoft.identity.common.internal.util.DateUtilities;
 
 import java.util.Date;
 
-public class ADALTokenCacheItem {
+public class ADALTokenCacheItem implements ITokenCacheItem {
 
     private ADALUserInfo mUserInfo;
 
@@ -159,11 +159,7 @@ public class ADALTokenCacheItem {
         mUserInfo = info;
     }
 
-    /**
-     * Get the resource.
-     *
-     * @return resource String.
-     */
+    @Override
     public String getResource() {
         return mResource;
     }
@@ -177,11 +173,7 @@ public class ADALTokenCacheItem {
         mResource = resource;
     }
 
-    /**
-     * Get the authority.
-     *
-     * @return authority url string.
-     */
+    @Override
     public String getAuthority() {
         return mAuthority;
     }
@@ -195,11 +187,7 @@ public class ADALTokenCacheItem {
         mAuthority = authority;
     }
 
-    /**
-     * Get the client identifier.
-     *
-     * @return client identifier string.
-     */
+    @Override
     public String getClientId() {
         return mClientId;
     }
@@ -231,11 +219,7 @@ public class ADALTokenCacheItem {
         mAccessToken = accessToken;
     }
 
-    /**
-     * Get the refresh token string.
-     *
-     * @return the refresh token string.
-     */
+    @Override
     public String getRefreshToken() {
         return mRefreshtoken;
     }

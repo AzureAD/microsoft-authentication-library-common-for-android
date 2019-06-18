@@ -9,6 +9,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.internal.cache.ITokenCacheItem;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -95,7 +96,7 @@ public class TokenCacheItemMigrationAdapter {
     /**
      * Testing whether the given client ID can use the cached foci to refresh token.
      *
-     * @param clientId String of the given client id.
+     * @param clientId    String of the given client id.
      * @param redirectUri redirect url string of the given client id.
      * @param cacheRecord Foci cache record.
      * @return true if the given client id can use the cached foci token. False, otherwise.
@@ -209,7 +210,7 @@ public class TokenCacheItemMigrationAdapter {
     @Nullable
     private static Pair<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
             @Nullable final String redirectUri,
-            @NonNull final ADALTokenCacheItem targetCacheItemToRenew) {
+            @NonNull final ITokenCacheItem targetCacheItemToRenew) {
         Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair = null;
 
         if (!StringExtensions.isNullOrBlank(redirectUri)) {
