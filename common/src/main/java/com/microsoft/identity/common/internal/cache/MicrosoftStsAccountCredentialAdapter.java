@@ -80,11 +80,13 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setCredentialType(CredentialType.AccessToken.name());
             accessToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             accessToken.setRealm(getRealm(strategy, response));
+
             if (!StringUtil.isEmpty(response.getAuthority())) {
                 accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromAuthority(new URL(response.getAuthority())));
             } else {
                 accessToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
             }
+
             accessToken.setClientId(request.getClientId());
             /*
             ===============================================================
@@ -100,11 +102,13 @@ public class MicrosoftStsAccountCredentialAdapter
 
             // Optional fields
             accessToken.setExtendedExpiresOn(getExtendedExpiresOn(response));
+
             if (!StringUtil.isEmpty(response.getAuthority())) {
                 accessToken.setAuthority(response.getAuthority());
             } else {
                 accessToken.setAuthority(request.getAuthority().toString());
             }
+
             accessToken.setAccessTokenType(response.getTokenType());
 
             return accessToken;
@@ -116,13 +120,14 @@ public class MicrosoftStsAccountCredentialAdapter
 
     /**
      * Returns the correct target based on whether the default scopes were returned or not
-     * @param responseScope
-     * @return
+     *
+     * @param responseScope The response scope to parse.
+     * @return The target containing default scopes.
      */
-    private String getTarget(String responseScope){
-        if(responseScope.contains(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE)){
+    private String getTarget(@NonNull final String responseScope) {
+        if (responseScope.contains(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE)) {
             return responseScope;
-        }else{
+        } else {
             return responseScope + " " + AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE
                     + " " + AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE
                     + " " + AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE;

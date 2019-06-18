@@ -41,34 +41,21 @@ import static com.microsoft.identity.common.internal.migration.TokenCacheItemMig
 
 public class TokenShareUtility implements ITokenShareInternal {
 
-    private MsalOAuth2TokenCache mTokenCache;
+    private final String mClientId;
+    private final String mRedirectUri;
+    private final MsalOAuth2TokenCache mTokenCache;
 
-    public TokenShareUtility(@NonNull final MsalOAuth2TokenCache cache) {
+    public TokenShareUtility(@NonNull final String clientId,
+                             @NonNull final String redirectUri,
+                             @NonNull final MsalOAuth2TokenCache cache) {
+        mClientId = clientId;
+        mRedirectUri = redirectUri;
         mTokenCache = cache;
     }
 
     /*
     Design questions:
-        1. When saving these tokens, do I persist them for my own clientId it so that this app can
-           use it? Or should I try to parse the clientId out of the input and save it under that?
-           Should I add a FoCI lookup that is agnostic of clientIds completely?
-
-           Brian's answer:
-               Add parsing to determine the _other_ app's client id. Parse it and save under that.
-               If you have an RT for this user already, delete it. Then change the RT lookup to return 
-               the RT of another client if the current one is FOCI.
-
-        2. If I already have an IdToken/RT for the current user and TSL tries to save a new one,
-           do I delete the one I have so that I maintain the 1 RT per user rule?
-
-           Brian's answer:
-               I think 'yes', maintain 1 RT per user. I don't want to potentially delete a good token for a bad one though...
-               What about...
-               If you already have tokens for this user and they're not expired, do nothing.
-               If you already have tokens for this user and they're expired, save the new tokens (see next question).
-               If you don't have tokens for this user, save the incoming (see next question).
-
-        3. For back-compat, it would seem that MSAL needs to both receive v1 idtokens AND supply them.
+        1. For back-compat, it would seem that MSAL needs to both receive v1 idtokens AND supply them.
            Is that true? What about when ADAL goes away? Will we add new API surface or version the
            payloads so we stop trying to convert everything between v1/v2 and back again?
 
@@ -80,20 +67,25 @@ public class TokenShareUtility implements ITokenShareInternal {
      */
 
     @Override
-    public String getFamilyRefreshToken(String oid) throws BaseException {
+    public String getFamilyRefreshToken(@NonNull final String oid) throws BaseException {
         // TODO hit the cache and try to find any FRT for this OID, if you have it, bag it up and
         // ship it
         return null;
     }
 
     @Override
-    public void saveFamilyRefreshToken(final String tokenCacheItemJson) throws Exception {
+    public void saveFamilyRefreshToken(@NonNull final String tokenCacheItemJson) throws Exception {
         final Future<Pair<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
                 sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
                     public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
                         final TokenCacheItem cacheItemToRenew = SSOStateSerializer.deserialize(tokenCacheItemJson);
-                        return renewToken("", cacheItemToRenew);
+
+                        // We're going to 'hijack' this token and set our own clientId for renewal
+                        // since these are FRTs, this is OK to do.
+                        cacheItemToRenew.setClientId(mClientId);
+
+                        return renewToken(mRedirectUri, cacheItemToRenew);
                     }
                 });
 
@@ -103,12 +95,13 @@ public class TokenShareUtility implements ITokenShareInternal {
         // Check the result, before proceeding to save into the cache...
         if (null != resultPair) {
             mTokenCache.setSingleSignOnState(
-                    resultPair.first,
-                    resultPair.second
+                    resultPair.first, // The account
+                    resultPair.second // The refresh token
             );
         }
     }
 
+    @SuppressWarnings("PMD.UnusedPrivateMethod")
     private static TokenCacheItem adapt(@NonNull final IdTokenRecord idTokenRecord,
                                         @NonNull final RefreshTokenRecord refreshTokenRecord) {
         final TokenCacheItem tokenCacheItem = new TokenCacheItem();
