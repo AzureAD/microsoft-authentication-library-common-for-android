@@ -45,22 +45,26 @@ public class TokenShareUtility implements ITokenShareInternal {
 
            Brian's answer:
                Add parsing to determine the _other_ app's client id. Parse it and save under that.
-               If you have an RT for this user for this clientId already, I guess delete it?
-               Then change the RT lookup to return the RT of another client if the current one is FOCI?
+               If you have an RT for this user already, delete it. Then change the RT lookup to return 
+               the RT of another client if the current one is FOCI.
 
         2. If I already have an IdToken/RT for the current user and TSL tries to save a new one,
            do I delete the one I have so that I maintain the 1 RT per user rule?
 
            Brian's answer:
+               I think 'yes', maintain 1 RT per user. I don't want to potentially delete a good token for a bad one though...
+               What about...
                If you already have tokens for this user and they're not expired, do nothing.
                If you already have tokens for this user and they're expired, save the new tokens (see next question).
                If you don't have tokens for this user, save the incoming (see next question).
 
-        3. When saving, what do I do about information I don't have such as homeAccountId? (This is part of the
+        3. When saving, what do I do about information I don't have such as home_account_id? (This is part of the
            cache-key).
 
            Brian's answer:
                ...? (I would say, "make a request" but that's a lot to go wrong, slow, etc.)
+               If I already have records in the cache for this OID, I could potentially 'peek' into
+               them to try and get home_account_id info but that seems ill-advised.
 
         4. For back-compat, it would seem that MSAL needs to both receive v1 idtokens AND supply them.
            Is that true? What about when ADAL goes away? Will we add new API surface or version the
