@@ -27,19 +27,25 @@ import android.util.Pair;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
+import static com.microsoft.identity.common.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.renewToken;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.sBackgroundExecutor;
 
 public class TokenShareUtility implements ITokenShareInternal {
+
+    private static final String TAG = TokenShareUtility.class.getSimpleName();
 
     private final String mClientId;
     private final String mRedirectUri;
@@ -68,9 +74,47 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     @Override
     public String getFamilyRefreshToken(@NonNull final String oid) throws BaseException {
-        // TODO hit the cache and try to find any FRT for this OID, if you have it, bag it up and
-        // ship it
-        return null;
+        final String methodName = ":getFamilyRefreshToken";
+
+        // First hit the cache to get the sought AccountRecord...
+        final AccountRecord localAccountRecord = mTokenCache.getAccountByLocalAccountId(
+                null,
+                mClientId,
+                oid
+        );
+
+        // Check it's not null
+        if (null == localAccountRecord) {
+            // Unrecognized OID, cannot supply a token.
+            throw new ClientException(TOKEN_CACHE_ITEM_NOT_FOUND);
+        }
+
+        // Query the cache for the IdTokenRecord, RefreshTokenRecord, etc.
+        final ICacheRecord cacheRecord = mTokenCache.load(
+                mClientId,
+                null, // wildcard (*)
+                localAccountRecord
+        );
+
+        // Inspect the result for completeness...
+        if (null == cacheRecord.getRefreshToken() || null == cacheRecord.getIdToken()) {
+            Logger.warn(
+                    TAG + methodName,
+                    "That's strange, we had an AccountRecord for OID: "
+                            + oid
+                            + " but couldn't find tokens for them."
+            );
+
+            throw new ClientException(TOKEN_CACHE_ITEM_NOT_FOUND);
+        }
+
+        final TokenCacheItem cacheItemToExport = adapt(
+                cacheRecord.getIdToken(),
+                cacheRecord.getRefreshToken()
+        );
+
+        // Ship it
+        return SSOStateSerializer.serialize(cacheItemToExport);
     }
 
     @Override
@@ -105,13 +149,18 @@ public class TokenShareUtility implements ITokenShareInternal {
     private static TokenCacheItem adapt(@NonNull final IdTokenRecord idTokenRecord,
                                         @NonNull final RefreshTokenRecord refreshTokenRecord) {
         final TokenCacheItem tokenCacheItem = new TokenCacheItem();
+        tokenCacheItem.setClientId(refreshTokenRecord.getClientId());
         tokenCacheItem.setAuthority(idTokenRecord.getAuthority());
-        // TODO set clientId to _this_ runtime
-        // TODO set the resource to be the scopes (adapted)
         tokenCacheItem.setRefreshToken(refreshTokenRecord.getSecret());
-        tokenCacheItem.setRawIdToken(idTokenRecord.getSecret());
+        tokenCacheItem.setResource(null); // TODO Does this need to be present?
+        tokenCacheItem.setRawIdToken(mintV1IdToken(idTokenRecord));
         tokenCacheItem.setFamilyClientId(refreshTokenRecord.getFamilyId());
 
         return tokenCacheItem;
+    }
+
+    private static String mintV1IdToken(@NonNull final IdTokenRecord idTokenRecord) {
+        // TODO implement
+        return null;
     }
 }
