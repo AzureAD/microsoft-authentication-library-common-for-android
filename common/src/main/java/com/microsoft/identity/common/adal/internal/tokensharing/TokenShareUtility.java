@@ -68,15 +68,7 @@ public class TokenShareUtility implements ITokenShareInternal {
                If you already have tokens for this user and they're expired, save the new tokens (see next question).
                If you don't have tokens for this user, save the incoming (see next question).
 
-        3. When saving, what do I do about information I don't have such as home_account_id? (This is part of the
-           cache-key).
-
-           Brian's answer:
-               ...? (I would say, "make a request" but that's a lot to go wrong, slow, etc.)
-               If I already have records in the cache for this OID, I could potentially 'peek' into
-               them to try and get home_account_id info but that seems ill-advised.
-
-        4. For back-compat, it would seem that MSAL needs to both receive v1 idtokens AND supply them.
+        3. For back-compat, it would seem that MSAL needs to both receive v1 idtokens AND supply them.
            Is that true? What about when ADAL goes away? Will we add new API surface or version the
            payloads so we stop trying to convert everything between v1/v2 and back again?
 
