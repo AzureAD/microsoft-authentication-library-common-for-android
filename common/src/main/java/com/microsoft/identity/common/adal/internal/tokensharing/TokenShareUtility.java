@@ -44,7 +44,9 @@ public class TokenShareUtility implements ITokenShareInternal {
            Should I add a FoCI lookup that is agnostic of clientIds completely?
 
            Brian's answer:
-               Add a clientId agnostic lookup and return that.
+               Add parsing to determine the _other_ app's client id. Parse it and save under that.
+               If you have an RT for this user for this clientId already, I guess delete it?
+               Then change the RT lookup to return the RT of another client if the current one is FOCI?
 
         2. If I already have an IdToken/RT for the current user and TSL tries to save a new one,
            do I delete the one I have so that I maintain the 1 RT per user rule?
