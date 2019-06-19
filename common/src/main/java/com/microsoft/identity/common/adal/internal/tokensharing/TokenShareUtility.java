@@ -60,17 +60,15 @@ public class TokenShareUtility implements ITokenShareInternal {
     private static final String TAG = TokenShareUtility.class.getSimpleName();
     private static final Map<String, String> mClaimRemapper = new HashMap<>();
 
-    /*
-     * Populate v1/v2 IdToken claims mapping here.
-     */
     static {
+        applyV1ToV2Mappings();
+    }
+
+    private static void applyV1ToV2Mappings() {
         mClaimRemapper.put(
                 IDToken.PREFERRED_USERNAME, // v2 value
                 AzureActiveDirectoryIdToken.UPN // v1 value
         );
-
-        // TODO something about iss/idp?
-        // TODO something about subject & preferred_username?
     }
 
     private final String mClientId;
