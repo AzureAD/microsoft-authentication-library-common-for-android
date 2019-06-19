@@ -167,14 +167,14 @@ public class TokenShareUtility implements ITokenShareInternal {
         tokenCacheItem.setAuthority(idTokenRecord.getAuthority());
         tokenCacheItem.setRefreshToken(refreshTokenRecord.getSecret());
         tokenCacheItem.setResource(null); // TODO Does this need to be present? You can't turn scopes into a resource AFAIK...
-        tokenCacheItem.setRawIdToken(mintV1IdToken(idTokenRecord.getSecret()));
+        tokenCacheItem.setRawIdToken(mintV1IdTokenFromRawV2IdToken(idTokenRecord.getSecret()));
         tokenCacheItem.setFamilyClientId(refreshTokenRecord.getFamilyId());
 
         return tokenCacheItem;
     }
 
     @NonNull
-    private static String mintV1IdToken(@NonNull final String rawV2IdToken) throws ServiceException {
+    private static String mintV1IdTokenFromRawV2IdToken(@NonNull final String rawV2IdToken) throws ServiceException {
         final Map<String, ?> v2TokenClaims = IDToken.parseJWT(rawV2IdToken);
 
         // We're going to overwrite some fields to make this v1 compat and then wrap it back up
