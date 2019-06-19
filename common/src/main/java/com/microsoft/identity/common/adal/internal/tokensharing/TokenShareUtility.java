@@ -28,6 +28,7 @@ import android.util.Pair;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -121,7 +122,7 @@ public class TokenShareUtility implements ITokenShareInternal {
             throw new ClientException(TOKEN_CACHE_ITEM_NOT_FOUND);
         }
 
-        final TokenCacheItem cacheItemToExport = adapt(
+        final ADALTokenCacheItem cacheItemToExport = adapt(
                 cacheRecord.getIdToken(),
                 cacheRecord.getRefreshToken()
         );
@@ -136,7 +137,7 @@ public class TokenShareUtility implements ITokenShareInternal {
                 sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
                     public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
-                        final TokenCacheItem cacheItemToRenew = SSOStateSerializer.deserialize(tokenCacheItemJson);
+                        final ADALTokenCacheItem cacheItemToRenew = SSOStateSerializer.deserialize(tokenCacheItemJson);
 
                         // We're going to 'hijack' this token and set our own clientId for renewal
                         // since these are FRTs, this is OK to do.
@@ -160,9 +161,9 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     @SuppressWarnings("PMD.UnusedPrivateMethod")
     @NonNull
-    private static TokenCacheItem adapt(@NonNull final IdTokenRecord idTokenRecord,
-                                        @NonNull final RefreshTokenRecord refreshTokenRecord) throws ServiceException {
-        final TokenCacheItem tokenCacheItem = new TokenCacheItem();
+    private static ADALTokenCacheItem adapt(@NonNull final IdTokenRecord idTokenRecord,
+                                            @NonNull final RefreshTokenRecord refreshTokenRecord) throws ServiceException {
+        final ADALTokenCacheItem tokenCacheItem = new ADALTokenCacheItem();
         tokenCacheItem.setClientId(refreshTokenRecord.getClientId());
         tokenCacheItem.setAuthority(idTokenRecord.getAuthority());
         tokenCacheItem.setRefreshToken(refreshTokenRecord.getSecret());

@@ -31,6 +31,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2;
+import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 
 import java.lang.reflect.Type;
 
@@ -41,12 +42,12 @@ import java.lang.reflect.Type;
  * including userInfo, and tenantId.
  */
 public final class TokenCacheItemSerializationAdapater
-        implements JsonDeserializer<TokenCacheItem>, JsonSerializer<TokenCacheItem> {
+        implements JsonDeserializer<ADALTokenCacheItem>, JsonSerializer<ADALTokenCacheItem> {
 
     private static final String TAG = TokenCacheItemSerializationAdapater.class.getSimpleName();
 
     @Override
-    public JsonElement serialize(final TokenCacheItem tokenCacheItem,
+    public JsonElement serialize(final ADALTokenCacheItem tokenCacheItem,
                                  final Type type,
                                  final JsonSerializationContext context) {
         JsonObject jsonObj = new JsonObject();
@@ -58,9 +59,9 @@ public final class TokenCacheItemSerializationAdapater
     }
 
     @Override
-    public TokenCacheItem deserialize(final JsonElement json,
-                                      final Type type,
-                                      final JsonDeserializationContext context)
+    public ADALTokenCacheItem deserialize(final JsonElement json,
+                                          final Type type,
+                                          final JsonDeserializationContext context)
             throws JsonParseException {
         final JsonObject srcJsonObj = json.getAsJsonObject();
         throwIfParameterMissing(srcJsonObj, OAuth2.AUTHORITY);
@@ -69,7 +70,7 @@ public final class TokenCacheItemSerializationAdapater
         throwIfParameterMissing(srcJsonObj, OAuth2.REFRESH_TOKEN);
 
         final String rawIdToken = srcJsonObj.get(OAuth2.ID_TOKEN).getAsString();
-        final TokenCacheItem tokenCacheItem = new TokenCacheItem();
+        final ADALTokenCacheItem tokenCacheItem = new ADALTokenCacheItem();
 
         tokenCacheItem.setAuthority(srcJsonObj.get(OAuth2.AUTHORITY).getAsString());
         tokenCacheItem.setRawIdToken(rawIdToken);

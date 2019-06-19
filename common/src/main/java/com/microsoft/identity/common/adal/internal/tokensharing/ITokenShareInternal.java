@@ -29,7 +29,7 @@ public interface ITokenShareInternal {
      * that account if the current application is a member of FoCI (family of clientIds).
      *
      * @param oid The OID of the sought user's FRT.
-     * @return The {@link com.microsoft.identity.common.adal.internal.tokensharing.TokenCacheItem}
+     * @return The {@link com.microsoft.identity.common.internal.cache.ADALTokenCacheItem}
      * serialized to JSON.
      */
     String getFamilyRefreshToken(String oid) throws Exception;

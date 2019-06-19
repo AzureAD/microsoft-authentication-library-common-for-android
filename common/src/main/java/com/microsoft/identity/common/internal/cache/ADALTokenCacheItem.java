@@ -65,6 +65,10 @@ public class ADALTokenCacheItem implements ITokenCacheItem {
 
     private String mSpeRing;
 
+    public ADALTokenCacheItem() {
+        // Empty
+    }
+
     ADALTokenCacheItem(final ADALTokenCacheItem tokenCacheItem) {
         mAuthority = tokenCacheItem.getAuthority();
         mResource = tokenCacheItem.getResource();

@@ -28,6 +28,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,7 +53,7 @@ final class SSOStateSerializer {
      * given user.
      */
     @SerializedName("tokenCacheItems")
-    private final List<TokenCacheItem> mTokenCacheItems = new ArrayList<>();
+    private final List<ADALTokenCacheItem> mTokenCacheItems = new ArrayList<>();
 
     /**
      * To customize the serialize/deserialize process and provide a more
@@ -60,7 +61,7 @@ final class SSOStateSerializer {
      * register custom serializer.
      */
     private static final Gson GSON = new GsonBuilder()
-            .registerTypeAdapter(TokenCacheItem.class, new TokenCacheItemSerializationAdapater())
+            .registerTypeAdapter(ADALTokenCacheItem.class, new TokenCacheItemSerializationAdapater())
             .create();
 
     /**
@@ -77,7 +78,7 @@ final class SSOStateSerializer {
      *
      * @param item TokenCacheItem to initialize a SSOStateSerializer
      */
-    private SSOStateSerializer(final TokenCacheItem item) {
+    private SSOStateSerializer(final ADALTokenCacheItem item) {
         if (item == null) {
             throw new IllegalArgumentException("tokenItem is null");
         }
@@ -95,7 +96,7 @@ final class SSOStateSerializer {
      * @throws ClientException
      */
     @SuppressWarnings("PMD")
-    private TokenCacheItem getTokenItem() throws ClientException {
+    private ADALTokenCacheItem getTokenItem() throws ClientException {
         if (mTokenCacheItems == null || mTokenCacheItems.isEmpty()) {
             throw new ClientException(ClientException.TOKEN_CACHE_ITEM_NOT_FOUND, "There is no token cache item in the SSOStateContainer.");
         }
@@ -120,7 +121,7 @@ final class SSOStateSerializer {
      * @return TokenCacheItem
      * @throws ClientException
      */
-    private TokenCacheItem internalDeserialize(final String serializedBlob) throws ClientException {
+    private ADALTokenCacheItem internalDeserialize(final String serializedBlob) throws ClientException {
         try {
             final JSONObject jsonObject = new JSONObject(serializedBlob);
             if (jsonObject.getInt("version") == this.getVersion()) {
@@ -139,13 +140,13 @@ final class SSOStateSerializer {
     /**
      * In order to provide symmetry and hide the details in the
      * SSOStateSerializer on the serialization, we have this static serialize
-     * function which takes the TokenCacheItem object as input and return the
+     * function which takes the ADALTokenCacheItem object as input and return the
      * serialized json string if successful.
      *
-     * @param item TokenCacheItem to convert to serialized json
+     * @param item ADALTokenCacheItem to convert to serialized json
      * @return String
      */
-    static String serialize(final TokenCacheItem item) {
+    static String serialize(final ADALTokenCacheItem item) {
         SSOStateSerializer ssoStateSerializer = new SSOStateSerializer(item);
         return ssoStateSerializer.internalSerialize();
     }
@@ -154,13 +155,13 @@ final class SSOStateSerializer {
      * In order to provide symmetry and hide the details in the
      * SSOStateSerializer on the deserialization, we have this static
      * deserialize function take the serialized string as input and return the
-     * deserialized TokenCacheItem if successful.
+     * deserialized ADALTokenCacheItem if successful.
      *
-     * @param serializedBlob string blob to deserialize into TokenCacheItem
-     * @return TokenCacheItem
+     * @param serializedBlob string blob to deserialize into ADALTokenCacheItem
+     * @return ADALTokenCacheItem
      * @throws ClientException
      */
-    static TokenCacheItem deserialize(final String serializedBlob) throws ClientException {
+    static ADALTokenCacheItem deserialize(final String serializedBlob) throws ClientException {
         SSOStateSerializer ssoStateSerializer = new SSOStateSerializer();
         return ssoStateSerializer.internalDeserialize(serializedBlob);
     }
