@@ -25,16 +25,16 @@ package com.microsoft.identity.common.adal.internal.tokensharing;
 public interface ITokenShareInternal {
 
     /**
-     * For the supplied user unique identifier (OID), return the corresponding refresh token for
-     * that account if the current application is a member of FoCI (family of clientIds). The token
-     * will be wrapped inside an opaque self-serializing object and cannot be used directly against
-     * an STS.
+     * For the supplied user unique identifier (OID/upn/preferred_username), return the
+     * corresponding refresh token for that account if the current application is a member of FoCI
+     * (family of clientIds). The token will be wrapped inside an opaque self-serializing object
+     * and cannot be used directly against an STS.
      *
-     * @param oid The OID of the sought user's FRT.
+     * @param identifier The OID of the sought user's FRT.
      * @return The {@link com.microsoft.identity.common.internal.cache.ADALTokenCacheItem}
      * serialized to JSON.
      */
-    String getWrappedFamilyRefreshToken(String oid) throws Exception;
+    String getWrappedFamilyRefreshToken(String identifier) throws Exception;
 
     /**
      * @param tokenCacheItemJson
