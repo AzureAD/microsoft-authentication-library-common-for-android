@@ -223,7 +223,7 @@ public class IDToken {
         return Collections.unmodifiableMap(mTokenClaims);
     }
 
-    private static Map<String, ?> parseJWT(@NonNull final String rawIdToken) throws ServiceException {
+    public static Map<String, ?> parseJWT(@NonNull final String rawIdToken) throws ServiceException {
         final String methodName = ":getClaims(String)";
 
         final Map<String, Object> result = new HashMap<>();

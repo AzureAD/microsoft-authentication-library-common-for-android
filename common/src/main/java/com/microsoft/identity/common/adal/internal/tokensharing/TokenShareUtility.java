@@ -27,6 +27,7 @@ import android.util.Pair;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -34,8 +35,18 @@ import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
+import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
+import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.PlainHeader;
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.PlainJWT;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
@@ -46,6 +57,20 @@ import static com.microsoft.identity.common.internal.migration.TokenCacheItemMig
 public class TokenShareUtility implements ITokenShareInternal {
 
     private static final String TAG = TokenShareUtility.class.getSimpleName();
+    private static final Map<String, String> mClaimRemapper = new HashMap<>();
+
+    /*
+     * Populate v1/v2 IdToken claims mapping here.
+     */
+    static {
+        mClaimRemapper.put(
+                IDToken.PREFERRED_USERNAME, // v2 value
+                AzureActiveDirectoryIdToken.UPN // v1 value
+        );
+
+        // TODO something about iss/idp?
+        // TODO something about subject & preferred_username?
+    }
 
     private final String mClientId;
     private final String mRedirectUri;
@@ -59,20 +84,8 @@ public class TokenShareUtility implements ITokenShareInternal {
         mTokenCache = cache;
     }
 
-    /*
-    Design questions:
-        1. For back-compat, it would seem that MSAL needs to both receive v1 idtokens AND supply them.
-           Is that true? What about when ADAL goes away? Will we add new API surface or version the
-           payloads so we stop trying to convert everything between v1/v2 and back again?
-
-           Brian's answer:
-               I think we should beef-up this implementation to return v1 and v2 artifacts BUT the
-               version check inside of "SSOStateSerializer" just throws exceptions if the version isn't
-               "1" so that's ridiculous -- seemingly can't use this. Maybe we keep "version = 1" and
-               just stuff more data in there and hope it doesn't break? ;-)
-     */
-
     @Override
+    @NonNull
     public String getFamilyRefreshToken(@NonNull final String oid) throws BaseException {
         final String methodName = ":getFamilyRefreshToken";
 
@@ -146,21 +159,67 @@ public class TokenShareUtility implements ITokenShareInternal {
     }
 
     @SuppressWarnings("PMD.UnusedPrivateMethod")
+    @NonNull
     private static TokenCacheItem adapt(@NonNull final IdTokenRecord idTokenRecord,
-                                        @NonNull final RefreshTokenRecord refreshTokenRecord) {
+                                        @NonNull final RefreshTokenRecord refreshTokenRecord) throws ServiceException {
         final TokenCacheItem tokenCacheItem = new TokenCacheItem();
         tokenCacheItem.setClientId(refreshTokenRecord.getClientId());
         tokenCacheItem.setAuthority(idTokenRecord.getAuthority());
         tokenCacheItem.setRefreshToken(refreshTokenRecord.getSecret());
-        tokenCacheItem.setResource(null); // TODO Does this need to be present?
-        tokenCacheItem.setRawIdToken(mintV1IdToken(idTokenRecord));
+        tokenCacheItem.setResource(null); // TODO Does this need to be present? You can't turn scopes into a resource AFAIK...
+        tokenCacheItem.setRawIdToken(mintV1IdToken(idTokenRecord.getSecret()));
         tokenCacheItem.setFamilyClientId(refreshTokenRecord.getFamilyId());
 
         return tokenCacheItem;
     }
 
-    private static String mintV1IdToken(@NonNull final IdTokenRecord idTokenRecord) {
-        // TODO implement
-        return null;
+    @NonNull
+    private static String mintV1IdToken(@NonNull final String rawV2IdToken) throws ServiceException {
+        final Map<String, ?> v2TokenClaims = IDToken.parseJWT(rawV2IdToken);
+
+        // We're going to overwrite some fields to make this v1 compat and then wrap it back up
+        final JWTClaimsSet.Builder claimsSetBuilder = new JWTClaimsSet.Builder();
+
+        for (final Map.Entry<String, ?> claimEntry : v2TokenClaims.entrySet()) {
+            final String claimKey = claimEntry.getKey();
+            Object claimValue = claimEntry.getValue();
+
+            if (MicrosoftIdToken.VERSION.equals(claimKey)) {
+                claimValue = "1";
+            }
+
+            claimsSetBuilder.claim(
+                    remap( // Assign v2 mappings
+                            claimKey
+                    ),
+                    claimValue
+            );
+        }
+
+        final JWTClaimsSet v1TokenClaims = claimsSetBuilder.build();
+
+        final PlainHeader plainHeader = new PlainHeader(
+                JOSEObjectType.JWT,
+                null, // unspecified content type
+                null, // unspecified critical header
+                null,  // no custom params
+                null // no baseUrl
+        );
+
+        final JWT outboundJwt = new PlainJWT(plainHeader, v1TokenClaims);
+
+        // Serialize and return the result
+        return outboundJwt.serialize();
+    }
+
+    @NonNull
+    private static String remap(@NonNull final String claimKey) {
+        String remappedValue = mClaimRemapper.get(claimKey);
+
+        if (null == remappedValue) {
+            remappedValue = claimKey;
+        }
+
+        return remappedValue;
     }
 }
