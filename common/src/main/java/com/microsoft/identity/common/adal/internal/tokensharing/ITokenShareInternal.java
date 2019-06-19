@@ -30,7 +30,7 @@ public interface ITokenShareInternal {
      * (family of clientIds). The token will be wrapped inside an opaque self-serializing object
      * and cannot be used directly against an STS.
      *
-     * @param identifier The OID of the sought user's FRT.
+     * @param identifier The identifier of the sought user's FRT.
      * @return The {@link com.microsoft.identity.common.internal.cache.ADALTokenCacheItem}
      * serialized to JSON.
      */
