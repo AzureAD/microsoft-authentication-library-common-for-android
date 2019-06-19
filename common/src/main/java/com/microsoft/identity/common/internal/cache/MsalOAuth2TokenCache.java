@@ -725,6 +725,38 @@ public class MsalOAuth2TokenCache
         return null;
     }
 
+    /**
+     * MSAL-only API for querying AccountRecords by username (upn/preferred_username).
+     *
+     * @param environment The environment to which the sought AccountRecords are associated.
+     * @param clientId    The clientId to which the sought AccountRecords are associated.
+     * @param username    The username of the sought AccountRecords.
+     * @return A List of AccountRecords matching the supplied criteria. Cannot be null, may be empty.
+     */
+    public List<AccountRecord> getAccountsByUsername(@Nullable final String environment,
+                                                     @NonNull final String clientId,
+                                                     @NonNull final String username) {
+        final String methodName = ":getAccountsByUsername";
+        final List<AccountRecord> result = new ArrayList<>();
+
+        final List<AccountRecord> accounts = getAccounts(environment, clientId);
+
+        for (final AccountRecord account : accounts) {
+            if (account.getUsername().equalsIgnoreCase(username)) {
+                result.add(account);
+            }
+        }
+
+        Logger.verbose(
+                TAG + methodName,
+                "Found "
+                        + accounts.size()
+                        + " accounts matching username."
+        );
+
+        return result;
+    }
+
     @Override
     @Nullable
     public ICacheRecord getAccountWithAggregatedAccountDataByLocalAccountId(

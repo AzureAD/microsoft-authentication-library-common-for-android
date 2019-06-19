@@ -47,6 +47,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -85,19 +86,34 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     @Override
     @NonNull
-    public String getWrappedFamilyRefreshToken(@NonNull final String oid) throws BaseException {
+    @SuppressWarnings("unchecked")
+    public String getWrappedFamilyRefreshToken(@NonNull final String identifier) throws BaseException {
         final String methodName = ":getWrappedFamilyRefreshToken";
 
         // First hit the cache to get the sought AccountRecord...
-        final AccountRecord localAccountRecord = mTokenCache.getAccountByLocalAccountId(
+        AccountRecord localAccountRecord = mTokenCache.getAccountByLocalAccountId(
                 null,
                 mClientId,
-                oid
+                identifier
         );
+
+        if (null == localAccountRecord) {
+            // We didn't find an OID match, try using the supplied value as a username...
+            final List<AccountRecord> accountRecords = mTokenCache.getAccountsByUsername(
+                    null,
+                    mClientId,
+                    identifier
+            );
+
+            // Any arbitrary AccountRecord will do for this user since these are FRTs
+            if (!accountRecords.isEmpty()) {
+                localAccountRecord = accountRecords.get(0);
+            }
+        }
 
         // Check it's not null
         if (null == localAccountRecord) {
-            // Unrecognized OID, cannot supply a token.
+            // Unrecognized identifier, cannot supply a token.
             throw new ClientException(TOKEN_CACHE_ITEM_NOT_FOUND);
         }
 
@@ -112,8 +128,8 @@ public class TokenShareUtility implements ITokenShareInternal {
         if (null == cacheRecord.getRefreshToken() || null == cacheRecord.getIdToken()) {
             Logger.warn(
                     TAG + methodName,
-                    "That's strange, we had an AccountRecord for OID: "
-                            + oid
+                    "That's strange, we had an AccountRecord for identifier: "
+                            + identifier
                             + " but couldn't find tokens for them."
             );
 
