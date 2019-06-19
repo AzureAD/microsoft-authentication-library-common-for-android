@@ -143,6 +143,13 @@ public class TokenShareUtility implements ITokenShareInternal {
                         // since these are FRTs, this is OK to do.
                         cacheItemToRenew.setClientId(mClientId);
 
+                        // The FRT's shared by TSL likely won't contain a resource. If they do,
+                        // assign this value to null - TokenCacheItemMigrationAdapter will add the default
+                        // scopes for us so that we may renew this token.
+                        // You may be tempted to use graph as the resource, but this doesn't
+                        // necessarily work for all sovereign clouds.
+                        cacheItemToRenew.setResource(null);
+
                         return renewToken(mRedirectUri, cacheItemToRenew);
                     }
                 });
@@ -167,7 +174,6 @@ public class TokenShareUtility implements ITokenShareInternal {
         tokenCacheItem.setClientId(refreshTokenRecord.getClientId());
         tokenCacheItem.setAuthority(idTokenRecord.getAuthority());
         tokenCacheItem.setRefreshToken(refreshTokenRecord.getSecret());
-        tokenCacheItem.setResource(null); // TODO Does this need to be present? You can't turn scopes into a resource AFAIK...
         tokenCacheItem.setRawIdToken(mintV1IdTokenFromRawV2IdToken(idTokenRecord.getSecret()));
         tokenCacheItem.setFamilyClientId(refreshTokenRecord.getFamilyId());
 
