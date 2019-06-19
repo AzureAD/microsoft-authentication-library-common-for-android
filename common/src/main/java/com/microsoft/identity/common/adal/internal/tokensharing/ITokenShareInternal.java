@@ -26,7 +26,9 @@ public interface ITokenShareInternal {
 
     /**
      * For the supplied user unique identifier (OID), return the corresponding refresh token for
-     * that account if the current application is a member of FoCI (family of clientIds).
+     * that account if the current application is a member of FoCI (family of clientIds). The token
+     * will be wrapped inside an opaque self-serializing object and cannot be used directly against
+     * an STS.
      *
      * @param oid The OID of the sought user's FRT.
      * @return The {@link com.microsoft.identity.common.internal.cache.ADALTokenCacheItem}
