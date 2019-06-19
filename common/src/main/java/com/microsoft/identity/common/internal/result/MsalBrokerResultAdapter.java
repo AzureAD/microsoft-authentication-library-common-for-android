@@ -40,10 +40,8 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
-import com.microsoft.identity.common.internal.cache.CacheRecord;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.SdkType;
@@ -53,11 +51,9 @@ import com.microsoft.identity.common.internal.util.ICacheRecordGsonAdapter;
 import org.json.JSONException;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_CURRENT_ACCOUNT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
 
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
@@ -340,16 +336,16 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     /**
-     * Get a bundle from current account's List<ICacheRecord>.
+     * Get a bundle from account(s)'s List<ICacheRecord>.
      *
-     * @param cacheRecords current account's List<ICacheRecord>.
+     * @param cacheRecords account(s)'s List<ICacheRecord>.
      * @return Bundle
      */
-    public static Bundle bundleFromCurrentAccount(@NonNull final List<ICacheRecord> cacheRecords) {
+    public static Bundle bundleFromAccounts(@NonNull final List<ICacheRecord> cacheRecords) {
         final Bundle resultBundle = new Bundle();
 
         if (cacheRecords != null) {
-            resultBundle.putString(BROKER_CURRENT_ACCOUNT, getJsonStringFromICacheRecordList(cacheRecords));
+            resultBundle.putString(BROKER_ACCOUNTS, getJsonStringFromICacheRecordList(cacheRecords));
         }
 
         return resultBundle;
@@ -367,12 +363,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * @param bundle Bundle
      * @return List<ICacheRecord> of the current account. This could be null.
      */
-    public static List<ICacheRecord> currentAccountFromBundle(@NonNull final Bundle bundle) throws ClientException {
-        final String accountJson = bundle.getString(BROKER_CURRENT_ACCOUNT);
+    public static List<ICacheRecord> accountsFromBundle(@NonNull final Bundle bundle) throws ClientException {
+        final String accountJson = bundle.getString(BROKER_ACCOUNTS);
 
         if (accountJson == null) {
             throw new ClientException(ErrorStrings.NO_ACCOUNT_FOUND,
-                    "No account found. The bundle does not contain the BROKER_CURRENT_ACCOUNT value.");
+                    "No account found. The bundle does not contain the BROKER_ACCOUNTS value.");
         }
 
         return getICacheRecordListFromJsonString(accountJson);
