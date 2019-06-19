@@ -87,8 +87,8 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     @Override
     @NonNull
-    public String getFamilyRefreshToken(@NonNull final String oid) throws BaseException {
-        final String methodName = ":getFamilyRefreshToken";
+    public String getWrappedFamilyRefreshToken(@NonNull final String oid) throws BaseException {
+        final String methodName = ":getWrappedFamilyRefreshToken";
 
         // First hit the cache to get the sought AccountRecord...
         final AccountRecord localAccountRecord = mTokenCache.getAccountByLocalAccountId(

@@ -32,7 +32,7 @@ public interface ITokenShareInternal {
      * @return The {@link com.microsoft.identity.common.internal.cache.ADALTokenCacheItem}
      * serialized to JSON.
      */
-    String getFamilyRefreshToken(String oid) throws Exception;
+    String getWrappedFamilyRefreshToken(String oid) throws Exception;
 
     /**
      * @param tokenCacheItemJson
