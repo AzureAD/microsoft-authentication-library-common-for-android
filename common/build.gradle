@@ -12,7 +12,7 @@ apply from: 'versioning/version_tasks.gradle'
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
     buildToolsVersion '28.0.3'
 
     defaultConfig {
@@ -22,7 +22,7 @@ android {
         versionName getAppVersionName()
         project.archivesBaseName = "common"
         project.version = android.defaultConfig.versionName
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -77,9 +77,9 @@ android {
 
 dependencies {
     implementation 'com.nimbusds:nimbus-jose-jwt:5.7'
-    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation "com.google.code.gson:gson:2.8.4"
-    implementation "com.android.support:customtabs:27.1.1"
+    implementation 'androidx.browser:browser:1.0.0'
 
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
@@ -94,7 +94,7 @@ dependencies {
 
     // Instrumented dependencies
     androidTestImplementation 'org.mockito:mockito-android:2.18.3'
-    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
+    androidTestImplementation('androidx.test.espresso:espresso-core:3.2.0', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 }
@@ -102,12 +102,12 @@ dependencies {
 // Create tasks to generate javadoc
 android.libraryVariants.all { variant ->
     task("${variant.name}Javadoc", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
-        source = variant.javaCompiler.source
+        source = variant.javaCompileProvider.get().source
 
         title = "Microsoft Identity Android Common"
 
         // First add all of your dependencies to the classpath, then add the android jars
-        doFirst { classpath += files(variant.javaCompiler.classpath.files) }
+        doFirst { classpath += files(variant.javaCompileProvider.get().classpath.files) }
         classpath += files(android.getBootClasspath())
 
         options.memberLevel = JavadocMemberLevel.PUBLIC
