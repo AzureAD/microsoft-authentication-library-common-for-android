@@ -22,7 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_API_EVENT_END;
+import android.support.annotation.NonNull;
+
+import com.microsoft.identity.common.exception.BaseException;
+
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 //TODO Add more properties to the event.
 public class ApiEndEvent extends BaseEvent {
@@ -31,5 +35,21 @@ public class ApiEndEvent extends BaseEvent {
     public ApiEndEvent() {
         super();
         names(TELEMETRY_EVENT_API_EVENT_END);
+    }
+
+    public ApiEndEvent putException(final BaseException exception) {
+        put(TELEMETRY_KEY_SERVER_ERROR_CODE, exception.getCliTelemErrorCode());
+        put(TELEMETRY_KEY_SERVER_SUBERROR_CODE, exception.getCliTelemSubErrorCode());
+        put(TELEMETRY_KEY_API_ERROR_CODE, exception.getErrorCode());
+        put(TELEMETRY_KEY_SPE_RING, exception.getSpeRing());
+        put(TELEMETRY_KEY_ERROR_DESCRIPTION, exception.getMessage()); //OII
+        put(TELEMETRY_KEY_RT_AGE, exception.getRefreshTokenAge());
+        put(TELEMETRY_KEY_IS_SUCCESSFUL, TELEMETRY_VALUE_NO);
+        return this;
+    }
+
+    public ApiEndEvent putApiId(@NonNull final String apiId) {
+        super.put(TELEMETRY_KEY_API_ID, apiId);
+        return this;
     }
 }

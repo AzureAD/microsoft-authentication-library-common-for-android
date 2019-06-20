@@ -38,6 +38,9 @@ import com.microsoft.identity.common.internal.request.AcquireTokenOperationParam
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
+import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 
 import java.util.List;
 import java.util.UUID;
@@ -368,7 +371,13 @@ public class ApiDispatcher {
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                initializeDiagnosticContext();
+                final String correlationId = initializeDiagnosticContext();
+                Telemetry.with(command.mParameters.getAppContext()).emit(
+                        new ApiStartEvent()
+                                .putProperties(command.mParameters)
+                                .putApiId("acquire_token_silent")
+                                .correlationId(correlationId)
+                );
 
                 if (command.mParameters instanceof AcquireTokenSilentOperationParameters) {
                     logSilentRequestParams(
@@ -405,6 +414,12 @@ public class ApiDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
+                            Telemetry.with(command.mParameters.getAppContext()).emit(
+                                    new ApiEndEvent()
+                                            .putException(finalException)
+                                            .putApiId("acquire_token_silent")
+                                            .correlationId(correlationId)
+                            );
                             command.getCallback().onError(finalException);
                         }
                     });

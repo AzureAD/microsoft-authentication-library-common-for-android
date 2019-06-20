@@ -72,7 +72,13 @@ public final class TelemetryEventStrings {
     public static final String TELEMETRY_KEY_DEVICE_ID = "device_id";
     public static final String TELEMETRY_KEY_APPLICATION_NAME = "application_name";
     public static final String TELEMETRY_KEY_APPLICATION_VERSION = "application_version";
+    public static final String TELEMETRY_KEY_SDK_NAME = "sdk_name";
+    public static final String TELEMETRY_KEY_SDK_VERSION = "sdk_version";
     public static final String TELEMETRY_KEY_LOGIN_HINT = "login_hint";
+    public static final String TELEMETRY_KEY_CLAIM_REQUEST = "claim_request";
+    public static final String TELEMETRY_KEY_REDIRECT_URI = "redirect_uri";
+    public static final String TELEMETRY_KEY_SCOPE_SIZE = "scope_size";
+    public static final String TELEMETRY_KEY_SCOPE = "scope_value";
     public static final String TELEMETRY_KEY_NTLM_HANDLED = "ntlm";
     public static final String TELEMETRY_KEY_UI_EVENT_COUNT = "ui_event_count";
     public static final String TELEMETRY_KEY_API_EVENT_COUNT = "api_event_count";
@@ -116,6 +122,7 @@ public final class TelemetryEventStrings {
     public static final String TELEMETRY_KEY_SERVER_SUBERROR_CODE = "server_sub_error_code";
     public static final String TELEMETRY_KEY_RT_AGE = "rt_age";
     public static final String TELEMETRY_KEY_SPE_INFO = "spe_info";
+    public static final String TELEMETRY_KEY_SPE_RING = "spe_ring";
     public static final String TELEMETRY_KEY_IS_SUCCESSFUL = "is_successfull";
     public static final String TELEMETRY_KEY_WIPE_APP = "wipe_app";
     public static final String TELEMETRY_KEY_WIPE_TIME = "wipe_time";

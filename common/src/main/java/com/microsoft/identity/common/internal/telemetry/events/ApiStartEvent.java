@@ -26,6 +26,12 @@ import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
+import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
+import com.microsoft.identity.common.internal.request.BrokerAcquireTokenOperationParameters;
+import com.microsoft.identity.common.internal.request.BrokerAcquireTokenSilentOperationParameters;
+import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -40,6 +46,44 @@ public class ApiStartEvent extends BaseEvent {
     public ApiStartEvent() {
         super();
         names(TELEMETRY_EVENT_API_EVENT_START);
+    }
+
+    public ApiStartEvent putProperties(final OperationParameters parameters) {
+        this.put(TELEMETRY_KEY_AUTHORITY, parameters.getAuthority().toString());
+        this.put(TELEMETRY_KEY_AUTHORITY_TYPE, parameters.getAuthority().getAuthorityTypeString());
+        this.put(TELEMETRY_KEY_APPLICATION_NAME, parameters.getApplicationName());
+        this.put(TELEMETRY_KEY_APPLICATION_VERSION, parameters.getApplicationVersion());
+        this.put(TELEMETRY_KEY_SDK_NAME, parameters.getSdkType().name());
+        this.put(TELEMETRY_KEY_SDK_VERSION, parameters.getSdkVersion());
+        this.put(TELEMETRY_KEY_CLAIM_REQUEST, StringUtil.isEmpty(
+                parameters.getClaimsRequestJson())? TELEMETRY_VALUE_NO : TELEMETRY_VALUE_YES
+        );
+        this.put(TELEMETRY_KEY_REDIRECT_URI, parameters.getRedirectUri());
+        this.put(TELEMETRY_KEY_CLIENT_ID, parameters.getClientId());
+        this.put(
+                TELEMETRY_KEY_LOGIN_HINT,
+                parameters.getAccount() == null ? TELEMETRY_VALUE_NOT_FOUND : parameters.getAccount().getHomeAccountId()
+        );
+        this.put(TELEMETRY_KEY_SCOPE_SIZE, String.valueOf(parameters.getScopes().size()));
+        this.put(TELEMETRY_KEY_SCOPE, parameters.getScopes().toString());
+
+        if (parameters instanceof AcquireTokenOperationParameters) {
+            //TODO
+        }
+
+        if (parameters instanceof AcquireTokenSilentOperationParameters) {
+            //TODO
+        }
+
+        if (parameters instanceof BrokerAcquireTokenOperationParameters) {
+            //TODO
+        }
+
+        if (parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
+            //TODO
+        }
+
+        return this;
     }
 
     public ApiStartEvent authority(@NonNull final String authority) {
