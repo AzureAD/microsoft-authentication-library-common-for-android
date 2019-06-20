@@ -20,22 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry;
+package com.microsoft.identity.common.internal.telemetry.events;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_CACHE_EVENT_END;
 
-public class UiEvent extends BaseEvent {
-    private static final String TAG = UiEvent.class.getSimpleName();
+//TODO Add more properties to the event.
+public class CacheEndEvent extends BaseEvent {
+    private static final String TAG = CacheEndEvent.class.getSimpleName();
 
-    public UiEvent() {
+    public CacheEndEvent() {
         super();
-        putEventName(TELEMETRY_EVENT_UI_EVENT);
+        names(TELEMETRY_EVENT_CACHE_EVENT_END);
     }
-
-    /*
-    TELEMETRY_KEY_UI_CANCELLED
-    HTTP_USER_AGENT
-    TELEMETRY_KEY_LOGIN_HINT
-    TELEMETRY_KEY_NTLM_HANDLED ?
-     */
 }

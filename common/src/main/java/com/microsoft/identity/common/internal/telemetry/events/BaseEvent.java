@@ -20,16 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry;
+package com.microsoft.identity.common.internal.telemetry.events;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.microsoft.identity.common.internal.telemetry.Properties;
+
 public class BaseEvent extends Properties {
-    public static final String START_TIME = "start_time";
-    public static final String STOP_TIME = "stop_time";
+    public static final String OCCUR_TIME = "start_time";
     public static final String EVENT_NAME = "event_name";
-    public static final String IS_COMPLETED = "is_completed";
+    public static final String CORRELATION_ID = "correlation_id";
+
+    BaseEvent() {
+        super();
+        occurs(System.currentTimeMillis());
+    }
 
     /**
      * Put the event name value into the properties map.
@@ -37,51 +43,35 @@ public class BaseEvent extends Properties {
      * @param eventName String of the event name
      * @return the event object
      */
-    public BaseEvent putEventName(@NonNull String eventName) {
+    public BaseEvent names(@NonNull String eventName) {
         put(EVENT_NAME, eventName);
         return this;
     }
 
     /**
-     * Put the event start time into the properties map.
+     * Put the event occurring time into the properties map.
      *
      * @param eventStartTime Long of the event start time. If null, then put the current time as the start time.
      * @return the event object
      */
-    public BaseEvent putEventStartTime(@Nullable Long eventStartTime) {
+    public BaseEvent occurs(@Nullable Long eventStartTime) {
         if (null == eventStartTime) {
-            put(START_TIME, String.valueOf(System.currentTimeMillis()));
+            put(OCCUR_TIME, String.valueOf(System.currentTimeMillis()));
         } else {
-            put(START_TIME, eventStartTime.toString());
+            put(OCCUR_TIME, eventStartTime.toString());
         }
 
         return this;
     }
 
     /**
-     * Put the event stop time into the properties map.
+     * Set the event correlation id.
      *
-     * @param eventStopTime Long of the event stop time. If null, then put the current time as the stop time.
+     * @param correlationId correlation id String
      * @return the event object
      */
-    public BaseEvent putEventStopTime(@Nullable Long eventStopTime) {
-        if (null == eventStopTime) {
-            put(STOP_TIME, String.valueOf(System.currentTimeMillis()));
-        } else {
-            put(STOP_TIME, eventStopTime.toString());
-        }
-
-        return this;
-    }
-
-    /**
-     * Put the event completion status into the properties map.
-     *
-     * @param isCompleted "true" if the event is completed, "false" otherwise.
-     * @return the event object
-     */
-    public BaseEvent isCompleted(final Boolean isCompleted) {
-        put(IS_COMPLETED, isCompleted.toString());
+    public BaseEvent correlationId(final String correlationId) {
+        put(CORRELATION_ID, correlationId);
         return this;
     }
 }

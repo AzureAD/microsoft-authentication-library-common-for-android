@@ -20,12 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry;
+package com.microsoft.identity.common.internal.telemetry.events;
 
-public class TelemetryPiiRules {
-    //enum of pii properties names based on TelemetryEventStrings
-    public boolean isPii (final String propertyName) {
-        //TODO
-        throw new UnsupportedOperationException("Not implemented");
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_HTTP_REQUEST_END;
+
+//TODO Add more properties to the event.
+public class HttpEndEvent extends BaseEvent {
+    private static final String TAG = HttpEndEvent.class.getSimpleName();
+
+    public HttpEndEvent() {
+        super();
+        names(TELEMETRY_EVENT_HTTP_REQUEST_END);
     }
 }

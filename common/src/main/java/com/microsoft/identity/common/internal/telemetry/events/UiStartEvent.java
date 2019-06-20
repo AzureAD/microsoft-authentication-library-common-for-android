@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.internal.telemetry;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,32 +20,33 @@ package com.microsoft.identity.common.internal.telemetry;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.internal.telemetry.events;
+
+import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
+
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
-public class CacheEvent extends BaseEvent {
-    private static final String TAG = CacheEvent.class.getSimpleName();
+//TODO Add more properties to the event.
+public class UiStartEvent extends BaseEvent {
+    private static final String TAG = UiStartEvent.class.getSimpleName();
 
-    public CacheEvent() {
+    public UiStartEvent() {
         super();
-        putEventName(TELEMETRY_EVENT_CACHE_EVENT);
+        names(TELEMETRY_EVENT_UI_EVENT_START);
     }
 
-    /*
-    MSID_TELEMETRY_KEY_TOKEN_TYPE
-    MSID_TELEMETRY_KEY_IS_FRT
-    MSID_TELEMETRY_KEY_IS_MRRT
-    MSID_TELEMETRY_KEY_IS_RT
+    public UiStartEvent putUserAgent(final AuthorizationAgent userAgent) {
+        this.put(TELEMETRY_KEY_USER_AGENT, userAgent.name());
+        return this;
+    }
 
-    MSID_TELEMETRY_KEY_RESULT_STATUS
-    MSID_TELEMETRY_KEY_RT_STATUS
-    MSID_TELEMETRY_KEY_MRRT_STATUS
-    MSID_TELEMETRY_KEY_FRT_STATUS
-    MSID_TELEMETRY_KEY_SPE_INFO
+    public UiStartEvent putLoginHint(final String loginHint) {
+        this.put(TELEMETRY_KEY_LOGIN_HINT, loginHint);
+        return this;
+    }
 
-
-    MSID_TELEMETRY_KEY_WIPE_APP
-    MSID_TELEMETRY_KEY_WIPE_TIME
-
-    */
-
+    public UiStartEvent isForcePrompt(final boolean isForcePrompt) {
+        this.put(TELEMETRY_KEY_IS_FORCE_PROMPT, String.valueOf(isForcePrompt));
+        return this;
+    }
 }

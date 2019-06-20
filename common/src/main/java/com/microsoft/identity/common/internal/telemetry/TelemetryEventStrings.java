@@ -24,13 +24,26 @@ package com.microsoft.identity.common.internal.telemetry;
 
 public final class TelemetryEventStrings {
     public static final String TELEMETRY_EVENT_DEFAULT_EVENT = "default_event";
-    public static final String TELEMETRY_EVENT_API_EVENT = "api_event";
-    public static final String TELEMETRY_EVENT_CACHE_EVENT = "cache_event";
-    public static final String TELEMETRY_EVENT_UI_EVENT = "ui_event";
-    public static final String TELEMETRY_EVENT_HTTP_REQUEST = "http_event";
-    public static final String TELEMETRY_EVENT_LAUNCH_BROKER = "broker_event";
+
+    public static final String TELEMETRY_EVENT_API_EVENT_START = "api_start_event";
+    public static final String TELEMETRY_EVENT_API_EVENT_END = "api_end_event";
+
+    public static final String TELEMETRY_EVENT_CACHE_EVENT_START = "cache_start_event";
+    public static final String TELEMETRY_EVENT_CACHE_EVENT_END = "cache_end_event";
+
+    public static final String TELEMETRY_EVENT_UI_EVENT_START = "ui_start_event";
+    public static final String TELEMETRY_EVENT_UI_EVENT_END = "ui_end_event";
+
+    public static final String TELEMETRY_EVENT_HTTP_REQUEST_START = "http_start_event";
+    public static final String TELEMETRY_EVENT_HTTP_REQUEST_END = "http_end_event";
+
+    public static final String TELEMETRY_EVENT_BROKER_REQUEST_START = "broker_start_event";
+    public static final String TELEMETRY_EVENT_BROKER_REQUEST_END = "broker_end_event";
+
+    public static final String TELEMETRY_EVENT_AUTHORITY_VALIDATION_START = "authority_validation_start_event";
+    public static final String TELEMETRY_EVENT_AUTHORITY_VALIDATION_END = "authority_validation_end_event";
+
     public static final String TELEMETRY_EVENT_TOKEN_GRANT = "token_grant";
-    public static final String TELEMETRY_EVENT_AUTHORITY_VALIDATION = "authority_validation";
     public static final String TELEMETRY_EVENT_ACQUIRE_TOKEN_SILENT = "acquire_token_silent_handler";
     public static final String TELEMETRY_EVENT_AUTHORIZATION_CODE = "authorization_code";
     public static final String TELEMETRY_EVENT_TOKEN_CACHE_LOOKUP = "token_cache_lookup";
@@ -38,6 +51,8 @@ public final class TelemetryEventStrings {
     public static final String TELEMETRY_EVENT_TOKEN_CACHE_DELETE = "token_cache_delete";
     public static final String TELEMETRY_EVENT_APP_METADATA_WRITE = "app_metadata_write";
     public static final String TELEMETRY_EVENT_APP_METADATA_DELETE = "app_metadata_delete";
+
+
 
     // Telemetry property name, only alphabetic letters, dots, and underscores are allowed.
     public static final String TELEMETRY_KEY_EVENT_NAME = "event_name";
@@ -53,6 +68,7 @@ public final class TelemetryEventStrings {
     public static final String TELEMETRY_KEY_START_TIME = "start_time";
     public static final String TELEMETRY_KEY_END_TIME = "stop_time";
     public static final String TELEMETRY_KEY_RESPONSE_TIME = "response_time";
+    public static final String TELEMETRY_KEY_IS_FORCE_PROMPT = "force_prompt";
     public static final String TELEMETRY_KEY_DEVICE_ID = "device_id";
     public static final String TELEMETRY_KEY_APPLICATION_NAME = "application_name";
     public static final String TELEMETRY_KEY_APPLICATION_VERSION = "application_version";

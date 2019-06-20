@@ -20,55 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.internal.telemetry.events;
 
-package com.microsoft.identity.common.internal.telemetry;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_UI_EVENT_END;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_UI_CANCELLED;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_USER_CANCEL;
 
-import java.util.concurrent.ConcurrentHashMap;
+//TODO Add more properties to the event.
+public class UiEndEvent extends BaseEvent {
+    private static final String TAG = UiEndEvent.class.getSimpleName();
 
-/**
- * The base class for the event properties.
- */
-public class Properties {
-    private ConcurrentHashMap<String, String> mProperties;
-
-    Properties(final ConcurrentHashMap<String, String> properties) {
-        mProperties = properties;
+    public UiEndEvent() {
+        super();
+        names(TELEMETRY_EVENT_UI_EVENT_END);
     }
 
-    public Properties() {
-        mProperties = new ConcurrentHashMap<>();
-    }
-
-    public Properties put(final String key, final String value) {
-        if (mProperties == null) {
-            mProperties = new ConcurrentHashMap<>();
-        }
-
-        mProperties.put(key, value);
+    public UiEndEvent isUserCancelled(final boolean userCancelled) {
+        this.put(TELEMETRY_KEY_USER_CANCEL, String.valueOf(userCancelled));
         return this;
     }
 
-    public Properties remove(final String key) {
-        mProperties.remove(key);
+    public UiEndEvent isUiCancelled(final boolean uiCancelled) {
+        this.put(TELEMETRY_KEY_UI_CANCELLED, String.valueOf(uiCancelled));
         return this;
-    }
-
-    public Properties remove(final String key, final String value) {
-        mProperties.remove(key, value);
-        return this;
-    }
-
-    public Properties put(final Properties appendProperties) {
-        if (mProperties == null) {
-            mProperties = appendProperties.getProperties();
-        } else {
-            mProperties.putAll(appendProperties.getProperties());
-        }
-
-        return this;
-    }
-
-    public ConcurrentHashMap<String, String> getProperties() {
-        return mProperties;
     }
 }

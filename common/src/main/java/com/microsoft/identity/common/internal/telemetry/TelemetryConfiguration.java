@@ -40,7 +40,7 @@ public class TelemetryConfiguration implements Serializable {
     @SerializedName("enable_telemetry")
     private boolean mTelemetryEnabled = true;
 
-    TelemetryConfiguration() {
+    public TelemetryConfiguration() {
     }
 
     /**

@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry;
+package com.microsoft.identity.common.internal.telemetry.events;
 
 import android.support.annotation.NonNull;
 
@@ -34,48 +34,40 @@ import java.security.NoSuchAlgorithmException;
 
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
-public class ApiEvent extends BaseEvent {
-    private static final String TAG = ApiEvent.class.getSimpleName();
+public class ApiStartEvent extends BaseEvent {
+    private static final String TAG = ApiStartEvent.class.getSimpleName();
 
-    public ApiEvent() {
+    public ApiStartEvent() {
         super();
-        putEventName(TELEMETRY_EVENT_API_EVENT);
-        put(TELEMETRY_KEY_API_EVENT_COUNT, "0");
+        names(TELEMETRY_EVENT_API_EVENT_START);
     }
 
-    public ApiEvent put(final ApiEvent newApiEvent) {
-        super.put(newApiEvent);
-        //increate the event count
-        put(TELEMETRY_KEY_API_EVENT_COUNT, String.valueOf(Integer.parseInt(this.getProperties().get(TELEMETRY_KEY_API_EVENT_COUNT)) + 1));
-        return this;
-    }
-
-    public ApiEvent putAuthority(@NonNull final String authority) {
+    public ApiStartEvent authority(@NonNull final String authority) {
         super.put(TELEMETRY_KEY_AUTHORITY, sanitizeUrlForTelemetry(authority));
         return this;
     }
 
-    public ApiEvent putAuthorityType(@NonNull final String authorityType) {
+    public ApiStartEvent putAuthorityType(@NonNull final String authorityType) {
         put(TELEMETRY_KEY_AUTHORITY_TYPE, authorityType);
         return this;
     }
 
-    public ApiEvent putUiBehavior(@NonNull final String uiBehavior) {
+    public ApiStartEvent putUiBehavior(@NonNull final String uiBehavior) {
         super.put(TELEMETRY_KEY_UI_BEHAVIOR, uiBehavior);
         return this;
     }
 
-    public ApiEvent putApiId(@NonNull final String apiId) {
+    public ApiStartEvent putApiId(@NonNull final String apiId) {
         super.put(TELEMETRY_KEY_API_ID, apiId);
         return this;
     }
 
-    public ApiEvent putValidationStatus(@NonNull final String validationStatus) {
+    public ApiStartEvent putValidationStatus(@NonNull final String validationStatus) {
         super.put(TELEMETRY_KEY_AUTHORITY_VALIDATION_STATUS, validationStatus);
         return this;
     }
 
-    public ApiEvent putLoginHint(@NonNull final String loginHint) {
+    public ApiStartEvent putLoginHint(@NonNull final String loginHint) {
         try {
             super.put(TELEMETRY_KEY_LOGIN_HINT, StringExtensions.createHash(loginHint));
         } catch (final NoSuchAlgorithmException | UnsupportedEncodingException exception) {
@@ -85,27 +77,22 @@ public class ApiEvent extends BaseEvent {
         return this;
     }
 
-    public ApiEvent putExtendedExpiresOnSetting(@NonNull final  String extendedExpiresOnSetting) {
+    public ApiStartEvent putExtendedExpiresOnSetting(@NonNull final  String extendedExpiresOnSetting) {
         put(TELEMETRY_KEY_EXTENDED_EXPIRES_ON_SETTING, extendedExpiresOnSetting);
         return this;
     }
 
-    public ApiEvent isApiCallSuccessful(final Boolean isSuccessful) {
+    public ApiStartEvent isApiCallSuccessful(final Boolean isSuccessful) {
         super.put(TELEMETRY_KEY_IS_SUCCESSFUL, isSuccessful.toString());
         return this;
     }
 
-    public ApiEvent putCorrelationId(@NonNull final String correlationId) {
-        super.put(TELEMETRY_KEY_CORRELATION_ID, correlationId);
-        return this;
-    }
-
-    public ApiEvent putRequestId(@NonNull final String requestId) {
+    public ApiStartEvent putRequestId(@NonNull final String requestId) {
         super.put(TELEMETRY_KEY_REQUEST_ID, requestId);
         return this;
     }
 
-    public ApiEvent putApiErrorCode(@NonNull final String errorCode) {
+    public ApiStartEvent putApiErrorCode(@NonNull final String errorCode) {
         super.put(TELEMETRY_KEY_API_ERROR_CODE, errorCode);
         return this;
     }

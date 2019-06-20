@@ -26,14 +26,10 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.internal.telemetry.events.BaseEvent;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +42,8 @@ public class Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
     static volatile Telemetry singleton = null;
     private TelemetryDispatcher mTelemetryDispatcher;
-    private Map<String, Properties> mAggregatedTelemetryMap;
+    //private Map<String, Properties> mAggregatedTelemetryMap;
+    private List<Map<String, String>> mTelemetryRawDataMap;
     private TelemetryConfiguration mDefaultConfiguration;
     private final TelemetryContext mTelemetryContext;
     private final boolean mIsDebugging;
@@ -58,7 +55,7 @@ public class Telemetry {
         mDefaultConfiguration = configuration;
         mTelemetryContext = telemetryContext;
         mIsDebugging = isDebugging;
-        mAggregatedTelemetryMap = new HashMap<>();
+        mTelemetryRawDataMap = new LinkedList<>();
     }
 
     public static Telemetry with(Context context) {
@@ -76,14 +73,19 @@ public class Telemetry {
         return singleton;
     }
 
-    public Map<String, Properties> getRequestMap() {
-        return mAggregatedTelemetryMap;
+    public TelemetryContext getTelemetryContext() {
+        return mTelemetryContext;
+    }
+
+    public List<Map<String, String>> getRequestMap() {
+        return mTelemetryRawDataMap;
     }
 
     /**
      * Register the receiver to flush the telemetry data.
      * @param receiver ITelemetryReceiver
      */
+    //TODO apply observer patter here.
     public synchronized void registerReceiver(final ITelemetryReceiver receiver) {
         if (null == receiver) {
             throw new IllegalArgumentException("Receiver instance cannot be null");
@@ -101,87 +103,106 @@ public class Telemetry {
         mTelemetryDispatcher = new TelemetryDispatcher(receiver);
     }
 
-    public void track(final @NonNull String requestId, final BaseEvent event) {
-        track(requestId, event.getClass().getSimpleName(), event, null);
+    /**
+     * Emit the event into the telemetry raw data map.
+     *
+     * @param event BaseEvent object
+     * @return the event reference for future properties modification.
+     */
+    public BaseEvent emit(final BaseEvent event) {
+        mTelemetryRawDataMap.add(event.getProperties());
+        return event;
     }
 
-    public void track(final @NonNull String requestId,
-                      final @NonNull String eventName,
-                      final @NonNull String propertyKey,
-                      final @Nullable String propertyValue) {
-        if (StringUtil.isEmpty(requestId)) {
-            throw new IllegalArgumentException("request id must not be null or empty.");
-        }
 
-        if (StringUtil.isEmpty(eventName)) {
-            throw new IllegalArgumentException("event name must not be null or empty.");
-        }
+//    public void track(final @NonNull String requestId, final BaseEvent event) {
+//        track(requestId, event.getClass().getSimpleName(), event, null);
+//    }
+//
+//    public void track(final @NonNull String requestId,
+//                      final @NonNull String eventName,
+//                      final @NonNull String propertyKey,
+//                      final @Nullable String propertyValue) {
+//        if (StringUtil.isEmpty(requestId)) {
+//            throw new IllegalArgumentException("request id must not be null or empty.");
+//        }
+//
+//        if (StringUtil.isEmpty(eventName)) {
+//            throw new IllegalArgumentException("event name must not be null or empty.");
+//        }
+//
+//        if (StringUtil.isEmpty(propertyKey)) {
+//            throw new IllegalArgumentException("eventName must not be null or empty.");
+//        }
+//
+//        sTelemetryExecutor.submit(
+//                new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        //enqueue the event
+//                        final String key = getPropertyKey(requestId, eventName);
+//                        if (mAggregatedTelemetryMap.get(key) == null)
+//                        {
+//                            mAggregatedTelemetryMap.put(key, new Properties().put(propertyKey, propertyValue));
+//                        } else {
+//                            mAggregatedTelemetryMap.get(key).put(propertyKey, propertyValue);
+//                        }
+//                    }
+//                });
+//    }
+//
+//    public void track(final String requestId,
+//                      final String eventName,
+//                      final BaseEvent event,
+//                      final TelemetryConfiguration options) {
+//        if (StringUtil.isEmpty(requestId)) {
+//            throw new IllegalArgumentException("requestId must not be null or empty.");
+//        }
+//
+//        sTelemetryExecutor.submit(
+//                new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        //Overwrite the telemetry configuration if the passed-in options is not null.
+//                        if (options != null) {
+//                            mDefaultConfiguration = options;
+//                        }
+//
+//                        if (null != event) {
+//                            //enqueue the event
+//                            final String key = getPropertyKey(requestId, eventName);
+//                            if (mAggregatedTelemetryMap.get(key) == null)
+//                            {
+//                                mAggregatedTelemetryMap.put(key, event);
+//                            } else {
+//                                mAggregatedTelemetryMap.get(key).put(event);
+//                            }
+//                        }
+//                    }
+//                });
+//    }
 
-        if (StringUtil.isEmpty(propertyKey)) {
-            throw new IllegalArgumentException("eventName must not be null or empty.");
-        }
-
-        sTelemetryExecutor.submit(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        //enqueue the event
-                        final String key = getPropertyKey(requestId, eventName);
-                        if (mAggregatedTelemetryMap.get(key) == null)
-                        {
-                            mAggregatedTelemetryMap.put(key, new Properties().put(propertyKey, propertyValue));
-                        } else {
-                            mAggregatedTelemetryMap.get(key).put(propertyKey, propertyValue);
-                        }
-                    }
-                });
-    }
-
-    public void track(final String requestId,
-                      final String eventName,
-                      final BaseEvent event,
-                      final TelemetryConfiguration options) {
-        if (StringUtil.isEmpty(requestId)) {
-            throw new IllegalArgumentException("requestId must not be null or empty.");
-        }
-
-        sTelemetryExecutor.submit(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        //Overwrite the telemetry configuration if the passed-in options is not null.
-                        if (options != null) {
-                            mDefaultConfiguration = options;
-                        }
-
-                        if (null != event) {
-                            //enqueue the event
-                            final String key = getPropertyKey(requestId, eventName);
-                            if (mAggregatedTelemetryMap.get(key) == null)
-                            {
-                                mAggregatedTelemetryMap.put(key, event);
-                            } else {
-                                mAggregatedTelemetryMap.get(key).put(event);
-                            }
-                        }
-                    }
-                });
-    }
-
+    /**
+     * Flush the telemetry data based on the requestId to the observer.
+     *
+     * @param requestId The request id should either passed by the client app through the API call
+     *                  or generated by the API dispatcher.
+     */
     public void flush(final String requestId) {
         if (null == mTelemetryDispatcher) {
             return;
         }
 
         synchronized (this) {
-            List<Map<String, String>> result = new ArrayList<>();
             //check the configuration
             if (!mDefaultConfiguration.isDebugEnabled() && mIsDebugging) {
                 return;
             }
 
+            //TODO currently just flush the aggregated data required by the MATS.
+
             //Add the telemetry context map
-            result.add(mTelemetryContext.getProperties());
+            //result.add(mTelemetryContext.getProperties());
 
             //Append all the events of the request id
 
@@ -245,12 +266,12 @@ public class Telemetry {
         }
     }
 
-    private String getPropertyKey(@NonNull final String requestId, @NonNull final String eventName) {
-        final List<String> key = new LinkedList<>();
-        key.add(requestId);
-        key.add(eventName);
-        return StringUtil.join('_', key);
-    }
+//    private String getPropertyKey(@NonNull final String requestId, @NonNull final String eventName) {
+//        final List<String> key = new LinkedList<>();
+//        key.add(requestId);
+//        key.add(eventName);
+//        return StringUtil.join('_', key);
+//    }
 
     /**
      * Returns true if the application has the given permission.
