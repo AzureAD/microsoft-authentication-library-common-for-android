@@ -331,7 +331,7 @@ public class StorageHelper implements IStorageHelper {
                                 + brokerPackageName
                 );
 
-                if (faults <= MAX_FAULTS) {
+                if (faults < MAX_FAULTS) {
                     faults++;
 
                     Logger.warn(
