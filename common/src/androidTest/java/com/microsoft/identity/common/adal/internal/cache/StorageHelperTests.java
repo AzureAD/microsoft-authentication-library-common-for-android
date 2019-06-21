@@ -272,7 +272,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         }
         final Context context = getInstrumentation().getTargetContext();
         final StorageHelper storageHelper = new StorageHelper(context);
-        SecretKey kp = storageHelper.loadSecretKeyForEncryption();
+        SecretKey kp = storageHelper.loadSecretKeyForEncryptionByPackageName();
 
         assertNotNull("Keypair is not null", kp);
 
@@ -332,10 +332,10 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
             keyFile.delete();
         }
 
-        SecretKey key = storageHelper.loadSecretKeyForEncryption();
+        SecretKey key = storageHelper.loadSecretKeyForEncryptionByPackageName();
         assertNotNull("Key is not null", key);
 
-        SecretKey key2 = storageHelper.loadSecretKeyForEncryption();
+        SecretKey key2 = storageHelper.loadSecretKeyForEncryptionByPackageName();
         Log.d(TAG, "Key1:" + key.toString());
         Log.d(TAG, "Key1:" + key2.toString());
         assertTrue("Key info is same", key.toString().equals(key2.toString()));

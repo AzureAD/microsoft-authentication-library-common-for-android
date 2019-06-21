@@ -56,7 +56,7 @@ public interface IStorageHelper {
      * @throws GeneralSecurityException throws if general security error happens.
      * @throws IOException              throws if I/O error happens.
      */
-    SecretKey loadSecretKeyForEncryption() throws IOException, GeneralSecurityException;
+    SecretKey loadSecretKeyForEncryptionByPackageName(String packageName) throws IOException, GeneralSecurityException;
 
     /**
      * Get Secret Key based on API level to use in encryption. Decryption key

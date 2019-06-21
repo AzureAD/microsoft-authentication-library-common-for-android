@@ -36,6 +36,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -58,7 +59,9 @@ import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -139,6 +142,11 @@ public class StorageHelper implements IStorageHelper {
 
     private static final String ANDROID_KEY_STORE = "AndroidKeyStore";
 
+    private static final Set<String> mBrokerPackageNames = new HashSet<String>() {{
+        add(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME);
+        add(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+    }};
+
     private final Context mContext;
     private final SecureRandom mRandom;
 
@@ -173,7 +181,7 @@ public class StorageHelper implements IStorageHelper {
         }
 
         // load key for encryption if not loaded
-        mKey = loadSecretKeyForEncryption();
+        mKey = loadSecretKeyForEncryptionByPackageName(mContext.getPackageName());
         mHMACKey = getHMacKey(mKey);
 
         Log.v(TAG, "Encrypt version:" + mBlobVersion);
@@ -223,6 +231,10 @@ public class StorageHelper implements IStorageHelper {
     public String decrypt(final String encryptedBlob)
             throws GeneralSecurityException, IOException {
         Log.v(TAG, "Starting decryption");
+
+        if (mBrokerPackageNames.contains(mContext.getPackageName())) {
+            return decryptWithBrokerRetry(encryptedBlob);
+        }
 
         if (StringExtensions.isNullOrBlank(encryptedBlob)) {
             throw new IllegalArgumentException("Input is empty or null");
@@ -286,12 +298,75 @@ public class StorageHelper implements IStorageHelper {
         return decrypted;
     }
 
+    /**
+     * Broker-specific decryption method used to retry keys when broker-switching.
+     *
+     * @return The decrypted value.
+     * @throws GeneralSecurityException
+     * @throws IOException
+     */
+    private String decryptWithBrokerRetry(@NonNull final String encryptedblob)
+            throws IOException, GeneralSecurityException {
+        final String methodName = "decryptWithBrokerRetry";
+
+        // Placeholder for our result
+        String decryptedResult = null;
+
+        // We'll only throw an exception when we run out of keys to try...
+        final int MAX_FAULTS = mBrokerPackageNames.size() - 1;
+        int faults = 0;
+
+        // Due to broker-switching action, we need to implement key-retry.
+        for (final String brokerPackageName : mBrokerPackageNames) {
+            try {
+                // Load the key
+                loadSecretKeyForEncryptionByPackageName(brokerPackageName);
+
+                // Try to use it for decryption
+                decryptedResult = decrypt(encryptedblob);
+            } catch (IOException | GeneralSecurityException e) {
+                Logger.warn(
+                        TAG + methodName,
+                        "Failed to decrypt with pkg name:"
+                                + brokerPackageName
+                );
+
+                if (++faults < MAX_FAULTS) {
+                    Logger.warn(
+                            TAG + methodName,
+                            "Retrying..."
+                    );
+
+                    continue;
+                }
+
+                Logger.error(
+                        TAG + methodName,
+                        "Failed to decrypt - keys options exhausted",
+                        e
+                );
+
+                throw e;
+            } finally {
+                // Whatever happens, reset the keys to our package...
+                loadSecretKeyForEncryptionByPackageName(mContext.getPackageName());
+            }
+        }
+
+        return decryptedResult;
+    }
+
     @Override
-    public synchronized SecretKey loadSecretKeyForEncryption() throws IOException,
+    public synchronized SecretKey loadSecretKeyForEncryptionByPackageName(
+            @NonNull final String pkgName) throws IOException,
             GeneralSecurityException {
-        final String pkgName = mContext.getPackageName();
         final byte[] secretKeyData = getSecretKeyData(pkgName);
-        return loadSecretKeyForEncryption(secretKeyData == null ? VERSION_ANDROID_KEY_STORE : VERSION_USER_DEFINED);
+
+        return loadSecretKeyForEncryption(
+                secretKeyData == null
+                        ? VERSION_ANDROID_KEY_STORE
+                        : VERSION_USER_DEFINED
+        );
     }
 
     @Nullable
