@@ -28,17 +28,24 @@ import java.io.Serializable;
 
 public class TelemetryConfiguration implements Serializable {
 
-    @SerializedName("enable_pii")
+    /**
+     * Field names used for serialization by Gson.
+     */
+    public static final class SerializedNames {
+        public static final String PII_ENABLED = "pii_enabled";
+        public static final String NOTIFY_ON_FAILTURE_ONLY = "notify_on_failure_only";
+        public static final String DEBUG_ENABLED = "debug_enabled";
+    }
+
+
+    @SerializedName(SerializedNames.PII_ENABLED)
     private boolean mPiiEnabled = false;
 
-    @SerializedName("notify_on_failure_only")
+    @SerializedName(SerializedNames.NOTIFY_ON_FAILTURE_ONLY)
     private boolean mNotifyOnFailureOnly = true;
 
-    @SerializedName("enable_debug")
+    @SerializedName(SerializedNames.DEBUG_ENABLED)
     private boolean mDebugEnabled = false;
-
-    @SerializedName("enable_telemetry")
-    private boolean mTelemetryEnabled = true;
 
     public TelemetryConfiguration() {
     }
@@ -100,13 +107,5 @@ public class TelemetryConfiguration implements Serializable {
      */
     public void setDebugEnabled(final boolean debugEnabled) {
         mDebugEnabled = debugEnabled;
-    }
-
-    public boolean isTelemetryEnabled() {
-        return mTelemetryEnabled;
-    }
-
-    public void enableTelemetry(final boolean telemetryEnabled) {
-        mTelemetryEnabled = telemetryEnabled;
     }
 }

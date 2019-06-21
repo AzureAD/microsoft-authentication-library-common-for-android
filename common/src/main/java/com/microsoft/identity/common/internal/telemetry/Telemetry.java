@@ -50,42 +50,46 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 
 public class Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
-    static volatile Telemetry singleton = null;
-    //private TelemetryDispatcher mTelemetryDispatcher;
+    private static volatile Telemetry singleton = null;
     private List<ITelemetryObserver> mObservers;
-    //private Map<String, Properties> mAggregatedTelemetryMap;
     private List<Map<String, String>> mTelemetryRawDataMap;
     private TelemetryConfiguration mDefaultConfiguration;
     private final TelemetryContext mTelemetryContext;
     private final boolean mIsDebugging;
-    private final static ExecutorService sTelemetryExecutor = Executors.newCachedThreadPool();
 
-    private Telemetry(final TelemetryConfiguration configuration,
-                      final TelemetryContext telemetryContext,
-                      final boolean isDebugging) {
-        mDefaultConfiguration = configuration;
-        mTelemetryContext = telemetryContext;
-        mIsDebugging = isDebugging;
+    private Telemetry(final Builder builder) {
+        if (builder == null) {
+            throw new IllegalArgumentException("Builder cannot be null");
+        }
+
+        if (builder.mDefaultConfiguration == null) {
+            throw new IllegalArgumentException("Telemetry configuration cannot be null");
+        }
+
+        if (builder.mTelemetryContext == null) {
+            throw new IllegalArgumentException("Telemetry context cannot be null");
+        }
+
+        mDefaultConfiguration = builder.mDefaultConfiguration;
+        mTelemetryContext = builder.mTelemetryContext;
+        mIsDebugging = builder.mIsDebugging;
         mTelemetryRawDataMap = new LinkedList<>();
-
-        //TODO For test purpose Remove later
-        addObserver(new TestTelemetryObserver());
-        addObserver(new AggregatedTelemetryObserver());
     }
 
-
-    public static Telemetry with(Context context) {
+    /** Prepares instance using builder. **/
+    private static Telemetry prepareInstance(Builder builder) {
         if (singleton == null) {
-            if (context == null) {
-                throw new IllegalArgumentException("Context must not be null.");
-            }
-            synchronized (Telemetry.class) {
+            synchronized(Telemetry.class) {
                 if (singleton == null) {
-                    Builder builder = new Builder(context);
-                    singleton = builder.build();
+                    singleton = new Telemetry(builder);
                 }
             }
         }
+        return singleton;
+    }
+
+    /** This is for getting instance of Telemetry **/
+    public static Telemetry getInstance() {
         return singleton;
     }
 
@@ -136,74 +140,6 @@ public class Telemetry {
         mTelemetryRawDataMap.add(event.getProperties());
         return event;
     }
-
-
-//    public void track(final @NonNull String requestId, final BaseEvent event) {
-//        track(requestId, event.getClass().getSimpleName(), event, null);
-//    }
-//
-//    public void track(final @NonNull String requestId,
-//                      final @NonNull String eventName,
-//                      final @NonNull String propertyKey,
-//                      final @Nullable String propertyValue) {
-//        if (StringUtil.isEmpty(requestId)) {
-//            throw new IllegalArgumentException("request id must not be null or empty.");
-//        }
-//
-//        if (StringUtil.isEmpty(eventName)) {
-//            throw new IllegalArgumentException("event name must not be null or empty.");
-//        }
-//
-//        if (StringUtil.isEmpty(propertyKey)) {
-//            throw new IllegalArgumentException("eventName must not be null or empty.");
-//        }
-//
-//        sTelemetryExecutor.submit(
-//                new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        //enqueue the event
-//                        final String key = getPropertyKey(requestId, eventName);
-//                        if (mAggregatedTelemetryMap.get(key) == null)
-//                        {
-//                            mAggregatedTelemetryMap.put(key, new Properties().put(propertyKey, propertyValue));
-//                        } else {
-//                            mAggregatedTelemetryMap.get(key).put(propertyKey, propertyValue);
-//                        }
-//                    }
-//                });
-//    }
-//
-//    public void track(final String requestId,
-//                      final String eventName,
-//                      final BaseEvent event,
-//                      final TelemetryConfiguration options) {
-//        if (StringUtil.isEmpty(requestId)) {
-//            throw new IllegalArgumentException("requestId must not be null or empty.");
-//        }
-//
-//        sTelemetryExecutor.submit(
-//                new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        //Overwrite the telemetry configuration if the passed-in options is not null.
-//                        if (options != null) {
-//                            mDefaultConfiguration = options;
-//                        }
-//
-//                        if (null != event) {
-//                            //enqueue the event
-//                            final String key = getPropertyKey(requestId, eventName);
-//                            if (mAggregatedTelemetryMap.get(key) == null)
-//                            {
-//                                mAggregatedTelemetryMap.put(key, event);
-//                            } else {
-//                                mAggregatedTelemetryMap.get(key).put(event);
-//                            }
-//                        }
-//                    }
-//                });
-//    }
 
     /**
      * Flush the telemetry data based on the requestId to the observer.
@@ -270,7 +206,10 @@ public class Telemetry {
         private TelemetryContext mTelemetryContext;
         private Boolean mIsDebugging;
 
-        public Builder(final Context context) {
+        public Builder() {
+        }
+
+        public Builder withContext(final Context context) {
             if (context == null) {
                 throw new IllegalArgumentException("Context must not be null.");
             }
@@ -293,7 +232,7 @@ public class Telemetry {
                 mIsDebugging = true;
             }
 
-            mDefaultConfiguration = new TelemetryConfiguration();
+            return this;
         }
 
         /**
@@ -307,15 +246,12 @@ public class Telemetry {
             mDefaultConfiguration = configuration;
             return this;
         }
+
         /**
          * Create a {@link Telemetry} client.
          */
-        public Telemetry build() {
-            return new Telemetry(
-                    mDefaultConfiguration,
-                    mTelemetryContext,
-                    mIsDebugging
-            );
+        public Telemetry build() throws IllegalArgumentException {
+            return prepareInstance(this);
         }
     }
 
