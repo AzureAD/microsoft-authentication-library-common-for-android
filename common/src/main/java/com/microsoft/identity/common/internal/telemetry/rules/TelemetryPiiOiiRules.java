@@ -32,7 +32,7 @@ import java.util.Set;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 final public class TelemetryPiiOiiRules {
-    private TelemetryPiiOiiRules sInstance;
+    private static TelemetryPiiOiiRules sInstance;
     private Set<String> piiPropertiesSet;
     private Set<String> oiiPropertiesSet;
 
@@ -59,7 +59,7 @@ final public class TelemetryPiiOiiRules {
         oiiPropertiesSet = new HashSet<>(Arrays.asList(oiiArray));
     }
 
-    public TelemetryPiiOiiRules getInstance() {
+    public static TelemetryPiiOiiRules getInstance() {
         if (sInstance == null) {
             sInstance = new TelemetryPiiOiiRules();
         }

@@ -23,47 +23,49 @@
 
 package com.microsoft.identity.common.internal.telemetry;
 
+import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryObserver;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class TelemetryDispatcher {
-    private final ITelemetryReceiver mEventReceiver;
-
-    /**
-     * Constructs a new EventDispatcher.
-     *
-     * @param receiver the {@link ITelemetryReceiver} to receive {@link Telemetry} data.
-     */
-    TelemetryDispatcher(final ITelemetryReceiver receiver) {
-        mEventReceiver = receiver;
-    }
-
-    /**
-     * Returns the {@link ITelemetryReceiver} to which telemetry data is dispatched.
-     *
-     * @return the event receiver.
-     */
-    ITelemetryReceiver getReceiver() {
-        return mEventReceiver;
-    }
-
-    /**
-     * Dispatches the {@link Telemetry} instances associated to receiver.
-     *
-     * @param eventsToPublish the Events to publish.
-     */
-    void dispatch(final List<Properties> eventsToPublish) {
-        if (null == mEventReceiver) {
-            return;
-        }
-
-        final Map<String, String> eventsForPublication = new HashMap<>();
-
-        for (final Properties event : eventsToPublish) {
-            eventsForPublication.putAll(event.getProperties());
-        }
-
-        mEventReceiver.onTelemetryReceived(eventsForPublication);
-    }
+//    private final List<ITelemetryObserver> mEventReceiver;
+//
+//    /**
+//     * Constructs a new EventDispatcher.
+//     *
+//     * @param receiver the {@link ITelemetryObserver} to receive {@link Telemetry} data.
+//     */
+//    TelemetryDispatcher(final ITelemetryObserver receiver) {
+//        mEventReceiver = receiver;
+//    }
+//
+//    /**
+//     * Returns the {@link ITelemetryObserver} to which telemetry data is dispatched.
+//     *
+//     * @return the event receiver.
+//     */
+//    ITelemetryObserver getReceiver() {
+//        return mEventReceiver;
+//    }
+//
+//    /**
+//     * Dispatches the {@link Telemetry} instances associated to receiver.
+//     *
+//     * @param eventsToPublish the Events to publish.
+//     */
+//    void dispatch(final List<Properties> eventsToPublish) {
+//        if (null == mEventReceiver) {
+//            return;
+//        }
+//
+//        final Map<String, String> eventsForPublication = new HashMap<>();
+//
+//        for (final Properties event : eventsToPublish) {
+//            eventsForPublication.putAll(event.getProperties());
+//        }
+//
+//        mEventReceiver.upload(eventsForPublication);
+//    }
 }

@@ -20,19 +20,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry;
+package com.microsoft.identity.common.internal.telemetry.observers;
 
+import com.microsoft.identity.common.internal.logging.Logger;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
-/**
- * The interface function for apps to override if they want to get the Telemetry.
- */
-public interface ITelemetryReceiver {
+public class AggregatedTelemetryObserver implements ITelemetryObserver<Map<String, String>> {
+    private static final String TAG = AggregatedTelemetryObserver.class.getSimpleName();
 
-    /**
-     * Invoked when telemetry data is received.
-     *
-     * @param events Map of properties for the request id.
-     */
-    void onTelemetryReceived(final Map<String, String> events);
+    @Override
+    public void send(final List<Map<String, String>> telemetryRawData) {
+        //aggregate the raw data into MATS format
+        final Map<String, String> aggregatedMap = new HashMap<>();
+        for (Map<String, String> properties : telemetryRawData) {
+            //Apply the aggregation telemetry rule.
+            aggregatedMap.putAll(properties);
+        }
+
+        upload(aggregatedMap);
+    }
+
+    @Override
+    public void upload(Map<String, String> telemetryData) {
+        //TODO
+    }
 }

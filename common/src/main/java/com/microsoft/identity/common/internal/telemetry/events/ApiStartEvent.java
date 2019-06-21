@@ -48,7 +48,27 @@ public class ApiStartEvent extends BaseEvent {
         names(TELEMETRY_EVENT_API_EVENT_START);
     }
 
-    public ApiStartEvent putProperties(final OperationParameters parameters) {
+    public ApiStartEvent putProperties(OperationParameters parameters) {
+        /*
+        private Set<String> mScopes;
+    protected IAccountRecord mAccount;
+    @Expose()
+    private String clientId;
+    @Expose()
+    private String redirectUri;
+    @Expose()
+    private Authority mAuthority;
+    @Expose()
+    private String mClaimsRequestJson;
+    @Expose()
+    private SdkType mSdkType = SdkType.MSAL; // default value where we get a v2 id token;
+    @Expose()
+    private String mSdkVersion;
+    @Expose()
+    private String mApplicationName;
+    @Expose()
+    private String mApplicationVersion;
+         */
         this.put(TELEMETRY_KEY_AUTHORITY, parameters.getAuthority().toString());
         this.put(TELEMETRY_KEY_AUTHORITY_TYPE, parameters.getAuthority().getAuthorityTypeString());
         this.put(TELEMETRY_KEY_APPLICATION_NAME, parameters.getApplicationName());
