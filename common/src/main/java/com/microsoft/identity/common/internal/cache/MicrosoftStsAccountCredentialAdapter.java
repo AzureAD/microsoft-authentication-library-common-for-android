@@ -202,7 +202,11 @@ public class MicrosoftStsAccountCredentialAdapter
             idToken.setSecret(response.getIdToken());
 
             // Optional fields
-            idToken.setAuthority(response.getAuthority());
+            if (!StringUtil.isEmpty(response.getAuthority())) {
+                idToken.setAuthority(response.getAuthority());
+            } else { // Working around a bug - sov cloud seems to have broken response authority...
+                idToken.setAuthority(request.getAuthority().toString());
+            }
 
             return idToken;
         } catch (ServiceException | MalformedURLException e) {
