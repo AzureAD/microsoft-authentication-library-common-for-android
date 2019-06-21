@@ -126,7 +126,11 @@ public class MicrosoftStsAccountCredentialAdapter
      */
     private String getTarget(@NonNull final String responseScope) {
         if (responseScope.contains(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE)) {
-            return responseScope;
+            if (responseScope.contains(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE)) {
+                return responseScope;
+            } else {
+                return responseScope + " " + AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE;
+            }
         } else {
             return responseScope + " " + AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE
                     + " " + AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE
