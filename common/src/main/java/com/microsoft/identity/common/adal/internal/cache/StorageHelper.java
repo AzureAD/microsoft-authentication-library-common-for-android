@@ -319,7 +319,9 @@ public class StorageHelper implements IStorageHelper {
         // Due to broker-switching action, we need to implement key-retry.
         for (final String brokerPackageName : mBrokerPackageNames) {
             try {
-                // Load the key
+                // Load the key - before we do, force member variables to null to bypass optimizations
+                mKey = null;
+                mHMACKey = null;
                 loadSecretKeyForEncryptionByPackageName(brokerPackageName);
 
                 // Try to use it for decryption
