@@ -331,7 +331,9 @@ public class StorageHelper implements IStorageHelper {
                                 + brokerPackageName
                 );
 
-                if (++faults < MAX_FAULTS) {
+                if (faults <= MAX_FAULTS) {
+                    faults++;
+
                     Logger.warn(
                             TAG + methodName,
                             "Retrying..."
@@ -342,7 +344,7 @@ public class StorageHelper implements IStorageHelper {
 
                 Logger.error(
                         TAG + methodName,
-                        "Failed to decrypt - keys options exhausted",
+                        "Failed to decrypt - key options exhausted",
                         e
                 );
 
