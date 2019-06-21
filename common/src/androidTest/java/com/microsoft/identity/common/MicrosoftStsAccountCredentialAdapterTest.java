@@ -77,7 +77,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     private static final String MOCK_UID = "mock_uid";
     private static final String MOCK_UTID = "mock_utid";
     private static final String MOCK_CLIENT_INFO = createRawClientInfo(MOCK_UID, MOCK_UTID);
-    private static final String MOCK_SCOPE = "user.read";
+    private static final String MOCK_SCOPE = "user.read openid profile offline_access";
     private static final String MOCK_FAMILY_ID = "1";
     private static final long MOCK_EXPIRES_IN = 3600L;
     private static final long MOCK_EXT_EXPIRES_IN = MOCK_EXPIRES_IN * 2;
@@ -150,6 +150,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockRequest.getAuthority()).thenReturn(new URL(MOCK_AUTHORITY));
         when(mockResponse.getIdToken()).thenReturn(MOCK_ID_TOKEN_WITH_CLAIMS);
         when(mockResponse.getClientInfo()).thenReturn(MOCK_CLIENT_INFO);
+        when(mockResponse.getScope()).thenReturn(MOCK_SCOPE);
         when(mockAccount.getRealm()).thenReturn(MOCK_TID);
         when(mockAccount.getHomeAccountId()).thenReturn(MOCK_UID + "." + MOCK_UTID);
         when(mockAccount.getEnvironment()).thenReturn(MOCK_ENVIRONMENT);
