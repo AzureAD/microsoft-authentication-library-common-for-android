@@ -36,6 +36,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -231,6 +232,7 @@ public class StorageHelper implements IStorageHelper {
 
     @Override
     public String decrypt(final String encryptedBlob) throws GeneralSecurityException, IOException {
+        final String methodName = "decrypt";
         Log.v(TAG, "Starting decryption");
 
         if (StringExtensions.isNullOrBlank(encryptedBlob)) {
@@ -250,6 +252,13 @@ public class StorageHelper implements IStorageHelper {
         try {
             return decryptWithPackageName(bytes, packageName);
         } catch (GeneralSecurityException | IOException e) {
+            Logger.error(
+                    TAG + methodName,
+                    "Failed to decrypt with package name: "
+                            + packageName,
+                    e
+            );
+
             if (!BROKER_PACKAGE_NAMES.contains(packageName)) {
                 // If we are not the broker, do not retry, immediately throw.
                 throw e;
@@ -260,6 +269,12 @@ public class StorageHelper implements IStorageHelper {
                     packageName.equals(AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)
                             ? COMPANY_PORTAL_APP_PACKAGE_NAME
                             : AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+
+            Logger.warn(
+                    TAG + methodName,
+                    "We are the broker. Retrying with package name: "
+                            + nextPackageToUse
+            );
 
             return decryptWithPackageName(bytes, nextPackageToUse);
         }
