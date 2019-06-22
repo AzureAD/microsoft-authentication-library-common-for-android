@@ -58,7 +58,9 @@ import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -67,6 +69,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
+
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
 
 public class StorageHelper implements IStorageHelper {
@@ -138,6 +143,11 @@ public class StorageHelper implements IStorageHelper {
     private static final int KEY_FILE_SIZE = 1024;
 
     private static final String ANDROID_KEY_STORE = "AndroidKeyStore";
+
+    private static final Set<String> BROKER_PACKAGE_NAMES = new HashSet<String>() {{
+        add(AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        add(COMPANY_PORTAL_APP_PACKAGE_NAME);
+    }};
 
     private final Context mContext;
     private final SecureRandom mRandom;
@@ -237,7 +247,22 @@ public class StorageHelper implements IStorageHelper {
 
         final String packageName = mContext.getPackageName();
 
-        return decryptWithPackageName(bytes, packageName);
+        try {
+            return decryptWithPackageName(bytes, packageName);
+        } catch (GeneralSecurityException | IOException e) {
+            if (!BROKER_PACKAGE_NAMES.contains(packageName)) {
+                // If we are not the broker, do not retry, immediately throw.
+                throw e;
+            }
+
+            // We are the broker... try with the other broker's package name
+            final String nextPackageToUse =
+                    packageName.equals(AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)
+                            ? COMPANY_PORTAL_APP_PACKAGE_NAME
+                            : AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+
+            return decryptWithPackageName(bytes, nextPackageToUse);
+        }
     }
 
     private String decryptWithPackageName(final byte[] bytes,
