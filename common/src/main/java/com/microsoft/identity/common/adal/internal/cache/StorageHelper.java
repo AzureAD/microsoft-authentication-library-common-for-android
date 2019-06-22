@@ -220,8 +220,7 @@ public class StorageHelper implements IStorageHelper {
     }
 
     @Override
-    public String decrypt(final String encryptedBlob)
-            throws GeneralSecurityException, IOException {
+    public String decrypt(final String encryptedBlob) throws GeneralSecurityException, IOException {
         Log.v(TAG, "Starting decryption");
 
         if (StringExtensions.isNullOrBlank(encryptedBlob)) {
@@ -229,33 +228,33 @@ public class StorageHelper implements IStorageHelper {
         }
 
         int encodeVersionLength = encryptedBlob.charAt(0) - 'a';
-        if (encodeVersionLength <= 0) {
-            throw new IllegalArgumentException(String.format(
-                    "Encode version length: '%s' is not valid, it must be greater of equal to 0",
-                    encodeVersionLength));
-        }
-        if (!encryptedBlob.substring(1, 1 + encodeVersionLength).equals(ENCODE_VERSION)) {
-            throw new IllegalArgumentException(String.format(
-                    "Encode version received was: '%s', Encode version supported is: '%s'", encryptedBlob,
-                    ENCODE_VERSION));
-        }
 
-        final byte[] bytes = Base64
-                .decode(encryptedBlob.substring(1 + encodeVersionLength), Base64.DEFAULT);
+        validateEncodeVersion(encryptedBlob, encodeVersionLength);
+
+        final byte[] bytes = Base64.decode(
+                encryptedBlob.substring(1 + encodeVersionLength),
+                Base64.DEFAULT
+        );
 
         // get key version used for this data. If user upgraded to different
         // API level, data needs to be updated
-        final String keyVersion = new String(bytes, 0, KEY_VERSION_BLOB_LENGTH,
-                AuthenticationConstants.ENCODING_UTF8);
+        final String keyVersion = new String(
+                bytes,
+                0,
+                KEY_VERSION_BLOB_LENGTH,
+                AuthenticationConstants.ENCODING_UTF8
+        );
+
         Log.v(TAG, "Encrypt version:" + keyVersion);
 
-        final SecretKey secretKey = getKey(keyVersion);
+        final SecretKey secretKey = getKey(keyVersion, mContext.getPackageName());
         final SecretKey hmacKey = getHMacKey(secretKey);
 
         // byte input array: encryptedData-iv-macDigest
         final int ivIndex = bytes.length - DATA_KEY_LENGTH - HMAC_LENGTH;
         final int macIndex = bytes.length - HMAC_LENGTH;
         final int encryptedLength = ivIndex - KEY_VERSION_BLOB_LENGTH;
+
         if (ivIndex < 0 || macIndex < 0 || encryptedLength < 0) {
             throw new IOException("Invalid byte array input for decryption.");
         }
@@ -276,14 +275,44 @@ public class StorageHelper implements IStorageHelper {
         // that IV.
         // It is using same cipher for different version since version# change
         // will mean upgrade to AndroidKeyStore and new Key.
-        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(bytes, ivIndex,
-                DATA_KEY_LENGTH));
+        cipher.init(
+                Cipher.DECRYPT_MODE,
+                secretKey,
+                new IvParameterSpec(bytes, ivIndex, DATA_KEY_LENGTH)
+        );
 
         // Decrypt data bytes from 0 to ivindex
-        final String decrypted = new String(cipher.doFinal(bytes, KEY_VERSION_BLOB_LENGTH,
-                encryptedLength), AuthenticationConstants.ENCODING_UTF8);
+        final String decrypted = new String(
+                cipher.doFinal(
+                        bytes,
+                        KEY_VERSION_BLOB_LENGTH,
+                        encryptedLength
+                ), AuthenticationConstants.ENCODING_UTF8
+        );
+
         Log.v(TAG, "Finished decryption");
+
         return decrypted;
+    }
+
+    private void validateEncodeVersion(String encryptedBlob, int encodeVersionLength) {
+        if (encodeVersionLength <= 0) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Encode version length: '%s' is not valid, it must be greater of equal to 0",
+                            encodeVersionLength
+                    )
+            );
+        }
+
+        if (!encryptedBlob.substring(1, 1 + encodeVersionLength).equals(ENCODE_VERSION)) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Encode version received was: '%s', Encode version supported is: '%s'",
+                            encryptedBlob,
+                            ENCODE_VERSION)
+            );
+        }
     }
 
     @Override
@@ -339,7 +368,7 @@ public class StorageHelper implements IStorageHelper {
         }
 
         try {
-            mSecretKeyFromAndroidKeyStore = getKey(keyVersion);
+            mSecretKeyFromAndroidKeyStore = getKey(keyVersion, mContext.getPackageName());
         } catch (final IOException | GeneralSecurityException exception) {
             Log.v(TAG, "Key does not exist in AndroidKeyStore, try to generate new keys.");
         }
@@ -365,10 +394,12 @@ public class StorageHelper implements IStorageHelper {
      * @throws GeneralSecurityException
      * @throws IOException
      */
-    private synchronized SecretKey getKey(final String keyVersion) throws GeneralSecurityException, IOException {
+    private synchronized SecretKey getKey(final String keyVersion,
+                                          final String packageName)
+            throws GeneralSecurityException, IOException {
         switch (keyVersion) {
             case VERSION_USER_DEFINED:
-                return getSecretKey(getSecretKeyData(mContext.getPackageName()));
+                return getSecretKey(getSecretKeyData(packageName));
             case VERSION_ANDROID_KEY_STORE:
 
                 if (mSecretKeyFromAndroidKeyStore != null) {
