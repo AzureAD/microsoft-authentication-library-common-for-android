@@ -228,7 +228,6 @@ public class StorageHelper implements IStorageHelper {
         }
 
         int encodeVersionLength = encryptedBlob.charAt(0) - 'a';
-
         validateEncodeVersion(encryptedBlob, encodeVersionLength);
 
         final byte[] bytes = Base64.decode(
@@ -236,6 +235,14 @@ public class StorageHelper implements IStorageHelper {
                 Base64.DEFAULT
         );
 
+        final String packageName = mContext.getPackageName();
+
+        return decryptWithPackageName(bytes, packageName);
+    }
+
+    private String decryptWithPackageName(final byte[] bytes,
+                                          @NonNull final String packageName)
+            throws GeneralSecurityException, IOException {
         // get key version used for this data. If user upgraded to different
         // API level, data needs to be updated
         final String keyVersion = new String(
@@ -247,7 +254,7 @@ public class StorageHelper implements IStorageHelper {
 
         Log.v(TAG, "Encrypt version:" + keyVersion);
 
-        final SecretKey secretKey = getKey(keyVersion, mContext.getPackageName());
+        final SecretKey secretKey = getKey(keyVersion, packageName);
         final SecretKey hmacKey = getHMacKey(secretKey);
 
         // byte input array: encryptedData-iv-macDigest
@@ -287,7 +294,8 @@ public class StorageHelper implements IStorageHelper {
                         bytes,
                         KEY_VERSION_BLOB_LENGTH,
                         encryptedLength
-                ), AuthenticationConstants.ENCODING_UTF8
+                ),
+                AuthenticationConstants.ENCODING_UTF8
         );
 
         Log.v(TAG, "Finished decryption");
