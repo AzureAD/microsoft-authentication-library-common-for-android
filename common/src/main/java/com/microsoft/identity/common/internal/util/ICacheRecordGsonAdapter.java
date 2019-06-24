@@ -20,31 +20,26 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
+package com.microsoft.identity.common.internal.util;
 
-import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.microsoft.identity.common.internal.cache.CacheRecord;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 
-import java.util.Map;
+import java.lang.reflect.Type;
 
 /**
- * Azure Active Directory B2C Id Token.
- * B2C supports customizing the claims contained in tokens
- * see <a href='https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-tokens'>https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-tokens</a>
+ * Custom Gson Deserializer to handle ICacheRecord -> CacheRecord (concrete class) mapping.
  */
-public class AzureActiveDirectoryB2CIdToken extends IDToken {
-    /**
-     * Constructor of AzureActiveDirectoryB2CIdToken.
-     *
-     * @param rawIdToken String
-     * @throws ServiceException if rawIdToken is malformed in JSON format.
-     */
-    public AzureActiveDirectoryB2CIdToken(String rawIdToken) throws ServiceException {
-        super(rawIdToken);
-    }
+public class ICacheRecordGsonAdapter implements JsonDeserializer<ICacheRecord> {
 
     @Override
-    public Map<String, ?> getTokenClaims() {
-        return super.getTokenClaims();
+    public ICacheRecord deserialize(final JsonElement json,
+                                    final Type typeOfT,
+                                    final JsonDeserializationContext context) throws JsonParseException {
+        return context.deserialize(json, CacheRecord.class);
     }
 }

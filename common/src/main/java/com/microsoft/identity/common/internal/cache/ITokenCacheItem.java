@@ -20,31 +20,39 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
-
-import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
-
-import java.util.Map;
+package com.microsoft.identity.common.internal.cache;
 
 /**
- * Azure Active Directory B2C Id Token.
- * B2C supports customizing the claims contained in tokens
- * see <a href='https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-tokens'>https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-tokens</a>
+ * Interface to glue together various migration/TSL related functionality.
  */
-public class AzureActiveDirectoryB2CIdToken extends IDToken {
-    /**
-     * Constructor of AzureActiveDirectoryB2CIdToken.
-     *
-     * @param rawIdToken String
-     * @throws ServiceException if rawIdToken is malformed in JSON format.
-     */
-    public AzureActiveDirectoryB2CIdToken(String rawIdToken) throws ServiceException {
-        super(rawIdToken);
-    }
+public interface ITokenCacheItem {
 
-    @Override
-    public Map<String, ?> getTokenClaims() {
-        return super.getTokenClaims();
-    }
+    /**
+     * Gets the authority.
+     *
+     * @return The authority to get.
+     */
+    String getAuthority();
+
+    /**
+     * Gets the clientId.
+     *
+     * @return The clientId to get.
+     */
+    String getClientId();
+
+    /**
+     * Gets the refresh tokens (as a raw String).
+     *
+     * @return The refresh token to get.
+     */
+    String getRefreshToken();
+
+    /**
+     * Gets the resource associated to this request.
+     *
+     * @return The resource to get.
+     */
+    String getResource();
+
 }

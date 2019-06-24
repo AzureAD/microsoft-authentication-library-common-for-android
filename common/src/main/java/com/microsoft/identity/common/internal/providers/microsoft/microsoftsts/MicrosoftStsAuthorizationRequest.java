@@ -59,6 +59,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     //@SerializedName("login_hint")
     private transient String mDisplayableId;
 
+    private String mTokenScope;
+
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
     // TODO private boolean mIsExtendedLifetimeEnabled = false;
@@ -89,6 +91,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mUid = builder.mUid;
         mUtid = builder.mUtid;
         mDisplayableId = builder.mDisplayableId;
+        mTokenScope = builder.mTokenScope;
     }
 
     public static class Builder extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest.Builder> {
@@ -96,6 +99,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         private String mUid;
         private String mUtid;
         private String mDisplayableId;
+        private String mTokenScope;
 
         public MicrosoftStsAuthorizationRequest.Builder setUid(String uid) {
             mUid = uid;
@@ -109,6 +113,11 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
         public MicrosoftStsAuthorizationRequest.Builder setDisplayableId(String displayableId) {
             mDisplayableId = displayableId;
+            return self();
+        }
+
+        public MicrosoftStsAuthorizationRequest.Builder setTokenScope(String tokenScope) {
+            mTokenScope = tokenScope;
             return self();
         }
 
@@ -137,6 +146,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     public String getPrompt() {
         return mPrompt;
     }
+
+    public String getTokenScope() {return mTokenScope;}
 
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {

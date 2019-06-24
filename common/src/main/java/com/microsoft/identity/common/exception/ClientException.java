@@ -25,6 +25,16 @@ package com.microsoft.identity.common.exception;
 public class ClientException extends BaseException {
 
     /**
+     * Indicates that a token was not found in the internal/adal/tokensharing ssostateserializer.
+     */
+    public static final String TOKEN_CACHE_ITEM_NOT_FOUND = "token_cache_item_not_found";
+
+    /**
+     * Deserialization error loading the token shared library item.
+     */
+    public static final String TOKEN_SHARING_DESERIALIZATION_ERROR = "token_sharing_deserialization_error";
+
+    /**
      * There are multiple cache entries found, the sdk cannot pick the correct access token
      * or refresh token from the cache. Likely it's a bug in the sdk when caching tokens or authority
      * is not proviced in the silent request and multiple tokens were found.

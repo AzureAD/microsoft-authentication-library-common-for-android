@@ -27,6 +27,8 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.exception.ArgumentException;
@@ -38,30 +40,21 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
-import com.microsoft.identity.common.internal.cache.SchemaUtil;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
-import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
-
+import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
+import com.microsoft.identity.common.internal.util.ICacheRecordGsonAdapter;
 
 import org.json.JSONException;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
+import java.lang.reflect.Type;
 import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_CURRENT_ACCOUNT;
 
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
@@ -76,6 +69,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final AccessTokenRecord accessTokenRecord = authenticationResult.getAccessTokenRecord();
 
         final BrokerResult brokerResult = new BrokerResult.Builder()
+                .tenantProfileRecords(authenticationResult.getCacheRecordWithTenantProfileData())
                 .accessToken(authenticationResult.getAccessToken())
                 .idToken(authenticationResult.getIdToken())
                 .refreshToken(authenticationResult.getRefreshToken())
@@ -152,45 +146,41 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     @Override
     public ILocalAuthenticationResult authenticationResultFromBundle(@NonNull final Bundle resultBundle) {
-
-        final BrokerResult brokerResult = new Gson().fromJson(
-                resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2),
-                BrokerResult.class
-        );
+        final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
 
         if (brokerResult == null) {
             Logger.error(TAG, "Broker Result not returned from Broker, ", null);
             return null;
         }
 
-        try {
-            Logger.verbose(TAG, "Broker Result returned from Bundle, constructing authentication result");
+        Logger.verbose(TAG, "Broker Result returned from Bundle, constructing authentication result");
 
-            final AccessTokenRecord accessTokenRecord = getAccessTokenRecord(brokerResult);
-            final IAccountRecord accountRecord = getAccountRecord(brokerResult);
-            final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
-                    accessTokenRecord,
-                    brokerResult.getRefreshToken(),
-                    brokerResult.getIdToken(),
-                    brokerResult.getFamilyId(),
-                    accountRecord
-            );
-            return authenticationResult;
-        } catch (final ServiceException e) {
-            Logger.error(TAG, "Failed to parse Client Info ", e);
-            return null;
-        }
+        final List<ICacheRecord> tenantProfileCacheRecords = brokerResult.getTenantProfileData();
+        final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
+                tenantProfileCacheRecords.get(0),
+                tenantProfileCacheRecords,
+                SdkType.MSAL
+        );
 
+        return authenticationResult;
+
+    }
+
+    public static BrokerResult brokerResultFromBundle(@NonNull final Bundle resultBundle) {
+        return new GsonBuilder()
+                .registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter())
+                .create()
+                .fromJson(
+                        resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2),
+                        BrokerResult.class
+                );
     }
 
     @Override
     public BaseException baseExceptionFromBundle(@NonNull final Bundle resultBundle) {
         Logger.verbose(TAG, "Constructing exception from result bundle");
 
-        final BrokerResult brokerResult = new Gson().fromJson(
-                resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2),
-                BrokerResult.class
-        );
+        final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
 
         if (brokerResult == null) {
             Logger.error(TAG, "Broker Result not returned from Broker, ", null);
@@ -226,7 +216,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             Logger.warn(TAG, "Received a User cancelled exception from Broker : " + errorCode);
             baseException = new UserCancelException();
 
-        } else if(ArgumentException.ILLEGAL_ARGUMENT_ERROR_CODE.equalsIgnoreCase(errorCode)) {
+        } else if (ArgumentException.ILLEGAL_ARGUMENT_ERROR_CODE.equalsIgnoreCase(errorCode)) {
 
             Logger.warn(TAG, "Received a Argument exception from Broker : " + errorCode);
             baseException = new ArgumentException(
@@ -257,71 +247,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         baseException.setRefreshTokenAge(brokerResult.getRefreshTokenAge());
 
         return baseException;
-
-    }
-
-
-    /**
-     * Helper to get AccessTokenRecord from BrokerResult
-     */
-    private AccessTokenRecord getAccessTokenRecord(@NonNull final BrokerResult brokerResult) throws ServiceException {
-
-        final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
-
-        try {
-            final ClientInfo clientInfo = new ClientInfo(brokerResult.getClientInfo());
-            accessTokenRecord.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            accessTokenRecord.setRealm(
-                    SchemaUtil.getTenantId(brokerResult.getClientInfo(),
-                    brokerResult.getIdToken())
-            );
-
-            final URL authorityUrl = new URL(brokerResult.getAuthority());
-            final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.
-                    getAzureActiveDirectoryCloud(authorityUrl);
-            if (cloudEnv != null) {
-                Logger.info(TAG, "Using preferred cache host name...");
-                accessTokenRecord.setEnvironment(cloudEnv.getPreferredCacheHostName());
-            } else {
-                accessTokenRecord.setEnvironment(
-                        authorityUrl.getHost()
-                );
-            }
-        } catch (MalformedURLException e) {
-            Logger.error(TAG, "Malformed authority url ", e);
-        }
-        accessTokenRecord.setClientId(brokerResult.getClientId());
-        accessTokenRecord.setSecret(brokerResult.getAccessToken());
-        accessTokenRecord.setAccessTokenType(brokerResult.getTokenType());
-        accessTokenRecord.setAuthority(brokerResult.getAuthority());
-        accessTokenRecord.setTarget(brokerResult.getScope());
-        accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
-
-        accessTokenRecord.setExpiresOn(
-                String.valueOf(brokerResult.getExpiresOn())
-        );
-
-        accessTokenRecord.setExtendedExpiresOn(
-                String.valueOf(brokerResult.getExtendedExpiresOn())
-        );
-
-        accessTokenRecord.setCachedAt(
-                String.valueOf(brokerResult.getCachedAt())
-        );
-        return accessTokenRecord;
-    }
-
-    /**
-     * Helper method to retrieve IAccountRecord from BrokerResult
-     */
-    private IAccountRecord getAccountRecord(@NonNull final BrokerResult brokerResult) throws ServiceException {
-        final ClientInfo clientInfo = new ClientInfo(brokerResult.getClientInfo());
-        final MicrosoftStsAccount microsoftStsAccount = new MicrosoftStsAccount(
-                new IDToken(brokerResult.getIdToken()),
-                clientInfo
-        );
-        microsoftStsAccount.setEnvironment(brokerResult.getEnvironment());
-        return new AccountRecord(microsoftStsAccount);
     }
 
     /**
@@ -329,7 +254,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      */
     private IntuneAppProtectionPolicyRequiredException getIntuneProtectionRequiredException(
             @NonNull final BrokerResult brokerResult) {
-
         final IntuneAppProtectionPolicyRequiredException exception =
                 new IntuneAppProtectionPolicyRequiredException(
                         brokerResult.getErrorCode(),
@@ -360,13 +284,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * Helper method to retrieve ServiceException from BrokerResult
      */
     private ServiceException getServiceException(@NonNull final BrokerResult brokerResult) {
-
         final ServiceException serviceException = new ServiceException(
                 brokerResult.getErrorCode(),
                 brokerResult.getErrorMessage(),
                 null
         );
+
         serviceException.setOauthSubErrorCode(brokerResult.getSubErrorCode());
+
         try {
             serviceException.setHttpResponseBody(
                     brokerResult.getHttpResponseBody() != null ?
@@ -389,45 +314,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     /**
-     * Get the bundle from the AccountRecord list.
-     * @param records List of AccountRecord
-     * @return Bundle
-     */
-    public Bundle bundleFromAccountRecordList(@NonNull final List<AccountRecord> records) {
-        final Bundle resultBundle = new Bundle();
-        ArrayList<String> accountRecordString = new ArrayList<>();
-        for (AccountRecord record : records) {
-            final String recordInGson = new Gson().toJson(record, AccountRecord.class);
-            accountRecordString.add(recordInGson);
-        }
-
-        resultBundle.putStringArrayList(BROKER_ACCOUNTS, accountRecordString);
-        return resultBundle;
-    }
-
-    /**
-     * Get the AccountRecord list from bundle.
-     * @param bundle Bundle
-     * @return List of AccountRecord
-     */
-    public static List<AccountRecord> getAccountRecordListFromBundle(@NonNull final Bundle bundle) {
-        final ArrayList<String> accountsList = bundle.getStringArrayList(BROKER_ACCOUNTS);
-        final List<AccountRecord> result = new ArrayList<>();
-        if (accountsList == null) {
-            //The bundle does not contain the BROKER_RESULT_ACCOUNTS value.
-            return null;
-        }
-
-        for (final String accountJson : accountsList) {
-            final AccountRecord accountRecord = new Gson().fromJson(accountJson, AccountRecord.class);
-            result.add(accountRecord);
-        }
-
-        return result;
-    }
-
-    /**
      * Get a bundle from an Account Mode string.
+     *
      * @param isSharedDevice true if this device is registered as shared. False otherwise.
      * @return Bundle
      */
@@ -439,6 +327,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     /**
      * Get Device mode from bundle.
+     *
      * @param bundle Bundle
      * @return Account mode.
      */
@@ -447,32 +336,50 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     /**
-     * Get a bundle from current account's AccountRecord.
-     * @param record current account's AccountRecord.
+     * Get a bundle from account(s)'s List<ICacheRecord>.
+     *
+     * @param cacheRecords account(s)'s List<ICacheRecord>.
      * @return Bundle
      */
-    public static Bundle bundleFromCurrentAccount(@NonNull final AccountRecord record) {
+    public static Bundle bundleFromAccounts(@NonNull final List<ICacheRecord> cacheRecords) {
         final Bundle resultBundle = new Bundle();
 
-        final String recordInGson = new Gson().toJson(record, AccountRecord.class);
-        resultBundle.putString(BROKER_CURRENT_ACCOUNT, recordInGson);
+        if (cacheRecords != null) {
+            resultBundle.putString(BROKER_ACCOUNTS, getJsonStringFromICacheRecordList(cacheRecords));
+        }
 
         return resultBundle;
     }
 
+    public static String getJsonStringFromICacheRecordList(List<ICacheRecord> cacheRecords) {
+        final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
+        }.getType();
+        return new Gson().toJson(cacheRecords, listOfCacheRecords);
+    }
+
     /**
-     * Get current account's AccountRecord from bundle.
+     * Get current account's ICacheRecord from bundle.
+     *
      * @param bundle Bundle
-     * @return AccountRecord of the current account. This could be null.
+     * @return List<ICacheRecord> of the current account. This could be null.
      */
-    public static AccountRecord currentAccountFromBundle(@NonNull final Bundle bundle) {
-        final String accountJson = bundle.getString(BROKER_CURRENT_ACCOUNT);
+    public static List<ICacheRecord> accountsFromBundle(@NonNull final Bundle bundle) throws ClientException {
+        final String accountJson = bundle.getString(BROKER_ACCOUNTS);
 
         if (accountJson == null) {
-            //The bundle does not contain the BROKER_CURRENT_ACCOUNT value.
-            return null;
+            throw new ClientException(ErrorStrings.NO_ACCOUNT_FOUND,
+                    "No account found. The bundle does not contain the BROKER_ACCOUNTS value.");
         }
 
-        return new Gson().fromJson(accountJson, AccountRecord.class);
+        return getICacheRecordListFromJsonString(accountJson);
+    }
+
+    public static List<ICacheRecord> getICacheRecordListFromJsonString(String accountJson) {
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter());
+
+        final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
+        }.getType();
+        return builder.create().fromJson(accountJson, listOfCacheRecords);
     }
 }

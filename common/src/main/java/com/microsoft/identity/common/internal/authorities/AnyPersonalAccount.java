@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-
 public class AnyPersonalAccount extends AzureActiveDirectoryAudience {
 
     public static final String ANY_PERSONAL_ACCOUNT_TENANT_ID = "consumers";

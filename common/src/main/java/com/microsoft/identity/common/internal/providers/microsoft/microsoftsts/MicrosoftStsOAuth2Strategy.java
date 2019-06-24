@@ -318,6 +318,7 @@ public class MicrosoftStsOAuth2Strategy
         tokenRequest.setCode(response.getCode());
         tokenRequest.setRedirectUri(request.getRedirectUri());
         tokenRequest.setClientId(request.getClientId());
+        tokenRequest.setScope(request.getTokenScope());
 
         try {
             tokenRequest.setCorrelationId(

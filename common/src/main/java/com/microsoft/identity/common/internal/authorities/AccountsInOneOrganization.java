@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-
 public class AccountsInOneOrganization extends AzureActiveDirectoryAudience {
 
     public AccountsInOneOrganization() {
