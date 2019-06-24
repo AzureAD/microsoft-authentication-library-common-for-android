@@ -26,7 +26,6 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
-//TODO Add more properties to the event.
 public class UiStartEvent extends BaseEvent {
     private static final String TAG = UiStartEvent.class.getSimpleName();
 

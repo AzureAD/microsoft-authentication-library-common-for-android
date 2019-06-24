@@ -22,14 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_HTTP_REQUEST_END;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 
-//TODO Add more properties to the event.
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_HTTP_REQUEST_END;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_HTTP_RESPONSE_CODE;
+
 public class HttpEndEvent extends BaseEvent {
     private static final String TAG = HttpEndEvent.class.getSimpleName();
 
     public HttpEndEvent() {
         super();
         names(TELEMETRY_EVENT_HTTP_REQUEST_END);
+    }
+
+    public HttpEndEvent putResponse(final HttpResponse httpResponse) {
+        put(TELEMETRY_KEY_HTTP_RESPONSE_CODE, String.valueOf(httpResponse.getStatusCode()));
+        //TODO discuss what kind of telemetry need to be refined from response body and header.
+        return this;
     }
 }

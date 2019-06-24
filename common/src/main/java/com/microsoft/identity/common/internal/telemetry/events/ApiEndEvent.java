@@ -25,10 +25,11 @@ package com.microsoft.identity.common.internal.telemetry.events;
 import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
-//TODO Add more properties to the event.
 public class ApiEndEvent extends BaseEvent {
     private static final String TAG = ApiStartEvent.class.getSimpleName();
 
@@ -37,7 +38,24 @@ public class ApiEndEvent extends BaseEvent {
         names(TELEMETRY_EVENT_API_EVENT_END);
     }
 
-    public ApiEndEvent putException(final BaseException exception) {
+    public ApiEndEvent putResult(@NonNull final AcquireTokenResult result) {
+        put(TELEMETRY_KEY_IS_SUCCESSFUL, result.getSucceeded().toString());
+
+        if (null != result.getLocalAuthenticationResult()) {
+            put(TELEMETRY_KEY_USER_ID, result.getLocalAuthenticationResult().getUniqueId());
+            put(TELEMETRY_KEY_TENANT_ID, result.getLocalAuthenticationResult().getTenantId());
+            put(TELEMETRY_KEY_SPE_RING, result.getLocalAuthenticationResult().getSpeRing());
+            put(TELEMETRY_KEY_RT_AGE, result.getLocalAuthenticationResult().getRefreshTokenAge());
+        }
+
+        return this;
+    }
+
+    public ApiEndEvent putException(@NonNull final BaseException exception) {
+        if (exception  instanceof UserCancelException) {
+            put(TELEMETRY_VALUE_USER_CANCELLED, TELEMETRY_VALUE_YES);
+        }
+
         put(TELEMETRY_KEY_SERVER_ERROR_CODE, exception.getCliTelemErrorCode());
         put(TELEMETRY_KEY_SERVER_SUBERROR_CODE, exception.getCliTelemSubErrorCode());
         put(TELEMETRY_KEY_API_ERROR_CODE, exception.getErrorCode());

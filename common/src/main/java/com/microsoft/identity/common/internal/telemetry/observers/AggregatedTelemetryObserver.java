@@ -22,19 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.observers;
 
-import com.microsoft.identity.common.internal.logging.Logger;
-
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class AggregatedTelemetryObserver implements ITelemetryObserver<Map<String, String>> {
+/**
+ * Telemetry observer class for MATS format. The calling application need to implement the class for further data processing.
+ */
+public abstract class AggregatedTelemetryObserver implements ITelemetryObserver<Map<String, String>> {
     private static final String TAG = AggregatedTelemetryObserver.class.getSimpleName();
 
     @Override
     public void send(final List<Map<String, String>> telemetryRawData) {
-        //aggregate the raw data into MATS format
         final Map<String, String> aggregatedMap = new HashMap<>();
         for (Map<String, String> properties : telemetryRawData) {
             //Apply the aggregation telemetry rule.
@@ -45,7 +44,5 @@ public class AggregatedTelemetryObserver implements ITelemetryObserver<Map<Strin
     }
 
     @Override
-    public void upload(Map<String, String> telemetryData) {
-        //TODO
-    }
+    public abstract void upload(Map<String, String> telemetryData);
 }

@@ -49,26 +49,6 @@ public class ApiStartEvent extends BaseEvent {
     }
 
     public ApiStartEvent putProperties(OperationParameters parameters) {
-        /*
-        private Set<String> mScopes;
-    protected IAccountRecord mAccount;
-    @Expose()
-    private String clientId;
-    @Expose()
-    private String redirectUri;
-    @Expose()
-    private Authority mAuthority;
-    @Expose()
-    private String mClaimsRequestJson;
-    @Expose()
-    private SdkType mSdkType = SdkType.MSAL; // default value where we get a v2 id token;
-    @Expose()
-    private String mSdkVersion;
-    @Expose()
-    private String mApplicationName;
-    @Expose()
-    private String mApplicationVersion;
-         */
         this.put(TELEMETRY_KEY_AUTHORITY, parameters.getAuthority().toString());
         this.put(TELEMETRY_KEY_AUTHORITY_TYPE, parameters.getAuthority().getAuthorityTypeString());
         this.put(TELEMETRY_KEY_APPLICATION_NAME, parameters.getApplicationName());
@@ -80,27 +60,40 @@ public class ApiStartEvent extends BaseEvent {
         );
         this.put(TELEMETRY_KEY_REDIRECT_URI, parameters.getRedirectUri());
         this.put(TELEMETRY_KEY_CLIENT_ID, parameters.getClientId());
-        this.put(
-                TELEMETRY_KEY_LOGIN_HINT,
-                parameters.getAccount() == null ? TELEMETRY_VALUE_NOT_FOUND : parameters.getAccount().getHomeAccountId()
-        );
         this.put(TELEMETRY_KEY_SCOPE_SIZE, String.valueOf(parameters.getScopes().size()));
         this.put(TELEMETRY_KEY_SCOPE, parameters.getScopes().toString());
 
         if (parameters instanceof AcquireTokenOperationParameters) {
-            //TODO
+            this.put(
+                    TELEMETRY_KEY_USER_AGENT,
+                    ((AcquireTokenOperationParameters) parameters).getAuthorizationAgent().name()
+            );
+            this.put(TELEMETRY_KEY_LOGIN_HINT,
+                    ((AcquireTokenOperationParameters) parameters).getLoginHint()
+            );
+            this.put(TELEMETRY_KEY_REQUEST_QUERY_PARAMS,
+                    String.valueOf(((AcquireTokenOperationParameters) parameters).getExtraQueryStringParameters().size())
+            );
         }
 
         if (parameters instanceof AcquireTokenSilentOperationParameters) {
-            //TODO
+            this.put(TELEMETRY_KEY_USER_ID, parameters.getAccount().getHomeAccountId());
+            this.put(
+                    TELEMETRY_KEY_IS_FORCE_REFRESH,
+                    String.valueOf(((AcquireTokenSilentOperationParameters) parameters).getForceRefresh())
+            );
+            this.put(
+                    TELEMETRY_KEY_BROKER_PROTOCOL_VERSION,
+                    String.valueOf(((AcquireTokenSilentOperationParameters) parameters).getRequiredBrokerProtocolVersion())
+            );
         }
 
         if (parameters instanceof BrokerAcquireTokenOperationParameters) {
-            //TODO
+            //TODO when integrate the telemetry with broker.
         }
 
         if (parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
-            //TODO
+            //TODO when integrate the telemetry with broker.
         }
 
         return this;

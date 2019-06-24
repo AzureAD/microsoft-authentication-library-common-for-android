@@ -26,7 +26,6 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_UI_CANCELLED;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_USER_CANCEL;
 
-//TODO Add more properties to the event.
 public class UiEndEvent extends BaseEvent {
     private static final String TAG = UiEndEvent.class.getSimpleName();
 

@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.telemetry.events;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
-//TODO Add more properties to the event.
 public class HttpStartEvent extends BaseEvent {
 
     private static final String TAG = HttpStartEvent.class.getSimpleName();
@@ -67,9 +66,6 @@ public class HttpStartEvent extends BaseEvent {
         this.put(TELEMETRY_KEY_HTTP_ERROR_DOMAIN, errorDomain);
         return this;
     }
-
-    private static final String TELEMETRY_KEY_NETWORK_CONNECTION = "network_connection";
-    private static final String TELEMETRY_KEY_POWER_OPTIMIZATION = "power_optimization";
 
     public HttpStartEvent isNetworkConnected(boolean isConnected) {
         this.put(TELEMETRY_KEY_NETWORK_CONNECTION, String.valueOf(isConnected));

@@ -23,6 +23,8 @@
 
 package com.microsoft.identity.common.internal.telemetry;
 
+import com.microsoft.identity.common.internal.util.StringUtil;
+
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -44,7 +46,9 @@ public class Properties {
             mProperties = new ConcurrentHashMap<>();
         }
 
-        mProperties.put(key, value);
+        if (!StringUtil.isEmpty(key) && !StringUtil.isEmpty(value)) {
+            mProperties.put(key, value);
+        }
         return this;
     }
 

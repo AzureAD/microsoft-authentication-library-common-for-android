@@ -37,5 +37,10 @@ public interface ITelemetryObserver<T> {
      */
     void upload(T telemetryData);
 
+    /**
+     * Called when telemetry data is flushed.
+     *
+     * @param telemetryData telemetry data
+     */
     void send(List<Map<String, String>> telemetryData);
 }

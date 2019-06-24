@@ -22,14 +22,38 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_CACHE_EVENT_END;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
-//TODO Add more properties to the event.
 public class CacheEndEvent extends BaseEvent {
     private static final String TAG = CacheEndEvent.class.getSimpleName();
 
     public CacheEndEvent() {
         super();
         names(TELEMETRY_EVENT_CACHE_EVENT_END);
+    }
+
+    public CacheEndEvent putResultStatus(final String resultStatus) {
+        put(TELEMETRY_KEY_RESULT_STATUS, resultStatus);
+        return this;
+    }
+
+    public CacheEndEvent putRtStatus(final String rtStatus) {
+        put(TELEMETRY_KEY_RT_STATUS, rtStatus);
+        return this;
+    }
+
+    public CacheEndEvent putMrrtStatus(final String mrrtStatus) {
+        put(TELEMETRY_KEY_MRRT_STATUS, mrrtStatus);
+        return this;
+    }
+
+    public CacheEndEvent putFrtStatus(final String frtStatus) {
+        put(TELEMETRY_KEY_FRT_STATUS, frtStatus);
+        return this;
+    }
+
+    public CacheEndEvent putSpeInfo(final String speInfo) {
+        put(TELEMETRY_KEY_SPE_INFO, speInfo);
+        return this;
     }
 }

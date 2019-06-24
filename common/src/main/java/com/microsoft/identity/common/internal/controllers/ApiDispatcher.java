@@ -372,12 +372,6 @@ public class ApiDispatcher {
             @Override
             public void run() {
                 final String correlationId = initializeDiagnosticContext();
-                Telemetry.with(command.mParameters.getAppContext()).emit(
-                        new ApiStartEvent()
-                                .putProperties(command.mParameters)
-                                .putApiId("acquire_token_silent")
-                                .correlationId(correlationId)
-                );
 
                 if (command.mParameters instanceof AcquireTokenSilentOperationParameters) {
                     logSilentRequestParams(
@@ -414,18 +408,19 @@ public class ApiDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            Telemetry.with(command.mParameters.getAppContext()).emit(
+                            // end api event
+                            Telemetry.emit(
                                     new ApiEndEvent()
                                             .putException(finalException)
                                             .putApiId("acquire_token_silent")
-                                            .correlationId(correlationId)
                             );
+
+
                             command.getCallback().onError(finalException);
                         }
                     });
                 } else {
                     if (null != result && result.getSucceeded()) {
-                        //Post Success
                         final ILocalAuthenticationResult authenticationResult = result.getLocalAuthenticationResult();
                         handler.post(new Runnable() {
                             @Override
@@ -437,6 +432,7 @@ public class ApiDispatcher {
                         //Get MsalException from Authorization and/or Token Error Response
                         baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
                         final BaseException finalException = baseException;
+
                         if (finalException instanceof UserCancelException) {
                             //Post Cancel
                             handler.post(new Runnable() {
@@ -455,6 +451,8 @@ public class ApiDispatcher {
                         }
                     }
                 }
+
+                Telemetry.getInstance().flush(correlationId);
             }
         });
     }

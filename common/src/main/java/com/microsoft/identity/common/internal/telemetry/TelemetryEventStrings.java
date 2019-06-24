@@ -52,8 +52,6 @@ public final class TelemetryEventStrings {
     public static final String TELEMETRY_EVENT_APP_METADATA_WRITE = "app_metadata_write";
     public static final String TELEMETRY_EVENT_APP_METADATA_DELETE = "app_metadata_delete";
 
-
-
     // Telemetry property name, only alphabetic letters, dots, and underscores are allowed.
     public static final String TELEMETRY_KEY_EVENT_NAME = "event_name";
     public static final String TELEMETRY_KEY_AUTHORITY_TYPE = "authority_type";
@@ -68,7 +66,10 @@ public final class TelemetryEventStrings {
     public static final String TELEMETRY_KEY_START_TIME = "start_time";
     public static final String TELEMETRY_KEY_END_TIME = "stop_time";
     public static final String TELEMETRY_KEY_RESPONSE_TIME = "response_time";
+    public static final String TELEMETRY_KEY_NETWORK_CONNECTION = "network_connection";
+    public static final String TELEMETRY_KEY_POWER_OPTIMIZATION = "power_optimization";
     public static final String TELEMETRY_KEY_IS_FORCE_PROMPT = "force_prompt";
+    public static final String TELEMETRY_KEY_IS_FORCE_REFRESH = "force_refresh";
     public static final String TELEMETRY_KEY_DEVICE_ID = "device_id";
     public static final String TELEMETRY_KEY_APPLICATION_NAME = "application_name";
     public static final String TELEMETRY_KEY_APPLICATION_VERSION = "application_version";
@@ -148,5 +149,21 @@ public final class TelemetryEventStrings {
     public static final String TELEMETRY_VALUE_AUTHORITY_AAD = "aad";
     public static final String TELEMETRY_VALUE_AUTHORITY_ADFS = "adfs";
     public static final String TELEMETRY_VALUE_AUTHORITY_B2C = "b2c";
+
+    //Telemetry API ID
+    public static final String API_BROKER_ACQUIRE_TOKEN_INTERACTIVE = "201";
+    public static final String API_BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE = "202";
+    public static final String API_BROKER_ACQUIRE_TOKEN_SILENT= "203";
+    public static final String API_GET_BROKER_DEVICE_MODE= "204";
+    public static final String API_BROKER_GET_CURRENT_ACCOUNT= "205";
+    public static final String API_BROKER_GET_ACCOUNTS= "206";
+    public static final String API_BROKER_REMOVE_ACCOUNT= "207";
+    public static final String API_BROKER_REMOVE_ACCOUNT_FROM_SHARED_DEVICE= "208";
+
+    public static final String API_LOCAL_ACQUIRE_TOKEN_INTERACTIVE = "101";
+    public static final String API_LOCAL_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE = "1032";
+    public static final String API_LOCAL_ACQUIRE_TOKEN_SILENT= "103";
+    public static final String API_LOCAL_GET_ACCOUNTS= "106";
+    public static final String API_LOCAL_REMOVE_ACCOUNT= "107";
 }
 

@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.telemetry.events;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.telemetry.Properties;
 
 public class BaseEvent extends Properties {
@@ -35,6 +36,7 @@ public class BaseEvent extends Properties {
     BaseEvent() {
         super();
         occurs(System.currentTimeMillis());
+        correlationId(DiagnosticContext.getRequestContext().get(CORRELATION_ID));
     }
 
     /**

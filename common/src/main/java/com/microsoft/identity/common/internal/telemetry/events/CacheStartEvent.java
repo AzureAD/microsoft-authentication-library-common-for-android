@@ -23,7 +23,6 @@ package com.microsoft.identity.common.internal.telemetry.events;
 // THE SOFTWARE.
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
-//TODO Add more properties to the event.
 public class CacheStartEvent extends BaseEvent {
     private static final String TAG = CacheStartEvent.class.getSimpleName();
 
@@ -32,22 +31,27 @@ public class CacheStartEvent extends BaseEvent {
         names(TELEMETRY_EVENT_CACHE_EVENT_START);
     }
 
-    /*
-    MSID_TELEMETRY_KEY_TOKEN_TYPE
-    MSID_TELEMETRY_KEY_IS_FRT
-    MSID_TELEMETRY_KEY_IS_MRRT
-    MSID_TELEMETRY_KEY_IS_RT
+    public CacheStartEvent putTokenType(final String tokenType) {
+        put(TELEMETRY_KEY_TOKEN_TYPE, tokenType);
+        return this;
+    }
 
-    MSID_TELEMETRY_KEY_RESULT_STATUS
-    MSID_TELEMETRY_KEY_RT_STATUS
-    MSID_TELEMETRY_KEY_MRRT_STATUS
-    MSID_TELEMETRY_KEY_FRT_STATUS
-    MSID_TELEMETRY_KEY_SPE_INFO
+    public CacheStartEvent isFrt(final boolean isFrt) {
+        put(TELEMETRY_KEY_IS_FRT, String.valueOf(isFrt));
+        return this;
+    }
 
+    public CacheStartEvent isMrrt(final boolean isMrrt) {
+        put(TELEMETRY_KEY_IS_FRT, String.valueOf(isMrrt));
+        return this;
+    }
+    public CacheStartEvent isRt(final boolean isRt) {
+        put(TELEMETRY_KEY_IS_FRT, String.valueOf(isRt));
+        return this;
+    }
 
-    MSID_TELEMETRY_KEY_WIPE_APP
-    MSID_TELEMETRY_KEY_WIPE_TIME
-
-    */
-
+    public CacheStartEvent putWipeApp(final boolean appWiped) {
+        put(TELEMETRY_KEY_WIPE_APP, String.valueOf(appWiped));
+        return this;
+    }
 }
