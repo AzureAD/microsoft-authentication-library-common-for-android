@@ -356,9 +356,9 @@ public class StorageHelper implements IStorageHelper {
         if (!encryptedBlob.substring(1, 1 + encodeVersionLength).equals(ENCODE_VERSION)) {
             throw new IllegalArgumentException(
                     String.format(
-                            "Encode version received was: '%s', Encode version supported is: '%s'",
-                            encryptedBlob,
-                            ENCODE_VERSION)
+                            "Unsupported encode version received. Encode version supported is: '%s'",
+                            ENCODE_VERSION
+                    )
             );
         }
     }
