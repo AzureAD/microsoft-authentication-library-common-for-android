@@ -36,6 +36,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -58,7 +59,9 @@ import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -67,6 +70,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
+
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
 
 public class StorageHelper implements IStorageHelper {
@@ -138,6 +144,11 @@ public class StorageHelper implements IStorageHelper {
     private static final int KEY_FILE_SIZE = 1024;
 
     private static final String ANDROID_KEY_STORE = "AndroidKeyStore";
+
+    private static final Set<String> BROKER_PACKAGE_NAMES = new HashSet<String>() {{
+        add(AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        add(COMPANY_PORTAL_APP_PACKAGE_NAME);
+    }};
 
     private final Context mContext;
     private final SecureRandom mRandom;
@@ -220,8 +231,8 @@ public class StorageHelper implements IStorageHelper {
     }
 
     @Override
-    public String decrypt(final String encryptedBlob)
-            throws GeneralSecurityException, IOException {
+    public String decrypt(final String encryptedBlob) throws GeneralSecurityException, IOException {
+        final String methodName = "decrypt";
         Log.v(TAG, "Starting decryption");
 
         if (StringExtensions.isNullOrBlank(encryptedBlob)) {
@@ -229,33 +240,68 @@ public class StorageHelper implements IStorageHelper {
         }
 
         int encodeVersionLength = encryptedBlob.charAt(0) - 'a';
-        if (encodeVersionLength <= 0) {
-            throw new IllegalArgumentException(String.format(
-                    "Encode version length: '%s' is not valid, it must be greater of equal to 0",
-                    encodeVersionLength));
-        }
-        if (!encryptedBlob.substring(1, 1 + encodeVersionLength).equals(ENCODE_VERSION)) {
-            throw new IllegalArgumentException(String.format(
-                    "Encode version received was: '%s', Encode version supported is: '%s'", encryptedBlob,
-                    ENCODE_VERSION));
-        }
+        validateEncodeVersion(encryptedBlob, encodeVersionLength);
 
-        final byte[] bytes = Base64
-                .decode(encryptedBlob.substring(1 + encodeVersionLength), Base64.DEFAULT);
+        final byte[] bytes = Base64.decode(
+                encryptedBlob.substring(1 + encodeVersionLength),
+                Base64.DEFAULT
+        );
 
+        final String packageName = mContext.getPackageName();
+
+        try {
+            return decryptWithPackageName(bytes, packageName);
+        } catch (GeneralSecurityException | IOException e) {
+            Logger.error(
+                    TAG + methodName,
+                    "Failed to decrypt with package name: "
+                            + packageName,
+                    e
+            );
+
+            if (!BROKER_PACKAGE_NAMES.contains(packageName)) {
+                // If we are not the broker, do not retry, immediately throw.
+                throw e;
+            }
+
+            // We are the broker... try with the other broker's package name
+            final String nextPackageToUse =
+                    packageName.equals(AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)
+                            ? COMPANY_PORTAL_APP_PACKAGE_NAME
+                            : AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+
+            Logger.warn(
+                    TAG + methodName,
+                    "We are the broker. Retrying with package name: "
+                            + nextPackageToUse
+            );
+
+            return decryptWithPackageName(bytes, nextPackageToUse);
+        }
+    }
+
+    private String decryptWithPackageName(final byte[] bytes,
+                                          @NonNull final String packageName)
+            throws GeneralSecurityException, IOException {
         // get key version used for this data. If user upgraded to different
         // API level, data needs to be updated
-        final String keyVersion = new String(bytes, 0, KEY_VERSION_BLOB_LENGTH,
-                AuthenticationConstants.ENCODING_UTF8);
+        final String keyVersion = new String(
+                bytes,
+                0,
+                KEY_VERSION_BLOB_LENGTH,
+                AuthenticationConstants.ENCODING_UTF8
+        );
+
         Log.v(TAG, "Encrypt version:" + keyVersion);
 
-        final SecretKey secretKey = getKey(keyVersion);
+        final SecretKey secretKey = getKey(keyVersion, packageName);
         final SecretKey hmacKey = getHMacKey(secretKey);
 
         // byte input array: encryptedData-iv-macDigest
         final int ivIndex = bytes.length - DATA_KEY_LENGTH - HMAC_LENGTH;
         final int macIndex = bytes.length - HMAC_LENGTH;
         final int encryptedLength = ivIndex - KEY_VERSION_BLOB_LENGTH;
+
         if (ivIndex < 0 || macIndex < 0 || encryptedLength < 0) {
             throw new IOException("Invalid byte array input for decryption.");
         }
@@ -276,14 +322,45 @@ public class StorageHelper implements IStorageHelper {
         // that IV.
         // It is using same cipher for different version since version# change
         // will mean upgrade to AndroidKeyStore and new Key.
-        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(bytes, ivIndex,
-                DATA_KEY_LENGTH));
+        cipher.init(
+                Cipher.DECRYPT_MODE,
+                secretKey,
+                new IvParameterSpec(bytes, ivIndex, DATA_KEY_LENGTH)
+        );
 
         // Decrypt data bytes from 0 to ivindex
-        final String decrypted = new String(cipher.doFinal(bytes, KEY_VERSION_BLOB_LENGTH,
-                encryptedLength), AuthenticationConstants.ENCODING_UTF8);
+        final String decrypted = new String(
+                cipher.doFinal(
+                        bytes,
+                        KEY_VERSION_BLOB_LENGTH,
+                        encryptedLength
+                ),
+                AuthenticationConstants.ENCODING_UTF8
+        );
+
         Log.v(TAG, "Finished decryption");
+
         return decrypted;
+    }
+
+    private void validateEncodeVersion(String encryptedBlob, int encodeVersionLength) {
+        if (encodeVersionLength <= 0) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Encode version length: '%s' is not valid, it must be greater of equal to 0",
+                            encodeVersionLength
+                    )
+            );
+        }
+
+        if (!encryptedBlob.substring(1, 1 + encodeVersionLength).equals(ENCODE_VERSION)) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Unsupported encode version received. Encode version supported is: '%s'",
+                            ENCODE_VERSION
+                    )
+            );
+        }
     }
 
     @Override
@@ -339,7 +416,7 @@ public class StorageHelper implements IStorageHelper {
         }
 
         try {
-            mSecretKeyFromAndroidKeyStore = getKey(keyVersion);
+            mSecretKeyFromAndroidKeyStore = getKey(keyVersion, mContext.getPackageName());
         } catch (final IOException | GeneralSecurityException exception) {
             Log.v(TAG, "Key does not exist in AndroidKeyStore, try to generate new keys.");
         }
@@ -365,10 +442,12 @@ public class StorageHelper implements IStorageHelper {
      * @throws GeneralSecurityException
      * @throws IOException
      */
-    private synchronized SecretKey getKey(final String keyVersion) throws GeneralSecurityException, IOException {
+    private synchronized SecretKey getKey(final String keyVersion,
+                                          final String packageName)
+            throws GeneralSecurityException, IOException {
         switch (keyVersion) {
             case VERSION_USER_DEFINED:
-                return getSecretKey(getSecretKeyData(mContext.getPackageName()));
+                return getSecretKey(getSecretKeyData(packageName));
             case VERSION_ANDROID_KEY_STORE:
 
                 if (mSecretKeyFromAndroidKeyStore != null) {
