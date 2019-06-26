@@ -25,13 +25,13 @@ package com.microsoft.identity.common.internal.telemetry.events;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_HTTP_EVENT;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_HTTP_REQUEST_END;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_HTTP_END_EVENT;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_HTTP_RESPONSE_CODE;
 
 public class HttpEndEvent extends BaseEvent {
     public HttpEndEvent() {
         super();
-        names(TELEMETRY_EVENT_HTTP_REQUEST_END);
+        names(TELEMETRY_EVENT_HTTP_END_EVENT);
         types(TELEMETRY_EVENT_HTTP_EVENT);
     }
 

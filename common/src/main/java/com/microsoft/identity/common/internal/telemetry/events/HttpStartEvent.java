@@ -26,7 +26,7 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class HttpStartEvent extends BaseEvent {
     public HttpStartEvent() {
         super();
-        names(TELEMETRY_EVENT_HTTP_REQUEST_START);
+        names(TELEMETRY_EVENT_HTTP_START_EVENT);
         types(TELEMETRY_EVENT_HTTP_EVENT);
     }
 

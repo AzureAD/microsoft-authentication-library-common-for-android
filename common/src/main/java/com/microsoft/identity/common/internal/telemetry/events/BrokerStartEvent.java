@@ -22,13 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_BROKER_REQUEST;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_BROKER_REQUEST_START;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_BROKER_EVENT;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_BROKER_START_EVENT;
 
 public class BrokerStartEvent extends BaseEvent {
     public BrokerStartEvent() {
         super();
-        names(TELEMETRY_EVENT_BROKER_REQUEST_START);
-        types(TELEMETRY_EVENT_BROKER_REQUEST);
+        names(TELEMETRY_EVENT_BROKER_START_EVENT);
+        types(TELEMETRY_EVENT_BROKER_EVENT);
     }
 }

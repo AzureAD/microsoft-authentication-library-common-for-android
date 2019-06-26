@@ -46,7 +46,9 @@ public class TelemetryAggregationRules {
 
     public static TelemetryAggregationRules getInstance() {
         if (sInstance == null) {
-            sInstance = new TelemetryAggregationRules();
+            synchronized (TelemetryAggregationRules.class) {
+                sInstance = new TelemetryAggregationRules();
+            }
         }
 
         return sInstance;

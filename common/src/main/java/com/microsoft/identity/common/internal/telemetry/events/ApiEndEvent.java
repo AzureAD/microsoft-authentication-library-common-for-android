@@ -33,7 +33,7 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class ApiEndEvent extends BaseEvent {
     public ApiEndEvent() {
         super();
-        names(TELEMETRY_EVENT_API_EVENT_END);
+        names(TELEMETRY_EVENT_API_END_EVENT);
         types(TELEMETRY_EVENT_API_EVENT);
     }
 

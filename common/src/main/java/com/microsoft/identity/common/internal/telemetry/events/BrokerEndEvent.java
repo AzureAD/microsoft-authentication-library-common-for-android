@@ -27,7 +27,7 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class BrokerEndEvent extends BaseEvent {
     public BrokerEndEvent() {
         super();
-        names(TELEMETRY_EVENT_BROKER_REQUEST_END);
-        types(TELEMETRY_EVENT_BROKER_REQUEST);
+        names(TELEMETRY_EVENT_BROKER_END_EVENT);
+        types(TELEMETRY_EVENT_BROKER_EVENT);
     }
 }

@@ -26,7 +26,7 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class CacheStartEvent extends BaseEvent {
     public CacheStartEvent() {
         super();
-        names(TELEMETRY_EVENT_CACHE_EVENT_START);
+        names(TELEMETRY_EVENT_CACHE_START_EVENT);
         types(TELEMETRY_EVENT_CACHE_EVENT);
     }
 

@@ -23,29 +23,29 @@
 package com.microsoft.identity.common.internal.telemetry;
 
 public final class TelemetryEventStrings {
-    public static final String TELEMETRY_EVENT_API_EVENT_START = "api_start_event";
-    public static final String TELEMETRY_EVENT_API_EVENT_END = "api_end_event";
+    public static final String TELEMETRY_EVENT_API_START_EVENT = "api_start_event";
+    public static final String TELEMETRY_EVENT_API_END_EVENT = "api_end_event";
     public static final String TELEMETRY_EVENT_API_EVENT = "api_event";
 
-    public static final String TELEMETRY_EVENT_CACHE_EVENT_START = "cache_start_event";
-    public static final String TELEMETRY_EVENT_CACHE_EVENT_END = "cache_end_event";
+    public static final String TELEMETRY_EVENT_CACHE_START_EVENT = "cache_start_event";
+    public static final String TELEMETRY_EVENT_CACHE_END_EVENT = "cache_end_event";
     public static final String TELEMETRY_EVENT_CACHE_EVENT = "cache_event";
 
-    public static final String TELEMETRY_EVENT_UI_EVENT_START = "ui_start_event";
-    public static final String TELEMETRY_EVENT_UI_EVENT_END = "ui_end_event";
+    public static final String TELEMETRY_EVENT_UI_START_EVENT = "ui_start_event";
+    public static final String TELEMETRY_EVENT_UI_END_EVENT = "ui_end_event";
     public static final String TELEMETRY_EVENT_UI_EVENT = "ui_event";
 
-    public static final String TELEMETRY_EVENT_HTTP_REQUEST_START = "http_start_event";
-    public static final String TELEMETRY_EVENT_HTTP_REQUEST_END = "http_end_event";
+    public static final String TELEMETRY_EVENT_HTTP_START_EVENT = "http_start_event";
+    public static final String TELEMETRY_EVENT_HTTP_END_EVENT = "http_end_event";
     public static final String TELEMETRY_EVENT_HTTP_EVENT = "http_event";
 
-    public static final String TELEMETRY_EVENT_BROKER_REQUEST_START = "broker_start_event";
-    public static final String TELEMETRY_EVENT_BROKER_REQUEST_END = "broker_end_event";
-    public static final String TELEMETRY_EVENT_BROKER_REQUEST = "broker_event";
+    public static final String TELEMETRY_EVENT_BROKER_START_EVENT = "broker_start_event";
+    public static final String TELEMETRY_EVENT_BROKER_END_EVENT = "broker_end_event";
+    public static final String TELEMETRY_EVENT_BROKER_EVENT = "broker_event";
 
-    public static final String TELEMETRY_EVENT_AUTHORITY_VALIDATION_START = "authority_validation_start_event";
-    public static final String TELEMETRY_EVENT_AUTHORITY_VALIDATION_END = "authority_validation_end_event";
-    public static final String TELEMETRY_EVENT_AUTHORITY_VALIDATION = "authority_validation_event";
+    public static final String TELEMETRY_EVENT_AUTHORITY_VALIDATION_START_EVENT = "authority_validation_start_event";
+    public static final String TELEMETRY_EVENT_AUTHORITY_VALIDATION_END_EVENT = "authority_validation_end_event";
+    public static final String TELEMETRY_EVENT_AUTHORITY_VALIDATION_EVENT = "authority_validation_event";
 
     public static final String TELEMETRY_EVENT_TOKEN_GRANT = "token_grant";
     public static final String TELEMETRY_EVENT_ACQUIRE_TOKEN_SILENT = "acquire_token_silent_handler";
@@ -145,6 +145,7 @@ public final class TelemetryEventStrings {
     public static final String TELEMETRY_KEY_DEVICE_TIMEZONE = "time_zone";
     // OS
     public static final String TELEMETRY_KEY_OS_NAME = "os_name";
+    public static final String TELEMETRY_VALUE_OS_NAME = "android";
     public static final String TELEMETRY_KEY_OS_VERSION = "os_version";
     public static final String TELEMETRY_KEY_TIMEZONE = "timezone";
 

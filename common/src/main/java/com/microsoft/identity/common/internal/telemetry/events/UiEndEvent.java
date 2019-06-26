@@ -23,14 +23,14 @@
 package com.microsoft.identity.common.internal.telemetry.events;
 
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_UI_EVENT;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_UI_EVENT_END;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_UI_END_EVENT;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_UI_CANCELLED;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_USER_CANCEL;
 
 public class UiEndEvent extends BaseEvent {
     public UiEndEvent() {
         super();
-        names(TELEMETRY_EVENT_UI_EVENT_END);
+        names(TELEMETRY_EVENT_UI_END_EVENT);
         types(TELEMETRY_EVENT_UI_EVENT);
     }
 

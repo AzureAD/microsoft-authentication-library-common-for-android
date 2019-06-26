@@ -37,7 +37,6 @@ public class TelemetryConfiguration implements Serializable {
         public static final String DEBUG_ENABLED = "debug_enabled";
     }
 
-
     @SerializedName(SerializedNames.PII_ENABLED)
     private boolean mPiiEnabled = false;
 
@@ -74,7 +73,7 @@ public class TelemetryConfiguration implements Serializable {
     /**
      * @return true if telemetry only dispatched when error occurred, false otherwise.
      */
-    public boolean isNotifyOnFailureOnly() {
+    public boolean shouldNotifyOnFailureOnly() {
         return mNotifyOnFailureOnly;
     }
 

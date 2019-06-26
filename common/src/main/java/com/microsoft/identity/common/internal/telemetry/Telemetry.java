@@ -22,12 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 
+import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.telemetry.adapter.TelemetryAggregationAdapter;
@@ -46,13 +46,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static com.microsoft.identity.common.internal.logging.DiagnosticContext.CORRELATION_ID;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_CORRELATION_ID;
 
 public class Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
-    private static volatile Telemetry singleton = null;
+    private static volatile Telemetry sTelemetryInstance = null;
     private List<ITelemetryObserver> mObservers;
     private List<Map<String, String>> mTelemetryRawDataMap;
     private TelemetryConfiguration mDefaultConfiguration;
@@ -63,16 +62,14 @@ public class Telemetry {
     private final boolean mIsTelemetryEnabled;
 
     private Telemetry(final Builder builder) {
-        if (builder == null) {
-            throw new IllegalArgumentException("Builder cannot be null");
-        }
-
-        if (builder.mTelemetryContext == null) {
-            throw new IllegalArgumentException("Telemetry context cannot be null");
-        }
-
-        if (builder.mDefaultConfiguration == null) {
-            //if the telemetry configuration is not set in the json, disable the telemetry.
+        if (builder == null
+                || builder.mTelemetryContext == null
+                || builder.mDefaultConfiguration == null) {
+            //we do not want to throw exception for telemetry.
+            Logger.warn(
+                    TAG,
+                    "Telemetry is disabled because the Telemetry context or configuration is null"
+            );
             mIsTelemetryEnabled = false;
         } else {
             mIsTelemetryEnabled = true;
@@ -88,21 +85,28 @@ public class Telemetry {
      * Prepares instance using builder.
      **/
     private static Telemetry prepareInstance(Builder builder) {
-        if (singleton == null) {
+        if (sTelemetryInstance == null) {
             synchronized (Telemetry.class) {
-                if (singleton == null) {
-                    singleton = new Telemetry(builder);
+                if (sTelemetryInstance == null) {
+                    sTelemetryInstance = new Telemetry(builder);
                 }
             }
         }
-        return singleton;
+        return sTelemetryInstance;
     }
 
     /**
      * This is for getting instance of Telemetry
      **/
     public static Telemetry getInstance() {
-        return singleton;
+        // If sTelemetryInstance is not initialized, telemetry will be disabled.
+        if (sTelemetryInstance == null) {
+            synchronized (Telemetry.class) {
+                new Builder().build();
+            }
+        }
+
+        return sTelemetryInstance;
     }
 
     public TelemetryContext getTelemetryContext() {
@@ -120,7 +124,7 @@ public class Telemetry {
      */
     public synchronized void addObserver(final ITelemetryObserver observer) {
         if (null == observer) {
-            throw new IllegalArgumentException("Receiver instance cannot be null");
+            throw new IllegalArgumentException("Telemetry Observer instance cannot be null");
         }
 
         // check to make sure we're not already dispatching elsewhere
@@ -135,6 +139,10 @@ public class Telemetry {
 
     public synchronized void removeObserver(final ITelemetryObserver observer) {
         if (null == observer || null == mObservers) {
+            Logger.warn(
+                    TAG,
+                    "Unable to remove the observe. Either the observer is null or the observer list is empty."
+            );
             return;
         }
 
@@ -174,7 +182,6 @@ public class Telemetry {
      */
     public void flush(@NonNull final String correlationId) {
         if (!mIsTelemetryEnabled) {
-            Logger.warn(TAG, "Telemetry is disabled.");
             return;
         }
         if (null == mObservers) {
@@ -250,9 +257,7 @@ public class Telemetry {
             if (context == null) {
                 throw new IllegalArgumentException("Context must not be null.");
             }
-            if (!hasPermission(context, Manifest.permission.INTERNET)) {
-                throw new IllegalArgumentException("INTERNET permission is required.");
-            }
+
             mContext = context.getApplicationContext();
             if (mContext == null) {
                 throw new IllegalArgumentException("Application context must not be null.");
@@ -266,7 +271,7 @@ public class Telemetry {
                 mIsDebugging = (flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
             } catch (final PackageManager.NameNotFoundException exception) {
                 Logger.warn(TAG, "The application is not found from PackageManager.");
-                mIsDebugging = true;
+                mIsDebugging = BuildConfig.DEBUG;
             }
 
             return this;
@@ -286,12 +291,5 @@ public class Telemetry {
         public Telemetry build() throws IllegalArgumentException {
             return prepareInstance(this);
         }
-    }
-
-    /**
-     * Returns true if the application has the given permission.
-     */
-    public static boolean hasPermission(Context context, String permission) {
-        return context.checkCallingOrSelfPermission(permission) == PERMISSION_GRANTED;
     }
 }

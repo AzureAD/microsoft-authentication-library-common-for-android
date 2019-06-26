@@ -29,7 +29,7 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class UiStartEvent extends BaseEvent {
     public UiStartEvent() {
         super();
-        names(TELEMETRY_EVENT_UI_EVENT_START);
+        names(TELEMETRY_EVENT_UI_START_EVENT);
         types(TELEMETRY_EVENT_UI_EVENT);
     }
 

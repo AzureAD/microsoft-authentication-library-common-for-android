@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 import java.util.TimeZone;
@@ -50,18 +51,18 @@ public class TelemetryContext extends Properties {
      * is thread safe.
      */
     static synchronized TelemetryContext create(final Context context) {
-        TelemetryContext telemetryContext = new TelemetryContext(new ConcurrentHashMap<String, String>());
-        telemetryContext.putApp(context);
-        telemetryContext.putDevice();
-        telemetryContext.putOs();
+        final TelemetryContext telemetryContext = new TelemetryContext(new ConcurrentHashMap<String, String>());
+        telemetryContext.addApplicationInfo(context);
+        telemetryContext.addDeviceInfo();
+        telemetryContext.addOsInfo();
         telemetryContext.put(TELEMETRY_KEY_DEVICE_TIMEZONE, TimeZone.getDefault().getID());
         return telemetryContext;
     }
 
-    void putApp(Context context) {
+    void addApplicationInfo(@NonNull final Context context) {
         try {
-            PackageManager packageManager = context.getPackageManager();
-            PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
+            final PackageManager packageManager = context.getPackageManager();
+            final PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
             put(TELEMETRY_KEY_APPLICATION_NAME, packageInfo.applicationInfo.loadLabel(packageManager).toString());
             put(TELEMETRY_KEY_APPLICATION_VERSION, packageInfo.versionName);
             put(TELEMETRY_KEY_APP_BUILD, String.valueOf(packageInfo.versionCode));
@@ -71,14 +72,14 @@ public class TelemetryContext extends Properties {
         }
     }
 
-    void putDevice() {
+    void addDeviceInfo() {
         put(TELEMETRY_KEY_DEVICE_MANUFACTURER, Build.MANUFACTURER);
         put(TELEMETRY_KEY_DEVICE_MODEL, Build.MODEL);
         put(TELEMETRY_KEY_DEVICE_NAME, Build.DEVICE);
     }
 
-    void putOs() {
-        put(TELEMETRY_KEY_OS_NAME, "Android");
+    void addOsInfo() {
+        put(TELEMETRY_KEY_OS_NAME, TELEMETRY_VALUE_OS_NAME);
         put(TELEMETRY_KEY_OS_VERSION, Build.VERSION.RELEASE);
     }
 }

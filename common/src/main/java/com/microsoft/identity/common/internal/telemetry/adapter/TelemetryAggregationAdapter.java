@@ -33,8 +33,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_API_EVENT_END;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_API_EVENT_START;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_API_END_EVENT;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_API_START_EVENT;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_END_TIME;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_EVENT_NAME;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_EVENT_TYPE;
@@ -80,13 +80,13 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
             }
 
             final long eventOccurTime = Long.parseLong(event.get(TELEMETRY_KEY_OCCUR_TIME));
-            if (eventName.equalsIgnoreCase(TELEMETRY_EVENT_API_EVENT_START)
+            if (eventName.equalsIgnoreCase(TELEMETRY_EVENT_API_START_EVENT)
                     && (apiStartTime == -1
                     || eventOccurTime < apiStartTime)) {
                 apiStartTime = eventOccurTime;
             }
 
-            if (eventName.equalsIgnoreCase(TELEMETRY_EVENT_API_EVENT_END)
+            if (eventName.equalsIgnoreCase(TELEMETRY_EVENT_API_END_EVENT)
                     && (apiEndTime == -1
                     || eventOccurTime > apiEndTime)) {
                 apiEndTime = eventOccurTime;

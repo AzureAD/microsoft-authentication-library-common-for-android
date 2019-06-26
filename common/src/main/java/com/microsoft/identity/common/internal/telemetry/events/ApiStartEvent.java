@@ -45,7 +45,7 @@ public class ApiStartEvent extends BaseEvent {
 
     public ApiStartEvent() {
         super();
-        names(TELEMETRY_EVENT_API_EVENT_START);
+        names(TELEMETRY_EVENT_API_START_EVENT);
         types(TELEMETRY_EVENT_API_EVENT);
     }
 

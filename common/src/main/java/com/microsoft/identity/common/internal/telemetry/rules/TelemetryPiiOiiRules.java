@@ -62,7 +62,9 @@ final public class TelemetryPiiOiiRules {
 
     public static TelemetryPiiOiiRules getInstance() {
         if (sInstance == null) {
-            sInstance = new TelemetryPiiOiiRules();
+            synchronized (TelemetryPiiOiiRules.class) {
+                sInstance = new TelemetryPiiOiiRules();
+            }
         }
 
         return sInstance;
