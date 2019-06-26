@@ -30,13 +30,18 @@ import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.telemetry.adapter.TelemetryAggregationAdapter;
+import com.microsoft.identity.common.internal.telemetry.adapter.TelemetryDefaultAdapter;
 import com.microsoft.identity.common.internal.telemetry.events.BaseEvent;
+import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryAggregatedObserver;
+import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryDefaultObserver;
 import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryObserver;
 import com.microsoft.identity.common.internal.telemetry.rules.TelemetryPiiOiiRules;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -123,6 +128,8 @@ public class Telemetry {
             mObservers = new LinkedList<>();
         }
 
+
+
         mObservers.add(observer);
     }
 
@@ -188,10 +195,11 @@ public class Telemetry {
 
             List<Map<String, String>> finalRawMap = new ArrayList<>();
 
-            for (Map<String, String> event : mTelemetryRawDataMap) {
+            for (Iterator<Map<String, String>> iterator = mTelemetryRawDataMap.iterator(); iterator.hasNext(); ) {
+                Map<String, String> event = iterator.next();
                 if (correlationId.equalsIgnoreCase(event.get(TELEMETRY_KEY_CORRELATION_ID))) {
                     finalRawMap.add(applyPiiOiiRule(event));
-                    finalRawMap.remove(event);
+                    iterator.remove();
                 }
             }
 
@@ -199,7 +207,13 @@ public class Telemetry {
             finalRawMap.add(applyPiiOiiRule(mTelemetryContext.getProperties()));
 
             for (ITelemetryObserver observer : mObservers) {
-                observer.send(finalRawMap);
+                if (observer instanceof ITelemetryAggregatedObserver) {
+                    new TelemetryAggregationAdapter((ITelemetryAggregatedObserver)observer).process(finalRawMap);
+                } else if (observer instanceof ITelemetryDefaultObserver) {
+                    new TelemetryDefaultAdapter((ITelemetryDefaultObserver) observer).process(finalRawMap);
+                } else {
+                    Logger.warn(TAG, "Unknown observer type: " + observer.getClass());
+                }
             }
         }
     }

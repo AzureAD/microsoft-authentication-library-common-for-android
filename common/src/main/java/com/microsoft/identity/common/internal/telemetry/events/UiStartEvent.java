@@ -27,11 +27,10 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 public class UiStartEvent extends BaseEvent {
-    private static final String TAG = UiStartEvent.class.getSimpleName();
-
     public UiStartEvent() {
         super();
         names(TELEMETRY_EVENT_UI_EVENT_START);
+        types(TELEMETRY_EVENT_UI_EVENT);
     }
 
     public UiStartEvent putUserAgent(final AuthorizationAgent userAgent) {

@@ -27,39 +27,18 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
-import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.platform.Device;
-
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 /**
  * TelemetryContext is a dictionary of information about the state of the device.
  * It is attached to every outgoing telemetry calls.
- *
  */
 public class TelemetryContext extends Properties {
     private static final String TAG = TelemetryContext.class.getSimpleName();
-
-    // App
-    private static final String APP_NAME_KEY = "app_name";
-    private static final String APP_VERSION_KEY = "app_version";
-    private static final String APP_PACKAGE_NAME_KEY = "app_package_name";
-    private static final String APP_BUILD_KEY = "app_build";
-    // Device
-    private static final String DEVICE_MANUFACTURER_KEY = "device_manufacturer";
-    private static final String DEVICE_MODEL_KEY = "device_model";
-    private static final String DEVICE_NAME_KEY = "device_name";
-    private static final String DEVICE_ID_KEY = "device_id";
-    // Library
-    private static final String LIBRARY_NAME_KEY = "library_name";
-    private static final String LIBRARY_VERSION_KEY = "library_version";
-    // OS
-    private static final String OS_NAME_KEY = "os_name";
-    private static final String OS_VERSION_KEY = "os_version";
-    private static final String TIMEZONE_KEY = "timezone";
 
     TelemetryContext(ConcurrentHashMap<String, String> delegate) {
         super(delegate);
@@ -74,9 +53,8 @@ public class TelemetryContext extends Properties {
         TelemetryContext telemetryContext = new TelemetryContext(new ConcurrentHashMap<String, String>());
         telemetryContext.putApp(context);
         telemetryContext.putDevice();
-        telemetryContext.putLibrary();
         telemetryContext.putOs();
-        telemetryContext.put(TIMEZONE_KEY, TimeZone.getDefault().getID());
+        telemetryContext.put(TELEMETRY_KEY_DEVICE_TIMEZONE, TimeZone.getDefault().getID());
         return telemetryContext;
     }
 
@@ -84,10 +62,9 @@ public class TelemetryContext extends Properties {
         try {
             PackageManager packageManager = context.getPackageManager();
             PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
-            put(APP_NAME_KEY, packageInfo.applicationInfo.loadLabel(packageManager).toString());
-            put(APP_VERSION_KEY, packageInfo.versionName);
-            put(APP_PACKAGE_NAME_KEY, packageInfo.packageName);
-            put(APP_BUILD_KEY, String.valueOf(packageInfo.versionCode));
+            put(TELEMETRY_KEY_APPLICATION_NAME, packageInfo.applicationInfo.loadLabel(packageManager).toString());
+            put(TELEMETRY_KEY_APPLICATION_VERSION, packageInfo.versionName);
+            put(TELEMETRY_KEY_APP_BUILD, String.valueOf(packageInfo.versionCode));
         } catch (final PackageManager.NameNotFoundException e) {
             //Not throw the exception to break the auth request when getting the app's telemetry
             Logger.warn(TAG, "Unable to find the app's package name from PackageManager.");
@@ -95,18 +72,13 @@ public class TelemetryContext extends Properties {
     }
 
     void putDevice() {
-        put(DEVICE_MANUFACTURER_KEY, Build.MANUFACTURER);
-        put(DEVICE_MODEL_KEY, Build.MODEL);
-        put(DEVICE_NAME_KEY, Build.DEVICE);
-    }
-
-    void putLibrary() {
-        put(LIBRARY_NAME_KEY, "common-android");
-        put(LIBRARY_VERSION_KEY, BuildConfig.VERSION_NAME);
+        put(TELEMETRY_KEY_DEVICE_MANUFACTURER, Build.MANUFACTURER);
+        put(TELEMETRY_KEY_DEVICE_MODEL, Build.MODEL);
+        put(TELEMETRY_KEY_DEVICE_NAME, Build.DEVICE);
     }
 
     void putOs() {
-        put(OS_NAME_KEY, "Android");
-        put(OS_VERSION_KEY, Build.VERSION.RELEASE);
+        put(TELEMETRY_KEY_OS_NAME, "Android");
+        put(TELEMETRY_KEY_OS_VERSION, Build.VERSION.RELEASE);
     }
 }

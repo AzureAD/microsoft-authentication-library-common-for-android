@@ -28,15 +28,17 @@ import android.support.annotation.Nullable;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.telemetry.Properties;
 
-public class BaseEvent extends Properties {
-    public static final String OCCUR_TIME = "start_time";
-    public static final String EVENT_NAME = "event_name";
-    public static final String CORRELATION_ID = "correlation_id";
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_CORRELATION_ID;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_EVENT_NAME;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_EVENT_TYPE;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_OCCUR_TIME;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_START_TIME;
 
+public class BaseEvent extends Properties {
     BaseEvent() {
         super();
         occurs(System.currentTimeMillis());
-        correlationId(DiagnosticContext.getRequestContext().get(CORRELATION_ID));
+        correlationId(DiagnosticContext.getRequestContext().get(TELEMETRY_KEY_CORRELATION_ID));
     }
 
     /**
@@ -46,7 +48,12 @@ public class BaseEvent extends Properties {
      * @return the event object
      */
     public BaseEvent names(@NonNull String eventName) {
-        put(EVENT_NAME, eventName);
+        put(TELEMETRY_KEY_EVENT_NAME, eventName);
+        return this;
+    }
+
+    public BaseEvent types(@NonNull String eventType) {
+        put(TELEMETRY_KEY_EVENT_TYPE, eventType);
         return this;
     }
 
@@ -58,9 +65,9 @@ public class BaseEvent extends Properties {
      */
     public BaseEvent occurs(@Nullable Long eventStartTime) {
         if (null == eventStartTime) {
-            put(OCCUR_TIME, String.valueOf(System.currentTimeMillis()));
+            put(TELEMETRY_KEY_OCCUR_TIME, String.valueOf(System.currentTimeMillis()));
         } else {
-            put(OCCUR_TIME, eventStartTime.toString());
+            put(TELEMETRY_KEY_OCCUR_TIME, eventStartTime.toString());
         }
 
         return this;
@@ -73,7 +80,7 @@ public class BaseEvent extends Properties {
      * @return the event object
      */
     public BaseEvent correlationId(final String correlationId) {
-        put(CORRELATION_ID, correlationId);
+        put(TELEMETRY_KEY_CORRELATION_ID, correlationId);
         return this;
     }
 }

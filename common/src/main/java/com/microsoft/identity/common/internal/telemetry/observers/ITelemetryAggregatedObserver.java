@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.internal.telemetry.events;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,36 +20,15 @@ package com.microsoft.identity.common.internal.telemetry.events;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+package com.microsoft.identity.common.internal.telemetry.observers;
 
-public class CacheStartEvent extends BaseEvent {
-    public CacheStartEvent() {
-        super();
-        names(TELEMETRY_EVENT_CACHE_EVENT_START);
-        types(TELEMETRY_EVENT_CACHE_EVENT);
-    }
+import java.util.Map;
 
-    public CacheStartEvent putTokenType(final String tokenType) {
-        put(TELEMETRY_KEY_TOKEN_TYPE, tokenType);
-        return this;
-    }
-
-    public CacheStartEvent isFrt(final boolean isFrt) {
-        put(TELEMETRY_KEY_IS_FRT, String.valueOf(isFrt));
-        return this;
-    }
-
-    public CacheStartEvent isMrrt(final boolean isMrrt) {
-        put(TELEMETRY_KEY_IS_FRT, String.valueOf(isMrrt));
-        return this;
-    }
-    public CacheStartEvent isRt(final boolean isRt) {
-        put(TELEMETRY_KEY_IS_FRT, String.valueOf(isRt));
-        return this;
-    }
-
-    public CacheStartEvent putWipeApp(final boolean appWiped) {
-        put(TELEMETRY_KEY_WIPE_APP, String.valueOf(appWiped));
-        return this;
-    }
+/**
+ * Telemetry observer interface for MATS (Microsoft Authentication Telemetry Service) format.
+ * The calling application need to implement the interface for further data processing.
+ */
+public interface ITelemetryAggregatedObserver extends ITelemetryObserver<Map<String, String>> {
+    @Override
+    void upload(Map<String, String> telemetryData);
 }

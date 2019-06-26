@@ -25,11 +25,10 @@ package com.microsoft.identity.common.internal.telemetry.events;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 public class CacheEndEvent extends BaseEvent {
-    private static final String TAG = CacheEndEvent.class.getSimpleName();
-
     public CacheEndEvent() {
         super();
         names(TELEMETRY_EVENT_CACHE_EVENT_END);
+        types(TELEMETRY_EVENT_CACHE_EVENT);
     }
 
     public CacheEndEvent putResultStatus(final String resultStatus) {

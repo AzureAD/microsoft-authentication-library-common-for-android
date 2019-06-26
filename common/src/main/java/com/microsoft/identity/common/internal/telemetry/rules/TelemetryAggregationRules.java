@@ -22,26 +22,41 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.rules;
 
+import com.microsoft.identity.common.internal.util.StringUtil;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-//TODO Place holder
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_EVENT_NAME;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_OCCUR_TIME;
+
 public class TelemetryAggregationRules {
-    private TelemetryAggregationRules sInstance;
+    private static TelemetryAggregationRules sInstance;
     private Set<String> aggregatedPropertiesSet;
 
-    final private String aggregatedArray[] = { };
+    final private String aggregatedArray[] = {
+            TELEMETRY_KEY_EVENT_NAME,
+            TELEMETRY_KEY_OCCUR_TIME
+    };
 
     private TelemetryAggregationRules() {
         aggregatedPropertiesSet = new HashSet<>(Arrays.asList(aggregatedArray));
     }
 
-    public TelemetryAggregationRules getInstance() {
+    public static TelemetryAggregationRules getInstance() {
         if (sInstance == null) {
             sInstance = new TelemetryAggregationRules();
         }
 
         return sInstance;
+    }
+
+    public boolean isRedundant(final String propertyName) {
+        if (StringUtil.isEmpty(propertyName)) {
+            return false;
+        }
+
+        return aggregatedPropertiesSet.contains(propertyName);
     }
 }

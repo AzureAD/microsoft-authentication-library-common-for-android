@@ -47,6 +47,7 @@ final public class TelemetryPiiOiiRules {
     final private String oiiArray[] = {
             TELEMETRY_KEY_TENANT_ID,
             TELEMETRY_KEY_CLIENT_ID,
+            TELEMETRY_KEY_REDIRECT_URI,
             TELEMETRY_KEY_HTTP_PATH,
             TELEMETRY_KEY_AUTHORITY,
             TELEMETRY_KEY_IDP,

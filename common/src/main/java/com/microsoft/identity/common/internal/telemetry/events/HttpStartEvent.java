@@ -24,12 +24,10 @@ package com.microsoft.identity.common.internal.telemetry.events;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 public class HttpStartEvent extends BaseEvent {
-
-    private static final String TAG = HttpStartEvent.class.getSimpleName();
-
     public HttpStartEvent() {
         super();
         names(TELEMETRY_EVENT_HTTP_REQUEST_START);
+        types(TELEMETRY_EVENT_HTTP_EVENT);
     }
 
     public HttpStartEvent putMethod(String method) {

@@ -1,4 +1,3 @@
-package com.microsoft.identity.common.internal.telemetry.events;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,36 +20,31 @@ package com.microsoft.identity.common.internal.telemetry.events;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+package com.microsoft.identity.common.internal.telemetry.adapter;
 
-public class CacheStartEvent extends BaseEvent {
-    public CacheStartEvent() {
-        super();
-        names(TELEMETRY_EVENT_CACHE_EVENT_START);
-        types(TELEMETRY_EVENT_CACHE_EVENT);
+import android.support.annotation.NonNull;
+
+import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryDefaultObserver;
+
+import java.util.List;
+import java.util.Map;
+
+public final class TelemetryDefaultAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
+    private ITelemetryDefaultObserver mObserver;
+
+    public TelemetryDefaultAdapter(@NonNull final ITelemetryDefaultObserver observer) {
+        mObserver = observer;
     }
 
-    public CacheStartEvent putTokenType(final String tokenType) {
-        put(TELEMETRY_KEY_TOKEN_TYPE, tokenType);
-        return this;
+    public ITelemetryDefaultObserver getObserver() {
+        return mObserver;
     }
 
-    public CacheStartEvent isFrt(final boolean isFrt) {
-        put(TELEMETRY_KEY_IS_FRT, String.valueOf(isFrt));
-        return this;
-    }
+    public void process(List<Map<String, String>> rawData) {
+        if (null == mObserver) {
+            return;
+        }
 
-    public CacheStartEvent isMrrt(final boolean isMrrt) {
-        put(TELEMETRY_KEY_IS_FRT, String.valueOf(isMrrt));
-        return this;
-    }
-    public CacheStartEvent isRt(final boolean isRt) {
-        put(TELEMETRY_KEY_IS_FRT, String.valueOf(isRt));
-        return this;
-    }
-
-    public CacheStartEvent putWipeApp(final boolean appWiped) {
-        put(TELEMETRY_KEY_WIPE_APP, String.valueOf(appWiped));
-        return this;
+        mObserver.upload(rawData);
     }
 }

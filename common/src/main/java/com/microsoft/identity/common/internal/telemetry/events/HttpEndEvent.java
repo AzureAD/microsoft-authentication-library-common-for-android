@@ -24,15 +24,15 @@ package com.microsoft.identity.common.internal.telemetry.events;
 
 import com.microsoft.identity.common.internal.net.HttpResponse;
 
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_HTTP_EVENT;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_HTTP_REQUEST_END;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_HTTP_RESPONSE_CODE;
 
 public class HttpEndEvent extends BaseEvent {
-    private static final String TAG = HttpEndEvent.class.getSimpleName();
-
     public HttpEndEvent() {
         super();
         names(TELEMETRY_EVENT_HTTP_REQUEST_END);
+        types(TELEMETRY_EVENT_HTTP_EVENT);
     }
 
     public HttpEndEvent putResponse(final HttpResponse httpResponse) {

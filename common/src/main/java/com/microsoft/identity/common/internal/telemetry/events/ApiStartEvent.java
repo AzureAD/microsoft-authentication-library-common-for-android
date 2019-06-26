@@ -46,34 +46,41 @@ public class ApiStartEvent extends BaseEvent {
     public ApiStartEvent() {
         super();
         names(TELEMETRY_EVENT_API_EVENT_START);
+        types(TELEMETRY_EVENT_API_EVENT);
+    }
+
+    @Override
+    public ApiStartEvent put(@NonNull final String propertyName, final String propertyValue) {
+        super.put(propertyName, propertyValue);
+        return this;
     }
 
     public ApiStartEvent putProperties(OperationParameters parameters) {
         this.put(TELEMETRY_KEY_AUTHORITY, parameters.getAuthority().toString());
         this.put(TELEMETRY_KEY_AUTHORITY_TYPE, parameters.getAuthority().getAuthorityTypeString());
-        this.put(TELEMETRY_KEY_APPLICATION_NAME, parameters.getApplicationName());
-        this.put(TELEMETRY_KEY_APPLICATION_VERSION, parameters.getApplicationVersion());
         this.put(TELEMETRY_KEY_SDK_NAME, parameters.getSdkType().name());
         this.put(TELEMETRY_KEY_SDK_VERSION, parameters.getSdkVersion());
         this.put(TELEMETRY_KEY_CLAIM_REQUEST, StringUtil.isEmpty(
-                parameters.getClaimsRequestJson())? TELEMETRY_VALUE_NO : TELEMETRY_VALUE_YES
+                parameters.getClaimsRequestJson())? TELEMETRY_VALUE_FALSE : TELEMETRY_VALUE_TRUE
         );
         this.put(TELEMETRY_KEY_REDIRECT_URI, parameters.getRedirectUri());
         this.put(TELEMETRY_KEY_CLIENT_ID, parameters.getClientId());
-        this.put(TELEMETRY_KEY_SCOPE_SIZE, String.valueOf(parameters.getScopes().size()));
-        this.put(TELEMETRY_KEY_SCOPE, parameters.getScopes().toString());
 
         if (parameters instanceof AcquireTokenOperationParameters) {
             this.put(
                     TELEMETRY_KEY_USER_AGENT,
                     ((AcquireTokenOperationParameters) parameters).getAuthorizationAgent().name()
             );
+
             this.put(TELEMETRY_KEY_LOGIN_HINT,
                     ((AcquireTokenOperationParameters) parameters).getLoginHint()
             );
-            this.put(TELEMETRY_KEY_REQUEST_QUERY_PARAMS,
-                    String.valueOf(((AcquireTokenOperationParameters) parameters).getExtraQueryStringParameters().size())
-            );
+
+            if (null != ((AcquireTokenOperationParameters) parameters).getExtraQueryStringParameters()) {
+                this.put(TELEMETRY_KEY_REQUEST_QUERY_PARAMS,
+                        String.valueOf(((AcquireTokenOperationParameters) parameters).getExtraQueryStringParameters().size())
+                );
+            }
         }
 
         if (parameters instanceof AcquireTokenSilentOperationParameters) {
@@ -86,6 +93,8 @@ public class ApiStartEvent extends BaseEvent {
                     TELEMETRY_KEY_BROKER_PROTOCOL_VERSION,
                     String.valueOf(((AcquireTokenSilentOperationParameters) parameters).getRequiredBrokerProtocolVersion())
             );
+            this.put(TELEMETRY_KEY_SCOPE_SIZE, String.valueOf(parameters.getScopes().size()));
+            this.put(TELEMETRY_KEY_SCOPE, parameters.getScopes().toString());
         }
 
         if (parameters instanceof BrokerAcquireTokenOperationParameters) {
@@ -136,21 +145,6 @@ public class ApiStartEvent extends BaseEvent {
 
     public ApiStartEvent putExtendedExpiresOnSetting(@NonNull final  String extendedExpiresOnSetting) {
         put(TELEMETRY_KEY_EXTENDED_EXPIRES_ON_SETTING, extendedExpiresOnSetting);
-        return this;
-    }
-
-    public ApiStartEvent isApiCallSuccessful(final Boolean isSuccessful) {
-        super.put(TELEMETRY_KEY_IS_SUCCESSFUL, isSuccessful.toString());
-        return this;
-    }
-
-    public ApiStartEvent putRequestId(@NonNull final String requestId) {
-        super.put(TELEMETRY_KEY_REQUEST_ID, requestId);
-        return this;
-    }
-
-    public ApiStartEvent putApiErrorCode(@NonNull final String errorCode) {
-        super.put(TELEMETRY_KEY_API_ERROR_CODE, errorCode);
         return this;
     }
 

@@ -31,11 +31,10 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 public class ApiEndEvent extends BaseEvent {
-    private static final String TAG = ApiStartEvent.class.getSimpleName();
-
     public ApiEndEvent() {
         super();
         names(TELEMETRY_EVENT_API_EVENT_END);
+        types(TELEMETRY_EVENT_API_EVENT);
     }
 
     public ApiEndEvent putResult(@NonNull final AcquireTokenResult result) {
@@ -53,7 +52,7 @@ public class ApiEndEvent extends BaseEvent {
 
     public ApiEndEvent putException(@NonNull final BaseException exception) {
         if (exception  instanceof UserCancelException) {
-            put(TELEMETRY_VALUE_USER_CANCELLED, TELEMETRY_VALUE_YES);
+            put(TELEMETRY_VALUE_USER_CANCELLED, TELEMETRY_VALUE_TRUE);
         }
 
         put(TELEMETRY_KEY_SERVER_ERROR_CODE, exception.getCliTelemErrorCode());
@@ -62,12 +61,28 @@ public class ApiEndEvent extends BaseEvent {
         put(TELEMETRY_KEY_SPE_RING, exception.getSpeRing());
         put(TELEMETRY_KEY_ERROR_DESCRIPTION, exception.getMessage()); //OII
         put(TELEMETRY_KEY_RT_AGE, exception.getRefreshTokenAge());
-        put(TELEMETRY_KEY_IS_SUCCESSFUL, TELEMETRY_VALUE_NO);
+        put(TELEMETRY_KEY_IS_SUCCESSFUL, TELEMETRY_VALUE_FALSE);
         return this;
     }
 
     public ApiEndEvent putApiId(@NonNull final String apiId) {
         super.put(TELEMETRY_KEY_API_ID, apiId);
+        return this;
+    }
+
+    @Override
+    public ApiEndEvent put(@NonNull final String propertyName, @NonNull final String propertyValue) {
+        super.put(propertyName, propertyValue);
+        return this;
+    }
+
+    public ApiEndEvent isApiCallSuccessful(final Boolean isSuccessful) {
+        super.put(TELEMETRY_KEY_IS_SUCCESSFUL, isSuccessful.toString());
+        return this;
+    }
+
+    public ApiEndEvent putApiErrorCode(@NonNull final String errorCode) {
+        super.put(TELEMETRY_KEY_API_ERROR_CODE, errorCode);
         return this;
     }
 }

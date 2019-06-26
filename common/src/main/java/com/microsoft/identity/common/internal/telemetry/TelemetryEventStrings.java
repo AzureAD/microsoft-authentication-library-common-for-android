@@ -23,25 +23,29 @@
 package com.microsoft.identity.common.internal.telemetry;
 
 public final class TelemetryEventStrings {
-    public static final String TELEMETRY_EVENT_DEFAULT_EVENT = "default_event";
-
     public static final String TELEMETRY_EVENT_API_EVENT_START = "api_start_event";
     public static final String TELEMETRY_EVENT_API_EVENT_END = "api_end_event";
+    public static final String TELEMETRY_EVENT_API_EVENT = "api_event";
 
     public static final String TELEMETRY_EVENT_CACHE_EVENT_START = "cache_start_event";
     public static final String TELEMETRY_EVENT_CACHE_EVENT_END = "cache_end_event";
+    public static final String TELEMETRY_EVENT_CACHE_EVENT = "cache_event";
 
     public static final String TELEMETRY_EVENT_UI_EVENT_START = "ui_start_event";
     public static final String TELEMETRY_EVENT_UI_EVENT_END = "ui_end_event";
+    public static final String TELEMETRY_EVENT_UI_EVENT = "ui_event";
 
     public static final String TELEMETRY_EVENT_HTTP_REQUEST_START = "http_start_event";
     public static final String TELEMETRY_EVENT_HTTP_REQUEST_END = "http_end_event";
+    public static final String TELEMETRY_EVENT_HTTP_EVENT = "http_event";
 
     public static final String TELEMETRY_EVENT_BROKER_REQUEST_START = "broker_start_event";
     public static final String TELEMETRY_EVENT_BROKER_REQUEST_END = "broker_end_event";
+    public static final String TELEMETRY_EVENT_BROKER_REQUEST = "broker_event";
 
     public static final String TELEMETRY_EVENT_AUTHORITY_VALIDATION_START = "authority_validation_start_event";
     public static final String TELEMETRY_EVENT_AUTHORITY_VALIDATION_END = "authority_validation_end_event";
+    public static final String TELEMETRY_EVENT_AUTHORITY_VALIDATION = "authority_validation_event";
 
     public static final String TELEMETRY_EVENT_TOKEN_GRANT = "token_grant";
     public static final String TELEMETRY_EVENT_ACQUIRE_TOKEN_SILENT = "acquire_token_silent_handler";
@@ -54,6 +58,7 @@ public final class TelemetryEventStrings {
 
     // Telemetry property name, only alphabetic letters, dots, and underscores are allowed.
     public static final String TELEMETRY_KEY_EVENT_NAME = "event_name";
+    public static final String TELEMETRY_KEY_EVENT_TYPE = "event_type";
     public static final String TELEMETRY_KEY_AUTHORITY_TYPE = "authority_type";
     public static final String TELEMETRY_KEY_AUTHORITY_VALIDATION_STATUS = "authority_validation_status";
     public static final String TELEMETRY_KEY_EXTENDED_EXPIRES_ON_SETTING = "extended_expires_on_setting";
@@ -63,6 +68,7 @@ public final class TelemetryEventStrings {
     public static final String TELEMETRY_KEY_IDP = "idp";
     public static final String TELEMETRY_KEY_TENANT_ID = "tenant_id";
     public static final String TELEMETRY_KEY_USER_ID = "user_id";
+    public static final String TELEMETRY_KEY_OCCUR_TIME = "occur_time";
     public static final String TELEMETRY_KEY_START_TIME = "start_time";
     public static final String TELEMETRY_KEY_END_TIME = "stop_time";
     public static final String TELEMETRY_KEY_RESPONSE_TIME = "response_time";
@@ -116,7 +122,8 @@ public final class TelemetryEventStrings {
     public static final String TELEMETRY_KEY_AUTHORITY = "authority";
     public static final String TELEMETRY_KEY_GRANT_TYPE = "grant_type";
     public static final String TELEMETRY_KEY_API_STATUS = "api_status";
-    public static final String TELEMETRY_KEY_REQUEST_ID = "request_id";
+    public static final String TELEMETRY_KEY_REQUEST_CODE = "request_code";
+    public static final String TELEMETRY_KEY_RESULT_CODE = "result_code";
     public static final String TELEMETRY_KEY_USER_CANCEL = "user_cancel";
     public static final String TELEMETRY_KEY_UI_CANCELLED = "ui_cancelled";
     public static final String TELEMETRY_KEY_SERVER_ERROR_CODE = "server_error_code";
@@ -124,14 +131,26 @@ public final class TelemetryEventStrings {
     public static final String TELEMETRY_KEY_RT_AGE = "rt_age";
     public static final String TELEMETRY_KEY_SPE_INFO = "spe_info";
     public static final String TELEMETRY_KEY_SPE_RING = "spe_ring";
-    public static final String TELEMETRY_KEY_IS_SUCCESSFUL = "is_successfull";
+    public static final String TELEMETRY_KEY_IS_SUCCESSFUL = "is_successful";
     public static final String TELEMETRY_KEY_WIPE_APP = "wipe_app";
     public static final String TELEMETRY_KEY_WIPE_TIME = "wipe_time";
-    public static final String TELEMETRY_KEY_WEBVIEW_TYPE = "webview_type";
+
+
+    // App
+    public static final String TELEMETRY_KEY_APP_BUILD = "app_build";
+    // Device
+    public static final String TELEMETRY_KEY_DEVICE_MANUFACTURER = "device_manufacturer";
+    public static final String TELEMETRY_KEY_DEVICE_MODEL = "device_model";
+    public static final String TELEMETRY_KEY_DEVICE_NAME = "device_name";
+    public static final String TELEMETRY_KEY_DEVICE_TIMEZONE = "time_zone";
+    // OS
+    public static final String TELEMETRY_KEY_OS_NAME = "os_name";
+    public static final String TELEMETRY_KEY_OS_VERSION = "os_version";
+    public static final String TELEMETRY_KEY_TIMEZONE = "timezone";
 
     // Telemetry property value
-    public static final String TELEMETRY_VALUE_YES = "yes";
-    public static final String TELEMETRY_VALUE_NO = "no";
+    public static final String TELEMETRY_VALUE_TRUE = "true";
+    public static final String TELEMETRY_VALUE_FALSE = "false";
     public static final String TELEMETRY_VALUE_TRIED = "tried";
     public static final String TELEMETRY_VALUE_USER_CANCELLED = "user_cancelled";
     public static final String TELEMETRY_VALUE_NOT_FOUND = "not_found";
