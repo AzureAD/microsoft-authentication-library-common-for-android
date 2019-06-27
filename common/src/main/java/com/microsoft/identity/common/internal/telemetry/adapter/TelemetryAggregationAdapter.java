@@ -98,7 +98,7 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
         aggregatedData.put(TELEMETRY_KEY_START_TIME, String.valueOf(apiStartTime));
         aggregatedData.put(TELEMETRY_KEY_END_TIME, String.valueOf(apiEndTime));
 
-        mObserver.upload(aggregatedData);
+        mObserver.onReceived(aggregatedData);
     }
 
     private Map<String, String> applyAggregationRule(final Map<String, String> properties) {

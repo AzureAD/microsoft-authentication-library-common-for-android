@@ -45,6 +45,6 @@ public final class TelemetryDefaultAdapter implements ITelemetryAdapter<List<Map
             return;
         }
 
-        mObserver.upload(rawData);
+        mObserver.onReceived(rawData);
     }
 }

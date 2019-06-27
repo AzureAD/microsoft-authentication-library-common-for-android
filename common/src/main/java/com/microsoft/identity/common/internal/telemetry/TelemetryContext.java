@@ -81,5 +81,6 @@ public class TelemetryContext extends Properties {
     void addOsInfo() {
         put(TELEMETRY_KEY_OS_NAME, TELEMETRY_VALUE_OS_NAME);
         put(TELEMETRY_KEY_OS_VERSION, Build.VERSION.RELEASE);
+        put(TELEMETRY_KEY_OS_SECURITY_PATCH, Build.VERSION.SECURITY_PATCH);
     }
 }

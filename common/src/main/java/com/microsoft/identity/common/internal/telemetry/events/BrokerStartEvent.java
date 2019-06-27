@@ -24,11 +24,17 @@ package com.microsoft.identity.common.internal.telemetry.events;
 
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_BROKER_EVENT;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_BROKER_START_EVENT;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_BROKER_ACTION;
 
 public class BrokerStartEvent extends BaseEvent {
     public BrokerStartEvent() {
         super();
         names(TELEMETRY_EVENT_BROKER_START_EVENT);
         types(TELEMETRY_EVENT_BROKER_EVENT);
+    }
+
+    public BrokerStartEvent putAction(final String actionName) {
+        put(TELEMETRY_KEY_BROKER_ACTION, actionName);
+        return this;
     }
 }

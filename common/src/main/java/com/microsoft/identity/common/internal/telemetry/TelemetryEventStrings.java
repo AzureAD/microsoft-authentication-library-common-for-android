@@ -135,6 +135,7 @@ public final class TelemetryEventStrings {
     public static final String TELEMETRY_KEY_WIPE_APP = "wipe_app";
     public static final String TELEMETRY_KEY_WIPE_TIME = "wipe_time";
 
+    public static final String TELEMETRY_KEY_BROKER_ACTION = "broker_action";
 
     // App
     public static final String TELEMETRY_KEY_APP_BUILD = "app_build";
@@ -148,6 +149,7 @@ public final class TelemetryEventStrings {
     public static final String TELEMETRY_VALUE_OS_NAME = "android";
     public static final String TELEMETRY_KEY_OS_VERSION = "os_version";
     public static final String TELEMETRY_KEY_TIMEZONE = "timezone";
+    public static final String TELEMETRY_KEY_OS_SECURITY_PATCH = "security_patch";
 
     // Telemetry property value
     public static final String TELEMETRY_VALUE_TRUE = "true";

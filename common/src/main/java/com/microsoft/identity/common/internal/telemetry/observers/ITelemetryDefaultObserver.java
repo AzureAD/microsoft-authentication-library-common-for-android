@@ -30,5 +30,5 @@ import java.util.Map;
  */
 public interface ITelemetryDefaultObserver extends ITelemetryObserver<List<Map<String, String>>> {
     @Override
-    void upload(List<Map<String, String>> telemetryData);
+    void onReceived(List<Map<String, String>> telemetryData);
 }

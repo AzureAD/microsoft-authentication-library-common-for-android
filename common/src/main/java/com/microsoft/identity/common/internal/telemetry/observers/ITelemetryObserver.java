@@ -35,5 +35,5 @@ public interface ITelemetryObserver<T> {
      *
      * @param telemetryData telemetry data
      */
-    void upload(T telemetryData);
+    void onReceived(T telemetryData);
 }

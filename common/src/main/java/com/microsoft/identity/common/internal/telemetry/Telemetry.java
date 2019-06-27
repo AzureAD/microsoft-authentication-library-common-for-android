@@ -132,8 +132,6 @@ public class Telemetry {
             mObservers = new LinkedList<>();
         }
 
-
-
         mObservers.add(observer);
     }
 
@@ -159,13 +157,11 @@ public class Telemetry {
      * @param event BaseEvent object
      * @return the event reference for future properties modification.
      */
-    public static BaseEvent emit(final BaseEvent event) {
+    public static void emit(final BaseEvent event) {
         if (getInstance().mIsTelemetryEnabled) {
             //only enqueue the telemetry properties when the telemetry is enabled.
             getInstance().getRequestMap().add(event.getProperties());
         }
-
-        return event;
     }
 
     public void flush() {
