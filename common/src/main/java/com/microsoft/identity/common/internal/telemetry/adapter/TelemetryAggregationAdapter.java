@@ -33,13 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_API_END_EVENT;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_API_START_EVENT;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_END_TIME;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_EVENT_NAME;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_EVENT_TYPE;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_OCCUR_TIME;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_START_TIME;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
     private ITelemetryAggregatedObserver mObserver;
@@ -60,8 +54,8 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
         final Iterator<Map<String, String>> iterator = rawData.iterator();
         while (iterator.hasNext()) {
             Map<String, String> event = iterator.next();
-            final String eventName = event.get(TELEMETRY_KEY_EVENT_NAME);
-            final String eventType = event.get(TELEMETRY_KEY_EVENT_TYPE);
+            final String eventName = event.get(Key.EVENT_NAME);
+            final String eventType = event.get(Key.EVENT_TYPE);
 
             if (StringUtil.isEmpty(eventName)) {
                 aggregatedData.putAll(applyAggregationRule(event));
@@ -79,14 +73,14 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
                 );
             }
 
-            final long eventOccurTime = Long.parseLong(event.get(TELEMETRY_KEY_OCCUR_TIME));
-            if (eventName.equalsIgnoreCase(TELEMETRY_EVENT_API_START_EVENT)
+            final long eventOccurTime = Long.parseLong(event.get(Key.OCCUR_TIME));
+            if (eventName.equalsIgnoreCase(Event.API_START_EVENT)
                     && (apiStartTime == -1
                     || eventOccurTime < apiStartTime)) {
                 apiStartTime = eventOccurTime;
             }
 
-            if (eventName.equalsIgnoreCase(TELEMETRY_EVENT_API_END_EVENT)
+            if (eventName.equalsIgnoreCase(Event.API_END_EVENT)
                     && (apiEndTime == -1
                     || eventOccurTime > apiEndTime)) {
                 apiEndTime = eventOccurTime;
@@ -95,8 +89,8 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
             aggregatedData.putAll(applyAggregationRule(event));
         }
 
-        aggregatedData.put(TELEMETRY_KEY_START_TIME, String.valueOf(apiStartTime));
-        aggregatedData.put(TELEMETRY_KEY_END_TIME, String.valueOf(apiEndTime));
+        aggregatedData.put(Key.START_TIME, String.valueOf(apiStartTime));
+        aggregatedData.put(Key.END_TIME, String.valueOf(apiEndTime));
 
         mObserver.onReceived(aggregatedData);
     }

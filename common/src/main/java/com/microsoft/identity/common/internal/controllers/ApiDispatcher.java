@@ -39,7 +39,6 @@ import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperatio
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 
 import java.util.List;
 import java.util.UUID;
@@ -413,13 +412,6 @@ public class ApiDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            // end api event
-                            Telemetry.emit(
-                                    new ApiEndEvent()
-                                            .putException(finalException)
-                                            .putApiId("acquire_token_silent")
-                            );
-
                             command.getCallback().onError(finalException);
                         }
                     });

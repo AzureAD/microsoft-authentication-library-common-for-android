@@ -22,25 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_UI_EVENT;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_UI_END_EVENT;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_UI_CANCELLED;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_USER_CANCEL;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 public class UiEndEvent extends BaseEvent {
     public UiEndEvent() {
         super();
-        names(TELEMETRY_EVENT_UI_END_EVENT);
-        types(TELEMETRY_EVENT_UI_EVENT);
+        names(Event.UI_END_EVENT);
+        types(EventType.UI_EVENT);
     }
 
     public UiEndEvent isUserCancelled(final boolean userCancelled) {
-        put(TELEMETRY_KEY_USER_CANCEL, String.valueOf(userCancelled));
+        put(Key.USER_CANCEL, String.valueOf(userCancelled));
         return this;
     }
 
     public UiEndEvent isUiCancelled(final boolean uiCancelled) {
-        put(TELEMETRY_KEY_UI_CANCELLED, String.valueOf(uiCancelled));
+        put(Key.UI_CANCELLED, String.valueOf(uiCancelled));
         return this;
     }
 }

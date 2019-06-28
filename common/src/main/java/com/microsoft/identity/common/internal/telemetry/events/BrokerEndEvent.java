@@ -32,42 +32,42 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class BrokerEndEvent extends BaseEvent {
     public BrokerEndEvent() {
         super();
-        names(TELEMETRY_EVENT_BROKER_END_EVENT);
-        types(TELEMETRY_EVENT_BROKER_EVENT);
+        names(Event.BROKER_END_EVENT);
+        types(EventType.BROKER_EVENT);
     }
 
     public BrokerEndEvent putAction(final String actionName) {
-        put(TELEMETRY_KEY_BROKER_ACTION, actionName);
+        put(Key.BROKER_ACTION, actionName);
         return this;
     }
 
     public BrokerEndEvent isSuccessful(final boolean isSuccessful) {
-        put(TELEMETRY_KEY_IS_SUCCESSFUL, String.valueOf(isSuccessful));
+        put(Key.IS_SUCCESSFUL, String.valueOf(isSuccessful));
         return this;
     }
 
     public BrokerEndEvent putException(@NonNull final BaseException exception) {
         if (exception  instanceof UserCancelException) {
-            put(TELEMETRY_VALUE_USER_CANCELLED, TELEMETRY_VALUE_TRUE);
+            put(Key.USER_CANCELLED, Value.TRUE);
         }
 
-        put(TELEMETRY_KEY_SERVER_ERROR_CODE, exception.getCliTelemErrorCode());
-        put(TELEMETRY_KEY_SERVER_SUBERROR_CODE, exception.getCliTelemSubErrorCode());
-        put(TELEMETRY_KEY_API_ERROR_CODE, exception.getErrorCode());
-        put(TELEMETRY_KEY_SPE_RING, exception.getSpeRing());
-        put(TELEMETRY_KEY_ERROR_DESCRIPTION, exception.getMessage()); //OII
-        put(TELEMETRY_KEY_RT_AGE, exception.getRefreshTokenAge());
-        put(TELEMETRY_KEY_IS_SUCCESSFUL, TELEMETRY_VALUE_FALSE);
+        put(Key.SERVER_ERROR_CODE, exception.getCliTelemErrorCode());
+        put(Key.SERVER_SUBERROR_CODE, exception.getCliTelemSubErrorCode());
+        put(Key.ERROR_CODE, exception.getErrorCode());
+        put(Key.SPE_RING, exception.getSpeRing());
+        put(Key.ERROR_DESCRIPTION, exception.getMessage()); //OII
+        put(Key.RT_AGE, exception.getRefreshTokenAge());
+        put(Key.IS_SUCCESSFUL, Value.FALSE);
         return this;
     }
 
     public BrokerEndEvent putErrorCode(@NonNull final String errorCode) {
-        put(TELEMETRY_KEY_API_ERROR_CODE, errorCode);
+        put(Key.ERROR_CODE, errorCode);
         return this;
     }
 
     public BrokerEndEvent putErrorDescription(@NonNull final String errorDescription) {
-        put(TELEMETRY_KEY_ERROR_DESCRIPTION, errorDescription);
+        put(Key.ERROR_DESCRIPTION, errorDescription);
         return this;
     }
 }

@@ -26,52 +26,52 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class HttpStartEvent extends BaseEvent {
     public HttpStartEvent() {
         super();
-        names(TELEMETRY_EVENT_HTTP_START_EVENT);
-        types(TELEMETRY_EVENT_HTTP_EVENT);
+        names(Event.HTTP_START_EVENT);
+        types(EventType.HTTP_EVENT);
     }
 
     public HttpStartEvent putMethod(String method) {
-        put(TELEMETRY_KEY_HTTP_METHOD, method);
+        put(Key.HTTP_METHOD, method);
         return this;
     }
 
     public HttpStartEvent putPath(String path) {
-        put(TELEMETRY_KEY_HTTP_PATH, path);
+        put(Key.HTTP_PATH, path);
         return this;
     }
 
     public HttpStartEvent putRequestIdHeader(String requestIdHeader) {
-        put(TELEMETRY_KEY_HTTP_REQUEST_ID_HEADER, requestIdHeader);
+        put(Key.HTTP_REQUEST_ID_HEADER, requestIdHeader);
         return this;
     }
 
     public HttpStartEvent putResponseCode(String responseCode) {
-        put(TELEMETRY_KEY_HTTP_RESPONSE_CODE, responseCode);
+        put(Key.HTTP_RESPONSE_CODE, responseCode);
         return this;
     }
 
     public HttpStartEvent putResponseMethod(String responseMethod) {
-        this.put(TELEMETRY_KEY_HTTP_RESPONSE_METHOD, responseMethod);
+        this.put(Key.HTTP_RESPONSE_METHOD, responseMethod);
         return this;
     }
 
     public HttpStartEvent putRequestQueryParams(String requestQueryParams) {
-        put(TELEMETRY_KEY_REQUEST_QUERY_PARAMS, requestQueryParams);
+        put(Key.REQUEST_QUERY_PARAMS, requestQueryParams);
         return this;
     }
 
     public HttpStartEvent putErrorDomain(String errorDomain) {
-        put(TELEMETRY_KEY_HTTP_ERROR_DOMAIN, errorDomain);
+        put(Key.HTTP_ERROR_DOMAIN, errorDomain);
         return this;
     }
 
     public HttpStartEvent isNetworkConnected(boolean isConnected) {
-        put(TELEMETRY_KEY_NETWORK_CONNECTION, String.valueOf(isConnected));
+        put(Key.NETWORK_CONNECTION, String.valueOf(isConnected));
         return this;
     }
 
     public HttpStartEvent isPowerOptimizationOn(boolean isDozed) {
-        put(TELEMETRY_KEY_POWER_OPTIMIZATION, String.valueOf(isDozed));
+        put(Key.POWER_OPTIMIZATION, String.valueOf(isDozed));
         return this;
     }
 }

@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.microsoft.identity.common.internal.logging.DiagnosticContext.CORRELATION_ID;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_CORRELATION_ID;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 public class Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
@@ -229,7 +229,7 @@ public class Telemetry {
 
             for (Iterator<Map<String, String>> iterator = mTelemetryRawDataMap.iterator(); iterator.hasNext(); ) {
                 Map<String, String> event = iterator.next();
-                if (correlationId.equalsIgnoreCase(event.get(TELEMETRY_KEY_CORRELATION_ID))) {
+                if (correlationId.equalsIgnoreCase(event.get(Key.CORRELATION_ID))) {
                     finalRawMap.add(applyPiiOiiRule(event));
                     iterator.remove();
                 }

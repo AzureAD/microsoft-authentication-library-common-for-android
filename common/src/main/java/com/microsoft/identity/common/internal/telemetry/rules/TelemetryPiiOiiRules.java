@@ -37,22 +37,25 @@ final public class TelemetryPiiOiiRules {
     private Set<String> oiiPropertiesSet;
 
     final private String piiArray[] = {
-            TELEMETRY_KEY_USER_ID,
-            TELEMETRY_KEY_DEVICE_ID,
-            TELEMETRY_KEY_LOGIN_HINT,
-            TELEMETRY_KEY_ERROR_DESCRIPTION,
-            TELEMETRY_KEY_REQUEST_QUERY_PARAMS
+            Key.USER_ID,
+            Key.DEVICE_ID,
+            Key.LOGIN_HINT,
+            Key.ERROR_DESCRIPTION,
+            Key.REQUEST_QUERY_PARAMS,
+            Key.REDIRECT_URI,
+            Key.SCOPE,
+            Key.CLAIM_REQUEST
     } ;
 
     final private String oiiArray[] = {
-            TELEMETRY_KEY_TENANT_ID,
-            TELEMETRY_KEY_CLIENT_ID,
-            TELEMETRY_KEY_REDIRECT_URI,
-            TELEMETRY_KEY_HTTP_PATH,
-            TELEMETRY_KEY_AUTHORITY,
-            TELEMETRY_KEY_IDP,
-            TELEMETRY_KEY_APPLICATION_NAME,
-            TELEMETRY_KEY_APPLICATION_VERSION
+            Key.TENANT_ID,
+            Key.CLIENT_ID,
+            Key.REDIRECT_URI,
+            Key.HTTP_PATH,
+            Key.AUTHORITY,
+            Key.IDP,
+            Key.APPLICATION_NAME,
+            Key.APPLICATION_VERSION
     };
 
     private TelemetryPiiOiiRules() {

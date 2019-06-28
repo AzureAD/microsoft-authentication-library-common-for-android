@@ -33,18 +33,18 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class ApiEndEvent extends BaseEvent {
     public ApiEndEvent() {
         super();
-        names(TELEMETRY_EVENT_API_END_EVENT);
-        types(TELEMETRY_EVENT_API_EVENT);
+        names(Event.API_END_EVENT);
+        types(EventType.API_EVENT);
     }
 
     public ApiEndEvent putResult(@NonNull final AcquireTokenResult result) {
-        put(TELEMETRY_KEY_IS_SUCCESSFUL, result.getSucceeded().toString());
+        put(Key.IS_SUCCESSFUL, result.getSucceeded().toString());
 
         if (null != result.getLocalAuthenticationResult()) {
-            put(TELEMETRY_KEY_USER_ID, result.getLocalAuthenticationResult().getUniqueId());
-            put(TELEMETRY_KEY_TENANT_ID, result.getLocalAuthenticationResult().getTenantId());
-            put(TELEMETRY_KEY_SPE_RING, result.getLocalAuthenticationResult().getSpeRing());
-            put(TELEMETRY_KEY_RT_AGE, result.getLocalAuthenticationResult().getRefreshTokenAge());
+            put(Key.USER_ID, result.getLocalAuthenticationResult().getUniqueId());
+            put(Key.TENANT_ID, result.getLocalAuthenticationResult().getTenantId());
+            put(Key.SPE_RING, result.getLocalAuthenticationResult().getSpeRing());
+            put(Key.RT_AGE, result.getLocalAuthenticationResult().getRefreshTokenAge());
         }
 
         return this;
@@ -52,21 +52,21 @@ public class ApiEndEvent extends BaseEvent {
 
     public ApiEndEvent putException(@NonNull final BaseException exception) {
         if (exception  instanceof UserCancelException) {
-            put(TELEMETRY_VALUE_USER_CANCELLED, TELEMETRY_VALUE_TRUE);
+            put(Key.USER_CANCELLED, Value.TRUE);
         }
 
-        put(TELEMETRY_KEY_SERVER_ERROR_CODE, exception.getCliTelemErrorCode());
-        put(TELEMETRY_KEY_SERVER_SUBERROR_CODE, exception.getCliTelemSubErrorCode());
-        put(TELEMETRY_KEY_API_ERROR_CODE, exception.getErrorCode());
-        put(TELEMETRY_KEY_SPE_RING, exception.getSpeRing());
-        put(TELEMETRY_KEY_ERROR_DESCRIPTION, exception.getMessage()); //OII
-        put(TELEMETRY_KEY_RT_AGE, exception.getRefreshTokenAge());
-        put(TELEMETRY_KEY_IS_SUCCESSFUL, TELEMETRY_VALUE_FALSE);
+        put(Key.SERVER_ERROR_CODE, exception.getCliTelemErrorCode());
+        put(Key.SERVER_SUBERROR_CODE, exception.getCliTelemSubErrorCode());
+        put(Key.ERROR_CODE, exception.getErrorCode());
+        put(Key.SPE_RING, exception.getSpeRing());
+        put(Key.ERROR_DESCRIPTION, exception.getMessage()); //OII
+        put(Key.RT_AGE, exception.getRefreshTokenAge());
+        put(Key.IS_SUCCESSFUL, Value.FALSE);
         return this;
     }
 
     public ApiEndEvent putApiId(@NonNull final String apiId) {
-        put(TELEMETRY_KEY_API_ID, apiId);
+        put(Key.API_ID, apiId);
         return this;
     }
 
@@ -77,12 +77,12 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     public ApiEndEvent isApiCallSuccessful(final Boolean isSuccessful) {
-        put(TELEMETRY_KEY_IS_SUCCESSFUL, isSuccessful.toString());
+        put(Key.IS_SUCCESSFUL, isSuccessful.toString());
         return this;
     }
 
     public ApiEndEvent putApiErrorCode(@NonNull final String errorCode) {
-        put(TELEMETRY_KEY_API_ERROR_CODE, errorCode);
+        put(Key.ERROR_CODE, errorCode);
         return this;
     }
 }

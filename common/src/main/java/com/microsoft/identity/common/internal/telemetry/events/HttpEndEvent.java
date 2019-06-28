@@ -23,20 +23,17 @@
 package com.microsoft.identity.common.internal.telemetry.events;
 
 import com.microsoft.identity.common.internal.net.HttpResponse;
-
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_HTTP_EVENT;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_HTTP_END_EVENT;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_HTTP_RESPONSE_CODE;
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 public class HttpEndEvent extends BaseEvent {
     public HttpEndEvent() {
         super();
-        names(TELEMETRY_EVENT_HTTP_END_EVENT);
-        types(TELEMETRY_EVENT_HTTP_EVENT);
+        names(Event.HTTP_END_EVENT);
+        types(EventType.HTTP_EVENT);
     }
 
     public HttpEndEvent putResponse(final HttpResponse httpResponse) {
-        put(TELEMETRY_KEY_HTTP_RESPONSE_CODE, String.valueOf(httpResponse.getStatusCode()));
+        put(Key.HTTP_RESPONSE_CODE, String.valueOf(httpResponse.getStatusCode()));
         //TODO discuss what kind of telemetry need to be refined from response body and header.
         return this;
     }

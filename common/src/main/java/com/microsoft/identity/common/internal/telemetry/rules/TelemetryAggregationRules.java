@@ -28,16 +28,15 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_EVENT_NAME;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_OCCUR_TIME;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 public class TelemetryAggregationRules {
     private static TelemetryAggregationRules sInstance;
     private Set<String> aggregatedPropertiesSet;
 
     final private String aggregatedArray[] = {
-            TELEMETRY_KEY_EVENT_NAME,
-            TELEMETRY_KEY_OCCUR_TIME
+            Key.EVENT_NAME,
+            Key.OCCUR_TIME
     };
 
     private TelemetryAggregationRules() {

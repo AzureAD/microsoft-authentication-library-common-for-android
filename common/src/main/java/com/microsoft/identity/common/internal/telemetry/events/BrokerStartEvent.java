@@ -22,19 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_BROKER_EVENT;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_EVENT_BROKER_START_EVENT;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.TELEMETRY_KEY_BROKER_ACTION;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 public class BrokerStartEvent extends BaseEvent {
     public BrokerStartEvent() {
         super();
-        names(TELEMETRY_EVENT_BROKER_START_EVENT);
-        types(TELEMETRY_EVENT_BROKER_EVENT);
+        names(Event.BROKER_START_EVENT);
+        types(EventType.BROKER_EVENT);
     }
 
     public BrokerStartEvent putAction(final String actionName) {
-        put(TELEMETRY_KEY_BROKER_ACTION, actionName);
+        put(Key.BROKER_ACTION, actionName);
         return this;
     }
 }

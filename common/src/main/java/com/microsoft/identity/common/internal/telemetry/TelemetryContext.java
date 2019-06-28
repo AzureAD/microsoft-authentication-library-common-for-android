@@ -55,7 +55,7 @@ public class TelemetryContext extends Properties {
         telemetryContext.addApplicationInfo(context);
         telemetryContext.addDeviceInfo();
         telemetryContext.addOsInfo();
-        telemetryContext.put(TELEMETRY_KEY_DEVICE_TIMEZONE, TimeZone.getDefault().getID());
+        telemetryContext.put(Device.TIMEZONE, TimeZone.getDefault().getID());
         return telemetryContext;
     }
 
@@ -63,9 +63,9 @@ public class TelemetryContext extends Properties {
         try {
             final PackageManager packageManager = context.getPackageManager();
             final PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
-            put(TELEMETRY_KEY_APPLICATION_NAME, packageInfo.applicationInfo.loadLabel(packageManager).toString());
-            put(TELEMETRY_KEY_APPLICATION_VERSION, packageInfo.versionName);
-            put(TELEMETRY_KEY_APP_BUILD, String.valueOf(packageInfo.versionCode));
+            put(App.NAME, packageInfo.applicationInfo.loadLabel(packageManager).toString());
+            put(App.VERSION, packageInfo.versionName);
+            put(App.BUILD, String.valueOf(packageInfo.versionCode));
         } catch (final PackageManager.NameNotFoundException e) {
             //Not throw the exception to break the auth request when getting the app's telemetry
             Logger.warn(TAG, "Unable to find the app's package name from PackageManager.");
@@ -73,14 +73,14 @@ public class TelemetryContext extends Properties {
     }
 
     void addDeviceInfo() {
-        put(TELEMETRY_KEY_DEVICE_MANUFACTURER, Build.MANUFACTURER);
-        put(TELEMETRY_KEY_DEVICE_MODEL, Build.MODEL);
-        put(TELEMETRY_KEY_DEVICE_NAME, Build.DEVICE);
+        put(Device.MANUFACTURER, Build.MANUFACTURER);
+        put(Device.MODEL, Build.MODEL);
+        put(Device.NAME, Build.DEVICE);
     }
 
     void addOsInfo() {
-        put(TELEMETRY_KEY_OS_NAME, TELEMETRY_VALUE_OS_NAME);
-        put(TELEMETRY_KEY_OS_VERSION, Build.VERSION.RELEASE);
-        put(TELEMETRY_KEY_OS_SECURITY_PATCH, Build.VERSION.SECURITY_PATCH);
+        put(Os.NAME, Os.OS_NAME);
+        put(Os.VERSION, Build.VERSION.RELEASE);
+        put(Os.SECURITY_PATCH, Build.VERSION.SECURITY_PATCH);
     }
 }

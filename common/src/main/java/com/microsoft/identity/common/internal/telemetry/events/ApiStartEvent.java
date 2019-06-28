@@ -45,8 +45,8 @@ public class ApiStartEvent extends BaseEvent {
 
     public ApiStartEvent() {
         super();
-        names(TELEMETRY_EVENT_API_START_EVENT);
-        types(TELEMETRY_EVENT_API_EVENT);
+        names(Event.API_START_EVENT);
+        types(EventType.API_EVENT);
     }
 
     @Override
@@ -57,51 +57,51 @@ public class ApiStartEvent extends BaseEvent {
 
     public ApiStartEvent putProperties(@NonNull final OperationParameters parameters) {
         if (parameters.getAuthority() != null) {
-            put(TELEMETRY_KEY_AUTHORITY, parameters.getAuthority().toString());
-            put(TELEMETRY_KEY_AUTHORITY_TYPE, parameters.getAuthority().getAuthorityTypeString());
+            put(Key.AUTHORITY, parameters.getAuthority().toString());
+            put(Key.AUTHORITY_TYPE, parameters.getAuthority().getAuthorityTypeString());
         }
 
-        put(TELEMETRY_KEY_SDK_NAME, parameters.getSdkType().name());
-        put(TELEMETRY_KEY_SDK_VERSION, parameters.getSdkVersion());
+        put(Key.SDK_NAME, parameters.getSdkType().name());
+        put(Key.SDK_VERSION, parameters.getSdkVersion());
 
-        put(TELEMETRY_KEY_CLAIM_REQUEST, StringUtil.isEmpty(
-                parameters.getClaimsRequestJson())? TELEMETRY_VALUE_FALSE : TELEMETRY_VALUE_TRUE
+        put(Key.CLAIM_REQUEST, StringUtil.isEmpty(
+                parameters.getClaimsRequestJson())? Value.FALSE : Value.TRUE
         );
 
-        put(TELEMETRY_KEY_REDIRECT_URI, parameters.getRedirectUri());
-        put(TELEMETRY_KEY_CLIENT_ID, parameters.getClientId());
+        put(Key.REDIRECT_URI, parameters.getRedirectUri());
+        put(Key.CLIENT_ID, parameters.getClientId());
 
         if (parameters instanceof AcquireTokenOperationParameters) {
             put(
-                    TELEMETRY_KEY_USER_AGENT,
+                    Key.USER_AGENT,
                     ((AcquireTokenOperationParameters) parameters).getAuthorizationAgent().name()
             );
 
-            put(TELEMETRY_KEY_LOGIN_HINT,
+            put(Key.LOGIN_HINT,
                     ((AcquireTokenOperationParameters) parameters).getLoginHint()
             );
 
             if (null != ((AcquireTokenOperationParameters) parameters).getExtraQueryStringParameters()) {
-                put(TELEMETRY_KEY_REQUEST_QUERY_PARAMS,
+                put(Key.REQUEST_QUERY_PARAMS,
                         String.valueOf(((AcquireTokenOperationParameters) parameters).getExtraQueryStringParameters().size())
                 );
             }
         }
 
         if (parameters instanceof AcquireTokenSilentOperationParameters) {
-            put(TELEMETRY_KEY_USER_ID, parameters.getAccount().getHomeAccountId());
+            put(Key.USER_ID, parameters.getAccount().getHomeAccountId());
             put(
-                    TELEMETRY_KEY_IS_FORCE_REFRESH,
+                    Key.IS_FORCE_REFRESH,
                     String.valueOf(((AcquireTokenSilentOperationParameters) parameters).getForceRefresh())
             );
             put(
-                    TELEMETRY_KEY_BROKER_PROTOCOL_VERSION,
+                    Key.BROKER_PROTOCOL_VERSION,
                     String.valueOf(((AcquireTokenSilentOperationParameters) parameters).getRequiredBrokerProtocolVersion())
             );
 
             if (parameters.getScopes() != null) {
-                put(TELEMETRY_KEY_SCOPE_SIZE, String.valueOf(parameters.getScopes().size()));
-                put(TELEMETRY_KEY_SCOPE, parameters.getScopes().toString());
+                put(Key.SCOPE_SIZE, String.valueOf(parameters.getScopes().size()));
+                put(Key.SCOPE, parameters.getScopes().toString());
             }
         }
 
@@ -117,33 +117,33 @@ public class ApiStartEvent extends BaseEvent {
     }
 
     public ApiStartEvent authority(@NonNull final String authority) {
-        put(TELEMETRY_KEY_AUTHORITY, sanitizeUrlForTelemetry(authority));
+        put(Key.AUTHORITY, sanitizeUrlForTelemetry(authority));
         return this;
     }
 
     public ApiStartEvent putAuthorityType(@NonNull final String authorityType) {
-        put(TELEMETRY_KEY_AUTHORITY_TYPE, authorityType);
+        put(Key.AUTHORITY_TYPE, authorityType);
         return this;
     }
 
     public ApiStartEvent putUiBehavior(@NonNull final String uiBehavior) {
-        put(TELEMETRY_KEY_UI_BEHAVIOR, uiBehavior);
+        put(Key.UI_BEHAVIOR, uiBehavior);
         return this;
     }
 
     public ApiStartEvent putApiId(@NonNull final String apiId) {
-        put(TELEMETRY_KEY_API_ID, apiId);
+        put(Key.API_ID, apiId);
         return this;
     }
 
     public ApiStartEvent putValidationStatus(@NonNull final String validationStatus) {
-        put(TELEMETRY_KEY_AUTHORITY_VALIDATION_STATUS, validationStatus);
+        put(Key.AUTHORITY_VALIDATION_STATUS, validationStatus);
         return this;
     }
 
     public ApiStartEvent putLoginHint(@NonNull final String loginHint) {
         try {
-            put(TELEMETRY_KEY_LOGIN_HINT, StringExtensions.createHash(loginHint));
+            put(Key.LOGIN_HINT, StringExtensions.createHash(loginHint));
         } catch (final NoSuchAlgorithmException | UnsupportedEncodingException exception) {
             Logger.warn(TAG, exception.getMessage());
         }
@@ -152,7 +152,7 @@ public class ApiStartEvent extends BaseEvent {
     }
 
     public ApiStartEvent putExtendedExpiresOnSetting(@NonNull final  String extendedExpiresOnSetting) {
-        put(TELEMETRY_KEY_EXTENDED_EXPIRES_ON_SETTING, extendedExpiresOnSetting);
+        put(Key.EXTENDED_EXPIRES_ON_SETTING, extendedExpiresOnSetting);
         return this;
     }
 

@@ -26,31 +26,31 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class CacheStartEvent extends BaseEvent {
     public CacheStartEvent() {
         super();
-        names(TELEMETRY_EVENT_CACHE_START_EVENT);
-        types(TELEMETRY_EVENT_CACHE_EVENT);
+        names(Event.CACHE_START_EVENT);
+        types(EventType.CACHE_EVENT);
     }
 
     public CacheStartEvent putTokenType(final String tokenType) {
-        put(TELEMETRY_KEY_TOKEN_TYPE, tokenType);
+        put(Key.TOKEN_TYPE, tokenType);
         return this;
     }
 
     public CacheStartEvent isFrt(final boolean isFrt) {
-        put(TELEMETRY_KEY_IS_FRT, String.valueOf(isFrt));
+        put(Key.IS_FRT, String.valueOf(isFrt));
         return this;
     }
 
     public CacheStartEvent isMrrt(final boolean isMrrt) {
-        put(TELEMETRY_KEY_IS_FRT, String.valueOf(isMrrt));
+        put(Key.IS_FRT, String.valueOf(isMrrt));
         return this;
     }
     public CacheStartEvent isRt(final boolean isRt) {
-        put(TELEMETRY_KEY_IS_FRT, String.valueOf(isRt));
+        put(Key.IS_FRT, String.valueOf(isRt));
         return this;
     }
 
     public CacheStartEvent putWipeApp(final boolean appWiped) {
-        put(TELEMETRY_KEY_WIPE_APP, String.valueOf(appWiped));
+        put(Key.WIPE_APP, String.valueOf(appWiped));
         return this;
     }
 }
