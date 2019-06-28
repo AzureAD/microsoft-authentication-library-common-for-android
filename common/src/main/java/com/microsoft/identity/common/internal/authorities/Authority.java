@@ -66,6 +66,10 @@ public abstract class Authority {
         return mIsDefault;
     }
 
+    public String getAuthorityTypeString() {
+        return mAuthorityTypeString;
+    }
+
     public void setDefault(Boolean isDefault) {
         mIsDefault = isDefault;
     }

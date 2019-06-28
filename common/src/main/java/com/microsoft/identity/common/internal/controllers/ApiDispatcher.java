@@ -38,6 +38,7 @@ import com.microsoft.identity.common.internal.request.AcquireTokenOperationParam
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
 import java.util.List;
 import java.util.UUID;
@@ -62,7 +63,7 @@ public class ApiDispatcher {
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                initializeDiagnosticContext();
+                final String correlationId = initializeDiagnosticContext();
 
                 List<ICacheRecord> result = null;
                 BaseException baseException = null;
@@ -100,6 +101,8 @@ public class ApiDispatcher {
                         }
                     });
                 }
+
+                Telemetry.getInstance().flush(correlationId);
             }
         });
     }
@@ -113,7 +116,7 @@ public class ApiDispatcher {
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                initializeDiagnosticContext();
+                final String correlationId = initializeDiagnosticContext();
 
                 boolean result = false;
                 BaseException baseException = null;
@@ -151,6 +154,8 @@ public class ApiDispatcher {
                         }
                     });
                 }
+
+                Telemetry.getInstance().flush(correlationId);
             }
         });
     }
@@ -170,7 +175,7 @@ public class ApiDispatcher {
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    initializeDiagnosticContext();
+                    final String correlationId = initializeDiagnosticContext();
 
                     if (command.mParameters instanceof AcquireTokenOperationParameters) {
                         logInteractiveRequestParameters(methodName, (AcquireTokenOperationParameters) command.mParameters);
@@ -240,6 +245,8 @@ public class ApiDispatcher {
                             }
                         }
                     }
+
+                    Telemetry.getInstance().flush(correlationId);
                 }
             });
         }
@@ -368,7 +375,7 @@ public class ApiDispatcher {
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                initializeDiagnosticContext();
+                final String correlationId = initializeDiagnosticContext();
 
                 if (command.mParameters instanceof AcquireTokenSilentOperationParameters) {
                     logSilentRequestParams(
@@ -410,7 +417,6 @@ public class ApiDispatcher {
                     });
                 } else {
                     if (null != result && result.getSucceeded()) {
-                        //Post Success
                         final ILocalAuthenticationResult authenticationResult = result.getLocalAuthenticationResult();
                         handler.post(new Runnable() {
                             @Override
@@ -422,6 +428,7 @@ public class ApiDispatcher {
                         //Get MsalException from Authorization and/or Token Error Response
                         baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
                         final BaseException finalException = baseException;
+
                         if (finalException instanceof UserCancelException) {
                             //Post Cancel
                             handler.post(new Runnable() {
@@ -440,6 +447,8 @@ public class ApiDispatcher {
                         }
                     }
                 }
+
+                Telemetry.getInstance().flush(correlationId);
             }
         });
     }
