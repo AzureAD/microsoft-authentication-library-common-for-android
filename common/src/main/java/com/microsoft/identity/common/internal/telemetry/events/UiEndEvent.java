@@ -35,12 +35,12 @@ public class UiEndEvent extends BaseEvent {
     }
 
     public UiEndEvent isUserCancelled(final boolean userCancelled) {
-        this.put(TELEMETRY_KEY_USER_CANCEL, String.valueOf(userCancelled));
+        put(TELEMETRY_KEY_USER_CANCEL, String.valueOf(userCancelled));
         return this;
     }
 
     public UiEndEvent isUiCancelled(final boolean uiCancelled) {
-        this.put(TELEMETRY_KEY_UI_CANCELLED, String.valueOf(uiCancelled));
+        put(TELEMETRY_KEY_UI_CANCELLED, String.valueOf(uiCancelled));
         return this;
     }
 }

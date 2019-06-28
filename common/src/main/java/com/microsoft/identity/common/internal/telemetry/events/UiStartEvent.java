@@ -34,17 +34,17 @@ public class UiStartEvent extends BaseEvent {
     }
 
     public UiStartEvent putUserAgent(final AuthorizationAgent userAgent) {
-        this.put(TELEMETRY_KEY_USER_AGENT, userAgent.name());
+        put(TELEMETRY_KEY_USER_AGENT, userAgent.name());
         return this;
     }
 
     public UiStartEvent putLoginHint(final String loginHint) {
-        this.put(TELEMETRY_KEY_LOGIN_HINT, loginHint);
+        put(TELEMETRY_KEY_LOGIN_HINT, loginHint);
         return this;
     }
 
     public UiStartEvent isForcePrompt(final boolean isForcePrompt) {
-        this.put(TELEMETRY_KEY_IS_FORCE_PROMPT, String.valueOf(isForcePrompt));
+        put(TELEMETRY_KEY_IS_FORCE_PROMPT, String.valueOf(isForcePrompt));
         return this;
     }
 }

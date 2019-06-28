@@ -66,7 +66,7 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     public ApiEndEvent putApiId(@NonNull final String apiId) {
-        super.put(TELEMETRY_KEY_API_ID, apiId);
+        put(TELEMETRY_KEY_API_ID, apiId);
         return this;
     }
 
@@ -77,12 +77,12 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     public ApiEndEvent isApiCallSuccessful(final Boolean isSuccessful) {
-        super.put(TELEMETRY_KEY_IS_SUCCESSFUL, isSuccessful.toString());
+        put(TELEMETRY_KEY_IS_SUCCESSFUL, isSuccessful.toString());
         return this;
     }
 
     public ApiEndEvent putApiErrorCode(@NonNull final String errorCode) {
-        super.put(TELEMETRY_KEY_API_ERROR_CODE, errorCode);
+        put(TELEMETRY_KEY_API_ERROR_CODE, errorCode);
         return this;
     }
 }

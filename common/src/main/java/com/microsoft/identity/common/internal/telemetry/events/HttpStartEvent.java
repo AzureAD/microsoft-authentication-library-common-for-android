@@ -31,22 +31,22 @@ public class HttpStartEvent extends BaseEvent {
     }
 
     public HttpStartEvent putMethod(String method) {
-        this.put(TELEMETRY_KEY_HTTP_METHOD, method);
+        put(TELEMETRY_KEY_HTTP_METHOD, method);
         return this;
     }
 
     public HttpStartEvent putPath(String path) {
-        this.put(TELEMETRY_KEY_HTTP_PATH, path);
+        put(TELEMETRY_KEY_HTTP_PATH, path);
         return this;
     }
 
     public HttpStartEvent putRequestIdHeader(String requestIdHeader) {
-        this.put(TELEMETRY_KEY_HTTP_REQUEST_ID_HEADER, requestIdHeader);
+        put(TELEMETRY_KEY_HTTP_REQUEST_ID_HEADER, requestIdHeader);
         return this;
     }
 
     public HttpStartEvent putResponseCode(String responseCode) {
-        this.put(TELEMETRY_KEY_HTTP_RESPONSE_CODE, responseCode);
+        put(TELEMETRY_KEY_HTTP_RESPONSE_CODE, responseCode);
         return this;
     }
 
@@ -56,22 +56,22 @@ public class HttpStartEvent extends BaseEvent {
     }
 
     public HttpStartEvent putRequestQueryParams(String requestQueryParams) {
-        this.put(TELEMETRY_KEY_REQUEST_QUERY_PARAMS, requestQueryParams);
+        put(TELEMETRY_KEY_REQUEST_QUERY_PARAMS, requestQueryParams);
         return this;
     }
 
     public HttpStartEvent putErrorDomain(String errorDomain) {
-        this.put(TELEMETRY_KEY_HTTP_ERROR_DOMAIN, errorDomain);
+        put(TELEMETRY_KEY_HTTP_ERROR_DOMAIN, errorDomain);
         return this;
     }
 
     public HttpStartEvent isNetworkConnected(boolean isConnected) {
-        this.put(TELEMETRY_KEY_NETWORK_CONNECTION, String.valueOf(isConnected));
+        put(TELEMETRY_KEY_NETWORK_CONNECTION, String.valueOf(isConnected));
         return this;
     }
 
     public HttpStartEvent isPowerOptimizationOn(boolean isDozed) {
-        this.put(TELEMETRY_KEY_POWER_OPTIMIZATION, String.valueOf(isDozed));
+        put(TELEMETRY_KEY_POWER_OPTIMIZATION, String.valueOf(isDozed));
         return this;
     }
 }
