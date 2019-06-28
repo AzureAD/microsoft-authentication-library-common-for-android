@@ -22,13 +22,16 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-
 public class AnyPersonalAccount extends AzureActiveDirectoryAudience {
 
     public static final String ANY_PERSONAL_ACCOUNT_TENANT_ID = "consumers";
 
     public AnyPersonalAccount() {
         this.setTenantId(ANY_PERSONAL_ACCOUNT_TENANT_ID);
+    }
+
+    public AnyPersonalAccount(final String cloudUrl) {
+        this.setTenantId(ANY_PERSONAL_ACCOUNT_TENANT_ID);
+        this.setCloudUrl(cloudUrl);
     }
 }
