@@ -40,7 +40,7 @@ public final class TelemetryDefaultAdapter implements ITelemetryAdapter<List<Map
         return mObserver;
     }
 
-    public void process(List<Map<String, String>> rawData) {
+    public void process(@NonNull final List<Map<String, String>> rawData) {
         if (null == mObserver) {
             return;
         }

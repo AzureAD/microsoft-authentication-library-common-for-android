@@ -52,7 +52,7 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
         return mObserver;
     }
 
-    public void process(List<Map<String, String>> rawData) {
+    public void process(@NonNull final List<Map<String, String>> rawData) {
         final Map<String, String> aggregatedData = new HashMap<>();
         long apiStartTime = -1;
         long apiEndTime = -1;
@@ -101,7 +101,7 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
         mObserver.onReceived(aggregatedData);
     }
 
-    private Map<String, String> applyAggregationRule(final Map<String, String> properties) {
+    private Map<String, String> applyAggregationRule(@NonNull final Map<String, String> properties) {
         final Map<String, String> nonPiiProperties = new HashMap<>();
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             if (!StringUtil.isEmpty(entry.getValue())

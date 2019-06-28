@@ -60,11 +60,9 @@ final public class TelemetryPiiOiiRules {
         oiiPropertiesSet = new HashSet<>(Arrays.asList(oiiArray));
     }
 
-    public static TelemetryPiiOiiRules getInstance() {
+    public synchronized static TelemetryPiiOiiRules getInstance() {
         if (sInstance == null) {
-            synchronized (TelemetryPiiOiiRules.class) {
-                sInstance = new TelemetryPiiOiiRules();
-            }
+            sInstance = new TelemetryPiiOiiRules();
         }
 
         return sInstance;

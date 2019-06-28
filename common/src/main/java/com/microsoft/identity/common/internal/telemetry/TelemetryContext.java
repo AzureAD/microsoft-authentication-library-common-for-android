@@ -41,7 +41,7 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class TelemetryContext extends Properties {
     private static final String TAG = TelemetryContext.class.getSimpleName();
 
-    TelemetryContext(ConcurrentHashMap<String, String> delegate) {
+    TelemetryContext(final ConcurrentHashMap<String, String> delegate) {
         super(delegate);
     }
 

@@ -84,12 +84,10 @@ public class Telemetry {
     /**
      * Prepares instance using builder.
      **/
-    private static Telemetry prepareInstance(Builder builder) {
+    private synchronized static Telemetry prepareInstance(Builder builder) {
         if (sTelemetryInstance == null) {
-            synchronized (Telemetry.class) {
-                if (sTelemetryInstance == null) {
-                    sTelemetryInstance = new Telemetry(builder);
-                }
+            if (sTelemetryInstance == null) {
+                sTelemetryInstance = new Telemetry(builder);
             }
         }
         return sTelemetryInstance;
@@ -98,12 +96,10 @@ public class Telemetry {
     /**
      * This is for getting instance of Telemetry
      **/
-    public static Telemetry getInstance() {
+    public synchronized static Telemetry getInstance() {
         // If sTelemetryInstance is not initialized, telemetry will be disabled.
         if (sTelemetryInstance == null) {
-            synchronized (Telemetry.class) {
-                new Builder().build();
-            }
+            new Builder().build();
         }
 
         return sTelemetryInstance;

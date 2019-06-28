@@ -44,11 +44,9 @@ public class TelemetryAggregationRules {
         aggregatedPropertiesSet = new HashSet<>(Arrays.asList(aggregatedArray));
     }
 
-    public static TelemetryAggregationRules getInstance() {
+    public synchronized static TelemetryAggregationRules getInstance() {
         if (sInstance == null) {
-            synchronized (TelemetryAggregationRules.class) {
-                sInstance = new TelemetryAggregationRules();
-            }
+            sInstance = new TelemetryAggregationRules();
         }
 
         return sInstance;
