@@ -52,7 +52,7 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
     private static volatile Telemetry sTelemetryInstance = null;
-    private List<ITelemetryObserver> mObservers;
+    private static List<ITelemetryObserver> mObservers;
     private List<Map<String, String>> mTelemetryRawDataMap;
     private TelemetryConfiguration mDefaultConfiguration;
     private TelemetryContext mTelemetryContext;
@@ -77,7 +77,6 @@ public class Telemetry {
             mTelemetryContext = builder.mTelemetryContext;
             mIsDebugging = builder.mIsDebugging;
             mTelemetryRawDataMap = new LinkedList<>();
-            mObservers = new LinkedList<>();
         }
     }
 
@@ -85,11 +84,8 @@ public class Telemetry {
      * Prepares instance using builder.
      **/
     private synchronized static Telemetry prepareInstance(Builder builder) {
-        if (sTelemetryInstance == null) {
-            if (sTelemetryInstance == null) {
-                sTelemetryInstance = new Telemetry(builder);
-            }
-        }
+        sTelemetryInstance = new Telemetry(builder);
+
         return sTelemetryInstance;
     }
 
