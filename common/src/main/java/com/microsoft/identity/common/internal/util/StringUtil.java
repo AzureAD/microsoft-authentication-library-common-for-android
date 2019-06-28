@@ -26,18 +26,9 @@ import android.support.annotation.NonNull;
 import android.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.lang.reflect.Array;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-
 
 /**
  * String utilities.
@@ -159,83 +150,5 @@ public final class StringUtil {
         }
 
         return 0;
-    }
-
-    /**
-     * Return a copy of the contents of the given map as a {@link JSONObject}. Instead of failing on
-     * {@code null} values like the {@link JSONObject} map constructor, it cleans them up and
-     * correctly converts them to {@link JSONObject#NULL}.
-     */
-    public static JSONObject toJsonObject(Map<String, ?> map) {
-        JSONObject jsonObject = new JSONObject();
-        for (Map.Entry<String, ?> entry : map.entrySet()) {
-            Object value = wrap(entry.getValue());
-            try {
-                jsonObject.put(entry.getKey(), value);
-            } catch (JSONException ignored) {
-                // Ignore values that JSONObject doesn't accept.
-            }
-        }
-        return jsonObject;
-    }
-
-    /**
-     * Wraps the given object if necessary. {@link JSONObject#wrap(Object)} is only available on API
-     * 19+, so we've copied the implementation. Deviates from the original implementation in that it
-     * always returns {@link JSONObject#NULL} instead of {@code null} in case of a failure, and
-     * returns the {@link Object#toString} of any object that is of a custom (non-primitive or
-     * non-collection/map) type.
-     *
-     * <p>If the object is null returns {@link JSONObject#NULL}. If the object is a {@link JSONArray}
-     * or {@link JSONObject}, no wrapping is necessary. If the object is {@link JSONObject#NULL}, no
-     * wrapping is necessary. If the object is an array or {@link Collection}, returns an equivalent
-     * {@link JSONArray}. If the object is a {@link Map}, returns an equivalent {@link JSONObject}. If
-     * the object is a primitive wrapper type or {@link String}, returns the object. Otherwise returns
-     * the result of {@link Object#toString}. If wrapping fails, returns JSONObject.NULL.
-     */
-    private static Object wrap(Object o) {
-        //TODO can be removed after change the minSdk to 19.
-        if (o == null) {
-            return JSONObject.NULL;
-        }
-        if (o instanceof JSONArray || o instanceof JSONObject) {
-            return o;
-        }
-        if (o.equals(JSONObject.NULL)) {
-            return o;
-        }
-        try {
-            if (o instanceof Collection) {
-                return new JSONArray((Collection) o);
-            } else if (o.getClass().isArray()) {
-                final int length = Array.getLength(o);
-                JSONArray array = new JSONArray();
-                for (int i = 0; i < length; ++i) {
-                    array.put(wrap(Array.get(array, i)));
-                }
-                return array;
-            }
-            if (o instanceof Map) {
-                //noinspection unchecked
-                return toJsonObject((Map) o);
-            }
-            if (o instanceof Boolean
-                    || o instanceof Byte
-                    || o instanceof Character
-                    || o instanceof Double
-                    || o instanceof Float
-                    || o instanceof Integer
-                    || o instanceof Long
-                    || o instanceof Short
-                    || o instanceof String) {
-                return o;
-            }
-            // Deviate from original implementation and return the String representation of the object
-            // regardless of package.
-            return o.toString();
-        } catch (Exception ignored) {
-        }
-        // Deviate from original and return JSONObject.NULL instead of null.
-        return JSONObject.NULL;
     }
 }
