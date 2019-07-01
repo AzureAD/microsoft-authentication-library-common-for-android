@@ -172,7 +172,7 @@ public class MicrosoftAuthClient {
      * - If authenticator is the broker, this will return CP.
      *
      * @param context
-     * @return package name of the installed inactive authenticator, if there's any.
+     * @return package name of the installed inactive broker app, if there's any.
      */
     private String getInactiveBrokerPackageName(@NonNull final Context context) {
         final String methodName = ":getInactiveBrokerPackageName";
