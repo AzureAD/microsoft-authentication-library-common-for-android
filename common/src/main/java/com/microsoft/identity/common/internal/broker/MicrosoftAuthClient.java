@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
@@ -50,6 +51,7 @@ public class MicrosoftAuthClient {
     private MicrosoftAuthServiceConnection mMicrosoftAuthServiceConnection;
     private Intent mMicrosoftAuthServiceIntent;
     private Boolean mBound = false;
+    private Boolean mShouldBindWithInactiveBroker;
 
     /**
      * Constructor for the Microsoft Auth Client
@@ -57,6 +59,17 @@ public class MicrosoftAuthClient {
      * @param context
      */
     public MicrosoftAuthClient(Context context) {
+        this(context, false);
+    }
+
+    /**
+     * Constructor for the Microsoft Auth Client
+     *
+     * @param context
+     * @param shouldBindWithInactiveBroker set to true if this Client should be bound to an inactive broker (if there's any).
+     */
+    public MicrosoftAuthClient(Context context, boolean shouldBindWithInactiveBroker) {
+        mShouldBindWithInactiveBroker = shouldBindWithInactiveBroker;
         mContext = context;
         mMicrosoftAuthServiceIntent = getIntentForAuthService(mContext);
     }
@@ -67,6 +80,10 @@ public class MicrosoftAuthClient {
      * @return MicrosoftAuthServiceFuture
      */
     public MicrosoftAuthServiceFuture connect() throws ClientException {
+
+        if (mMicrosoftAuthServiceIntent == null) {
+            throw new ClientException("Service is unavailable or does not support binding.  Microsoft Auth Service.");
+        }
 
         MicrosoftAuthServiceFuture future = new MicrosoftAuthServiceFuture();
         mMicrosoftAuthServiceConnection = new MicrosoftAuthServiceConnection(future);
@@ -85,12 +102,11 @@ public class MicrosoftAuthClient {
      * Disconnects (unbinds) from the bound Microsoft Auth Service
      */
     public void disconnect() {
-        if(mBound) {
+        if (mBound) {
             mContext.unbindService(mMicrosoftAuthServiceConnection);
             mBound = false;
         }
     }
-
 
     /**
      * Gets the intent that points to the bound service on the device... if available
@@ -100,13 +116,22 @@ public class MicrosoftAuthClient {
      * @return Intent
      */
     public Intent getIntentForAuthService(final Context context) {
-        final String currentActiveBrokerPackageName = getCurrentActiveBrokerPackageName(context);
-        if (currentActiveBrokerPackageName == null || currentActiveBrokerPackageName.length() == 0) {
+
+        final String targetedBrokerPackageName;
+
+        if (mShouldBindWithInactiveBroker) {
+            targetedBrokerPackageName = getInactiveBrokerPackageName(context);
+        } else {
+            targetedBrokerPackageName = getCurrentActiveBrokerPackageName(context);
+        }
+
+        if (targetedBrokerPackageName == null || targetedBrokerPackageName.length() == 0) {
             return null;
         }
+
         final Intent authServiceToBind = new Intent(MICROSOFT_AUTH_SERVICE_INTENT_FILTER);
-        authServiceToBind.setPackage(currentActiveBrokerPackageName);
-        authServiceToBind.setClassName(currentActiveBrokerPackageName, MICROSOFT_AUTH_SERVICE_CLASS_NAME);
+        authServiceToBind.setPackage(targetedBrokerPackageName);
+        authServiceToBind.setClassName(targetedBrokerPackageName, MICROSOFT_AUTH_SERVICE_CLASS_NAME);
 
         return authServiceToBind;
     }
@@ -136,6 +161,41 @@ public class MicrosoftAuthClient {
                     && isMicrosoftAuthServiceSupported(context.getPackageManager(), authenticator.packageName)) {
                 return authenticator.packageName;
             }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the inactive installed authenticator.
+     * - If CP is the broker, this will return authenticator.
+     * - If authenticator is the broker, this will return CP.
+     *
+     * @param context
+     * @return package name of the installed inactive authenticator, if there's any.
+     */
+    private String getInactiveBrokerPackageName(@NonNull final Context context) {
+        final String methodName = ":getInactiveBrokerPackageName";
+        String currentBroker = getCurrentActiveBrokerPackageName(context);
+
+        final String inactiveBrokerPackageName;
+        if (currentBroker.equalsIgnoreCase(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
+            inactiveBrokerPackageName = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+        } else if (currentBroker.equalsIgnoreCase(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+            inactiveBrokerPackageName = AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+        } else {
+            return null;
+        }
+
+        // Verify the signature to make sure that we're not binding to malicious apps.
+        final BrokerValidator validator = new BrokerValidator(context);
+        try {
+            if (validator.verifySignature(inactiveBrokerPackageName)) {
+                return inactiveBrokerPackageName;
+            }
+        } catch (Exception e) {
+            // Log. It could be that inactiveBrokerPackageName is not installed on the app, or something's wrong.
+            Logger.error(TAG + methodName, "Failed to get inactive Broker package name.", e);
         }
 
         return null;
