@@ -66,6 +66,10 @@ public abstract class Authority {
         return mIsDefault;
     }
 
+    public String getAuthorityTypeString() {
+        return mAuthorityTypeString;
+    }
+
     public void setDefault(Boolean isDefault) {
         mIsDefault = isDefault;
     }
@@ -100,6 +104,7 @@ public abstract class Authority {
         if (authorityIsKnownFromConfiguration(authorityUrl)) {
             final Authority configuredAuthority = getEquivalentConfiguredAuthority(authorityUrl);
             final String authorityTypeStr = configuredAuthority.mAuthorityTypeString;
+
             if ("B2C".equalsIgnoreCase(authorityTypeStr)) {
                 authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
             } else {

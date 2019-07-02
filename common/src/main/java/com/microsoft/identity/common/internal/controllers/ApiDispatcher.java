@@ -25,10 +25,12 @@ package com.microsoft.identity.common.internal.controllers;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.util.Pair;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
@@ -36,7 +38,9 @@ import com.microsoft.identity.common.internal.request.AcquireTokenOperationParam
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -50,6 +54,112 @@ public class ApiDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
 
+    public static void getAccounts(@NonNull final LoadAccountCommand command) {
+        final String methodName = ":getAccounts";
+        Logger.verbose(
+                TAG + methodName,
+                "Beginning load accounts."
+        );
+        sSilentExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                final String correlationId = initializeDiagnosticContext();
+
+                List<ICacheRecord> result = null;
+                BaseException baseException = null;
+                Handler handler = new Handler(Looper.getMainLooper());
+
+                try {
+                    //Try executing request
+                    result = command.execute();
+                } catch (final Exception e) {
+                    //Capture any resulting exception and map to MsalException type
+                    Logger.errorPII(
+                            TAG + methodName,
+                            "Silent request failed with Exception",
+                            e
+                    );
+                    baseException = ExceptionAdapter.baseExceptionFromException(e);
+                }
+
+                if (baseException != null) {
+                    //Post On Error
+                    final BaseException finalException = baseException;
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            command.getCallback().onError(finalException);
+                        }
+                    });
+                } else {
+                    final List<ICacheRecord> finalAccountsList = result;
+
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            command.getCallback().onTaskCompleted(finalAccountsList);
+                        }
+                    });
+                }
+
+                Telemetry.getInstance().flush(correlationId);
+            }
+        });
+    }
+
+    public static void removeAccount(@NonNull final RemoveAccountCommand command) {
+        final String methodName = ":removeAccount";
+        Logger.verbose(
+                TAG + methodName,
+                "Beginning remove account."
+        );
+        sSilentExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                final String correlationId = initializeDiagnosticContext();
+
+                boolean result = false;
+                BaseException baseException = null;
+                Handler handler = new Handler(Looper.getMainLooper());
+
+                try {
+                    //Try executing request
+                    result = command.execute();
+
+                } catch (final Exception e) {
+                    //Capture any resulting exception and map to MsalException type
+                    Logger.errorPII(
+                            TAG + methodName,
+                            "Silent request failed with Exception",
+                            e
+                    );
+                    baseException = ExceptionAdapter.baseExceptionFromException(e);
+                }
+
+                if (baseException != null) {
+                    //Post On Error
+                    final BaseException finalException = baseException;
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            command.getCallback().onError(finalException);
+                        }
+                    });
+                } else {
+                    final boolean finalResult = result;
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            command.getCallback().onTaskCompleted(finalResult);
+                        }
+                    });
+                }
+
+                Telemetry.getInstance().flush(correlationId);
+            }
+        });
+    }
+
     public static void beginInteractive(final InteractiveTokenCommand command) {
         final String methodName = ":beginInteractive";
         Logger.verbose(
@@ -59,13 +169,13 @@ public class ApiDispatcher {
         synchronized (sLock) {
             // Send a broadcast to cancel if any active auth request is present.
             command.getParameters().getAppContext().sendBroadcast(
-                            new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
+                    new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
             );
 
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    initializeDiagnosticContext();
+                    final String correlationId = initializeDiagnosticContext();
 
                     if (command.mParameters instanceof AcquireTokenOperationParameters) {
                         logInteractiveRequestParameters(methodName, (AcquireTokenOperationParameters) command.mParameters);
@@ -135,6 +245,8 @@ public class ApiDispatcher {
                             }
                         }
                     }
+
+                    Telemetry.getInstance().flush(correlationId);
                 }
             });
         }
@@ -263,7 +375,7 @@ public class ApiDispatcher {
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                initializeDiagnosticContext();
+                final String correlationId = initializeDiagnosticContext();
 
                 if (command.mParameters instanceof AcquireTokenSilentOperationParameters) {
                     logSilentRequestParams(
@@ -305,7 +417,6 @@ public class ApiDispatcher {
                     });
                 } else {
                     if (null != result && result.getSucceeded()) {
-                        //Post Success
                         final ILocalAuthenticationResult authenticationResult = result.getLocalAuthenticationResult();
                         handler.post(new Runnable() {
                             @Override
@@ -317,6 +428,7 @@ public class ApiDispatcher {
                         //Get MsalException from Authorization and/or Token Error Response
                         baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
                         final BaseException finalException = baseException;
+
                         if (finalException instanceof UserCancelException) {
                             //Post Cancel
                             handler.post(new Runnable() {
@@ -335,6 +447,8 @@ public class ApiDispatcher {
                         }
                     }
                 }
+
+                Telemetry.getInstance().flush(correlationId);
             }
         });
     }

@@ -221,7 +221,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 intent.setComponent(new ComponentName(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
                         AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                getActivity().getApplicationContext().startActivity(intent);
+                getActivity().startActivity(intent);
             } catch (final SecurityException ex) {
                 Logger.warn(TAG + methodName, "Failed to launch Company Portal, falling back to browser.");
                 openLinkInBrowser(url);
@@ -244,7 +244,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
 
         if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
-            getActivity().getApplicationContext().startActivity(intent);
+            getActivity().startActivity(intent);
         } else {
             Logger.warn(TAG + methodName, "Unable to find an app to resolve the activity.");
         }

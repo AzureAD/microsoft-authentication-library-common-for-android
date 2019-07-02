@@ -123,6 +123,11 @@ public final class AuthenticationConstants {
          * Sub error returned by server representing the user cancel the auth flow.
          */
         public static final String SUB_ERROR_UI_CANCEL = "cancel";
+
+        /**
+         * V2 endpoint for logging the user out in browser.
+         */
+        public static final String LOGOUT_ENDPOINT_V2 = "https://login.microsoftonline.com/common/oauth2/v2.0/logout";
     }
 
     /**
@@ -671,6 +676,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_FINAL_URL = "adal.final.url";
 
         /**
+         * String of the default browser package name.
+         */
+        public static final String DEFAULT_BROWSER_PACKAGE_NAME = "default.browser.package.name";
+
+        /**
          * String of account initial request.
          */
         public static final String ACCOUNT_INITIAL_REQUEST = "account.initial.request";
@@ -771,6 +781,11 @@ public final class AuthenticationConstants {
         public static final String ACCOUNT_NAME = "account.name";
 
         /**
+         * String of key for account name.
+         */
+        public static final String ACCOUNT_HOME_ACCOUNT_ID = "account.home.account.id";
+
+        /**
          * String of key for account id token.
          */
         public static final String ACCOUNT_IDTOKEN = "account.idtoken";
@@ -809,6 +824,21 @@ public final class AuthenticationConstants {
          * String of key for tenant id.
          */
         public static final String ACCOUNT_USERINFO_TENANTID = "account.userinfo.tenantid";
+
+        /**
+         * String of key for environment.
+         */
+        public static final String ACCOUNT_USERINFO_ENVIRONMENT = "account.userinfo.environment";
+
+        /**
+         * String of key for authority type.
+         */
+        public static final String ACCOUNT_USERINFO_AUTHORITY_TYPE = "account.userinfo.authority.type";
+
+        /**
+         * String of key for account id token record.
+         */
+        public static final String ACCOUNT_USERINFO_ID_TOKEN = "account.userinfo.id.token";
 
         /**
          * String of key for adal version.
@@ -1017,6 +1047,12 @@ public final class AuthenticationConstants {
          * String to return Msal V2 response.
          */
         public static final String BROKER_RESULT_V2 = "broker_result_v2";
+
+        /**
+         * Represents the broker device mode boolean (true = shared device mode).
+         * This is used to determine what PublicClientApplication MSAL will return to its caller.
+         */
+        public static final String BROKER_DEVICE_MODE = "broker_device_mode";
 
         /**
          * String to return a true if the request succeeded, false otherwise.

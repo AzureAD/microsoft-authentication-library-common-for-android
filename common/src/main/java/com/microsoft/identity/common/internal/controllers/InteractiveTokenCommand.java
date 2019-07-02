@@ -24,10 +24,7 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
 
-import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;

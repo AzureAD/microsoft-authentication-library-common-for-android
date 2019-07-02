@@ -1,15 +1,14 @@
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.internal.result;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class AuthorizationResultFuture implements Future<AuthorizationResult> {
+public class ResultFuture<T> implements Future<T> {
 
     private final CountDownLatch mCountDownLatch = new CountDownLatch(1);
-    private AuthorizationResult mAuthorizationResult;
+    private T mResult;
 
     @Override
     public boolean cancel(boolean b) {
@@ -27,23 +26,23 @@ public class AuthorizationResultFuture implements Future<AuthorizationResult> {
     }
 
     @Override
-    public AuthorizationResult get() throws InterruptedException, ExecutionException {
+    public T get() throws InterruptedException {
         mCountDownLatch.await();
-        return mAuthorizationResult;
+        return mResult;
     }
 
     @Override
-    public AuthorizationResult get(long l, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
+    public T get(long l, TimeUnit timeUnit) throws InterruptedException, TimeoutException {
         if (mCountDownLatch.await(l, timeUnit)) {
-            return mAuthorizationResult;
+            return mResult;
         } else {
             throw new TimeoutException();
         }
 
     }
 
-    public void setAuthorizationResult(AuthorizationResult result) {
-        mAuthorizationResult = result;
+    public void setResult(T result) {
+        mResult = result;
         mCountDownLatch.countDown();
     }
 }

@@ -26,11 +26,9 @@ import android.support.annotation.NonNull;
 import android.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 
 /**
  * String utilities.
