@@ -40,11 +40,11 @@ interface IMicrosoftAuthService {
 
     Bundle removeAccount(in Bundle bundle);
 
+    Bundle getInactiveBrokerKey(in Bundle bundle);
+    
     Bundle getDeviceMode();
 
     Bundle getCurrentAccount(in Bundle bundle);
 
     Bundle removeAccountFromSharedDevice(in Bundle bundle);
-
-    Bundle getInactiveBrokerKey(in Bundle bundle);
 }
