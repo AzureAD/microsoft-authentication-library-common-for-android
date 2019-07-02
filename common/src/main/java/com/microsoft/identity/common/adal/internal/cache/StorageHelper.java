@@ -53,6 +53,8 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
@@ -430,10 +432,11 @@ public class StorageHelper implements IStorageHelper {
         final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
         keyStore.load(null);
 
-        final KeyStore.PrivateKeyEntry entry;
+        final PublicKey publicKey;
+        final PrivateKey privateKey;
         try {
-            entry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(
-                    KEY_STORE_CERT_ALIAS, null);
+            publicKey = keyStore.getCertificate(KEY_STORE_CERT_ALIAS).getPublicKey();
+            privateKey = (PrivateKey)keyStore.getKey(KEY_STORE_CERT_ALIAS, null);
         } catch (final RuntimeException e) {
             // There is an issue in android keystore that resets keystore
             // Issue 61989:  AndroidKeyStore deleted after changing screen lock type
@@ -444,7 +447,7 @@ public class StorageHelper implements IStorageHelper {
             throw new KeyStoreException(e);
         }
 
-        return new KeyPair(entry.getCertificate().getPublicKey(), entry.getPrivateKey());
+        return new KeyPair(publicKey, privateKey);
     }
 
     /**
