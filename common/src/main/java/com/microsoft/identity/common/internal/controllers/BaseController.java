@@ -35,15 +35,12 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -51,10 +48,6 @@ import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
@@ -72,7 +65,6 @@ import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
-import com.microsoft.identity.common.internal.util.DateUtilities;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -80,7 +72,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 public abstract class BaseController {
 
@@ -395,64 +386,6 @@ public abstract class BaseController {
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
         operationParameters.setScopes(requestScopes);
-    }
-
-    public AccessTokenRecord getAccessTokenRecord(@NonNull final MicrosoftStsTokenResponse tokenResponse,
-                                                  @NonNull final OperationParameters requestParameters) {
-        final String methodName = ":getAccessTokenRecord";
-
-        final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
-
-        try {
-            final ClientInfo clientInfo = new ClientInfo(tokenResponse.getClientInfo());
-            accessTokenRecord.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            accessTokenRecord.setRealm(SchemaUtil.getTenantId(
-                    tokenResponse.getClientInfo(),
-                    tokenResponse.getIdToken()
-                    )
-            );
-            final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.
-                    getAzureActiveDirectoryCloud(
-                            requestParameters.getAuthority().getAuthorityURL()
-                    );
-
-            if (cloudEnv != null) {
-                Logger.info(TAG, "Using preferred cache host name...");
-                accessTokenRecord.setEnvironment(cloudEnv.getPreferredCacheHostName());
-            } else {
-                accessTokenRecord.setEnvironment(
-                        requestParameters.getAuthority().getAuthorityURL().getHost()
-                );
-            }
-        } catch (final ServiceException e) {
-            Logger.error(TAG + methodName, "ClientInfo construction failed ", e);
-        }
-        accessTokenRecord.setClientId(requestParameters.getClientId());
-        accessTokenRecord.setSecret(tokenResponse.getAccessToken());
-        accessTokenRecord.setAccessTokenType(tokenResponse.getTokenType());
-        accessTokenRecord.setAuthority(
-                requestParameters.getAuthority().getAuthorityURL().toString()
-        );
-        accessTokenRecord.setTarget(TextUtils.join(" ", requestParameters.getScopes()));
-        accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
-
-        if (tokenResponse.getExpiresIn() != null) {
-            accessTokenRecord.setExpiresOn(
-                    String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExpiresIn()))
-            );
-        }
-
-        if (tokenResponse.getExtExpiresIn() != null) {
-            accessTokenRecord.setExtendedExpiresOn(
-                    String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExtExpiresIn()))
-            );
-        }
-
-        accessTokenRecord.setCachedAt(
-                String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()))
-        );
-
-        return accessTokenRecord;
     }
 
     /**
