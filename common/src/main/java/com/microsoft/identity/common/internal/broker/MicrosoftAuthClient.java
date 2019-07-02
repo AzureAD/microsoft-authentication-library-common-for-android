@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -174,14 +175,15 @@ public class MicrosoftAuthClient {
      * @param context
      * @return package name of the installed inactive broker app, if there's any.
      */
+    @Nullable
     private String getInactiveBrokerPackageName(@NonNull final Context context) {
         final String methodName = ":getInactiveBrokerPackageName";
         String currentBroker = getCurrentActiveBrokerPackageName(context);
 
         final String inactiveBrokerPackageName;
-        if (currentBroker.equalsIgnoreCase(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
+        if (AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(currentBroker)) {
             inactiveBrokerPackageName = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
-        } else if (currentBroker.equalsIgnoreCase(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+        } else if (AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(currentBroker)) {
             inactiveBrokerPackageName = AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
         } else {
             return null;
