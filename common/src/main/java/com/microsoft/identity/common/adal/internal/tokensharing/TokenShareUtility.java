@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Pair;
 
 import com.microsoft.identity.common.exception.BaseException;
@@ -74,13 +75,16 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     private final String mClientId;
     private final String mRedirectUri;
+    private final String mDefaultAuthority;
     private final MsalOAuth2TokenCache mTokenCache;
 
     public TokenShareUtility(@NonNull final String clientId,
                              @NonNull final String redirectUri,
+                             @NonNull final String defaultAuthority,
                              @NonNull final MsalOAuth2TokenCache cache) {
         mClientId = clientId;
         mRedirectUri = redirectUri;
+        mDefaultAuthority = defaultAuthority;
         mTokenCache = cache;
     }
 
@@ -146,12 +150,12 @@ public class TokenShareUtility implements ITokenShareInternal {
     }
 
     @Override
-    public void saveOrgIdFamilyRefreshToken(@NonNull final String tokenCacheItemJson) throws Exception {
+    public void saveOrgIdFamilyRefreshToken(@NonNull final String ssoStateSerializerBlob) throws Exception {
         final Future<Pair<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
                 sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
                     public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
-                        final ADALTokenCacheItem cacheItemToRenew = SSOStateSerializer.deserialize(tokenCacheItemJson);
+                        final ADALTokenCacheItem cacheItemToRenew = SSOStateSerializer.deserialize(ssoStateSerializerBlob);
 
                         // We're going to 'hijack' this token and set our own clientId for renewal
                         // since these are FRTs, this is OK to do.
@@ -170,6 +174,12 @@ public class TokenShareUtility implements ITokenShareInternal {
 
         final Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair = resultFuture.get();
 
+        saveResult(resultPair);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void saveResult(@Nullable final Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair)
+            throws ClientException {
         // If an error is encountered while requesting new tokens, null is returned
         // Check the result, before proceeding to save into the cache...
         if (null != resultPair) {
@@ -181,13 +191,35 @@ public class TokenShareUtility implements ITokenShareInternal {
     }
 
     @Override
-    public String getMsaFamilyRefreshToken(String identifier) throws Exception {
+    public String getMsaFamilyRefreshToken(@NonNull final String identifier) throws Exception {
         throw new UnsupportedOperationException("Unimplemented method stub!");
     }
 
     @Override
-    public void saveMsaFamilyRefreshToken(String refreshToken) throws Exception {
-        throw new UnsupportedOperationException("Unimplemented method stub!");
+    public void saveMsaFamilyRefreshToken(@NonNull final String refreshToken) throws Exception {
+        final Future<Pair<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
+                sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
+                    @Override
+                    public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
+                        final ADALTokenCacheItem cacheItemToRenew = createTokenCacheItem(refreshToken);
+                        return renewToken(mRedirectUri, cacheItemToRenew);
+                    }
+                });
+
+        final Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair = resultFuture.get();
+
+        saveResult(resultPair);
+    }
+
+    private ADALTokenCacheItem createTokenCacheItem(@NonNull final String refreshToken) {
+        final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem();
+
+        // Set only the minimally required properties...
+        cacheItem.setAuthority(mDefaultAuthority);
+        cacheItem.setClientId(mClientId);
+        cacheItem.setRefreshToken(refreshToken);
+
+        return cacheItem;
     }
 
     @SuppressWarnings("PMD.UnusedPrivateMethod")
