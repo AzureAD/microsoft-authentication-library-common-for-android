@@ -87,7 +87,7 @@ public class TokenShareUtility implements ITokenShareInternal {
     @Override
     @NonNull
     @SuppressWarnings("unchecked")
-    public String getWrappedFamilyRefreshToken(@NonNull final String identifier) throws BaseException {
+    public String getOrgIdFamilyRefreshToken(@NonNull final String identifier) throws BaseException {
         final String methodName = ":getWrappedFamilyRefreshToken";
 
         // First hit the cache to get the sought AccountRecord...
@@ -146,7 +146,7 @@ public class TokenShareUtility implements ITokenShareInternal {
     }
 
     @Override
-    public void saveFamilyRefreshToken(@NonNull final String tokenCacheItemJson) throws Exception {
+    public void saveOrgIdFamilyRefreshToken(@NonNull final String tokenCacheItemJson) throws Exception {
         final Future<Pair<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
                 sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
@@ -178,6 +178,16 @@ public class TokenShareUtility implements ITokenShareInternal {
                     resultPair.second // The refresh token
             );
         }
+    }
+
+    @Override
+    public String getMsaFamilyRefreshToken(String identifier) throws Exception {
+        throw new UnsupportedOperationException("Unimplemented method stub!");
+    }
+
+    @Override
+    public void saveMsaFamilyRefreshToken(String refreshToken) throws Exception {
+        throw new UnsupportedOperationException("Unimplemented method stub!");
     }
 
     @SuppressWarnings("PMD.UnusedPrivateMethod")
