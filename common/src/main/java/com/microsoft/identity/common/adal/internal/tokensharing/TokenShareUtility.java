@@ -92,8 +92,49 @@ public class TokenShareUtility implements ITokenShareInternal {
     @NonNull
     @SuppressWarnings("unchecked")
     public String getOrgIdFamilyRefreshToken(@NonNull final String identifier) throws BaseException {
-        final String methodName = ":getWrappedFamilyRefreshToken";
+        final ICacheRecord cacheRecord = getCacheRecordForIdentifier(identifier);
 
+        throwIfCacheRecordIncomplete(identifier, cacheRecord);
+
+        final ADALTokenCacheItem cacheItemToExport = adapt(
+                cacheRecord.getIdToken(),
+                cacheRecord.getRefreshToken()
+        );
+
+        // Ship it
+        return SSOStateSerializer.serialize(cacheItemToExport);
+    }
+
+    private void throwIfCacheRecordIncomplete(@NonNull final String identifier,
+                                              @NonNull final ICacheRecord cacheRecord) throws ClientException {
+        // Inspect the result for completeness...
+        if (null == cacheRecord.getRefreshToken() || null == cacheRecord.getIdToken()) {
+            final String methodName = ":throwIfCacheRecordIncomplete";
+
+            Logger.warn(
+                    TAG + methodName,
+                    "That's strange, we had an AccountRecord for identifier: "
+                            + identifier
+                            + " but couldn't find tokens for them."
+            );
+
+            throw new ClientException(TOKEN_CACHE_ITEM_NOT_FOUND);
+        }
+    }
+
+    private ICacheRecord getCacheRecordForIdentifier(@NonNull final String identifier) throws ClientException {
+        final AccountRecord localAccountRecord = getAccountRecordForIdentifier(identifier);
+
+        // Query the cache for the IdTokenRecord, RefreshTokenRecord, etc.
+        return mTokenCache.load(
+                mClientId,
+                null, // wildcard (*)
+                localAccountRecord
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    private AccountRecord getAccountRecordForIdentifier(@NonNull final String identifier) throws ClientException {
         // First hit the cache to get the sought AccountRecord...
         AccountRecord localAccountRecord = mTokenCache.getAccountByLocalAccountId(
                 null,
@@ -121,32 +162,7 @@ public class TokenShareUtility implements ITokenShareInternal {
             throw new ClientException(TOKEN_CACHE_ITEM_NOT_FOUND);
         }
 
-        // Query the cache for the IdTokenRecord, RefreshTokenRecord, etc.
-        final ICacheRecord cacheRecord = mTokenCache.load(
-                mClientId,
-                null, // wildcard (*)
-                localAccountRecord
-        );
-
-        // Inspect the result for completeness...
-        if (null == cacheRecord.getRefreshToken() || null == cacheRecord.getIdToken()) {
-            Logger.warn(
-                    TAG + methodName,
-                    "That's strange, we had an AccountRecord for identifier: "
-                            + identifier
-                            + " but couldn't find tokens for them."
-            );
-
-            throw new ClientException(TOKEN_CACHE_ITEM_NOT_FOUND);
-        }
-
-        final ADALTokenCacheItem cacheItemToExport = adapt(
-                cacheRecord.getIdToken(),
-                cacheRecord.getRefreshToken()
-        );
-
-        // Ship it
-        return SSOStateSerializer.serialize(cacheItemToExport);
+        return localAccountRecord;
     }
 
     @Override
@@ -192,7 +208,11 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     @Override
     public String getMsaFamilyRefreshToken(@NonNull final String identifier) throws Exception {
-        throw new UnsupportedOperationException("Unimplemented method stub!");
+        final ICacheRecord cacheRecord = getCacheRecordForIdentifier(identifier);
+
+        throwIfCacheRecordIncomplete(identifier, cacheRecord);
+
+        return cacheRecord.getRefreshToken().getSecret();
     }
 
     @Override
