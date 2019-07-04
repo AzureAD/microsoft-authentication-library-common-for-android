@@ -156,9 +156,11 @@ public class InactiveBrokerClient {
         // Verify the signature to make sure that we're not binding to malicious apps.
         final BrokerValidator validator = new BrokerValidator(context);
         if (validator.verifySignature(inactiveBrokerPackageName)) {
+            Logger.verbose(TAG + methodName, "inactive broker package found:" + inactiveBrokerPackageName);
             return inactiveBrokerPackageName;
         }
 
+        Logger.verbose(TAG + methodName, "Inactive broker package not found.");
         return null;
     }
 }
