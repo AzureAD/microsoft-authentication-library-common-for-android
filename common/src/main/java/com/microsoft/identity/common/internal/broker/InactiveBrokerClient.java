@@ -155,13 +155,8 @@ public class InactiveBrokerClient {
 
         // Verify the signature to make sure that we're not binding to malicious apps.
         final BrokerValidator validator = new BrokerValidator(context);
-        try {
-            if (validator.verifySignature(inactiveBrokerPackageName)) {
-                return inactiveBrokerPackageName;
-            }
-        } catch (Exception e) {
-            // Log. It could be that inactiveBrokerPackageName is not installed on the device, or something's wrong.
-            Logger.error(TAG + methodName, "Failed to get inactive Broker package name.", e);
+        if (validator.verifySignature(inactiveBrokerPackageName)) {
+            return inactiveBrokerPackageName;
         }
 
         return null;
