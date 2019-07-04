@@ -34,6 +34,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.broker.InactiveBrokerClient;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.ByteArrayOutputStream;
@@ -486,6 +487,40 @@ public class StorageHelper implements IStorageHelper {
 
         Logger.verbose(TAG + methodName, "Unknown KeyType. This code should never be reached.");
         throw new GeneralSecurityException(ErrorStrings.UNKNOWN_ERROR);
+    }
+
+    /**
+     * If needed, get the key from inactive broker (if there is one).
+     *
+     * @return true if the migration happened and succeeded. false otherwise.
+     */
+    public boolean migrateEncryptionKeyIfNeeded(@NonNull final String callingPackageName) throws GeneralSecurityException, IOException {
+        if (!(COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(callingPackageName) ||
+                AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(callingPackageName))) {
+            // Caller is not broker. No need to migrate.
+            return false;
+        }
+
+        mEncryptionKey = getKey();
+        if (mEncryptionKey != null){
+            return false;
+        }
+
+        mEncryptionKey = getKeyFromInactiveBroker(callingPackageName);
+        return mEncryptionKey != null;
+    }
+
+
+    protected SecretKey getKeyFromInactiveBroker(@NonNull final String callingPackageName) {
+        final String methodName = ":getKeyFromInactiveBroker";
+        String encodedKey = InactiveBrokerClient.getSerializedKeyFromInactiveBroker(mContext, callingPackageName);
+
+        if (encodedKey == null || encodedKey.length() == 0) {
+            Logger.verbose(TAG + methodName, "The returned bundle doesn't contain any key.");
+            return null;
+        }
+
+        return getSecretKey(Base64.decode(encodedKey, Base64.DEFAULT));
     }
 
     /**

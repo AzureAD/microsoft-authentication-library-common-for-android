@@ -1112,6 +1112,8 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_CURRENT_ACCOUNT = "broker_current_account";
 
+        public static final String BROKER_KEYSTORE_ASYMMETRIC_KEY = "broker_keystore_asymmetric_key";
+
         /**
          * Bundle identifiers for x-ms-clitelem info.
          */

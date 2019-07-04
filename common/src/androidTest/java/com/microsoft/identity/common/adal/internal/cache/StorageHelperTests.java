@@ -361,4 +361,21 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         String decryptedKey = storageHelper.decrypt(legacyEncryptedKey);
         assertTrue("Decrypted data is same", expectedDecrypted.equals(decryptedKey));
     }
+
+    // This is a manual test. Debug broker app is required to be installed on the test device.
+    @Test
+    @Suppress
+    public void testGetKeyFromInactiveBroker() throws UnsupportedEncodingException {
+        final Context context = getInstrumentation().getTargetContext();
+        final StorageHelper storageHelper = new StorageHelper(context);
+
+        // Use AuthApp package name. so that it talks to testApp (Company portal debug package name).
+        final String packageName = AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+        final SecretKey obtainedKey = storageHelper.getKeyFromInactiveBroker(packageName);
+
+        //To test this, this has to be set on the Broker side.
+        final SecretKey expectedKey = storageHelper.getSecretKey(Base64.decode("PLUG_KEY_HERE".getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT));
+
+        assertTrue("keys are matching.", expectedKey.equals(obtainedKey));
+    }
 }

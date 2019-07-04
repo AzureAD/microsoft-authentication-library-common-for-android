@@ -67,7 +67,7 @@ public class AndroidTestHelper {
             mTestSignature = signature.toByteArray();
             MessageDigest md = MessageDigest.getInstance("SHA");
             md.update(mTestSignature);
-            mTestTag = Base64.encodeToString(md.digest(), Base64.DEFAULT);
+            mTestTag = Base64.encodeToString(md.digest(), Base64.DEFAULT).trim();
             break;
         }
         AuthenticationSettings.INSTANCE.setBrokerSignature(mTestTag);
