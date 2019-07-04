@@ -25,6 +25,7 @@ package com.microsoft.identity.common.adal.internal.cache;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.test.filters.Suppress;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Base64;
@@ -32,6 +33,7 @@ import android.util.Log;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 
 import org.junit.Before;
@@ -40,9 +42,11 @@ import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.DigestException;
+import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.crypto.SecretKey;
 
@@ -143,7 +147,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         // The following test is using the user provided key
         setSecretKeyData();
         assertThrowsException(
-                DigestException.class,
+                GeneralSecurityException.class,
                 null,
                 new AndroidTestHelper.ThrowableRunnable() {
                     @Override
@@ -223,7 +227,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         final int randomlyChosenByte = 15;
         bytes[randomlyChosenByte]++;
         final String modified = new String(Base64.encode(bytes, Base64.NO_WRAP), "UTF-8");
-        assertThrowsException(DigestException.class, null, new ThrowableRunnable() {
+        assertThrowsException(GeneralSecurityException.class, null, new ThrowableRunnable() {
             @Override
             public void run() throws Exception {
                 storageHelper.decrypt(flagVersion + modified);
@@ -260,27 +264,6 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         }
     }
 
-
-    //Github issue #580. Suppress this unit test as we cannot make it work consistently.
-    @Suppress
-    @TargetApi(MIN_SDK_VERSION)
-    @Test
-    public void testKeyPair() throws
-            GeneralSecurityException, IOException {
-        if (Build.VERSION.SDK_INT < MIN_SDK_VERSION) {
-            return;
-        }
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
-        SecretKey kp = storageHelper.loadSecretKeyForEncryption();
-
-        assertNotNull("Keypair is not null", kp);
-
-        KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
-        keyStore.load(null);
-        assertTrue("Keystore has the alias", keyStore.containsAlias("AdalKey"));
-    }
-
     @TargetApi(MIN_SDK_VERSION)
     @Test
     public void testKeyPairAndroidKeyStore() throws
@@ -290,7 +273,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         }
         final Context context = getInstrumentation().getTargetContext();
         final StorageHelper storageHelper = new StorageHelper(context);
-        SecretKey kp = storageHelper.loadSecretKeyForEncryption(StorageHelper.VERSION_ANDROID_KEY_STORE);
+        SecretKey kp = storageHelper.createKey();
 
         assertNotNull("Keypair is not null", kp);
 
@@ -306,6 +289,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         if (Build.VERSION.SDK_INT < MIN_SDK_VERSION) {
             return;
         }
+
         final Context context = getInstrumentation().getTargetContext();
         final StorageHelper storageHelper = new StorageHelper(context);
         setSecretKeyData();
@@ -341,4 +325,40 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         assertTrue("Key info is same", key.toString().equals(key2.toString()));
     }
 
+    // Encrypt with legacy key, then try decrypting. The decryption code should be smart enough to figure that out.
+    @Test
+    @Suppress
+    public void testDecryptingLegacyBrokerKey() throws GeneralSecurityException, IOException {
+
+        class StorageHelperMock extends StorageHelper {
+
+            public StorageHelperMock(@NonNull Context context) throws UnsupportedEncodingException {
+                super(context);
+
+                final Map<String, byte[]> secretKeys = new HashMap<String, byte[]>(2);
+                secretKeys.put(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
+                        Base64.decode("PLUG_LEGACY_KEY_HERE".getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT));
+                secretKeys.put(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
+                        Base64.decode("PLUG_LEGACY_KEY_HERE".getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT));
+                AuthenticationSettings.INSTANCE.setBrokerSecretKeys(secretKeys);
+            }
+
+            @Override
+            public synchronized SecretKey loadSecretKeyForEncryption() throws IOException,
+                    GeneralSecurityException {
+                setBlobVersion(VERSION_USER_DEFINED);
+                return loadSecretKey(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
+            }
+        }
+
+        final Context context = getInstrumentation().getTargetContext();
+        final StorageHelper storageHelper = new StorageHelperMock(context);
+
+        String expectedDecrypted = "SomeValue1234";
+        String legacyEncryptedKey = storageHelper.encrypt(expectedDecrypted);
+        assertTrue("Data is encrypted with legacy key", storageHelper.isEncryptedWithUserDefinedKey(legacyEncryptedKey));
+
+        String decryptedKey = storageHelper.decrypt(legacyEncryptedKey);
+        assertTrue("Decrypted data is same", expectedDecrypted.equals(decryptedKey));
+    }
 }
