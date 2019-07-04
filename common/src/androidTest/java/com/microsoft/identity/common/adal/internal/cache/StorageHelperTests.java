@@ -362,6 +362,22 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         assertTrue("Decrypted data is same", expectedDecrypted.equals(decryptedKey));
     }
 
+    @Test
+    public void testSecretKeySerialization() throws UnsupportedEncodingException {
+        final Context context = getInstrumentation().getTargetContext();
+        final StorageHelper storageHelper = new StorageHelper(context);
+
+        final String keyString = "ABCDEFGH";
+        final SecretKey key = storageHelper.getSecretKey(Base64.decode(keyString.getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT));
+        final SecretKey anotherKey = storageHelper.getSecretKey(Base64.decode("RANDOM".getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT));
+
+        final String serializedKey = storageHelper.serializeSecretKey(key);
+        final SecretKey deserializedKey = storageHelper.deserializeSecretKey(serializedKey);
+
+        assertTrue("keys are matching.", deserializedKey.equals(key));
+        assertFalse("keys should not be matching.", deserializedKey.equals(anotherKey));
+    }
+
     // This is a manual test. Debug broker app is required to be installed on the test device.
     @Test
     @Suppress

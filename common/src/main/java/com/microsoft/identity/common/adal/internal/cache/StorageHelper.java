@@ -513,14 +513,14 @@ public class StorageHelper implements IStorageHelper {
 
     protected SecretKey getKeyFromInactiveBroker(@NonNull final String callingPackageName) {
         final String methodName = ":getKeyFromInactiveBroker";
-        String encodedKey = InactiveBrokerClient.getSerializedKeyFromInactiveBroker(mContext, callingPackageName);
+        String serializedKey = InactiveBrokerClient.getSerializedKeyFromInactiveBroker(mContext, callingPackageName);
 
-        if (encodedKey == null || encodedKey.length() == 0) {
+        if (serializedKey == null || serializedKey.length() == 0) {
             Logger.verbose(TAG + methodName, "The returned bundle doesn't contain any key.");
             return null;
         }
 
-        return getSecretKey(Base64.decode(encodedKey, Base64.DEFAULT));
+        return deserializeSecretKey(serializedKey);
     }
 
     /**
@@ -855,5 +855,13 @@ public class StorageHelper implements IStorageHelper {
         } finally {
             in.close();
         }
+    }
+
+    public String serializeSecretKey(@NonNull final SecretKey key){
+        return Base64.encodeToString(key.getEncoded(), Base64.DEFAULT);
+    }
+
+    public SecretKey deserializeSecretKey(@NonNull final String serializedKey){
+        return getSecretKey(Base64.decode(serializedKey, Base64.DEFAULT));
     }
 }
