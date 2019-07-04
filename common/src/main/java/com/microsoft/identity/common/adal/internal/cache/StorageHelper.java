@@ -465,7 +465,7 @@ public class StorageHelper implements IStorageHelper {
     /**
      * Given the key type, load a secret key.
      */
-    protected SecretKey loadSecretKey(@NonNull final KeyType keyType) throws IOException, GeneralSecurityException {
+    public SecretKey loadSecretKey(@NonNull final KeyType keyType) throws IOException, GeneralSecurityException {
         final String methodName = "loadSecretKey";
 
         switch (keyType) {
