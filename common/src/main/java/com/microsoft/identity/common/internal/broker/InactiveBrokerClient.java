@@ -49,7 +49,7 @@ public class InactiveBrokerClient {
                 return null;
             }
 
-            return resultBundle.getString(AuthenticationConstants.Broker.BROKER_KEYSTORE_ASYMMETRIC_KEY);
+            return resultBundle.getString(AuthenticationConstants.Broker.BROKER_KEYSTORE_SYMMETRIC_KEY);
 
         } catch (final BaseException | InterruptedException | ExecutionException | RemoteException e) {
             Logger.error(
