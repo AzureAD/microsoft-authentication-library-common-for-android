@@ -181,13 +181,13 @@ public class StorageHelper implements IStorageHelper {
     @Override
     public String encrypt(final String clearText)
             throws GeneralSecurityException, IOException {
-        final String methodName = ":readKeyData";
-
-        Logger.verbose(TAG + methodName, "Starting encryption");
+        final String methodName = ":encrypt";
 
         if (StringExtensions.isNullOrBlank(clearText)) {
             throw new IllegalArgumentException("Input is empty or null");
         }
+
+        Logger.verbose(TAG + methodName, "Starting encryption");
 
         // load key for encryption if not loaded
         mEncryptionKey = loadSecretKeyForEncryption();
@@ -256,7 +256,9 @@ public class StorageHelper implements IStorageHelper {
                     continue;
                 }
 
-                return decryptWithSecretKey(bytes, secretKey);
+                String result = decryptWithSecretKey(bytes, secretKey);
+                Logger.verbose(TAG + methodName, "Finished decryption.");
+                return result;
             } catch (GeneralSecurityException | IOException e) {
                 Logger.error(
                         TAG + methodName,
@@ -278,8 +280,6 @@ public class StorageHelper implements IStorageHelper {
 
         final byte[] bytes = getByteArrayFromEncryptedBlob(encryptedBlob);
 
-        // get key version used for this data. If user upgraded to different
-        // API level, data needs to be updated
         final String keyVersion = new String(
                 bytes,
                 0,
@@ -415,9 +415,8 @@ public class StorageHelper implements IStorageHelper {
     /**
      * Load SecretKey for Broker for encryption.
      * This will try getting Keystore-encrypted symmetric key in the following order.
-     * 1. Existing key.
-     * 2. the key owned by inactive broker.
-     * 3. a newly-generated key.
+     * 1. Keystore-encrypted symmetric key.
+     * 2. a newly-generated key.
      */
     private SecretKey loadSecretKeyForBrokerEncryption() throws IOException, GeneralSecurityException {
         setBlobVersion(VERSION_ANDROID_KEY_STORE);
@@ -732,7 +731,6 @@ public class StorageHelper implements IStorageHelper {
     private void deleteKeyFile() {
         final String methodName = ":deleteKeyFile";
 
-        // Store secret key in a file after wrapping
         final File keyFile = new File(mContext.getDir(mContext.getPackageName(),
                 Context.MODE_PRIVATE), ADALKS);
         if (keyFile.exists()) {
