@@ -179,16 +179,21 @@ public class StorageHelper implements IStorageHelper {
         mRandom = new SecureRandom();
     }
 
+    // Exposed to be overridden by mock tests.
+    protected String getPackageName() {
+        return mContext.getPackageName();
+    }
+
     @Override
     public String encrypt(final String clearText)
             throws GeneralSecurityException, IOException {
-        final String methodName = ":readKeyData";
-
-        Logger.verbose(TAG + methodName, "Starting encryption");
+        final String methodName = ":encrypt";
 
         if (StringExtensions.isNullOrBlank(clearText)) {
             throw new IllegalArgumentException("Input is empty or null");
         }
+
+        Logger.verbose(TAG + methodName, "Starting encryption");
 
         // load key for encryption if not loaded
         mEncryptionKey = loadSecretKeyForEncryption();
@@ -238,7 +243,7 @@ public class StorageHelper implements IStorageHelper {
     }
 
     @Override
-    public String decrypt(final String encryptedBlob) throws GeneralSecurityException, IOException {
+    public String decrypt(final String encryptedBlob) throws GeneralSecurityException {
         final String methodName = "decrypt";
         Logger.verbose(TAG + methodName, "Starting decryption");
 
@@ -246,7 +251,7 @@ public class StorageHelper implements IStorageHelper {
             throw new IllegalArgumentException("Input is empty or null");
         }
 
-        final String packageName = mContext.getPackageName();
+        final String packageName = getPackageName();
         final List<KeyType> potentialDecryptionKeyList = initializeDecryptionKeyTypeList(encryptedBlob, packageName);
 
         final byte[] bytes = getByteArrayFromEncryptedBlob(encryptedBlob);
@@ -257,7 +262,9 @@ public class StorageHelper implements IStorageHelper {
                     continue;
                 }
 
-                return decryptWithSecretKey(bytes, secretKey);
+                String result = decryptWithSecretKey(bytes, secretKey);
+                Logger.verbose(TAG + methodName, "Finished decryption.");
+                return result;
             } catch (GeneralSecurityException | IOException e) {
                 Logger.error(
                         TAG + methodName,
@@ -275,20 +282,31 @@ public class StorageHelper implements IStorageHelper {
         throw new GeneralSecurityException(ErrorStrings.DECRYPTION_FAILED);
     }
 
-    public boolean isEncryptedWithUserDefinedKey(@NonNull final String encryptedBlob) throws UnsupportedEncodingException {
+    public boolean isEncryptedWithUserDefinedKey(@NonNull final String data) {
+        final String methodName = "isEncryptedWithUserDefinedKey";
 
-        final byte[] bytes = getByteArrayFromEncryptedBlob(encryptedBlob);
+        final byte[] bytes;
+        try {
+            bytes = getByteArrayFromEncryptedBlob(data);
+        } catch (IllegalArgumentException e) {
+            Logger.error(TAG + methodName, "This data is not an encrypted blob.", e);
+            return false;
+        }
 
-        // get key version used for this data. If user upgraded to different
-        // API level, data needs to be updated
-        final String keyVersion = new String(
-                bytes,
-                0,
-                KEY_VERSION_BLOB_LENGTH,
-                AuthenticationConstants.ENCODING_UTF8
-        );
+        try {
+            final String keyVersion = new String(
+                    bytes,
+                    0,
+                    KEY_VERSION_BLOB_LENGTH,
+                    AuthenticationConstants.ENCODING_UTF8
+            );
 
-        return VERSION_USER_DEFINED.equalsIgnoreCase(keyVersion);
+            return VERSION_USER_DEFINED.equalsIgnoreCase(keyVersion);
+        } catch (UnsupportedEncodingException e) {
+            Logger.error(TAG + methodName, "Failed to extract keyVersion.", e);
+        }
+
+        return false;
     }
 
     private byte[] getByteArrayFromEncryptedBlob(@NonNull final String encryptedBlob) {
@@ -305,13 +323,16 @@ public class StorageHelper implements IStorageHelper {
      * Get all the key type that could be potential candidates for decryption.
      **/
     private List<KeyType> initializeDecryptionKeyTypeList(@NonNull final String encryptedBlob,
-                                                          @NonNull final String packageName) throws UnsupportedEncodingException {
+                                                          @NonNull final String packageName) {
         List<KeyType> keyTypeList = new ArrayList<>();
 
         if (isEncryptedWithUserDefinedKey(encryptedBlob)) {
-            if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) || AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+            if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
                 keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
                 keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
+            } else if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+                keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
+                keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
             } else {
                 keyTypeList.add(KeyType.ADAL_USER_DEFINED_KEY);
             }
@@ -404,7 +425,7 @@ public class StorageHelper implements IStorageHelper {
             return mEncryptionKey;
         }
 
-        final String packageName = mContext.getPackageName();
+        final String packageName = getPackageName();
         if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) ||
                 AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
             return loadSecretKeyForBrokerEncryption();
@@ -416,9 +437,8 @@ public class StorageHelper implements IStorageHelper {
     /**
      * Load SecretKey for Broker for encryption.
      * This will try getting Keystore-encrypted symmetric key in the following order.
-     * 1. Existing key.
-     * 2. the key owned by inactive broker.
-     * 3. a newly-generated key.
+     * 1. Keystore-encrypted symmetric key.
+     * 2. a newly-generated key.
      */
     private SecretKey loadSecretKeyForBrokerEncryption() throws IOException, GeneralSecurityException {
         setBlobVersion(VERSION_ANDROID_KEY_STORE);
@@ -669,7 +689,7 @@ public class StorageHelper implements IStorageHelper {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     private AlgorithmParameterSpec getKeyPairGeneratorSpec(final Context context, final Date start, final Date end) {
         final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s", KEY_STORE_CERT_ALIAS,
-                context.getPackageName());
+                getPackageName());
         return new KeyPairGeneratorSpec.Builder(context)
                 .setAlias(KEY_STORE_CERT_ALIAS)
                 .setSubject(new X500Principal(certInfo))
@@ -767,8 +787,7 @@ public class StorageHelper implements IStorageHelper {
     private void deleteKeyFile() {
         final String methodName = ":deleteKeyFile";
 
-        // Store secret key in a file after wrapping
-        final File keyFile = new File(mContext.getDir(mContext.getPackageName(),
+        final File keyFile = new File(mContext.getDir(getPackageName(),
                 Context.MODE_PRIVATE), ADALKS);
         if (keyFile.exists()) {
             Logger.verbose(TAG + methodName, "Delete KeyFile");
@@ -822,7 +841,7 @@ public class StorageHelper implements IStorageHelper {
         final String methodName = ":writeKeyData";
 
         Logger.verbose(TAG + methodName, "Writing key data to a file");
-        final File keyFile = new File(mContext.getDir(mContext.getPackageName(), Context.MODE_PRIVATE),
+        final File keyFile = new File(mContext.getDir(getPackageName(), Context.MODE_PRIVATE),
                 ADALKS);
         final OutputStream out = new FileOutputStream(keyFile);
         try {
@@ -835,7 +854,7 @@ public class StorageHelper implements IStorageHelper {
     private byte[] readKeyData() throws IOException {
         final String methodName = ":readKeyData";
 
-        final File keyFile = new File(mContext.getDir(mContext.getPackageName(), Context.MODE_PRIVATE),
+        final File keyFile = new File(mContext.getDir(getPackageName(), Context.MODE_PRIVATE),
                 ADALKS);
         if (!keyFile.exists()) {
             throw new IOException("Key file to read does not exist");

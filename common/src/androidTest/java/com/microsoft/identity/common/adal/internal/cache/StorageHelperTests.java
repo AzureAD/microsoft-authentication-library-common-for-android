@@ -344,6 +344,11 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
             }
 
             @Override
+            protected String getPackageName(){
+                return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+            }
+
+            @Override
             public synchronized SecretKey loadSecretKeyForEncryption() throws IOException,
                     GeneralSecurityException {
                 setBlobVersion(VERSION_USER_DEFINED);
@@ -355,6 +360,8 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         final StorageHelper storageHelper = new StorageHelperMock(context);
 
         String expectedDecrypted = "SomeValue1234";
+        assertFalse("Data is not encypted", storageHelper.isEncryptedWithUserDefinedKey(expectedDecrypted));
+
         String legacyEncryptedKey = storageHelper.encrypt(expectedDecrypted);
         assertTrue("Data is encrypted with legacy key", storageHelper.isEncryptedWithUserDefinedKey(legacyEncryptedKey));
 
