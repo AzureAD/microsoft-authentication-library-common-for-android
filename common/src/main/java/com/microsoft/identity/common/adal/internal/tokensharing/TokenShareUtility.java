@@ -54,6 +54,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import static com.microsoft.identity.common.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
+import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.renewToken;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.sBackgroundExecutor;
 
@@ -217,11 +218,26 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     @Override
     public void saveMsaFamilyRefreshToken(@NonNull final String refreshToken) throws Exception {
+        final String methodName = "saveMsaFamilyRefreshToken";
+
         final Future<Pair<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
                 sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
                     public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
                         final ADALTokenCacheItem cacheItemToRenew = createTokenCacheItem(refreshToken);
+
+                        // Check that instance discovery metadata is loaded before making the request...
+                        final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata();
+
+                        if (!cloudMetadataLoaded) {
+                            Logger.warn(
+                                    TAG + methodName,
+                                    "Failed to load cloud metadata, aborting."
+                            );
+
+                            return null;
+                        }
+
                         return renewToken(mRedirectUri, cacheItemToRenew);
                     }
                 });
