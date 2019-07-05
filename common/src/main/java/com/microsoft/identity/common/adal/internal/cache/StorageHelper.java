@@ -179,7 +179,7 @@ public class StorageHelper implements IStorageHelper {
     }
 
     // Exposed to be overridden by mock tests.
-    protected String getPackageName(){
+    protected String getPackageName() {
         return mContext.getPackageName();
     }
 
@@ -287,7 +287,7 @@ public class StorageHelper implements IStorageHelper {
         final byte[] bytes;
         try {
             bytes = getByteArrayFromEncryptedBlob(data);
-        } catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             Logger.error(TAG + methodName, "This data is not an encrypted blob.", e);
             return false;
         }
@@ -322,7 +322,7 @@ public class StorageHelper implements IStorageHelper {
      * Get all the key type that could be potential candidates for decryption.
      **/
     private List<KeyType> initializeDecryptionKeyTypeList(@NonNull final String encryptedBlob,
-                                                            @NonNull final String packageName) {
+                                                          @NonNull final String packageName) {
         List<KeyType> keyTypeList = new ArrayList<>();
 
         if (isEncryptedWithUserDefinedKey(encryptedBlob)) {
