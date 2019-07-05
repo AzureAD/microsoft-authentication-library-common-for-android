@@ -28,6 +28,7 @@ import android.content.Context;
 import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Base64;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -514,26 +515,36 @@ public class StorageHelper implements IStorageHelper {
      *
      * @return true if the migration happened and succeeded. false otherwise.
      */
-    public boolean migrateEncryptionKeyIfNeeded(@NonNull final String callingPackageName) throws GeneralSecurityException, IOException {
-        if (!(COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(callingPackageName) ||
-                AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(callingPackageName))) {
-            // Caller is not broker. No need to migrate.
+    public boolean migrateEncryptionKeyIfNeeded(@NonNull final String activeBrokerPackageName) throws GeneralSecurityException, IOException {
+        final String methodName = ":migrateEncryptionKeyIfNeeded";
+
+        if (!(COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(activeBrokerPackageName) ||
+                AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(activeBrokerPackageName))) {
+            Logger.verbose(TAG + methodName, "Caller is not a broker. Migration is not needed.");
             return false;
         }
 
         mEncryptionKey = getKey();
         if (mEncryptionKey != null){
+            Logger.verbose(TAG + methodName, "Key already exists. Migration is not needed.");
             return false;
         }
 
-        mEncryptionKey = getKeyFromInactiveBroker(callingPackageName);
-        return mEncryptionKey != null;
+        mEncryptionKey = getKeyFromInactiveBroker(activeBrokerPackageName);
+        if (mEncryptionKey != null){
+            Logger.verbose(TAG + methodName, "Key is successfully retrieved from inactive broker. Saving key...");
+            saveSecretKey(mEncryptionKey);
+            return true;
+        }
+
+        Logger.verbose(TAG + methodName, "Key migration failed.");
+        return false;
     }
 
-
+    @Nullable
     protected SecretKey getKeyFromInactiveBroker(@NonNull final String callingPackageName) {
         final String methodName = ":getKeyFromInactiveBroker";
-        String serializedKey = InactiveBrokerClient.getSerializedKeyFromInactiveBroker(mContext, callingPackageName);
+        final String serializedKey = InactiveBrokerClient.getSerializedSymmetricKeyFromInactiveBroker(mContext, callingPackageName);
 
         if (serializedKey == null || serializedKey.length() == 0) {
             Logger.verbose(TAG + methodName, "The returned bundle doesn't contain any key.");
@@ -541,6 +552,16 @@ public class StorageHelper implements IStorageHelper {
         }
 
         return deserializeSecretKey(serializedKey);
+    }
+
+    private void saveSecretKey(@NonNull SecretKey key) throws GeneralSecurityException, IOException {
+        final String methodName = ":saveSecretKey";
+
+        Logger.verbose(TAG + methodName, "Saving secret key to storage.");
+
+        mKeyPair = generateKeyPairFromAndroidKeyStore();
+        final byte[] keyWrapped = wrap(key);
+        writeKeyData(keyWrapped);
     }
 
     /**
@@ -563,12 +584,8 @@ public class StorageHelper implements IStorageHelper {
 
         if (mSecretKeyFromAndroidKeyStore == null) {
             // If encountering exception for reading keys, try to generate new keys
-            mKeyPair = generateKeyPairFromAndroidKeyStore();
-
-            // Also generate new secretkey
             mSecretKeyFromAndroidKeyStore = generateSecretKey();
-            final byte[] keyWrapped = wrap(mSecretKeyFromAndroidKeyStore);
-            writeKeyData(keyWrapped);
+            saveSecretKey(mSecretKeyFromAndroidKeyStore);
         }
 
         return mSecretKeyFromAndroidKeyStore;

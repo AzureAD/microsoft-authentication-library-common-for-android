@@ -68,8 +68,8 @@ public class BrokerAccountServiceFuture implements Future<IBrokerAccountService>
 
     }
 
-    public void setBrokerAccountService(IBrokerAccountService result) {
-        mBrokerAccountService = result;
+    public void setBrokerAccountService(IBrokerAccountService brokerAccountService) {
+        mBrokerAccountService = brokerAccountService;
         mCountDownLatch.countDown();
     }
 }

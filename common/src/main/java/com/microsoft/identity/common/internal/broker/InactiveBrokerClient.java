@@ -32,16 +32,16 @@ public class InactiveBrokerClient {
     private Boolean mBound = false;
 
     // Must be called from BG thread.
-    public static String getSerializedKeyFromInactiveBroker(@NonNull Context context,
-                                                            @NonNull final String callingPackageName) {
-        final String methodName = ":getKeyFromInactiveBroker";
+    public static String getSerializedSymmetricKeyFromInactiveBroker(@NonNull Context context,
+                                                                     @NonNull final String activeBrokerPackageName) {
+        final String methodName = ":getSerializedSymmetricKeyFromInactiveBroker";
 
-        final InactiveBrokerClient client = new InactiveBrokerClient(context, callingPackageName);
+        final InactiveBrokerClient client = new InactiveBrokerClient(context, activeBrokerPackageName);
         try {
             final BrokerAccountServiceFuture brokerAccountServiceFuture = client.connect();
-            IBrokerAccountService service = brokerAccountServiceFuture.get();
+            final IBrokerAccountService service = brokerAccountServiceFuture.get();
 
-            Bundle resultBundle = service.getInactiveBrokerKey();
+            final Bundle resultBundle = service.getInactiveBrokerKey();
 
             // This means that the inactive broker doesn't support getInactiveBrokerKey().
             if (resultBundle == null){
@@ -80,15 +80,16 @@ public class InactiveBrokerClient {
     /**
      * Binds to the service and returns a future that provides the proxy for the calling the BrokerAccountService
      *
-     * @return MicrosoftAuthServiceFuture
+     * @return BrokerAccountServiceFuture
      */
+    @NonNull
     private BrokerAccountServiceFuture connect() throws ClientException {
 
         if (mBrokerAccountServiceIntent == null) {
             throw new ClientException("mBrokerAccountServiceIntent is null. BrokerAccountService.");
         }
 
-        BrokerAccountServiceFuture future = new BrokerAccountServiceFuture();
+        final BrokerAccountServiceFuture future = new BrokerAccountServiceFuture();
         mBrokerAccountServiceConnection = new BrokerAccountServiceConnection(future);
 
         mBound = mContext.bindService(mBrokerAccountServiceIntent, mBrokerAccountServiceConnection, Context.BIND_AUTO_CREATE);
@@ -118,6 +119,7 @@ public class InactiveBrokerClient {
      * @param context
      * @return Intent
      */
+    @Nullable
     private Intent getIntentForBrokerAccountService(final Context context) {
         final String inactiveBrokerPackageName = getInactiveBrokerPackageName(context);
 
