@@ -154,6 +154,15 @@ public class StorageHelper implements IStorageHelper {
         KEYSTORE_ENCRYPTED_KEY
     }
 
+    /**
+     * Encryption type of a given blob.
+     */
+    enum EncryptionType {
+        USER_DEFINED,
+        ANDROID_KEY_STORE,
+        UNENCRYPTED
+    }
+
     private final Context mContext;
     private final SecureRandom mRandom;
 
@@ -242,12 +251,17 @@ public class StorageHelper implements IStorageHelper {
     }
 
     @Override
-    public String decrypt(final String encryptedBlob) throws GeneralSecurityException {
+    public String decrypt(final String encryptedBlob) throws GeneralSecurityException, IOException {
         final String methodName = "decrypt";
         Logger.verbose(TAG + methodName, "Starting decryption");
 
         if (StringExtensions.isNullOrBlank(encryptedBlob)) {
             throw new IllegalArgumentException("Input is empty or null");
+        }
+
+        if (getEncryptionType(encryptedBlob) == EncryptionType.UNENCRYPTED) {
+            Logger.verbose(TAG + methodName, "This string is not encrypted. Finished decryption.");
+            return encryptedBlob;
         }
 
         final String packageName = getPackageName();
@@ -281,7 +295,10 @@ public class StorageHelper implements IStorageHelper {
         throw new GeneralSecurityException(ErrorStrings.DECRYPTION_FAILED);
     }
 
-    public boolean isEncryptedWithUserDefinedKey(@NonNull final String data) {
+    /**
+     * Determine type of encryption performed on the given data blob.
+     * */
+    public EncryptionType getEncryptionType(@NonNull final String data) throws IOException {
         final String methodName = "isEncryptedWithUserDefinedKey";
 
         final byte[] bytes;
@@ -289,7 +306,7 @@ public class StorageHelper implements IStorageHelper {
             bytes = getByteArrayFromEncryptedBlob(data);
         } catch (IllegalArgumentException e) {
             Logger.error(TAG + methodName, "This data is not an encrypted blob.", e);
-            return false;
+            return EncryptionType.UNENCRYPTED;
         }
 
         try {
@@ -300,12 +317,17 @@ public class StorageHelper implements IStorageHelper {
                     AuthenticationConstants.ENCODING_UTF8
             );
 
-            return VERSION_USER_DEFINED.equalsIgnoreCase(keyVersion);
+            if (VERSION_USER_DEFINED.equalsIgnoreCase(keyVersion)) {
+                return EncryptionType.USER_DEFINED;
+            } else if (VERSION_ANDROID_KEY_STORE.equalsIgnoreCase(keyVersion)) {
+                return EncryptionType.ANDROID_KEY_STORE;
+            }
         } catch (UnsupportedEncodingException e) {
             Logger.error(TAG + methodName, "Failed to extract keyVersion.", e);
+            throw e;
         }
 
-        return false;
+        return EncryptionType.UNENCRYPTED;
     }
 
     private byte[] getByteArrayFromEncryptedBlob(@NonNull final String encryptedBlob) {
@@ -322,10 +344,12 @@ public class StorageHelper implements IStorageHelper {
      * Get all the key type that could be potential candidates for decryption.
      **/
     private List<KeyType> initializeDecryptionKeyTypeList(@NonNull final String encryptedBlob,
-                                                          @NonNull final String packageName) {
+                                                          @NonNull final String packageName) throws IOException {
         List<KeyType> keyTypeList = new ArrayList<>();
 
-        if (isEncryptedWithUserDefinedKey(encryptedBlob)) {
+        EncryptionType encryptionType = getEncryptionType(encryptedBlob);
+
+        if (encryptionType == EncryptionType.USER_DEFINED) {
             if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
                 keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
                 keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
@@ -335,7 +359,7 @@ public class StorageHelper implements IStorageHelper {
             } else {
                 keyTypeList.add(KeyType.ADAL_USER_DEFINED_KEY);
             }
-        } else {
+        } else if (encryptionType == EncryptionType.ANDROID_KEY_STORE) {
             keyTypeList.add(KeyType.KEYSTORE_ENCRYPTED_KEY);
         }
 
