@@ -61,6 +61,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.ArrayList;
@@ -674,14 +675,15 @@ public class StorageHelper implements IStorageHelper {
             final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
             keyStore.load(null);
 
-            if (keyStore.containsAlias(KEY_STORE_CERT_ALIAS)) {
+            final Certificate cert = keyStore.getCertificate(KEY_STORE_CERT_ALIAS);
+            final Key privateKey = keyStore.getKey(KEY_STORE_CERT_ALIAS, null);
+
+            if (cert == null || privateKey == null) {
                 Logger.verbose(TAG + methodName, "Key entry doesn't exist.");
                 return null;
             }
 
-            final PublicKey publicKey = keyStore.getCertificate(KEY_STORE_CERT_ALIAS).getPublicKey();
-            final PrivateKey privateKey = (PrivateKey)keyStore.getKey(KEY_STORE_CERT_ALIAS, null);
-            return new KeyPair(publicKey, privateKey);
+            return new KeyPair(cert.getPublicKey(), (PrivateKey)privateKey);
 
         } catch (final RuntimeException | NoSuchAlgorithmException | CertificateException | UnrecoverableEntryException | IOException e) {
             // There is an issue in android keystore that resets keystore
