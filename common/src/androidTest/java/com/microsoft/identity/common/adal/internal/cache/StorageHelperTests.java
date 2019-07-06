@@ -119,46 +119,6 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
                 });
     }
 
-    @Test
-    public void testDecryptInvalidInput() throws
-            IOException, GeneralSecurityException {
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
-        assertThrowsException(
-                IllegalArgumentException.class,
-                "is not valid, it must be greater of equal to 0",
-                new AndroidTestHelper.ThrowableRunnable() {
-                    @Override
-                    public void run() throws GeneralSecurityException, IOException {
-                        storageHelper.decrypt("E1bad64");
-                    }
-                });
-
-        assertThrowsException(
-                IllegalArgumentException.class,
-                "bad base-64",
-                new AndroidTestHelper.ThrowableRunnable() {
-                    @Override
-                    public void run() throws GeneralSecurityException, IOException {
-                        storageHelper.decrypt("cE1bad64");
-                    }
-                });
-
-        // The following test is using the user provided key
-        setSecretKeyData();
-        assertThrowsException(
-                GeneralSecurityException.class,
-                null,
-                new AndroidTestHelper.ThrowableRunnable() {
-                    @Override
-                    public void run() throws GeneralSecurityException, IOException {
-                        storageHelper.decrypt("cE1" + new String(Base64.encode(
-                                "U001thatShouldFail1234567890123456789012345678901234567890"
-                                        .getBytes("UTF-8"), Base64.NO_WRAP), "UTF-8"));
-                    }
-                });
-    }
-
     /**
      * test different size messages
      */

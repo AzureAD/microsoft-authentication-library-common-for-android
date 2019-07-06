@@ -297,6 +297,7 @@ public class StorageHelper implements IStorageHelper {
 
     /**
      * Determine type of encryption performed on the given data blob.
+     * NOTE :If it cannot verify the keyVersion, it will assume that this data is not encrypted.
      * */
     public EncryptionType getEncryptionType(@NonNull final String data) throws IOException {
         final String methodName = "isEncryptedWithUserDefinedKey";
