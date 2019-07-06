@@ -119,46 +119,6 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
                 });
     }
 
-    @Test
-    public void testDecryptInvalidInput() throws
-            IOException, GeneralSecurityException {
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
-        assertThrowsException(
-                IllegalArgumentException.class,
-                "is not valid, it must be greater of equal to 0",
-                new AndroidTestHelper.ThrowableRunnable() {
-                    @Override
-                    public void run() throws GeneralSecurityException, IOException {
-                        storageHelper.decrypt("E1bad64");
-                    }
-                });
-
-        assertThrowsException(
-                IllegalArgumentException.class,
-                "bad base-64",
-                new AndroidTestHelper.ThrowableRunnable() {
-                    @Override
-                    public void run() throws GeneralSecurityException, IOException {
-                        storageHelper.decrypt("cE1bad64");
-                    }
-                });
-
-        // The following test is using the user provided key
-        setSecretKeyData();
-        assertThrowsException(
-                GeneralSecurityException.class,
-                null,
-                new AndroidTestHelper.ThrowableRunnable() {
-                    @Override
-                    public void run() throws GeneralSecurityException, IOException {
-                        storageHelper.decrypt("cE1" + new String(Base64.encode(
-                                "U001thatShouldFail1234567890123456789012345678901234567890"
-                                        .getBytes("UTF-8"), Base64.NO_WRAP), "UTF-8"));
-                    }
-                });
-    }
-
     /**
      * test different size messages
      */
@@ -331,9 +291,9 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
     @Suppress
     public void testDecryptingLegacyBrokerKey() throws GeneralSecurityException, IOException {
 
-        class StorageHelperMock extends StorageHelper {
+        class LegacyStorageHelperMock extends StorageHelper {
 
-            public StorageHelperMock(@NonNull Context context) throws UnsupportedEncodingException {
+            public LegacyStorageHelperMock(@NonNull Context context) throws UnsupportedEncodingException {
                 super(context);
 
                 final Map<String, byte[]> secretKeys = new HashMap<String, byte[]>(2);
@@ -358,16 +318,23 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         }
 
         final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelperMock(context);
+        final StorageHelper storageHelper = new StorageHelper(context);
+        final LegacyStorageHelperMock legacyStorageHelperMock = new LegacyStorageHelperMock(context);
 
         String expectedDecrypted = "SomeValue1234";
-        assertFalse("Data is not encypted", storageHelper.isEncryptedWithUserDefinedKey(expectedDecrypted));
+        assertTrue("Data is not encrypted", storageHelper.getEncryptionType(expectedDecrypted) == StorageHelper.EncryptionType.UNENCRYPTED);
 
-        String legacyEncryptedKey = storageHelper.encrypt(expectedDecrypted);
-        assertTrue("Data is encrypted with legacy key", storageHelper.isEncryptedWithUserDefinedKey(legacyEncryptedKey));
+        String keyStoreEncryptedKey = storageHelper.encrypt(expectedDecrypted);
+        assertTrue("Data is encrypted with keystore key", storageHelper.getEncryptionType(keyStoreEncryptedKey) == StorageHelper.EncryptionType.ANDROID_KEY_STORE);
 
-        String decryptedKey = storageHelper.decrypt(legacyEncryptedKey);
-        assertTrue("Decrypted data is same", expectedDecrypted.equals(decryptedKey));
+        String decryptedKeystoreKey = storageHelper.decrypt(keyStoreEncryptedKey);
+        assertTrue("Decrypted data is same", expectedDecrypted.equals(decryptedKeystoreKey));
+
+        String legacyEncryptedKey = legacyStorageHelperMock.encrypt(expectedDecrypted);
+        assertTrue("Data is encrypted with legacy key", legacyStorageHelperMock.getEncryptionType(legacyEncryptedKey) == StorageHelper.EncryptionType.USER_DEFINED);
+
+        String decryptedLegacyKey = legacyStorageHelperMock.decrypt(legacyEncryptedKey);
+        assertTrue("Decrypted data is same", expectedDecrypted.equals(decryptedLegacyKey));
     }
 
     @Test
