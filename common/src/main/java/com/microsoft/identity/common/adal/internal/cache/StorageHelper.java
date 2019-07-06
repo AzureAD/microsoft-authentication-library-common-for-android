@@ -614,10 +614,18 @@ public class StorageHelper implements IStorageHelper {
         }
 
         if (mSecretKeyFromAndroidKeyStore == null) {
-            // If encountering exception for reading keys, try to generate new keys
-            mSecretKeyFromAndroidKeyStore = generateSecretKey();
-            saveSecretKey(mSecretKeyFromAndroidKeyStore);
+            createKey();
         }
+
+        return mSecretKeyFromAndroidKeyStore;
+    }
+
+    /**
+     * Generate a new key and save to storage.
+     */
+    private synchronized SecretKey createKey() throws GeneralSecurityException, IOException {
+        mSecretKeyFromAndroidKeyStore = generateSecretKey();
+        saveSecretKey(mSecretKeyFromAndroidKeyStore);
 
         return mSecretKeyFromAndroidKeyStore;
     }
