@@ -471,13 +471,7 @@ public class StorageHelper implements IStorageHelper {
     @NonNull
     private SecretKey loadSecretKeyForBrokerEncryption() throws IOException, GeneralSecurityException {
         setBlobVersion(VERSION_ANDROID_KEY_STORE);
-        SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
-
-        if (key == null) {
-            key = createKey();
-        }
-
-        return key;
+        return loadOrCreateKey();
     }
 
     /**
@@ -495,11 +489,7 @@ public class StorageHelper implements IStorageHelper {
 
         // Try loading existing keystore-encrypted key. If it doesn't exist, create a new one.
         setBlobVersion(VERSION_ANDROID_KEY_STORE);
-        SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
-
-        if (key == null) {
-            key = createKey();
-        }
+        SecretKey key = loadOrCreateKey();
 
         return key;
     }
@@ -549,9 +539,9 @@ public class StorageHelper implements IStorageHelper {
      * @throws GeneralSecurityException
      * @throws IOException
      */
-    protected synchronized SecretKey createKey()
+    protected synchronized SecretKey loadOrCreateKey()
             throws GeneralSecurityException, IOException {
-        final String methodName = ":createKey";
+        final String methodName = ":loadOrCreateKey";
         try {
             mSecretKeyFromAndroidKeyStore = getKey();
         } catch (final IOException | GeneralSecurityException exception) {
