@@ -165,7 +165,7 @@ public class StorageHelper implements IStorageHelper {
     /**
      * Encryption type of a given blob.
      */
-    enum EncryptionType {
+    public enum EncryptionType {
         USER_DEFINED,
         ANDROID_KEY_STORE,
         UNENCRYPTED
@@ -551,8 +551,9 @@ public class StorageHelper implements IStorageHelper {
 
     /**
      * If needed, get the key from inactive broker (if there is one).
+     * If it fails to get a new key. It will create a new one.
      *
-     * @return true if the migration happened and succeeded. false otherwise.
+     * @return true if key is migrated from another broker, or was newly created.
      */
     public boolean migrateEncryptionKeyIfNeeded(@NonNull final String activeBrokerPackageName) throws GeneralSecurityException, IOException {
         final String methodName = ":migrateEncryptionKeyIfNeeded";
@@ -576,8 +577,9 @@ public class StorageHelper implements IStorageHelper {
             return true;
         }
 
-        Logger.verbose(TAG + methodName, "Key migration failed.");
-        return false;
+        Logger.verbose(TAG + methodName, "Key migration failed. Create a new key.");
+        mEncryptionKey = createKey();
+        return true;
     }
 
     @Nullable
