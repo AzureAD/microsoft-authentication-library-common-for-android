@@ -354,6 +354,7 @@ public class StorageHelper implements IStorageHelper {
      **/
     private List<KeyType> initializeDecryptionKeyTypeList(@NonNull final String encryptedBlob,
                                                           @NonNull final String packageName) throws IOException {
+        final String methodName = "initializeDecryptionKeyTypeList";
         List<KeyType> keyTypeList = new ArrayList<>();
 
         EncryptionType encryptionType = getEncryptionType(encryptedBlob);
@@ -372,10 +373,12 @@ public class StorageHelper implements IStorageHelper {
             keyTypeList.add(KeyType.KEYSTORE_ENCRYPTED_KEY);
         }
 
+        Logger.verbose(TAG + methodName, "Decryption key list's size = " + keyTypeList.size());
         return keyTypeList;
     }
 
-    private String decryptWithSecretKey(final byte[] bytes,
+    @NonNull
+    private String decryptWithSecretKey(@NonNull final byte[] bytes,
                                         @NonNull final SecretKey secretKey)
             throws GeneralSecurityException, IOException {
         final String methodName = "decryptWithSecretKey";
@@ -472,6 +475,7 @@ public class StorageHelper implements IStorageHelper {
      * 1. Keystore-encrypted symmetric key.
      * 2. a newly-generated key.
      */
+    @NonNull
     private SecretKey loadSecretKeyForBrokerEncryption() throws IOException, GeneralSecurityException {
         setBlobVersion(VERSION_ANDROID_KEY_STORE);
         SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
@@ -489,6 +493,7 @@ public class StorageHelper implements IStorageHelper {
      * 1. User-defined key.
      * 2. Keystore-encrypted symmetric key.
      */
+    @NonNull
     private SecretKey loadSecretKeyForADALMSALEncryption() throws IOException, GeneralSecurityException {
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() != null) {
             setBlobVersion(VERSION_USER_DEFINED);
