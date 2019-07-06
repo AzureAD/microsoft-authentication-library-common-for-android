@@ -49,13 +49,18 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.DigestException;
 import java.security.GeneralSecurityException;
+import java.security.Key;
+import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.ArrayList;
@@ -485,7 +490,10 @@ public class StorageHelper implements IStorageHelper {
 
     /**
      * Given the key type, load a secret key.
+     *
+     * @return SecretKey. Null if there isn't any.
      */
+    @Nullable
     public SecretKey loadSecretKey(@NonNull final KeyType keyType) throws IOException, GeneralSecurityException {
         final String methodName = "loadSecretKey";
 
@@ -594,10 +602,11 @@ public class StorageHelper implements IStorageHelper {
     /**
      * Get the saved key. Will only do read operation.
      *
-     * @return SecretKey
+     * @return SecretKey. Null if there isn't any.
      * @throws GeneralSecurityException
      * @throws IOException
      */
+    @Nullable
     private synchronized SecretKey getKey()
             throws GeneralSecurityException, IOException {
 
@@ -609,6 +618,10 @@ public class StorageHelper implements IStorageHelper {
         // Asymmetric cryptography is used to protect the session key
         // used for Encryption and HMac
         mKeyPair = readKeyPair();
+        if (mKeyPair == null) {
+            return null;
+        }
+
         mSecretKeyFromAndroidKeyStore = getUnwrappedSecretKey();
         return mSecretKeyFromAndroidKeyStore;
     }
@@ -649,22 +662,28 @@ public class StorageHelper implements IStorageHelper {
 
     /**
      * Read KeyPair from AndroidKeyStore.
+     *
+     * @return KeyPair. Null if there isn't any.
      */
-    private synchronized KeyPair readKeyPair() throws GeneralSecurityException, IOException {
+    @Nullable
+    private synchronized KeyPair readKeyPair() throws KeyStoreException {
         final String methodName = ":readKeyPair";
-        if (!doesKeyPairExist()) {
-            throw new KeyStoreException("KeyPair entry does not exist.");
-        }
-
         Logger.verbose(TAG + methodName, "Reading Key entry");
-        final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
-        keyStore.load(null);
 
-        final KeyStore.PrivateKeyEntry entry;
         try {
-            entry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(
-                    KEY_STORE_CERT_ALIAS, null);
-        } catch (final RuntimeException e) {
+            final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
+            keyStore.load(null);
+
+            if (keyStore.containsAlias(KEY_STORE_CERT_ALIAS)) {
+                Logger.verbose(TAG + methodName, "Key entry doesn't exist.");
+                return null;
+            }
+
+            final PublicKey publicKey = keyStore.getCertificate(KEY_STORE_CERT_ALIAS).getPublicKey();
+            final PrivateKey privateKey = (PrivateKey)keyStore.getKey(KEY_STORE_CERT_ALIAS, null);
+            return new KeyPair(publicKey, privateKey);
+
+        } catch (final RuntimeException | NoSuchAlgorithmException | CertificateException | UnrecoverableEntryException | IOException e) {
             // There is an issue in android keystore that resets keystore
             // Issue 61989:  AndroidKeyStore deleted after changing screen lock type
             // https://code.google.com/p/android/issues/detail?id=61989
@@ -673,34 +692,6 @@ public class StorageHelper implements IStorageHelper {
             // handle it as regular KeyStoreException
             throw new KeyStoreException(e);
         }
-
-        return new KeyPair(entry.getCertificate().getPublicKey(), entry.getPrivateKey());
-    }
-
-    /**
-     * Check if KeyPair exists on AndroidKeyStore.
-     */
-    private synchronized boolean doesKeyPairExist() throws GeneralSecurityException, IOException {
-        final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
-        keyStore.load(null);
-
-        final boolean isKeyStoreCertAliasExisted;
-        try {
-            isKeyStoreCertAliasExisted = keyStore.containsAlias(KEY_STORE_CERT_ALIAS);
-        } catch (final NullPointerException exception) {
-            // There is an issue with Android Keystore when remote service attempts
-            // to access Keystore.
-            // Changeset found for google source to address the related issue with
-            // remote service accessing keystore :
-            // https://android.googlesource.com/platform/external/sepolicy/+/0e30164b17af20f680635c7c6c522e670ecc3df3
-            // The thrown exception in this case is:
-            // java.lang.NullPointerException: Attempt to invoke interface method
-            // 'int android.security.IKeystoreService.exist(java.lang.String, int)' on a null object reference
-            // To avoid app from crashing, re-throw as checked exception
-            throw new KeyStoreException(exception);
-        }
-
-        return isKeyStoreCertAliasExisted;
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -767,7 +758,7 @@ public class StorageHelper implements IStorageHelper {
     /**
      * generate secretKey to store after wrapping with KeyStore.
      *
-     * @return SecretKey
+     * @return SecretKey.
      * @throws NoSuchAlgorithmException
      */
     protected SecretKey generateSecretKey() throws NoSuchAlgorithmException {
@@ -776,6 +767,7 @@ public class StorageHelper implements IStorageHelper {
         return keygen.generateKey();
     }
 
+    @Nullable
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     private synchronized SecretKey getUnwrappedSecretKey()
             throws GeneralSecurityException, IOException {
@@ -785,6 +777,11 @@ public class StorageHelper implements IStorageHelper {
         final SecretKey unwrappedSecretKey;
         try {
             final byte[] wrappedSecretKey = readKeyData();
+            if (wrappedSecretKey == null){
+                Logger.verbose(TAG + methodName, "Key data is null");
+                return null;
+            }
+
             unwrappedSecretKey = unwrap(wrappedSecretKey);
             Logger.verbose(TAG + methodName, "Finished reading SecretKey");
         } catch (final GeneralSecurityException | IOException ex) {
@@ -868,13 +865,14 @@ public class StorageHelper implements IStorageHelper {
         }
     }
 
+    @Nullable
     private byte[] readKeyData() throws IOException {
         final String methodName = ":readKeyData";
 
         final File keyFile = new File(mContext.getDir(getPackageName(), Context.MODE_PRIVATE),
                 ADALKS);
         if (!keyFile.exists()) {
-            throw new IOException("Key file to read does not exist");
+            return null;
         }
 
         Logger.verbose(TAG + methodName, "Reading key data from a file");

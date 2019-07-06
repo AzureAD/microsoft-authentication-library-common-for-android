@@ -48,6 +48,15 @@ public class InactiveBrokerClient {
                 Logger.verbose(TAG + methodName, "resultBundle is null");
                 return null;
             }
+            else if (resultBundle.getString(AuthenticationConstants.OAuth2.ERROR) != null) {
+                // NOTE: BrokerAccountService's createErrorBundle is still using OAuth2.ERROR. so i'm keeping the pattern here.
+                Logger.error(
+                        TAG + methodName,
+                        "Receiving error result from inactive broker: "
+                                + resultBundle.getString(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION),
+                        null);
+                return null;
+            }
 
             return resultBundle.getString(AuthenticationConstants.Broker.BROKER_KEYSTORE_SYMMETRIC_KEY);
 
