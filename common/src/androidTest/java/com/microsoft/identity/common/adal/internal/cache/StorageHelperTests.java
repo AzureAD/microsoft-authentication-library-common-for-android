@@ -233,7 +233,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         }
         final Context context = getInstrumentation().getTargetContext();
         final StorageHelper storageHelper = new StorageHelper(context);
-        SecretKey kp = storageHelper.createKey();
+        SecretKey kp = storageHelper.loadOrCreateKey();
 
         assertNotNull("Keypair is not null", kp);
 
