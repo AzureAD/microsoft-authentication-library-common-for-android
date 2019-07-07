@@ -49,6 +49,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.DigestException;
 import java.security.GeneralSecurityException;
+import java.security.InvalidParameterException;
 import java.security.Key;
 import java.security.KeyException;
 import java.security.KeyPair;
@@ -313,7 +314,7 @@ public class StorageHelper implements IStorageHelper {
         final byte[] bytes;
         try {
             bytes = getByteArrayFromEncryptedBlob(data);
-        } catch (IllegalArgumentException e) {
+        } catch (RuntimeException e) {
             Logger.error(TAG + methodName, "This data is not an encrypted blob.", e);
             return EncryptionType.UNENCRYPTED;
         }
@@ -543,33 +544,36 @@ public class StorageHelper implements IStorageHelper {
      * If needed, get the key from inactive broker (if there is one).
      * If it fails to get a new key. It will create a new one.
      *
-     * @return true if key is migrated from another broker, or was newly created.
+     * This function can only be invoked by Broker apps.
      */
-    public boolean migrateEncryptionKeyIfNeeded(@NonNull final String activeBrokerPackageName) throws GeneralSecurityException, IOException {
+    public void migrateEncryptionKeyIfNeeded() throws GeneralSecurityException, IOException {
         final String methodName = ":migrateEncryptionKeyIfNeeded";
+
+        final String activeBrokerPackageName = getPackageName();
 
         if (!(COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(activeBrokerPackageName) ||
                 AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(activeBrokerPackageName))) {
-            Logger.verbose(TAG + methodName, "Caller is not a broker. Migration is not needed.");
-            return false;
+            final String errorMessage = "Caller is not a broker. Migration is not needed";
+            Logger.error(TAG + methodName, errorMessage, null);
+            throw new InvalidParameterException(errorMessage);
         }
 
         mEncryptionKey = getKey();
         if (mEncryptionKey != null){
-            Logger.verbose(TAG + methodName, "Key already exists. Migration is not needed.");
-            return false;
+            Logger.verbose(TAG + methodName, "Key already exists.");
+            return;
         }
 
         mEncryptionKey = getKeyFromInactiveBroker(activeBrokerPackageName);
         if (mEncryptionKey != null){
             Logger.verbose(TAG + methodName, "Key is successfully retrieved from inactive broker. Saving key...");
             saveSecretKey(mEncryptionKey);
-            return true;
+            return;
         }
 
         Logger.verbose(TAG + methodName, "Key migration failed. Create a new key.");
         mEncryptionKey = createKey();
-        return true;
+        return;
     }
 
     @Nullable
@@ -830,7 +834,7 @@ public class StorageHelper implements IStorageHelper {
         return unwrappedSecretKey;
     }
 
-    private void deleteKeyFile() {
+    protected void deleteKeyFile() {
         final String methodName = ":deleteKeyFile";
 
         final File keyFile = new File(mContext.getDir(getPackageName(),
