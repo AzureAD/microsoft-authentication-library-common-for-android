@@ -114,31 +114,28 @@ public class ExceptionAdapter {
      * @param tokenResult
      * @return ServiceException, UiRequiredException
      * */
-    public static ServiceException exceptionFromTokenResult(TokenResult tokenResult) {
+    public static ServiceException exceptionFromTokenResult(final TokenResult tokenResult) {
         final String methodName = ":exceptionFromTokenResult";
 
-        final TokenErrorResponse tokenErrorResponse;
-        ServiceException outErr = null;
+        ServiceException outErr;
 
-        if (tokenResult != null && !tokenResult.getSuccess()) {
-            tokenErrorResponse = tokenResult.getErrorResponse();
+        if (tokenResult != null &&
+                !tokenResult.getSuccess() &&
+                tokenResult.getErrorResponse() != null &&
+                !StringUtil.isEmpty(tokenResult.getErrorResponse().getError())) {
 
-            if (StringUtil.isEmpty(tokenErrorResponse.getError())) {
-                Logger.warn(
-                        TAG + methodName,
-                        "Received unknown error"
-                );
-                outErr = new ServiceException(
-                        ServiceException.UNKNOWN_ERROR,
-                        "Request failed, but no error returned back from service.",
-                        null
-                );
-            } else {
-                outErr = getExceptionFromTokenErrorResponse(tokenErrorResponse);
-
-            }
-
+            outErr = getExceptionFromTokenErrorResponse(tokenResult.getErrorResponse());
             applyCliTelemInfo(tokenResult.getCliTelemInfo(), outErr);
+        }else {
+            Logger.warn(
+                    TAG + methodName,
+                    "Unknown error, Token result is null [" + (tokenResult == null) + "]"
+            );
+            outErr = new ServiceException(
+                    ServiceException.UNKNOWN_ERROR,
+                    "Request failed, but no error returned back from service.",
+                    null
+            );
         }
 
         return outErr;
@@ -166,7 +163,7 @@ public class ExceptionAdapter {
      * @param errorResponse
      * @return ServiceException, UiRequiredException
      * */
-    public static ServiceException getExceptionFromTokenErrorResponse(final TokenErrorResponse errorResponse) {
+    public static ServiceException getExceptionFromTokenErrorResponse(@NonNull final TokenErrorResponse errorResponse) {
         final String methodName = ":getExceptionFromTokenErrorResponse";
 
         final ServiceException outErr;
