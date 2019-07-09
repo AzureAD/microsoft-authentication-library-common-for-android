@@ -26,7 +26,7 @@ public class InactiveBrokerClient {
     private static final String BROKER_ACCOUNT_SERVICE_CLASS_NAME = "com.microsoft.aad.adal.BrokerAccountService";
 
     private Context mContext;
-    private String mCallingPackageName;
+    private String mActiveBrokerPackageName;
     private BrokerAccountServiceConnection mBrokerAccountServiceConnection;
     private Intent mBrokerAccountServiceIntent;
     private Boolean mBound = false;
@@ -77,12 +77,12 @@ public class InactiveBrokerClient {
      * Constructor for the BrokerAccountServiceClient
      *
      * @param context
-     * @param callingPackageName name of the calling package.
+     * @param activeBrokerPackageName package name of the calling active broker.
      */
     private InactiveBrokerClient(@NonNull final Context context,
-                                 @NonNull final String callingPackageName) {
+                                 @NonNull final String activeBrokerPackageName) {
         mContext = context;
-        mCallingPackageName = callingPackageName;
+        mActiveBrokerPackageName = activeBrokerPackageName;
         mBrokerAccountServiceIntent = getIntentForBrokerAccountService(mContext);
     }
 
@@ -156,9 +156,9 @@ public class InactiveBrokerClient {
         final String methodName = ":getInactiveBrokerPackageName";
 
         final String inactiveBrokerPackageName;
-        if (AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(mCallingPackageName)) {
+        if (AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(mActiveBrokerPackageName)) {
             inactiveBrokerPackageName = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
-        } else if (AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(mCallingPackageName)) {
+        } else if (AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(mActiveBrokerPackageName)) {
             inactiveBrokerPackageName = AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
         } else {
             return null;

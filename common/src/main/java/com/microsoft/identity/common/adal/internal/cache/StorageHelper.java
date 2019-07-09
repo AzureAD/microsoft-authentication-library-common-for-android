@@ -556,7 +556,7 @@ public class StorageHelper implements IStorageHelper {
                 AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(activeBrokerPackageName))) {
             final String errorMessage = "Caller is not a broker. Migration is not needed";
             Logger.error(TAG + methodName, errorMessage, null);
-            throw new InvalidParameterException(errorMessage);
+            throw new IllegalStateException(errorMessage);
         }
 
         mEncryptionKey = getKey();
@@ -578,9 +578,9 @@ public class StorageHelper implements IStorageHelper {
     }
 
     @Nullable
-    protected SecretKey getKeyFromInactiveBroker(@NonNull final String callingPackageName) {
+    protected SecretKey getKeyFromInactiveBroker(@NonNull final String activeBrokerPackageName) {
         final String methodName = ":getKeyFromInactiveBroker";
-        final String serializedKey = InactiveBrokerClient.getSerializedSymmetricKeyFromInactiveBroker(mContext, callingPackageName);
+        final String serializedKey = InactiveBrokerClient.getSerializedSymmetricKeyFromInactiveBroker(mContext, activeBrokerPackageName);
 
         if (serializedKey == null || serializedKey.length() == 0) {
             Logger.verbose(TAG + methodName, "The returned bundle doesn't contain any key.");
