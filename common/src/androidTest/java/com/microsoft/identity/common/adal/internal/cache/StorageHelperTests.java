@@ -357,12 +357,21 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
     @Test
     @Suppress
     public void testGetKeyFromInactiveBroker() throws UnsupportedEncodingException {
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
+        class StorageHelperMock extends StorageHelper {
 
-        // Use AuthApp package name. so that it talks to testApp (Company portal debug package name).
-        final String packageName = AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
-        final SecretKey obtainedKey = storageHelper.getKeyFromInactiveBroker(packageName);
+            public StorageHelperMock(@NonNull Context context) throws UnsupportedEncodingException {
+                super(context);
+            }
+
+            @Override
+            protected String getPackageName(){
+                // Use AuthApp package name. so that it talks to testApp (Company portal debug package name).
+                return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+            }
+        }
+        final Context context = getInstrumentation().getTargetContext();
+        final StorageHelperMock storageHelper = new StorageHelperMock(context);
+        final SecretKey obtainedKey = storageHelper.getKeyFromInactiveBroker();
 
         //To test this, this has to be set on the Broker side.
         final SecretKey expectedKey = storageHelper.getSecretKey(Base64.decode("PLUG_KEY_HERE".getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT));

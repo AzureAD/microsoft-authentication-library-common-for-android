@@ -182,7 +182,7 @@ public class StorageHelper implements IStorageHelper {
     private String mBlobVersion;
     private SecretKey mEncryptionKey = null;
     private SecretKey mEncryptionHMACKey = null;
-    private SecretKey mSecretKeyFromAndroidKeyStore = null;
+    private SecretKey mCachedKeyStoreEncryptedKey = null;
 
     /**
      * Constructor for {@link StorageHelper}.
@@ -534,7 +534,7 @@ public class StorageHelper implements IStorageHelper {
                 return getSecretKey(AuthenticationSettings.INSTANCE.getSecretKeyData());
 
             case KEYSTORE_ENCRYPTED_KEY:
-                return getKey();
+                return loadKey();
         }
 
         Logger.verbose(TAG + methodName, "Unknown KeyType. This code should never be reached.");
@@ -550,22 +550,20 @@ public class StorageHelper implements IStorageHelper {
     public void migrateEncryptionKeyIfNeeded() throws GeneralSecurityException, IOException {
         final String methodName = ":migrateEncryptionKeyIfNeeded";
 
-        final String activeBrokerPackageName = getPackageName();
-
-        if (!(COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(activeBrokerPackageName) ||
-                AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(activeBrokerPackageName))) {
+        if (!(COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName()) ||
+                AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName()))) {
             final String errorMessage = "Caller is not a broker. Migration is not needed";
             Logger.error(TAG + methodName, errorMessage, null);
             throw new IllegalStateException(errorMessage);
         }
 
-        mEncryptionKey = getKey();
+        mEncryptionKey = loadKey();
         if (mEncryptionKey != null){
             Logger.verbose(TAG + methodName, "Key already exists.");
             return;
         }
 
-        mEncryptionKey = getKeyFromInactiveBroker(activeBrokerPackageName);
+        mEncryptionKey = getKeyFromInactiveBroker();
         if (mEncryptionKey != null){
             Logger.verbose(TAG + methodName, "Key is successfully retrieved from inactive broker. Saving key...");
             saveSecretKey(mEncryptionKey);
@@ -578,9 +576,9 @@ public class StorageHelper implements IStorageHelper {
     }
 
     @Nullable
-    protected SecretKey getKeyFromInactiveBroker(@NonNull final String activeBrokerPackageName) {
+    protected SecretKey getKeyFromInactiveBroker() {
         final String methodName = ":getKeyFromInactiveBroker";
-        final String serializedKey = InactiveBrokerClient.getSerializedSymmetricKeyFromInactiveBroker(mContext, activeBrokerPackageName);
+        final String serializedKey = InactiveBrokerClient.getSerializedSymmetricKeyFromInactiveBroker(mContext, getPackageName());
 
         if (serializedKey == null || serializedKey.length() == 0) {
             Logger.verbose(TAG + methodName, "The returned bundle doesn't contain any key.");
@@ -595,7 +593,10 @@ public class StorageHelper implements IStorageHelper {
 
         Logger.verbose(TAG + methodName, "Saving secret key to storage.");
 
-        mKeyPair = generateKeyPairFromAndroidKeyStore();
+        if (mKeyPair == null) {
+            mKeyPair = generateKeyPairFromAndroidKeyStore();
+        }
+
         final byte[] keyWrapped = wrap(key);
         writeKeyData(keyWrapped);
     }
@@ -613,41 +614,41 @@ public class StorageHelper implements IStorageHelper {
             throws GeneralSecurityException, IOException {
         final String methodName = ":loadOrCreateKey";
         try {
-            mSecretKeyFromAndroidKeyStore = getKey();
+            mCachedKeyStoreEncryptedKey = loadKey();
         } catch (final IOException | GeneralSecurityException exception) {
             Logger.verbose(TAG + methodName, "Key does not exist in AndroidKeyStore, try to generate new keys.");
         }
 
-        if (mSecretKeyFromAndroidKeyStore == null) {
+        if (mCachedKeyStoreEncryptedKey == null) {
             createKey();
         }
 
-        return mSecretKeyFromAndroidKeyStore;
+        return mCachedKeyStoreEncryptedKey;
     }
 
     /**
      * Generate a new key and save to storage.
      */
     private synchronized SecretKey createKey() throws GeneralSecurityException, IOException {
-        mSecretKeyFromAndroidKeyStore = generateSecretKey();
-        saveSecretKey(mSecretKeyFromAndroidKeyStore);
+        mCachedKeyStoreEncryptedKey = generateSecretKey();
+        saveSecretKey(mCachedKeyStoreEncryptedKey);
 
-        return mSecretKeyFromAndroidKeyStore;
+        return mCachedKeyStoreEncryptedKey;
     }
 
     /**
-     * Get the saved key. Will only do read operation.
+     * Load the saved key. Will only do read operation.
      *
      * @return SecretKey. Null if there isn't any.
      * @throws GeneralSecurityException
      * @throws IOException
      */
     @Nullable
-    private synchronized SecretKey getKey()
+    private synchronized SecretKey loadKey()
             throws GeneralSecurityException, IOException {
 
-        if (mSecretKeyFromAndroidKeyStore != null) {
-            return mSecretKeyFromAndroidKeyStore;
+        if (mCachedKeyStoreEncryptedKey != null) {
+            return mCachedKeyStoreEncryptedKey;
         }
 
         // androidKeyStore can store app specific self signed cert.
@@ -658,8 +659,8 @@ public class StorageHelper implements IStorageHelper {
             return null;
         }
 
-        mSecretKeyFromAndroidKeyStore = getUnwrappedSecretKey();
-        return mSecretKeyFromAndroidKeyStore;
+        mCachedKeyStoreEncryptedKey = getUnwrappedSecretKey();
+        return mCachedKeyStoreEncryptedKey;
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
