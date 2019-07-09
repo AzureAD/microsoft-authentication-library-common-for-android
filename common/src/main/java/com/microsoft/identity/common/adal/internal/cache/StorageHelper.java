@@ -253,7 +253,7 @@ public class StorageHelper implements IStorageHelper {
 
     @Override
     public String decrypt(final String encryptedBlob) throws GeneralSecurityException, IOException {
-        final String methodName = "decrypt";
+        final String methodName = ":decrypt";
         Logger.verbose(TAG + methodName, "Starting decryption");
 
         if (StringExtensions.isNullOrBlank(encryptedBlob)) {
@@ -266,10 +266,10 @@ public class StorageHelper implements IStorageHelper {
         }
 
         final String packageName = getPackageName();
-        final List<KeyType> potentialDecryptionKeyList = initializeDecryptionKeyTypeList(encryptedBlob, packageName);
+        final List<KeyType> potentialDecryptionKeyTypeList = initializeDecryptionKeyTypeList(encryptedBlob, packageName);
 
         final byte[] bytes = getByteArrayFromEncryptedBlob(encryptedBlob);
-        for (final KeyType keyType : potentialDecryptionKeyList) {
+        for (final KeyType keyType : potentialDecryptionKeyTypeList) {
             try {
                 final SecretKey secretKey = loadSecretKey(keyType);
                 if (secretKey == null) {
@@ -301,7 +301,7 @@ public class StorageHelper implements IStorageHelper {
      * NOTE :If it cannot verify the keyVersion, it will assume that this data is not encrypted.
      * */
     public EncryptionType getEncryptionType(@NonNull final String data) throws IOException {
-        final String methodName = "isEncryptedWithUserDefinedKey";
+        final String methodName = ":getEncryptionType";
 
         final byte[] bytes;
         try {
@@ -345,9 +345,10 @@ public class StorageHelper implements IStorageHelper {
     /**
      * Get all the key type that could be potential candidates for decryption.
      **/
+    @NonNull
     private List<KeyType> initializeDecryptionKeyTypeList(@NonNull final String encryptedBlob,
                                                           @NonNull final String packageName) throws IOException {
-        final String methodName = "initializeDecryptionKeyTypeList";
+        final String methodName = ":initializeDecryptionKeyTypeList";
         List<KeyType> keyTypeList = new ArrayList<>();
 
         EncryptionType encryptionType = getEncryptionType(encryptedBlob);
@@ -374,7 +375,7 @@ public class StorageHelper implements IStorageHelper {
     private String decryptWithSecretKey(@NonNull final byte[] bytes,
                                         @NonNull final SecretKey secretKey)
             throws GeneralSecurityException, IOException {
-        final String methodName = "decryptWithSecretKey";
+        final String methodName = ":decryptWithSecretKey";
 
         final SecretKey hmacKey = getHMacKey(secretKey);
 
@@ -507,7 +508,7 @@ public class StorageHelper implements IStorageHelper {
      */
     @Nullable
     protected SecretKey loadSecretKey(@NonNull final KeyType keyType) throws IOException, GeneralSecurityException {
-        final String methodName = "loadSecretKey";
+        final String methodName = ":loadSecretKey";
 
         switch (keyType) {
             case LEGACY_AUTHENTICATOR_APP_KEY:
