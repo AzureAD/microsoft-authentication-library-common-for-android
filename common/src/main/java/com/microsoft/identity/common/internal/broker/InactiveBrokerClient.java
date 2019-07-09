@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.microsoft.aad.adal.IBrokerAccountService;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -102,7 +103,7 @@ public class InactiveBrokerClient {
         mBrokerAccountServiceConnection = new BrokerAccountServiceConnection(future);
 
         mBound = mContext.bindService(mBrokerAccountServiceIntent, mBrokerAccountServiceConnection, Context.BIND_AUTO_CREATE);
-        Logger.verbose(TAG + "connect", "The status for MicrosoftAuthService bindService call is: " + Boolean.valueOf(mBound));
+        Logger.verbose(TAG + "connect", "The status for BrokerAccountService bindService call is: " + Boolean.valueOf(mBound));
 
         if (!mBound) {
             throw new ClientException("Service is unavailable or does not support binding. BrokerAccountService.");
@@ -132,7 +133,7 @@ public class InactiveBrokerClient {
     private Intent getIntentForBrokerAccountService(final Context context) {
         final String inactiveBrokerPackageName = getInactiveBrokerPackageName(context);
 
-        if (inactiveBrokerPackageName == null || inactiveBrokerPackageName.length() == 0) {
+        if (TextUtils.isEmpty(inactiveBrokerPackageName)) {
             return null;
         }
 
@@ -161,6 +162,7 @@ public class InactiveBrokerClient {
         } else if (AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(mActiveBrokerPackageName)) {
             inactiveBrokerPackageName = AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
         } else {
+            Logger.error(TAG + methodName, "Unknown active broker package name:" + mActiveBrokerPackageName, null);
             return null;
         }
 
