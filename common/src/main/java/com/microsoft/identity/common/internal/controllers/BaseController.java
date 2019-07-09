@@ -133,11 +133,7 @@ public abstract class BaseController {
                         .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
                         .setSlice(requestAuthority.mSlice);
             }
-
-            if(builder instanceof MicrosoftStsAuthorizationRequest.Builder){
-                ((MicrosoftStsAuthorizationRequest.Builder)builder).setTokenScope(TextUtils.join(" ", parameters.getScopes()));
-            }
-
+            
             if (acquireTokenOperationParameters.getExtraScopesToConsent() != null) {
                 parameters.getScopes().addAll(acquireTokenOperationParameters.getExtraScopesToConsent());
             }
