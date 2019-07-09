@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.cache;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -48,6 +49,19 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     private final String mSharedPreferencesFileName;
     private final SharedPreferences mSharedPreferences;
     private final IStorageHelper mStorageHelper;
+
+    /**
+     * Constructs an instance of SharedPreferencesFileManager with the default shared preference.
+     *
+     * @param context Interface to global information about an application environment.
+     */
+    public SharedPreferencesFileManager(
+            final Context context) {
+        Logger.verbose(TAG, "Init: " + TAG);
+        mSharedPreferencesFileName = "default";
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        mStorageHelper = null;
+    }
 
     /**
      * Constructs an instance of SharedPreferencesFileManager.
