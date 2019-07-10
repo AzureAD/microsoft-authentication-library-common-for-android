@@ -346,22 +346,22 @@ public class StorageHelper implements IStorageHelper {
      * Get all the key type that could be potential candidates for decryption.
      **/
     @NonNull
-    private List<KeyType> getKeysForDecryptionType(@NonNull final String encryptedBlob,
-                                                   @NonNull final String packageName) throws IOException {
+    public List<KeyType> getKeysForDecryptionType(@NonNull final String encryptedBlob,
+                                                  @NonNull final String packageName) throws IOException {
         final String methodName = ":initializeDecryptionKeyTypeList";
         List<KeyType> keyTypeList = new ArrayList<>();
 
         EncryptionType encryptionType = getEncryptionType(encryptedBlob);
 
         if (encryptionType == EncryptionType.USER_DEFINED) {
-            if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+            if (AuthenticationSettings.INSTANCE.getSecretKeyData() != null) {
+                keyTypeList.add(KeyType.ADAL_USER_DEFINED_KEY);
+            } else if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
                 keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
                 keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
             } else if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
                 keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
                 keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
-            } else {
-                keyTypeList.add(KeyType.ADAL_USER_DEFINED_KEY);
             }
         } else if (encryptionType == EncryptionType.ANDROID_KEY_STORE) {
             keyTypeList.add(KeyType.KEYSTORE_ENCRYPTED_KEY);
