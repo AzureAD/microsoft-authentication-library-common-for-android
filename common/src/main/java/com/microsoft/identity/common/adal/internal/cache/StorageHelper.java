@@ -274,14 +274,14 @@ public class StorageHelper implements IStorageHelper {
         }
 
         final String packageName = getPackageName();
-        final List<KeyType> keysForEncryptionType = getKeysForEncryptionType(encryptedBlob, packageName);
+        final List<KeyType> keysForDecryptionType = getKeysForDecryptionType(encryptedBlob, packageName);
 
         // At the point of writing, Telemetry isn't wired into common yet.
         // The best effort is to return a proper exception, and have its caller (Presumably in ad-accounts), emit an exception event).
         Exception lastKnownException = null;
 
         final byte[] bytes = getByteArrayFromEncryptedBlob(encryptedBlob);
-        for (final KeyType keyType : keysForEncryptionType) {
+        for (final KeyType keyType : keysForDecryptionType) {
             try {
                 final SecretKey secretKey = loadSecretKey(keyType);
                 if (secretKey == null) {
@@ -360,22 +360,22 @@ public class StorageHelper implements IStorageHelper {
      * Get all the key type that could be potential candidates for decryption.
      **/
     @NonNull
-    private List<KeyType> getKeysForEncryptionType(@NonNull final String encryptedBlob,
-                                                   @NonNull final String packageName) throws IOException {
+    public List<KeyType> getKeysForDecryptionType(@NonNull final String encryptedBlob,
+                                                  @NonNull final String packageName) throws IOException {
         final String methodName = ":initializeDecryptionKeyTypeList";
         List<KeyType> keyTypeList = new ArrayList<>();
 
         EncryptionType encryptionType = getEncryptionType(encryptedBlob);
 
         if (encryptionType == EncryptionType.USER_DEFINED) {
-            if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+            if (AuthenticationSettings.INSTANCE.getSecretKeyData() != null) {
+                keyTypeList.add(KeyType.ADAL_USER_DEFINED_KEY);
+            } else if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
                 keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
                 keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
             } else if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
                 keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
                 keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
-            } else {
-                keyTypeList.add(KeyType.ADAL_USER_DEFINED_KEY);
             }
         } else if (encryptionType == EncryptionType.ANDROID_KEY_STORE) {
             keyTypeList.add(KeyType.KEYSTORE_ENCRYPTED_KEY);
@@ -468,35 +468,6 @@ public class StorageHelper implements IStorageHelper {
             return mEncryptionKey;
         }
 
-        final String packageName = getPackageName();
-        if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) ||
-                AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
-            return loadSecretKeyForBrokerEncryption();
-        }
-
-        return loadSecretKeyForADALMSALEncryption();
-    }
-
-    /**
-     * Load SecretKey for Broker for encryption.
-     * This will try getting Keystore-encrypted symmetric key in the following order.
-     * 1. Keystore-encrypted symmetric key.
-     * 2. a newly-generated key.
-     */
-    @NonNull
-    private SecretKey loadSecretKeyForBrokerEncryption() throws IOException, GeneralSecurityException {
-        setBlobVersion(VERSION_ANDROID_KEY_STORE);
-        return loadOrCreateKey();
-    }
-
-    /**
-     * Load SecretKey for ADAL/MSAL for encryption.
-     * This will try getting key in the following order.
-     * 1. User-defined key.
-     * 2. Keystore-encrypted symmetric key.
-     */
-    @NonNull
-    private SecretKey loadSecretKeyForADALMSALEncryption() throws IOException, GeneralSecurityException {
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() != null) {
             setBlobVersion(VERSION_USER_DEFINED);
             return loadSecretKey(KeyType.ADAL_USER_DEFINED_KEY);
