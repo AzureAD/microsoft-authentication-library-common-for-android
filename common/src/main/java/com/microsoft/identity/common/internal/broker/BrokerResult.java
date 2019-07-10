@@ -58,6 +58,7 @@ public class BrokerResult implements Serializable {
         static final String CACHED_AT = "cached_at";
         static final String REFRESH_TOKEN_AGE = "refresh_token_age";
         static final String SUCCESS = "success";
+        static final String NEGOTIATED_BROKER_PROTOCOL_VERSION = "negotiated.broker.protocol.version.name";
 
         // Error constants
         /**
@@ -222,6 +223,13 @@ public class BrokerResult implements Serializable {
     private String mRefreshTokenAge;
 
     /**
+     * Negotiated broker protocol version between broker client and broker service.
+     */
+    @Nullable
+    @SerializedName(SerializedNames.NEGOTIATED_BROKER_PROTOCOL_VERSION)
+    private String mNegotiatedBrokerProtocolVersion;
+
+    /**
      * Boolean to indicate if the request succeeded without exceptions.
      */
     @NonNull
@@ -321,6 +329,7 @@ public class BrokerResult implements Serializable {
         mRefreshTokenAge = builder.mRefreshTokenAge;
         mSuccess = builder.mSuccess;
         mTenantProfileData = builder.mTenantProfileData;
+        mNegotiatedBrokerProtocolVersion = builder.mNegotiatedBrokerProtocolVersion;
 
         mErrorCode = builder.mErrorCode;
         mErrorMessage = builder.mErrorMessage;
@@ -495,6 +504,8 @@ public class BrokerResult implements Serializable {
 
         private boolean mSuccess;
 
+        private String mNegotiatedBrokerProtocolVersion;
+
         // Exception parameters
 
         private String mErrorCode;
@@ -614,6 +625,11 @@ public class BrokerResult implements Serializable {
 
         public Builder success(boolean success) {
             this.mSuccess = success;
+            return this;
+        }
+
+        public Builder negotiatedBrokerProtocolVersion(String negotiatedBrokerProtocolVersion) {
+            this.mNegotiatedBrokerProtocolVersion = negotiatedBrokerProtocolVersion;
             return this;
         }
 
