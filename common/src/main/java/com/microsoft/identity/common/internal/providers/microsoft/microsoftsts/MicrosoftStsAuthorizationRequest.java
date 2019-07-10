@@ -59,7 +59,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     //@SerializedName("login_hint")
     private transient String mDisplayableId;
 
-    private String mTokenScope;
+    private transient String mTokenScope;
 
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
