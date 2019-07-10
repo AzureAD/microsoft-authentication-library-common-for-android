@@ -261,15 +261,15 @@ public class StorageHelper implements IStorageHelper {
         }
 
         if (getEncryptionType(encryptedBlob) == EncryptionType.UNENCRYPTED) {
-            Logger.verbose(TAG + methodName, "This string is not encrypted. Finished decryption.");
+            Logger.warn(TAG + methodName, "This string is not encrypted. Finished decryption.");
             return encryptedBlob;
         }
 
         final String packageName = getPackageName();
-        final List<KeyType> potentialDecryptionKeyTypeList = initializeDecryptionKeyTypeList(encryptedBlob, packageName);
+        final List<KeyType> keysForEncryptionType = getKeysForEncryptionType(encryptedBlob, packageName);
 
         final byte[] bytes = getByteArrayFromEncryptedBlob(encryptedBlob);
-        for (final KeyType keyType : potentialDecryptionKeyTypeList) {
+        for (final KeyType keyType : keysForEncryptionType) {
             try {
                 final SecretKey secretKey = loadSecretKey(keyType);
                 if (secretKey == null) {
@@ -346,8 +346,8 @@ public class StorageHelper implements IStorageHelper {
      * Get all the key type that could be potential candidates for decryption.
      **/
     @NonNull
-    private List<KeyType> initializeDecryptionKeyTypeList(@NonNull final String encryptedBlob,
-                                                          @NonNull final String packageName) throws IOException {
+    private List<KeyType> getKeysForEncryptionType(@NonNull final String encryptedBlob,
+                                                   @NonNull final String packageName) throws IOException {
         final String methodName = ":initializeDecryptionKeyTypeList";
         List<KeyType> keyTypeList = new ArrayList<>();
 
