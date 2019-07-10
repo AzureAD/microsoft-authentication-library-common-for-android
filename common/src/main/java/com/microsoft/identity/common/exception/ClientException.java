@@ -34,6 +34,8 @@ public class ClientException extends BaseException {
      */
     public static final String TOKEN_SHARING_DESERIALIZATION_ERROR = "token_sharing_deserialization_error";
 
+    public static final String TOKEN_SHARING_MSA_PERSISTENCE_ERROR = "failed_to_persist_msa_credential";
+
     /**
      * There are multiple cache entries found, the sdk cannot pick the correct access token
      * or refresh token from the cache. Likely it's a bug in the sdk when caching tokens or authority

@@ -33,11 +33,32 @@ public interface ITokenShareInternal {
      * @param identifier The identifier of the sought user's FRT.
      * @return The {@link com.microsoft.identity.common.internal.cache.ADALTokenCacheItem}
      * serialized to JSON.
+     * @throws Exception If the requested token cannot be found.
      */
-    String getWrappedFamilyRefreshToken(String identifier) throws Exception;
+    String getOrgIdFamilyRefreshToken(String identifier) throws Exception;
 
     /**
-     * @param tokenCacheItemJson
+     * Saves the supplied SsoStateSerializer blob into the cache.
+     *
+     * @param ssoStateSerializerBlob The blob to save.
+     * @throws Exception If an error is encountered while saving the supplied blob.
      */
-    void saveFamilyRefreshToken(String tokenCacheItemJson) throws Exception;
+    void saveOrgIdFamilyRefreshToken(String ssoStateSerializerBlob) throws Exception;
+
+    /**
+     * For the provided MSA user id, retrieve the FRT belonging to this user (if exists).
+     *
+     * @param identifier The identifier of the sought user's FRT.
+     * @return The raw FRT for the provided identifier.
+     * @throws Exception If the requested token cannot be found.
+     */
+    String getMsaFamilyRefreshToken(String identifier) throws Exception;
+
+    /**
+     * Saves the supplied FRT to the cache.
+     *
+     * @param refreshToken The FRT to save.
+     * @throws Exception If an Exception is encountered while saving the FRT.
+     */
+    void saveMsaFamilyRefreshToken(String refreshToken) throws Exception;
 }

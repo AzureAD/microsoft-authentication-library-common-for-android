@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Pair;
 
 import com.microsoft.identity.common.exception.BaseException;
@@ -53,6 +54,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import static com.microsoft.identity.common.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
+import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.renewToken;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.sBackgroundExecutor;
 
@@ -74,22 +76,66 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     private final String mClientId;
     private final String mRedirectUri;
+    private final String mDefaultAuthority;
     private final MsalOAuth2TokenCache mTokenCache;
 
     public TokenShareUtility(@NonNull final String clientId,
                              @NonNull final String redirectUri,
+                             @NonNull final String defaultAuthority,
                              @NonNull final MsalOAuth2TokenCache cache) {
         mClientId = clientId;
         mRedirectUri = redirectUri;
+        mDefaultAuthority = defaultAuthority;
         mTokenCache = cache;
     }
 
     @Override
     @NonNull
     @SuppressWarnings("unchecked")
-    public String getWrappedFamilyRefreshToken(@NonNull final String identifier) throws BaseException {
-        final String methodName = ":getWrappedFamilyRefreshToken";
+    public String getOrgIdFamilyRefreshToken(@NonNull final String identifier) throws BaseException {
+        final ICacheRecord cacheRecord = getCacheRecordForIdentifier(identifier);
 
+        throwIfCacheRecordIncomplete(identifier, cacheRecord);
+
+        final ADALTokenCacheItem cacheItemToExport = adapt(
+                cacheRecord.getIdToken(),
+                cacheRecord.getRefreshToken()
+        );
+
+        // Ship it
+        return SSOStateSerializer.serialize(cacheItemToExport);
+    }
+
+    private void throwIfCacheRecordIncomplete(@NonNull final String identifier,
+                                              @NonNull final ICacheRecord cacheRecord) throws ClientException {
+        // Inspect the result for completeness...
+        if (null == cacheRecord.getRefreshToken() || null == cacheRecord.getIdToken()) {
+            final String methodName = ":throwIfCacheRecordIncomplete";
+
+            Logger.warn(
+                    TAG + methodName,
+                    "That's strange, we had an AccountRecord for identifier: "
+                            + identifier
+                            + " but couldn't find tokens for them."
+            );
+
+            throw new ClientException(TOKEN_CACHE_ITEM_NOT_FOUND);
+        }
+    }
+
+    private ICacheRecord getCacheRecordForIdentifier(@NonNull final String identifier) throws ClientException {
+        final AccountRecord localAccountRecord = getAccountRecordForIdentifier(identifier);
+
+        // Query the cache for the IdTokenRecord, RefreshTokenRecord, etc.
+        return mTokenCache.load(
+                mClientId,
+                null, // wildcard (*)
+                localAccountRecord
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    private AccountRecord getAccountRecordForIdentifier(@NonNull final String identifier) throws ClientException {
         // First hit the cache to get the sought AccountRecord...
         AccountRecord localAccountRecord = mTokenCache.getAccountByLocalAccountId(
                 null,
@@ -117,41 +163,16 @@ public class TokenShareUtility implements ITokenShareInternal {
             throw new ClientException(TOKEN_CACHE_ITEM_NOT_FOUND);
         }
 
-        // Query the cache for the IdTokenRecord, RefreshTokenRecord, etc.
-        final ICacheRecord cacheRecord = mTokenCache.load(
-                mClientId,
-                null, // wildcard (*)
-                localAccountRecord
-        );
-
-        // Inspect the result for completeness...
-        if (null == cacheRecord.getRefreshToken() || null == cacheRecord.getIdToken()) {
-            Logger.warn(
-                    TAG + methodName,
-                    "That's strange, we had an AccountRecord for identifier: "
-                            + identifier
-                            + " but couldn't find tokens for them."
-            );
-
-            throw new ClientException(TOKEN_CACHE_ITEM_NOT_FOUND);
-        }
-
-        final ADALTokenCacheItem cacheItemToExport = adapt(
-                cacheRecord.getIdToken(),
-                cacheRecord.getRefreshToken()
-        );
-
-        // Ship it
-        return SSOStateSerializer.serialize(cacheItemToExport);
+        return localAccountRecord;
     }
 
     @Override
-    public void saveFamilyRefreshToken(@NonNull final String tokenCacheItemJson) throws Exception {
+    public void saveOrgIdFamilyRefreshToken(@NonNull final String ssoStateSerializerBlob) throws Exception {
         final Future<Pair<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
                 sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
                     public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
-                        final ADALTokenCacheItem cacheItemToRenew = SSOStateSerializer.deserialize(tokenCacheItemJson);
+                        final ADALTokenCacheItem cacheItemToRenew = SSOStateSerializer.deserialize(ssoStateSerializerBlob);
 
                         // We're going to 'hijack' this token and set our own clientId for renewal
                         // since these are FRTs, this is OK to do.
@@ -170,6 +191,12 @@ public class TokenShareUtility implements ITokenShareInternal {
 
         final Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair = resultFuture.get();
 
+        saveResult(resultPair);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void saveResult(@Nullable final Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair)
+            throws ClientException {
         // If an error is encountered while requesting new tokens, null is returned
         // Check the result, before proceeding to save into the cache...
         if (null != resultPair) {
@@ -178,6 +205,57 @@ public class TokenShareUtility implements ITokenShareInternal {
                     resultPair.second // The refresh token
             );
         }
+    }
+
+    @Override
+    public String getMsaFamilyRefreshToken(@NonNull final String identifier) throws Exception {
+        final ICacheRecord cacheRecord = getCacheRecordForIdentifier(identifier);
+
+        throwIfCacheRecordIncomplete(identifier, cacheRecord);
+
+        return cacheRecord.getRefreshToken().getSecret();
+    }
+
+    @Override
+    public void saveMsaFamilyRefreshToken(@NonNull final String refreshToken) throws Exception {
+        final String methodName = "saveMsaFamilyRefreshToken";
+
+        final Future<Pair<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
+                sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
+                    @Override
+                    public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
+                        final ADALTokenCacheItem cacheItemToRenew = createTokenCacheItem(refreshToken);
+
+                        // Check that instance discovery metadata is loaded before making the request...
+                        final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata();
+
+                        if (!cloudMetadataLoaded) {
+                            Logger.warn(
+                                    TAG + methodName,
+                                    "Failed to load cloud metadata, aborting."
+                            );
+
+                            return null;
+                        }
+
+                        return renewToken(mRedirectUri, cacheItemToRenew);
+                    }
+                });
+
+        final Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair = resultFuture.get();
+
+        saveResult(resultPair);
+    }
+
+    private ADALTokenCacheItem createTokenCacheItem(@NonNull final String refreshToken) {
+        final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem();
+
+        // Set only the minimally required properties...
+        cacheItem.setAuthority(mDefaultAuthority);
+        cacheItem.setClientId(mClientId);
+        cacheItem.setRefreshToken(refreshToken);
+
+        return cacheItem;
     }
 
     @SuppressWarnings("PMD.UnusedPrivateMethod")
