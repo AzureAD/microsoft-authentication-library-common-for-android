@@ -271,6 +271,11 @@ public final class ErrorStrings {
     public static final String BROKER_BIND_SERVICE_FAILED = "Failed to bind the service in broker app";
 
     /**
+     * Unable to call the broker because the protocol version does not compatible.
+     */
+    public static final String BROKER_PROTOCOL_VERSION_INCOMPATIBLE = "Unable to call the broker because the protocol version does not compatible";
+
+    /**
      * Could not retrieve capabilities from broker apps.
      */
     public static final String FAILED_TO_GET_CAPABILITIES = "Could not get the capabilities";
