@@ -276,6 +276,10 @@ public class StorageHelper implements IStorageHelper {
         final String packageName = getPackageName();
         final List<KeyType> keysForEncryptionType = getKeysForEncryptionType(encryptedBlob, packageName);
 
+        // At the point of writing, Telemetry isn't wired into common yet.
+        // The best effort is to return a proper exception, and have its caller (Presumably in ad-accounts), emit an exception event).
+        Exception lastKnownException = null;
+
         final byte[] bytes = getByteArrayFromEncryptedBlob(encryptedBlob);
         for (final KeyType keyType : keysForEncryptionType) {
             try {
@@ -294,6 +298,8 @@ public class StorageHelper implements IStorageHelper {
                                 + keyType.toString(),
                         e
                 );
+
+                lastKnownException = e;
             }
         }
 
@@ -301,7 +307,7 @@ public class StorageHelper implements IStorageHelper {
                 TAG + methodName,
                 "Tried all decryption keys and decryption still fails. Throw an exception.");
 
-        throw new GeneralSecurityException(ErrorStrings.DECRYPTION_FAILED);
+        throw new GeneralSecurityException(ErrorStrings.DECRYPTION_FAILED, lastKnownException);
     }
 
     /**
