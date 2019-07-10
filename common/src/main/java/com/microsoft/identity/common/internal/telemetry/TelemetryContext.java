@@ -81,6 +81,9 @@ public class TelemetryContext extends Properties {
     void addOsInfo() {
         put(Os.NAME, Os.OS_NAME);
         put(Os.VERSION, Build.VERSION.RELEASE);
-        put(Os.SECURITY_PATCH, Build.VERSION.SECURITY_PATCH);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            put(Os.SECURITY_PATCH, Build.VERSION.SECURITY_PATCH);
+        }
     }
 }
