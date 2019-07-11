@@ -289,7 +289,7 @@ public class StorageHelper implements IStorageHelper {
             }
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Tried all decryption keys and decryption still fails. Throw an exception.");
 
@@ -307,7 +307,7 @@ public class StorageHelper implements IStorageHelper {
         try {
             bytes = getByteArrayFromEncryptedBlob(data);
         } catch (IllegalArgumentException e) {
-            Logger.error(TAG + methodName, "This data is not an encrypted blob.", e);
+            Logger.verbose(TAG + methodName, "This data is not an encrypted blob.");
             return EncryptionType.UNENCRYPTED;
         }
 
@@ -348,7 +348,7 @@ public class StorageHelper implements IStorageHelper {
     @NonNull
     public List<KeyType> getKeysForDecryptionType(@NonNull final String encryptedBlob,
                                                   @NonNull final String packageName) throws IOException {
-        final String methodName = ":initializeDecryptionKeyTypeList";
+        final String methodName = ":getKeysForDecryptionType";
         List<KeyType> keyTypeList = new ArrayList<>();
 
         EncryptionType encryptionType = getEncryptionType(encryptedBlob);
@@ -495,6 +495,7 @@ public class StorageHelper implements IStorageHelper {
                 return getSecretKey(AuthenticationSettings.INSTANCE.getSecretKeyData());
 
             case KEYSTORE_ENCRYPTED_KEY:
+                Logger.verbose(TAG + methodName, "Loading KeyStore encrypted key.");
                 return getKey();
         }
 
