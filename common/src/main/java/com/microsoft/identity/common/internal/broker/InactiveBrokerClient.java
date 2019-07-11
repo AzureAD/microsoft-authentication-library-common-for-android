@@ -33,6 +33,7 @@ public class InactiveBrokerClient {
     private Boolean mBound = false;
 
     // Must be called from BG thread.
+    // activeBrokerPackageName is the calling broker. We're exposing this instead of pulling from context object for test cases.
     public static String getSerializedSymmetricKeyFromInactiveBroker(@NonNull Context context,
                                                                      @NonNull final String activeBrokerPackageName) {
         final String methodName = ":getSerializedSymmetricKeyFromInactiveBroker";

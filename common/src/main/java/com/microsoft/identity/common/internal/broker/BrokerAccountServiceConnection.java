@@ -46,22 +46,6 @@ public class BrokerAccountServiceConnection implements android.content.ServiceCo
         mBrokerAccountServiceFuture.setBrokerAccountService(mBrokerAccountService);
     }
 
-    /*
-
-    //Needed for API level 26 and above
-    @Override
-    public void onBindingDied(ComponentName name){
-
-    }
-
-
-    //Needed for API level 28 and above
-    @Override
-    public void onNullBinding(ComponentName name){
-
-    }
-    */
-
     @Override
     public void onServiceDisconnected(ComponentName name) {
         Logger.verbose(TAG, "BrokerAccountService is disconnected.");
