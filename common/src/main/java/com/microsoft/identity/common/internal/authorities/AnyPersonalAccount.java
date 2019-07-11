@@ -29,4 +29,9 @@ public class AnyPersonalAccount extends AzureActiveDirectoryAudience {
     public AnyPersonalAccount() {
         this.setTenantId(ANY_PERSONAL_ACCOUNT_TENANT_ID);
     }
+
+    public AnyPersonalAccount(final String cloudUrl) {
+        this.setTenantId(ANY_PERSONAL_ACCOUNT_TENANT_ID);
+        this.setCloudUrl(cloudUrl);
+    }
 }

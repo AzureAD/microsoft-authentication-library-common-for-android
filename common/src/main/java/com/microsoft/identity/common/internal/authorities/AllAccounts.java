@@ -22,11 +22,18 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
+import android.support.annotation.NonNull;
+
 public class AllAccounts extends AzureActiveDirectoryAudience {
 
     public static final String ALL_ACCOUNTS_TENANT_ID = "common";
 
     public AllAccounts() {
+        this.setTenantId(ALL_ACCOUNTS_TENANT_ID);
+    }
+
+    public AllAccounts(@NonNull final String cloudUrl) {
+        this.setCloudUrl(cloudUrl);
         this.setTenantId(ALL_ACCOUNTS_TENANT_ID);
     }
 }
