@@ -338,7 +338,6 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
     }
 
     // Encrypt with legacy key, then try decrypting. The decryption code should be smart enough to figure that out.
-    // This is a manual test, as the actual legacy key needs to be plugged into PLUG_LEGACY_KEY_HERE.
     @Test
     public void testDecryptingLegacyBrokerKey() throws GeneralSecurityException, IOException {
         class LegacyStorageHelperMock extends StorageHelper {
