@@ -320,8 +320,8 @@ public class StorageHelper implements IStorageHelper {
         final byte[] bytes;
         try {
             bytes = getByteArrayFromEncryptedBlob(data);
-        } catch (IllegalArgumentException e) {
-            Logger.verbose(TAG + methodName, "This data is not an encrypted blob.");
+        } catch (Exception e) {
+            Logger.error(TAG + methodName, "This data is not an encrypted blob. Treat as unencrypted data.", e);
             return EncryptionType.UNENCRYPTED;
         }
 
@@ -828,7 +828,7 @@ public class StorageHelper implements IStorageHelper {
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private synchronized void resetKeyPairFromAndroidKeyStore() throws KeyStoreException,
+    protected synchronized void resetKeyPairFromAndroidKeyStore() throws KeyStoreException,
             NoSuchAlgorithmException, CertificateException, IOException {
         final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
         keyStore.load(null);

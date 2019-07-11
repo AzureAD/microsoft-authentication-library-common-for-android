@@ -441,7 +441,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
     public void testGetKeyFromInactiveBroker() throws UnsupportedEncodingException {
         class StorageHelperMock extends StorageHelper {
 
-            public StorageHelperMock(@NonNull Context context) throws UnsupportedEncodingException {
+            public StorageHelperMock(@NonNull Context context) {
                 super(context);
             }
 
@@ -459,5 +459,33 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         final SecretKey expectedKey = storageHelper.getSecretKey(Base64.decode("PLUG_KEY_HERE".getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT));
 
         assertTrue("keys are matching.", expectedKey.equals(obtainedKey));
+    }
+
+    @Test
+    public void testMigrateWithNoInactiveBroker() throws GeneralSecurityException, IOException {
+
+        class StorageHelperMock extends StorageHelper {
+
+            public StorageHelperMock(@NonNull Context context) throws UnsupportedEncodingException {
+                super(context);
+            }
+
+            @Override
+            protected String getPackageName() {
+                // Use AuthApp package name.
+                return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+            }
+        }
+
+        final Context context = getInstrumentation().getTargetContext();
+        final StorageHelperMock storageHelper = new StorageHelperMock(context);
+
+        // Everything is on clean slate.
+        storageHelper.deleteKeyFile();
+        storageHelper.resetKeyPairFromAndroidKeyStore();
+
+        storageHelper.migrateEncryptionKeyIfNeeded();
+
+        assertTrue("Key is created", storageHelper.loadSecretKey(StorageHelper.KeyType.KEYSTORE_ENCRYPTED_KEY) != null);
     }
 }
