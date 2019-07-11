@@ -26,6 +26,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.test.filters.Suppress;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Base64;
 import android.util.Log;
@@ -35,6 +36,7 @@ import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -68,12 +70,18 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
     private static final int MIN_SDK_VERSION = 18;
 
     @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-        AuthenticationSettings.INSTANCE.setBrokerSecretKeys(null);
-        AuthenticationSettings.INSTANCE.setSecretKey(null);
-    }
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
 
+        // Everything is on clean slate.
+        final Context context = getInstrumentation().getTargetContext();
+        final StorageHelper storageHelper = new StorageHelper(context);
+        storageHelper.deleteKeyFile();
+        storageHelper.resetKeyPairFromAndroidKeyStore();
+
+        AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
+    }
     @Test
     public void testEncryptDecrypt() throws GeneralSecurityException, IOException {
         String clearText = "SomeValue1234";
@@ -316,7 +324,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
             }
 
             @Override
-            protected String getPackageName(){
+            protected String getPackageName() {
                 return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
             }
         }
@@ -346,7 +354,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
             }
 
             @Override
-            protected String getPackageName(){
+            protected String getPackageName() {
                 return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
             }
 
@@ -382,12 +390,12 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         AuthenticationSettings.INSTANCE.setSecretKey(secretKey.getEncoded());
 
         class StorageHelperMock extends StorageHelper {
-            public StorageHelperMock(@NonNull Context context) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeySpecException {
+            public StorageHelperMock(@NonNull Context context) {
                 super(context);
             }
 
             @Override
-            protected String getPackageName(){
+            protected String getPackageName() {
                 // Simulate the case where CP is doing Local ADAL auth.
                 return AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
             }
@@ -416,5 +424,72 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         String decryptedValue = storageHelperMock.decrypt(encryptedValue);
 
         assertTrue("Decrypted data is same", decryptedValue.equals(unencryptedValue));
+    }
+
+    @Test
+    public void testSecretKeySerialization() throws UnsupportedEncodingException {
+        final Context context = getInstrumentation().getTargetContext();
+        final StorageHelper storageHelper = new StorageHelper(context);
+
+        final String keyString = "ABCDEFGH";
+        final SecretKey key = storageHelper.getSecretKey(Base64.decode(keyString.getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT));
+        final SecretKey anotherKey = storageHelper.getSecretKey(Base64.decode("RANDOM".getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT));
+
+        final String serializedKey = storageHelper.serializeSecretKey(key);
+        final SecretKey deserializedKey = storageHelper.deserializeSecretKey(serializedKey);
+
+        assertTrue("keys are matching.", deserializedKey.equals(key));
+        assertFalse("keys should not be matching.", deserializedKey.equals(anotherKey));
+    }
+
+    // This is a manual test. Debug broker app is required to be installed on the test device.
+    @Test
+    @Suppress
+    public void testGetKeyFromInactiveBroker() throws UnsupportedEncodingException {
+        class StorageHelperMock extends StorageHelper {
+
+            public StorageHelperMock(@NonNull Context context) {
+                super(context);
+            }
+
+            @Override
+            protected String getPackageName() {
+                // Use AuthApp package name. so that it talks to testApp (Company portal debug package name).
+                return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+            }
+        }
+        final Context context = getInstrumentation().getTargetContext();
+        final StorageHelperMock storageHelper = new StorageHelperMock(context);
+        final SecretKey obtainedKey = storageHelper.getKeyFromInactiveBroker();
+
+        //To test this, this has to be set on the Broker side.
+        final SecretKey expectedKey = storageHelper.getSecretKey(Base64.decode("PLUG_KEY_HERE".getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT));
+
+        assertTrue("keys are matching.", expectedKey.equals(obtainedKey));
+    }
+
+    // If we invoke migrateEncryptionKeyIfNeeded() when the active broker doesn't exist, it should create a new key gracefully.
+    @Test
+    public void testMigrateWithNoInactiveBroker() throws GeneralSecurityException, IOException {
+
+        class StorageHelperMock extends StorageHelper {
+
+            public StorageHelperMock(@NonNull Context context) {
+                super(context);
+            }
+
+            @Override
+            protected String getPackageName() {
+                // Use AuthApp package name.
+                return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+            }
+        }
+
+        final Context context = getInstrumentation().getTargetContext();
+        final StorageHelperMock storageHelper = new StorageHelperMock(context);
+
+        storageHelper.migrateEncryptionKeyIfNeeded();
+
+        assertTrue("Key is created", storageHelper.loadSecretKey(StorageHelper.KeyType.KEYSTORE_ENCRYPTED_KEY) != null);
     }
 }

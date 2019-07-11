@@ -36,4 +36,6 @@ interface IBrokerAccountService {
     Intent getIntentForInteractiveRequest();
 
     void removeAccounts();
+
+    Bundle getInactiveBrokerKey();
 }
