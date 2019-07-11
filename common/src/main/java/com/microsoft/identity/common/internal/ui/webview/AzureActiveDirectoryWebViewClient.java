@@ -213,8 +213,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodName = "#processWebsiteRequest";
         final PackageHelper packageHelper = new PackageHelper(getActivity().getApplicationContext());
         if (url.startsWith(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL)
-                && packageHelper.isPackageInstalledAndEnabled(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)) {
-            Logger.verbose(TAG + methodName, "It is a device CA request. Company Portal is installed.");
+                && packageHelper.isPackageInstalledAndEnabled(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)
+                && packageHelper.isPackageInstalledAndEnabled(AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME)
+                && AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE.equals(
+                packageHelper.getCurrentSignatureForPackage(AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME))) {
+            // TODO: This flow should really check if the Microsoft Intune or the Company Portal apps are installed,
+            // which is the correct client app to launch depending on the enrollment, and launch that app, to permanently skip the browser.
+            // Also it must handle 3rd party MDMs as appropriate, which will depend on the browser flow determining the authority.
+            Logger.verbose(TAG + methodName, "It is a device CA request on IPPhone. Company Portal is installed.");
             try {
                 Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
                 final Intent intent = new Intent();
@@ -255,7 +261,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final HashMap<String, String> parameters = StringExtensions.getUrlParameters(url);
         final String installLink = parameters.get(AuthenticationConstants.Broker.INSTALL_URL_KEY);
         final String userName = parameters.get(AuthenticationConstants.Broker.INSTALL_UPN_KEY);
-        if(TextUtils.isEmpty(installLink)){
+        if (TextUtils.isEmpty(installLink)) {
             Logger.verbose(TAG, "Install link is null or empty, Return to caller with BROWSER_CODE_DEVICE_REGISTER");
             resultIntent.putExtra(AuthenticationConstants.Broker.INSTALL_UPN_KEY, userName);
             getCompletionCallback().onChallengeResponseReceived(

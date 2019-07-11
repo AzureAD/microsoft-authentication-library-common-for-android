@@ -24,14 +24,12 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 
 import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.DeviceRegistrationRequiredException;
-import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
@@ -116,31 +114,28 @@ public class ExceptionAdapter {
      * @param tokenResult
      * @return ServiceException, UiRequiredException
      * */
-    public static ServiceException exceptionFromTokenResult(TokenResult tokenResult) {
+    public static ServiceException exceptionFromTokenResult(final TokenResult tokenResult) {
         final String methodName = ":exceptionFromTokenResult";
 
-        final TokenErrorResponse tokenErrorResponse;
-        ServiceException outErr = null;
+        ServiceException outErr;
 
-        if (tokenResult != null && !tokenResult.getSuccess()) {
-            tokenErrorResponse = tokenResult.getErrorResponse();
+        if (tokenResult != null &&
+                !tokenResult.getSuccess() &&
+                tokenResult.getErrorResponse() != null &&
+                !StringUtil.isEmpty(tokenResult.getErrorResponse().getError())) {
 
-            if (StringUtil.isEmpty(tokenErrorResponse.getError())) {
-                Logger.warn(
-                        TAG + methodName,
-                        "Received unknown error"
-                );
-                outErr = new ServiceException(
-                        ServiceException.UNKNOWN_ERROR,
-                        "Request failed, but no error returned back from service.",
-                        null
-                );
-            } else {
-                outErr = getExceptionFromTokenErrorResponse(tokenErrorResponse);
-
-            }
-
+            outErr = getExceptionFromTokenErrorResponse(tokenResult.getErrorResponse());
             applyCliTelemInfo(tokenResult.getCliTelemInfo(), outErr);
+        }else {
+            Logger.warn(
+                    TAG + methodName,
+                    "Unknown error, Token result is null [" + (tokenResult == null) + "]"
+            );
+            outErr = new ServiceException(
+                    ServiceException.UNKNOWN_ERROR,
+                    "Request failed, but no error returned back from service.",
+                    null
+            );
         }
 
         return outErr;
@@ -161,13 +156,6 @@ public class ExceptionAdapter {
 
     }
 
-    private static boolean isIntunePolicyRequiredError(final String oAuthError, final String oAuthSubError) {
-
-        return  !TextUtils.isEmpty(oAuthError) &&
-                !TextUtils.isEmpty(oAuthSubError) &&
-                oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT) &&
-                oAuthSubError.equalsIgnoreCase(AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED);
-    }
 
     /**
      * Get an exception object from the given oAuth values.
@@ -175,7 +163,7 @@ public class ExceptionAdapter {
      * @param errorResponse
      * @return ServiceException, UiRequiredException
      * */
-    public static ServiceException getExceptionFromTokenErrorResponse(final TokenErrorResponse errorResponse) {
+    public static ServiceException getExceptionFromTokenErrorResponse(@NonNull final TokenErrorResponse errorResponse) {
         final String methodName = ":getExceptionFromTokenErrorResponse";
 
         final ServiceException outErr;
@@ -185,14 +173,7 @@ public class ExceptionAdapter {
             outErr = new UiRequiredException(
                     errorResponse.getError(),
                     errorResponse.getErrorDescription());
-        }else if(isIntunePolicyRequiredError(errorResponse.getError(), errorResponse.getSubError())){
-
-            outErr = new IntuneAppProtectionPolicyRequiredException(
-                    errorResponse.getError(),
-                    errorResponse.getErrorDescription()
-            );
-        }
-        else {
+        } else {
             outErr = new ServiceException(
                     errorResponse.getError(),
                     errorResponse.getErrorDescription(),
