@@ -134,8 +134,8 @@ public abstract class BaseController {
                         .setSlice(requestAuthority.mSlice);
             }
 
-            if(builder instanceof MicrosoftStsAuthorizationRequest.Builder){
-                ((MicrosoftStsAuthorizationRequest.Builder)builder).setTokenScope(TextUtils.join(" ", parameters.getScopes()));
+            if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
+                ((MicrosoftStsAuthorizationRequest.Builder) builder).setTokenScope(TextUtils.join(" ", parameters.getScopes()));
             }
 
             if (acquireTokenOperationParameters.getExtraScopesToConsent() != null) {
