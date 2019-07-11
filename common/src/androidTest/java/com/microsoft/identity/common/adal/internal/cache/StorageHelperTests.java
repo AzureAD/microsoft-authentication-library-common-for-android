@@ -36,6 +36,7 @@ import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -69,12 +70,18 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
     private static final int MIN_SDK_VERSION = 18;
 
     @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-        AuthenticationSettings.INSTANCE.setBrokerSecretKeys(null);
-        AuthenticationSettings.INSTANCE.setSecretKey(null);
-    }
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
 
+        // Everything is on clean slate.
+        final Context context = getInstrumentation().getTargetContext();
+        final StorageHelper storageHelper = new StorageHelper(context);
+        storageHelper.deleteKeyFile();
+        storageHelper.resetKeyPairFromAndroidKeyStore();
+
+        AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
+    }
     @Test
     public void testEncryptDecrypt() throws GeneralSecurityException, IOException {
         String clearText = "SomeValue1234";
@@ -383,7 +390,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         AuthenticationSettings.INSTANCE.setSecretKey(secretKey.getEncoded());
 
         class StorageHelperMock extends StorageHelper {
-            public StorageHelperMock(@NonNull Context context) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeySpecException {
+            public StorageHelperMock(@NonNull Context context) {
                 super(context);
             }
 
@@ -461,12 +468,13 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         assertTrue("keys are matching.", expectedKey.equals(obtainedKey));
     }
 
+    // If we invoke migrateEncryptionKeyIfNeeded() when the active broker doesn't exist, it should create a new key gracefully.
     @Test
     public void testMigrateWithNoInactiveBroker() throws GeneralSecurityException, IOException {
 
         class StorageHelperMock extends StorageHelper {
 
-            public StorageHelperMock(@NonNull Context context) throws UnsupportedEncodingException {
+            public StorageHelperMock(@NonNull Context context) {
                 super(context);
             }
 
@@ -479,10 +487,6 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
 
         final Context context = getInstrumentation().getTargetContext();
         final StorageHelperMock storageHelper = new StorageHelperMock(context);
-
-        // Everything is on clean slate.
-        storageHelper.deleteKeyFile();
-        storageHelper.resetKeyPairFromAndroidKeyStore();
 
         storageHelper.migrateEncryptionKeyIfNeeded();
 
