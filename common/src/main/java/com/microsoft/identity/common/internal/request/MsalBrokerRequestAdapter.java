@@ -239,7 +239,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * @param parameters AcquireTokenSilentOperationParameters
      * @return request bundle
      */
-    public static Bundle getBrokerHelloBundle(@NonNull final AcquireTokenSilentOperationParameters parameters) {
+    public static Bundle getBrokerHelloBundle(@NonNull final OperationParameters parameters) {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
                 AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);

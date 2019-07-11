@@ -61,6 +61,16 @@ public class OperationParameters {
     private String mApplicationName;
     @Expose()
     private String mApplicationVersion;
+    @Expose()
+    private String mRequiredBrokerProtocolVersion; //Move the required broker protocol var into parent class, as the interactive call also needs Bound Service.
+
+    public String getRequiredBrokerProtocolVersion() {
+        return mRequiredBrokerProtocolVersion;
+    }
+
+    public void setRequiredBrokerProtocolVersion(@NonNull final String requiredBrokerProtocolVersion) {
+        mRequiredBrokerProtocolVersion = requiredBrokerProtocolVersion;
+    }
 
     public SdkType getSdkType() {
         return mSdkType;
