@@ -57,4 +57,15 @@ public interface IStorageHelper {
      * @throws IOException              throws if I/O error happens.
      */
     SecretKey loadSecretKeyForEncryption() throws IOException, GeneralSecurityException;
+
+    /**
+     * Get Secret Key based on API level to use in encryption. Decryption key
+     * depends on version# since user can migrate to new Android.OS
+     *
+     * @param defaultBlobVersion the blobVersion to use by default
+     * @return SecretKey Get Secret Key based on API level to use in encryption.
+     * @throws GeneralSecurityException throws if general security error happens.
+     * @throws IOException              throws if I/O error happens.
+     */
+    SecretKey loadSecretKeyForEncryption(String defaultBlobVersion) throws IOException, GeneralSecurityException;
 }
