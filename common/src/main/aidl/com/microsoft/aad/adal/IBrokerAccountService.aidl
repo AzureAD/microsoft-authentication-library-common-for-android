@@ -37,5 +37,5 @@ interface IBrokerAccountService {
 
     void removeAccounts();
 
-    Bundle getInactiveBrokerKey();
+    Bundle getInactiveBrokerKey(in Bundle bundle);
 }
