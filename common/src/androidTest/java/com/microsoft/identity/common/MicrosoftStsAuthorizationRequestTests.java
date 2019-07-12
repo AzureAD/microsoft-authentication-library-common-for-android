@@ -26,13 +26,16 @@ import android.util.Pair;
 
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -85,6 +88,17 @@ public class MicrosoftStsAuthorizationRequestTests {
         assertTrue("Matching response type", actualCodeRequestUrlWithLoginHint.contains("response_type=code"));
         assertTrue("Matching correlation id", actualCodeRequestUrlWithLoginHint.contains("client-request-id=" + DEFAULT_TEST_CORRELATION_ID.toString()));
 
+    }
+
+    @Test
+    public void testGetCodeRequestWithDuplicatedExtraQueryParameters() throws MalformedURLException, UnsupportedEncodingException {
+        final MicrosoftStsAuthorizationRequest.Builder requestWithLoginHint = getBaseBuilder();
+        final List<Pair<String, String>> extraQueryParameter = new LinkedList<>();
+        extraQueryParameter.add(new Pair<>("login_hint", DEFAULT_TEST_LOGIN_HINT));
+        requestWithLoginHint.setExtraQueryParams(extraQueryParameter);
+        final String actualCodeRequestUrlWithLoginHint = requestWithLoginHint.build().getAuthorizationRequestAsHttpRequest().toString();
+
+        Assert.assertTrue(1 == StringUtil.countMatches(actualCodeRequestUrlWithLoginHint, "login_hint"));
     }
 
     @Test
