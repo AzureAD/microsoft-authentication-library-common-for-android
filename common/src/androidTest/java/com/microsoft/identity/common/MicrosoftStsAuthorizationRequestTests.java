@@ -62,6 +62,9 @@ public class MicrosoftStsAuthorizationRequestTests {
     private static final String DEFAULT_TEST_SLICE_PARAMETER = "slice=myslice";
     private static final String DEFAULT_TEST_AUTHORITY_STRING = "https://login.microsoftonline.com/common";
 
+    private static final String CONSTANT_LOGIN_HINT = "login_hint";
+    private static final String CONSTANT_INSTANCE_AWARE = "instance_aware";
+
     static URL getValidRequestUrl() throws MalformedURLException {
         return new URL(DEFAULT_TEST_AUTHORITY_STRING);
     }
@@ -91,14 +94,32 @@ public class MicrosoftStsAuthorizationRequestTests {
     }
 
     @Test
-    public void testGetCodeRequestWithDuplicatedExtraQueryParameters() throws MalformedURLException, UnsupportedEncodingException {
+    public void testGetCodeRequestWithDuplicatedExtraQueryParametersLoginHint() throws MalformedURLException {
+        final int expectedCount = 1;
         final MicrosoftStsAuthorizationRequest.Builder requestWithLoginHint = getBaseBuilder();
         final List<Pair<String, String>> extraQueryParameter = new LinkedList<>();
-        extraQueryParameter.add(new Pair<>("login_hint", DEFAULT_TEST_LOGIN_HINT));
+        extraQueryParameter.add(new Pair<>(CONSTANT_LOGIN_HINT, DEFAULT_TEST_LOGIN_HINT));
         requestWithLoginHint.setExtraQueryParams(extraQueryParameter);
         final String actualCodeRequestUrlWithLoginHint = requestWithLoginHint.build().getAuthorizationRequestAsHttpRequest().toString();
 
-        Assert.assertTrue(1 == StringUtil.countMatches(actualCodeRequestUrlWithLoginHint, "login_hint"));
+        Assert.assertTrue(actualCodeRequestUrlWithLoginHint.contains(CONSTANT_LOGIN_HINT));
+        Assert.assertTrue(expectedCount == StringUtil.countMatches(actualCodeRequestUrlWithLoginHint, "login_hint"));
+    }
+
+    @Test
+    public void testGetCodeRequestWithDuplicatedExtraQueryParametersInstanceAware() throws MalformedURLException {
+        final int expectedCount = 1;
+        final MicrosoftStsAuthorizationRequest.Builder requestWithLoginHint = getBaseBuilder();
+        final List<Pair<String, String>> extraQueryParameter = new LinkedList<>();
+        extraQueryParameter.add(new Pair<>(CONSTANT_LOGIN_HINT, DEFAULT_TEST_LOGIN_HINT));
+        extraQueryParameter.add(new Pair<>(CONSTANT_INSTANCE_AWARE, Boolean.TRUE.toString()));
+        requestWithLoginHint.setExtraQueryParams(extraQueryParameter);
+        final String actualCodeRequestUrl = requestWithLoginHint.build().getAuthorizationRequestAsHttpRequest().toString();
+
+        Assert.assertTrue(actualCodeRequestUrl.contains(CONSTANT_LOGIN_HINT));
+        Assert.assertTrue(actualCodeRequestUrl.contains(CONSTANT_INSTANCE_AWARE));
+        Assert.assertTrue(expectedCount == StringUtil.countMatches(actualCodeRequestUrl, CONSTANT_LOGIN_HINT));
+        Assert.assertTrue(expectedCount == StringUtil.countMatches(actualCodeRequestUrl, CONSTANT_INSTANCE_AWARE));
     }
 
     @Test
