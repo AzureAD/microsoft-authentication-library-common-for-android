@@ -43,7 +43,10 @@ public class InactiveBrokerClient {
             final BrokerAccountServiceFuture brokerAccountServiceFuture = client.connect();
             final IBrokerAccountService service = brokerAccountServiceFuture.get();
 
-            final Bundle resultBundle = service.getInactiveBrokerKey();
+            final Bundle requestBundle = new Bundle();
+            requestBundle.putString(AuthenticationConstants.Broker.CALLER_INFO_PACKAGE, context.getPackageName());
+
+            final Bundle resultBundle = service.getInactiveBrokerKey(requestBundle);
 
             // This means that the inactive broker doesn't support getInactiveBrokerKey().
             if (resultBundle == null){
