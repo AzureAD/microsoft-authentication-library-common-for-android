@@ -276,18 +276,24 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
     public abstract String getAuthorizationEndpoint();
 
-    public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
-        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
+    public Uri getAuthorizationRequestAsHttpRequest() {
 
-        for (Map.Entry<String, Object> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
-            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
-        }
-
+        Map<String, Object> qpMap = new HashMap<>();
+        qpMap.putAll(ObjectMapper.serializeObjectHashMap(this));
         // Add extra qp, if present...
         if (null != mExtraQueryParams && !mExtraQueryParams.isEmpty()) {
             for (final Pair<String, String> queryParam : mExtraQueryParams) {
-                uriBuilder.appendQueryParameter(queryParam.first, queryParam.second);
+                //Skip appending for duplicated extra query parameters
+                if (!qpMap.containsKey(queryParam.first)) {
+                    qpMap.put(queryParam.first, queryParam.second);
+                }
             }
+        }
+
+        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
+
+        for (Map.Entry<String, Object> entry : qpMap.entrySet()) {
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
         }
 
         return uriBuilder.build();
