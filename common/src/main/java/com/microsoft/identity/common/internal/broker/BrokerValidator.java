@@ -128,7 +128,6 @@ public class BrokerValidator {
      * @return True if the certificate hash is known. False otherwise.
      */
     public boolean verifySignature(final String brokerPackageName) {
-        final String methodName = ":verifySignature";
         try {
             return verifySignatureAndThrowIfHashVerificationFailed(brokerPackageName);
         } catch (final ClientException e) {
@@ -151,7 +150,7 @@ public class BrokerValidator {
             final String signatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
 
             hashListStringBuilder.append(signatureHash);
-            hashListStringBuilder.append(",");
+            hashListStringBuilder.append(',');
 
             if (mCompanyPortalSignature.equals(signatureHash)
                     || AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_SIGNATURE.equals(signatureHash)) {
