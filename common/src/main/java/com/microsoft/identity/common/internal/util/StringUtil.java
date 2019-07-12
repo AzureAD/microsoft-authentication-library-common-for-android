@@ -167,8 +167,8 @@ public final class StringUtil {
         if (StringUtil.isEmpty(str) || StringUtil.isEmpty(subString)) {
             return count;
         }
-        for(int i = 0; i < (str.length() - subString.length()); i++) {
-            if(String.copyValueOf(str.toCharArray(), i, subString.length()).equalsIgnoreCase(subString)) {
+        for(int i = 0; i <= (str.length() - subString.length()); i++) {
+            if(str.substring(i, i + subString.length()).equalsIgnoreCase(subString)) {
                 count++;
             }
         }
