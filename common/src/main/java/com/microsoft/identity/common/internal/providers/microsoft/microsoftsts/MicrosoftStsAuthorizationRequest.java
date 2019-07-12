@@ -33,6 +33,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAutho
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.Map;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
@@ -139,30 +140,37 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     }
 
     @Override
-    public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
-        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
-        for (Map.Entry<String, Object> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
-            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
+    public Uri getAuthorizationRequestAsHttpRequest() {
+        final Map<String, Object> qpMap = new HashMap<>();
+        qpMap.putAll(ObjectMapper.serializeObjectHashMap(this));
+
+        for (Map.Entry<String, String> entry : mFlightParameters.entrySet()) {
+            qpMap.put(entry.getKey(), entry.getValue());
+        }
+
+        if (mSlice != null) {
+            if (!TextUtils.isEmpty(mSlice.getSlice())) {
+                qpMap.put(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
+            }
+            if (!TextUtils.isEmpty(mSlice.getDC())) {
+                qpMap.put(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDC());
+            }
         }
 
         // Add extra qp, if present...
         if (null != getExtraQueryParams() && !getExtraQueryParams().isEmpty()) {
             for (final Pair<String, String> queryParam : getExtraQueryParams()) {
-                uriBuilder.appendQueryParameter(queryParam.first, queryParam.second);
+                //Skip appending for duplicated extra query parameters
+                if (!qpMap.containsKey(queryParam.first)) {
+                    qpMap.put(queryParam.first, queryParam.second);
+                }
             }
         }
 
-        for (Map.Entry<String, String> entry : mFlightParameters.entrySet()) {
-            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
-        }
+        final Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
 
-        if (mSlice != null) {
-            if(!TextUtils.isEmpty(mSlice.getSlice())) {
-                uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
-            }
-            if(!TextUtils.isEmpty(mSlice.getDC())) {
-                uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDC());
-            }
+        for (Map.Entry<String, Object> entry : qpMap.entrySet()) {
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
         }
 
         return uriBuilder.build();

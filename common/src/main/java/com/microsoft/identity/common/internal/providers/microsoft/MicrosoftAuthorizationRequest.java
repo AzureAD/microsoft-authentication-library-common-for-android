@@ -289,21 +289,4 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         final byte[] stateBytes = Base64.decode(encodedState, Base64.NO_PADDING | Base64.URL_SAFE);
         return new String(stateBytes, Charset.defaultCharset());
     }
-
-    @Override
-    public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
-        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
-        for (Map.Entry<String, Object> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
-            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
-        }
-
-        // Add extra qp, if present...
-        if (null != getExtraQueryParams() && !getExtraQueryParams().isEmpty()) {
-            for (final Pair<String, String> queryParam : getExtraQueryParams()) {
-                uriBuilder.appendQueryParameter(queryParam.first, queryParam.second);
-            }
-        }
-
-        return uriBuilder.build();
-    }
 }
