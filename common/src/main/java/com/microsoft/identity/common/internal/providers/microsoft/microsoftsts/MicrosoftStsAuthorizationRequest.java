@@ -141,8 +141,21 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() {
-        Map<String, Object> qpMap = new HashMap<>();
+        final Map<String, Object> qpMap = new HashMap<>();
         qpMap.putAll(ObjectMapper.serializeObjectHashMap(this));
+
+        for (Map.Entry<String, String> entry : mFlightParameters.entrySet()) {
+            qpMap.put(entry.getKey(), entry.getValue());
+        }
+
+        if (mSlice != null) {
+            if (!TextUtils.isEmpty(mSlice.getSlice())) {
+                qpMap.put(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
+            }
+            if (!TextUtils.isEmpty(mSlice.getDC())) {
+                qpMap.put(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDC());
+            }
+        }
 
         // Add extra qp, if present...
         if (null != getExtraQueryParams() && !getExtraQueryParams().isEmpty()) {
@@ -154,24 +167,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             }
         }
 
-        for (Map.Entry<String, String> entry : mFlightParameters.entrySet()) {
-            if (!qpMap.containsKey(entry.getKey())) {
-                qpMap.put(entry.getKey(), entry.getValue());
-            }
-        }
-
-        if (mSlice != null) {
-            if(!TextUtils.isEmpty(mSlice.getSlice())
-                    && !qpMap.containsKey(AzureActiveDirectorySlice.SLICE_PARAMETER)) {
-                qpMap.put(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
-            }
-            if(!TextUtils.isEmpty(mSlice.getDC())
-                    && !qpMap.containsKey(AzureActiveDirectorySlice.DC_PARAMETER)) {
-                qpMap.put(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDC());
-            }
-        }
-
-        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
+        final Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
 
         for (Map.Entry<String, Object> entry : qpMap.entrySet()) {
             uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
