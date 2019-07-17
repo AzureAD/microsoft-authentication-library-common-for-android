@@ -54,7 +54,7 @@ public class InactiveBrokerClient {
         final String methodName = ":getSerializedSymmetricKeyFromInactiveBroker";
 
         if (Looper.myLooper() == Looper.getMainLooper()) {
-            final String errorMessage = "Calling " + methodName + " from main thread.";
+            final String errorMessage =  methodName + " can't be called from main thread.";
             Logger.error(TAG + methodName, errorMessage, null);
             throw new IllegalStateException(errorMessage);
         }
