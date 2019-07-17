@@ -314,7 +314,7 @@ public class StorageHelper implements IStorageHelper {
      * Determine type of encryption performed on the given data blob.
      * NOTE :If it cannot verify the keyVersion, it will assume that this data is not encrypted.
      * */
-    public EncryptionType getEncryptionType(@NonNull final String data) throws IOException {
+    public EncryptionType getEncryptionType(@NonNull final String data) throws UnsupportedEncodingException {
         final String methodName = ":getEncryptionType";
 
         final byte[] bytes;
@@ -523,7 +523,7 @@ public class StorageHelper implements IStorageHelper {
      * If needed, get the key from inactive broker (if there is one).
      * If it fails to get a new key. It will create a new one.
      *
-     * This function can only be invoked by Broker apps.
+     * IMPORTANT: This function can only be invoked by Broker apps, and must NOT be called from main thread.
      */
     public void migrateEncryptionKeyIfNeeded() throws GeneralSecurityException, IOException {
         final String methodName = ":migrateEncryptionKeyIfNeeded";

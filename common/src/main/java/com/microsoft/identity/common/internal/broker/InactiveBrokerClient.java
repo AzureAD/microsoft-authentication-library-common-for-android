@@ -3,6 +3,7 @@ package com.microsoft.identity.common.internal.broker;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -15,6 +16,8 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Use for communicating with inactive broker only.
@@ -26,22 +29,40 @@ public class InactiveBrokerClient {
     private static final String BROKER_ACCOUNT_SERVICE_INTENT_FILTER = "com.microsoft.workaccount.BrokerAccount";
     private static final String BROKER_ACCOUNT_SERVICE_CLASS_NAME = "com.microsoft.aad.adal.BrokerAccountService";
 
+    // Time out for the encryption key retrieval bind service.
+    private static final int KEY_BIND_TIMEOUT_IN_SECONDS = 5;
+
     private Context mContext;
     private String mActiveBrokerPackageName;
     private BrokerAccountServiceConnection mBrokerAccountServiceConnection;
     private Intent mBrokerAccountServiceIntent;
     private Boolean mBound = false;
 
-    // Must be called from BG thread.
-    // activeBrokerPackageName is the calling broker. We're exposing this instead of pulling from context object for test cases.
+    /**
+     * IMPORTANT:
+     *      1.) This operation might perform an IPC call, which requires the main thread to be free.
+     *      (onServiceConnected will only be resumed on the main thread).
+     *
+     *      2.) The caller has to be certain that there are no other operation blocking the main thread.
+     *      Otherwise, deadlock will occur.
+     *
+     *      2.) BrokerAccountServiceFuture.get() blocks the calling thread, waiting for the IPC connection to be established.
+     *      Therefore, THIS OPERATION MUST NOT BE CALLED FROM THE MAIN THREAD.
+     * */
     public static String getSerializedSymmetricKeyFromInactiveBroker(@NonNull Context context,
                                                                      @NonNull final String activeBrokerPackageName) {
         final String methodName = ":getSerializedSymmetricKeyFromInactiveBroker";
 
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            final String errorMessage = "Calling " + methodName + " from main thread.";
+            Logger.error(TAG + methodName, errorMessage, null);
+            throw new IllegalStateException(errorMessage);
+        }
+
         final InactiveBrokerClient client = new InactiveBrokerClient(context, activeBrokerPackageName);
         try {
             final BrokerAccountServiceFuture brokerAccountServiceFuture = client.connect();
-            final IBrokerAccountService service = brokerAccountServiceFuture.get();
+            final IBrokerAccountService service = brokerAccountServiceFuture.get(KEY_BIND_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
 
             final Bundle requestBundle = new Bundle();
             requestBundle.putString(AuthenticationConstants.Broker.CALLER_INFO_PACKAGE, context.getPackageName());
@@ -65,7 +86,7 @@ public class InactiveBrokerClient {
 
             return resultBundle.getString(AuthenticationConstants.Broker.BROKER_KEYSTORE_SYMMETRIC_KEY);
 
-        } catch (final BaseException | InterruptedException | ExecutionException | RemoteException e) {
+        } catch (final BaseException | InterruptedException | ExecutionException | RemoteException | TimeoutException e) {
             Logger.error(
                     TAG + methodName,
                     "Exception is thrown when trying to get key from inactive broker:"
