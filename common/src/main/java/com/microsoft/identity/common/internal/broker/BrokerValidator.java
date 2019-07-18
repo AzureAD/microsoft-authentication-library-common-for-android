@@ -78,13 +78,12 @@ public class BrokerValidator {
      * Verifies that the installed broker package's signing certificate hash matches the known
      * release certificate hash.
      *
-     * If signature hash verification fails, this will throw a Client exception, with its error message being a list of hashes.
+     * If signature hash verification fails, this will throw a Client exception containing the cause of error, which could contain a list of mismatch hashes.
      *
      * @param brokerPackageName The broker package to inspect.
-     * @return True if the certificate hash is known. False otherwise.
+     * @return SignatureHash of brokerPackageName, if the verification succeeds..
      */
-    public boolean verifySignatureAndThrowIfHashVerificationFailed(final String brokerPackageName) throws ClientException {
-        final String methodName = ":verifySignatureAndThrowIfHashVerificationFailed";
+    public String verifySignatureAndThrow(final String brokerPackageName) throws ClientException {
         try {
             // Read all the certificates associated with the package name. In higher version of
             // android sdk, package manager will only returned the cert that is used to sign the
@@ -94,7 +93,7 @@ public class BrokerValidator {
             final List<X509Certificate> certs = readCertDataForBrokerApp(brokerPackageName);
 
             // Verify the cert list contains the cert we trust.
-            verifySignatureHash(certs);
+            final String signatureHash = verifySignatureHash(certs);
 
             // Perform the certificate chain validation. If there is only one cert returned,
             // no need to perform certificate chain validation.
@@ -102,22 +101,14 @@ public class BrokerValidator {
                 verifyCertificateChain(certs);
             }
 
-            return true;
+            return signatureHash;
         } catch (NameNotFoundException e) {
-            Logger.error(TAG + methodName, "Broker related package does not exist", e);
+            throw new ClientException(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND, e.getMessage(), e);
         } catch (NoSuchAlgorithmException e) {
-            Logger.error(TAG + methodName, "Digest SHA algorithm does not exists", e);
+            throw new ClientException(ErrorStrings.NO_SUCH_ALGORITHM, e.getMessage(), e);
         } catch (final IOException | GeneralSecurityException e) {
-            Logger.error(TAG + methodName, ErrorStrings.BROKER_VERIFICATION_FAILED, e);
-        } catch (final ClientException e){
-            Logger.error(TAG + methodName, ErrorStrings.BROKER_VERIFICATION_FAILED, e);
-
-            if (e.getErrorCode().equalsIgnoreCase(ErrorStrings.BROKER_APP_VERIFICATION_FAILED)){
-                throw e;
-            }
+            throw new ClientException(ErrorStrings.BROKER_VERIFICATION_FAILED, e.getMessage(), e);
         }
-
-        return false;
     }
 
     /**
@@ -128,16 +119,17 @@ public class BrokerValidator {
      * @return True if the certificate hash is known. False otherwise.
      */
     public boolean verifySignature(final String brokerPackageName) {
+        final String methodName = ":verifySignature";
         try {
-            return verifySignatureAndThrowIfHashVerificationFailed(brokerPackageName);
-        } catch (final ClientException e) {
-            // Do not throw.
+            return verifySignatureAndThrow(brokerPackageName) != null;
+        } catch (final ClientException e){
+            Logger.error(TAG + methodName, e.getErrorCode() + ": " + e.getMessage(), e);
         }
 
         return false;
     }
 
-    private void verifySignatureHash(final List<X509Certificate> certs) throws NoSuchAlgorithmException,
+    private String verifySignatureHash(final List<X509Certificate> certs) throws NoSuchAlgorithmException,
             CertificateEncodingException, ClientException {
 
         final StringBuilder hashListStringBuilder = new StringBuilder();
@@ -154,11 +146,11 @@ public class BrokerValidator {
 
             if (mCompanyPortalSignature.equals(signatureHash)
                     || AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_SIGNATURE.equals(signatureHash)) {
-                return;
+                return signatureHash;
             }
         }
 
-        throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED, hashListStringBuilder.toString());
+        throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
     }
 
     @SuppressLint("PackageManagerGetSignatures")

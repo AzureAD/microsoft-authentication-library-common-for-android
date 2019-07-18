@@ -1238,4 +1238,18 @@ public final class AuthenticationConstants {
          */
         public static final String APPLICATION_JSON = "application/json";
     }
+
+    public static final class TelemetryEvents {
+        public static final String DECRYPTION_ERROR = "decryption_error_v2";
+
+        public static final String KEYCHAIN_WRITE = "keychain_write_v2";
+
+        public static final String KEYCHAIN_READ = "keychain_read_v2";
+
+        public static final String KEY_RETRIEVAL = "key_retrieval_v2";
+
+        public static final String KEY_DISTRIBUTION = "key_distribution_v2";
+
+        public static final String KEY_CREATED = "key_created_v2";
+    }
 }
