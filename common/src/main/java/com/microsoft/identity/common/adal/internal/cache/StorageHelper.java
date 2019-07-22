@@ -83,7 +83,7 @@ public class StorageHelper implements IStorageHelper {
     /**
      * A flag to turn on/off keystore encryption on Broker apps.
      */
-    public static final boolean SHOULD_ENCRYPT_BROKER_VALUES_WITH_KEYSTORE_ENCRYPTED_KEY = false;
+    public static final boolean sShouldEncryptWithKeyStoreKey = false;
 
     /**
      * HMac key hashing algorithm.
@@ -364,7 +364,6 @@ public class StorageHelper implements IStorageHelper {
     @NonNull
     public List<KeyType> getKeysForDecryptionType(@NonNull final String encryptedBlob,
                                                   @NonNull final String packageName) throws IOException {
-        final String methodName = ":getKeysForDecryptionType";
         List<KeyType> keyTypeList = new ArrayList<>();
 
         EncryptionType encryptionType = getEncryptionType(encryptedBlob);
@@ -383,7 +382,6 @@ public class StorageHelper implements IStorageHelper {
             keyTypeList.add(KeyType.KEYSTORE_ENCRYPTED_KEY);
         }
 
-        Logger.verbose(TAG + methodName, "Decryption key list's size = " + keyTypeList.size());
         return keyTypeList;
     }
 
@@ -469,14 +467,14 @@ public class StorageHelper implements IStorageHelper {
         }
 
         // The current app runtime is the broker; load its secret key.
-        if (!SHOULD_ENCRYPT_BROKER_VALUES_WITH_KEYSTORE_ENCRYPTED_KEY &&
+        if (!sShouldEncryptWithKeyStoreKey &&
                 AuthenticationSettings.INSTANCE.getBrokerSecretKeys().containsKey(getPackageName())) {
 
             // Try to read keystore key - so that we get telemetry data on its reliability.
             // If anything happens, do not crash the app.
             try {
                 loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
-            } catch (Exception e){
+            } catch (Exception e) {
                 // Best effort.
             }
 
@@ -550,23 +548,12 @@ public class StorageHelper implements IStorageHelper {
      * Encrypt the given unencrypted symmetric key with Keystore key and save to storage.
      */
     public void saveKeyStoreEncryptedKey(@NonNull SecretKey unencryptedKey) throws GeneralSecurityException, IOException {
-        final String methodName = ":saveSecretKey";
-
-        try {
-            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE);
-
-            if (mKeyPair == null) {
-                mKeyPair = generateKeyPairFromAndroidKeyStore();
-            }
-
-            final byte[] keyWrapped = wrap(unencryptedKey);
-            writeKeyData(keyWrapped);
-
-            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE, "");
-        } catch (final GeneralSecurityException | IOException e) {
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE, e.toString(), e);
-            throw e;
+        if (mKeyPair == null) {
+            mKeyPair = generateKeyPairFromAndroidKeyStore();
         }
+
+        final byte[] keyWrapped = wrap(unencryptedKey);
+        writeKeyData(keyWrapped);
     }
 
     /**
@@ -635,24 +622,32 @@ public class StorageHelper implements IStorageHelper {
     private synchronized KeyPair generateKeyPairFromAndroidKeyStore()
             throws GeneralSecurityException, IOException {
         final String methodName = ":generateKeyPairFromAndroidKeyStore";
-        final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
-        keyStore.load(null);
-
-        Logger.verbose(TAG + methodName, "Generate KeyPair from AndroidKeyStore");
-        final Calendar start = Calendar.getInstance();
-        final Calendar end = Calendar.getInstance();
-        final int certValidYears = 100;
-        end.add(Calendar.YEAR, certValidYears);
-
-        // self signed cert stored in AndroidKeyStore to asym. encrypt key
-        // to a file
-        final KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA",
-                ANDROID_KEY_STORE);
-        generator.initialize(getKeyPairGeneratorSpec(mContext, start.getTime(), end.getTime()));
 
         try {
-            return generator.generateKeyPair();
-        } catch (final IllegalStateException exception) {
+            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE);
+
+            final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
+            keyStore.load(null);
+
+            Logger.verbose(TAG + methodName, "Generate KeyPair from AndroidKeyStore");
+            final Calendar start = Calendar.getInstance();
+            final Calendar end = Calendar.getInstance();
+            final int certValidYears = 100;
+            end.add(Calendar.YEAR, certValidYears);
+
+            // self signed cert stored in AndroidKeyStore to asym. encrypt key
+            // to a file
+            final KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA",
+                    ANDROID_KEY_STORE);
+            generator.initialize(getKeyPairGeneratorSpec(mContext, start.getTime(), end.getTime()));
+
+            final KeyPair keyPair = generator.generateKeyPair();
+            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE, "");
+            return keyPair;
+        } catch (final GeneralSecurityException | IOException e) {
+            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE, e.toString(), e);
+            throw e;
+        } catch (final IllegalStateException e) {
             // There is an issue with AndroidKeyStore when attempting to generate keypair
             // if user doesn't have pin/passphrase setup for their lock screen.
             // Issue 177459 : AndroidKeyStore KeyPairGenerator fails to generate
@@ -662,8 +657,8 @@ public class StorageHelper implements IStorageHelper {
             // The thrown exception in this case is:
             // java.lang.IllegalStateException: could not generate key in keystore
             // To avoid app crashing, re-throw as checked exception
-
-            throw new KeyStoreException(exception);
+            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE, e.toString(), e);
+            throw new KeyStoreException(e);
         }
     }
 
