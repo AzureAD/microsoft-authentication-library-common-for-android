@@ -41,7 +41,7 @@ public class BrokerData{
     }
 
     /**
-     * Given a broker package name, verify its signature and returns a BrokerData object.
+     * Given a broker package name, verify its signature and return a BrokerData object.
      *
      * @throws ClientException an exception containing mismatch signature hashes as its error message.
      * */
