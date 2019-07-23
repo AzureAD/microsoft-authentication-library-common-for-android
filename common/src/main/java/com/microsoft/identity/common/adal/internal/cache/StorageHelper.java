@@ -588,23 +588,17 @@ public class StorageHelper implements IStorageHelper {
         }
 
         try {
-            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ);
-
             // androidKeyStore can store app specific self signed cert.
             // Asymmetric cryptography is used to protect the session key
             // used for Encryption and HMac
             mKeyPair = readKeyPair();
             if (mKeyPair == null) {
-                logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ, "KeyStore is empty.");
                 return null;
             }
 
             mCachedKeyStoreEncryptedKey = getUnwrappedSecretKey();
-            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ, "KeyStore encrypted key is loaded.");
 
         } catch (final GeneralSecurityException | IOException e) {
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ, e.toString(), e);
-
             // Reset KeyPair info so that new request will generate correct KeyPairs.
             // All tokens with previous SecretKey are not possible to decrypt.
             Logger.error(TAG + methodName, ErrorStrings.ANDROIDKEYSTORE_FAILED, e);
@@ -674,6 +668,8 @@ public class StorageHelper implements IStorageHelper {
         Logger.verbose(TAG + methodName, "Reading Key entry");
 
         try {
+            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ);
+
             final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
             keyStore.load(null);
 
@@ -681,11 +677,17 @@ public class StorageHelper implements IStorageHelper {
             final Key privateKey = keyStore.getKey(KEY_STORE_CERT_ALIAS, null);
 
             if (cert == null || privateKey == null) {
+                logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ, "KeyStore is empty.");
                 Logger.verbose(TAG + methodName, "Key entry doesn't exist.");
                 return null;
             }
 
-            return new KeyPair(cert.getPublicKey(), (PrivateKey) privateKey);
+            final KeyPair keyPair = new KeyPair(cert.getPublicKey(), (PrivateKey) privateKey);
+            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ, "KeyStore KeyPair is loaded.");
+            return keyPair;
+        } catch (final GeneralSecurityException | IOException e) {
+            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ, e.toString(), e);
+            throw e;
         } catch (final RuntimeException e) {
             // There is an issue in android keystore that resets keystore
             // Issue 61989:  AndroidKeyStore deleted after changing screen lock type
@@ -693,7 +695,7 @@ public class StorageHelper implements IStorageHelper {
             // in this case getEntry throws
             // java.lang.RuntimeException: error:0D07207B:asn1 encoding routines:ASN1_get_object:header too long
             // handle it as regular KeyStoreException
-
+            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ, e.toString(), e);
             throw new KeyStoreException(e);
         }
     }
