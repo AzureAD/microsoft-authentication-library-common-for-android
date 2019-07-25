@@ -30,7 +30,7 @@ import java.util.Locale;
 /**
  * CacheKey will be the object for generating a cache key.
  */
-public final class CacheKey implements Serializable {
+public class CacheKey implements Serializable {
 
     /**
      * Serial version id.
@@ -51,7 +51,8 @@ public final class CacheKey implements Serializable {
 
     private boolean mIsMultipleResourceRefreshToken;
 
-    private CacheKey() {
+    protected CacheKey() {
+        // Intentionally blank.
     }
 
     @Override
@@ -76,8 +77,12 @@ public final class CacheKey implements Serializable {
      *                                    apps now, by default the id will be "1".
      * @return CacheKey to use in saving token
      */
-    public static String createCacheKey(final String authority, final String resource, final String clientId,
-                                        final boolean isMultiResourceRefreshToken, final String userId, final String familyClientId) {
+    public static String createCacheKey(final String authority,
+                                        final String resource,
+                                        final String clientId,
+                                        final boolean isMultiResourceRefreshToken,
+                                        final String userId,
+                                        final String familyClientId) {
 
         if (authority == null) {
             throw new IllegalArgumentException("authority");
@@ -137,8 +142,10 @@ public final class CacheKey implements Serializable {
      * @param userId    User id for the key to store regular RT entry.
      * @return The cache key for regular RT entry.
      */
-    public static String createCacheKeyForRTEntry(final String authority, final String resource,
-                                                  final String clientId, final String userId) {
+    public static String createCacheKeyForRTEntry(final String authority,
+                                                  final String resource,
+                                                  final String clientId,
+                                                  final String userId) {
         return createCacheKey(authority, resource, clientId, false, userId, null);
     }
 
