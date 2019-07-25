@@ -146,7 +146,14 @@ public class CacheKey implements Serializable {
                                                   final String resource,
                                                   final String clientId,
                                                   final String userId) {
-        return createCacheKey(authority, resource, clientId, false, userId, null);
+        return createCacheKey(
+                authority,
+                resource,
+                clientId,
+                false, // isMrrt
+                userId,
+                null // foci
+        );
     }
 
     /**
@@ -157,8 +164,17 @@ public class CacheKey implements Serializable {
      * @param userId    The user id used to create the cache key.
      * @return The cache key for MRRT entry.
      */
-    public static String createCacheKeyForMRRT(final String authority, final String clientId, final String userId) {
-        return createCacheKey(authority, null, clientId, true, userId, null);
+    public static String createCacheKeyForMRRT(final String authority,
+                                               final String clientId,
+                                               final String userId) {
+        return createCacheKey(
+                authority,
+                null, // resource
+                clientId,
+                true, // isMrrt
+                userId,
+                null // foci
+        );
     }
 
     /**
@@ -169,8 +185,17 @@ public class CacheKey implements Serializable {
      * @param userId         The user id of the cache key.
      * @return The cache key for FRT entry.
      */
-    public static String createCacheKeyForFRT(final String authority, final String familyClientId, final String userId) {
-        return createCacheKey(authority, null, null, true, userId, familyClientId);
+    public static String createCacheKeyForFRT(final String authority,
+                                              final String familyClientId,
+                                              final String userId) {
+        return createCacheKey(
+                authority,
+                null,
+                null,
+                true,
+                userId,
+                familyClientId
+        );
     }
 
     /**
