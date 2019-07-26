@@ -57,6 +57,9 @@ public class BrokerAcquireTokenOperationParameters extends AcquireTokenOperation
 
     private String mCorrelationId;
 
+    /** Specifying that this acquireToken operation was hit by an interrupt, which needs to be interactively resolved.*/
+    private Boolean mShouldResolveInterrupt;
+
     private RequestType mRequestType = RequestType.REGULAR;
 
     public String getCallerPackageName() {
@@ -97,6 +100,14 @@ public class BrokerAcquireTokenOperationParameters extends AcquireTokenOperation
 
     public void setRequestType(RequestType requestType) {
         this.mRequestType = requestType;
+    }
+
+    public Boolean getShouldResolveInterrupt() {
+        return mShouldResolveInterrupt;
+    }
+
+    public void setShouldResolveInterrupt(final Boolean shouldResolveInterrupt) {
+        this.mShouldResolveInterrupt = shouldResolveInterrupt;
     }
 
 
