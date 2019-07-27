@@ -57,7 +57,7 @@ public class ApiStartEvent extends BaseEvent {
 
     public ApiStartEvent putProperties(@NonNull final OperationParameters parameters) {
         if (parameters.getAuthority() != null) {
-            put(Key.AUTHORITY, parameters.getAuthority().toString());
+            put(Key.AUTHORITY, parameters.getAuthority().toString()); //Pii
             put(Key.AUTHORITY_TYPE, parameters.getAuthority().getAuthorityTypeString());
         }
 
@@ -68,8 +68,8 @@ public class ApiStartEvent extends BaseEvent {
                 parameters.getClaimsRequestJson())? Value.FALSE : Value.TRUE
         );
 
-        put(Key.REDIRECT_URI, parameters.getRedirectUri());
-        put(Key.CLIENT_ID, parameters.getClientId());
+        put(Key.REDIRECT_URI, parameters.getRedirectUri()); //Pii
+        put(Key.CLIENT_ID, parameters.getClientId()); //Pii
 
         if (parameters instanceof AcquireTokenOperationParameters) {
             put(
@@ -77,31 +77,31 @@ public class ApiStartEvent extends BaseEvent {
                     ((AcquireTokenOperationParameters) parameters).getAuthorizationAgent().name()
             );
 
-            put(Key.LOGIN_HINT,
+            put(Key.LOGIN_HINT, //Pii
                     ((AcquireTokenOperationParameters) parameters).getLoginHint()
             );
 
             if (null != ((AcquireTokenOperationParameters) parameters).getExtraQueryStringParameters()) {
-                put(Key.REQUEST_QUERY_PARAMS,
+                put(Key.REQUEST_QUERY_PARAMS, //Pii
                         String.valueOf(((AcquireTokenOperationParameters) parameters).getExtraQueryStringParameters().size())
                 );
             }
         }
 
         if (parameters instanceof AcquireTokenSilentOperationParameters) {
-            put(Key.USER_ID, parameters.getAccount().getHomeAccountId());
+            put(Key.USER_ID, parameters.getAccount().getHomeAccountId()); //Pii
             put(
                     Key.IS_FORCE_REFRESH,
                     String.valueOf(((AcquireTokenSilentOperationParameters) parameters).getForceRefresh())
             );
             put(
                     Key.BROKER_PROTOCOL_VERSION,
-                    String.valueOf(((AcquireTokenSilentOperationParameters) parameters).getRequiredBrokerProtocolVersion())
+                    String.valueOf(parameters.getRequiredBrokerProtocolVersion())
             );
 
             if (parameters.getScopes() != null) {
                 put(Key.SCOPE_SIZE, String.valueOf(parameters.getScopes().size()));
-                put(Key.SCOPE, parameters.getScopes().toString());
+                put(Key.SCOPE, parameters.getScopes().toString()); //Pii
             }
         }
 

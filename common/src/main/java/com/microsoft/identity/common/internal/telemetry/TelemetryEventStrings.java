@@ -153,6 +153,8 @@ public final class TelemetryEventStrings {
         public static final String WIPE_TIME = "wipe_time";
         public static final String BROKER_ACTION = "broker_action";
         public static final String USER_CANCELLED = "user_cancelled";
+        public static final String ACCOUNTS_NUMBER = "accounts_number";
+        public static final String IS_DEVICE_SHARED = "is_device_shared";
 
         public static final String TOKEN_GRANT = "token_grant";
         public static final String ACQUIRE_TOKEN_SILENT = "acquire_token_silent_handler";

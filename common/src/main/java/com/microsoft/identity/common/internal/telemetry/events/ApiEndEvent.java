@@ -26,6 +26,7 @@ import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.internal.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
@@ -41,8 +42,8 @@ public class ApiEndEvent extends BaseEvent {
         put(Key.IS_SUCCESSFUL, result.getSucceeded().toString());
 
         if (null != result.getLocalAuthenticationResult()) {
-            put(Key.USER_ID, result.getLocalAuthenticationResult().getUniqueId());
-            put(Key.TENANT_ID, result.getLocalAuthenticationResult().getTenantId());
+            put(Key.USER_ID, result.getLocalAuthenticationResult().getUniqueId()); //pii
+            put(Key.TENANT_ID, result.getLocalAuthenticationResult().getTenantId()); //pii
             put(Key.SPE_RING, result.getLocalAuthenticationResult().getSpeRing());
             put(Key.RT_AGE, result.getLocalAuthenticationResult().getRefreshTokenAge());
         }
@@ -50,17 +51,18 @@ public class ApiEndEvent extends BaseEvent {
         return this;
     }
 
-    public ApiEndEvent putException(@NonNull final BaseException exception) {
-        if (exception  instanceof UserCancelException) {
+    public ApiEndEvent putException(@NonNull final Exception exception) {
+        final BaseException adaptedException = ExceptionAdapter.baseExceptionFromException(exception);
+        if (adaptedException  instanceof UserCancelException) {
             put(Key.USER_CANCELLED, Value.TRUE);
         }
 
-        put(Key.SERVER_ERROR_CODE, exception.getCliTelemErrorCode());
-        put(Key.SERVER_SUBERROR_CODE, exception.getCliTelemSubErrorCode());
-        put(Key.ERROR_CODE, exception.getErrorCode());
-        put(Key.SPE_RING, exception.getSpeRing());
-        put(Key.ERROR_DESCRIPTION, exception.getMessage()); //OII
-        put(Key.RT_AGE, exception.getRefreshTokenAge());
+        put(Key.SERVER_ERROR_CODE, adaptedException.getCliTelemErrorCode());
+        put(Key.SERVER_SUBERROR_CODE, adaptedException.getCliTelemSubErrorCode());
+        put(Key.ERROR_CODE, adaptedException.getErrorCode());
+        put(Key.SPE_RING, adaptedException.getSpeRing());
+        put(Key.ERROR_DESCRIPTION, adaptedException.getMessage()); //oii
+        put(Key.RT_AGE, adaptedException.getRefreshTokenAge());
         put(Key.IS_SUCCESSFUL, Value.FALSE);
         return this;
     }
