@@ -24,6 +24,7 @@
 package com.microsoft.identity.common.internal.broker;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -101,6 +102,29 @@ public class PackageHelper {
             Logger.error(TAG, "Package is not found. ", "Package name: " + packageName, e);
         }
         return callingUID;
+    }
+
+    /**
+     * Check if the given package is installed and enabled.
+     *
+     * @param packageName the package name to look up.
+     * @return true if the package is installed and enabled. Otherwise, returns false.
+     */
+    public boolean isPackageInstalledAndEnabled(final Context context, final String packageName) {
+        final String methodName = "#isPackageInstalledAndEnabled";
+        boolean enabled = false;
+        PackageManager pm = context.getPackageManager();
+        try {
+            ApplicationInfo applicationInfo = pm.getApplicationInfo(packageName, 0);
+            if (applicationInfo != null) {
+                enabled = applicationInfo.enabled;
+            }
+        } catch (NameNotFoundException e) {
+            Logger.error(TAG + methodName, "Package is not found. Package name: " + packageName, e);
+        }
+
+        Logger.verbose(TAG + methodName, " Is package installed and enabled? [" + enabled + "]");
+        return enabled;
     }
 
     /**
