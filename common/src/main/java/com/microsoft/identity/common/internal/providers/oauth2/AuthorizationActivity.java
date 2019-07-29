@@ -22,6 +22,9 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.controllers.ApiDispatcher;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
+import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
@@ -174,6 +177,7 @@ public final class AuthorizationActivity extends Activity {
     protected void onCreate(final Bundle savedInstanceState) {
         final String methodName = "#onCreate";
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.common_activity_authentication);
 
         // Register Broadcast receiver to cancel the auth request
@@ -189,6 +193,7 @@ public final class AuthorizationActivity extends Activity {
             Logger.verbose(TAG + methodName, "Extract state from the saved bundle.");
             extractState(savedInstanceState);
         }
+        Telemetry.emit(new UiStartEvent().putUserAgent(mAuthorizationAgent));
 
         if (mAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
             AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(this, new AuthorizationCompletionCallback(), mRedirectUri);
@@ -296,11 +301,14 @@ public final class AuthorizationActivity extends Activity {
         final Intent resultIntent = createResultIntent(url);
         if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL))) {
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, resultIntent);
+            Telemetry.emit(new UiEndEvent().isUiComplete());
         } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE))
                 && resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE).equalsIgnoreCase("cancel")) {
             //when the user click the "cancel" button in the UI, server will send the the redirect uri with "cancel" error sub-code and redirects back to the calling app
+            Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, resultIntent);
         } else {
+            Telemetry.emit(new UiEndEvent().isUiComplete());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
         }
 
@@ -312,6 +320,7 @@ public final class AuthorizationActivity extends Activity {
         final Intent resultIntent = new Intent();
         resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
+        Telemetry.emit(new UiEndEvent().isUserCancelled());
         finish();
     }
 

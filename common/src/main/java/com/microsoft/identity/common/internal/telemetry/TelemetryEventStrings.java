@@ -143,6 +143,7 @@ public final class TelemetryEventStrings {
         public static final String RESULT_CODE = "result_code";
         public static final String USER_CANCEL = "user_cancel";
         public static final String UI_CANCELLED = "ui_cancelled";
+        public static final String UI_COMPLETE = "ui_complete";
         public static final String SERVER_ERROR_CODE = "server_error_code";
         public static final String SERVER_SUBERROR_CODE = "server_sub_error_code";
         public static final String RT_AGE = "rt_age";
