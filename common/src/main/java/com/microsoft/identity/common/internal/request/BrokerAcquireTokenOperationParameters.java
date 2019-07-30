@@ -58,7 +58,7 @@ public class BrokerAcquireTokenOperationParameters extends AcquireTokenOperation
     private String mCorrelationId;
 
     /** Specifying that this acquireToken operation was hit by an interrupt, which needs to be interactively resolved.*/
-    private Boolean mShouldResolveInterrupt;
+    private boolean mShouldResolveInterrupt;
 
     private RequestType mRequestType = RequestType.REGULAR;
 
