@@ -588,16 +588,7 @@ public class StorageHelper implements IStorageHelper {
         }
 
         try {
-            // androidKeyStore can store app specific self signed cert.
-            // Asymmetric cryptography is used to protect the session key
-            // used for Encryption and HMac
-            mKeyPair = readKeyPair();
-            if (mKeyPair == null) {
-                return null;
-            }
-
             mCachedKeyStoreEncryptedKey = getUnwrappedSecretKey();
-
         } catch (final GeneralSecurityException | IOException e) {
             // Reset KeyPair info so that new request will generate correct KeyPairs.
             // All tokens with previous SecretKey are not possible to decrypt.
@@ -784,6 +775,14 @@ public class StorageHelper implements IStorageHelper {
         final byte[] wrappedSecretKey = readKeyData();
         if (wrappedSecretKey == null) {
             Logger.verbose(TAG + methodName, "Key data is null");
+            return null;
+        }
+
+        // androidKeyStore can store app specific self signed cert.
+        // Asymmetric cryptography is used to protect the session key
+        // used for Encryption and HMac
+        mKeyPair = readKeyPair();
+        if (mKeyPair == null) {
             return null;
         }
 
