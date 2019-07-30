@@ -24,12 +24,15 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.DeviceRegistrationRequiredException;
+import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
@@ -173,6 +176,8 @@ public class ExceptionAdapter {
             outErr = new UiRequiredException(
                     errorResponse.getError(),
                     errorResponse.getErrorDescription());
+        } else if (shouldConvertToIntunePolicyRequiredException(errorResponse)) {
+            outErr = getIntuneAppProtectionPolicyRequiredException(errorResponse);
         } else {
             outErr = new ServiceException(
                     errorResponse.getError(),
@@ -209,6 +214,39 @@ public class ExceptionAdapter {
             outErr.setCliTelemErrorCode(cliTelemInfo.getServerErrorCode());
             outErr.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
         }
+    }
+
+    private static IntuneAppProtectionPolicyRequiredException getIntuneAppProtectionPolicyRequiredException(@NonNull final TokenErrorResponse errorResponse) {
+        final IntuneAppProtectionPolicyRequiredException exception =
+                new IntuneAppProtectionPolicyRequiredException(
+                        errorResponse.getError(),
+                        errorResponse.getErrorDescription()
+                );
+
+        exception.setOauthSubErrorCode(errorResponse.getSubError());
+
+        try {
+            exception.setHttpResponseBody(HashMapExtensions.jsonStringAsMap(
+                    errorResponse.getResponseBody())
+            );
+            if (errorResponse.getResponseHeadersJson() != null) {
+                exception.setHttpResponseHeaders(
+                        HeaderSerializationUtil.fromJson(
+                                errorResponse.getResponseHeadersJson())
+                );
+            }
+        } catch (JSONException e) {
+            Logger.warn(TAG, "Unable to parse json");
+        }
+        return exception;
+
+    }
+
+    private static boolean shouldConvertToIntunePolicyRequiredException(@NonNull final TokenErrorResponse errorResponse) {
+        return  !TextUtils.isEmpty(errorResponse.getError()) &&
+                !TextUtils.isEmpty(errorResponse.getSubError()) &&
+                errorResponse.getError().equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT) &&
+                errorResponse.getSubError().equalsIgnoreCase(AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED);
     }
 
     private static HttpResponse synthesizeHttpResponse(final int statusCode,
