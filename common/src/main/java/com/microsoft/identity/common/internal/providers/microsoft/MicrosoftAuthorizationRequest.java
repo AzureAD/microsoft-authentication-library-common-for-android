@@ -108,6 +108,10 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     private String mDiagnosticDM;
 
     @Expose()
+    @SerializedName("client_info")
+    private String mClientInfoEnabled;
+
+    @Expose()
     @SerializedName(INSTANCE_AWARE)
     private Boolean mMultipleCloudAware;
 
@@ -128,6 +132,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mCodeChallengeMethod = mPkceChallenge.getCodeChallengeMethod();
         mCodeChallenge = mPkceChallenge.getCodeChallenge();
         mState = generateEncodedState();
+        mClientInfoEnabled = "1";
 
         if (builder.mSlice != null) {
             mSlice = builder.mSlice;
@@ -260,6 +265,10 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     public Boolean getMultipleCloudAware() {return mMultipleCloudAware;}
 
     public String getCodeChallenge() { return mCodeChallenge;}
+
+    public String getmClientInfoEnabled() {
+        return mClientInfoEnabled;
+    }
 
     public String getCodeChallengeMethod() { return mCodeChallengeMethod;}
 

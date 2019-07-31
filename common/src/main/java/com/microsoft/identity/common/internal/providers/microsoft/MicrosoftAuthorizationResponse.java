@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 
 /**
@@ -35,6 +36,7 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
     public final static String CLOUD_INSTANCE_HOST_NAME = "cloud_instance_host_name";
     public final static String CLOUD_GRAPH_HOST_NAME = "cloud_graph_host_name";
     public final static String SESSION_STATE = "session_state";
+    public final static String CLIENT_INFO = "client_info";
 
 
     @Expose()
@@ -47,6 +49,8 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
     protected String mCloudGraphHostName;
     @Expose()
     protected String mSessionState;
+    @Expose()
+    protected String mClientInfo;
 
 
     /**
@@ -84,6 +88,24 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
     public String getCloudGraphHostName() { return mCloudGraphHostName;}
 
     public String getSessionState() { return mSessionState;}
+
+    /**
+     * Gets the response client_info.
+     *
+     * @return The client_info to get.
+     */
+    public String getClientInfo() {
+        return mClientInfo;
+    }
+
+    /**
+     * Sets the response client_info.
+     *
+     * @param clientInfo The client_info to set.
+     */
+    public void setClientInfo(final String clientInfo) {
+        mClientInfo = clientInfo;
+    }
 
 
 

@@ -47,6 +47,7 @@ public class MicrosoftStsAuthorizationResponse extends MicrosoftAuthorizationRes
         mCloudInstanceHostName = otherParameters.get(MicrosoftAuthorizationResponse.CLOUD_INSTANCE_HOST_NAME);
         mCloudInstanceName = otherParameters.get(MicrosoftAuthorizationResponse.CLOUD_INSTANCE_NAME);
         mSessionState = otherParameters.get(MicrosoftAuthorizationResponse.SESSION_STATE);
+        mClientInfo = otherParameters.get(MicrosoftStsAuthorizationResponse.CLIENT_INFO);
 
     }
 
