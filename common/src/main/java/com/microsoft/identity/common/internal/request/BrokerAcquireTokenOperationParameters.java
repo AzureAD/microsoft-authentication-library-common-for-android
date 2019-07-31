@@ -102,7 +102,7 @@ public class BrokerAcquireTokenOperationParameters extends AcquireTokenOperation
         this.mRequestType = requestType;
     }
 
-    public Boolean getShouldResolveInterrupt() {
+    public boolean getShouldResolveInterrupt() {
         return mShouldResolveInterrupt;
     }
 
