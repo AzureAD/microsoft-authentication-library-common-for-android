@@ -106,7 +106,7 @@ public class BrokerAcquireTokenOperationParameters extends AcquireTokenOperation
         return mShouldResolveInterrupt;
     }
 
-    public void setShouldResolveInterrupt(final Boolean shouldResolveInterrupt) {
+    public void setShouldResolveInterrupt(final boolean shouldResolveInterrupt) {
         this.mShouldResolveInterrupt = shouldResolveInterrupt;
     }
 
