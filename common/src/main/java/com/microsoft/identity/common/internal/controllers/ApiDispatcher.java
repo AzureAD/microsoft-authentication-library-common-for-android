@@ -29,16 +29,21 @@ import android.support.annotation.NonNull;
 import android.util.Pair;
 
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.List;
 import java.util.UUID;
@@ -233,6 +238,32 @@ public class ApiDispatcher {
                                     @Override
                                     public void run() {
                                         command.getCallback().onCancel();
+                                    }
+                                });
+                            } else if (finalException instanceof IntuneAppProtectionPolicyRequiredException) {
+                               if (result.getAuthorizationResult() != null
+                                        && result.getAuthorizationResult().getAuthorizationResponse() != null
+                                        && result.getAuthorizationResult().getAuthorizationResponse() instanceof MicrosoftAuthorizationResponse
+                                        && !StringUtil.isEmpty(((MicrosoftAuthorizationResponse) result.getAuthorizationResult().getAuthorizationResponse()).getClientInfo())) {
+                                    try {
+                                        final ClientInfo clientInfo = new ClientInfo(((MicrosoftAuthorizationResponse) result.getAuthorizationResult().getAuthorizationResponse()).getClientInfo());
+                                        ((IntuneAppProtectionPolicyRequiredException) finalException).setAccountUserId(clientInfo.getUid());
+                                        ((IntuneAppProtectionPolicyRequiredException) finalException).setTenantId(clientInfo.getUtid());
+                                        ((IntuneAppProtectionPolicyRequiredException) finalException).setAuthorityUrl(command.mParameters.getAuthority().getAuthorityURL().toString());
+
+                                    } catch (final ServiceException serviceException) {
+                                        Logger.errorPII(
+                                                TAG,
+                                                "Failed to construct IDToken or ClientInfo",
+                                                serviceException
+                                        );
+                                    }
+                                }
+
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        command.getCallback().onError(finalException);
                                     }
                                 });
                             } else {

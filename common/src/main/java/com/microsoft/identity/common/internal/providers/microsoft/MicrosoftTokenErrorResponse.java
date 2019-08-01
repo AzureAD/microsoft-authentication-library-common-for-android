@@ -44,6 +44,9 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
     @SerializedName("oAuth_metadata")
     private String mOAuthErrorMetadata;
 
+    @SerializedName("adi")
+    private String mAccountDisplayableIdentifier;
+
     /**
      * @return mErrorCodes of the Microsoft token error response.
      */
@@ -114,5 +117,22 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
      */
     public void setOAuthErrorMetadata(final String oAuthErrorMetadata) {
         this.mOAuthErrorMetadata = oAuthErrorMetadata;
+    }
+
+
+    /**
+     *
+     * @return mAccountDisplayableIdentifier of the Microsoft token error response.
+     */
+    public String getAccountDisplayableIdentifier() {
+        return mAccountDisplayableIdentifier;
+    }
+
+    /**
+     *
+     * @param mAccountDisplayableIdentifier of Microsoft token error response
+     */
+    public void setAccountDisplayableIdentifier(String mAccountDisplayableIdentifier) {
+        this.mAccountDisplayableIdentifier = mAccountDisplayableIdentifier;
     }
 }

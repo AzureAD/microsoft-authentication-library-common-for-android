@@ -40,6 +40,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
@@ -111,27 +112,6 @@ public class ExceptionAdapter {
         }
 
         final ServiceException exception = exceptionFromTokenResult(result.getTokenResult());
-        if (exception instanceof IntuneAppProtectionPolicyRequiredException) {
-            if (result.getAuthorizationResult() != null
-                    && result.getAuthorizationResult().getAuthorizationResponse() != null
-                    && result.getAuthorizationResult().getAuthorizationResponse() instanceof MicrosoftAuthorizationResponse
-                    && !StringUtil.isEmpty(((MicrosoftAuthorizationResponse) result.getAuthorizationResult().getAuthorizationResponse()).getClientInfo())) {
-                try {
-                    final ClientInfo clientInfo = new ClientInfo(((MicrosoftAuthorizationResponse) result.getAuthorizationResult().getAuthorizationResponse()).getClientInfo());
-                    ((IntuneAppProtectionPolicyRequiredException) exception).setAccountUserId(clientInfo.getUid());
-                    ((IntuneAppProtectionPolicyRequiredException) exception).setTenantId(clientInfo.getUtid());
-                    //TODO why authority url is required in Android?  it is not passed in iOS.
-                    //TODO Blocker from Server side. The upn is not returned from the server :token endpoint even "client_info=1" passed in the token request.
-
-                } catch (final ServiceException serviceException) {
-                    Logger.errorPII(
-                            TAG,
-                            "Failed to construct IDToken or ClientInfo",
-                            serviceException
-                    );
-                }
-            }
-        }
 
         return exception;
     }
@@ -249,6 +229,10 @@ public class ExceptionAdapter {
                 );
 
         exception.setOauthSubErrorCode(errorResponse.getSubError());
+
+        if(errorResponse instanceof MicrosoftTokenErrorResponse) {
+            exception.setAccountUpn(((MicrosoftTokenErrorResponse) errorResponse).getAccountDisplayableIdentifier());
+        }
 
         try {
             exception.setHttpResponseBody(HashMapExtensions.jsonStringAsMap(
