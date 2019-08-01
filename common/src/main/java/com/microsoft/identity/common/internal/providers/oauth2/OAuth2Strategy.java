@@ -143,7 +143,7 @@ public abstract class OAuth2Strategy
         headers.putAll(Device.getPlatformIdParameters());
 
         return HttpRequest.sendPost(
-                new URL(mTokenEndpoint),
+                new URL(mTokenEndpoint + "?dc=PROD-WST-TEST1"), //TODO why token request does not take query parameters as authorization request's?
                 headers,
                 requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
                 TOKEN_REQUEST_CONTENT_TYPE
