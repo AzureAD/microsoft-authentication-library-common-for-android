@@ -20,18 +20,36 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.authorities;
 
-public class AnyPersonalAccount extends AzureActiveDirectoryAudience {
+package com.microsoft.identity.common.internal.broker;
 
-    public static final String ANY_PERSONAL_ACCOUNT_TENANT_ID = "consumers";
+import android.content.Context;
+import android.support.annotation.NonNull;
 
-    public AnyPersonalAccount() {
-        this.setTenantId(ANY_PERSONAL_ACCOUNT_TENANT_ID);
+import com.microsoft.identity.common.exception.ClientException;
+
+/**
+ * Represents packageName and SignatureHash of a broker app.
+ * */
+public class BrokerData{
+    public final String packageName;
+    public final String signatureHash;
+
+    private BrokerData(String packageName, String hash) {
+        this.packageName = packageName;
+        this.signatureHash = hash;
     }
 
-    public AnyPersonalAccount(final String cloudUrl) {
-        this.setTenantId(ANY_PERSONAL_ACCOUNT_TENANT_ID);
-        this.setCloudUrl(cloudUrl);
+    /**
+     * Given a broker package name, verify its signature and return a BrokerData object.
+     *
+     * @throws ClientException an exception containing mismatch signature hashes as its error message.
+     * */
+    public static BrokerData getBrokerDataForBrokerApp(@NonNull final Context context,
+                                                       @NonNull String brokerPackageName) throws ClientException {
+
+        // Verify the signature to make sure that we're not binding to malicious apps.
+        final BrokerValidator validator = new BrokerValidator(context);
+        return new BrokerData(brokerPackageName, validator.verifySignatureAndThrow(brokerPackageName));
     }
 }

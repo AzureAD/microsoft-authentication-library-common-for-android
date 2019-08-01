@@ -1,3 +1,5 @@
+package com.microsoft.identity.common.internal.broker;
+
 //  Copyright (c) Microsoft Corporation.
 //  All rights reserved.
 //
@@ -20,18 +22,32 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.authorities;
 
-public class AnyPersonalAccount extends AzureActiveDirectoryAudience {
+import android.content.ComponentName;
+import android.os.IBinder;
 
-    public static final String ANY_PERSONAL_ACCOUNT_TENANT_ID = "consumers";
+import com.microsoft.aad.adal.IBrokerAccountService;
+import com.microsoft.identity.client.IMicrosoftAuthService;
+import com.microsoft.identity.common.internal.logging.Logger;
 
-    public AnyPersonalAccount() {
-        this.setTenantId(ANY_PERSONAL_ACCOUNT_TENANT_ID);
+public class BrokerAccountServiceConnection implements android.content.ServiceConnection {
+    private static final String TAG = MicrosoftAuthServiceConnection.class.getSimpleName();
+    private IBrokerAccountService mBrokerAccountService;
+    private BrokerAccountServiceFuture mBrokerAccountServiceFuture;
+
+    public BrokerAccountServiceConnection(BrokerAccountServiceFuture future) {
+        mBrokerAccountServiceFuture = future;
     }
 
-    public AnyPersonalAccount(final String cloudUrl) {
-        this.setTenantId(ANY_PERSONAL_ACCOUNT_TENANT_ID);
-        this.setCloudUrl(cloudUrl);
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        Logger.verbose(TAG, "BrokerAccountService is connected.");
+        mBrokerAccountService = IBrokerAccountService.Stub.asInterface(service);
+        mBrokerAccountServiceFuture.setBrokerAccountService(mBrokerAccountService);
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+        Logger.verbose(TAG, "BrokerAccountService is disconnected.");
     }
 }

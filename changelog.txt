@@ -1,3 +1,11 @@
+Version 0.0.12
+-------------
+- Broker V2 protocol support changes for v1 parity with ADAL.
+- Introduced new bound service IMicrosoftAuthService for MSAL.
+- Key Transfer changes from inactive broker
+- Introduced various adapters to translate betwewn broker request and responses.
+- Multiple bug fixes.
+
 Version 0.0.10
 -------------
 - Adds support HTTP response caching

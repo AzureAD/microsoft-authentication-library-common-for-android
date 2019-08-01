@@ -324,6 +324,39 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
+    public void save2ArgOverloadMethodV1Compat() {
+        // This test asserts that if an IdToken is returned in the v1 format (broker cases),
+        // it is saved properly.
+
+        mOauth2TokenCache.save(defaultTestBundleV1.mGeneratedAccount, defaultTestBundleV1.mGeneratedIdToken);
+
+        final List<AccountRecord> accounts = accountCredentialCache.getAccounts();
+        assertEquals(1, accounts.size());
+        assertEquals(defaultTestBundleV1.mGeneratedAccount, accounts.get(0));
+
+        final List<Credential> credentials = accountCredentialCache.getCredentials();
+        assertEquals(1, credentials.size());
+
+        final List<Credential> rts = new ArrayList<>();
+        final List<Credential> ats = new ArrayList<>();
+        final List<Credential> ids = new ArrayList<>();
+
+        for (final Credential credential : credentials) {
+            if (credential.getCredentialType().equalsIgnoreCase(CredentialType.AccessToken.name())) {
+                ats.add(credential);
+            } else if (credential.getCredentialType().equalsIgnoreCase(CredentialType.RefreshToken.name())) {
+                rts.add(credential);
+            } else if (credential.getCredentialType().equalsIgnoreCase(CredentialType.V1IdToken.name())) {
+                ids.add(credential);
+            } else {
+                fail();
+            }
+        }
+        assertEquals(defaultTestBundleV1.mGeneratedIdToken, ids.get(0));
+    }
+
+
+    @Test
     public void saveTokensWithIntersect() throws Exception {
         // Manually insert an AT with a ltd scope into the cache
         final String extendedScopes = "calendar.modify user.read user.write https://graph.windows.net";

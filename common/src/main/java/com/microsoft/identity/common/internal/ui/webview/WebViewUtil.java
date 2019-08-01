@@ -13,29 +13,36 @@
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OsR
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.aad.adal;
 
-/**
- * Broker Account service APIs provided by the broker app. Those APIs will be responsible for interacting with the
- * account manager API. Calling app does not need to request for contacts permission if the broker installed on the
- * device has the support for the bound service.
- */
-interface IBrokerAccountService {
+package com.microsoft.identity.common.internal.ui.webview;
 
-    Bundle getBrokerUsers();
-    
-    Bundle acquireTokenSilently(in Map requestParameters);
-    
-    Intent getIntentForInteractiveRequest();
+import android.content.Context;
+import android.os.Build;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 
-    void removeAccounts();
-
-    Bundle getInactiveBrokerKey(in Bundle bundle);
+public class WebViewUtil {
+    /**
+     * Clear cookies from embedded webview.
+     * */
+    public static void clearCookiesFromWebView(final Context context){
+        final CookieManager cookieManager = CookieManager.getInstance();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+            cookieManager.removeAllCookies(null);
+            cookieManager.flush();
+        } else {
+            final CookieSyncManager syncManager = CookieSyncManager.createInstance(context);
+            syncManager.startSync();
+            cookieManager.removeAllCookie();
+            syncManager.stopSync();
+            syncManager.sync();
+        }
+    }
 }

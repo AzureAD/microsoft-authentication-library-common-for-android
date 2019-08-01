@@ -13,29 +13,24 @@
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OsR
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.aad.adal;
+
+package com.microsoft.identity.common.adal.internal.cache;
+
+import android.content.Context;
 
 /**
- * Broker Account service APIs provided by the broker app. Those APIs will be responsible for interacting with the
- * account manager API. Calling app does not need to request for contacts permission if the broker installed on the
- * device has the support for the bound service.
- */
-interface IBrokerAccountService {
-
-    Bundle getBrokerUsers();
-    
-    Bundle acquireTokenSilently(in Map requestParameters);
-    
-    Intent getIntentForInteractiveRequest();
-
-    void removeAccounts();
-
-    Bundle getInactiveBrokerKey(in Bundle bundle);
+ * Temporary interface.
+ * For injecting telemetry into common (until common's telemetry is properly wired up).
+ * */
+public interface IWpjTelemetryCallback {
+    void logEvent(Context context, final String operation, final Boolean isFailed, final String reason);
+    void logSessionStart(Context context, final String operation);
+    void logSessionEnd(Context context, final String operation, final Boolean isFailed, final String reason);
 }

@@ -140,6 +140,14 @@ public enum AuthenticationSettings {
     }
 
     /**
+     * For test cases only.
+     * */
+    public void clearSecretKeysForTestCases(){
+        mBrokerSecretKeys.clear();
+        mSecretKeyData.set(null);
+    }
+
+    /**
      * Gets packagename for broker app that installed authenticator.
      *
      * @return packagename

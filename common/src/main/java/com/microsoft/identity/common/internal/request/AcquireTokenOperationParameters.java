@@ -45,7 +45,7 @@ public class AcquireTokenOperationParameters extends OperationParameters {
     private List<String> mExtraScopesToConsent;
     @Expose()
     private OpenIdConnectPromptParameter mOpenIdConnectPromptParameter;
-    private HashMap<String, String> mRequestHeaders;
+    private transient HashMap<String, String> mRequestHeaders;
     private List<BrowserDescriptor> mBrowserSafeList;
 
     public AuthorizationAgent getAuthorizationAgent() {

@@ -123,6 +123,11 @@ public final class AuthenticationConstants {
          * Sub error returned by server representing the user cancel the auth flow.
          */
         public static final String SUB_ERROR_UI_CANCEL = "cancel";
+
+        /**
+         * V2 endpoint for logging the user out in browser.
+         */
+        public static final String LOGOUT_ENDPOINT_V2 = "https://login.microsoftonline.com/common/oauth2/v2.0/logout";
     }
 
     /**
@@ -771,6 +776,11 @@ public final class AuthenticationConstants {
         public static final String ACCOUNT_NAME = "account.name";
 
         /**
+         * String of key for account name.
+         */
+        public static final String ACCOUNT_HOME_ACCOUNT_ID = "account.home.account.id";
+
+        /**
          * String of key for account id token.
          */
         public static final String ACCOUNT_IDTOKEN = "account.idtoken";
@@ -929,6 +939,23 @@ public final class AuthenticationConstants {
         public static final String AZURE_AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
 
         /**
+         * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
+         * The only supported detection of this phone is the application install state.
+         * The Microsoft Intune app depends on the browser opening the fwlink, and in the app manifest registers to handle the URL.
+         * In the 1906 both apps will be installed on COBO devices, but the MDM CA link must open the browser to then open Microsoft Intune.
+         * On IP Phones devices (without a browser) the Company Portal must be launched.
+         * App name of Teams Phone app to detect it for the MDM Device CA redirect.
+         */
+        public static final String IPPHONE_APP_PACKAGE_NAME = "com.microsoft.skype.teams.ipphone";
+
+        /**
+         * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
+         * The only supported detection of this phone is the application install state.
+         * App signature of Teams Phone app to detect it for the MDM Device CA redirect.
+         */
+        public static final String IPPHONE_APP_SIGNATURE = "fcg80qvoM1YMKJZibjBwQcDfOno=";
+
+        /**
          * The value for pkeyauth redirect.
          */
         public static final String PKEYAUTH_REDIRECT = "urn:http-auth:PKeyAuth";
@@ -1019,6 +1046,12 @@ public final class AuthenticationConstants {
         public static final String BROKER_RESULT_V2 = "broker_result_v2";
 
         /**
+         * Represents the broker device mode boolean (true = shared device mode).
+         * This is used to determine what PublicClientApplication MSAL will return to its caller.
+         */
+        public static final String BROKER_DEVICE_MODE = "broker_device_mode";
+
+        /**
          * String to return a true if the request succeeded, false otherwise.
          */
         public static final String BROKER_REQUEST_V2_SUCCESS = "broker_request_v2_success";
@@ -1073,6 +1106,13 @@ public final class AuthenticationConstants {
          * String to return account list from broker.
          */
         public static final String BROKER_ACCOUNTS = "broker_accounts";
+
+        /**
+         * String to return current account from broker (only available in shared device mode)
+         */
+        public static final String BROKER_CURRENT_ACCOUNT = "broker_current_account";
+
+        public static final String BROKER_KEYSTORE_SYMMETRIC_KEY = "broker_keystore_symmetric_key";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.
@@ -1197,5 +1237,19 @@ public final class AuthenticationConstants {
          * @see <a href="https://tools.ietf.org/html/rfc7159">RFC-7159</a>
          */
         public static final String APPLICATION_JSON = "application/json";
+    }
+
+    public static final class TelemetryEvents {
+        public static final String DECRYPTION_ERROR = "decryption_error_v2";
+
+        public static final String KEYCHAIN_WRITE = "keychain_write_v2";
+
+        public static final String KEYCHAIN_READ = "keychain_read_v2";
+
+        public static final String KEY_RETRIEVAL = "key_retrieval_v2";
+
+        public static final String KEY_DISTRIBUTION = "key_distribution_v2";
+
+        public static final String KEY_CREATED = "key_created_v2";
     }
 }

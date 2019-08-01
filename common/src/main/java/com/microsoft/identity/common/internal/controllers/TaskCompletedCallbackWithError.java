@@ -20,18 +20,10 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.authorities;
+package com.microsoft.identity.common.internal.controllers;
 
-public class AnyPersonalAccount extends AzureActiveDirectoryAudience {
+import com.microsoft.identity.common.internal.util.TaskCompletedCallback;
 
-    public static final String ANY_PERSONAL_ACCOUNT_TENANT_ID = "consumers";
-
-    public AnyPersonalAccount() {
-        this.setTenantId(ANY_PERSONAL_ACCOUNT_TENANT_ID);
-    }
-
-    public AnyPersonalAccount(final String cloudUrl) {
-        this.setTenantId(ANY_PERSONAL_ACCOUNT_TENANT_ID);
-        this.setCloudUrl(cloudUrl);
-    }
+public interface TaskCompletedCallbackWithError<T, U> extends TaskCompletedCallback<T> {
+    void onError(U error);
 }
