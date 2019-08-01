@@ -28,7 +28,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
-import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.ADALError;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ArgumentException;
@@ -257,10 +256,16 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
         Logger.verbose(TAG , "Setting properties from ServiceException.");
 
+        // Silent call in ADAL expects these calls which differs from intercative adal call,
+        // so adding values to these constants as well
+        resultBundle.putString(AuthenticationConstants.OAuth2.ERROR, serviceException.getErrorCode());
+        resultBundle.putString(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION, serviceException.getMessage());
+        resultBundle.putString(AuthenticationConstants.OAuth2.SUBERROR, serviceException.getOAuthSubErrorCode());
+
         if (null != serviceException.getHttpResponseBody()) {
-            resultBundle.putString(
+            resultBundle.putSerializable(
                     AuthenticationConstants.OAuth2.HTTP_RESPONSE_BODY,
-                    new Gson().toJson(serviceException.getHttpResponseBody())
+                    serviceException.getHttpResponseBody()
             );
         }
 
