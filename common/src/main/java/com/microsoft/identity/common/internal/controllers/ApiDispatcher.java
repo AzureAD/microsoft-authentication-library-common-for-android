@@ -246,15 +246,34 @@ public class ApiDispatcher {
                                         && result.getAuthorizationResult().getAuthorizationResponse() instanceof MicrosoftAuthorizationResponse
                                         && !StringUtil.isEmpty(((MicrosoftAuthorizationResponse) result.getAuthorizationResult().getAuthorizationResponse()).getClientInfo())) {
                                     try {
-                                        final ClientInfo clientInfo = new ClientInfo(((MicrosoftAuthorizationResponse) result.getAuthorizationResult().getAuthorizationResponse()).getClientInfo());
-                                        ((IntuneAppProtectionPolicyRequiredException) finalException).setAccountUserId(clientInfo.getUid());
-                                        ((IntuneAppProtectionPolicyRequiredException) finalException).setTenantId(clientInfo.getUtid());
-                                        ((IntuneAppProtectionPolicyRequiredException) finalException).setAuthorityUrl(command.mParameters.getAuthority().getAuthorityURL().toString());
+                                        final ClientInfo clientInfo = new ClientInfo(
+                                                ((MicrosoftAuthorizationResponse) result
+                                                        .getAuthorizationResult()
+                                                        .getAuthorizationResponse()
+                                                ).getClientInfo()
+                                        );
 
+                                        ((IntuneAppProtectionPolicyRequiredException) finalException)
+                                                .setAccountUserId(
+                                                        clientInfo.getUid()
+                                                );
+
+                                        ((IntuneAppProtectionPolicyRequiredException) finalException)
+                                                .setTenantId(
+                                                        clientInfo.getUtid()
+                                                );
+
+                                        ((IntuneAppProtectionPolicyRequiredException) finalException)
+                                                .setAuthorityUrl(
+                                                        command.mParameters
+                                                                .getAuthority()
+                                                                .getAuthorityURL()
+                                                                .toString()
+                                                );
                                     } catch (final ServiceException serviceException) {
                                         Logger.errorPII(
                                                 TAG,
-                                                "Failed to construct IDToken or ClientInfo",
+                                                "Failed to construct the ClientInfo for IntuneAppProtectionPolicyRequiredException",
                                                 serviceException
                                         );
                                     }

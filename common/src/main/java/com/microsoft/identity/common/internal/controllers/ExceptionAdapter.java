@@ -111,9 +111,7 @@ public class ExceptionAdapter {
             );
         }
 
-        final ServiceException exception = exceptionFromTokenResult(result.getTokenResult());
-
-        return exception;
+        return exceptionFromTokenResult(result.getTokenResult());
     }
 
     /**
