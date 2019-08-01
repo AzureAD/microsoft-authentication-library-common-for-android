@@ -7,6 +7,7 @@ android:
 
     # The BuildTools version used by the project
     - build-tools-28.0.3
+    - android-27
 
 # Disable Gradle cache uploads
 before_cache:
