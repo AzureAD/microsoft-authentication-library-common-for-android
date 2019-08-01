@@ -270,11 +270,9 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         if (null != serviceException.getHttpResponseHeaders()) {
-            resultBundle.putString(
+            resultBundle.putSerializable(
                     AuthenticationConstants.OAuth2.HTTP_RESPONSE_HEADER,
-                    HeaderSerializationUtil.toJson(
-                            serviceException.getHttpResponseHeaders()
-                    )
+                    serviceException.getHttpResponseHeaders()
             );
         }
         resultBundle.putInt(
