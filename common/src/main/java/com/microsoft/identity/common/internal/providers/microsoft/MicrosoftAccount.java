@@ -107,8 +107,9 @@ public abstract class MicrosoftAccount extends BaseAccount {
 
         long mPasswordExpiration = 0;
 
-        if (!StringExtensions.isNullOrBlank((String) claims.get(AzureActiveDirectoryIdToken.PASSWORD_EXPIRATION))) {
-            mPasswordExpiration = Long.parseLong((String) claims.get(AzureActiveDirectoryIdToken.PASSWORD_EXPIRATION));
+        if (null != claims.get(AzureActiveDirectoryIdToken.PASSWORD_EXPIRATION)) {
+            final Object expiry = claims.get(AzureActiveDirectoryIdToken.PASSWORD_EXPIRATION);
+            mPasswordExpiration = Long.valueOf(expiry.toString());
         }
 
         if (mPasswordExpiration > 0) {
