@@ -9,6 +9,10 @@ sudo: true
 # Build Variables
 env:
   global:
+    - BUILD_TOOLS_VERSION=28.0.3
+    - COMPILE_SDK_VERSION=27
+    - EMULATOR_API_VERSION=21
+
     # This is to guarantee a clean gradle log
     - TERM=dumb
 
@@ -16,16 +20,16 @@ android:
   components:
     - tools
     - platform-tools
-    - build-tools-28.0.3
-    - android-27
+    - build-tools-$BUILD_TOOLS_VERSION
+    - android-$COMPILE_SDK_VERSION
     - extra-google-m2repository
 
     ## Emulator config ##
     # The SDK version used for the emulator
-    - android-21
+    - android-$EMULATOR_API_VERSION
 
     #system images
-    - sys-img-armeabi-v7a-android-21
+    - sys-img-armeabi-v7a-android-$EMULATOR_API_VERSION
 
 before_install:
   - chmod +x gradlew
@@ -41,7 +45,7 @@ cache:
 
 before_script:
   - android list targets
-  - echo no | android create avd --force -n test -t android-21 --abi armeabi-v7a
+  - echo no | android create avd --force -n test -t android-$EMULATOR_API_VERSION --abi armeabi-v7a
   - emulator -avd test -no-audio -no-window &
   - android-wait-for-emulator
   - adb shell input keyevent 82 &
