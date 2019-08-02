@@ -18,7 +18,7 @@ android:
     - platform-tools
     - build-tools-28.0.3
     - android-27
-    - extra-google-
+    - extra-google-m2repository
 
     ## Emulator config ##
     # The SDK version used for the emulator
