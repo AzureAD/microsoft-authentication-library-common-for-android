@@ -11,8 +11,6 @@ env:
   global:
     # This is to guarantee a clean gradle log
     - TERM=dumb
-  matrix:
-    - ANDROID_SDKS=android-27 ANDROID_TARGET=android-27
 
 android:
   components:
