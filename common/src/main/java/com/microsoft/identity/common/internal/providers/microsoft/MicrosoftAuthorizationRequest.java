@@ -132,6 +132,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mCodeChallengeMethod = mPkceChallenge.getCodeChallengeMethod();
         mCodeChallenge = mPkceChallenge.getCodeChallenge();
         mState = generateEncodedState();
+        // Enabling client info is required for TrueMAM. To enable the clientInfo, pass "client_info = 1".
+        // This parameter should be set as enabled by default, which is consistent with other platform.
         mClientInfoEnabled = "1";
 
         if (builder.mSlice != null) {
