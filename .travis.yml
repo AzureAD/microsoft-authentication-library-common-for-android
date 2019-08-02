@@ -1,12 +1,18 @@
 # ./travis.yml for adal android
 
 language: android
-
-jdk:
-  - oraclejdk8
+jdk: oraclejdk8
 
 # Don't use the Travis Container-Based Infrastructure
 sudo: true
+
+# Build Variables
+env:
+  global:
+    # This is to guarantee a clean gradle log
+    - TERM=dumb
+  matrix:
+    - ANDROID_SDKS=android-27 ANDROID_TARGET=android-27
 
 android:
   components:
@@ -26,13 +32,6 @@ android:
     - android-21
     #system images
     - sys-img-armeabi-v7a-android-21
-
-env:
-  global:
-    # This is to guaratee a clean gradle log
-    - TERM=dumb
-  matrix:
-    - ANDROID_SDKS=android-27 ANDROID_TARGET=android-27
 
 before_install:
   - chmod +x gradlew
