@@ -335,4 +335,19 @@ public final class ErrorStrings {
      */
     public static final String UNSUPPORTED_BROKER_VERSION = "unsupported_broker_version";
 
+    /**
+     * Decryption failed.
+     */
+    public static final String DECRYPTION_FAILED = "decryption_failed";
+
+    /**
+     * Caller of the request is not a known instance.
+     */
+    public static final String UNKNOWN_CALLER = "unknown_caller";
+
+    /**
+     * The key cannot be found.
+     */
+    public static final String KEY_NOT_FOUND = "key_not_found";
+
 }
