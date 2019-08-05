@@ -1,3 +1,8 @@
+Version 0.0.14
+-------------
+- Bug fix : Read user id from the request bundle for broker silent request.
+- Add shouldResolveInterrupt field to parameters.
+
 Version 0.0.12
 -------------
 - Broker V2 protocol support changes for v1 parity with ADAL.
