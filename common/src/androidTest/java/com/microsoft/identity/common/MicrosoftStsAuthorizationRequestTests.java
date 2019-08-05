@@ -26,13 +26,16 @@ import android.util.Pair;
 
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -58,6 +61,9 @@ public class MicrosoftStsAuthorizationRequestTests {
     private static final String DEFAULT_TEST_DISPLAYABLEID = "user@contoso.com";
     private static final String DEFAULT_TEST_SLICE_PARAMETER = "slice=myslice";
     private static final String DEFAULT_TEST_AUTHORITY_STRING = "https://login.microsoftonline.com/common";
+
+    private static final String CONSTANT_LOGIN_HINT = "login_hint";
+    private static final String CONSTANT_INSTANCE_AWARE = "instance_aware";
 
     static URL getValidRequestUrl() throws MalformedURLException {
         return new URL(DEFAULT_TEST_AUTHORITY_STRING);
@@ -85,6 +91,35 @@ public class MicrosoftStsAuthorizationRequestTests {
         assertTrue("Matching response type", actualCodeRequestUrlWithLoginHint.contains("response_type=code"));
         assertTrue("Matching correlation id", actualCodeRequestUrlWithLoginHint.contains("client-request-id=" + DEFAULT_TEST_CORRELATION_ID.toString()));
 
+    }
+
+    @Test
+    public void testGetCodeRequestWithDuplicatedExtraQueryParametersLoginHint() throws MalformedURLException {
+        final int expectedCount = 1;
+        final MicrosoftStsAuthorizationRequest.Builder requestWithLoginHint = getBaseBuilder();
+        final List<Pair<String, String>> extraQueryParameter = new LinkedList<>();
+        extraQueryParameter.add(new Pair<>(CONSTANT_LOGIN_HINT, DEFAULT_TEST_LOGIN_HINT));
+        requestWithLoginHint.setExtraQueryParams(extraQueryParameter);
+        final String actualCodeRequestUrlWithLoginHint = requestWithLoginHint.build().getAuthorizationRequestAsHttpRequest().toString();
+
+        Assert.assertTrue(actualCodeRequestUrlWithLoginHint.contains(CONSTANT_LOGIN_HINT));
+        Assert.assertTrue(expectedCount == StringUtil.countMatches(actualCodeRequestUrlWithLoginHint, "login_hint"));
+    }
+
+    @Test
+    public void testGetCodeRequestWithDuplicatedExtraQueryParametersInstanceAware() throws MalformedURLException {
+        final int expectedCount = 1;
+        final MicrosoftStsAuthorizationRequest.Builder requestWithLoginHint = getBaseBuilder();
+        final List<Pair<String, String>> extraQueryParameter = new LinkedList<>();
+        extraQueryParameter.add(new Pair<>(CONSTANT_LOGIN_HINT, DEFAULT_TEST_LOGIN_HINT));
+        extraQueryParameter.add(new Pair<>(CONSTANT_INSTANCE_AWARE, Boolean.TRUE.toString()));
+        requestWithLoginHint.setExtraQueryParams(extraQueryParameter);
+        final String actualCodeRequestUrl = requestWithLoginHint.build().getAuthorizationRequestAsHttpRequest().toString();
+
+        Assert.assertTrue(actualCodeRequestUrl.contains(CONSTANT_LOGIN_HINT));
+        Assert.assertTrue(actualCodeRequestUrl.contains(CONSTANT_INSTANCE_AWARE));
+        Assert.assertTrue(expectedCount == StringUtil.countMatches(actualCodeRequestUrl, CONSTANT_LOGIN_HINT));
+        Assert.assertTrue(expectedCount == StringUtil.countMatches(actualCodeRequestUrl, CONSTANT_INSTANCE_AWARE));
     }
 
     @Test

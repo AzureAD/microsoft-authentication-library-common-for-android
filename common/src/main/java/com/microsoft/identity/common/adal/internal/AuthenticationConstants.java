@@ -1128,6 +1128,13 @@ public final class AuthenticationConstants {
         public static final String BROKER_ACCOUNTS = "broker_accounts";
 
         /**
+         * String to return current account from broker (only available in shared device mode)
+         */
+        public static final String BROKER_CURRENT_ACCOUNT = "broker_current_account";
+
+        public static final String BROKER_KEYSTORE_SYMMETRIC_KEY = "broker_keystore_symmetric_key";
+
+        /**
          * Bundle identifiers for x-ms-clitelem info.
          */
         public static final class CliTelemInfo {
@@ -1250,5 +1257,19 @@ public final class AuthenticationConstants {
          * @see <a href="https://tools.ietf.org/html/rfc7159">RFC-7159</a>
          */
         public static final String APPLICATION_JSON = "application/json";
+    }
+
+    public static final class TelemetryEvents {
+        public static final String DECRYPTION_ERROR = "decryption_error_v2";
+
+        public static final String KEYCHAIN_WRITE = "keychain_write_v2";
+
+        public static final String KEYCHAIN_READ = "keychain_read_v2";
+
+        public static final String KEY_RETRIEVAL = "key_retrieval_v2";
+
+        public static final String KEY_DISTRIBUTION = "key_distribution_v2";
+
+        public static final String KEY_CREATED = "key_created_v2";
     }
 }
