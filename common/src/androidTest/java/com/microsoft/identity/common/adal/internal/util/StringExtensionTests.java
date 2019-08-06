@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.util;
 
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.runner.AndroidJUnit4;
 import android.util.Log;
 
 import com.microsoft.identity.common.adal.internal.AndroidTestHelper;

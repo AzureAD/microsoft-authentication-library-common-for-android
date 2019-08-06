@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.net;
 
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;

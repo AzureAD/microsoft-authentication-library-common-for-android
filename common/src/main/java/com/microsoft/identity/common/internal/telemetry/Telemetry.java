@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.telemetry;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
