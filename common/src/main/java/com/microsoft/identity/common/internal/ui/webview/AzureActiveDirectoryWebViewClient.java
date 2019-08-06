@@ -107,6 +107,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @return return true means the host application handles the url, while return false means the current WebView handles the url.
      */
     @Override
+    @TargetApi(Build.VERSION_CODES.N)
     @RequiresApi(Build.VERSION_CODES.N)
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
         final Uri requestUrl = request.getUrl();
