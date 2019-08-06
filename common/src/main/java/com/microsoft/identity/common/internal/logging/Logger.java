@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.logging;
 
 import android.os.Build;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Log;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;

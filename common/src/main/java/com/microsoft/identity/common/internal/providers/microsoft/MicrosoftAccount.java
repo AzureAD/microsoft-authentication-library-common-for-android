@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
