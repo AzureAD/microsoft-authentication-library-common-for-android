@@ -21,7 +21,7 @@ ext {
     junitVersion = "4.12"
     legacySupportV4Version = "1.0.0"
     materialVersion = "1.0.0"
-    mockitoCoreVersion = "2.18.3"
+    mockitoCoreVersion = "1.10.19"
     mockitoAndroidVersion = "2.18.3"
     multidexVersion = "2.0.1"
     powerMockVersion = "1.6.6"
