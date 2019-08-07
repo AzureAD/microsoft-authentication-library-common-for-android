@@ -88,13 +88,18 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == BROWSER_FLOW) {
             if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
-                final AuthorizationResult result = mOAuth2Strategy.getAuthorizationResultFactory().createAuthorizationResult(
-                        resultCode, data, mAuthorizationRequest
-                );
+                final AuthorizationResult result = mOAuth2Strategy
+                        .getAuthorizationResultFactory()
+                        .createAuthorizationResult(
+                                resultCode,
+                                data,
+                                mAuthorizationRequest
+                        );
                 mAuthorizationResultFuture.setResult(result);
             } else {
                 Logger.warn(TAG, "SDK Cancel triggering before request is sent out. " +
-                        "Potentially due to an activity stale state where onDestroy might not be called or a broadcast is sent out twice "
+                        "Potentially due to an activity stale state where onDestroy " +
+                        "might not be called or a broadcast is sent out multiple times "
                 );
             }
         } else {
