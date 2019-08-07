@@ -326,7 +326,7 @@ public class StorageHelper implements IStorageHelper {
         final String activeBroker = mContext.getPackageName();
 
         if (!previousActiveBroker.equalsIgnoreCase(activeBroker)) {
-            final String message = "Failed to decrypt with keyType: " + keyType.name()
+            final String message = "Decryption failed with key: " + keyType.name()
                     + " Active broker: " + activeBroker
                     + " Exception: " + exception.toString();
 
