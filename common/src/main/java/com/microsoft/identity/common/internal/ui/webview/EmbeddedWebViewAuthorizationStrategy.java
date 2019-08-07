@@ -98,8 +98,9 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                 mAuthorizationResultFuture.setResult(result);
             } else {
                 Logger.warn(TAG, "SDK Cancel triggering before request is sent out. " +
-                        "Potentially due to an activity stale state where onDestroy " +
-                        "might not be called or a broadcast is sent out multiple times "
+                        "Potentially due to an stale activity state, " +
+                        "oAuth2Strategy null ? [" + (mOAuth2Strategy == null) + "]" +
+                        "mAuthorizationResultFuture ? [" + (mAuthorizationResultFuture == null) + "]"
                 );
             }
         } else {
