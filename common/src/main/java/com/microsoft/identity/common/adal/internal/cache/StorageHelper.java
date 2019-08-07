@@ -25,7 +25,9 @@ package com.microsoft.identity.common.adal.internal.cache;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
+import android.preference.PreferenceManager;
 import android.security.KeyPairGeneratorSpec;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -118,6 +120,8 @@ public class StorageHelper implements IStorageHelper {
     private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
+
+    private static final String CURRENT_ACTIVE_BROKER = "current_active_broker";
 
     private static final int KEY_SIZE = 256;
 
@@ -295,13 +299,10 @@ public class StorageHelper implements IStorageHelper {
                 }
 
                 String result = decryptWithSecretKey(bytes, secretKey);
-                Logger.verbose(TAG + methodName, "Finished decryption.");
+                Logger.verbose(TAG + methodName, "Finished decryption with keyType:" + keyType.name());
                 return result;
             } catch (GeneralSecurityException | IOException e) {
-                logEvent(methodName,
-                        AuthenticationConstants.TelemetryEvents.DECRYPTION_ERROR,
-                        true,
-                        "failed to decrypt with keyType:" + keyType.name() + " exception: " + e.toString());
+                emitDecryptionFailureTelemetryIfNeeded(keyType, e);
             }
         }
 
@@ -310,6 +311,36 @@ public class StorageHelper implements IStorageHelper {
                 "Tried all decryption keys and decryption still fails. Throw an exception.");
 
         throw new GeneralSecurityException(ErrorStrings.DECRYPTION_FAILED);
+    }
+
+    // This is to make sure that Decryption error failure is only emitted once - to avoid bombarding ARIA.
+    private void emitDecryptionFailureTelemetryIfNeeded(@NonNull final KeyType keyType,
+                                                        @NonNull final Exception exception) {
+        final String methodName = ":emitDecryptionFailureTelemetryIfNeeded";
+        final SharedPreferences sharedPreferences = PreferenceManager.
+                getDefaultSharedPreferences(mContext);
+        final String previousActiveBroker = sharedPreferences.getString(
+                CURRENT_ACTIVE_BROKER,
+                ""
+        );
+        final String activeBroker = mContext.getPackageName();
+
+        if (!previousActiveBroker.equalsIgnoreCase(activeBroker)) {
+            final String message = "Failed to decrypt with keyType: " + keyType.name()
+                    + " Active broker: " + activeBroker
+                    + " Exception: " + exception.toString();
+
+            Logger.info(TAG + methodName, message);
+
+            if (mTelemetryCallback != null) {
+                mTelemetryCallback.logEvent(mContext,
+                        AuthenticationConstants.TelemetryEvents.DECRYPTION_ERROR,
+                        true,
+                        message);
+            }
+
+            sharedPreferences.edit().putString(CURRENT_ACTIVE_BROKER, activeBroker).apply();
+        }
     }
 
     /**
@@ -523,8 +554,6 @@ public class StorageHelper implements IStorageHelper {
     @Nullable
     public SecretKey loadSecretKey(@NonNull final KeyType keyType) throws IOException, GeneralSecurityException {
         final String methodName = ":loadSecretKey";
-
-        Logger.verbose(TAG + methodName, "Loading key with Type:" + keyType.name());
 
         switch (keyType) {
             case LEGACY_AUTHENTICATOR_APP_KEY:
