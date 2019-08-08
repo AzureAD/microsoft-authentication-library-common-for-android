@@ -22,7 +22,7 @@ ext {
     legacySupportV4Version = "1.0.0"
     materialVersion = "1.0.0"
     mockitoCoreVersion = "2.18.3"
-    mockitoAndroidVersion = "3.0.4"
+    mockitoAndroidVersion = "3.0.0"
     multidexVersion = "2.0.1"
     powerMockVersion = "1.6.6"
     nimbusVersion = "5.7"
