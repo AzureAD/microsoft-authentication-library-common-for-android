@@ -1,3 +1,7 @@
+Version 0.0.15
+-------------
+- Bug Fix : Adding null safety check to avoid crash on EmbeddedWebViewStrategy
+
 Version 0.0.14
 -------------
 - Bug fix : Read user id from the request bundle for broker silent request.
