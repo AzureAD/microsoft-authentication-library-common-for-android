@@ -24,7 +24,8 @@ package com.microsoft.identity.common;
 
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.test.runner.AndroidJUnit4;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;

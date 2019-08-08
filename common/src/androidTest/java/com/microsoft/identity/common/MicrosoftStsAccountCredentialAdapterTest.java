@@ -22,8 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import androidx.test.runner.AndroidJUnit4;
 import android.util.Base64;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
