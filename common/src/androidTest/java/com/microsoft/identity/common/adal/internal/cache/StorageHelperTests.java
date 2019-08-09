@@ -38,6 +38,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -139,6 +140,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
      * test different size messages
      */
     @Test
+    @Ignore
     public void testEncryptDecryptDifferentSizes() throws GeneralSecurityException, IOException {
         Log.d(TAG, "Starting testEncryptDecrypt_differentSizes");
         // try different block sizes
