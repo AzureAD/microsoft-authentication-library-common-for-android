@@ -93,6 +93,7 @@ dependencies {
     testImplementation "org.powermock:powermock-classloading-xstream:$rootProject.ext.powerMockVersion"
 
     // Instrumented dependencies
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation "org.mockito:mockito-android:$rootProject.ext.mockitoAndroidVersion"
     androidTestImplementation("androidx.test.espresso:espresso-core:$rootProject.ext.espressoCoreVersion", {
         exclude group: 'com.android.support', module: 'support-annotations'

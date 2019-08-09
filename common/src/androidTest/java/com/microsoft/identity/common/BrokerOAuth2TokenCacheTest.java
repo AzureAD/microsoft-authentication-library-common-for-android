@@ -23,8 +23,9 @@
 package com.microsoft.identity.common;
 
 import android.content.Context;
+
 import androidx.test.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
@@ -126,7 +127,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         MockitoAnnotations.initMocks(this);
 
         // Our test context
-        final Context context = InstrumentationRegistry.getTargetContext();
+        final Context context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().getTargetContext();
 
         mApplicationMetadataCache = new SharedPreferencesBrokerApplicationMetadataCache(context);
 
@@ -214,10 +215,13 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         if (null != mAppUidCredentialCache) {
             mAppUidCredentialCache.clearAll();
         }
+
         mFociCredentialCache.clearAll();
+
         for (final IAccountCredentialCache cache : mOtherAppCredentialCaches) {
             cache.clearAll();
         }
+
         mApplicationMetadataCache.clear();
     }
 
