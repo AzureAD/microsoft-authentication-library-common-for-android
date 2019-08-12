@@ -45,6 +45,7 @@ public abstract class Authority {
 
     private static final String ADFS_PATH_SEGMENT = "adfs";
     private static final String B2C_PATH_SEGMENT = "tfp";
+    private static final String AAD_ROPC_TEST_PATH_SEGMENT = "aad.ropc";
 
     protected boolean mKnownToMicrosoft = false;
     protected boolean mKnownToDeveloper = false;
@@ -129,6 +130,14 @@ public abstract class Authority {
                             "Authority type is B2C"
                     );
                     authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
+                    break;
+                case AAD_ROPC_TEST_PATH_SEGMENT:
+                    //Return new ROPC TEST Authority
+                    Logger.verbose(
+                            TAG + methodName,
+                            "Authority type is AAD_ROPC_TEST"
+                    );
+                    authority = new RopcTestAuthority();
                     break;
                 default:
                     Logger.verbose(

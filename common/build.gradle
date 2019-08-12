@@ -81,6 +81,9 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
 
+    implementation project(':keyvault')
+    implementation project(':labapi')
+
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
     testImplementation 'org.json:json:20160810'
