@@ -1,6 +1,6 @@
 package com.microsoft.identity.common.internal.providers.ropc;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
