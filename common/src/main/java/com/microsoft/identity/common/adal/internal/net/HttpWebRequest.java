@@ -57,6 +57,7 @@ public class HttpWebRequest {
     private final byte[] mRequestContent;
     private final String mRequestContentType;
     private final Map<String, String> mRequestHeaders;
+    private static boolean sDisableNetworkCheckForTest;
 
     /**
      * Constructor of HttpWebRequest.
@@ -189,6 +190,9 @@ public class HttpWebRequest {
      * @throws ClientException throw network exception
      */
     public static void throwIfNetworkNotAvailable(final Context context) throws ClientException {
+        if (sDisableNetworkCheckForTest) {
+            return;
+        }
         final DefaultConnectionService connectionService = new DefaultConnectionService(context);
         if (!connectionService.isConnectionAvailable()) {
             if (connectionService.isNetworkDisabledFromOptimizations()) {
@@ -270,4 +274,12 @@ public class HttpWebRequest {
             }
         }
     }
+
+    /**
+     * Mark that the system is running under test conditions and that Network checks should be disabled.
+     */
+    public static void disableNetworkCheckForTestForTest(final boolean disabled) {
+        sDisableNetworkCheckForTest = disabled;
+    }
+
 }
