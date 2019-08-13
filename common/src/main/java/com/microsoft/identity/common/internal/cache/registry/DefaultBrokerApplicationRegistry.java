@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -35,7 +36,7 @@ public class DefaultBrokerApplicationRegistry implements IBrokerApplicationRegis
 
     @Override
     public BrokerApplicationRegistryData getMetadata(@NonNull final String clientId,
-                                                     @NonNull final String environment,
+                                                     @Nullable final String environment,
                                                      final int processUid) {
         final String methodName = ":getMetadata";
 
@@ -44,8 +45,8 @@ public class DefaultBrokerApplicationRegistry implements IBrokerApplicationRegis
 
         for (final BrokerApplicationRegistryData metadata : allMetadata) {
             if (clientId.equals(metadata.getClientId())
-                    && environment.equals(metadata.getEnvironment())
-                    && processUid == metadata.getUid()) {
+                    && processUid == metadata.getUid()
+                    && (null == environment || environment.equals(metadata.getEnvironment()))) {
                 Logger.verbose(
                         TAG + metadata,
                         "Metadata located."
