@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
@@ -106,9 +106,10 @@ public abstract class MicrosoftAccount extends BaseAccount {
         mUtid = clientInfo.getUtid();
 
         long mPasswordExpiration = 0;
+        final Object expiry = claims.get(AzureActiveDirectoryIdToken.PASSWORD_EXPIRATION);
 
-        if (!StringExtensions.isNullOrBlank((String) claims.get(AzureActiveDirectoryIdToken.PASSWORD_EXPIRATION))) {
-            mPasswordExpiration = Long.parseLong((String) claims.get(AzureActiveDirectoryIdToken.PASSWORD_EXPIRATION));
+        if (null != expiry) {
+            mPasswordExpiration = Long.valueOf(expiry.toString());
         }
 
         if (mPasswordExpiration > 0) {
@@ -120,8 +121,10 @@ public abstract class MicrosoftAccount extends BaseAccount {
         }
 
         mPasswordChangeUrl = null;
-        if (!StringExtensions.isNullOrBlank((String) claims.get(AzureActiveDirectoryIdToken.PASSWORD_CHANGE_URL))) {
-            mPasswordChangeUrl = Uri.parse((String) claims.get(AzureActiveDirectoryIdToken.PASSWORD_CHANGE_URL));
+        final String passwordChangeUrl = (String) claims.get(AzureActiveDirectoryIdToken.PASSWORD_CHANGE_URL);
+
+        if (!StringExtensions.isNullOrBlank(passwordChangeUrl)) {
+            mPasswordChangeUrl = Uri.parse(passwordChangeUrl);
         }
     }
 

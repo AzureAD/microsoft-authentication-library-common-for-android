@@ -20,45 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import androidx.annotation.NonNull;
+package com.microsoft.identity.common.adal.internal.cache;
 
-import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
+import android.content.Context;
 
-import java.util.Date;
-
-public class AzureActiveDirectoryAccessToken extends AccessToken {
-
-    private Date mExpiresOn;
-    private Date mExtendedExpiresOn;
-
-    /**
-     * Constructor of AzureActiveDirectoryAccessToken.
-     *
-     * @param response AzureActiveDirectoryTokenResponse
-     */
-    public AzureActiveDirectoryAccessToken(
-            @NonNull final AzureActiveDirectoryTokenResponse response) {
-        super(response);
-        mExpiresOn = response.getExpiresOn();
-        mExtendedExpiresOn = response.getExtExpiresOn();
-    }
-
-    /**
-     * @return mExpiresOn of AzureActiveDirectoryAccessToken
-     */
-    public Date getExpiresOn() {
-        return mExpiresOn;
-    }
-
-    /**
-     * @return mExtendedExpiresOn of AzureActiveDirectoryAccessToken
-     */
-    public Date getExtendedExpiresOn() {
-        return mExtendedExpiresOn;
-    }
-
-    //TODO: Need to add override for IsExpired() to address extended token expires on
-
+/**
+ * Temporary interface.
+ * For injecting telemetry into common (until common's telemetry is properly wired up).
+ * */
+public interface IWpjTelemetryCallback {
+    void logEvent(Context context, final String operation, final Boolean isFailed, final String reason);
+    void logSessionStart(Context context, final String operation);
+    void logSessionEnd(Context context, final String operation, final Boolean isFailed, final String reason);
 }

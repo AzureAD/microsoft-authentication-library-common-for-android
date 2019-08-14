@@ -20,29 +20,36 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.util;
 
+package com.microsoft.identity.common.internal.broker;
+
+import android.content.Context;
 import androidx.annotation.NonNull;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.exception.ClientException;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+/**
+ * Represents packageName and SignatureHash of a broker app.
+ * */
+public class BrokerData{
+    public final String packageName;
+    public final String signatureHash;
 
-public class HeaderSerializationUtil {
-
-    public static String toJson(@NonNull final Map<String, List<String>> headersIn) {
-        return new Gson().toJson(headersIn);
+    private BrokerData(String packageName, String hash) {
+        this.packageName = packageName;
+        this.signatureHash = hash;
     }
 
-    public static HashMap<String, List<String>> fromJson(@NonNull final String jsonIn) {
-        return new Gson()
-                .fromJson(
-                        jsonIn,
-                        new TypeToken<HashMap<String, List<String>>>() {
-                        }.getType()
-                );
+    /**
+     * Given a broker package name, verify its signature and return a BrokerData object.
+     *
+     * @throws ClientException an exception containing mismatch signature hashes as its error message.
+     * */
+    public static BrokerData getBrokerDataForBrokerApp(@NonNull final Context context,
+                                                       @NonNull String brokerPackageName) throws ClientException {
+
+        // Verify the signature to make sure that we're not binding to malicious apps.
+        final BrokerValidator validator = new BrokerValidator(context);
+        return new BrokerData(brokerPackageName, validator.verifySignatureAndThrow(brokerPackageName));
     }
 }

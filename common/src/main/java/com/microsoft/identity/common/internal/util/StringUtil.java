@@ -22,7 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -150,5 +151,26 @@ public final class StringUtil {
         }
 
         return 0;
+    }
+
+    /**
+     * Counts the number of occurrences of one String in another.
+     *
+     * @param str
+     * @param subString
+     * @return int
+     */
+    public static int countMatches(@NonNull String str, @Nullable String subString) {
+        int count = 0;
+        if (StringUtil.isEmpty(str) || StringUtil.isEmpty(subString)) {
+            return count;
+        }
+        for(int i = 0; i <= (str.length() - subString.length()); i++) {
+            if(str.substring(i, i + subString.length()).equalsIgnoreCase(subString)) {
+                count++;
+            }
+        }
+
+        return count;
     }
 }

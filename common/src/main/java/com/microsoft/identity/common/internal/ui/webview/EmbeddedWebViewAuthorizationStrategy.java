@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.ui.webview;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
@@ -87,8 +87,22 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     @Override
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == BROWSER_FLOW) {
-            final AuthorizationResult result = mOAuth2Strategy.getAuthorizationResultFactory().createAuthorizationResult(resultCode, data, mAuthorizationRequest);
-            mAuthorizationResultFuture.setResult(result);
+            if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
+                final AuthorizationResult result = mOAuth2Strategy
+                        .getAuthorizationResultFactory()
+                        .createAuthorizationResult(
+                                resultCode,
+                                data,
+                                mAuthorizationRequest
+                        );
+                mAuthorizationResultFuture.setResult(result);
+            } else {
+                Logger.warn(TAG, "SDK Cancel triggering before request is sent out. " +
+                        "Potentially due to an stale activity state, " +
+                        "oAuth2Strategy null ? [" + (mOAuth2Strategy == null) + "]" +
+                        "mAuthorizationResultFuture ? [" + (mAuthorizationResultFuture == null) + "]"
+                );
+            }
         } else {
             Logger.warnPII(TAG, "Unknown request code " + requestCode);
         }

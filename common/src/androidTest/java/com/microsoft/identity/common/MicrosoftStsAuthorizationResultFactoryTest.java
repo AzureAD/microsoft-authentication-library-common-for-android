@@ -23,7 +23,8 @@
 package com.microsoft.identity.common;
 
 import android.content.Intent;
-import android.support.test.runner.AndroidJUnit4;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -46,15 +47,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-
 @RunWith(AndroidJUnit4.class)
 public class MicrosoftStsAuthorizationResultFactoryTest {
 
     private static final String REDIRECT_URI = "msauth-clientid://packagename/";
     private static final String AUTH_CODE_AND_STATE = "code=authorization_code&state=state";
     private static final String FRAGMENT_STRING = "#_=_";
-    private static final String MOCK_AUTH_CODE = "authorization_code";
-    private static final String MOCK_STATE = "state";
     private static final String ERROR_MESSAGE = "access_denied";
     private static final String ERROR_DESCRIPTION = "access denied error description";
 
@@ -216,7 +214,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     @Test
     public void testUrlWithInvalidAuthCodeAndFragmentParas() {
         Intent intent = new Intent();
-        intent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, REDIRECT_URI  + "?" + FRAGMENT_STRING);
+        intent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, REDIRECT_URI + "?" + FRAGMENT_STRING);
         AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, intent, getMstsAuthorizationRequest());
         assertNotNull(result);

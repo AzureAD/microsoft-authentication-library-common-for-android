@@ -1,3 +1,5 @@
+package com.microsoft.identity.common.internal.broker;
+
 //  Copyright (c) Microsoft Corporation.
 //  All rights reserved.
 //
@@ -20,29 +22,32 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.util;
 
-import androidx.annotation.NonNull;
+import android.content.ComponentName;
+import android.os.IBinder;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.microsoft.aad.adal.IBrokerAccountService;
+import com.microsoft.identity.client.IMicrosoftAuthService;
+import com.microsoft.identity.common.internal.logging.Logger;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+public class BrokerAccountServiceConnection implements android.content.ServiceConnection {
+    private static final String TAG = MicrosoftAuthServiceConnection.class.getSimpleName();
+    private IBrokerAccountService mBrokerAccountService;
+    private BrokerAccountServiceFuture mBrokerAccountServiceFuture;
 
-public class HeaderSerializationUtil {
-
-    public static String toJson(@NonNull final Map<String, List<String>> headersIn) {
-        return new Gson().toJson(headersIn);
+    public BrokerAccountServiceConnection(BrokerAccountServiceFuture future) {
+        mBrokerAccountServiceFuture = future;
     }
 
-    public static HashMap<String, List<String>> fromJson(@NonNull final String jsonIn) {
-        return new Gson()
-                .fromJson(
-                        jsonIn,
-                        new TypeToken<HashMap<String, List<String>>>() {
-                        }.getType()
-                );
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        Logger.verbose(TAG, "BrokerAccountService is connected.");
+        mBrokerAccountService = IBrokerAccountService.Stub.asInterface(service);
+        mBrokerAccountServiceFuture.setBrokerAccountService(mBrokerAccountService);
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+        Logger.verbose(TAG, "BrokerAccountService is disconnected.");
     }
 }

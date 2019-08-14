@@ -25,9 +25,7 @@ package com.microsoft.identity.common.unit;
 import com.microsoft.identity.common.internal.authorities.AccountsInOneOrganization;
 import com.microsoft.identity.common.internal.authorities.AllAccounts;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
-import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryEnvironment;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 
 import junit.framework.Assert;
 
@@ -35,13 +33,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.UnsupportedEncodingException;
-
 @RunWith(JUnit4.class)
 public class AudienceDefaultCloudUrlTest {
 
     @Test
-    public void test_AccountsInOneOrganizationDefaultCloudUrl()  {
+    public void test_AccountsInOneOrganizationDefaultCloudUrl() {
 
         AzureActiveDirectoryAudience audience = new AccountsInOneOrganization();
         Assert.assertEquals(AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
@@ -52,7 +48,7 @@ public class AudienceDefaultCloudUrlTest {
     }
 
     @Test
-    public void test_AllAccountsDefaultCloudUrl()  {
+    public void test_AllAccountsDefaultCloudUrl() {
 
         AzureActiveDirectoryAudience audience = new AllAccounts();
         Assert.assertEquals(AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
@@ -68,15 +64,12 @@ public class AudienceDefaultCloudUrlTest {
     }
 
     @Test
-    public void test_AnyPerosnalAccountDefaultCloudUrl()  {
+    public void test_AnyPerosnalAccountDefaultCloudUrl() {
 
         AzureActiveDirectoryAudience audience = new AllAccounts();
         Assert.assertEquals(AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
 
     }
-
-
-
 
 
 }

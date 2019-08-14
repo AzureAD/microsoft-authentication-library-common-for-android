@@ -40,7 +40,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-public final class DateTimeAdapter implements JsonDeserializer<Date>, JsonSerializer<Date> {
+public class DateTimeAdapter implements JsonDeserializer<Date>, JsonSerializer<Date> {
 
     private static final String TAG = "DateTimeAdapter";
 
