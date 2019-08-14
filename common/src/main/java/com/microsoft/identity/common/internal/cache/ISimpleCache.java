@@ -4,8 +4,6 @@ import java.util.List;
 
 /**
  * A generic caching interface.
- *
- * @param <T> The object or metadata to cache.
  */
 public interface ISimpleCache<T> {
 

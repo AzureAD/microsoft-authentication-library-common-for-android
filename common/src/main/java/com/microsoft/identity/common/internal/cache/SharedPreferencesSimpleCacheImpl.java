@@ -1,0 +1,180 @@
+package com.microsoft.identity.common.internal.cache;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import androidx.annotation.NonNull;
+
+import com.google.gson.Gson;
+import com.microsoft.identity.common.internal.logging.Logger;
+
+import java.lang.reflect.Type;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCache<T> {
+
+    private static final String TAG = SharedPreferencesSimpleCacheImpl.class.getSimpleName();
+
+    private static final String EMPTY_ARRAY = "[]";
+
+    private final SharedPreferences mSharedPrefs;
+    private final String mKeySingleEntry;
+    private final Gson mGson = new Gson();
+
+    public SharedPreferencesSimpleCacheImpl(@NonNull final Context context,
+                                            @NonNull final String prefsName,
+                                            @NonNull final String singleKey) {
+        Logger.verbose(
+                TAG + "::ctor",
+                "Init"
+        );
+        mSharedPrefs = context.getSharedPreferences(
+                prefsName,
+                Context.MODE_PRIVATE
+        );
+        mKeySingleEntry = singleKey;
+    }
+
+    protected abstract Type getListTypeToken();
+
+    @Override
+    public boolean insert(T t) {
+        final String methodName = ":insert";
+
+        final Set<T> allMetadata = new HashSet<>(getAll());
+        Logger.verbose(
+                TAG + methodName,
+                "Existing metadata contained ["
+                        + allMetadata.size()
+                        + "] elements."
+        );
+
+        allMetadata.add(t);
+
+        Logger.verbose(
+                TAG + methodName,
+                "New metadata set size: ["
+                        + allMetadata.size()
+                        + "]"
+        );
+
+        final String json = mGson.toJson(allMetadata);
+
+        Logger.verbose(
+                TAG + methodName,
+                "Writing cache entry."
+        );
+
+        final boolean success = mSharedPrefs.edit().putString(mKeySingleEntry, json).commit();
+
+        if (success) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Cache successfully updated."
+            );
+        } else {
+            Logger.warn(
+                    TAG + methodName,
+                    "Error writing to cache."
+            );
+        }
+
+        return success;
+    }
+
+    @Override
+    public boolean remove(T t) {
+        final String methodName = ":remove";
+
+        final Set<T> allMetadata = new HashSet<>(getAll());
+
+        Logger.verbose(
+                TAG + methodName,
+                "Existing metadata contained ["
+                        + allMetadata.size()
+                        + "] elements."
+        );
+
+        final boolean removed = allMetadata.remove(t);
+
+        Logger.verbose(
+                TAG + methodName,
+                "New metadata set size: ["
+                        + allMetadata.size()
+                        + "]"
+        );
+
+        if (!removed) {
+            // Nothing to do, wasn't cached in the first place!
+            Logger.warn(
+                    TAG + methodName,
+                    "Nothing to delete -- cache entry is missing!"
+            );
+
+            return true;
+        } else {
+            final String json = mGson.toJson(allMetadata);
+
+            Logger.verbose(
+                    TAG + methodName,
+                    "Writing new cache values..."
+            );
+
+            final boolean written = mSharedPrefs.edit().putString(mKeySingleEntry, json).commit();
+
+            Logger.verbose(
+                    TAG + methodName,
+                    "Updated cache contents written? ["
+                            + written
+                            + "]"
+            );
+
+            return written;
+        }
+    }
+
+    @Override
+    public List<T> getAll() {
+        final String methodName = ":getAll";
+        final String jsonList = mSharedPrefs.getString(mKeySingleEntry, EMPTY_ARRAY);
+
+        final Type listType = getListTypeToken();
+
+        final List<T> result = mGson.fromJson(
+                jsonList,
+                listType
+        );
+
+        Logger.verbose(
+                TAG + methodName,
+                "Found ["
+                        + result.size()
+                        + "] cache entries."
+        );
+
+        return result;
+    }
+
+    @Override
+    public boolean clear() {
+        final String methodName = ":clear";
+
+        final boolean cleared = mSharedPrefs.edit().clear().commit();
+
+        if (!cleared) {
+            Logger.warn(
+                    TAG + methodName,
+                    "Failed to clear cache."
+            );
+        } else {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Cache successfully cleared."
+            );
+        }
+
+        return cleared;
+    }
+}
