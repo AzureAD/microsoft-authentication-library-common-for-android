@@ -35,6 +35,9 @@ public abstract class AbstractApplicationMetadata {
         public static final String CLIENT_ID = "client_id";
         static final String ENVIRONMENT = "environment";
         static final String APPLICATION_UID = "application_uid";
+
+        // If you add properties to this base class, you *must* regenerate the below
+        // implementations of hashCode() and equals() to account for them.
     }
 
     @SerializedName(SerializedNames.CLIENT_ID)
