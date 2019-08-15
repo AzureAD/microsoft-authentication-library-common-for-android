@@ -26,7 +26,7 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.cache.AbstractApplicationMetadata;
 
 /**
- * A basic registry (key/value) style data store for tracking info about apps which bind to the
+ * A basic registry (key/value) entry for tracking info about apps which bind to the
  * broker.
  * <p>
  * This class is fine to expand over time if more properties need to be added - make note however,

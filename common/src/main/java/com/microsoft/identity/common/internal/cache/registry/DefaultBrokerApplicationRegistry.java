@@ -34,6 +34,10 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import java.lang.reflect.Type;
 import java.util.List;
 
+/**
+ * A basic registry (key/value) style data store for tracking info about apps which bind to the
+ * broker.
+ */
 public class DefaultBrokerApplicationRegistry
         extends SharedPreferencesSimpleCacheImpl<BrokerApplicationRegistryData>
         implements IBrokerApplicationRegistry {
