@@ -35,6 +35,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * A simple metadata store definition that uses SharedPreferences to persist, read, update, and
+ * delete data.
+ * <p>
+ * Data serializes as JSON.
+ *
+ * @param <T> The type of metadata that will be persisted.
+ */
 public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCache<T> {
 
     private static final String TAG = SharedPreferencesSimpleCacheImpl.class.getSimpleName();
