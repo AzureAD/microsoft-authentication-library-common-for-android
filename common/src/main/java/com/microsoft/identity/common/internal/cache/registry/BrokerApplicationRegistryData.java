@@ -25,6 +25,14 @@ package com.microsoft.identity.common.internal.cache.registry;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.cache.AbstractApplicationMetadata;
 
+/**
+ * A basic registry (key/value) style data store for tracking info about apps which bind to the
+ * broker.
+ * <p>
+ * This class is fine to expand over time if more properties need to be added - make note however,
+ * that if you add more properties, you need to regenerate the hashCode() and equals()
+ * implementation.
+ */
 public class BrokerApplicationRegistryData extends AbstractApplicationMetadata {
 
     private static final class SerializedNames extends AbstractApplicationMetadata.SerializedNames {
@@ -34,10 +42,20 @@ public class BrokerApplicationRegistryData extends AbstractApplicationMetadata {
     @SerializedName(SerializedNames.ALLOW_WPJ_ACCESS)
     private boolean mWpjAccountAccessAllowed;
 
+    /**
+     * Gets the WPJ Account access state flag.
+     *
+     * @return True if account access is allowed. False otherwise.
+     */
     public boolean isWpjAccountAccessAllowed() {
         return mWpjAccountAccessAllowed;
     }
 
+    /**
+     * Sets the WPJ Account access state flag.
+     *
+     * @param allow True if access should be allowed to the binding app. False otherwise.
+     */
     public void setWpjAccountAccessAllowed(final boolean allow) {
         mWpjAccountAccessAllowed = allow;
     }
