@@ -24,7 +24,18 @@ package com.microsoft.identity.common.internal.cache.registry;
 
 import com.microsoft.identity.common.internal.cache.ISimpleCache;
 
+/**
+ * Interface defining the BrokerApplicationRegistry.
+ */
 public interface IBrokerApplicationRegistry extends ISimpleCache<BrokerApplicationRegistryData> {
 
-    BrokerApplicationRegistryData getMetadata(String client, String environment, int processUid);
+    /**
+     * Gets the appropriate metadata for the provided app criteria.
+     *
+     * @param clientId    The clientId of the target or binding app.
+     * @param environment The environment of the target or binding app.
+     * @param processUid  The process UID of the target or binding app.
+     * @return The BrokerApplicationRegistryData to return.
+     */
+    BrokerApplicationRegistryData getMetadata(String clientId, String environment, int processUid);
 }
