@@ -24,6 +24,11 @@ package com.microsoft.identity.common.internal.cache;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Abstract base class of BrokerApplicationMetadata and BrokerApplicationRegistry - this class
+ * provides an outline of a unique app that is distinguished by the properties defined in its
+ * inner-class {@link AbstractApplicationMetadata.SerializedNames}.
+ */
 public abstract class AbstractApplicationMetadata {
 
     protected static class SerializedNames {
