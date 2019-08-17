@@ -162,8 +162,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         assertNotNull(familyCacheRecordWithClientId);
         assertNotNull(familyCacheRecordWithClientId.getAccount());
         assertNotNull(familyCacheRecordWithClientId.getRefreshToken());
-        assertNull(familyCacheRecordWithClientId.getIdToken());
-        assertNull(familyCacheRecordWithClientId.getAccessToken());
+        assertNotNull(familyCacheRecordWithClientId.getIdToken());
+        assertNotNull(familyCacheRecordWithClientId.getAccessToken());
 
         final ICacheRecord familyCacheRecordWithClientIdButNonMatchingTarget =
                 mOauth2TokenCache.loadByFamilyId(
@@ -174,8 +174,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         assertNotNull(familyCacheRecordWithClientIdButNonMatchingTarget);
         assertNotNull(familyCacheRecordWithClientIdButNonMatchingTarget.getAccount());
         assertNotNull(familyCacheRecordWithClientIdButNonMatchingTarget.getRefreshToken());
-        assertNull(familyCacheRecordWithClientIdButNonMatchingTarget.getIdToken());
-        assertNull(familyCacheRecordWithClientIdButNonMatchingTarget.getAccessToken());
+        assertNotNull(familyCacheRecordWithClientIdButNonMatchingTarget.getIdToken());
+        assertNotNull(familyCacheRecordWithClientIdButNonMatchingTarget.getAccessToken());
 
         final ICacheRecord wrongClientIdResult =
                 mOauth2TokenCache.loadByFamilyId(
@@ -319,8 +319,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
 
         assertNotNull(cacheRecord);
         assertNotNull(cacheRecord.getRefreshToken());
-        assertNull(cacheRecord.getAccessToken());
-        assertNull(cacheRecord.getIdToken());
+        assertNotNull(cacheRecord.getAccessToken());
+        assertNotNull(cacheRecord.getIdToken());
         assertEquals(
                 CLIENT_ID + "2",
                 cacheRecord.getRefreshToken().getClientId()
@@ -334,8 +334,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
 
         assertNotNull(cacheRecord2);
         assertNotNull(cacheRecord2.getRefreshToken());
-        assertNull(cacheRecord2.getAccessToken());
-        assertNull(cacheRecord2.getIdToken());
+        assertNotNull(cacheRecord2.getAccessToken());
+        assertNotNull(cacheRecord2.getIdToken());
         assertEquals(
                 CLIENT_ID + "2",
                 cacheRecord2.getRefreshToken().getClientId()
