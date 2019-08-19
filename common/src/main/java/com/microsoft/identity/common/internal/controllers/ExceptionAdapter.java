@@ -39,11 +39,14 @@ import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
@@ -58,7 +61,8 @@ public class ExceptionAdapter {
     private static final String TAG = ExceptionAdapter.class.getSimpleName();
 
     @Nullable
-    public static BaseException exceptionFromAcquireTokenResult(final AcquireTokenResult result) {
+    public static BaseException exceptionFromAcquireTokenResult(@NonNull final AcquireTokenResult result,
+                                                                @Nullable final OperationParameters parameters) {
         final String methodName = ":exceptionFromAcquireTokenResult";
         final AuthorizationResult authorizationResult = result.getAuthorizationResult();
 
@@ -109,7 +113,13 @@ public class ExceptionAdapter {
             );
         }
 
-        return exceptionFromTokenResult(result.getTokenResult());
+        final ServiceException exception = exceptionFromTokenResult(result.getTokenResult());
+
+        if (exception instanceof IntuneAppProtectionPolicyRequiredException) {
+            setIntuneExceptionPropertiesProperties(result, parameters, (IntuneAppProtectionPolicyRequiredException)exception);
+        }
+
+        return exception;
     }
 
     /**
@@ -118,7 +128,7 @@ public class ExceptionAdapter {
      * @param tokenResult
      * @return ServiceException, UiRequiredException
      * */
-    public static ServiceException exceptionFromTokenResult(final TokenResult tokenResult) {
+    public static ServiceException exceptionFromTokenResult(@NonNull final TokenResult tokenResult) {
         final String methodName = ":exceptionFromTokenResult";
 
         ServiceException outErr;
@@ -217,6 +227,43 @@ public class ExceptionAdapter {
         }
     }
 
+    private static void setIntuneExceptionPropertiesProperties(@NonNull final AcquireTokenResult result,
+                                                               @NonNull final OperationParameters parameters,
+                                                               @NonNull final IntuneAppProtectionPolicyRequiredException outErr) {
+        if (result.getAuthorizationResult() != null
+                && result.getAuthorizationResult().getAuthorizationResponse() != null
+                && result.getAuthorizationResult().getAuthorizationResponse() instanceof MicrosoftAuthorizationResponse
+                && !StringUtil.isEmpty(((MicrosoftAuthorizationResponse) result.getAuthorizationResult().getAuthorizationResponse()).getClientInfo())) {
+            try {
+                final ClientInfo clientInfo = new ClientInfo(
+                        ((MicrosoftAuthorizationResponse) result
+                                .getAuthorizationResult()
+                                .getAuthorizationResponse()
+                        ).getClientInfo()
+                );
+
+                outErr.setAccountUserId(clientInfo.getUid());
+                outErr.setTenantId(clientInfo.getUtid());
+                if (null != parameters
+                        && null != parameters.getAuthority()
+                        && null != parameters.getAuthority().getAuthorityURL()) {
+                    outErr.setAuthorityUrl(
+                            parameters
+                                    .getAuthority()
+                                    .getAuthorityURL()
+                                    .toString()
+                    );
+                }
+            } catch (final ServiceException serviceException) {
+                Logger.errorPII(
+                        TAG,
+                        "Failed to construct the ClientInfo for IntuneAppProtectionPolicyRequiredException",
+                        serviceException
+                );
+            }
+        }
+    }
+
     private static IntuneAppProtectionPolicyRequiredException getIntuneAppProtectionPolicyRequiredException(@NonNull final TokenErrorResponse errorResponse) {
         final IntuneAppProtectionPolicyRequiredException exception =
                 new IntuneAppProtectionPolicyRequiredException(
@@ -240,14 +287,14 @@ public class ExceptionAdapter {
                                 errorResponse.getResponseHeadersJson())
                 );
             }
-        } catch (JSONException e) {
+        } catch (final JSONException e) {
             Logger.warn(TAG, "Unable to parse json");
         }
-        return exception;
 
+        return exception;
     }
 
-    private static boolean shouldConvertToIntunePolicyRequiredException(@NonNull final TokenErrorResponse errorResponse) {
+    public static boolean shouldConvertToIntunePolicyRequiredException(@NonNull final TokenErrorResponse errorResponse) {
         return  !TextUtils.isEmpty(errorResponse.getError()) &&
                 !TextUtils.isEmpty(errorResponse.getSubError()) &&
                 errorResponse.getError().equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT) &&

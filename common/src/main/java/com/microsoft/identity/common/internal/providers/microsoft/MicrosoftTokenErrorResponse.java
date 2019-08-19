@@ -119,7 +119,6 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
         this.mOAuthErrorMetadata = oAuthErrorMetadata;
     }
 
-
     /**
      *
      * @return mAccountDisplayableIdentifier of the Microsoft token error response.

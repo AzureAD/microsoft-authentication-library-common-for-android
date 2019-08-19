@@ -106,7 +106,4 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
     public void setClientInfo(final String clientInfo) {
         mClientInfo = clientInfo;
     }
-
-
-
 }

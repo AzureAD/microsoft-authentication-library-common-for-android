@@ -231,7 +231,7 @@ public class ApiDispatcher {
                             });
                         } else {
                             //Get MsalException from Authorization and/or Token Error Response
-                            baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
+                            baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result, command.mParameters);
                             final BaseException finalException = baseException;
                             if (finalException instanceof UserCancelException) {
                                 //Post Cancel
@@ -239,51 +239,6 @@ public class ApiDispatcher {
                                     @Override
                                     public void run() {
                                         command.getCallback().onCancel();
-                                    }
-                                });
-                            } else if (finalException instanceof IntuneAppProtectionPolicyRequiredException) {
-                               if (result.getAuthorizationResult() != null
-                                        && result.getAuthorizationResult().getAuthorizationResponse() != null
-                                        && result.getAuthorizationResult().getAuthorizationResponse() instanceof MicrosoftAuthorizationResponse
-                                        && !StringUtil.isEmpty(((MicrosoftAuthorizationResponse) result.getAuthorizationResult().getAuthorizationResponse()).getClientInfo())) {
-                                    try {
-                                        final ClientInfo clientInfo = new ClientInfo(
-                                                ((MicrosoftAuthorizationResponse) result
-                                                        .getAuthorizationResult()
-                                                        .getAuthorizationResponse()
-                                                ).getClientInfo()
-                                        );
-
-                                        ((IntuneAppProtectionPolicyRequiredException) finalException)
-                                                .setAccountUserId(
-                                                        clientInfo.getUid()
-                                                );
-
-                                        ((IntuneAppProtectionPolicyRequiredException) finalException)
-                                                .setTenantId(
-                                                        clientInfo.getUtid()
-                                                );
-
-                                        ((IntuneAppProtectionPolicyRequiredException) finalException)
-                                                .setAuthorityUrl(
-                                                        command.mParameters
-                                                                .getAuthority()
-                                                                .getAuthorityURL()
-                                                                .toString()
-                                                );
-                                    } catch (final ServiceException serviceException) {
-                                        Logger.errorPII(
-                                                TAG,
-                                                "Failed to construct the ClientInfo for IntuneAppProtectionPolicyRequiredException",
-                                                serviceException
-                                        );
-                                    }
-                                }
-
-                                handler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        command.getCallback().onError(finalException);
                                     }
                                 });
                             } else {
@@ -483,7 +438,7 @@ public class ApiDispatcher {
                         });
                     } else {
                         //Get MsalException from Authorization and/or Token Error Response
-                        baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
+                        baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result, command.mParameters);
                         final BaseException finalException = baseException;
 
                         if (finalException instanceof UserCancelException) {
