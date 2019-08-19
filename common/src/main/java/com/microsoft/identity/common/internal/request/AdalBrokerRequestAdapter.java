@@ -28,8 +28,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Pair;
 
@@ -200,6 +200,12 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY
         );
         parameters.setClientId(clientId);
+
+        parameters.setLocalAccountId(
+                bundle.getString(
+                        AuthenticationConstants.Broker.ACCOUNT_USERINFO_USERID
+                )
+        );
 
         String redirectUri = bundle.getString(
                 AuthenticationConstants.Broker.ACCOUNT_REDIRECT);

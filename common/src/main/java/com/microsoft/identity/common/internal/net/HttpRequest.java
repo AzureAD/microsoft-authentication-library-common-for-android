@@ -210,7 +210,6 @@ public final class HttpRequest {
 
     private HttpURLConnection setupConnection() throws IOException {
         final HttpURLConnection urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(mRequestUrl);
-        //urlConnection.setRequestProperty("Connection", "close");
 
         // Apply request headers and update the headers with default attributes first
         final Set<Map.Entry<String, String>> headerEntries = mRequestHeaders.entrySet();

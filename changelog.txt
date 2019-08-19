@@ -1,7 +1,18 @@
-Version 0.0.11
+Version 0.0.15
+-------------
+- Bug Fix : Adding null safety check to avoid crash on EmbeddedWebViewStrategy
+
+Version 0.0.14
+-------------
+- Bug fix : Read user id from the request bundle for broker silent request.
+- Add shouldResolveInterrupt field to parameters.
+
+Version 0.0.12
 -------------
 - Broker V2 protocol support changes for v1 parity with ADAL.
 - Introduced new bound service IMicrosoftAuthService for MSAL.
+- Key Transfer changes from inactive broker
+- Introduced various adapters to translate betwewn broker request and responses.
 - Multiple bug fixes.
 
 Version 0.0.10

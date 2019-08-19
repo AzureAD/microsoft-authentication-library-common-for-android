@@ -25,8 +25,9 @@ package com.microsoft.identity.common.internal.controllers;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
 import android.util.Pair;
+
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
@@ -414,9 +415,10 @@ public class ApiDispatcher {
 
     public static void completeInteractive(int requestCode, int resultCode, final Intent data) {
         final String methodName = ":completeInteractive";
-        if(sCommand != null) {
+        if (sCommand != null) {
             sCommand.notify(requestCode, resultCode, data);
-        }else {
+            sCommand = null;
+        } else {
             Logger.warn(TAG + methodName, "sCommand is null, No interactive call in progress to complete.");
         }
     }

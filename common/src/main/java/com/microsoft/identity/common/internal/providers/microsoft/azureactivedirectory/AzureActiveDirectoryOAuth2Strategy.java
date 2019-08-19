@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;

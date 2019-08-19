@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.adapter;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryAggregatedObserver;
 import com.microsoft.identity.common.internal.telemetry.rules.TelemetryAggregationRules;
