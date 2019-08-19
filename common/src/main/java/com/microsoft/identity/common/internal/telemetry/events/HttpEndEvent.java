@@ -32,9 +32,16 @@ public class HttpEndEvent extends BaseEvent {
         types(EventType.HTTP_EVENT);
     }
 
-    public HttpEndEvent putResponse(final HttpResponse httpResponse) {
-        put(Key.HTTP_RESPONSE_CODE, String.valueOf(httpResponse.getStatusCode()));
-        //TODO discuss what kind of telemetry need to be refined from response body and header.
+    public HttpEndEvent putStatusCode(final int statusCode) {
+        put(Key.HTTP_RESPONSE_CODE, String.valueOf(statusCode));
+        return this;
+    }
+
+    public HttpEndEvent putHttpResponse(final HttpResponse response) {
+        put(Key.HTTP_RESPONSE_CODE, String.valueOf(response.getStatusCode()));
+        //put(Key.OAUTH_ERROR_CODE, )
+        //put(Key.HTTP_ERROR_DOMAIN, )
+        //put(Key.HTTP_ERROR_CODE, )
         return this;
     }
 }

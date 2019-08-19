@@ -45,16 +45,6 @@ public class HttpStartEvent extends BaseEvent {
         return this;
     }
 
-    public HttpStartEvent putResponseCode(String responseCode) {
-        put(Key.HTTP_RESPONSE_CODE, responseCode);
-        return this;
-    }
-
-    public HttpStartEvent putResponseMethod(String responseMethod) {
-        this.put(Key.HTTP_RESPONSE_METHOD, responseMethod);
-        return this;
-    }
-
     public HttpStartEvent putRequestQueryParams(String requestQueryParams) {
         put(Key.REQUEST_QUERY_PARAMS, requestQueryParams);
         return this;

@@ -116,6 +116,7 @@ public final class TelemetryEventStrings {
         public static final String API_ID = "api_id";
         public static final String TOKEN_TYPE = "token_type";
         public static final String IS_RT = "is_rt";
+        public static final String IS_AT = "is_at";
         public static final String IS_MRRT = "is_mrrt";
         public static final String IS_FRT = "is_frt";
         public static final String RT_STATUS = "token_rt_status";

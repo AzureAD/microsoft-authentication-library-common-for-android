@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.HttpEndEvent;
+import com.microsoft.identity.common.internal.telemetry.events.HttpStartEvent;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.BufferedReader;
@@ -114,9 +117,19 @@ public final class HttpRequest {
     public static HttpResponse sendPost(final URL requestUrl, final Map<String, String> requestHeaders,
                                         final byte[] requestContent, final String requestContentType)
             throws IOException {
+        Telemetry.emit(
+                new HttpStartEvent()
+                        .putMethod(REQUEST_METHOD_POST)
+                        .putPath(requestUrl.getPath())
+                        .putRequestIdHeader(requestHeaders.get("client-request-id"))
+        );
+
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_POST,
                 requestContent, requestContentType);
-        return httpRequest.send();
+        final HttpResponse response = httpRequest.send();
+        Telemetry.emit(new HttpEndEvent().putStatusCode(response.getStatusCode()));
+
+        return response;
     }
 
     /**
@@ -129,9 +142,18 @@ public final class HttpRequest {
      */
     public static HttpResponse sendGet(final URL requestUrl, final Map<String, String> requestHeaders)
             throws IOException {
-        final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
+        Telemetry.emit(
+                new HttpStartEvent()
+                        .putMethod(REQUEST_METHOD_GET)
+                        .putPath(requestUrl.getPath())
+                        .putRequestIdHeader(requestHeaders.get("client-request-id"))
+        );
 
-        return httpRequest.send();
+        final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
+        final HttpResponse response =  httpRequest.send();
+
+        Telemetry.emit(new HttpEndEvent().putStatusCode(response.getStatusCode()));
+        return response;
     }
 
     /**

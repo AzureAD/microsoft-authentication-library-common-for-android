@@ -308,7 +308,7 @@ public final class AuthorizationActivity extends Activity {
             Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, resultIntent);
         } else {
-            Telemetry.emit(new UiEndEvent().isUiComplete());
+            Telemetry.emit(new UiEndEvent().isUiCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
         }
 
