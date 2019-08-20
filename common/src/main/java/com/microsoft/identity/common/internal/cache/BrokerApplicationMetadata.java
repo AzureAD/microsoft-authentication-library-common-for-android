@@ -24,42 +24,14 @@ package com.microsoft.identity.common.internal.cache;
 
 import com.google.gson.annotations.SerializedName;
 
-public class BrokerApplicationMetadata {
+public class BrokerApplicationMetadata extends AbstractApplicationMetadata {
 
-    private static final class SerializedNames {
-        public static final String CLIENT_ID = "client_id";
-        static final String ENVIRONMENT = "environment";
+    private static final class SerializedNames extends AbstractApplicationMetadata.SerializedNames {
         static final String FAMILY_ID = "family_id";
-        static final String APPLICATION_UID = "application_uid";
     }
-
-    @SerializedName(SerializedNames.CLIENT_ID)
-    private String mClientId;
-
-    @SerializedName(SerializedNames.ENVIRONMENT)
-    private String mEnvironment;
 
     @SerializedName(SerializedNames.FAMILY_ID)
     private String mFoci;
-
-    @SerializedName(SerializedNames.APPLICATION_UID)
-    private int mUid;
-
-    public String getClientId() {
-        return mClientId;
-    }
-
-    public void setClientId(final String mClientId) {
-        this.mClientId = mClientId;
-    }
-
-    public String getEnvironment() {
-        return mEnvironment;
-    }
-
-    public void setEnvironment(final String mEnvironment) {
-        this.mEnvironment = mEnvironment;
-    }
 
     public String getFoci() {
         return mFoci;
@@ -67,14 +39,6 @@ public class BrokerApplicationMetadata {
 
     public void setFoci(final String mFoci) {
         this.mFoci = mFoci;
-    }
-
-    public int getUid() {
-        return mUid;
-    }
-
-    public void setUid(final int mUid) {
-        this.mUid = mUid;
     }
 
     //CHECKSTYLE:OFF
@@ -86,15 +50,11 @@ public class BrokerApplicationMetadata {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
 
-        BrokerApplicationMetadata that = (BrokerApplicationMetadata) o;
+        BrokerApplicationMetadata metadata = (BrokerApplicationMetadata) o;
 
-        if (mUid != that.mUid) return false;
-        if (mClientId != null ? !mClientId.equals(that.mClientId) : that.mClientId != null)
-            return false;
-        if (mEnvironment != null ? !mEnvironment.equals(that.mEnvironment) : that.mEnvironment != null)
-            return false;
-        return mFoci != null ? mFoci.equals(that.mFoci) : that.mFoci == null;
+        return mFoci != null ? mFoci.equals(metadata.mFoci) : metadata.mFoci == null;
     }
     //CHECKSTYLE:ON
 
@@ -105,10 +65,8 @@ public class BrokerApplicationMetadata {
     @SuppressWarnings("PMD")
     @Override
     public int hashCode() {
-        int result = mClientId != null ? mClientId.hashCode() : 0;
-        result = 31 * result + (mEnvironment != null ? mEnvironment.hashCode() : 0);
+        int result = super.hashCode();
         result = 31 * result + (mFoci != null ? mFoci.hashCode() : 0);
-        result = 31 * result + mUid;
         return result;
     }
     //CHECKSTYLE:ON
