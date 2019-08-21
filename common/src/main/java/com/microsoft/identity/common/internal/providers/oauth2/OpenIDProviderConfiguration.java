@@ -265,351 +265,351 @@ public class OpenIDProviderConfiguration {
         return mAuthorizationEndpoint;
     }
 
-    public void setAuthorizationEndpoint(String authorizationEndpoint) {
-        this.mAuthorizationEndpoint = authorizationEndpoint;
+    public void setAuthorizationEndpoint(final String authorizationEndpoint) {
+        mAuthorizationEndpoint = authorizationEndpoint;
     }
 
     public String getTokenEndpoint() {
         return mTokenEndpoint;
     }
 
-    public void setTokenEndpoint(String tokenEndpoint) {
-        this.mTokenEndpoint = tokenEndpoint;
+    public void setTokenEndpoint(final String tokenEndpoint) {
+        mTokenEndpoint = tokenEndpoint;
     }
 
     public List<String> getTokenEndpointAuthMethodsSupported() {
         return mTokenEndpointAuthMethodsSupported;
     }
 
-    public void setTokenEndpointAuthMethodsSupported(List<String> tokenEndpointAuthMethodsSupported) {
-        this.mTokenEndpointAuthMethodsSupported = tokenEndpointAuthMethodsSupported;
+    public void setTokenEndpointAuthMethodsSupported(final List<String> tokenEndpointAuthMethodsSupported) {
+        mTokenEndpointAuthMethodsSupported = tokenEndpointAuthMethodsSupported;
     }
 
     public String getJwksUri() {
         return mJwksUri;
     }
 
-    public void setJwksUri(String jwksUri) {
-        this.mJwksUri = jwksUri;
+    public void setJwksUri(final String jwksUri) {
+        mJwksUri = jwksUri;
     }
 
     public List<String> getResponseModesSupported() {
         return mResponseModesSupported;
     }
 
-    public void setResponseModesSupported(List<String> responseModesSupported) {
-        this.mResponseModesSupported = responseModesSupported;
+    public void setResponseModesSupported(final List<String> responseModesSupported) {
+        mResponseModesSupported = responseModesSupported;
     }
 
     public List<String> getSubjectTypesSupported() {
         return mSubjectTypesSupported;
     }
 
-    public void setSubjectTypesSupported(List<String> subjectTypesSupported) {
-        this.mSubjectTypesSupported = subjectTypesSupported;
+    public void setSubjectTypesSupported(final List<String> subjectTypesSupported) {
+        mSubjectTypesSupported = subjectTypesSupported;
     }
 
     public List<String> getIdTokenSigningAlgValuesSupported() {
         return mIdTokenSigningAlgValuesSupported;
     }
 
-    public void setIdTokenSigningAlgValuesSupported(List<String> idTokenSigningAlgValuesSupported) {
-        this.mIdTokenSigningAlgValuesSupported = idTokenSigningAlgValuesSupported;
+    public void setIdTokenSigningAlgValuesSupported(final List<String> idTokenSigningAlgValuesSupported) {
+        mIdTokenSigningAlgValuesSupported = idTokenSigningAlgValuesSupported;
     }
 
     public Boolean getHttpLogoutSupported() {
         return mHttpLogoutSupported;
     }
 
-    public void setHttpLogoutSupported(Boolean httpLogoutSupported) {
-        this.mHttpLogoutSupported = httpLogoutSupported;
+    public void setHttpLogoutSupported(final Boolean httpLogoutSupported) {
+        mHttpLogoutSupported = httpLogoutSupported;
     }
 
     public Boolean getFrontChannelLogoutSupported() {
         return mFrontChannelLogoutSupported;
     }
 
-    public void setFrontChannelLogoutSupported(Boolean frontChannelLogoutSupported) {
-        this.mFrontChannelLogoutSupported = frontChannelLogoutSupported;
+    public void setFrontChannelLogoutSupported(final Boolean frontChannelLogoutSupported) {
+        mFrontChannelLogoutSupported = frontChannelLogoutSupported;
     }
 
     public String getEndSessionEndpoint() {
         return mEndSessionEndpoint;
     }
 
-    public void setEndSessionEndpoint(String endSessionEndpoint) {
-        this.mEndSessionEndpoint = endSessionEndpoint;
+    public void setEndSessionEndpoint(final String endSessionEndpoint) {
+        mEndSessionEndpoint = endSessionEndpoint;
     }
 
     public List<String> getResponseTypesSupported() {
         return mResponseTypesSupported;
     }
 
-    public void setResponseTypesSupported(List<String> responseTypesSupported) {
-        this.mResponseTypesSupported = responseTypesSupported;
+    public void setResponseTypesSupported(final List<String> responseTypesSupported) {
+        mResponseTypesSupported = responseTypesSupported;
     }
 
     public List<String> getScopesSupported() {
         return mScopesSupported;
     }
 
-    public void setScopesSupported(List<String> scopesSupported) {
-        this.mScopesSupported = scopesSupported;
+    public void setScopesSupported(final List<String> scopesSupported) {
+        mScopesSupported = scopesSupported;
     }
 
     public String getIssuer() {
         return mIssuer;
     }
 
-    public void setIssuer(String issuer) {
-        this.mIssuer = issuer;
+    public void setIssuer(final String issuer) {
+        mIssuer = issuer;
     }
 
     public List<String> getClaimsSupported() {
         return mClaimsSupported;
     }
 
-    public void setClaimsSupported(List<String> claimsSupported) {
-        this.mClaimsSupported = claimsSupported;
+    public void setClaimsSupported(final List<String> claimsSupported) {
+        mClaimsSupported = claimsSupported;
     }
 
     public Boolean getRequestUriParameterSupported() {
         return mRequestUriParameterSupported;
     }
 
-    public void setRequestUriParameterSupported(Boolean requestUriParameterSupported) {
-        this.mRequestUriParameterSupported = requestUriParameterSupported;
+    public void setRequestUriParameterSupported(final Boolean requestUriParameterSupported) {
+        mRequestUriParameterSupported = requestUriParameterSupported;
     }
 
     public String getUserInfoEndpoint() {
         return mUserInfoEndpoint;
     }
 
-    public void setUserInfoEndpoint(String userInfoEndpoint) {
-        this.mUserInfoEndpoint = userInfoEndpoint;
+    public void setUserInfoEndpoint(final String userInfoEndpoint) {
+        mUserInfoEndpoint = userInfoEndpoint;
     }
 
     public String getTenantRegionScope() {
         return mTenantRegionScope;
     }
 
-    public void setTenantRegionScope(String tenantRegionScope) {
-        this.mTenantRegionScope = tenantRegionScope;
+    public void setTenantRegionScope(final String tenantRegionScope) {
+        mTenantRegionScope = tenantRegionScope;
     }
 
     public String getCloudInstanceName() {
         return mCloudInstanceName;
     }
 
-    public void setCloudInstanceName(String cloudInstanceName) {
-        this.mCloudInstanceName = cloudInstanceName;
+    public void setCloudInstanceName(final String cloudInstanceName) {
+        mCloudInstanceName = cloudInstanceName;
     }
 
     public String getCloudGraphHostName() {
         return mCloudGraphHostName;
     }
 
-    public void setCloudGraphHostName(String cloudGraphHostName) {
-        this.mCloudGraphHostName = cloudGraphHostName;
+    public void setCloudGraphHostName(final String cloudGraphHostName) {
+        mCloudGraphHostName = cloudGraphHostName;
     }
 
     public String getMsGraphHost() {
         return mMsGraphHost;
     }
 
-    public void setMsGraphHost(String msGraphHost) {
-        this.mMsGraphHost = msGraphHost;
+    public void setMsGraphHost(final String msGraphHost) {
+        mMsGraphHost = msGraphHost;
     }
 
     public String getRbacUrl() {
         return mRbacUrl;
     }
 
-    public void setRbacUrl(String rbacUrl) {
-        this.mRbacUrl = rbacUrl;
+    public void setRbacUrl(final String rbacUrl) {
+        mRbacUrl = rbacUrl;
     }
 
     public String getRegistrationEndpoint() {
         return mRegistrationEndpoint;
     }
 
-    public void setRegistrationEndpoint(String registrationEndpoint) {
-        this.mRegistrationEndpoint = registrationEndpoint;
+    public void setRegistrationEndpoint(final String registrationEndpoint) {
+        mRegistrationEndpoint = registrationEndpoint;
     }
 
     public List<String> getGrantTypesSupported() {
         return mGrantTypesSupported;
     }
 
-    public void setGrantTypesSupported(List<String> grantTypesSupported) {
-        this.mGrantTypesSupported = grantTypesSupported;
+    public void setGrantTypesSupported(final List<String> grantTypesSupported) {
+        mGrantTypesSupported = grantTypesSupported;
     }
 
     public List<String> getAcrValuesSupported() {
         return mAcrValuesSupported;
     }
 
-    public void setAcrValuesSupported(List<String> acrValuesSupported) {
-        this.mAcrValuesSupported = acrValuesSupported;
+    public void setAcrValuesSupported(final List<String> acrValuesSupported) {
+        mAcrValuesSupported = acrValuesSupported;
     }
 
     public List<String> getIdTokenEncryptionAlgValuesSupported() {
         return mIdTokenEncryptionAlgValuesSupported;
     }
 
-    public void setIdTokenEncryptionAlgValuesSupported(List<String> idTokenEncryptionAlgValuesSupported) {
-        this.mIdTokenEncryptionAlgValuesSupported = idTokenEncryptionAlgValuesSupported;
+    public void setIdTokenEncryptionAlgValuesSupported(final List<String> idTokenEncryptionAlgValuesSupported) {
+        mIdTokenEncryptionAlgValuesSupported = idTokenEncryptionAlgValuesSupported;
     }
 
     public List<String> getIdTokenEncryptionEncValuesSupported() {
         return mIdTokenEncryptionEncValuesSupported;
     }
 
-    public void setIdTokenEncryptionEncValuesSupported(List<String> idTokenEncryptionEncValuesSupported) {
-        this.mIdTokenEncryptionEncValuesSupported = idTokenEncryptionEncValuesSupported;
+    public void setIdTokenEncryptionEncValuesSupported(final List<String> idTokenEncryptionEncValuesSupported) {
+        mIdTokenEncryptionEncValuesSupported = idTokenEncryptionEncValuesSupported;
     }
 
     public List<String> getUserInfoSigningAlgValuesSupported() {
         return mUserInfoSigningAlgValuesSupported;
     }
 
-    public void setUserInfoSigningAlgValuesSupported(List<String> userInfoSigningAlgValuesSupported) {
-        this.mUserInfoSigningAlgValuesSupported = userInfoSigningAlgValuesSupported;
+    public void setUserInfoSigningAlgValuesSupported(final List<String> userInfoSigningAlgValuesSupported) {
+        mUserInfoSigningAlgValuesSupported = userInfoSigningAlgValuesSupported;
     }
 
     public List<String> getUserInfoEncryptionAlgValuesSupported() {
         return mUserInfoEncryptionAlgValuesSupported;
     }
 
-    public void setUserInfoEncryptionAlgValuesSupported(List<String> userInfoEncryptionAlgValuesSupported) {
-        this.mUserInfoEncryptionAlgValuesSupported = userInfoEncryptionAlgValuesSupported;
+    public void setUserInfoEncryptionAlgValuesSupported(final List<String> userInfoEncryptionAlgValuesSupported) {
+        mUserInfoEncryptionAlgValuesSupported = userInfoEncryptionAlgValuesSupported;
     }
 
     public List<String> getUserInfoEncryptionEncValueSupported() {
         return mUserInfoEncryptionEncValueSupported;
     }
 
-    public void setUserInfoEncryptionEncValueSupported(List<String> userInfoEncryptionEncValueSupported) {
-        this.mUserInfoEncryptionEncValueSupported = userInfoEncryptionEncValueSupported;
+    public void setUserInfoEncryptionEncValueSupported(final List<String> userInfoEncryptionEncValueSupported) {
+        mUserInfoEncryptionEncValueSupported = userInfoEncryptionEncValueSupported;
     }
 
     public List<String> getRequestObjectSigningAlgValuesSupported() {
         return mRequestObjectSigningAlgValuesSupported;
     }
 
-    public void setRequestObjectSigningAlgValuesSupported(List<String> requestObjectSigningAlgValuesSupported) {
-        this.mRequestObjectSigningAlgValuesSupported = requestObjectSigningAlgValuesSupported;
+    public void setRequestObjectSigningAlgValuesSupported(final List<String> requestObjectSigningAlgValuesSupported) {
+        mRequestObjectSigningAlgValuesSupported = requestObjectSigningAlgValuesSupported;
     }
 
     public List<String> getRequestObjectEncryptionAlgValuesSupported() {
         return mRequestObjectEncryptionAlgValuesSupported;
     }
 
-    public void setRequestObjectEncryptionAlgValuesSupported(List<String> requestObjectEncryptionAlgValuesSupported) {
-        this.mRequestObjectEncryptionAlgValuesSupported = requestObjectEncryptionAlgValuesSupported;
+    public void setRequestObjectEncryptionAlgValuesSupported(final List<String> requestObjectEncryptionAlgValuesSupported) {
+        mRequestObjectEncryptionAlgValuesSupported = requestObjectEncryptionAlgValuesSupported;
     }
 
     public List<String> getRequestObjectEncryptionEncValuesSupported() {
         return mRequestObjectEncryptionEncValuesSupported;
     }
 
-    public void setRequestObjectEncryptionEncValuesSupported(List<String> requestObjectEncryptionEncValuesSupported) {
-        this.mRequestObjectEncryptionEncValuesSupported = requestObjectEncryptionEncValuesSupported;
+    public void setRequestObjectEncryptionEncValuesSupported(final List<String> requestObjectEncryptionEncValuesSupported) {
+        mRequestObjectEncryptionEncValuesSupported = requestObjectEncryptionEncValuesSupported;
     }
 
     public List<String> getTokenEndpointAuthSigningAlgValuesSupported() {
         return mTokenEndpointAuthSigningAlgValuesSupported;
     }
 
-    public void setTokenEndpointAuthSigningAlgValuesSupported(List<String> tokenEndpointAuthSigningAlgValuesSupported) {
-        this.mTokenEndpointAuthSigningAlgValuesSupported = tokenEndpointAuthSigningAlgValuesSupported;
+    public void setTokenEndpointAuthSigningAlgValuesSupported(final List<String> tokenEndpointAuthSigningAlgValuesSupported) {
+        mTokenEndpointAuthSigningAlgValuesSupported = tokenEndpointAuthSigningAlgValuesSupported;
     }
 
     public List<String> getDisplayValuesSupported() {
         return mDisplayValuesSupported;
     }
 
-    public void setDisplayValuesSupported(List<String> displayValuesSupported) {
-        this.mDisplayValuesSupported = displayValuesSupported;
+    public void setDisplayValuesSupported(final List<String> displayValuesSupported) {
+        mDisplayValuesSupported = displayValuesSupported;
     }
 
     public List<String> getClaimTypesSupported() {
         return mClaimTypesSupported;
     }
 
-    public void setClaimTypesSupported(List<String> claimTypesSupported) {
-        this.mClaimTypesSupported = claimTypesSupported;
+    public void setClaimTypesSupported(final List<String> claimTypesSupported) {
+        mClaimTypesSupported = claimTypesSupported;
     }
 
     public String getServiceDocumentation() {
         return mServiceDocumentation;
     }
 
-    public void setServiceDocumentation(String serviceDocumentation) {
-        this.mServiceDocumentation = serviceDocumentation;
+    public void setServiceDocumentation(final String serviceDocumentation) {
+        mServiceDocumentation = serviceDocumentation;
     }
 
     public List<String> getClaimsLocalesSupported() {
         return mClaimsLocalesSupported;
     }
 
-    public void setClaimsLocalesSupported(List<String> claimsLocalesSupported) {
-        this.mClaimsLocalesSupported = claimsLocalesSupported;
+    public void setClaimsLocalesSupported(final List<String> claimsLocalesSupported) {
+        mClaimsLocalesSupported = claimsLocalesSupported;
     }
 
     public List<String> getUiLocalesSupported() {
         return mUiLocalesSupported;
     }
 
-    public void setUiLocalesSupported(List<String> uiLocalesSupported) {
-        this.mUiLocalesSupported = uiLocalesSupported;
+    public void setUiLocalesSupported(final List<String> uiLocalesSupported) {
+        mUiLocalesSupported = uiLocalesSupported;
     }
 
     public Boolean getClaimsParameterSupported() {
         return mClaimsParameterSupported;
     }
 
-    public void setClaimsParameterSupported(Boolean claimsParameterSupported) {
-        this.mClaimsParameterSupported = claimsParameterSupported;
+    public void setClaimsParameterSupported(final Boolean claimsParameterSupported) {
+        mClaimsParameterSupported = claimsParameterSupported;
     }
 
     public Boolean getRequestParameterSupported() {
         return mRequestParameterSupported;
     }
 
-    public void setRequestParameterSupported(Boolean requestParameterSupported) {
-        this.mRequestParameterSupported = requestParameterSupported;
+    public void setRequestParameterSupported(final Boolean requestParameterSupported) {
+        mRequestParameterSupported = requestParameterSupported;
     }
 
     public Boolean getRequireRequestUriRegistration() {
         return mRequireRequestUriRegistration;
     }
 
-    public void setRequireRequestUriRegistration(Boolean requireRequestUriRegistration) {
-        this.mRequireRequestUriRegistration = requireRequestUriRegistration;
+    public void setRequireRequestUriRegistration(final Boolean requireRequestUriRegistration) {
+        mRequireRequestUriRegistration = requireRequestUriRegistration;
     }
 
     public String getOpPolicyUri() {
         return mOpPolicyUri;
     }
 
-    public void setOpPolicyUri(String opPolicyUri) {
-        this.mOpPolicyUri = opPolicyUri;
+    public void setOpPolicyUri(final String opPolicyUri) {
+        mOpPolicyUri = opPolicyUri;
     }
 
     public String getOpTosUri() {
         return mOpTosUri;
     }
 
-    public void setOpTosUri(String opTosUri) {
-        this.mOpTosUri = opTosUri;
+    public void setOpTosUri(final String opTosUri) {
+        mOpTosUri = opTosUri;
     }
 
     public String getCheckSessionIFrame() {
         return mCheckSessionIFrame;
     }
 
-    public void setCheckSessionIFrame(String checkSessionIFrame) {
-        this.mCheckSessionIFrame = checkSessionIFrame;
+    public void setCheckSessionIFrame(final String checkSessionIFrame) {
+        mCheckSessionIFrame = checkSessionIFrame;
     }
 }
