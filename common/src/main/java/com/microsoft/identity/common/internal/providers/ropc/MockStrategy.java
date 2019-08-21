@@ -5,7 +5,6 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
@@ -16,29 +15,28 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStra
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.result.ResultFuture;
+import com.microsoft.identity.common.internal.testutils.MockTokenResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
-import com.microsoft.identity.common.utilities.Scenario;
 
 import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.Future;
 
-public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOAuth2Strategy {
+public class MockStrategy extends MicrosoftStsOAuth2Strategy {
 
     private static final String TAG = ResourceOwnerPasswordCredentialsTestStrategy.class.getSimpleName();
 
-    public static final String USERNAME_EMPTY_OR_NULL = "username_empty_or_null";
-    public static final String PASSWORD_EMPTY_OR_NULL = "password_empty_or_null";
-    public static final String SCOPE_EMPTY_OR_NULL = "scope_empty_or_null";
-    public static final String GRANT_TYPE_EMPTY_OR_NULL = "grant_type_empty_or_null";
-    public static final String INVALID_GRANT_TYPE = "invalid_grant_type";
+    public final String USERNAME_EMPTY_OR_NULL = "username_empty_or_null";
+    public final String PASSWORD_EMPTY_OR_NULL = "password_empty_or_null";
+    public final String SCOPE_EMPTY_OR_NULL = "scope_empty_or_null";
+    public final String GRANT_TYPE_EMPTY_OR_NULL = "grant_type_empty_or_null";
 
     /**
-     * Constructor of ResourceOwnerPasswordCredentialsTestStrategy.
+     * Constructor of MockStrategy.
      *
      * @param config Microsoft Sts OAuth2 configuration
      */
-    public ResourceOwnerPasswordCredentialsTestStrategy(MicrosoftStsOAuth2Configuration config) {
+    public MockStrategy(MicrosoftStsOAuth2Configuration config) {
         super(config);
     }
 
@@ -73,11 +71,12 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
                 "Requesting token..."
         );
 
-        request.setGrantType(TokenRequest.GrantTypes.PASSWORD);
-        validateTokenRequest(request);
+        if (!request.getGrantType().equals(TokenRequest.GrantTypes.REFRESH_TOKEN)) {
+            request.setGrantType(TokenRequest.GrantTypes.PASSWORD);
+            validateTokenRequest(request);
+        }
 
-        final HttpResponse response = performTokenRequest(request);
-        return getTokenResultFromHttpResponse(response);
+        return MockTokenResult.getTokenResult();
     }
 
     @Override
@@ -109,7 +108,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
         );
 
         String username = request.getLoginHint();
-        String password = Scenario.getPasswordForUser(username);
+        String password = "fake-password";
 
         MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setUsername(username);
@@ -136,4 +135,5 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
 
         return tokenRequest;
     }
+
 }

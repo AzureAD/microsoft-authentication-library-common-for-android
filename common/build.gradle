@@ -81,6 +81,8 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
 
+    implementation "org.robolectric:annotations:4.0"
+
     implementation project(':keyvault')
     implementation project(':labapi')
 
