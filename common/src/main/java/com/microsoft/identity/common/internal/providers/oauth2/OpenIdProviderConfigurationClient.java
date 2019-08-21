@@ -44,16 +44,16 @@ import static com.microsoft.identity.common.exception.ServiceException.OPENID_PR
 /**
  * A class for pulling the OpenIDConfiguratino document from the OpenID Provider server.
  */
-public class OpenIdProviderConfigurationClientB {
+public class OpenIdProviderConfigurationClient {
 
-    private static final String TAG = OpenIdProviderConfigurationClientB.class.getSimpleName();
+    private static final String TAG = OpenIdProviderConfigurationClient.class.getSimpleName();
     private static final String sWellKnownConfig = "/.well-known/openid-configuration";
 
     private final String mIssuer;
     private final Gson mGson = new Gson();
     private final IWebRequestHandler mWebRequestHandler = new WebRequestHandler();
 
-    public OpenIdProviderConfigurationClientB(@NonNull final String issuer) {
+    public OpenIdProviderConfigurationClient(@NonNull final String issuer) {
         mIssuer = sanitize(issuer);
     }
 
