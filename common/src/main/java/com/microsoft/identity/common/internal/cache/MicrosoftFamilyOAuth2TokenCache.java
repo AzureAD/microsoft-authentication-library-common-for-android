@@ -95,7 +95,6 @@ public class MicrosoftFamilyOAuth2TokenCache
 
         RefreshTokenRecord rtToReturn = null;
         IdTokenRecord idTokenToReturn = null;
-        AccessTokenRecord atRecordToReturn = null;
 
         // First, filter down to only the refresh tokens...
         for (final Credential credential : getAccountCredentialCache().getCredentials()) {
@@ -126,24 +125,9 @@ public class MicrosoftFamilyOAuth2TokenCache
             }
         }
 
-        for (final Credential credential : getAccountCredentialCache().getCredentials()) {
-            if (credential instanceof AccessTokenRecord) {
-                final AccessTokenRecord atRecord = (AccessTokenRecord) credential;
-
-                if (null != clientId && clientId.equals(atRecord.getClientId())
-                        && accountRecord.getEnvironment().equals(atRecord.getEnvironment())
-                        && accountRecord.getHomeAccountId().equals(atRecord.getHomeAccountId())
-                        && accountRecord.getRealm().equals(atRecord.getRealm())) {
-                    atRecordToReturn = atRecord;
-                    break;
-                }
-            }
-        }
-
         final CacheRecord result = new CacheRecord();
         result.setAccount(accountRecord);
         result.setRefreshToken(rtToReturn);
-        result.setAccessToken(atRecordToReturn);
 
         if (null != idTokenToReturn) {
             if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenToReturn.getCredentialType())) {
