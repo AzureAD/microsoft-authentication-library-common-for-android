@@ -124,7 +124,7 @@ public class OpenIDProviderConfiguration {
     private String mMsGraphHost;
 
     @SerializedName(RBAC_URL)
-    private String mRbac_Url;
+    private String mRbacUrl;
 
     public String getAuthorizationEndpoint() {
         return mAuthorizationEndpoint;
@@ -286,11 +286,11 @@ public class OpenIDProviderConfiguration {
         this.mMsGraphHost = mMsGraphHost;
     }
 
-    public String getRbac_Url() {
-        return mRbac_Url;
+    public String getRbacUrl() {
+        return mRbacUrl;
     }
 
-    public void setRbac_Url(String mRbac_Url) {
-        this.mRbac_Url = mRbac_Url;
+    public void setRbacUrl(String mRbacUrl) {
+        this.mRbacUrl = mRbacUrl;
     }
 }
