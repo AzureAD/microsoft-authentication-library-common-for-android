@@ -26,7 +26,27 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.*;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.AUTHORIZATION_ENDPOINT;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.CLAIMS_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.CLOUD_GRAPH_HOST_NAME;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.CLOUD_INSTANCE_NAME;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.END_SESSION_ENDPOINT;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.FRONTCHANNEL_LOGOUT_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.HTTP_LOGOUT_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.ID_TOKEN_SIGNING_ALG_VALUES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.ISSUER;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.JWKS_URI;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.MSGRAPH_HOST;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.RBAC_URL;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.REQUEST_URI_PARAMETER_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.RESPONSE_MODES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.RESPONSE_TYPES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.SCOPES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.SUBJECT_TYPES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.TENANT_REGION_SCOPE;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.TOKEN_ENDPOINT;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.TOKEN_ENDPOINT_AUTH_METHODS_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.USERINFO_ENDPOINT;
 
 /*
  * Represents the information returned from the OpenID Provider Configuration Endpoint
@@ -130,167 +150,167 @@ public class OpenIDProviderConfiguration {
         return mAuthorizationEndpoint;
     }
 
-    public void setAuthorizationEndpoint(String mAuthorizationEndpoint) {
-        this.mAuthorizationEndpoint = mAuthorizationEndpoint;
+    public void setAuthorizationEndpoint(final String authorizationEndpoint) {
+        mAuthorizationEndpoint = authorizationEndpoint;
     }
 
     public String getTokenEndpoint() {
         return mTokenEndpoint;
     }
 
-    public void setTokenEndpoint(String mTokenEndpoint) {
-        this.mTokenEndpoint = mTokenEndpoint;
+    public void setTokenEndpoint(final String tokenEndpoint) {
+        mTokenEndpoint = tokenEndpoint;
     }
 
     public List<String> getTokenEndpointAuthMethodsSupported() {
         return mTokenEndpointAuthMethodsSupported;
     }
 
-    public void setTokenEndpointAuthMethodsSupported(List<String> mTokenEndpointAuthMethodsSupported) {
-        this.mTokenEndpointAuthMethodsSupported = mTokenEndpointAuthMethodsSupported;
+    public void setTokenEndpointAuthMethodsSupported(final List<String> tokenEndpointAuthMethodsSupported) {
+        mTokenEndpointAuthMethodsSupported = tokenEndpointAuthMethodsSupported;
     }
 
     public String getJwksUri() {
         return mJwksUri;
     }
 
-    public void setJwksUri(String mJwksUri) {
-        this.mJwksUri = mJwksUri;
+    public void setJwksUri(final String jwksUri) {
+        mJwksUri = jwksUri;
     }
 
     public List<String> getResponseModesSupported() {
         return mResponseModesSupported;
     }
 
-    public void setResponseModesSupported(List<String> mResponseModesSupported) {
-        this.mResponseModesSupported = mResponseModesSupported;
+    public void setResponseModesSupported(final List<String> responseModesSupported) {
+        mResponseModesSupported = responseModesSupported;
     }
 
     public List<String> getSubjectTypesSupported() {
         return mSubjectTypesSupported;
     }
 
-    public void setSubjectTypesSupported(List<String> mSubjectTypesSupported) {
-        this.mSubjectTypesSupported = mSubjectTypesSupported;
+    public void setSubjectTypesSupported(final List<String> subjectTypesSupported) {
+        mSubjectTypesSupported = subjectTypesSupported;
     }
 
     public List<String> getIdTokenSigningAlgValuesSupported() {
         return mIdTokenSigningAlgValuesSupported;
     }
 
-    public void setIdTokenSigningAlgValuesSupported(List<String> mIdTokenSigningAlgValuesSupported) {
-        this.mIdTokenSigningAlgValuesSupported = mIdTokenSigningAlgValuesSupported;
+    public void setIdTokenSigningAlgValuesSupported(final List<String> idTokenSigningAlgValuesSupported) {
+        mIdTokenSigningAlgValuesSupported = idTokenSigningAlgValuesSupported;
     }
 
     public Boolean getHttpLogoutSupported() {
         return mHttpLogoutSupported;
     }
 
-    public void setHttpLogoutSupported(Boolean mHttpLogoutSupported) {
-        this.mHttpLogoutSupported = mHttpLogoutSupported;
+    public void setHttpLogoutSupported(final Boolean httpLogoutSupported) {
+        mHttpLogoutSupported = httpLogoutSupported;
     }
 
     public Boolean getFrontChannelLogoutSupported() {
         return mFrontChannelLogoutSupported;
     }
 
-    public void setFrontChannelLogoutSupported(Boolean mFrontChannelLogoutSupported) {
-        this.mFrontChannelLogoutSupported = mFrontChannelLogoutSupported;
+    public void setFrontChannelLogoutSupported(final Boolean frontChannelLogoutSupported) {
+        mFrontChannelLogoutSupported = frontChannelLogoutSupported;
     }
 
     public String getEndSessionEndpoint() {
         return mEndSessionEndpoint;
     }
 
-    public void setEndSessionEndpoint(String mEndSessionEndpoint) {
-        this.mEndSessionEndpoint = mEndSessionEndpoint;
+    public void setEndSessionEndpoint(final String endSessionEndpoint) {
+        mEndSessionEndpoint = endSessionEndpoint;
     }
 
     public List<String> getResponseTypesSupported() {
         return mResponseTypesSupported;
     }
 
-    public void setResponseTypesSupported(List<String> mResponseTypesSupported) {
-        this.mResponseTypesSupported = mResponseTypesSupported;
+    public void setResponseTypesSupported(final List<String> responseTypesSupported) {
+        mResponseTypesSupported = responseTypesSupported;
     }
 
     public List<String> getScopesSupported() {
         return mScopesSupported;
     }
 
-    public void setScopesSupported(List<String> mScopesSupported) {
-        this.mScopesSupported = mScopesSupported;
+    public void setScopesSupported(final List<String> scopesSupported) {
+        mScopesSupported = scopesSupported;
     }
 
     public String getIssuer() {
         return mIssuer;
     }
 
-    public void setIssuer(String mIssuer) {
-        this.mIssuer = mIssuer;
+    public void setIssuer(final String issuer) {
+        mIssuer = issuer;
     }
 
     public List<String> getClaimsSupported() {
         return mClaimsSupported;
     }
 
-    public void setClaimsSupported(List<String> mClaimsSupported) {
-        this.mClaimsSupported = mClaimsSupported;
+    public void setClaimsSupported(final List<String> claimsSupported) {
+        mClaimsSupported = claimsSupported;
     }
 
     public Boolean getRequestUriParameterSupported() {
         return mRequestUriParameterSupported;
     }
 
-    public void setRequestUriParameterSupported(Boolean mRequestUriParameterSupported) {
-        this.mRequestUriParameterSupported = mRequestUriParameterSupported;
+    public void setRequestUriParameterSupported(final Boolean requestUriParameterSupported) {
+        mRequestUriParameterSupported = requestUriParameterSupported;
     }
 
     public String getUserInfoEndpoint() {
         return mUserInfoEndpoint;
     }
 
-    public void setUserInfoEndpoint(String mUserInfoEndpoint) {
-        this.mUserInfoEndpoint = mUserInfoEndpoint;
+    public void setUserInfoEndpoint(final String userInfoEndpoint) {
+        mUserInfoEndpoint = userInfoEndpoint;
     }
 
     public String getTenantRegionScope() {
         return mTenantRegionScope;
     }
 
-    public void setTenantRegionScope(String mTenantRegionScope) {
-        this.mTenantRegionScope = mTenantRegionScope;
+    public void setTenantRegionScope(final String tenantRegionScope) {
+        mTenantRegionScope = tenantRegionScope;
     }
 
     public String getCloudInstanceName() {
         return mCloudInstanceName;
     }
 
-    public void setCloudInstanceName(String mCloudInstanceName) {
-        this.mCloudInstanceName = mCloudInstanceName;
+    public void setCloudInstanceName(final String cloudInstanceName) {
+        mCloudInstanceName = cloudInstanceName;
     }
 
     public String getCloudGraphHostName() {
         return mCloudGraphHostName;
     }
 
-    public void setCloudGraphHostName(String mCloudGraphHostName) {
-        this.mCloudGraphHostName = mCloudGraphHostName;
+    public void setCloudGraphHostName(final String cloudGraphHostName) {
+        mCloudGraphHostName = cloudGraphHostName;
     }
 
     public String getMsGraphHost() {
         return mMsGraphHost;
     }
 
-    public void setMsGraphHost(String mMsGraphHost) {
-        this.mMsGraphHost = mMsGraphHost;
+    public void setMsGraphHost(final String msGraphHost) {
+        mMsGraphHost = msGraphHost;
     }
 
     public String getRbacUrl() {
         return mRbacUrl;
     }
 
-    public void setRbacUrl(String mRbacUrl) {
-        this.mRbacUrl = mRbacUrl;
+    public void setRbacUrl(final String rbacUrl) {
+        mRbacUrl = rbacUrl;
     }
 }
