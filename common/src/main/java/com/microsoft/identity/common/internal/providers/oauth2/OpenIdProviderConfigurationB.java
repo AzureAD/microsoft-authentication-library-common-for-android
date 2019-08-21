@@ -26,57 +26,57 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.ACR_VALUES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.AUTHORIZATION_ENDPOINT;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.CHECK_SESSION_IFRAME;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.CLAIMS_LOCALES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.CLAIMS_PARAMETER_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.CLAIMS_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.CLAIM_TYPES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.CLOUD_GRAPH_HOST_NAME;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.CLOUD_INSTANCE_NAME;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.DISPLAY_VALUES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.END_SESSION_ENDPOINT;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.FRONTCHANNEL_LOGOUT_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.GRANT_TYPES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.HTTP_LOGOUT_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.ID_TOKEN_ENCRYPTION_ALG_VALUES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.ID_TOKEN_ENCRYPTION_ENC_VALUES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.ID_TOKEN_SIGNING_ALG_VALUES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.ISSUER;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.JWKS_URI;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.MSGRAPH_HOST;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.OP_POLICY_URI;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.OP_TOS_URI;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.RBAC_URL;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.REGISTRATION_ENDPOINT;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.REQUEST_OBJECT_ENCRYPTION_ALG_VALUES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.REQUEST_OBJECT_ENCRYPTION_ENC_VALUES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.REQUEST_OBJECT_SIGNING_ALG_VALUES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.REQUEST_PARAMETER_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.REQUEST_URI_PARAMETER_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.REQUIRE_REQUEST_URI_REGISTRATION;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.RESPONSE_MODES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.RESPONSE_TYPES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.SCOPES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.SERVICE_DOCUMENTATION;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.SUBJECT_TYPES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.TENANT_REGION_SCOPE;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.TOKEN_ENDPOINT;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.TOKEN_ENDPOINT_AUTH_METHODS_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.TOKEN_ENDPOINT_AUTH_SIGNING_ALG_VALUES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.UI_LOCALES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.USERINFO_ENCRYPTION_ALG_VALUES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.USERINFO_ENCRYPTION_ENC_VALUES_SUPPORTED;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.USERINFO_ENDPOINT;
-import static com.microsoft.identity.common.internal.providers.oauth2.OpenIDProviderConfiguration.SerializedNames.USERINFO_SIGNING_ALG_VALUES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.ACR_VALUES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.AUTHORIZATION_ENDPOINT;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.CHECK_SESSION_IFRAME;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.CLAIMS_LOCALES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.CLAIMS_PARAMETER_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.CLAIMS_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.CLAIM_TYPES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.CLOUD_GRAPH_HOST_NAME;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.CLOUD_INSTANCE_NAME;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.DISPLAY_VALUES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.END_SESSION_ENDPOINT;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.FRONTCHANNEL_LOGOUT_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.GRANT_TYPES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.HTTP_LOGOUT_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.ID_TOKEN_ENCRYPTION_ALG_VALUES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.ID_TOKEN_ENCRYPTION_ENC_VALUES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.ID_TOKEN_SIGNING_ALG_VALUES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.ISSUER;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.JWKS_URI;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.MSGRAPH_HOST;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.OP_POLICY_URI;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.OP_TOS_URI;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.RBAC_URL;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.REGISTRATION_ENDPOINT;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.REQUEST_OBJECT_ENCRYPTION_ALG_VALUES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.REQUEST_OBJECT_ENCRYPTION_ENC_VALUES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.REQUEST_OBJECT_SIGNING_ALG_VALUES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.REQUEST_PARAMETER_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.REQUEST_URI_PARAMETER_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.REQUIRE_REQUEST_URI_REGISTRATION;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.RESPONSE_MODES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.RESPONSE_TYPES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.SCOPES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.SERVICE_DOCUMENTATION;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.SUBJECT_TYPES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.TENANT_REGION_SCOPE;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.TOKEN_ENDPOINT;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.TOKEN_ENDPOINT_AUTH_METHODS_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.TOKEN_ENDPOINT_AUTH_SIGNING_ALG_VALUES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.UI_LOCALES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.USERINFO_ENCRYPTION_ALG_VALUES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.USERINFO_ENCRYPTION_ENC_VALUES_SUPPORTED;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.USERINFO_ENDPOINT;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationB.SerializedNames.USERINFO_SIGNING_ALG_VALUES_SUPPORTED;
 
 /*
  * Represents the information returned from the OpenID Provider Configuration Endpoint
  * https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
  */
 @SuppressWarnings("PMD")
-public class OpenIDProviderConfiguration {
+public class OpenIdProviderConfigurationB {
 
     /**
      * Keys for JSON parsing.

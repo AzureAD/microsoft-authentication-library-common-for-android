@@ -70,9 +70,9 @@ public class OpenIdProviderConfigurationClient {
     /**
      * Get OpenID provider configuration.
      *
-     * @return OpenIDProviderConfiguration
+     * @return OpenIdProviderConfigurationB
      */
-    public OpenIDProviderConfiguration getOpenIDProviderConfiguration() throws ServiceException {
+    public OpenIdProviderConfigurationB getOpenIDProviderConfiguration() throws ServiceException {
         final String methodName = ":getOpenIDProviderConfiguration";
 
         try {
@@ -114,13 +114,13 @@ public class OpenIdProviderConfigurationClient {
         }
     }
 
-    private OpenIDProviderConfiguration parseMetadata(@Nullable final String body) {
+    private OpenIdProviderConfigurationB parseMetadata(@Nullable final String body) {
         if (TextUtils.isEmpty(body)) {
             // Return an empty config
-            return new OpenIDProviderConfiguration();
+            return new OpenIdProviderConfigurationB();
         }
 
-        return mGson.fromJson(body, OpenIDProviderConfiguration.class);
+        return mGson.fromJson(body, OpenIdProviderConfigurationB.class);
     }
 
 }
