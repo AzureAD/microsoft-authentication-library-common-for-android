@@ -120,6 +120,10 @@ public final class TelemetryEventStrings {
         public static final String IS_MRRT = "is_mrrt";
         public static final String IS_FRT = "is_frt";
         public static final String RT_STATUS = "token_rt_status";
+        public static final String ACCOUNT_STATUS = "account_status";
+        public static final String ID_TOKEN_STATUS = "id_token_status";
+        public static final String V1_ID_TOKEN_STATUS = "v1_id_token_status";
+        public static final String AT_STATUS = "token_at_status";
         public static final String MRRT_STATUS = "token_mrrt_status";
         public static final String FRT_STATUS = "token_frt_status";
         public static final String CORRELATION_ID = "correlation_id";
@@ -154,6 +158,7 @@ public final class TelemetryEventStrings {
         public static final String WIPE_APP = "wipe_app";
         public static final String WIPE_TIME = "wipe_time";
         public static final String BROKER_ACTION = "broker_action";
+        public static final String BROKER_STRATEGY = "broker_strategy";
         public static final String USER_CANCELLED = "user_cancelled";
         public static final String ACCOUNTS_NUMBER = "accounts_number";
         public static final String IS_DEVICE_SHARED = "is_device_shared";
@@ -187,6 +192,8 @@ public final class TelemetryEventStrings {
         public static final String AUTHORITY_AAD = "aad";
         public static final String AUTHORITY_ADFS = "adfs";
         public static final String AUTHORITY_B2C = "b2c";
+        public static final String ACCOUNT_MANAGER = "account_manager";
+        public static final String BOUND_SERVICE = "bound_service";
     }
 
     public static final class Api {
