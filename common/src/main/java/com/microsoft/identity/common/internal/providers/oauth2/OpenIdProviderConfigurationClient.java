@@ -25,19 +25,22 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
 import com.microsoft.identity.common.adal.internal.net.IWebRequestHandler;
 import com.microsoft.identity.common.adal.internal.net.WebRequestHandler;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.microsoft.identity.common.exception.ServiceException.OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD;
 
@@ -48,6 +51,12 @@ public class OpenIdProviderConfigurationClient {
 
     private static final String TAG = OpenIdProviderConfigurationClient.class.getSimpleName();
     private static final String sWellKnownConfig = "/.well-known/openid-configuration";
+    private static final ExecutorService sBackgroundExecutor = Executors.newCachedThreadPool();
+    private static final Map<URL, OpenIdProviderConfiguration> sConfigCache = new HashMap<>();
+
+    public interface OpenIdProviderConfigurationCallback
+            extends TaskCompletedCallbackWithError<OpenIdProviderConfiguration, Exception> {
+    }
 
     private final String mIssuer;
     private final Gson mGson = new Gson();
@@ -67,16 +76,43 @@ public class OpenIdProviderConfigurationClient {
         return sanitizedIssuer;
     }
 
+    public void loadOpenIdProviderConfiguration(
+            @NonNull final OpenIdProviderConfigurationCallback callback) {
+        sBackgroundExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    callback.onTaskCompleted(loadOpenIdProviderConfiguration());
+                } catch (ServiceException e) {
+                    callback.onError(e);
+                }
+            }
+        });
+    }
+
     /**
      * Get OpenID provider configuration.
      *
-     * @return OpenIdProviderConfigurationB
+     * @return OpenIdProviderConfiguration
      */
-    public OpenIdProviderConfigurationB getOpenIDProviderConfiguration() throws ServiceException {
-        final String methodName = ":getOpenIDProviderConfiguration";
+    public synchronized OpenIdProviderConfiguration loadOpenIdProviderConfiguration()
+            throws ServiceException {
+        final String methodName = ":loadOpenIdProviderConfiguration";
 
         try {
             final URL configUrl = new URL(mIssuer + sWellKnownConfig);
+
+            // Check first for a cached copy...
+            final OpenIdProviderConfiguration cacheResult = sConfigCache.get(configUrl);
+
+            // If we found a result, return it...
+            if (null != cacheResult) {
+                Logger.info(
+                        TAG + methodName,
+                        "Using cached metadata result."
+                );
+                return cacheResult;
+            }
 
             Logger.verbose(
                     TAG + methodName,
@@ -95,7 +131,8 @@ public class OpenIdProviderConfigurationClient {
 
             final int statusCode = providerConfigResponse.getStatusCode();
 
-            if (HttpURLConnection.HTTP_OK != statusCode) {
+            if (HttpURLConnection.HTTP_OK != statusCode
+                    || TextUtils.isEmpty(providerConfigResponse.getBody())) {
                 throw new ServiceException(
                         OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD,
                         "OpenId Provider Configuration metadata failed to load with status: "
@@ -104,7 +141,14 @@ public class OpenIdProviderConfigurationClient {
                 );
             }
 
-            return parseMetadata(providerConfigResponse.getBody());
+            final OpenIdProviderConfiguration parsedConfig = parseMetadata(
+                    providerConfigResponse.getBody()
+            );
+
+            // Cache our config in memory for later
+            cacheConfiguration(configUrl, parsedConfig);
+
+            return parsedConfig;
         } catch (IOException e) {
             throw new ServiceException(
                     OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD,
@@ -114,13 +158,13 @@ public class OpenIdProviderConfigurationClient {
         }
     }
 
-    private OpenIdProviderConfigurationB parseMetadata(@Nullable final String body) {
-        if (TextUtils.isEmpty(body)) {
-            // Return an empty config
-            return new OpenIdProviderConfigurationB();
-        }
+    private void cacheConfiguration(@NonNull final URL configUrl,
+                                    @NonNull final OpenIdProviderConfiguration parsedConfig) {
+        sConfigCache.put(configUrl, parsedConfig);
+    }
 
-        return mGson.fromJson(body, OpenIdProviderConfigurationB.class);
+    private OpenIdProviderConfiguration parseMetadata(@NonNull final String body) {
+        return mGson.fromJson(body, OpenIdProviderConfiguration.class);
     }
 
 }
