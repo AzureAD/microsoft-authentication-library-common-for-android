@@ -15,7 +15,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStra
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.result.ResultFuture;
-import com.microsoft.identity.common.internal.testutils.MockTokenResult;
+import com.microsoft.identity.common.internal.testutils.MockTokenResponse;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.IOException;
@@ -76,7 +76,7 @@ public class MockStrategy extends MicrosoftStsOAuth2Strategy {
             validateTokenRequest(request);
         }
 
-        return MockTokenResult.getTokenResult();
+        return MockTokenResponse.getTokenResult();
     }
 
     @Override
