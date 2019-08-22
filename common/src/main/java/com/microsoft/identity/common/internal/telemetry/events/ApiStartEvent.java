@@ -126,11 +126,6 @@ public class ApiStartEvent extends BaseEvent {
         return this;
     }
 
-    public ApiStartEvent putUiBehavior(@NonNull final String uiBehavior) {
-        put(Key.UI_BEHAVIOR, uiBehavior);
-        return this;
-    }
-
     public ApiStartEvent putApiId(@NonNull final String apiId) {
         put(Key.API_ID, apiId);
         return this;

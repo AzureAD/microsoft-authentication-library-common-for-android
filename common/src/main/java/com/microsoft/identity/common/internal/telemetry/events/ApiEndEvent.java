@@ -54,7 +54,7 @@ public class ApiEndEvent extends BaseEvent {
     public ApiEndEvent putException(@NonNull final Exception exception) {
         final BaseException adaptedException = ExceptionAdapter.baseExceptionFromException(exception);
         if (adaptedException  instanceof UserCancelException) {
-            put(Key.USER_CANCELLED, Value.TRUE);
+            put(Key.USER_CANCEL, Value.TRUE);
         }
 
         put(Key.SERVER_ERROR_CODE, adaptedException.getCliTelemErrorCode());

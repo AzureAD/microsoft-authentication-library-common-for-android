@@ -53,7 +53,7 @@ public class BrokerEndEvent extends BaseEvent {
 
     public BrokerEndEvent putException(@NonNull final BaseException exception) {
         if (exception  instanceof UserCancelException) {
-            put(Key.USER_CANCELLED, Value.TRUE);
+            put(Key.USER_CANCEL, Value.TRUE);
         }
 
         put(Key.SERVER_ERROR_CODE, exception.getCliTelemErrorCode());

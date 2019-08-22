@@ -34,7 +34,7 @@ public class BaseEvent extends Properties {
     BaseEvent() {
         super();
         occurs(System.currentTimeMillis());
-        correlationId(DiagnosticContext.getRequestContext().get(Key.CORRELATION_ID));
+        correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
     }
 
     /**

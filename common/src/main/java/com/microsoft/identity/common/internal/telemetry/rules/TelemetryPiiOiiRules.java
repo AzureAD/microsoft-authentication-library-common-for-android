@@ -53,9 +53,9 @@ final public class TelemetryPiiOiiRules {
             Key.REDIRECT_URI,
             Key.HTTP_PATH,
             Key.AUTHORITY,
-            Key.IDP,
-            Key.APPLICATION_NAME,
-            Key.APPLICATION_VERSION
+            Key.IDP_NAME,
+            App.NAME,
+            App.VERSION
     };
 
     private TelemetryPiiOiiRules() {
