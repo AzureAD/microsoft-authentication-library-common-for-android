@@ -22,9 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
@@ -33,6 +36,8 @@ import java.text.ParseException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.microsoft.identity.common.internal.net.ObjectMapper.TAG;
 
 /**
  * Represents the OpenID Connect Id Token.
@@ -183,7 +188,7 @@ public class IDToken {
     public static final String UPDATED_AT = "updated_at";
 
 
-    private Map<String, String> mTokenClaims = null;
+    private Map<String, ?> mTokenClaims = null;
     private final String mRawIdToken;
 
     /**
@@ -214,33 +219,30 @@ public class IDToken {
     /**
      * @return Token claims in Map<String, String>.
      */
-    public Map<String, String> getTokenClaims() {
+    public Map<String, ?> getTokenClaims() {
         return Collections.unmodifiableMap(mTokenClaims);
     }
 
-    public static Map<String, String> parseJWT(final String idToken) throws ServiceException {
-        final JWTClaimsSet claimsSet;
+    public static Map<String, ?> parseJWT(@NonNull final String rawIdToken) throws ServiceException {
+        final String methodName = ":getClaims(String)";
+
+        final Map<String, Object> result = new HashMap<>();
+
         try {
-            // Create a SignedJWT from the input token String
-            final JWT jwt = JWTParser.parse(idToken);
-            claimsSet = jwt.getJWTClaimsSet();
+            final JWT jwt = JWTParser.parse(rawIdToken);
+            final JWTClaimsSet claimsSet = jwt.getJWTClaimsSet();
+            result.putAll(claimsSet.getClaims());
         } catch (ParseException e) {
+            Logger.error(
+                    TAG + methodName,
+                    "Failed to parse IdToken",
+                    e
+            );
+
             throw new ServiceException("Failed to parse JWT", ErrorStrings.INVALID_JWT, e);
         }
 
-        // Grab the claims and stick them into a Map<String, Object>
-        final Map<String, Object> claimsMap = claimsSet.getClaims();
-
-        // Convert that Map<String, Object> into Map<String, String>
-        final Map<String, String> claimsMapStr = new HashMap<>();
-
-        for (final Map.Entry<String, Object> entry : claimsMap.entrySet()) {
-            claimsMapStr.put(entry.getKey(), entry.getValue().toString());
-        }
-
-        // Return our result
-        return claimsMapStr;
-
+        return result;
     }
 
 }

@@ -22,13 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import java.util.List;
 import java.util.Set;
 
-public interface IBrokerApplicationMetadataCache {
+public interface IBrokerApplicationMetadataCache extends ISimpleCache<BrokerApplicationMetadata> {
 
     /**
      * @return A Set of all ClientIds known to this cache. May be empty, but never null.
@@ -60,35 +59,4 @@ public interface IBrokerApplicationMetadataCache {
      */
     @Nullable
     BrokerApplicationMetadata getMetadata(String clientId, String environment, int processUid);
-
-    /**
-     * Inserts a new entry in the cache.
-     *
-     * @param metadata The metadata to save.
-     * @return True, if saved. False otherwise.
-     */
-    boolean insert(BrokerApplicationMetadata metadata);
-
-    /**
-     * Removes an existing entry in the cache.
-     *
-     * @param metadata The metadata to remove.
-     * @return True if removed or does not exist. False otherwise.
-     */
-    boolean remove(BrokerApplicationMetadata metadata);
-
-    /**
-     * Returns all entries in the app metadata cache.
-     *
-     * @return A List of {@link BrokerApplicationMetadata}.
-     */
-    @NonNull
-    List<BrokerApplicationMetadata> getAll();
-
-    /**
-     * Removes all entries in the app metadata cache.
-     *
-     * @return True if the cache has been successfully cleared. False otherwise.
-     */
-    boolean clear();
 }

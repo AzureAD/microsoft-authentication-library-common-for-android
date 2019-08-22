@@ -178,6 +178,13 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
+    public List<ICacheRecord> saveAndLoadAggregatedAccountData(AzureActiveDirectoryOAuth2Strategy oAuth2Strategy, AzureActiveDirectoryAuthorizationRequest request, AzureActiveDirectoryTokenResponse response) throws ClientException {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
     public ICacheRecord save(final AccountRecord accountRecord,
                              final IdTokenRecord idTokenRecord) {
         throw new UnsupportedOperationException(
@@ -190,6 +197,13 @@ public class ADALOAuth2TokenCache
             final String clientId,
             final String target,
             final AccountRecord account) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public List<ICacheRecord> loadWithAggregatedAccountData(String clientId, String target, AccountRecord account) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
@@ -213,9 +227,23 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
-    public AccountRecord getAccountWithLocalAccountId(final String environment,
-                                                      final String clientId,
-                                                      final String localAccountId) {
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(String environment, String clientId, String homeAccountId) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public AccountRecord getAccountByLocalAccountId(final String environment,
+                                                    final String clientId,
+                                                    final String localAccountId) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public ICacheRecord getAccountWithAggregatedAccountDataByLocalAccountId(String environment, String clientId, String localAccountId) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
@@ -230,10 +258,40 @@ public class ADALOAuth2TokenCache
     }
 
     @Override
+    public List<AccountRecord> getAllTenantAccountsForAccountByClientId(String clientId, AccountRecord accountRecord) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(final String environment,
+                                                                   final String clientId) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public List<IdTokenRecord> getIdTokensForAccountRecord(final String clientId,
+                                                           final AccountRecord accountRecord) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
     public AccountDeletionRecord removeAccount(final String environment,
                                                final String clientId,
                                                final String homeAccountId,
                                                final String realm) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public void clearAll() {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );

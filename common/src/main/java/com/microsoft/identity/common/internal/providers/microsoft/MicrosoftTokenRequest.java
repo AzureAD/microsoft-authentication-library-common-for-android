@@ -79,6 +79,8 @@ public class MicrosoftTokenRequest extends TokenRequest {
     @SerializedName(CLIENT_APP_VERSION)
     private String mClientAppVersion;
 
+    private String mTokenScope;
+
     // Sent as part of headers if available, so marking it transient.
     private transient String mBrokerVersion;
 
@@ -132,6 +134,14 @@ public class MicrosoftTokenRequest extends TokenRequest {
 
     public void setClientAppName(String clientAppName) {
         this.mClientAppName = clientAppName;
+    }
+
+    public String getTokenScope() {
+        return mTokenScope;
+    }
+
+    public void setTokenScope(String tokenScope) {
+        this.mTokenScope = tokenScope;
     }
 
     public String getClientAppVersion() {

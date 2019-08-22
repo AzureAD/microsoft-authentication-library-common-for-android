@@ -22,8 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -79,30 +80,61 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setCredentialType(CredentialType.AccessToken.name());
             accessToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             accessToken.setRealm(getRealm(strategy, response));
+
             if (!StringUtil.isEmpty(response.getAuthority())) {
                 accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromAuthority(new URL(response.getAuthority())));
             } else {
                 accessToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
             }
+
             accessToken.setClientId(request.getClientId());
-            accessToken.setTarget(request.getScope());
+            /*
+            ===============================================================
+            NOTE: When requesting tokens for resources other than MS Graph or AAD Graph the default scopes
+            openid, profile and offline_access are not returned.  They need to be written into the cache anyway
+            to avoid cache misses.
+            ===============================================================
+             */
+            accessToken.setTarget(getTarget(response.getScope()));
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
             accessToken.setExpiresOn(String.valueOf(expiresOn));
             accessToken.setSecret(response.getAccessToken());
 
             // Optional fields
             accessToken.setExtendedExpiresOn(getExtendedExpiresOn(response));
+
             if (!StringUtil.isEmpty(response.getAuthority())) {
                 accessToken.setAuthority(response.getAuthority());
             } else {
                 accessToken.setAuthority(request.getAuthority().toString());
             }
+
             accessToken.setAccessTokenType(response.getTokenType());
 
             return accessToken;
         } catch (ServiceException | MalformedURLException e) {
             // TODO handle this properly
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Returns the correct target based on whether the default scopes were returned or not
+     *
+     * @param responseScope The response scope to parse.
+     * @return The target containing default scopes.
+     */
+    private String getTarget(@NonNull final String responseScope) {
+        if (responseScope.contains(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE)) {
+            if (responseScope.contains(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE)) {
+                return responseScope;
+            } else {
+                return responseScope + " " + AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE;
+            }
+        } else {
+            return responseScope + " " + AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE
+                    + " " + AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE
+                    + " " + AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE;
         }
     }
 
@@ -174,7 +206,11 @@ public class MicrosoftStsAccountCredentialAdapter
             idToken.setSecret(response.getIdToken());
 
             // Optional fields
-            idToken.setAuthority(response.getAuthority());
+            if (!StringUtil.isEmpty(response.getAuthority())) {
+                idToken.setAuthority(response.getAuthority());
+            } else { // Working around a bug - sov cloud seems to have broken response authority...
+                idToken.setAuthority(request.getAuthority().toString());
+            }
 
             return idToken;
         } catch (ServiceException | MalformedURLException e) {

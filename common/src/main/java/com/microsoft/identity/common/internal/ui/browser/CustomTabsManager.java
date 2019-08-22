@@ -22,16 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.browser;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.customtabs.CustomTabsCallback;
-import android.support.customtabs.CustomTabsClient;
-import android.support.customtabs.CustomTabsIntent;
-import android.support.customtabs.CustomTabsServiceConnection;
-import android.support.customtabs.CustomTabsSession;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.browser.customtabs.CustomTabsCallback;
+import androidx.browser.customtabs.CustomTabsClient;
+import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.browser.customtabs.CustomTabsServiceConnection;
+import androidx.browser.customtabs.CustomTabsSession;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -96,7 +95,7 @@ public class CustomTabsManager {
     }
 
     /**
-     * Method to bind Browser {@link android.support.customtabs.CustomTabsService}.
+     * Method to bind Browser {@link androidx.browser.customtabs.CustomTabsService}.
      * Waits until the {@link CustomTabsServiceConnection} is connected.
      */
     public synchronized void bind(@NonNull String browserPackage) {
@@ -114,7 +113,7 @@ public class CustomTabsManager {
     }
 
     /**
-     * Creates a {@link android.support.customtabs.CustomTabsSession custom tab session} for
+     * Creates a {@link androidx.browser.customtabs.CustomTabsSession custom tab session} for
      * use with a custom tab intent with optional callback. If no custom tab supporting browser
      * is available, this will return {@code null}.
      * @param callback
@@ -152,7 +151,7 @@ public class CustomTabsManager {
     }
 
     /**
-     * Method to unbind custom tabs service {@link android.support.customtabs.CustomTabsService}.
+     * Method to unbind custom tabs service {@link androidx.browser.customtabs.CustomTabsService}.
      */
     public synchronized void unbind() {
         if (mContextRef.get() != null && mCustomTabsServiceIsBound) {

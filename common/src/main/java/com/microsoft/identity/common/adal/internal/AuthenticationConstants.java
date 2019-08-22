@@ -623,7 +623,7 @@ public final class AuthenticationConstants {
         /**
          * The maximum broker protocol version that common supports.
          */
-        public static final String BROKER_PROTOCOL_VERSION_CODE = "2.0";
+        public static final String BROKER_PROTOCOL_VERSION_CODE = "3.0";
 
         /**
          * The key of maximum broker protocol version that client advertised.
@@ -674,6 +674,11 @@ public final class AuthenticationConstants {
          * String of broker final url.
          */
         public static final String BROKER_FINAL_URL = "adal.final.url";
+
+        /**
+         * String of the default browser package name.
+         */
+        public static final String DEFAULT_BROWSER_PACKAGE_NAME = "default.browser.package.name";
 
         /**
          * String of account initial request.
@@ -819,6 +824,21 @@ public final class AuthenticationConstants {
          * String of key for tenant id.
          */
         public static final String ACCOUNT_USERINFO_TENANTID = "account.userinfo.tenantid";
+
+        /**
+         * String of key for environment.
+         */
+        public static final String ACCOUNT_USERINFO_ENVIRONMENT = "account.userinfo.environment";
+
+        /**
+         * String of key for authority type.
+         */
+        public static final String ACCOUNT_USERINFO_AUTHORITY_TYPE = "account.userinfo.authority.type";
+
+        /**
+         * String of key for account id token record.
+         */
+        public static final String ACCOUNT_USERINFO_ID_TOKEN = "account.userinfo.id.token";
 
         /**
          * String of key for adal version.

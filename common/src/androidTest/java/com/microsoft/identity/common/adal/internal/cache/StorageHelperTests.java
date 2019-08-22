@@ -25,10 +25,11 @@ package com.microsoft.identity.common.adal.internal.cache;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.test.runner.AndroidJUnit4;
 import android.util.Base64;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
@@ -55,7 +56,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static androidx.test.InstrumentationRegistry.getInstrumentation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -81,6 +82,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
 
         AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
     }
+
     @Test
     public void testEncryptDecrypt() throws GeneralSecurityException, IOException {
         String clearText = "SomeValue1234";
@@ -335,7 +337,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
 
         final String authAppKey = Base64.encodeToString(new SecretKeySpec(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME), "AES").getEncoded(), Base64.DEFAULT);
         final String encryptionKey = Base64.encodeToString(legacyStorageHelperMock.loadSecretKeyForEncryption().getEncoded(), Base64.DEFAULT);
-        assertTrue("AuthApp key is used for encryption." ,authAppKey.equals(encryptionKey));
+        assertTrue("AuthApp key is used for encryption.", authAppKey.equals(encryptionKey));
 
         String expectedDecrypted = "SomeValue1234";
         assertTrue("Data is not encrypted", legacyStorageHelperMock.getEncryptionType(expectedDecrypted) == StorageHelper.EncryptionType.UNENCRYPTED);
@@ -368,7 +370,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
 
         final String authAppKey = Base64.encodeToString(new SecretKeySpec(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME), "AES").getEncoded(), Base64.DEFAULT);
         final String encryptionKey = Base64.encodeToString(legacyStorageHelperMock.loadSecretKeyForEncryption().getEncoded(), Base64.DEFAULT);
-        assertTrue("CP key is used for encryption." ,authAppKey.equals(encryptionKey));
+        assertTrue("CP key is used for encryption.", authAppKey.equals(encryptionKey));
 
         String expectedDecrypted = "SomeValue1234";
         assertTrue("Data is not encrypted", legacyStorageHelperMock.getEncryptionType(expectedDecrypted) == StorageHelper.EncryptionType.UNENCRYPTED);

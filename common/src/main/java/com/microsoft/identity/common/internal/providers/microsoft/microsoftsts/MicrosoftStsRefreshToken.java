@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 

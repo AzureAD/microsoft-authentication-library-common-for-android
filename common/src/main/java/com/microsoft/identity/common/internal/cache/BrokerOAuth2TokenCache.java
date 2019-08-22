@@ -23,9 +23,10 @@
 package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
@@ -81,6 +82,7 @@ import static com.microsoft.identity.common.internal.cache.SharedPreferencesAcco
  * @param <GenericAccount>              The Account type to use.
  * @param <GenericRefreshToken>         The RefreshToken type to use.
  */
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class BrokerOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,
@@ -233,6 +235,37 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
+    @SuppressWarnings("unchecked")
+    public List<ICacheRecord> saveAndLoadAggregatedAccountData(
+            @NonNull final AccountRecord accountRecord,
+            @NonNull final IdTokenRecord idTokenRecord,
+            @NonNull final AccessTokenRecord accessTokenRecord,
+            @Nullable final String familyId) throws ClientException {
+        final ICacheRecord cacheRecord = save(
+                accountRecord,
+                idTokenRecord,
+                accessTokenRecord,
+                familyId
+        );
+
+        final String clientId = cacheRecord.getAccessToken().getClientId();
+        final String target = cacheRecord.getAccessToken().getTarget();
+        final String environment = cacheRecord.getAccessToken().getEnvironment();
+
+        // Now get the cache we just saved to....
+        final MsalOAuth2TokenCache cache = getTokenCacheForClient(
+                clientId,
+                environment,
+                mCallingProcessUid
+        );
+
+        return (List<ICacheRecord>) cache.loadWithAggregatedAccountData(
+                clientId,
+                target,
+                cacheRecord.getAccount()
+        );
+    }
+
     @Override
     public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
                              @NonNull final GenericAuthorizationRequest request,
@@ -297,6 +330,58 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
+    @Override
+    @SuppressWarnings(UNCHECKED)
+    public List<ICacheRecord> saveAndLoadAggregatedAccountData(
+            @NonNull final GenericOAuth2Strategy oAuth2Strategy,
+            @NonNull final GenericAuthorizationRequest request,
+            @NonNull final GenericTokenResponse response) throws ClientException {
+        final String methodName = ":saveAndLoadAggregatedAccountData";
+
+        final boolean isFoci = !StringExtensions.isNullOrBlank(response.getFamilyId());
+
+        OAuth2TokenCache targetCache;
+
+        if (isFoci) {
+            targetCache = mFociCache;
+        } else {
+            targetCache = getTokenCacheForClient(
+                    request.getClientId(),
+                    oAuth2Strategy.getIssuerCacheIdentifier(request),
+                    mCallingProcessUid
+            );
+
+            if (null == targetCache) {
+                Logger.warn(
+                        TAG + methodName,
+                        "Existing cache not found. A new one will be created."
+                );
+                targetCache = initializeProcessUidCache(
+                        getContext(),
+                        mCallingProcessUid
+                );
+            }
+        }
+
+        final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
+                oAuth2Strategy,
+                request,
+                response
+        );
+
+        // The 0th element contains the record we *just* saved. Other records are corollary data.
+        final ICacheRecord justSavedRecord = result.get(0);
+
+        updateApplicationMetadataCache(
+                justSavedRecord.getRefreshToken().getClientId(),
+                justSavedRecord.getRefreshToken().getEnvironment(),
+                justSavedRecord.getRefreshToken().getFamilyId(),
+                mCallingProcessUid
+        );
+
+        return result;
+    }
+
     private void updateApplicationMetadataCache(@NonNull final String clientId,
                                                 @NonNull final String environment,
                                                 @Nullable final String familyId,
@@ -346,7 +431,7 @@ public class BrokerOAuth2TokenCache
      * If the result contains only an AccountRecord then we had no tokens in the cache and the
      * library should do some equivalent of AUTH_REFRESH_FAILED_PROMPT_NOT_ALLOWED
      * <p>
-     * If the result contains only a RefreshTokenRecord then the caller should attempt to refresh
+     * If the result contains only an AccountRecord and RefreshTokenRecord then the caller should attempt to refresh
      * the access token. If it works, call BrokerOAuth2TokenCache#save() with the result. If it
      * fails, throw some equivalent of AUTH_REFRESH_FAILED_PROMPT_NOT_ALLOWED
      *
@@ -423,6 +508,80 @@ public class BrokerOAuth2TokenCache
         );
 
         return resultRecord;
+    }
+
+    /**
+     * The caller of this method should inspect the result carefully.
+     * <p>
+     * If the result contains >1 element: tokens were found for the provided filter criteria and
+     * additionally, tokens were found for this Account relative to a guest tenant.
+     * <p>
+     * If the result contains exactly 1 element, you may receive 1 of a few different
+     * response payloads, depending on cache state...
+     * <p>
+     * If the result contains an AccountRecord, IdTokenRecord, AccessTokenRecord, and
+     * RefreshTokenRecord then the result is OK to use. The caller should still check the expiry of
+     * the AccessTokenRecord before returning the result to the caller, refreshing as necessary...
+     * <p>
+     * If the result contains only an AccountRecord then we had no tokens in the cache and the
+     * library should do some equivalent of AUTH_REFRESH_FAILED_PROMPT_NOT_ALLOWED
+     * <p>
+     * If the result contains only an AccountRecord and RefreshTokenRecord then the caller should attempt to refresh
+     * the access token. If it works, call BrokerOAuth2TokenCache#save() with the result. If it
+     * fails, throw some equivalent of AUTH_REFRESH_FAILED_PROMPT_NOT_ALLOWED
+     *
+     * @param clientId The ClientId of the current app.
+     * @param target   The 'target' (scopes) the requested token should contain.
+     * @param account  The Account whose Credentials should be loaded.
+     * @return A List of ICacheRecords for the supplied filter criteria.
+     */
+    @SuppressWarnings(UNCHECKED)
+    @Override
+    public List<ICacheRecord> loadWithAggregatedAccountData(@NonNull final String clientId,
+                                                            @Nullable final String target,
+                                                            @NonNull final AccountRecord account) {
+        final String methodName = ":loadWithAggregatedAccountData";
+        final OAuth2TokenCache targetCache = getTokenCacheForClient(
+                clientId,
+                account.getEnvironment(),
+                mCallingProcessUid
+        );
+
+        final boolean shouldUseFociCache = null == targetCache;
+        final List<ICacheRecord> resultRecords;
+
+        if (shouldUseFociCache) {
+            // We do not have a cache for this app or it is not yet known to be a member of the family
+            // use the foci cache....
+
+            // Load a sparse-record (if available) containing only the desired account and a
+            // refresh token if available...
+            resultRecords = new ArrayList<>();
+            resultRecords.add(
+                    mFociCache.loadByFamilyId(
+                            clientId,
+                            account
+                    )
+            );
+        } else {
+            resultRecords = targetCache.loadWithAggregatedAccountData(
+                    clientId,
+                    target,
+                    account
+            );
+        }
+
+        final boolean resultFound = !resultRecords.isEmpty()
+                && null != resultRecords.get(0).getRefreshToken();
+
+        Logger.verbose(
+                TAG + methodName,
+                "Result found? ["
+                        + resultFound
+                        + "]"
+        );
+
+        return resultRecords;
     }
 
     @Override
@@ -514,6 +673,59 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
+    @Override
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(
+            @Nullable final String environment,
+            @NonNull final String clientId,
+            @NonNull final String homeAccountId) {
+        final String methodName = ":getAccountsWithAggregatedAccountData";
+
+        final List<ICacheRecord> result;
+        OAuth2TokenCache targetCache;
+
+        if (null != environment) {
+            targetCache = getTokenCacheForClient(
+                    clientId,
+                    environment,
+                    mCallingProcessUid
+            );
+
+            if (null == targetCache) {
+                Logger.verbose(
+                        TAG + methodName,
+                        "Falling back to FoCI cache..."
+                );
+
+                targetCache = mFociCache;
+            }
+
+            result = targetCache.getAccountsWithAggregatedAccountData(
+                    environment,
+                    clientId,
+                    homeAccountId
+            );
+        } else {
+            // If no environment was specified, return all of the accounts across all of the envs...
+            // Callers should really specify an environment...
+            final List<OAuth2TokenCache> caches = getTokenCachesForClientId(clientId);
+
+            // Declare a new List to which we will add all of our results...
+            result = new ArrayList<>();
+
+            for (final OAuth2TokenCache cache : caches) {
+                result.addAll(
+                        cache.getAccountsWithAggregatedAccountData(
+                                environment,
+                                clientId,
+                                homeAccountId
+                        )
+                );
+            }
+        }
+
+        return result;
+    }
+
     private List<OAuth2TokenCache> getTokenCachesForClientId(@NonNull final String clientId) {
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
         final List<OAuth2TokenCache> result = new ArrayList<>();
@@ -545,10 +757,10 @@ public class BrokerOAuth2TokenCache
 
     @Override
     @Nullable
-    public AccountRecord getAccountWithLocalAccountId(@Nullable final String environment,
-                                                      @NonNull final String clientId,
-                                                      @NonNull final String localAccountId) {
-        final String methodName = ":getAccountWithLocalAccountId";
+    public AccountRecord getAccountByLocalAccountId(@Nullable final String environment,
+                                                    @NonNull final String clientId,
+                                                    @NonNull final String localAccountId) {
+        final String methodName = ":getAccountByLocalAccountId";
 
         Logger.verbose(
                 TAG + methodName,
@@ -563,13 +775,13 @@ public class BrokerOAuth2TokenCache
             );
 
             if (null != targetCache) {
-                return targetCache.getAccountWithLocalAccountId(
+                return targetCache.getAccountByLocalAccountId(
                         environment,
                         clientId,
                         localAccountId
                 );
             } else {
-                return mFociCache.getAccountWithLocalAccountId(
+                return mFociCache.getAccountByLocalAccountId(
                         environment,
                         clientId,
                         localAccountId
@@ -584,7 +796,53 @@ public class BrokerOAuth2TokenCache
             while (null == result && cacheIterator.hasNext()) {
                 result = cacheIterator
                         .next()
-                        .getAccountWithLocalAccountId(
+                        .getAccountByLocalAccountId(
+                                environment,
+                                clientId,
+                                localAccountId
+                        );
+            }
+
+            return result;
+        }
+    }
+
+    @Override
+    @Nullable
+    public ICacheRecord getAccountWithAggregatedAccountDataByLocalAccountId(
+            @Nullable final String environment,
+            @NonNull final String clientId,
+            @NonNull final String localAccountId) {
+        if (null != environment) {
+            OAuth2TokenCache targetCache = getTokenCacheForClient(
+                    clientId,
+                    environment,
+                    mCallingProcessUid
+            );
+
+            if (null != targetCache) {
+                return targetCache.getAccountWithAggregatedAccountDataByLocalAccountId(
+                        environment,
+                        clientId,
+                        localAccountId
+                );
+            } else {
+                return mFociCache.getAccountWithAggregatedAccountDataByLocalAccountId(
+                        environment,
+                        clientId,
+                        localAccountId
+                );
+            }
+        } else {
+            ICacheRecord result = null;
+
+            final List<OAuth2TokenCache> cachesToInspect = getTokenCachesForClientId(clientId);
+            final Iterator<OAuth2TokenCache> cacheIterator = cachesToInspect.iterator();
+
+            while (null == result && cacheIterator.hasNext()) {
+                result = cacheIterator
+                        .next()
+                        .getAccountWithAggregatedAccountDataByLocalAccountId(
                                 environment,
                                 clientId,
                                 localAccountId
@@ -634,6 +892,91 @@ public class BrokerOAuth2TokenCache
                     "Found ["
                             + result.size()
                             + "] accounts."
+            );
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<AccountRecord> getAllTenantAccountsForAccountByClientId(@NonNull final String clientId,
+                                                                        @NonNull final AccountRecord accountRecord) {
+        final OAuth2TokenCache cache = getTokenCacheForClient(
+                clientId,
+                accountRecord.getEnvironment(),
+                mCallingProcessUid
+        );
+
+        return cache.getAllTenantAccountsForAccountByClientId(
+                clientId,
+                accountRecord
+        );
+    }
+
+    @Override
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(@Nullable String environment,
+                                                                   @NonNull String clientId) {
+        final String methodName = ":getAccountsWithAggregatedAccountData";
+
+        final List<ICacheRecord> result;
+        OAuth2TokenCache targetCache;
+
+        if (null != environment) {
+            targetCache = getTokenCacheForClient(
+                    clientId,
+                    environment,
+                    mCallingProcessUid
+            );
+
+            if (null == targetCache) {
+                Logger.verbose(
+                        TAG + methodName,
+                        "Falling back to FoCI cache..."
+                );
+
+                targetCache = mFociCache;
+            }
+
+            result = targetCache.getAccountsWithAggregatedAccountData(environment, clientId);
+        } else {
+            // If no environment was specified, return all of the accounts across all of the envs...
+            // Callers should really specify an environment...
+            final List<OAuth2TokenCache> caches = getTokenCachesForClientId(clientId);
+
+            // Declare a new List to which we will add all of our results...
+            result = new ArrayList<>();
+
+            for (final OAuth2TokenCache cache : caches) {
+                result.addAll(cache.getAccountsWithAggregatedAccountData(environment, clientId));
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<IdTokenRecord> getIdTokensForAccountRecord(@NonNull final String clientId,
+                                                           @NonNull final AccountRecord accountRecord) {
+        final List<IdTokenRecord> result;
+        final String accountEnv = accountRecord.getEnvironment();
+
+        if (null == clientId) {
+            // If the client id was null... then presumably we want to aggregate the IdTokens across
+            // apps... why would you want that? For now, throw an Exception and see if anyone requests
+            // this feature...
+            throw new UnsupportedOperationException(
+                    "Aggregating IdTokens across ClientIds is not supported - do you have a feature request?"
+            );
+        } else {
+            final OAuth2TokenCache cache = getTokenCacheForClient(
+                    clientId,
+                    accountEnv,
+                    mCallingProcessUid
+            );
+
+            result = cache.getIdTokensForAccountRecord(
+                    clientId,
+                    accountRecord
             );
         }
 
@@ -775,6 +1118,13 @@ public class BrokerOAuth2TokenCache
         );
     }
 
+    @Override
+    public void clearAll() {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
     /**
      * Tests if a clientId is 'known' to the cache. A clientId is known if a token has been
      * previously saved to the cache with it.
@@ -797,8 +1147,10 @@ public class BrokerOAuth2TokenCache
      *
      * @return A List of ICacheRecords for the FoCI accounts.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings(UNCHECKED)
     public List<ICacheRecord> getFociCacheRecords() {
+        final String methodName = ":getFociCacheRecords";
+
         final List<ICacheRecord> result = new ArrayList<>();
 
         final List<BrokerApplicationMetadata> allFociApplicationMetadata =
@@ -813,16 +1165,48 @@ public class BrokerOAuth2TokenCache
 
             // For each account, load the RT
             for (final AccountRecord account : accounts) {
+                final String homeAccountId = account.getHomeAccountId();
+                final String environment = account.getEnvironment();
+                final String clientId = fociAppMetadata.getClientId();
+                final String realm = account.getRealm();
+
+                // Load the refresh token (1 per user per environment)
                 final List<Credential> refreshTokens =
                         mFociCache
                                 .getAccountCredentialCache()
                                 .getCredentialsFilteredBy(
-                                        account.getHomeAccountId(),
-                                        account.getEnvironment(),
+                                        homeAccountId,
+                                        environment,
                                         CredentialType.RefreshToken,
-                                        fociAppMetadata.getClientId(),
+                                        clientId,
                                         null, // wildcard (*)
                                         null // wildcard (*)
+                                );
+
+                // Load the V1IdToken (v1 if adal used)
+                final List<Credential> v1IdTokens =
+                        mFociCache
+                                .getAccountCredentialCache()
+                                .getCredentialsFilteredBy(
+                                        homeAccountId,
+                                        environment,
+                                        CredentialType.V1IdToken,
+                                        clientId,
+                                        realm,
+                                        null
+                                );
+
+                // Load the IdToken
+                final List<Credential> idTokens =
+                        mFociCache
+                                .getAccountCredentialCache()
+                                .getCredentialsFilteredBy(
+                                        homeAccountId,
+                                        environment,
+                                        CredentialType.IdToken,
+                                        clientId,
+                                        realm,
+                                        null
                                 );
 
                 // Construct the ICacheRecord
@@ -830,6 +1214,40 @@ public class BrokerOAuth2TokenCache
                     final CacheRecord cacheRecord = new CacheRecord();
                     cacheRecord.setAccount(account);
                     cacheRecord.setRefreshToken((RefreshTokenRecord) refreshTokens.get(0));
+
+                    // Add the V1IdToken (if exists, should have 1 if ADAL used)
+                    if (!v1IdTokens.isEmpty()) {
+                        Logger.verbose(
+                                TAG + methodName,
+                                "Found ["
+                                        + v1IdTokens.size()
+                                        + "] V1IdTokens"
+                        );
+
+                        cacheRecord.setV1IdToken((IdTokenRecord) v1IdTokens.get(0));
+                    } else {
+                        Logger.warn(
+                                TAG + methodName,
+                                "No V1IdTokens exist for this account."
+                        );
+                    }
+
+                    // Add the IdTokens (if exists, should have 1 if MSAL used)
+                    if (!idTokens.isEmpty()) {
+                        Logger.verbose(
+                                TAG + methodName,
+                                "Found ["
+                                        + idTokens.size()
+                                        + "] IdTokens"
+                        );
+
+                        cacheRecord.setIdToken((IdTokenRecord) idTokens.get(0));
+                    } else {
+                        Logger.warn(
+                                TAG + methodName,
+                                "No IdTokens exist for this account."
+                        );
+                    }
 
                     // Add it to the result
                     result.add(cacheRecord);

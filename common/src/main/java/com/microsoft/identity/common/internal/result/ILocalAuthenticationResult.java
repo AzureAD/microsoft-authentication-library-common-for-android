@@ -23,13 +23,15 @@
 
 package com.microsoft.identity.common.internal.result;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * Interface to wrap successful authentication result. When auth succeeds, token will be wrapped into the
@@ -122,4 +124,6 @@ public interface ILocalAuthenticationResult {
      */
     @Nullable
     String getFamilyId();
+
+    List<ICacheRecord> getCacheRecordWithTenantProfileData();
 }

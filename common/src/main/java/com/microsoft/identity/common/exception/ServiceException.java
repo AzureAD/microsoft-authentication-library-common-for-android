@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.exception;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;

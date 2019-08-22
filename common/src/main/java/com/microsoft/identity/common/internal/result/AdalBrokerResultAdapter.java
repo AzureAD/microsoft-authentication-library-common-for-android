@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.result;
 import android.accounts.AccountManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.ADALError;
@@ -40,7 +40,6 @@ import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CliTelemInfo.RT_AGE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CliTelemInfo.SERVER_ERROR;

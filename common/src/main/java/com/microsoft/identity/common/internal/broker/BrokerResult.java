@@ -22,12 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Encapsulates the possible responses from the broker.  Both successful response and error response.
@@ -35,6 +37,7 @@ import java.io.Serializable;
 public class BrokerResult implements Serializable {
 
     private class SerializedNames {
+        static final String TENANT_PROFILE_CACHE_RECORDS = "tenant_profile_cache_records";
         static final String ACCESS_TOKEN = "access_token";
         static final String ID_TOKEN = "id_token";
         static final String REFRESH_TOKEN = "refresh_token";
@@ -54,6 +57,7 @@ public class BrokerResult implements Serializable {
         static final String CACHED_AT = "cached_at";
         static final String REFRESH_TOKEN_AGE = "refresh_token_age";
         static final String SUCCESS = "success";
+        static final String NEGOTIATED_BROKER_PROTOCOL_VERSION = "negotiated.broker.protocol.version.name";
 
         // Error constants
         /**
@@ -218,6 +222,13 @@ public class BrokerResult implements Serializable {
     private String mRefreshTokenAge;
 
     /**
+     * Negotiated broker protocol version between broker client and broker service.
+     */
+    @Nullable
+    @SerializedName(SerializedNames.NEGOTIATED_BROKER_PROTOCOL_VERSION)
+    private String mNegotiatedBrokerProtocolVersion;
+
+    /**
      * Boolean to indicate if the request succeeded without exceptions.
      */
     @NonNull
@@ -290,6 +301,11 @@ public class BrokerResult implements Serializable {
     private String mCliTelemSubErrorCode;
 
 
+    @Nullable
+    @SerializedName(SerializedNames.TENANT_PROFILE_CACHE_RECORDS)
+    private final List<ICacheRecord> mTenantProfileData;
+
+
     private BrokerResult(@NonNull final Builder builder) {
         mAccessToken = builder.mAccessToken;
         mIdToken = builder.mIdToken;
@@ -311,6 +327,8 @@ public class BrokerResult implements Serializable {
         mSpeRing = builder.mSpeRing;
         mRefreshTokenAge = builder.mRefreshTokenAge;
         mSuccess = builder.mSuccess;
+        mTenantProfileData = builder.mTenantProfileData;
+        mNegotiatedBrokerProtocolVersion = builder.mNegotiatedBrokerProtocolVersion;
 
         mErrorCode = builder.mErrorCode;
         mErrorMessage = builder.mErrorMessage;
@@ -321,6 +339,10 @@ public class BrokerResult implements Serializable {
         mHttpResponseHeaders = builder.mHttpResponseHeaders;
         mCliTelemErrorCode = builder.mCliTelemErrorCode;
         mCliTelemSubErrorCode = builder.mCliTelemSubErrorCode;
+    }
+
+    public List<ICacheRecord> getTenantProfileData() {
+        return mTenantProfileData;
     }
 
     public String getCliTelemSubErrorCode() {
@@ -427,7 +449,7 @@ public class BrokerResult implements Serializable {
         return mHomeAccountId;
     }
 
-    public String getRefreshToken(){
+    public String getRefreshToken() {
         return mRefreshToken;
     }
 
@@ -481,6 +503,8 @@ public class BrokerResult implements Serializable {
 
         private boolean mSuccess;
 
+        private String mNegotiatedBrokerProtocolVersion;
+
         // Exception parameters
 
         private String mErrorCode;
@@ -501,6 +525,7 @@ public class BrokerResult implements Serializable {
 
         private String mCliTelemSubErrorCode;
 
+        private List<ICacheRecord> mTenantProfileData;
 
         public Builder accessToken(@Nullable final String accessToken) {
             this.mAccessToken = accessToken;
@@ -602,6 +627,11 @@ public class BrokerResult implements Serializable {
             return this;
         }
 
+        public Builder negotiatedBrokerProtocolVersion(String negotiatedBrokerProtocolVersion) {
+            this.mNegotiatedBrokerProtocolVersion = negotiatedBrokerProtocolVersion;
+            return this;
+        }
+
         public Builder errorCode(String errorCode) {
             this.mErrorCode = errorCode;
             return this;
@@ -649,6 +679,11 @@ public class BrokerResult implements Serializable {
 
         public BrokerResult build() {
             return new BrokerResult(this);
+        }
+
+        public Builder tenantProfileRecords(List<ICacheRecord> cacheRecordWithTenantProfileData) {
+            this.mTenantProfileData = cacheRecordWithTenantProfileData;
+            return this;
         }
     }
 

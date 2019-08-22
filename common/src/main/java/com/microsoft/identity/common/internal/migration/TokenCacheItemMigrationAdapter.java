@@ -1,17 +1,39 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.common.internal.migration;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Pair;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.internal.cache.ITokenCacheItem;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -25,7 +47,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,7 +66,8 @@ public class TokenCacheItemMigrationAdapter {
 
     private static final String TAG = TokenCacheItemMigrationAdapter.class.getSimpleName();
 
-    public static final String COMMON = "/common";
+    private static final String DEFAULT_SCOPES = "openid profile offline_access";
+    private static final String COMMON = "/common";
 
     /**
      * ExecutorService to handle background computation.
@@ -98,7 +120,7 @@ public class TokenCacheItemMigrationAdapter {
     /**
      * Testing whether the given client ID can use the cached foci to refresh token.
      *
-     * @param clientId String of the given client id.
+     * @param clientId    String of the given client id.
      * @param redirectUri redirect url string of the given client id.
      * @param cacheRecord Foci cache record.
      * @return true if the given client id can use the cached foci token. False, otherwise.
@@ -210,9 +232,9 @@ public class TokenCacheItemMigrationAdapter {
     }
 
     @Nullable
-    private static Pair<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
+    public static Pair<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
             @Nullable final String redirectUri,
-            @NonNull final ADALTokenCacheItem targetCacheItemToRenew) {
+            @NonNull final ITokenCacheItem targetCacheItemToRenew) {
         Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair = null;
 
         if (!StringExtensions.isNullOrBlank(redirectUri)) {
@@ -227,9 +249,15 @@ public class TokenCacheItemMigrationAdapter {
                 // Create a correlation_id for the request
                 final UUID correlationId = UUID.randomUUID();
 
-                final String scopes = getScopesForTokenRequest(
-                        targetCacheItemToRenew.getResource()
-                );
+                final String scopes;
+
+                if (TextUtils.isEmpty(targetCacheItemToRenew.getResource())) {
+                    scopes = DEFAULT_SCOPES;
+                } else {
+                    scopes = getScopesForTokenRequest(
+                            targetCacheItemToRenew.getResource()
+                    );
+                }
 
                 // Create the strategy
                 final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config);
@@ -513,7 +541,7 @@ public class TokenCacheItemMigrationAdapter {
         String scopes = getScopeFromResource(v1Resource);
 
         // Add the default scopes, as they will not be present
-        scopes += " openid profile offline_access";
+        scopes += " " + DEFAULT_SCOPES;
 
         return scopes;
     }
