@@ -353,31 +353,31 @@ public final class ErrorStrings {
     /**
      * AccountMode in configuration is set to multiple. However, the device is marked as shared (which requires single account mode).
      */
-    public static final String CANNOT_INITIALIZE_MULTIPLE_ACCOUNT_PCA_ON_SHARED_DEVICE_ERRORCODE = "cannot_initialize_multiple_account_pca_on_shared_device";
-    public static final String CANNOT_INITIALIZE_MULTIPLE_ACCOUNT_PCA_ON_SHARED_DEVICE_ERRORMESSAGE = "AccountMode in configuration is set to multiple. However, the device is marked as shared (which requires single account mode).";
+    public static final String CANNOT_INITIALIZE_MULTIPLE_ACCOUNT_PCA_ON_SHARED_DEVICE_ERROR_CODE = "cannot_initialize_multiple_account_pca_on_shared_device";
+    public static final String CANNOT_INITIALIZE_MULTIPLE_ACCOUNT_PCA_ON_SHARED_DEVICE_ERROR_MESSAGE = "AccountMode in configuration is set to multiple. However, the device is marked as shared (which requires single account mode).";
 
     /**
      * Multiple account PublicClientApplication could not be created for unknown reasons
      */
-    public static final String CANNOT_INITIALIZE_MULTIPLE_ACCOUNT_PCA_UNKNOWN_REASON_ERRORCODE = "cannot_initialize_multiple_account_pca_unknown_reason";
-    public static final String CANNOT_INITIALIZE_MULTIPLE_ACCOUNT_PCA_UNKNOWN_REASON_ERRORMESSAGE = "Multiple account PublicClientApplication could not be created for unknown reasons";
+    public static final String CANNOT_INITIALIZE_MULTIPLE_ACCOUNT_PCA_UNKNOWN_REASON_ERROR_CODE = "cannot_initialize_multiple_account_pca_unknown_reason";
+    public static final String CANNOT_INITIALIZE_MULTIPLE_ACCOUNT_PCA_UNKNOWN_REASON_ERROR_MESSAGE = "Multiple account PublicClientApplication could not be created for unknown reasons";
 
     /**
      * AccountMode in configuration is not set to multiple. Cannot initialize multiple account PublicClientApplication.
      */
-    public static final String CANNOT_INITIALIZE_MULTIPLE_ACCOUNT_PCA_ACCOUNT_MODE_NOT_MULTIPLE_ERRORCODE = "cannot_initialize_multiple_account_pca_account_mode_not_multiple";
-    public static final String CANNOT_INITIALIZE_MULTIPLE_ACCOUNT_PCA_ACCOUNT_MODE_NOT_MULTIPLE_ERRORMESSAGE = "AccountMode in configuration is not set to multiple. Cannot initialize multiple account PublicClientApplication.";
+    public static final String CANNOT_INITIALIZE_MULTIPLE_ACCOUNT_PCA_ACCOUNT_MODE_NOT_MULTIPLE_ERROR_CODE = "cannot_initialize_multiple_account_pca_account_mode_not_multiple";
+    public static final String CANNOT_INITIALIZE_MULTIPLE_ACCOUNT_PCA_ACCOUNT_MODE_NOT_MULTIPLE_ERROR_MESSAGE = "AccountMode in configuration is not set to multiple. Cannot initialize multiple account PublicClientApplication.";
 
     /**
      * AccountMode in configuration is not set to single. Cannot initialize single account PublicClientApplication.
      */
-    public static final String CANNOT_INITIALIZE_SINGLE_ACCOUNT_PCA_ACCOUNT_MODE_NOT_SINGLE_ERRORCODE = "cannot_initialize_multiple_account_pca_account_mode_not_single";
-    public static final String CANNOT_INITIALIZE_SINGLE_ACCOUNT_PCA_ACCOUNT_MODE_NOT_SINGLE_ERRORMESSAGE = "AccountMode in configuration is not set to single. Cannot initialize single account PublicClientApplication.";
+    public static final String CANNOT_INITIALIZE_SINGLE_ACCOUNT_PCA_ACCOUNT_MODE_NOT_SINGLE_ERROR_CODE = "cannot_initialize_multiple_account_pca_account_mode_not_single";
+    public static final String CANNOT_INITIALIZE_SINGLE_ACCOUNT_PCA_ACCOUNT_MODE_NOT_SINGLE_ERROR_MESSAGE = "AccountMode in configuration is not set to single. Cannot initialize single account PublicClientApplication.";
 
     /**
      * A single account public client application could not be created for unknown reasons.
      */
-    public static final String CANNOT_INITIALIZE_SINGLE_ACCOUNT_PCA_UNKNOWN_REASON_ERRORCODE = "cannot_initialize_single_account_pca_unknown_reason";
-    public static final String CANNOT_INITIALIZE_SINGLE_ACCOUNT_PCA_UNKNOWN_REASON_ERRORMESSAGE = "A single account public client application could not be created for unknown reasons.";
+    public static final String CANNOT_INITIALIZE_SINGLE_ACCOUNT_PCA_UNKNOWN_REASON_ERROR_CODE = "cannot_initialize_single_account_pca_unknown_reason";
+    public static final String CANNOT_INITIALIZE_SINGLE_ACCOUNT_PCA_UNKNOWN_REASON_ERROR_MESSAGE = "A single account public client application could not be created for unknown reasons.";
 
 }
