@@ -31,6 +31,4 @@ import android.content.Context;
  * */
 public interface IWpjTelemetryCallback {
     void logEvent(Context context, final String operation, final Boolean isFailed, final String reason);
-    void logSessionStart(Context context, final String operation);
-    void logSessionEnd(Context context, final String operation, final Boolean isFailed, final String reason);
 }

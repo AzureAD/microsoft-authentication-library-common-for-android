@@ -1,3 +1,8 @@
+Version 0.0.17
+-------------
+- BugFix : Fix for foci lookup issue relative to migration
+- Add clearBrokerSecretKeys() to AuthenticationSettings.
+
 Version 0.0.15
 -------------
 - Bug Fix : Adding null safety check to avoid crash on EmbeddedWebViewStrategy

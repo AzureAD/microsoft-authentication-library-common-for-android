@@ -458,7 +458,7 @@ public class BrokerOAuth2TokenCache
         );
 
         final boolean shouldUseFociCache = null == targetCache;
-        final ICacheRecord resultRecord;
+        ICacheRecord resultRecord;
 
         if (shouldUseFociCache) {
             // We do not have a cache for this app or it is not yet known to be a member of the family
@@ -473,6 +473,29 @@ public class BrokerOAuth2TokenCache
                     target,
                     account
             );
+
+            if (null == resultRecord.getRefreshToken()) {
+                // We didn't find an exact match for this app, if this app is foci perform a
+                // more general search
+                final BrokerApplicationMetadata appMetadata = mApplicationMetadataCache.getMetadata(
+                        clientId,
+                        account.getEnvironment(),
+                        mCallingProcessUid
+                );
+
+                boolean isKnownFoci = false;
+
+                if (null != appMetadata) {
+                    isKnownFoci = null != appMetadata.getFoci();
+                }
+
+                if (isKnownFoci) {
+                    resultRecord = mFociCache.loadByFamilyId(
+                            clientId,
+                            account
+                    );
+                }
+            }
         }
 
         final boolean resultFound = null != resultRecord.getRefreshToken();
