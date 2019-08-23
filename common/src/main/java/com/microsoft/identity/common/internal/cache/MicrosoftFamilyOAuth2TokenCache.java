@@ -110,7 +110,9 @@ public class MicrosoftFamilyOAuth2TokenCache
             if (credential instanceof RefreshTokenRecord) {
                 final RefreshTokenRecord rtRecord = (RefreshTokenRecord) credential;
 
-                if (refreshTokenMatchesFamilyId(accountRecord, familyId, rtRecord)) {
+                if (familyId.equals(rtRecord.getFamilyId())
+                        && accountRecord.getEnvironment().equals(rtRecord.getEnvironment())
+                        && accountRecord.getHomeAccountId().equals(rtRecord.getHomeAccountId())) {
                     rtToReturn = rtRecord;
                     break;
                 }
@@ -122,7 +124,10 @@ public class MicrosoftFamilyOAuth2TokenCache
             if (credential instanceof IdTokenRecord) {
                 final IdTokenRecord idTokenRecord = (IdTokenRecord) credential;
 
-                if (idTokenMatchesClientId(clientId, accountRecord, idTokenRecord)) {
+                if (null != clientId && clientId.equals(idTokenRecord.getClientId())
+                        && accountRecord.getEnvironment().equals(idTokenRecord.getEnvironment())
+                        && accountRecord.getHomeAccountId().equals(idTokenRecord.getHomeAccountId())
+                        && accountRecord.getRealm().equals(idTokenRecord.getRealm())) {
                     idTokenToReturn = idTokenRecord;
                     break;
                 }
@@ -134,7 +139,11 @@ public class MicrosoftFamilyOAuth2TokenCache
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord atRecord = (AccessTokenRecord) credential;
 
-                    if (accessTokenMatchesClientAndTarget(clientId, target, accountRecord, atRecord)) {
+                    if (null != clientId && clientId.equals(atRecord.getClientId())
+                            && accountRecord.getEnvironment().equals(atRecord.getEnvironment())
+                            && accountRecord.getHomeAccountId().equals(atRecord.getHomeAccountId())
+                            && accountRecord.getRealm().equals(atRecord.getRealm())
+                            && targetsIntersect(target, atRecord.getTarget())) {
                         atRecordToReturn = atRecord;
                         break;
                     }
@@ -156,33 +165,5 @@ public class MicrosoftFamilyOAuth2TokenCache
         }
 
         return result;
-    }
-
-    private boolean refreshTokenMatchesFamilyId(@NonNull final AccountRecord accountRecord,
-                                                @NonNull final String familyId,
-                                                @NonNull final RefreshTokenRecord rtRecord) {
-        return familyId.equals(rtRecord.getFamilyId())
-                && accountRecord.getEnvironment().equals(rtRecord.getEnvironment())
-                && accountRecord.getHomeAccountId().equals(rtRecord.getHomeAccountId());
-    }
-
-    private boolean idTokenMatchesClientId(@Nullable final String clientId,
-                                           @NonNull final AccountRecord accountRecord,
-                                           IdTokenRecord idTokenRecord) {
-        return null != clientId && clientId.equals(idTokenRecord.getClientId())
-                && accountRecord.getEnvironment().equals(idTokenRecord.getEnvironment())
-                && accountRecord.getHomeAccountId().equals(idTokenRecord.getHomeAccountId())
-                && accountRecord.getRealm().equals(idTokenRecord.getRealm());
-    }
-
-    private boolean accessTokenMatchesClientAndTarget(@Nullable final String clientId,
-                                                      @NonNull final String target,
-                                                      @NonNull final AccountRecord accountRecord,
-                                                      AccessTokenRecord atRecord) {
-        return null != clientId && clientId.equals(atRecord.getClientId())
-                && accountRecord.getEnvironment().equals(atRecord.getEnvironment())
-                && accountRecord.getHomeAccountId().equals(atRecord.getHomeAccountId())
-                && accountRecord.getRealm().equals(atRecord.getRealm())
-                && targetsIntersect(target, atRecord.getTarget());
     }
 }
