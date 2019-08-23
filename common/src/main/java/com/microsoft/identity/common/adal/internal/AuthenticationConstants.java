@@ -1262,13 +1262,21 @@ public final class AuthenticationConstants {
     public static final class TelemetryEvents {
         public static final String DECRYPTION_ERROR = "decryption_error_v2";
 
-        public static final String KEYCHAIN_WRITE = "keychain_write_v2";
+        public static final String KEYCHAIN_WRITE_START = "keychain_write_v2_start";
 
-        public static final String KEYCHAIN_READ = "keychain_read_v2";
+        public static final String KEYCHAIN_WRITE_END = "keychain_write_v2_end";
 
-        public static final String KEY_RETRIEVAL = "key_retrieval_v2";
+        public static final String KEYCHAIN_READ_START = "keychain_read_v2_start";
 
-        public static final String KEY_DISTRIBUTION = "key_distribution_v2";
+        public static final String KEYCHAIN_READ_END = "keychain_read_v2_end";
+
+        public static final String KEY_RETRIEVAL_START = "key_retrieval_v2_start";
+
+        public static final String KEY_RETRIEVAL_END = "key_retrieval_v2_end";
+
+        public static final String KEY_DISTRIBUTION_START = "key_distribution_v2_start";
+
+        public static final String KEY_DISTRIBUTION_END = "key_distribution_v2_end";
 
         public static final String KEY_CREATED = "key_created_v2";
     }

@@ -27,8 +27,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -91,6 +94,7 @@ public class MicrosoftFamilyOAuth2TokenCache
         // - realm doesn't matter (MRRT)
 
         RefreshTokenRecord rtToReturn = null;
+        IdTokenRecord idTokenToReturn = null;
 
         // First, filter down to only the refresh tokens...
         for (final Credential credential : getAccountCredentialCache().getCredentials()) {
@@ -106,9 +110,32 @@ public class MicrosoftFamilyOAuth2TokenCache
             }
         }
 
+        // If there's a matching IdToken, pick that up too...
+        for (final Credential credential : getAccountCredentialCache().getCredentials()) {
+            if (credential instanceof IdTokenRecord) {
+                final IdTokenRecord idTokenRecord = (IdTokenRecord) credential;
+
+                if (null != clientId && clientId.equals(idTokenRecord.getClientId())
+                        && accountRecord.getEnvironment().equals(idTokenRecord.getEnvironment())
+                        && accountRecord.getHomeAccountId().equals(idTokenRecord.getHomeAccountId())
+                        && accountRecord.getRealm().equals(idTokenRecord.getRealm())) {
+                    idTokenToReturn = idTokenRecord;
+                    break;
+                }
+            }
+        }
+
         final CacheRecord result = new CacheRecord();
         result.setAccount(accountRecord);
         result.setRefreshToken(rtToReturn);
+
+        if (null != idTokenToReturn) {
+            if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenToReturn.getCredentialType())) {
+                result.setV1IdToken(idTokenToReturn);
+            } else {
+                result.setIdToken(idTokenToReturn);
+            }
+        }
 
         return result;
     }

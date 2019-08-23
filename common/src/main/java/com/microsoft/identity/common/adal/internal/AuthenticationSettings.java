@@ -140,6 +140,14 @@ public enum AuthenticationSettings {
     }
 
     /**
+     * Clear broker secret keys.
+     * Introduced as a temporary workaround to make sure Broker code clears up Broker keys in common before it's used by ADAL/MSAL.
+     * */
+    public void clearBrokerSecretKeys(){
+        mBrokerSecretKeys.clear();
+    }
+
+    /**
      * For test cases only.
      * */
     public void clearSecretKeysForTestCases(){
