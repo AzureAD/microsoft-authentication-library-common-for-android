@@ -145,6 +145,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
 
         final ICacheRecord familyCacheRecord = mOauth2TokenCache.loadByFamilyId(
                 null,
+                TARGET,
                 frtTestBundle.mGeneratedAccount
         );
 
@@ -156,6 +157,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
 
         final ICacheRecord familyCacheRecordWithClientId = mOauth2TokenCache.loadByFamilyId(
                 CLIENT_ID,
+                TARGET,
                 frtTestBundle.mGeneratedAccount
         );
 
@@ -168,6 +170,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         final ICacheRecord familyCacheRecordWithClientIdButNonMatchingTarget =
                 mOauth2TokenCache.loadByFamilyId(
                         CLIENT_ID,
+                        TARGET,
                         frtTestBundle.mGeneratedAccount
                 );
 
@@ -180,6 +183,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         final ICacheRecord wrongClientIdResult =
                 mOauth2TokenCache.loadByFamilyId(
                         "12345",
+                        TARGET,
                         frtTestBundle.mGeneratedAccount
                 );
 
@@ -314,6 +318,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         // Test only one FRT exists and it is the second one saved...
         final ICacheRecord cacheRecord = mOauth2TokenCache.loadByFamilyId(
                 CLIENT_ID,
+                TARGET,
                 frtTestBundle2.mGeneratedAccount
         );
 
@@ -329,6 +334,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         // Check querying for the FRT in the second app yields the same FRT
         final ICacheRecord cacheRecord2 = mOauth2TokenCache.loadByFamilyId(
                 CLIENT_ID + "2",
+                TARGET,
                 frtTestBundle2.mGeneratedAccount
         );
 
@@ -353,6 +359,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
 
         final ICacheRecord cacheRecord3 = mOauth2TokenCache.loadByFamilyId(
                 CLIENT_ID + "2",
+                TARGET,
                 randomAcct
         );
 
