@@ -47,6 +47,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.ICacheRecordGsonAdapter;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import org.json.JSONException;
 
@@ -174,6 +175,29 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                         resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2),
                         BrokerResult.class
                 );
+    }
+
+    public static boolean getHelloResultFromBundle(final Bundle bundle) throws ClientException {
+        final String methodName = ":getHelloResultFromBundle";
+        if (bundle == null) {
+            Logger.warn(TAG + methodName, "The hello result bundle is null.");
+            return false;
+        } else if (!StringUtil.isEmpty(bundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY))) {
+            final String negotiatedBrokerProtocolVersion = bundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY);
+            Logger.verbose(TAG + methodName,
+                    "Able to establish the connect, " +
+                            "the broker protocol version in common is ["
+                            + negotiatedBrokerProtocolVersion + "]");
+            return true;
+        } else if (bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2) != null
+                && bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2) instanceof BrokerResult) {
+            //no common broker version found and create the client exception from the result bundle.
+            //final BrokerResult brokerResult = MsalBrokerResultAdapter.brokerResultFromBundle(resultBundle);
+            final BrokerResult brokerResult = (BrokerResult) bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2);
+            throw new ClientException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
+        } else {
+            return false;
+        }
     }
 
     @Override
