@@ -45,7 +45,7 @@ import java.util.concurrent.Executors;
 import static com.microsoft.identity.common.exception.ServiceException.OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD;
 
 /**
- * A class for pulling the OpenIDConfiguratino document from the OpenID Provider server.
+ * A class for pulling the OpenIdConfiguration document from the OpenID Provider server.
  */
 public class OpenIdProviderConfigurationClient {
 
