@@ -189,10 +189,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                             "the broker protocol version in common is ["
                             + negotiatedBrokerProtocolVersion + "]");
             return true;
+        } else if (!StringUtil.isEmpty(bundle.getString(AuthenticationConstants.OAuth2.ERROR))
+                && !StringUtil.isEmpty(bundle.getString(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION))) {
+            final String errorCode = bundle.getString(AuthenticationConstants.OAuth2.ERROR);
+            final String errorMessage = bundle.getString(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION);
+            throw new ClientException(errorCode, errorMessage);
         } else if (bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2) != null
                 && bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2) instanceof BrokerResult) {
-            //no common broker version found and create the client exception from the result bundle.
-            //final BrokerResult brokerResult = MsalBrokerResultAdapter.brokerResultFromBundle(resultBundle);
+            // for the back compatibility purpose to version 3.0.4 and 3.0.6.
             final BrokerResult brokerResult = (BrokerResult) bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2);
             throw new ClientException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
         } else {
