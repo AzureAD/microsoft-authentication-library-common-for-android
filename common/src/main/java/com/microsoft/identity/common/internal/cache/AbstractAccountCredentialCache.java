@@ -198,8 +198,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
      * @return True, if the credentialTarget contains all of the targets (scopes) declared by
      * targetToMatch. False otherwise.
      */
-    private static boolean targetsIntersect(@NonNull final String targetToMatch,
-                                            @NonNull final String credentialTarget) {
+    static boolean targetsIntersect(@NonNull final String targetToMatch,
+                                    @NonNull final String credentialTarget) {
         // The credentialTarget must contain all of the scopes in the targetToMatch
         // It may contain more, but it must contain minimally those
         // Matching is case-insensitive
