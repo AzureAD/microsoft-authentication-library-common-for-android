@@ -35,6 +35,9 @@ import java.util.List;
 
 public class ServiceException extends BaseException {
 
+    public static final String OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD =
+            "failed_to_load_openid_configuration";
+
     /**
      * This request is missing a required parameter, includes an invalid parameter, includes a
      * parameter more than
