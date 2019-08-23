@@ -39,6 +39,8 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
+import java.util.List;
+
 import static com.microsoft.identity.common.internal.cache.AbstractAccountCredentialCache.targetsIntersect;
 
 public class MicrosoftFamilyOAuth2TokenCache
@@ -101,8 +103,10 @@ public class MicrosoftFamilyOAuth2TokenCache
         IdTokenRecord idTokenToReturn = null;
         AccessTokenRecord atRecordToReturn = null;
 
+        final List<Credential> allCredentials = getAccountCredentialCache().getCredentials();
+
         // First, filter down to only the refresh tokens...
-        for (final Credential credential : getAccountCredentialCache().getCredentials()) {
+        for (final Credential credential : allCredentials) {
             if (credential instanceof RefreshTokenRecord) {
                 final RefreshTokenRecord rtRecord = (RefreshTokenRecord) credential;
 
@@ -116,7 +120,7 @@ public class MicrosoftFamilyOAuth2TokenCache
         }
 
         // If there's a matching IdToken, pick that up too...
-        for (final Credential credential : getAccountCredentialCache().getCredentials()) {
+        for (final Credential credential : allCredentials) {
             if (credential instanceof IdTokenRecord) {
                 final IdTokenRecord idTokenRecord = (IdTokenRecord) credential;
 
@@ -131,7 +135,7 @@ public class MicrosoftFamilyOAuth2TokenCache
         }
 
         if (null != target) {
-            for (final Credential credential : getAccountCredentialCache().getCredentials()) {
+            for (final Credential credential : allCredentials) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord atRecord = (AccessTokenRecord) credential;
 
