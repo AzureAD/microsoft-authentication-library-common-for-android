@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -294,7 +295,13 @@ public final class AuthorizationActivity extends Activity {
         Logger.info(TAG, null, "Received redirect from customTab/browser.");
         final String url = getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
         final Intent resultIntent = createResultIntent(url);
-        if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL))) {
+        final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
+        if (parameters.containsKey("app_link")) {
+            final String appLink = parameters.get("app_link");
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(appLink));
+            startActivity(browserIntent);
+            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, resultIntent);
+        } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL))) {
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, resultIntent);
         } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE))
                 && resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE).equalsIgnoreCase("cancel")) {
