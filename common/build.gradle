@@ -81,6 +81,11 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
 
+    implementation "org.robolectric:annotations:4.0"
+
+    implementation project(':keyvault')
+    implementation project(':labapi')
+
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
     testImplementation 'org.json:json:20160810'
@@ -91,6 +96,7 @@ dependencies {
     testImplementation "org.powermock:powermock-module-junit4-rule:$rootProject.ext.powerMockVersion"
     testImplementation "org.powermock:powermock-api-mockito:$rootProject.ext.powerMockVersion"
     testImplementation "org.powermock:powermock-classloading-xstream:$rootProject.ext.powerMockVersion"
+    testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
 
     // Instrumented dependencies
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidxJunitVersion"
