@@ -31,6 +31,8 @@ import android.preference.PreferenceManager;
 import android.security.KeyPairGeneratorSpec;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.Pair;
+
 import android.util.Base64;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -79,13 +81,8 @@ import javax.security.auth.x500.X500Principal;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
-public class StorageHelper implements IStorageHelper {
+abstract class EncryptionManagerBase implements IEncryptionManager {
     private static final String TAG = "StorageHelper";
-
-    /**
-     * A flag to turn on/off keystore encryption on Broker apps.
-     */
-    public static final boolean sShouldEncryptWithKeyStoreKey = false;
 
     /**
      * HMac key hashing algorithm.
@@ -156,25 +153,6 @@ public class StorageHelper implements IStorageHelper {
 
     private static final String ANDROID_KEY_STORE = "AndroidKeyStore";
 
-    /**
-     * Type of Secret key to be used.
-     */
-    public enum KeyType {
-        LEGACY_AUTHENTICATOR_APP_KEY,
-        LEGACY_COMPANY_PORTAL_KEY,
-        ADAL_USER_DEFINED_KEY,
-        KEYSTORE_ENCRYPTED_KEY
-    }
-
-    /**
-     * Encryption type of a given blob.
-     */
-    public enum EncryptionType {
-        USER_DEFINED,
-        ANDROID_KEY_STORE,
-        UNENCRYPTED
-    }
-
     private final Context mContext;
     private final SecureRandom mRandom;
     private IWpjTelemetryCallback mTelemetryCallback;
@@ -193,21 +171,10 @@ public class StorageHelper implements IStorageHelper {
      *
      * @param context The {@link Context} to create {@link StorageHelper}.
      */
-    public StorageHelper(@NonNull final Context context) {
-        this(context, null);
-    }
-
-    /**
-     * Constructor for {@link StorageHelper}.
-     *
-     * @param context The {@link Context} to create {@link StorageHelper}.
-     *                TODO: Remove this suppression: https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html
-     */
-    @SuppressLint("TrulyRandom")
-    public StorageHelper(@NonNull final Context context, @Nullable final IWpjTelemetryCallback telemetryCallback) {
+    protected EncryptionManagerBase(@NonNull final Context context) {
         mContext = context.getApplicationContext();
         mRandom = new SecureRandom();
-        mTelemetryCallback = telemetryCallback;
+        mTelemetryCallback = null;
     }
 
     // Exposed to be overridden by mock tests.
@@ -215,8 +182,31 @@ public class StorageHelper implements IStorageHelper {
         return mContext.getPackageName();
     }
 
+    /**
+     * Sets telemetry callback to the StorageHelper object.
+     * This is currently exposed because Telemetry is not wired to Common yet.
+     *
+     * @param IWpjTelemetryCallback a callback object.
+     * */
+    public synchronized void setTelemetryCallback(@Nullable final IWpjTelemetryCallback telemetryCallback){
+        if (mTelemetryCallback == null && telemetryCallback != null) {
+            mTelemetryCallback = telemetryCallback;
+        }
+    }
+
+    protected boolean isEncryptionKeyLoaded(){
+        return mEncryptionKey != null && mBlobVersion != null;
+    }
+
+    protected Pair<SecretKey, String> getCachedEncryptionKey(){
+        if (isEncryptionKeyLoaded()){
+            return new Pair<>(mEncryptionKey, mBlobVersion);
+        }
+        return null;
+    }
+
     @Override
-    public String encrypt(final String clearText)
+    public synchronized String encrypt(final String clearText)
             throws GeneralSecurityException, IOException {
         final String methodName = ":encrypt";
 
@@ -227,8 +217,12 @@ public class StorageHelper implements IStorageHelper {
         Logger.verbose(TAG + methodName, "Starting encryption");
 
         // load key for encryption if not loaded
-        mEncryptionKey = loadSecretKeyForEncryption();
+        final Pair<SecretKey, String> encryptionKeyAndBlobKeyPair = loadSecretKeyForEncryption();
+
+        mEncryptionKey = encryptionKeyAndBlobKeyPair.first;
         mEncryptionHMACKey = getHMacKey(mEncryptionKey);
+
+        mBlobVersion = encryptionKeyAndBlobKeyPair.second;
 
         Logger.verbose(TAG + methodName, "Encrypt version:" + mBlobVersion);
         final byte[] blobVersion = mBlobVersion.getBytes(AuthenticationConstants.ENCODING_UTF8);
@@ -274,7 +268,7 @@ public class StorageHelper implements IStorageHelper {
     }
 
     @Override
-    public String decrypt(final String encryptedBlob) throws GeneralSecurityException, IOException {
+    public synchronized String decrypt(final String encryptedBlob) throws GeneralSecurityException, IOException {
         final String methodName = ":decrypt";
         Logger.verbose(TAG + methodName, "Starting decryption");
 
@@ -397,7 +391,7 @@ public class StorageHelper implements IStorageHelper {
                                                   @NonNull final String packageName) throws IOException {
         List<KeyType> keyTypeList = new ArrayList<>();
 
-        EncryptionType encryptionType = getEncryptionType(encryptedBlob);
+        final EncryptionType encryptionType = getEncryptionType(encryptedBlob);
 
         if (encryptionType == EncryptionType.USER_DEFINED) {
             if (AuthenticationSettings.INSTANCE.getSecretKeyData() != null) {
@@ -486,93 +480,6 @@ public class StorageHelper implements IStorageHelper {
         }
     }
 
-    @Override
-    public synchronized SecretKey loadSecretKeyForEncryption() throws IOException,
-            GeneralSecurityException {
-        final String methodName = ":loadSecretKeyForEncryption";
-
-        // Loading key only once for performance. If API is upgraded, it will
-        // restart the device anyway. It will load the correct key for new API.
-        if (mEncryptionKey != null && mEncryptionHMACKey != null) {
-            return mEncryptionKey;
-        }
-
-        // The current app runtime is the broker; load its secret key.
-        if (!sShouldEncryptWithKeyStoreKey &&
-                AuthenticationSettings.INSTANCE.getBrokerSecretKeys().containsKey(getPackageName())) {
-
-            // Try to read keystore key - so that we get telemetry data on its reliability.
-            // If anything happens, do not crash the app.
-            try {
-                loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
-            } catch (Exception e) {
-                // Best effort.
-            }
-
-            setBlobVersion(VERSION_USER_DEFINED);
-            if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName())) {
-                return loadSecretKey(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
-            } else {
-                return loadSecretKey(KeyType.LEGACY_COMPANY_PORTAL_KEY);
-            }
-        }
-
-        // Try to get user defined key (ADAL/MSAL).
-        if (AuthenticationSettings.INSTANCE.getSecretKeyData() != null) {
-            setBlobVersion(VERSION_USER_DEFINED);
-            return loadSecretKey(KeyType.ADAL_USER_DEFINED_KEY);
-        }
-
-        // Try loading existing keystore-encrypted key. If it doesn't exist, create a new one.
-        setBlobVersion(VERSION_ANDROID_KEY_STORE);
-        try {
-            SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
-            if (key != null) {
-                return key;
-            }
-        } catch (final IOException | GeneralSecurityException e) {
-            // If we fail to load key, proceed and generate a new one.
-        }
-
-        Logger.verbose(TAG + methodName, "Keystore-encrypted key does not exist, try to generate new keys.");
-        return generateKeyStoreEncryptedKey();
-    }
-
-    /**
-     * A function for setting mBlobVersion.
-     * Exposed for test cases.
-     */
-    protected void setBlobVersion(@NonNull String blobVersion) {
-        mBlobVersion = blobVersion;
-    }
-
-    /**
-     * Given the key type, load a secret key.
-     *
-     * @return SecretKey. Null if there isn't any.
-     */
-    @Nullable
-    public SecretKey loadSecretKey(@NonNull final KeyType keyType) throws IOException, GeneralSecurityException {
-        final String methodName = ":loadSecretKey";
-
-        switch (keyType) {
-            case LEGACY_AUTHENTICATOR_APP_KEY:
-                return getSecretKey(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(AZURE_AUTHENTICATOR_APP_PACKAGE_NAME));
-
-            case LEGACY_COMPANY_PORTAL_KEY:
-                return getSecretKey(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(COMPANY_PORTAL_APP_PACKAGE_NAME));
-
-            case ADAL_USER_DEFINED_KEY:
-                return getSecretKey(AuthenticationSettings.INSTANCE.getSecretKeyData());
-
-            case KEYSTORE_ENCRYPTED_KEY:
-                return loadKeyStoreEncryptedKey();
-        }
-
-        Logger.verbose(TAG + methodName, "Unknown KeyType. This code should never be reached.");
-        throw new GeneralSecurityException(ErrorStrings.UNKNOWN_ERROR);
-    }
-
     /**
      * Encrypt the given unencrypted symmetric key with Keystore key and save to storage.
      */
@@ -609,7 +516,7 @@ public class StorageHelper implements IStorageHelper {
      * @throws IOException
      */
     @Nullable
-    private synchronized SecretKey loadKeyStoreEncryptedKey()
+    protected synchronized SecretKey loadKeyStoreEncryptedKey()
             throws GeneralSecurityException, IOException {
         final String methodName = ":loadKeyStoreEncryptedKey";
         if (mCachedKeyStoreEncryptedKey != null) {
@@ -733,7 +640,7 @@ public class StorageHelper implements IStorageHelper {
                 .build();
     }
 
-    private static SecretKey getSecretKey(final byte[] rawBytes) {
+    protected static SecretKey getSecretKey(final byte[] rawBytes) {
         if (rawBytes == null) {
             throw new IllegalArgumentException("rawBytes");
         }
@@ -961,5 +868,4 @@ public class StorageHelper implements IStorageHelper {
             mTelemetryCallback.logEvent(mContext, operationName, true, reason);
         }
     }
-
 }

@@ -25,11 +25,11 @@ package com.microsoft.identity.common;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
-import androidx.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.adal.internal.cache.MsalEncryptionManager;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
@@ -231,11 +231,11 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         configureMocksForTestBundle(defaultTestBundleV2);
 
         // Context and related init
-        final Context context = InstrumentationRegistry.getTargetContext();
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         mSharedPreferencesFileManager = new SharedPreferencesFileManager(
                 context,
                 "test_prefs",
-                new StorageHelper(context)
+                MsalEncryptionManager.getInstance(context)
         );
 
         final ICacheKeyValueDelegate keyValueDelegate = new CacheKeyValueDelegate();

@@ -22,12 +22,36 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.cache;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.Pair;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 import javax.crypto.SecretKey;
 
-public interface IStorageHelper {
+public interface IEncryptionManager {
+
+    /**
+     * Type of Secret key to be used.
+     */
+    enum KeyType {
+        LEGACY_AUTHENTICATOR_APP_KEY,
+        LEGACY_COMPANY_PORTAL_KEY,
+        ADAL_USER_DEFINED_KEY,
+        KEYSTORE_ENCRYPTED_KEY
+    }
+
+    /**
+     * Encryption type of a given blob.
+     */
+    enum EncryptionType {
+        USER_DEFINED,
+        ANDROID_KEY_STORE,
+        UNENCRYPTED
+    }
+
     /**
      * Encrypt text with current key based on API level.
      *
@@ -56,5 +80,12 @@ public interface IStorageHelper {
      * @throws GeneralSecurityException throws if general security error happens.
      * @throws IOException              throws if I/O error happens.
      */
-    SecretKey loadSecretKeyForEncryption() throws IOException, GeneralSecurityException;
+    Pair loadSecretKeyForEncryption() throws IOException, GeneralSecurityException;
+
+    /**
+     * Given the key type, load a secret key.
+     *
+     * @return SecretKey. Null if there isn't any.
+     */
+    SecretKey loadSecretKey(@NonNull final KeyType keyType) throws IOException, GeneralSecurityException;
 }

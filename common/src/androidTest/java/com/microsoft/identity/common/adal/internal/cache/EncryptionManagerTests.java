@@ -30,6 +30,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
@@ -63,9 +64,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
-public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
+public class EncryptionManagerTests extends AndroidSecretKeyEnabledHelper {
 
-    private static final String TAG = "StorageHelperTests";
+    private static final String TAG = "EncryptionManagerTests";
 
     private static final int MIN_SDK_VERSION = 18;
 
@@ -75,10 +76,10 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         super.setUp();
 
         // Everything is on clean slate.
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
-        storageHelper.deleteKeyFile();
-        storageHelper.resetKeyPairFromAndroidKeyStore();
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        MsalEncryptionManager manager = new MsalEncryptionManager(context);
+        manager.deleteKeyFile();
+        manager.resetKeyPairFromAndroidKeyStore();
 
         AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
     }
@@ -91,9 +92,8 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void testEncryptDecryptNullEmpty() {
-
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MsalEncryptionManager storageHelper = new MsalEncryptionManager(context);
         assertThrowsException(
                 IllegalArgumentException.class,
                 "Input is empty or null",
@@ -150,8 +150,8 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
     }
 
     private void encryptDecrypt(String clearText) throws GeneralSecurityException, IOException {
-        Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MsalEncryptionManager storageHelper = new MsalEncryptionManager(context);
         String encrypted = storageHelper.encrypt(clearText);
         assertNotNull("encrypted string is not null", encrypted);
         assertFalse("encrypted string is not same as cleartext", encrypted.equals(clearText));
@@ -162,8 +162,8 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
     @Test
     public void testEncryptSameText() throws GeneralSecurityException, IOException {
         // access code
-        Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MsalEncryptionManager storageHelper = new MsalEncryptionManager(context);
         String clearText = "AAAAAAAA2pILN0mn3wlYIlWk7lqOZ5qjRWXHRnqDdzsq0s4aaUVgnMQo6oXfEUYL4fAxqVQ6dXh9sMAieFDjXVhTkp3mnL2gHSnAHJFwmj9mnlgaU7kVcoujXRA3Je23PEtoqEQMQPaurakVcEl7jOsjUGWD7JdaAHsYTujd1KHoTUdBJQQ-jz4t6Cish25zn9BPocJzN56rLUqgX3dnoA1z-hY4FS_EIn_Xdvqnil29t4etVHLDZD5RJbc5R3p5MaUKqPBF8sAQvJcgW-f9ebPHzO8L87RrsVNu4keagKmOnP139KSuORBhNaD57nmEvecJWtWTIAA&redirect_uri=https%3a%2f%2fworkaad.com%2fdemoclient1&client_id=dba19db4-53de-441d-9c63-da8d6f229e5a";
         Log.d(TAG, "Starting testEncryptSameText");
         String encrypted = storageHelper.encrypt(clearText);
@@ -188,8 +188,8 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void testTampering() throws GeneralSecurityException, IOException {
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MsalEncryptionManager storageHelper = new MsalEncryptionManager(context);
         String clearText = "AAAAAAAA2pILN0mn3wlYIlWk7lqOZ5qjRWXH";
         String encrypted = storageHelper.encrypt(clearText);
         assertNotNull("encrypted string is not null", encrypted);
@@ -217,8 +217,8 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
     @Test
     public void testVersion() throws GeneralSecurityException, IOException {
 
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MsalEncryptionManager storageHelper = new MsalEncryptionManager(context);
         String value = "anvaERSgvhdfgkhrebgagagfdgadfgaadfgadfgadfg435gerhawdeADFGb #$%#gf3$%1234";
         String encrypted = storageHelper.encrypt(value);
         final int knownEncryptedSubstringStart = 1;
@@ -246,8 +246,9 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         if (Build.VERSION.SDK_INT < MIN_SDK_VERSION) {
             return;
         }
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
+
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MsalEncryptionManager storageHelper = new MsalEncryptionManager(context);
         SecretKey kp = storageHelper.generateKeyStoreEncryptedKey();
 
         assertNotNull("Keypair is not null", kp);
@@ -265,8 +266,8 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
             return;
         }
 
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MsalEncryptionManager storageHelper = new MsalEncryptionManager(context);
         setSecretKeyData();
         String expectedDecrypted = "SomeValue1234";
         String encryptedInAPI17 = "cE1VTAwMb4ChefrTHHblCg0DYaK1UR456nW3q6+hqA9Cs2uB+bqcfsLzukiI+KOCdBGJV+JqhRJHBIDCOl68TYkLQAz65g=";
@@ -282,8 +283,8 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
             return;
         }
 
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MsalEncryptionManager storageHelper = new MsalEncryptionManager(context);
 
         File keyFile = new File(context.getDir(context.getPackageName(),
                 Context.MODE_PRIVATE), "adalks");
@@ -291,10 +292,10 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
             keyFile.delete();
         }
 
-        SecretKey key = storageHelper.loadSecretKeyForEncryption();
+        SecretKey key = storageHelper.loadSecretKeyForEncryption().first;
         assertNotNull("Key is not null", key);
 
-        SecretKey key2 = storageHelper.loadSecretKeyForEncryption();
+        SecretKey key2 = storageHelper.loadSecretKeyForEncryption().first;
         Log.d(TAG, "Key1:" + key.toString());
         Log.d(TAG, "Key1:" + key2.toString());
         assertTrue("Key info is same", key.toString().equals(key2.toString()));
@@ -321,8 +322,8 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
 
         setMockBrokerSecretKeys();
 
-        class LegacyStorageHelperMock extends StorageHelper {
-            public LegacyStorageHelperMock(@NonNull Context context) {
+        class LegacyEncryptionManagerMock extends BrokerEncryptionManager {
+            protected LegacyEncryptionManagerMock(@NonNull Context context) {
                 super(context);
             }
 
@@ -332,20 +333,20 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
             }
         }
 
-        final Context context = getInstrumentation().getTargetContext();
-        final LegacyStorageHelperMock legacyStorageHelperMock = new LegacyStorageHelperMock(context);
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final LegacyEncryptionManagerMock legacyEncryptionManagerMock = new LegacyEncryptionManagerMock(context);
 
         final String authAppKey = Base64.encodeToString(new SecretKeySpec(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME), "AES").getEncoded(), Base64.DEFAULT);
-        final String encryptionKey = Base64.encodeToString(legacyStorageHelperMock.loadSecretKeyForEncryption().getEncoded(), Base64.DEFAULT);
+        final String encryptionKey = Base64.encodeToString(legacyEncryptionManagerMock.loadSecretKeyForEncryption().first.getEncoded(), Base64.DEFAULT);
         assertTrue("AuthApp key is used for encryption.", authAppKey.equals(encryptionKey));
 
         String expectedDecrypted = "SomeValue1234";
-        assertTrue("Data is not encrypted", legacyStorageHelperMock.getEncryptionType(expectedDecrypted) == StorageHelper.EncryptionType.UNENCRYPTED);
+        assertTrue("Data is not encrypted", legacyEncryptionManagerMock.getEncryptionType(expectedDecrypted) == IEncryptionManager.EncryptionType.UNENCRYPTED);
 
-        String legacyEncryptedKey = legacyStorageHelperMock.encrypt(expectedDecrypted);
-        assertTrue("Data is encrypted with legacy key", legacyStorageHelperMock.getEncryptionType(legacyEncryptedKey) == StorageHelper.EncryptionType.USER_DEFINED);
+        String legacyEncryptedKey = legacyEncryptionManagerMock.encrypt(expectedDecrypted);
+        assertTrue("Data is encrypted with legacy key", legacyEncryptionManagerMock.getEncryptionType(legacyEncryptedKey) == IEncryptionManager.EncryptionType.USER_DEFINED);
 
-        String decryptedLegacyKey = legacyStorageHelperMock.decrypt(legacyEncryptedKey);
+        String decryptedLegacyKey = legacyEncryptionManagerMock.decrypt(legacyEncryptedKey);
         assertTrue("Decrypted data is same", expectedDecrypted.equals(decryptedLegacyKey));
     }
 
@@ -354,8 +355,8 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
 
         setMockBrokerSecretKeys();
 
-        class LegacyStorageHelperMock extends StorageHelper {
-            public LegacyStorageHelperMock(@NonNull Context context) {
+        class LegacyEncryptionManagerMock extends BrokerEncryptionManager {
+            protected LegacyEncryptionManagerMock(@NonNull Context context) {
                 super(context);
             }
 
@@ -365,20 +366,20 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
             }
         }
 
-        final Context context = getInstrumentation().getTargetContext();
-        final LegacyStorageHelperMock legacyStorageHelperMock = new LegacyStorageHelperMock(context);
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final LegacyEncryptionManagerMock legacyEncryptionManagerMock = new LegacyEncryptionManagerMock(context);
 
         final String authAppKey = Base64.encodeToString(new SecretKeySpec(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME), "AES").getEncoded(), Base64.DEFAULT);
-        final String encryptionKey = Base64.encodeToString(legacyStorageHelperMock.loadSecretKeyForEncryption().getEncoded(), Base64.DEFAULT);
+        final String encryptionKey = Base64.encodeToString(legacyEncryptionManagerMock.loadSecretKeyForEncryption().first.getEncoded(), Base64.DEFAULT);
         assertTrue("CP key is used for encryption.", authAppKey.equals(encryptionKey));
 
         String expectedDecrypted = "SomeValue1234";
-        assertTrue("Data is not encrypted", legacyStorageHelperMock.getEncryptionType(expectedDecrypted) == StorageHelper.EncryptionType.UNENCRYPTED);
+        assertTrue("Data is not encrypted", legacyEncryptionManagerMock.getEncryptionType(expectedDecrypted) == IEncryptionManager.EncryptionType.UNENCRYPTED);
 
-        String legacyEncryptedKey = legacyStorageHelperMock.encrypt(expectedDecrypted);
-        assertTrue("Data is encrypted with legacy key", legacyStorageHelperMock.getEncryptionType(legacyEncryptedKey) == StorageHelper.EncryptionType.USER_DEFINED);
+        String legacyEncryptedKey = legacyEncryptionManagerMock.encrypt(expectedDecrypted);
+        assertTrue("Data is encrypted with legacy key", legacyEncryptionManagerMock.getEncryptionType(legacyEncryptedKey) == IEncryptionManager.EncryptionType.USER_DEFINED);
 
-        String decryptedLegacyKey = legacyStorageHelperMock.decrypt(legacyEncryptedKey);
+        String decryptedLegacyKey = legacyEncryptionManagerMock.decrypt(legacyEncryptedKey);
         assertTrue("Decrypted data is same", expectedDecrypted.equals(decryptedLegacyKey));
     }
 
@@ -390,8 +391,8 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         final SecretKey secretKey = new SecretKeySpec(tempkey.getEncoded(), "AES");
         AuthenticationSettings.INSTANCE.setSecretKey(secretKey.getEncoded());
 
-        class StorageHelperMock extends StorageHelper {
-            public StorageHelperMock(@NonNull Context context) {
+        class EncryptionManagerMock extends MsalEncryptionManager {
+            protected EncryptionManagerMock(@NonNull Context context) {
                 super(context);
             }
 
@@ -402,20 +403,20 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
             }
         }
 
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelperMock storageHelperMock = new StorageHelperMock(context);
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final EncryptionManagerMock encryptionManagerMock = new EncryptionManagerMock(context);
 
         String unencryptedValue = "SomeValue1234";
-        String encryptedValue = storageHelperMock.encrypt(unencryptedValue);
+        String encryptedValue = encryptionManagerMock.encrypt(unencryptedValue);
 
-        assertTrue("Encrypted with user defined key", storageHelperMock.getEncryptionType(encryptedValue) == StorageHelper.EncryptionType.USER_DEFINED);
+        assertTrue("Encrypted with user defined key", encryptionManagerMock.getEncryptionType(encryptedValue) == IEncryptionManager.EncryptionType.USER_DEFINED);
 
-        List<StorageHelper.KeyType> keyTypeList = storageHelperMock.getKeysForDecryptionType(encryptedValue, AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME);
+        List<IEncryptionManager.KeyType> keyTypeList = encryptionManagerMock.getKeysForDecryptionType(encryptedValue, AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME);
 
         assertTrue("Expected 1 keyType", keyTypeList.size() == 1);
-        assertTrue("The first key should be user defined key", keyTypeList.get(0) == StorageHelper.KeyType.ADAL_USER_DEFINED_KEY);
+        assertTrue("The first key should be user defined key", keyTypeList.get(0) == IEncryptionManager.KeyType.ADAL_USER_DEFINED_KEY);
 
-        String decryptedValue = storageHelperMock.decrypt(encryptedValue);
+        String decryptedValue = encryptionManagerMock.decrypt(encryptedValue);
 
         assertTrue("Decrypted data is same", decryptedValue.equals(unencryptedValue));
     }
@@ -423,35 +424,35 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
     @Test
     public void testDecryptingWithADALKeyStoreKey() throws IOException, GeneralSecurityException {
 
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MsalEncryptionManager msalEncryptionManager = new MsalEncryptionManager(context);
 
         String unencryptedValue = "SomeValue1234";
-        String encryptedValue = storageHelper.encrypt(unencryptedValue);
+        String encryptedValue = msalEncryptionManager.encrypt(unencryptedValue);
 
-        assertTrue("Encrypted with keystore key", storageHelper.getEncryptionType(encryptedValue) == StorageHelper.EncryptionType.ANDROID_KEY_STORE);
+        assertTrue("Encrypted with keystore key", msalEncryptionManager.getEncryptionType(encryptedValue) == IEncryptionManager.EncryptionType.ANDROID_KEY_STORE);
 
-        List<StorageHelper.KeyType> keyTypeList = storageHelper.getKeysForDecryptionType(encryptedValue, "MOCK_ADAL_APP");
+        List<IEncryptionManager.KeyType> keyTypeList = msalEncryptionManager.getKeysForDecryptionType(encryptedValue, "MOCK_ADAL_APP");
 
         assertTrue("Expected 1 keyType", keyTypeList.size() == 1);
-        assertTrue("The first key should be keystore encrypted key", keyTypeList.get(0) == StorageHelper.KeyType.KEYSTORE_ENCRYPTED_KEY);
+        assertTrue("The first key should be keystore encrypted key", keyTypeList.get(0) == IEncryptionManager.KeyType.KEYSTORE_ENCRYPTED_KEY);
 
-        String decryptedValue = storageHelper.decrypt(encryptedValue);
+        String decryptedValue = msalEncryptionManager.decrypt(encryptedValue);
 
         assertTrue("Decrypted data is same", decryptedValue.equals(unencryptedValue));
     }
 
     @Test
     public void testSecretKeySerialization() throws UnsupportedEncodingException {
-        final Context context = getInstrumentation().getTargetContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MsalEncryptionManager msalEncryptionManager = new MsalEncryptionManager(context);
 
         final String keyString = "ABCDEFGH";
         final SecretKey key = new SecretKeySpec(Base64.decode(keyString.getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT), "AES");
         final SecretKey anotherKey = new SecretKeySpec(Base64.decode("RANDOM".getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT), "AES");
 
-        final String serializedKey = storageHelper.serializeSecretKey(key);
-        final SecretKey deserializedKey = storageHelper.deserializeSecretKey(serializedKey);
+        final String serializedKey = msalEncryptionManager.serializeSecretKey(key);
+        final SecretKey deserializedKey = msalEncryptionManager.deserializeSecretKey(serializedKey);
 
         assertTrue("keys are matching.", deserializedKey.equals(key));
         assertFalse("keys should not be matching.", deserializedKey.equals(anotherKey));

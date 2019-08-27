@@ -22,10 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import androidx.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.adal.internal.cache.MsalEncryptionManager;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 
@@ -54,13 +54,13 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     public static Iterable<ISharedPreferencesFileManager> testParams() {
         return Arrays.asList(new ISharedPreferencesFileManager[]{
                 new SharedPreferencesFileManager(
-                        InstrumentationRegistry.getTargetContext(),
+                        InstrumentationRegistry.getInstrumentation().getTargetContext(),
                         sTEST_SHARED_PREFS_NAME
                 ),
                 new SharedPreferencesFileManager(
-                        InstrumentationRegistry.getTargetContext(),
+                        InstrumentationRegistry.getInstrumentation().getTargetContext(),
                         sTEST_SHARED_PREFS_NAME,
-                        new StorageHelper(InstrumentationRegistry.getTargetContext())
+                        MsalEncryptionManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
                 )
         });
     }

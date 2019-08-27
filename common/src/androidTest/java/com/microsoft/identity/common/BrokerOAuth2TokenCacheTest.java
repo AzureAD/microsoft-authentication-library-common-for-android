@@ -28,7 +28,7 @@ import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.adal.internal.cache.MsalEncryptionManager;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
@@ -288,7 +288,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         return new SharedPreferencesFileManager(
                 context,
                 getBrokerUidSequesteredFilename(appUid),
-                new StorageHelper(context)
+                MsalEncryptionManager.getInstance(context)
         );
     }
 
@@ -296,7 +296,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         return new SharedPreferencesFileManager(
                 context,
                 BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                new StorageHelper(context)
+                MsalEncryptionManager.getInstance(context)
         );
     }
 
