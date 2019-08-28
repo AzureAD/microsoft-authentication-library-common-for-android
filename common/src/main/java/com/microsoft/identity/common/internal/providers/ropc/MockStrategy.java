@@ -13,6 +13,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.testutils.MockTokenResponse;
@@ -76,7 +77,7 @@ public class MockStrategy extends MicrosoftStsOAuth2Strategy {
             validateTokenRequest(request);
         }
 
-        return MockTokenResponse.getTokenResult();
+        return getTokenResult();
     }
 
     @Override
@@ -134,6 +135,13 @@ public class MockStrategy extends MicrosoftStsOAuth2Strategy {
         }
 
         return tokenRequest;
+    }
+
+    private TokenResult getTokenResult() {
+        TokenResponse tokenResponse = MockTokenResponse.getTokenResponse();
+        TokenResult tokenResult = new TokenResult(tokenResponse);
+        tokenResult.setSuccess(true);
+        return tokenResult;
     }
 
 }

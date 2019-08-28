@@ -57,16 +57,4 @@ public class MockTokenResponse {
         return tokenResponse;
     }
 
-    public static TokenResult getBasicTokenResult() {
-        TokenResponse tokenResponse = getTokenResponse();
-        TokenResult tokenResult = new TokenResult(tokenResponse);
-        tokenResult.setSuccess(true);
-        return tokenResult;
-    }
-
-    public static TokenResult getTokenResult() {
-        return getBasicTokenResult();
-    }
-
-
 }
