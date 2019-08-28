@@ -25,6 +25,13 @@ package com.microsoft.identity.common.utilities;
 
 import com.microsoft.identity.internal.test.labapi.model.TestConfiguration;
 
+import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+
 public class Scenario {
 
     private TestConfiguration mTestConfiguration;
@@ -46,7 +53,7 @@ public class Scenario {
         this.mCredential = credential;
     }
 
-    public static String getPasswordForUser(String upn) {
+    public static String getPasswordForUser(String upn) throws CertificateException, InterruptedException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
         TestConfigurationQuery query = new TestConfigurationQuery();
         query.upn = upn;
         Scenario scenario = GetScenario(query);
@@ -54,17 +61,12 @@ public class Scenario {
         return password;
     }
 
-    public static Scenario GetScenario(TestConfigurationQuery query) {
+    public static Scenario GetScenario(TestConfigurationQuery query) throws CertificateException, InterruptedException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
         TestConfiguration tc = TestConfigurationHelper.GetTestConfiguration(query);
         String keyVaultLocation = tc.getUsers().getCredentialVaultKeyName();
         String secretName = keyVaultLocation.substring(keyVaultLocation.lastIndexOf('/') + 1);
 
-        Credential credential = null;
-        try {
-            credential = Secrets.GetCredential(tc.getUsers().getUpn(), secretName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Credential credential = Secrets.GetCredential(tc.getUsers().getUpn(), secretName);
 
         Scenario scenario = new Scenario();
         scenario.setTestConfiguration(tc);

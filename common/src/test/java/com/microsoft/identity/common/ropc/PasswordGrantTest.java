@@ -16,6 +16,11 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -35,7 +40,12 @@ public final class PasswordGrantTest {
         query.isFederated = false;
         query.federationProvider = "ADFSv4";
 
-        Scenario scenario = Scenario.GetScenario(query);
+        Scenario scenario = null;
+        try {
+            scenario = Scenario.GetScenario(query);
+        } catch (Exception e) {
+            fail("Error getting username and/or password from keyvault/labapi");
+        }
         return scenario;
     }
 

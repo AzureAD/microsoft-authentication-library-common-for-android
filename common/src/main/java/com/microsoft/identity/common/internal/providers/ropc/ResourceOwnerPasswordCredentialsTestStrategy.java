@@ -20,6 +20,11 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.utilities.Scenario;
 
 import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.UUID;
 import java.util.concurrent.Future;
 
@@ -109,7 +114,12 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
         );
 
         String username = request.getLoginHint();
-        String password = Scenario.getPasswordForUser(username);
+        String password = null;
+        try {
+            password = Scenario.getPasswordForUser(username);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setUsername(username);
