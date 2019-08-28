@@ -80,8 +80,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
-
-    implementation "org.robolectric:annotations:4.0"
+    implementation "org.robolectric:annotations:$rootProject.ext.robolectricVersion"
 
     implementation project(':keyvault')
     implementation project(':labapi')
