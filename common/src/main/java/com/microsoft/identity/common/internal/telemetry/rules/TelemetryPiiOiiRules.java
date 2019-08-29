@@ -38,7 +38,7 @@ final public class TelemetryPiiOiiRules {
 
     final private String piiArray[] = {
             Key.USER_ID,
-            Key.DEVICE_ID,
+            Device.ID,
             Key.LOGIN_HINT,
             Key.ERROR_DESCRIPTION,
             Key.REQUEST_QUERY_PARAMS,
@@ -54,7 +54,7 @@ final public class TelemetryPiiOiiRules {
             Key.HTTP_PATH,
             Key.AUTHORITY,
             Key.IDP_NAME,
-            App.NAME,
+            //App.NAME,
             App.VERSION
     };
 

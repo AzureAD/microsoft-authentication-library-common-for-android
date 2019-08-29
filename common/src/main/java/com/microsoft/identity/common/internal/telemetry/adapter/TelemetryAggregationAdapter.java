@@ -37,6 +37,8 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 
 public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
     private ITelemetryAggregatedObserver mObserver;
+    private final String START = "start";
+    private final String END = "end";
 
     public TelemetryAggregationAdapter(@NonNull final ITelemetryAggregatedObserver observer) {
         mObserver = observer;
@@ -48,8 +50,7 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
 
     public void process(@NonNull final List<Map<String, String>> rawData) {
         final Map<String, String> aggregatedData = new HashMap<>();
-        long apiStartTime = -1;
-        long apiEndTime = -1;
+        final Map<String, String> responseTimeMap = new HashMap<>();
 
         final Iterator<Map<String, String>> iterator = rawData.iterator();
         while (iterator.hasNext()) {
@@ -62,8 +63,8 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
                 continue;
             }
 
-            //only count the starting of event.
-            if (eventName.contains("start")) {
+            //Count the events. Only check the "*_start_event" when counting.
+            if (eventName.contains(START)) {
                 final String eventTypeCount = eventType + "_count";
                 aggregatedData.put(
                         eventTypeCount,
@@ -73,24 +74,19 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
                 );
             }
 
-            final long eventOccurTime = Long.parseLong(event.get(Key.OCCUR_TIME));
-            if (eventName.equalsIgnoreCase(Event.API_START_EVENT)
-                    && (apiStartTime == -1
-                    || eventOccurTime < apiStartTime)) {
-                apiStartTime = eventOccurTime;
+            if(!StringUtil.isEmpty(event.get(Key.IS_SUCCESSFUL))) {
+                aggregatedData.put(
+                        eventType + Key.IS_SUCCESSFUL,
+                        event.get(Key.IS_SUCCESSFUL)
+                );
             }
 
-            if (eventName.equalsIgnoreCase(Event.API_END_EVENT)
-                    && (apiEndTime == -1
-                    || eventOccurTime > apiEndTime)) {
-                apiEndTime = eventOccurTime;
-            }
+            trackEventResponseTime(responseTimeMap, event);
 
             aggregatedData.putAll(applyAggregationRule(event));
         }
 
-        aggregatedData.put(Key.START_TIME, String.valueOf(apiStartTime));
-        aggregatedData.put(Key.END_TIME, String.valueOf(apiEndTime));
+        calculateEventResponseTime(responseTimeMap, aggregatedData);
 
         mObserver.onReceived(aggregatedData);
     }
@@ -105,5 +101,45 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
         }
 
         return nonPiiProperties;
+    }
+
+    private void trackEventResponseTime(@NonNull final Map<String, String> responseTimeMap,
+                                        @NonNull final Map<String, String> event) {
+        final String eventName = event.get(Key.EVENT_NAME);
+        final String eventType = event.get(Key.EVENT_TYPE);
+
+        if (eventName.contains(START)) {
+            final String eventStartTime = eventType + "_start_time";
+            responseTimeMap.put(
+                    eventStartTime,
+                    null == event.get(Key.OCCUR_TIME) ?
+                            null
+                            : event.get(Key.OCCUR_TIME)
+            );
+        }
+
+        if (eventName.contains(END)) {
+            final String eventEndTime = eventType + "_end_time";
+            responseTimeMap.put(
+                    eventEndTime,
+                    null == event.get(Key.OCCUR_TIME) ?
+                            null
+                            : event.get(Key.OCCUR_TIME)
+            );
+        }
+    }
+
+    private void calculateEventResponseTime(@NonNull final Map<String, String> responseTimeMap,
+                                            @NonNull final Map<String, String> aggregatedData) {
+        for (Map.Entry<String,String> entry : responseTimeMap.entrySet()) {
+            if (entry.getKey().contains(START)
+                    && responseTimeMap.containsKey(entry.getKey().replace(START, END))
+                    && responseTimeMap.get(entry.getKey().replace(START, END)) != null) {
+                final String key = entry.getKey().replace(START, "response");
+                final long startTime = Long.parseLong(entry.getValue());
+                final long endTime = Long.parseLong(responseTimeMap.get(entry.getKey().replace(START, END)));
+                aggregatedData.put(key, String.valueOf(endTime - startTime));
+            }
+        }
     }
 }

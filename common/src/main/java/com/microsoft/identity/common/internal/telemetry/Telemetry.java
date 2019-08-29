@@ -101,7 +101,7 @@ public class Telemetry {
         return sTelemetryInstance;
     }
 
-    TelemetryContext getTelemetryContext() {
+    public TelemetryContext getTelemetryContext() {
         return mTelemetryContext;
     }
 

@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.telemetry.events;
 
 import com.microsoft.identity.common.internal.cache.CacheRecord;
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
@@ -62,16 +63,12 @@ public class CacheEndEvent extends BaseEvent {
     public CacheEndEvent putCacheRecordStatus(final CacheRecord cacheRecord) {
         put(Key.AT_STATUS, cacheRecord.getAccessToken() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
         put(Key.RT_STATUS, cacheRecord.getRefreshToken() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
+        put(Key.FRT_STATUS, StringUtil.isEmpty(cacheRecord.getRefreshToken().getFamilyId()) ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
         put(Key.ID_TOKEN_STATUS, cacheRecord.getIdToken() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
         put(Key.V1_ID_TOKEN_STATUS, cacheRecord.getV1IdToken() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
         put(Key.ACCOUNT_STATUS, cacheRecord.getAccount() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
         return this;
     }
-
-//    public CacheEndEvent putIdTokenStatus(final String frtStatus) {
-//        put(Key., frtStatus);
-//        return this;
-//    }
 
     public CacheEndEvent putSpeInfo(final String speInfo) {
         put(Key.SPE_INFO, speInfo);

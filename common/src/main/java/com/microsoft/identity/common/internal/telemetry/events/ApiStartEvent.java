@@ -57,7 +57,7 @@ public class ApiStartEvent extends BaseEvent {
 
     public ApiStartEvent putProperties(@NonNull final OperationParameters parameters) {
         if (parameters.getAuthority() != null) {
-            put(Key.AUTHORITY, parameters.getAuthority().toString()); //Pii
+            put(Key.AUTHORITY, parameters.getAuthority().getAuthorityURL().getAuthority()); //Pii
             put(Key.AUTHORITY_TYPE, parameters.getAuthority().getAuthorityTypeString());
         }
 
@@ -86,6 +86,10 @@ public class ApiStartEvent extends BaseEvent {
                         String.valueOf(((AcquireTokenOperationParameters) parameters).getExtraQueryStringParameters().size())
                 );
             }
+
+            put(Key.PROMPT_BEHAVIOR,
+                    ((AcquireTokenOperationParameters) parameters).getOpenIdConnectPromptParameter().toString()
+            );
         }
 
         if (parameters instanceof AcquireTokenSilentOperationParameters) {

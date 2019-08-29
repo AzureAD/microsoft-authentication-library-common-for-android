@@ -120,7 +120,7 @@ public final class HttpRequest {
         Telemetry.emit(
                 new HttpStartEvent()
                         .putMethod(REQUEST_METHOD_POST)
-                        .putPath(requestUrl.getPath())
+                        .putPath(requestUrl)
                         .putRequestIdHeader(requestHeaders.get("client-request-id"))
         );
 
@@ -145,14 +145,17 @@ public final class HttpRequest {
         Telemetry.emit(
                 new HttpStartEvent()
                         .putMethod(REQUEST_METHOD_GET)
-                        .putPath(requestUrl.getPath())
+                        .putPath(requestUrl)
                         .putRequestIdHeader(requestHeaders.get("client-request-id"))
         );
 
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
         final HttpResponse response =  httpRequest.send();
 
-        Telemetry.emit(new HttpEndEvent().putStatusCode(response.getStatusCode()));
+        Telemetry.emit(
+                new HttpEndEvent()
+                        .putStatusCode(response.getStatusCode())
+        );
         return response;
     }
 

@@ -21,6 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
+import java.net.URL;
+
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 public class HttpStartEvent extends BaseEvent {
@@ -35,8 +37,23 @@ public class HttpStartEvent extends BaseEvent {
         return this;
     }
 
-    public HttpStartEvent putPath(String path) {
-        put(Key.HTTP_PATH, path);
+    public HttpStartEvent putPath(URL path) {
+        final StringBuilder logPath = new StringBuilder();
+        logPath.append(path.getProtocol());
+        logPath.append("://");
+        logPath.append(path.getAuthority());
+        logPath.append("/");
+
+        // we do not want to send tenant information
+        // index 0 is blank
+        // index 1 is tenant
+        final String[] splitArray = path.getPath().split("/");
+        for (int i = 2; i < splitArray.length; i++) {
+            logPath.append(splitArray[i]);
+            logPath.append("/");
+        }
+
+        put(Key.HTTP_PATH, logPath.toString());
         return this;
     }
 
@@ -52,16 +69,6 @@ public class HttpStartEvent extends BaseEvent {
 
     public HttpStartEvent putErrorDomain(String errorDomain) {
         put(Key.HTTP_ERROR_DOMAIN, errorDomain);
-        return this;
-    }
-
-    public HttpStartEvent isNetworkConnected(boolean isConnected) {
-        put(Key.NETWORK_CONNECTION, String.valueOf(isConnected));
-        return this;
-    }
-
-    public HttpStartEvent isPowerOptimizationOn(boolean isDozed) {
-        put(Key.POWER_OPTIMIZATION, String.valueOf(isDozed));
         return this;
     }
 }

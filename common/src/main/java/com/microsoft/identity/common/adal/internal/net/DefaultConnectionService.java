@@ -30,6 +30,7 @@ import android.os.Build;
 
 import com.microsoft.identity.common.adal.internal.PowerManagerWrapper;
 import com.microsoft.identity.common.adal.internal.UsageStatsManagerWrapper;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
 /**
  * Default connection service check network connectivity.
@@ -60,7 +61,9 @@ public class DefaultConnectionService implements IConnectionService {
         ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting() && !isNetworkDisabledFromOptimizations();
+        final boolean isConnectionAvailable = activeNetwork != null && activeNetwork.isConnectedOrConnecting() && !isNetworkDisabledFromOptimizations();
+        Telemetry.getInstance().getTelemetryContext().isNetworkConnected(isConnectionAvailable);
+        return isConnectionAvailable;
     }
 
     /**
@@ -74,15 +77,18 @@ public class DefaultConnectionService implements IConnectionService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             final UsageStatsManagerWrapper usageStatsManagerWrapper = UsageStatsManagerWrapper.getInstance();
             if (usageStatsManagerWrapper.isAppInactive(mConnectionContext)) {
+                Telemetry.getInstance().getTelemetryContext().isNetworkDisabledFromOptimizations(true);
                 return true;
             }
 
             final PowerManagerWrapper powerManagerWrapper = PowerManagerWrapper.getInstance();
             if (powerManagerWrapper.isDeviceIdleMode(mConnectionContext) && !powerManagerWrapper.isIgnoringBatteryOptimizations(mConnectionContext)) {
+                Telemetry.getInstance().getTelemetryContext().isNetworkDisabledFromOptimizations(true);
                 return true;
             }
         }
 
+        Telemetry.getInstance().getTelemetryContext().isNetworkDisabledFromOptimizations(false);
         return false;
     }
 }
