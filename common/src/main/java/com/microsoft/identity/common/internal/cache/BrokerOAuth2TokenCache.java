@@ -451,20 +451,32 @@ public class BrokerOAuth2TokenCache
                 "Performing lookup in app-specific cache."
         );
 
+        final BrokerApplicationMetadata appMetadata = mApplicationMetadataCache.getMetadata(
+                clientId,
+                account.getEnvironment(),
+                mCallingProcessUid
+        );
+
+        boolean isKnownFoci = false;
+
+        if (null != appMetadata) {
+            isKnownFoci = null != appMetadata.getFoci();
+        }
+
         final OAuth2TokenCache targetCache = getTokenCacheForClient(
                 clientId,
                 account.getEnvironment(),
                 mCallingProcessUid
         );
 
-        final boolean shouldUseFociCache = null == targetCache;
-        final ICacheRecord resultRecord;
+        final boolean shouldUseFociCache = null == targetCache || isKnownFoci;
+
+        ICacheRecord resultRecord;
 
         if (shouldUseFociCache) {
-            // We do not have a cache for this app or it is not yet known to be a member of the family
-            // use the foci cache....
             resultRecord = mFociCache.loadByFamilyId(
                     clientId,
+                    target,
                     account
             );
         } else {
@@ -537,6 +549,7 @@ public class BrokerOAuth2TokenCache
             resultRecords.add(
                     mFociCache.loadByFamilyId(
                             clientId,
+                            target,
                             account
                     )
             );

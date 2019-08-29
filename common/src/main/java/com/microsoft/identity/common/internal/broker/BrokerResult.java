@@ -57,7 +57,6 @@ public class BrokerResult implements Serializable {
         static final String CACHED_AT = "cached_at";
         static final String REFRESH_TOKEN_AGE = "refresh_token_age";
         static final String SUCCESS = "success";
-        static final String NEGOTIATED_BROKER_PROTOCOL_VERSION = "negotiated.broker.protocol.version.name";
 
         // Error constants
         /**
@@ -84,6 +83,8 @@ public class BrokerResult implements Serializable {
         static final String CLI_TELEM_ERRORCODE = "cli_telem_error_code";
         static final String CLI_TELEM_SUB_ERROR_CODE = "cli_telem_suberror_code";
     }
+
+    private static final long serialVersionUID = 8606631820514878489L;
 
     // Success parameters
     /**
@@ -222,13 +223,6 @@ public class BrokerResult implements Serializable {
     private String mRefreshTokenAge;
 
     /**
-     * Negotiated broker protocol version between broker client and broker service.
-     */
-    @Nullable
-    @SerializedName(SerializedNames.NEGOTIATED_BROKER_PROTOCOL_VERSION)
-    private String mNegotiatedBrokerProtocolVersion;
-
-    /**
      * Boolean to indicate if the request succeeded without exceptions.
      */
     @NonNull
@@ -328,7 +322,6 @@ public class BrokerResult implements Serializable {
         mRefreshTokenAge = builder.mRefreshTokenAge;
         mSuccess = builder.mSuccess;
         mTenantProfileData = builder.mTenantProfileData;
-        mNegotiatedBrokerProtocolVersion = builder.mNegotiatedBrokerProtocolVersion;
 
         mErrorCode = builder.mErrorCode;
         mErrorMessage = builder.mErrorMessage;

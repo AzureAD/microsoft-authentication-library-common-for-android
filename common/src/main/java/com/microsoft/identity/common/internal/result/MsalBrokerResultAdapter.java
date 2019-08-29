@@ -47,6 +47,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.ICacheRecordGsonAdapter;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import org.json.JSONException;
 
@@ -174,6 +175,39 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                         resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2),
                         BrokerResult.class
                 );
+    }
+
+    public static boolean getHelloResultFromBundle(final Bundle bundle) throws ClientException {
+        final String methodName = ":getHelloResultFromBundle";
+        if (bundle == null) {
+            Logger.warn(TAG + methodName, "The hello result bundle is null.");
+            return false;
+        }
+
+        if (!StringUtil.isEmpty(bundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY))) {
+            final String negotiatedBrokerProtocolVersion = bundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY);
+            Logger.verbose(TAG + methodName,
+                    "Able to establish the connect, " +
+                            "the broker protocol version in common is ["
+                            + negotiatedBrokerProtocolVersion + "]");
+            return true;
+        }
+
+        if (!StringUtil.isEmpty(bundle.getString(AuthenticationConstants.OAuth2.ERROR))
+                && !StringUtil.isEmpty(bundle.getString(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION))) {
+            final String errorCode = bundle.getString(AuthenticationConstants.OAuth2.ERROR);
+            final String errorMessage = bundle.getString(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION);
+            throw new ClientException(errorCode, errorMessage);
+        }
+
+        if (bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2) != null
+                && bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2) instanceof BrokerResult) {
+            // for the back compatibility purpose to version 3.0.4 and 3.0.6.
+            final BrokerResult brokerResult = (BrokerResult) bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2);
+            throw new ClientException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
+        }
+
+        return false;
     }
 
     @Override
