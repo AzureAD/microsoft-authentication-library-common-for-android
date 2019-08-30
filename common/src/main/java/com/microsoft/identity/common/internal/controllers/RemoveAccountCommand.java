@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import android.os.RemoteException;
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.request.OperationParameters;

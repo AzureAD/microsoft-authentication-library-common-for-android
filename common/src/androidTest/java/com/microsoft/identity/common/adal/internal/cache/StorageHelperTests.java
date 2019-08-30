@@ -25,6 +25,8 @@ package com.microsoft.identity.common.adal.internal.cache;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.test.runner.AndroidJUnit4;
 import android.util.Base64;
 import android.util.Log;
 
@@ -56,7 +58,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import static androidx.test.InstrumentationRegistry.getInstrumentation;
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;

@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.controllers;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.os.RemoteException;
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;

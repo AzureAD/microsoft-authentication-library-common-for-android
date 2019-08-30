@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
 
 public class AllAccounts extends AzureActiveDirectoryAudience {
 

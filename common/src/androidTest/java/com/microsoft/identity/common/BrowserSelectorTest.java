@@ -33,8 +33,7 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
 import android.net.Uri;
 import android.os.Build;
-
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import android.support.test.runner.AndroidJUnit4;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;

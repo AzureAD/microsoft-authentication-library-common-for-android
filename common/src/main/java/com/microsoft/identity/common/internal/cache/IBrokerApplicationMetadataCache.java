@@ -22,7 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import androidx.annotation.Nullable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.util.List;
 import java.util.Set;
