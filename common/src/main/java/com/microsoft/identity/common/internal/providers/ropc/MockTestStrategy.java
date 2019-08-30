@@ -5,6 +5,8 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.net.HttpResponse;
+import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
@@ -23,21 +25,20 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.Future;
 
-public class MockStrategy extends MicrosoftStsOAuth2Strategy {
+public class MockTestStrategy extends MicrosoftStsOAuth2Strategy {
 
     private static final String TAG = ResourceOwnerPasswordCredentialsTestStrategy.class.getSimpleName();
 
     public final String USERNAME_EMPTY_OR_NULL = "username_empty_or_null";
     public final String PASSWORD_EMPTY_OR_NULL = "password_empty_or_null";
     public final String SCOPE_EMPTY_OR_NULL = "scope_empty_or_null";
-    public final String GRANT_TYPE_EMPTY_OR_NULL = "grant_type_empty_or_null";
 
     /**
-     * Constructor of MockStrategy.
+     * Constructor of MockTestStrategy.
      *
      * @param config Microsoft Sts OAuth2 configuration
      */
-    public MockStrategy(MicrosoftStsOAuth2Configuration config) {
+    public MockTestStrategy(MicrosoftStsOAuth2Configuration config) {
         super(config);
     }
 
@@ -72,24 +73,32 @@ public class MockStrategy extends MicrosoftStsOAuth2Strategy {
                 "Requesting token..."
         );
 
-        if (!request.getGrantType().equals(TokenRequest.GrantTypes.REFRESH_TOKEN)) {
+        String grantType = request.getGrantType();
+
+        // check for the grant type and change to password if it is AUTH CODE
+        // otherwise it is REFRESH_TOKEN, and lets proceed to make a Refresh Token Request
+        if (grantType == null || grantType.equals(TokenRequest.GrantTypes.AUTHORIZATION_CODE)) {
             request.setGrantType(TokenRequest.GrantTypes.PASSWORD);
-            validateTokenRequest(request);
         }
 
-        return getTokenResult();
+        validateTokenRequest(request);
+
+        final HttpResponse response = performTokenRequest(request);
+        return getTokenResultFromHttpResponse(response);
     }
 
     @Override
     protected void validateTokenRequest(MicrosoftStsTokenRequest request) {
-        if (StringUtil.isEmpty(request.getGrantType())) {
-            throw new IllegalArgumentException(GRANT_TYPE_EMPTY_OR_NULL);
-        }
-
         if (StringUtil.isEmpty(request.getScope())) {
             throw new IllegalArgumentException(SCOPE_EMPTY_OR_NULL);
         }
 
+        if (request.getGrantType().equals(TokenRequest.GrantTypes.PASSWORD)) {
+            validateTokenRequestForPasswordGrant(request);
+        }
+    }
+
+    private void validateTokenRequestForPasswordGrant(MicrosoftStsTokenRequest request) {
         if (StringUtil.isEmpty(request.getUsername())) {
             throw new IllegalArgumentException(USERNAME_EMPTY_OR_NULL);
         }
@@ -137,11 +146,24 @@ public class MockStrategy extends MicrosoftStsOAuth2Strategy {
         return tokenRequest;
     }
 
-    private TokenResult getTokenResult() {
+    public TokenResult getTokenResult() {
         TokenResponse tokenResponse = MockTokenResponse.getTokenResponse();
         TokenResult tokenResult = new TokenResult(tokenResponse);
-        tokenResult.setSuccess(true);
         return tokenResult;
+    }
+
+    @Override
+    protected HttpResponse performTokenRequest(final MicrosoftStsTokenRequest tokenRequest) {
+        TokenResult tokenResult = getTokenResult();
+        TokenResponse tokenResponse = tokenResult.getTokenResponse();
+        HttpResponse httpResponse = makeHttpResponseFromResponseObject(tokenResponse);
+        return httpResponse;
+    }
+
+    public HttpResponse makeHttpResponseFromResponseObject(final Object obj) {
+        final String httpResponseBody = ObjectMapper.serializeObjectToJsonString(obj);
+        HttpResponse httpResponse = new HttpResponse(200, httpResponseBody, null);
+        return httpResponse;
     }
 
 }

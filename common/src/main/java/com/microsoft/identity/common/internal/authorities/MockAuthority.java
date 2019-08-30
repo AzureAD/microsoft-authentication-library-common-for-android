@@ -3,14 +3,13 @@ package com.microsoft.identity.common.internal.authorities;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.ropc.MockStrategy;
-import com.microsoft.identity.common.internal.providers.ropc.ResourceOwnerPasswordCredentialsTestStrategy;
+import com.microsoft.identity.common.internal.providers.ropc.MockTestStrategy;
 
 import java.util.Map;
 
 public class MockAuthority extends AzureActiveDirectoryAuthority {
 
-    private static transient final String TAG = RopcTestAuthority.class.getSimpleName();
+    private static transient final String TAG = AADTestAuthority.class.getSimpleName();
 
     public MockAuthority() {
         super(new AnyOrganizationalAccount());
@@ -52,7 +51,7 @@ public class MockAuthority extends AzureActiveDirectoryAuthority {
 
         config.setMultipleCloudsSupported(mMultipleCloudsSupported);
 
-        return new MockStrategy(config);
+        return new MockTestStrategy(config);
     }
 
 }

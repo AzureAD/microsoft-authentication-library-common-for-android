@@ -34,26 +34,17 @@ public class MockTokenResponse {
     }
 
     public static TokenResponse getTokenResponseWithExpiredAccessToken() {
-        String fakeAccessToken = "aaaa.BBBB.123";
-        String fakeRefreshToken = "abcDeFGhijkl";
-        String fakeIdToken = TokenCreator.createIdToken();
-        String fakeClientInfo = TokenCreator.createRawClientInfo();
-
-        MicrosoftStsTokenResponse tokenResponse = new MicrosoftStsTokenResponse();
-
+        MicrosoftStsTokenResponse tokenResponse = (MicrosoftStsTokenResponse) getTokenResponse();
         tokenResponse.setExpiresIn(Long.valueOf(0));
         tokenResponse.setExtExpiresIn(Long.valueOf(0));
-        tokenResponse.setAccessToken(fakeAccessToken);
-        tokenResponse.setTokenType(TOKEN_TYPE);
-        tokenResponse.setRefreshToken(fakeRefreshToken);
-        tokenResponse.setScope("User.Read");
-        tokenResponse.setIdToken(fakeIdToken);
-        tokenResponse.setClientInfo(fakeClientInfo);
-        tokenResponse.setRefreshTokenAge("");
-        tokenResponse.setCliTelemErrorCode("0");
-        tokenResponse.setCliTelemSubErrorCode("0");
-        tokenResponse.setResponseReceivedTime(Long.valueOf(0));
+        return tokenResponse;
+    }
 
+    public static TokenResponse getTokenResponseWithoutAccessToken() {
+        MicrosoftStsTokenResponse tokenResponse = (MicrosoftStsTokenResponse) getTokenResponse();
+        tokenResponse.setExpiresIn(null);
+        tokenResponse.setExtExpiresIn(null);
+        tokenResponse.setAccessToken(null);
         return tokenResponse;
     }
 
