@@ -90,7 +90,7 @@ public final class PasswordGrantTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void usernameNotProvided() throws IOException {
+    public void requestFailsIfUsernameNotProvided() throws IOException {
 
         Scenario scenario = getDefaultTestScenario();
         Credential credential = scenario.getCredential();;
@@ -110,7 +110,7 @@ public final class PasswordGrantTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void passwordNotProvided() throws IOException {
+    public void requestFailsIfPasswordNotProvided() throws IOException {
 
         Scenario scenario = getDefaultTestScenario();
         Credential credential = scenario.getCredential();
@@ -130,7 +130,7 @@ public final class PasswordGrantTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void scopeNotProvided() throws IOException {
+    public void requestFailsIfScopeNotProvided() throws IOException {
 
         Scenario scenario = getDefaultTestScenario();
         Credential credential = scenario.getCredential();
