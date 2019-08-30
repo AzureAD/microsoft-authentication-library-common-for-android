@@ -186,10 +186,9 @@ public class MicrosoftFamilyOAuth2TokenCache
         );
 
         // We also want to add accounts from different realms...
-        final List<AccountRecord> accountsInOtherTenants = getAllTenantAccountsForAccountByClientId(
-                clientId,
-                account
-        );
+
+        final List<AccountRecord> accountsInOtherTenants =
+                new ArrayList<>(getAllTenantAccountsForAccountByClientId(clientId, account));
 
         Logger.info(
                 TAG + methodName,
