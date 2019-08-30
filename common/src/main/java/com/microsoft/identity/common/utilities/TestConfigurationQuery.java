@@ -41,4 +41,5 @@ public class TestConfigurationQuery {
     public String role = null;
     public Boolean external = null;
     public String upn = null;
+    public String b2cProvider = null;
 }

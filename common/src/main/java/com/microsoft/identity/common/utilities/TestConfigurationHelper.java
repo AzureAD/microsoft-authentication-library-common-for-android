@@ -41,7 +41,7 @@ public class TestConfigurationHelper {
         TestConfiguration config;
 
         try {
-            config = api.getTestConfiguration(query.appName, query.appId, query.federationProvider, query.mfa, query.mam, query.mdm, query.ca, query.mamca, query.mdmca, query.license, query.federated, query.isFederated, query.userType, query.role, query.external, query.upn);
+            config = api.getTestConfiguration(query.appName, query.appId, query.federationProvider, query.mfa, query.mam, query.mdm, query.ca, query.mamca, query.mdmca, query.license, query.federated, query.isFederated, query.userType, query.role, query.external, query.upn, query.b2cProvider);
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new RuntimeException("Error retrieving test configuration", ex);
         }
