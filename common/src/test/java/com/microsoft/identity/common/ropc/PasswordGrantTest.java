@@ -1,7 +1,7 @@
 package com.microsoft.identity.common.ropc;
 
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.authorities.RopcTestAuthority;
+import com.microsoft.identity.common.internal.authorities.AADTestAuthority;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
@@ -16,11 +16,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.IOException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -69,6 +64,7 @@ public final class PasswordGrantTest {
         tokenRequest.setScope(scope);
         tokenRequest.setUsername(username);
         tokenRequest.setPassword(password);
+        tokenRequest.setGrantType(TokenRequest.GrantTypes.PASSWORD);
 
         return tokenRequest;
     }
@@ -79,8 +75,8 @@ public final class PasswordGrantTest {
         Scenario scenario = getDefaultTestScenario();
         Credential credential = scenario.getCredential();
 
-        RopcTestAuthority ropcTestAuthority = new RopcTestAuthority();
-        OAuth2Strategy testStrategy = ropcTestAuthority.createOAuth2Strategy();
+        AADTestAuthority aadTestAuthority = new AADTestAuthority();
+        OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
 
         TokenRequest tokenRequest = createTokenRequest(SCOPES, credential.userName, credential.password);
 
@@ -99,8 +95,8 @@ public final class PasswordGrantTest {
         Scenario scenario = getDefaultTestScenario();
         Credential credential = scenario.getCredential();;
 
-        RopcTestAuthority ropcTestAuthority = new RopcTestAuthority();
-        OAuth2Strategy testStrategy = ropcTestAuthority.createOAuth2Strategy();
+        AADTestAuthority aadTestAuthority = new AADTestAuthority();
+        OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
 
         TokenRequest tokenRequest = createTokenRequest(SCOPES, null, credential.password);
 
@@ -119,8 +115,8 @@ public final class PasswordGrantTest {
         Scenario scenario = getDefaultTestScenario();
         Credential credential = scenario.getCredential();
 
-        RopcTestAuthority ropcTestAuthority = new RopcTestAuthority();
-        OAuth2Strategy testStrategy = ropcTestAuthority.createOAuth2Strategy();
+        AADTestAuthority aadTestAuthority = new AADTestAuthority();
+        OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
 
         TokenRequest tokenRequest = createTokenRequest(SCOPES, credential.userName, null);
 
@@ -139,8 +135,8 @@ public final class PasswordGrantTest {
         Scenario scenario = getDefaultTestScenario();
         Credential credential = scenario.getCredential();
 
-        RopcTestAuthority ropcTestAuthority = new RopcTestAuthority();
-        OAuth2Strategy testStrategy = ropcTestAuthority.createOAuth2Strategy();
+        AADTestAuthority aadTestAuthority = new AADTestAuthority();
+        OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
 
         TokenRequest tokenRequest = createTokenRequest(null, credential.userName, credential.password);
 

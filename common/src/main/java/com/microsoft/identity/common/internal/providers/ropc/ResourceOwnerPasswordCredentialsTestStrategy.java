@@ -35,8 +35,6 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
     public static final String USERNAME_EMPTY_OR_NULL = "username_empty_or_null";
     public static final String PASSWORD_EMPTY_OR_NULL = "password_empty_or_null";
     public static final String SCOPE_EMPTY_OR_NULL = "scope_empty_or_null";
-    public static final String GRANT_TYPE_EMPTY_OR_NULL = "grant_type_empty_or_null";
-    public static final String INVALID_GRANT_TYPE = "invalid_grant_type";
 
     /**
      * Constructor of ResourceOwnerPasswordCredentialsTestStrategy.
@@ -78,7 +76,14 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
                 "Requesting token..."
         );
 
-        request.setGrantType(TokenRequest.GrantTypes.PASSWORD);
+        String grantType = request.getGrantType();
+
+        // check for the grant type and change to password if it is AUTH CODE
+        // otherwise it is REFRESH_TOKEN, and lets proceed to make a Refresh Token Request
+        if (grantType == null || grantType.equals(TokenRequest.GrantTypes.AUTHORIZATION_CODE)) {
+            request.setGrantType(TokenRequest.GrantTypes.PASSWORD);
+        }
+
         validateTokenRequest(request);
 
         final HttpResponse response = performTokenRequest(request);
@@ -87,14 +92,16 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
 
     @Override
     protected void validateTokenRequest(MicrosoftStsTokenRequest request) {
-        if (StringUtil.isEmpty(request.getGrantType())) {
-            throw new IllegalArgumentException(GRANT_TYPE_EMPTY_OR_NULL);
-        }
-
         if (StringUtil.isEmpty(request.getScope())) {
             throw new IllegalArgumentException(SCOPE_EMPTY_OR_NULL);
         }
 
+        if (request.getGrantType().equals(TokenRequest.GrantTypes.PASSWORD)) {
+            validateTokenRequestForPasswordGrant(request);
+        }
+    }
+
+    private void validateTokenRequestForPasswordGrant(MicrosoftStsTokenRequest request) {
         if (StringUtil.isEmpty(request.getUsername())) {
             throw new IllegalArgumentException(USERNAME_EMPTY_OR_NULL);
         }

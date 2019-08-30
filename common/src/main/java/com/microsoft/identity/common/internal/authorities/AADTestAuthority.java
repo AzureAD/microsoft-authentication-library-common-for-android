@@ -7,11 +7,11 @@ import com.microsoft.identity.common.internal.providers.ropc.ResourceOwnerPasswo
 
 import java.util.Map;
 
-public class RopcTestAuthority extends AzureActiveDirectoryAuthority {
+public class AADTestAuthority extends AzureActiveDirectoryAuthority {
 
-    private static transient final String TAG = RopcTestAuthority.class.getSimpleName();
+    private static transient final String TAG = AADTestAuthority.class.getSimpleName();
 
-    public RopcTestAuthority() {
+    public AADTestAuthority() {
         super(new AnyOrganizationalAccount());
     }
 
