@@ -23,10 +23,11 @@
 package com.microsoft.identity.common.internal.migration;
 
 import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Pair;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
@@ -58,7 +59,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX;
 import static com.microsoft.identity.common.internal.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 
@@ -137,7 +137,7 @@ public class TokenCacheItemMigrationAdapter {
         //Get authority url
         final Uri.Builder requestUrlBuilder = new Uri.Builder();
         final String tenantId = cacheRecord.getAccount().getRealm();
-        requestUrlBuilder.scheme(REDIRECT_SSL_PREFIX)
+        requestUrlBuilder.scheme("https")
                 .authority(cacheRecord.getRefreshToken().getEnvironment())
                 .appendPath(StringUtil.isEmpty(tenantId) ? ALL_ACCOUNTS_TENANT_ID : tenantId);
         final URL authorityUrl = new URL(requestUrlBuilder.build().toString());
