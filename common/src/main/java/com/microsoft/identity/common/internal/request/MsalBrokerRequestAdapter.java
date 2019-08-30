@@ -214,6 +214,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         parameters.setLoginHint(brokerRequest.getUserName());
 
+        parameters.setHomeAccountId(brokerRequest.getHomeAccountId());
+
+        parameters.setLocalAccountId(brokerRequest.getLocalAccountId());
+
         if(!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
             parameters.setExtraQueryStringParameters(
                     QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter())
