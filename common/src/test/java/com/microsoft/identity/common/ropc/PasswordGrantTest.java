@@ -35,12 +35,7 @@ public final class PasswordGrantTest {
         query.isFederated = false;
         query.federationProvider = "ADFSv4";
 
-        Scenario scenario = null;
-        try {
-            scenario = Scenario.GetScenario(query);
-        } catch (Exception e) {
-            fail("Error getting username and/or password from keyvault/labapi");
-        }
+        Scenario scenario = Scenario.GetScenario(query);
         return scenario;
     }
 
