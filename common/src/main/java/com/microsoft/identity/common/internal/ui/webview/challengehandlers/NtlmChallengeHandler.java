@@ -70,10 +70,12 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
                 final String userName = haup[0];
                 final String password = haup[1];
                 if (!StringUtil.isEmpty(userName) && !StringUtil.isEmpty(password)) {
+                    Logger.verbose(TAG, "Proceeding with username and password from webview.");
                     ntlmChallenge.getHandler().proceed(userName, password);
                 }
             }
         } else {
+            Logger.verbose(TAG, "Launch dialog to collect username/password.");
             showHttpAuthDialog(ntlmChallenge);
         }
 
@@ -92,6 +94,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
                 .setPositiveButton(R.string.http_auth_dialog_login,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
+                                Logger.verbose(TAG, "Proceeding with user supplied username and password.");
                                 ntlmChallenge.getHandler().proceed(usernameView.getText().toString(), passwordView.getText().toString());
                             }
                         })
