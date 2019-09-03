@@ -77,6 +77,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
                 .setPositiveButton(R.string.http_auth_dialog_login,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
+                                Logger.verbose(TAG, "Proceeding with user supplied username and password.");
                                 ntlmChallenge.getHandler().proceed(usernameView.getText().toString(), passwordView.getText().toString());
                             }
                         })
