@@ -37,6 +37,7 @@ public class HttpStartEvent extends BaseEvent {
         return this;
     }
 
+    //TODO Add unit test for b2c urls where where the format is pretty undefined (now that vanity urls are supported)
     public HttpStartEvent putPath(URL path) {
         final StringBuilder logPath = new StringBuilder();
         logPath.append(path.getProtocol())

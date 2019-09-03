@@ -100,10 +100,6 @@ final public class TelemetryPiiOiiRules {
      * @return true if the property belongs to PII/OII. False otherwise.
      */
     public boolean isPiiOrOii (final String propertyName) {
-        if (StringUtil.isEmpty(propertyName)) {
-            return false;
-        }
-
-        return piiPropertiesSet.contains(propertyName) || oiiPropertiesSet.contains(propertyName);
+        return isPii(propertyName) || isOii(propertyName);
     }
 }

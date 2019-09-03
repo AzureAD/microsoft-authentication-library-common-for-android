@@ -41,6 +41,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
+
 /**
  * Internal class for handling http request.
  */
@@ -121,7 +123,7 @@ public final class HttpRequest {
                 new HttpStartEvent()
                         .putMethod(REQUEST_METHOD_POST)
                         .putPath(requestUrl)
-                        .putRequestIdHeader(requestHeaders.get("client-request-id"))
+                        .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
         );
 
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_POST,
@@ -146,7 +148,7 @@ public final class HttpRequest {
                 new HttpStartEvent()
                         .putMethod(REQUEST_METHOD_GET)
                         .putPath(requestUrl)
-                        .putRequestIdHeader(requestHeaders.get("client-request-id"))
+                        .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
         );
 
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
