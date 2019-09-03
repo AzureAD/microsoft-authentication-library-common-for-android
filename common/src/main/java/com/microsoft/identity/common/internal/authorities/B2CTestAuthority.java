@@ -3,7 +3,7 @@ package com.microsoft.identity.common.internal.authorities;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.ropc.B2CRopcTestStrategy;
+import com.microsoft.identity.common.internal.providers.ropc.ResourceOwnerPasswordCredentialsTestStrategy;
 
 public class B2CTestAuthority extends AzureActiveDirectoryB2CAuthority {
 
@@ -23,6 +23,6 @@ public class B2CTestAuthority extends AzureActiveDirectoryB2CAuthority {
         MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
         config.setMultipleCloudsSupported(false);
         config.setAuthorityUrl(this.getAuthorityURL());
-        return new B2CRopcTestStrategy(config);
+        return new ResourceOwnerPasswordCredentialsTestStrategy(config);
     }
 }
