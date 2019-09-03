@@ -78,6 +78,8 @@ public final class AuthorizationActivity extends Activity {
 
     private AuthorizationAgent mAuthorizationAgent;
 
+    private boolean mResultSent = false;
+
     private BroadcastReceiver mCancelRequestReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -280,11 +282,21 @@ public final class AuthorizationActivity extends Activity {
     protected void onDestroy() {
         final String methodName = "#onDestroy";
         Logger.verbose(TAG + methodName, "");
+
+        // If the user kills the activity, i.e. by swiping it away, we want to inform the ApiDispatcher that this activity is done.
+        // Otherwise, sInteractiveExecutor will be blocked.
+        if (!mResultSent) {
+            final Intent resultIntent = new Intent();
+            resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, resultIntent);
+        }
+
         unregisterReceiver(mCancelRequestReceiver);
         super.onDestroy();
     }
 
     private void sendResult(int resultCode, final Intent resultIntent) {
+        mResultSent = true;
         ApiDispatcher.completeInteractive(
                 AuthorizationStrategy.BROWSER_FLOW,
                 resultCode,
