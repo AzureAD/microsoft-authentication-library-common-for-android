@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 public class HttpEndEvent extends BaseEvent {
@@ -34,14 +33,6 @@ public class HttpEndEvent extends BaseEvent {
 
     public HttpEndEvent putStatusCode(final int statusCode) {
         put(Key.HTTP_RESPONSE_CODE, String.valueOf(statusCode));
-        return this;
-    }
-
-    public HttpEndEvent putHttpResponse(final HttpResponse response) {
-        put(Key.HTTP_RESPONSE_CODE, String.valueOf(response.getStatusCode()));
-        //put(Key.OAUTH_ERROR_CODE, )
-        //put(Key.HTTP_ERROR_DOMAIN, )
-        //put(Key.HTTP_ERROR_CODE, )
         return this;
     }
 }

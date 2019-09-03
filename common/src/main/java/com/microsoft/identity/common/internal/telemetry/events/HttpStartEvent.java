@@ -39,18 +39,18 @@ public class HttpStartEvent extends BaseEvent {
 
     public HttpStartEvent putPath(URL path) {
         final StringBuilder logPath = new StringBuilder();
-        logPath.append(path.getProtocol());
-        logPath.append("://");
-        logPath.append(path.getAuthority());
-        logPath.append("/");
+        logPath.append(path.getProtocol())
+                .append("://")
+                .append(path.getAuthority())
+                .append("/");
 
         // we do not want to send tenant information
         // index 0 is blank
         // index 1 is tenant
         final String[] splitArray = path.getPath().split("/");
         for (int i = 2; i < splitArray.length; i++) {
-            logPath.append(splitArray[i]);
-            logPath.append("/");
+            logPath.append(splitArray[i])
+                    .append("/");
         }
 
         put(Key.HTTP_PATH, logPath.toString());

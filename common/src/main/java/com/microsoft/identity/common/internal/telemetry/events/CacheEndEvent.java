@@ -35,11 +35,6 @@ public class CacheEndEvent extends BaseEvent {
         types(EventType.CACHE_EVENT);
     }
 
-    public CacheEndEvent putResultStatus(final String resultStatus) {
-        put(Key.RESULT_STATUS, resultStatus);
-        return this;
-    }
-
     public CacheEndEvent putRtStatus(final String rtStatus) {
         put(Key.RT_STATUS, rtStatus);
         return this;
@@ -47,11 +42,6 @@ public class CacheEndEvent extends BaseEvent {
 
     public CacheEndEvent putAtStatus(final String rtStatus) {
         put(Key.AT_STATUS, rtStatus);
-        return this;
-    }
-
-    public CacheEndEvent putMrrtStatus(final String mrrtStatus) {
-        put(Key.MRRT_STATUS, mrrtStatus);
         return this;
     }
 
