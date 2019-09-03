@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.exception;
 
-import androidx.annotation.Nullable;
+import android.support.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 

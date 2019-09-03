@@ -22,9 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
-
-import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;

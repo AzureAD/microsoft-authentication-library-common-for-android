@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.dto;
 
-import androidx.annotation.Nullable;
+import android.support.annotation.Nullable;
 
 import java.util.Collections;
 import java.util.HashSet;

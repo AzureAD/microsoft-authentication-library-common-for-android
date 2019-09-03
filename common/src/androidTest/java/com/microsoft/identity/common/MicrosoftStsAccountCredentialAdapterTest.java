@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import android.support.test.runner.AndroidJUnit4;
 import android.util.Base64;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;

@@ -12,17 +12,17 @@ apply from: 'versioning/version_tasks.gradle'
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdkVersion 27
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
+        minSdkVersion 16
+        targetSdkVersion 27
         versionCode getAppVersionCode()
         versionName getAppVersionName()
         project.archivesBaseName = "common"
         project.version = android.defaultConfig.versionName
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -76,31 +76,30 @@ android {
 }
 
 dependencies {
-    implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
-    implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
-    implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
-    implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
+    implementation 'com.nimbusds:nimbus-jose-jwt:5.7'
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation "com.google.code.gson:gson:2.8.4"
+    implementation "com.android.support:customtabs:27.1.1"
 
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
     testImplementation 'org.json:json:20160810'
-    testImplementation "junit:junit:$rootProject.ext.junitVersion"
-    testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
+    testImplementation 'junit:junit:4.12'
+    testImplementation "org.mockito:mockito-core:1.10.19"
     testImplementation "com.google.dexmaker:dexmaker-mockito:1.2"
-    testImplementation "org.powermock:powermock-module-junit4:$rootProject.ext.powerMockVersion"
-    testImplementation "org.powermock:powermock-module-junit4-rule:$rootProject.ext.powerMockVersion"
-    testImplementation "org.powermock:powermock-api-mockito:$rootProject.ext.powerMockVersion"
-    testImplementation "org.powermock:powermock-classloading-xstream:$rootProject.ext.powerMockVersion"
+    testImplementation "org.powermock:powermock-module-junit4:1.6.6"
+    testImplementation "org.powermock:powermock-module-junit4-rule:1.6.6"
+    testImplementation "org.powermock:powermock-api-mockito:1.6.6"
+    testImplementation "org.powermock:powermock-classloading-xstream:1.6.6"
 
     // Instrumented dependencies
-    androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidxJunitVersion"
-    androidTestImplementation "org.mockito:mockito-android:$rootProject.ext.mockitoAndroidVersion"
-    androidTestImplementation("androidx.test.espresso:espresso-core:$rootProject.ext.espressoCoreVersion", {
+    androidTestImplementation 'org.mockito:mockito-android:2.18.3'
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 }
 
-// Create tasks to generate javadoc
+// Create tasks to generate javadocv
 android.libraryVariants.all { variant ->
     task("${variant.name}Javadoc", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
         source = variant.javaCompiler.source

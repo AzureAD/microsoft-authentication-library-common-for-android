@@ -23,9 +23,8 @@
 package com.microsoft.identity.common.internal.cache.registry;
 
 import android.content.Context;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesSimpleCacheImpl;

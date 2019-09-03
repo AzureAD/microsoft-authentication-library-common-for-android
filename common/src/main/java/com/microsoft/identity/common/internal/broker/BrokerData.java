@@ -24,7 +24,7 @@
 package com.microsoft.identity.common.internal.broker;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
 

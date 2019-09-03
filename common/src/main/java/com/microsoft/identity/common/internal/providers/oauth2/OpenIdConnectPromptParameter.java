@@ -23,7 +23,7 @@
 
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import androidx.annotation.Nullable;
+import android.support.annotation.Nullable;
 
 /**
  * The UI options that developer can pass during interactive token acquisition requests.
