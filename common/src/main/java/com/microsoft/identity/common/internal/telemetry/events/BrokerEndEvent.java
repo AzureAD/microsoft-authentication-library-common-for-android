@@ -41,10 +41,6 @@ public class BrokerEndEvent extends BaseEvent {
         return this;
     }
 
-    public BrokerEndEvent put(final String key, final String value) {
-        put(key, value);
-        return this;
-    }
 
     public BrokerEndEvent isSuccessful(final boolean isSuccessful) {
         put(Key.IS_SUCCESSFUL, String.valueOf(isSuccessful));

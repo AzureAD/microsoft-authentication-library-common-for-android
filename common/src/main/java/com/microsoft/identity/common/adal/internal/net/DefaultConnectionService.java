@@ -31,6 +31,8 @@ import android.os.Build;
 import com.microsoft.identity.common.adal.internal.PowerManagerWrapper;
 import com.microsoft.identity.common.adal.internal.UsageStatsManagerWrapper;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.internal.telemetry.events.BaseEvent;
 
 /**
  * Default connection service check network connectivity.
@@ -62,7 +64,7 @@ public class DefaultConnectionService implements IConnectionService {
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
         final boolean isConnectionAvailable = activeNetwork != null && activeNetwork.isConnectedOrConnecting() && !isNetworkDisabledFromOptimizations();
-        Telemetry.getInstance().getTelemetryContext().isNetworkConnected(isConnectionAvailable);
+        Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.NETWORK_CONNECTION, String.valueOf(isConnectionAvailable)));
         return isConnectionAvailable;
     }
 
@@ -77,18 +79,18 @@ public class DefaultConnectionService implements IConnectionService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             final UsageStatsManagerWrapper usageStatsManagerWrapper = UsageStatsManagerWrapper.getInstance();
             if (usageStatsManagerWrapper.isAppInactive(mConnectionContext)) {
-                Telemetry.getInstance().getTelemetryContext().isNetworkDisabledFromOptimizations(true);
+                Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.POWER_OPTIMIZATION, String.valueOf(true)));
                 return true;
             }
 
             final PowerManagerWrapper powerManagerWrapper = PowerManagerWrapper.getInstance();
             if (powerManagerWrapper.isDeviceIdleMode(mConnectionContext) && !powerManagerWrapper.isIgnoringBatteryOptimizations(mConnectionContext)) {
-                Telemetry.getInstance().getTelemetryContext().isNetworkDisabledFromOptimizations(true);
+                Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.POWER_OPTIMIZATION, String.valueOf(true)));
                 return true;
             }
         }
 
-        Telemetry.getInstance().getTelemetryContext().isNetworkDisabledFromOptimizations(false);
+        Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.POWER_OPTIMIZATION, String.valueOf(false)));
         return false;
     }
 }

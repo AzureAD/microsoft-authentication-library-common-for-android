@@ -33,7 +33,7 @@ public final class TelemetryEventStrings {
 
     public static final class Os {
         public static final String NAME = EVENT_PREFIX + "os_name";
-        public static final String OS_NAME = EVENT_PREFIX + "android";
+        public static final String OS_NAME = "android";
         public static final String VERSION = EVENT_PREFIX + "os_version";
         public static final String SECURITY_PATCH = EVENT_PREFIX + "security_patch";
     }

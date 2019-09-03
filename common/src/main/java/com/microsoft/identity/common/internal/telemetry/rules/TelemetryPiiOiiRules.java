@@ -55,7 +55,7 @@ final public class TelemetryPiiOiiRules {
             Key.AUTHORITY,
             Key.IDP_NAME,
             //App.NAME,
-            App.VERSION
+            //App.VERSION
     };
 
     private TelemetryPiiOiiRules() {
