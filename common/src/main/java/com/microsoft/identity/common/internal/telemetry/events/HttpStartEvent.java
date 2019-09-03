@@ -42,7 +42,7 @@ public class HttpStartEvent extends BaseEvent {
         logPath.append(path.getProtocol())
                 .append("://")
                 .append(path.getAuthority())
-                .append("/");
+                .append('/');
 
         // we do not want to send tenant information
         // index 0 is blank
@@ -50,7 +50,7 @@ public class HttpStartEvent extends BaseEvent {
         final String[] splitArray = path.getPath().split("/");
         for (int i = 2; i < splitArray.length; i++) {
             logPath.append(splitArray[i])
-                    .append("/");
+                    .append('/');
         }
 
         put(Key.HTTP_PATH, logPath.toString());
