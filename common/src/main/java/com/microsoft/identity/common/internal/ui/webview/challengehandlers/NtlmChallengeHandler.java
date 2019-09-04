@@ -33,7 +33,6 @@ import android.widget.EditText;
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 /**
  * Http authorization handler for NTLM challenge on web view.
@@ -62,23 +61,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
      */
     @Override
     public Void processChallenge(final NtlmChallenge ntlmChallenge) {
-        if (ntlmChallenge.getHandler().useHttpAuthUsernamePassword()
-                && ntlmChallenge.getView() != null) {
-            final String[] haup = ntlmChallenge.getView()
-                    .getHttpAuthUsernamePassword(ntlmChallenge.getHost(), ntlmChallenge.getRealm());
-            if (haup != null && haup.length == 2) {
-                final String userName = haup[0];
-                final String password = haup[1];
-                if (!StringUtil.isEmpty(userName) && !StringUtil.isEmpty(password)) {
-                    Logger.verbose(TAG, "Proceeding with username and password from webview.");
-                    ntlmChallenge.getHandler().proceed(userName, password);
-                }
-            }
-        } else {
-            Logger.verbose(TAG, "Launch dialog to collect username/password.");
-            showHttpAuthDialog(ntlmChallenge);
-        }
-
+        showHttpAuthDialog(ntlmChallenge);
         return null;
     }
 
