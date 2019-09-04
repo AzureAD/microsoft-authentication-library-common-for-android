@@ -57,6 +57,7 @@ android {
     testOptions {
         unitTests.all {
             exclude 'com/microsoft/identity/common/integration'
+            exclude 'com/microsoft/identity/common/ropc'
         }
     }
 
