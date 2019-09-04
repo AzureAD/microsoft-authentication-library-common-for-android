@@ -39,7 +39,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.microsoft.identity.common.internal.cache.AbstractAccountCredentialCache.targetsIntersect;
@@ -162,70 +161,6 @@ public class MicrosoftFamilyOAuth2TokenCache
                 result.setV1IdToken(idTokenToReturn);
             } else {
                 result.setIdToken(idTokenToReturn);
-            }
-        }
-
-        return result;
-    }
-
-    public List<ICacheRecord> loadByFamilyIdWithAggregatedAccountData(
-            @NonNull final String clientId,
-            @Nullable final String target,
-            @NonNull final AccountRecord account) {
-        final String methodName = ":loadByFamilyIdWithAggregatedAccountData";
-
-        final List<ICacheRecord> result = new ArrayList<>();
-
-        // First, load our primary record...
-        result.add(
-                loadByFamilyId(
-                        clientId,
-                        target,
-                        account
-                )
-        );
-
-        // We also want to add accounts from different realms...
-
-        final List<AccountRecord> accountsInOtherTenants =
-                new ArrayList<>(getAllTenantAccountsForAccountByClientId(clientId, account));
-
-        Logger.info(
-                TAG + methodName,
-                "Found "
-                        + (accountsInOtherTenants.size() - 1)
-                        + " profiles for this account"
-        );
-
-        // Ignore the first element, as it will contain the same result as loadByFamilyId()....
-        accountsInOtherTenants.remove(0);
-
-        if (!accountsInOtherTenants.isEmpty()) {
-            // We need the IdToken of each of these accounts... we can reuse the RT, since it is
-            // an FRT...
-
-            for (final AccountRecord accountRecord : accountsInOtherTenants) {
-                // Declare our container
-                final CacheRecord cacheRecord = new CacheRecord();
-                cacheRecord.setAccount(accountRecord);
-                cacheRecord.setRefreshToken(result.get(0).getRefreshToken());
-
-                // Load all of the IdTokens and set as appropriate...
-                final List<IdTokenRecord> idTokensForAccount = getIdTokensForAccountRecord(
-                        clientId,
-                        accountRecord
-                );
-
-                for (final IdTokenRecord idTokenRecord : idTokensForAccount) {
-                    if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
-                        cacheRecord.setV1IdToken(idTokenRecord);
-                    } else {
-                        cacheRecord.setIdToken(idTokenRecord);
-                    }
-                }
-
-                // We can ignore the A/T, since this account isn't being authorized...
-                result.add(cacheRecord);
             }
         }
 

@@ -170,11 +170,6 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 matches = matches && realm.equalsIgnoreCase(accessToken.getRealm());
             }
 
-            if (mustMatchOnRealm && credential instanceof IdTokenRecord) {
-                final IdTokenRecord idToken = (IdTokenRecord) credential;
-                matches = matches && realm.equalsIgnoreCase(idToken.getRealm());
-            }
-
             if (mustMatchOnTarget) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;

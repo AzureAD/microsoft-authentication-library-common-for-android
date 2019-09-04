@@ -182,12 +182,11 @@ public class ApiDispatcher {
                         logInteractiveRequestParameters(methodName, (AcquireTokenOperationParameters) command.mParameters);
                     }
 
+                    sCommand = command;
                     AcquireTokenResult result = null;
                     BaseException baseException = null;
 
                     try {
-                        sCommand = command;
-                        
                         //Try executing request
                         result = command.execute();
                     } catch (Exception e) {
@@ -202,8 +201,6 @@ public class ApiDispatcher {
                         } else {
                             baseException = ExceptionAdapter.baseExceptionFromException(e);
                         }
-                    } finally {
-                        sCommand = null;
                     }
 
                     Handler handler = new Handler(Looper.getMainLooper());
@@ -370,6 +367,7 @@ public class ApiDispatcher {
         final String methodName = ":completeInteractive";
         if (sCommand != null) {
             sCommand.notify(requestCode, resultCode, data);
+            sCommand = null;
         } else {
             Logger.warn(TAG + methodName, "sCommand is null, No interactive call in progress to complete.");
         }

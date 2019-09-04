@@ -461,11 +461,6 @@ public class BrokerOAuth2TokenCache
 
         if (null != appMetadata) {
             isKnownFoci = null != appMetadata.getFoci();
-
-            Logger.info(
-                    TAG + methodName,
-                    "App is known foci? " + isKnownFoci
-            );
         }
 
         final OAuth2TokenCache targetCache = getTokenCacheForClient(
@@ -535,35 +530,16 @@ public class BrokerOAuth2TokenCache
                                                             @Nullable final String target,
                                                             @NonNull final AccountRecord account) {
         final String methodName = ":loadWithAggregatedAccountData";
-
-        final BrokerApplicationMetadata appMetadata = mApplicationMetadataCache.getMetadata(
-                clientId,
-                account.getEnvironment(),
-                mCallingProcessUid
-        );
-
-        boolean isKnownFoci = false;
-
-        if (null != appMetadata) {
-            isKnownFoci = null != appMetadata.getFoci();
-
-            Logger.info(
-                    TAG + methodName,
-                    "App is known foci? " + isKnownFoci
-            );
-        }
-
         final OAuth2TokenCache targetCache = getTokenCacheForClient(
                 clientId,
                 account.getEnvironment(),
                 mCallingProcessUid
         );
 
-        final boolean appIsUnknownUseFociAsFallback = null == targetCache;
-
+        final boolean shouldUseFociCache = null == targetCache;
         final List<ICacheRecord> resultRecords;
 
-        if (appIsUnknownUseFociAsFallback) {
+        if (shouldUseFociCache) {
             // We do not have a cache for this app or it is not yet known to be a member of the family
             // use the foci cache....
 
@@ -577,13 +553,6 @@ public class BrokerOAuth2TokenCache
                             account
                     )
             );
-        } else if (isKnownFoci) {
-            resultRecords =
-                    mFociCache.loadByFamilyIdWithAggregatedAccountData(
-                            clientId,
-                            target,
-                            account
-                    );
         } else {
             resultRecords = targetCache.loadWithAggregatedAccountData(
                     clientId,

@@ -1,7 +1,3 @@
-Version 0.0.18
--------------
--BugFix : Complete the auth request as cancel if the activity is destroyed
-
 Version 0.0.17
 -------------
 - BugFix : Fix for foci lookup issue relative to migration
