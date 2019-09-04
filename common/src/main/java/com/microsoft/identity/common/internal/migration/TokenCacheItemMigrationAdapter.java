@@ -192,15 +192,17 @@ public class TokenCacheItemMigrationAdapter {
                     clientId,
                     redirectUri,
                     scopes,
-                    correlationId);
-            ICacheRecord savedRecord = brokerOAuth2TokenCache.save(
+                    correlationId
+            );
+            Logger.verbose(TAG + methodName,
+                    "Saving records to cache with client id" + clientId
+            );
+            brokerOAuth2TokenCache.save(
                     strategy,
                     authorizationRequest,
                     (MicrosoftTokenResponse) tokenResult.getTokenResponse()
             );
-
         }
-
         return tokenResult.getSuccess();
     }
 
