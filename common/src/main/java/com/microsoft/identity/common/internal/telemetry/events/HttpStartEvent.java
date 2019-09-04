@@ -37,24 +37,8 @@ public class HttpStartEvent extends BaseEvent {
         return this;
     }
 
-    //TODO Add unit test for b2c urls where where the format is pretty undefined (now that vanity urls are supported)
-    public HttpStartEvent putPath(URL path) {
-        final StringBuilder logPath = new StringBuilder();
-        logPath.append(path.getProtocol())
-                .append("://")
-                .append(path.getAuthority())
-                .append('/');
-
-        // we do not want to send tenant information
-        // index 0 is blank
-        // index 1 is tenant
-        final String[] splitArray = path.getPath().split("/");
-        for (int i = 2; i < splitArray.length; i++) {
-            logPath.append(splitArray[i])
-                    .append('/');
-        }
-
-        put(Key.HTTP_PATH, logPath.toString());
+    public HttpStartEvent putPath(final URL path) {
+        put(Key.HTTP_PATH, path.toExternalForm());
         return this;
     }
 

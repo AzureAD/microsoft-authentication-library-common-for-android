@@ -130,16 +130,28 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
         }
     }
 
+    /**
+     * The responseTimeMap has the start time and end time of all event types.
+     * This function is used to calculated the response time of each event type.
+     * Where event_type_response_time = event_type_end_time - event_type_start_time.
+     * The response time of each event type is added into the result aggregated data map.
+     *
+     * @param responseTimeMap has the start time and end time of each event type.
+     * @param aggregatedData the result map of the aggregation adapter.
+     */
     private void calculateEventResponseTime(@NonNull final Map<String, String> responseTimeMap,
                                             @NonNull final Map<String, String> aggregatedData) {
         for (Map.Entry<String,String> entry : responseTimeMap.entrySet()) {
-            if (entry.getKey().contains(START)
-                    && responseTimeMap.containsKey(entry.getKey().replace(START, END))
-                    && responseTimeMap.get(entry.getKey().replace(START, END)) != null) {
-                final String key = entry.getKey().replace(START, "response");
-                final long startTime = Long.parseLong(entry.getValue());
-                final long endTime = Long.parseLong(responseTimeMap.get(entry.getKey().replace(START, END)));
-                aggregatedData.put(key, String.valueOf(endTime - startTime));
+            final String entryKey = entry.getKey();
+            if (entryKey.contains(START)) {
+                final String eventEndTimeKey = entryKey.replace(START, END);
+                if (responseTimeMap.containsKey(eventEndTimeKey)
+                        && null != responseTimeMap.get(eventEndTimeKey)) {
+                    final String eventResponseTimeKey = entryKey.replace(START, "response");
+                    final long startTime = Long.parseLong(entry.getValue());
+                    final long endTime = Long.parseLong(eventEndTimeKey);
+                    aggregatedData.put(eventResponseTimeKey, String.valueOf(endTime - startTime));
+                }
             }
         }
     }
