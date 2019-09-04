@@ -81,6 +81,8 @@ public final class AuthorizationActivity extends Activity {
 
     private AuthorizationAgent mAuthorizationAgent;
 
+    private boolean mAuthResultSent = false;
+
     private BroadcastReceiver mCancelRequestReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -282,9 +284,27 @@ public final class AuthorizationActivity extends Activity {
     }
 
     @Override
+    protected void onStop() {
+        final String methodName = ":onStop";
+        if(!mAuthResultSent && isFinishing()){
+            Logger.info(TAG + methodName,
+                    "Activity is destroyed before Auth request is completed, sending request cancel"
+            );
+            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
+        }
+        super.onStop();
+    }
+
+    @Override
     protected void onDestroy() {
         final String methodName = "#onDestroy";
         Logger.verbose(TAG + methodName, "");
+        if(!mAuthResultSent){
+            Logger.info(TAG + methodName,
+                    "Activity is destroyed before Auth request is completed, sending request cancel"
+            );
+            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
+        }
         unregisterReceiver(mCancelRequestReceiver);
         super.onDestroy();
     }
@@ -295,6 +315,7 @@ public final class AuthorizationActivity extends Activity {
                 resultCode,
                 resultIntent
         );
+        mAuthResultSent = true;
     }
 
     private void completeAuthorization() {

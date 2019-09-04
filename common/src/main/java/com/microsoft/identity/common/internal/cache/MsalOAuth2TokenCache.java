@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -593,7 +594,7 @@ public class MsalOAuth2TokenCache
                 accountRecord.getEnvironment(),
                 CredentialType.IdToken,
                 clientId, // If null, behaves as wildcard
-                null, // wildcard (*)
+                accountRecord.getRealm(),
                 null // wildcard (*)
         );
 
@@ -603,7 +604,7 @@ public class MsalOAuth2TokenCache
                         accountRecord.getEnvironment(),
                         CredentialType.V1IdToken,
                         clientId,
-                        null, // wildcard (*)
+                        accountRecord.getRealm(),
                         null // wildcard (*)
                 )
         );
