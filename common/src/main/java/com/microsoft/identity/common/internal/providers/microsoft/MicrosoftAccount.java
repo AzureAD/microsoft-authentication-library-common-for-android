@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft;
 
 import android.net.Uri;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.BaseAccount;
@@ -178,7 +179,9 @@ public abstract class MicrosoftAccount extends BaseAccount {
     }
 
     /**
-     * @return The unique identifier of the user, which is across tenant.
+     * @return The unique identifier of the user.
+     * <p>
+     * For v2, the OID claim in the ID token.
      */
     public String getUserId() {
         return mUniqueId;
