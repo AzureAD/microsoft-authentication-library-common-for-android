@@ -137,13 +137,8 @@ public final class HttpRequest {
     /**
      * Send http request.
      */
-    private HttpResponse send() throws IOException, SocketTimeoutException, UnknownServiceException {
-        final HttpResponse response;
-        try {
-            response = sendWithRetry();
-        } catch (final SocketTimeoutException socketTimeoutException) {
-            throw socketTimeoutException;
-        }
+    private HttpResponse send() throws IOException {
+        final HttpResponse response = sendWithRetry();
 
         if (response != null && isRetryableError(response.getStatusCode())) {
             throw new UnknownServiceException("Retry failed again with 500/503/504");
