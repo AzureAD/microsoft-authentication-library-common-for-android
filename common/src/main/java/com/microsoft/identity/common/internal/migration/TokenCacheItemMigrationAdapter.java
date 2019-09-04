@@ -186,7 +186,8 @@ public class TokenCacheItemMigrationAdapter {
                         + "]");
 
         if(tokenResult.getSuccess()){
-            MicrosoftStsAuthorizationRequest authorizationRequest = createAuthRequest(
+            // Save the token record in tha cache so that we have an entry in BrokerApplicationMetadata for this client id.
+            final MicrosoftStsAuthorizationRequest authorizationRequest = createAuthRequest(
                     strategy,
                     cacheRecord,
                     clientId,
