@@ -46,7 +46,6 @@ public final class Logger {
     // Turn on the VERBOSE level logging by default.
     private LogLevel mLogLevel = LogLevel.VERBOSE;
     private ILoggerCallback mExternalLogger;
-    private final Object mLock = new Object();
 
     // Disable to log PII by default.
     private static boolean sAllowPii = false;
@@ -137,9 +136,7 @@ public final class Logger {
      *                       output the logs to the designated places.
      */
     public void setExternalLogger(final ILoggerCallback externalLogger) {
-        synchronized (mLock) {
-            mExternalLogger = externalLogger;
-        }
+        mExternalLogger = externalLogger;
     }
 
     /**
@@ -477,15 +474,15 @@ public final class Logger {
                 }
 
                 // Send logs into external logger callback.
-                synchronized (mLock) {
-                    if (null != mExternalLogger) {
-                        try {
-                            mExternalLogger.log(tag, logLevel, logMessage, containsPII);
-                        } catch (final Exception e) {
-                            // log message as warning to report callback error issue
-                            if (!containsPII || sAllowPii) {
-                                Log.w(tag, String.format(CUSTOM_LOG_ERROR, logMessage));
-                            }
+                final ILoggerCallback externalLogger = mExternalLogger;
+
+                if (null != externalLogger) {
+                    try {
+                        mExternalLogger.log(tag, logLevel, logMessage, containsPII);
+                    } catch (final Exception e) {
+                        // log message as warning to report callback error issue
+                        if (!containsPII || sAllowPii) {
+                            Log.w(tag, String.format(CUSTOM_LOG_ERROR, logMessage));
                         }
                     }
                 }
