@@ -87,6 +87,7 @@ public final class AuthorizationActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             Logger.info(TAG, "Received Authorization flow cancel request from SDK");
+            Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
             finish();
         }
@@ -290,6 +291,7 @@ public final class AuthorizationActivity extends Activity {
             Logger.info(TAG + methodName,
                     "Activity is destroyed before Auth request is completed, sending request cancel"
             );
+            Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
         }
         super.onStop();
@@ -303,6 +305,7 @@ public final class AuthorizationActivity extends Activity {
             Logger.info(TAG + methodName,
                     "Activity is destroyed before Auth request is completed, sending request cancel"
             );
+            Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
         }
         unregisterReceiver(mCancelRequestReceiver);
