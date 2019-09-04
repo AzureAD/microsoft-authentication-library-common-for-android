@@ -54,6 +54,7 @@ final public class TelemetryPiiOiiRules {
             Key.HTTP_PATH,
             Key.AUTHORITY,
             Key.IDP_NAME,
+            Key.HTTP_PATH
             //App.NAME,
             //App.VERSION
     };

@@ -103,6 +103,7 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
         return nonPiiProperties;
     }
 
+    //The response time is the duration of the last occurrence.
     private void trackEventResponseTime(@NonNull final Map<String, String> responseTimeMap,
                                         @NonNull final Map<String, String> event) {
         final String eventName = event.get(Key.EVENT_NAME);
