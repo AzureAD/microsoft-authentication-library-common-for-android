@@ -39,7 +39,7 @@ import java.util.concurrent.Executors;
 public final class Logger {
 
     private static final String CUSTOM_LOG_ERROR = "Custom log failed to log message:%s";
-    private static ExecutorService sLogExecutor = Executors.newCachedThreadPool();
+    private static ExecutorService sLogExecutor = Executors.newSingleThreadExecutor();
     private static final Logger INSTANCE = new Logger();
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
