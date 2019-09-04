@@ -1,3 +1,26 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 package com.microsoft.identity.common.adal.internal.cache;
 
 import android.content.Context;
@@ -53,8 +76,9 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
 
         // Loading key only once for performance. If API is upgraded, it will
         // restart the device anyway. It will load the correct key for new API.
-        if (isEncryptionKeyLoaded()) {
-            return getCachedEncryptionKey();
+        final Pair<SecretKey, String> cachedKey = getCachedEncryptionKey();
+        if (cachedKey != null) {
+            return cachedKey;
         }
 
         // The current app runtime is the broker; load its secret key.
@@ -84,6 +108,7 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
             }
         } catch (final IOException | GeneralSecurityException e) {
             // If we fail to load key, proceed and generate a new one.
+            Logger.warn(TAG + methodName, "Failed to load key with exception: " + e.toString());
         }
 
         Logger.verbose(TAG + methodName, "Keystore-encrypted key does not exist, try to generate new keys.");
@@ -108,9 +133,10 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
 
             case KEYSTORE_ENCRYPTED_KEY:
                 return loadKeyStoreEncryptedKey();
-        }
 
-        Logger.verbose(TAG + methodName, "Unknown KeyType. This code should never be reached.");
-        throw new GeneralSecurityException(ErrorStrings.UNKNOWN_ERROR);
+            default:
+                Logger.verbose(TAG + methodName, "Unknown KeyType. This code should never be reached.");
+                throw new GeneralSecurityException(ErrorStrings.UNKNOWN_ERROR);
+        }
     }
 }

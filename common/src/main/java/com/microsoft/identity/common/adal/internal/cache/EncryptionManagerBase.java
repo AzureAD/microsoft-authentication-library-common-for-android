@@ -198,6 +198,7 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         return mEncryptionKey != null && mBlobVersion != null;
     }
 
+    @Nullable
     protected Pair<SecretKey, String> getCachedEncryptionKey(){
         if (isEncryptionKeyLoaded()){
             return new Pair<>(mEncryptionKey, mBlobVersion);
