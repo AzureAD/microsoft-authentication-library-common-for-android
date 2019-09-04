@@ -23,8 +23,9 @@
 package com.microsoft.identity.common.internal.logging;
 
 import android.os.Build;
-import androidx.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
@@ -32,11 +33,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class Logger {
 
     private static final String CUSTOM_LOG_ERROR = "Custom log failed to log message:%s";
-
+    private static ExecutorService sLogExecutor = Executors.newCachedThreadPool();
     private static final Logger INSTANCE = new Logger();
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
@@ -452,38 +455,42 @@ public final class Logger {
                      @Nullable final String message,
                      @Nullable final Throwable throwable,
                      final boolean containsPII) {
-        if (logLevel.compareTo(mLogLevel) > 0) {
-            return;
-        }
+        sLogExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (logLevel.compareTo(mLogLevel) > 0) {
+                    return;
+                }
 
-        // Developer turns off PII logging, if the log meLoggerSettingssage contains any PII,
-        // we should not send it.
-        if (!sAllowPii && containsPII) {
-            return;
-        }
+                // Developer turns off PII logging, if the log meLoggerSettingssage contains any PII,
+                // we should not send it.
+                if (!sAllowPii && containsPII) {
+                    return;
+                }
 
-        //Format the log message.
-        final String logMessage = formatMessage(correlationID, message, throwable);
+                //Format the log message.
+                final String logMessage = formatMessage(correlationID, message, throwable);
 
-        // Send logs into Logcat.
-        if (sAllowLogcat) {
-            sendLogcatLogs(tag, logLevel, logMessage);
-        }
+                // Send logs into Logcat.
+                if (sAllowLogcat) {
+                    sendLogcatLogs(tag, logLevel, logMessage);
+                }
 
-        // Send logs into external logger callback.
-        synchronized (mLock) {
-            if (null != mExternalLogger) {
-                try {
-                    mExternalLogger.log(tag, logLevel, logMessage, containsPII);
-                } catch (final Exception e) {
-                    // log message as warning to report callback error issue
-                    if (!containsPII || sAllowPii) {
-                        Log.w(tag, String.format(CUSTOM_LOG_ERROR, logMessage));
+                // Send logs into external logger callback.
+                synchronized (mLock) {
+                    if (null != mExternalLogger) {
+                        try {
+                            mExternalLogger.log(tag, logLevel, logMessage, containsPII);
+                        } catch (final Exception e) {
+                            // log message as warning to report callback error issue
+                            if (!containsPII || sAllowPii) {
+                                Log.w(tag, String.format(CUSTOM_LOG_ERROR, logMessage));
+                            }
+                        }
                     }
                 }
             }
-        }
-
+        });
     }
 
     /**
@@ -520,15 +527,19 @@ public final class Logger {
             case ERROR:
                 Log.e(tag, message);
                 break;
+
             case WARN:
                 Log.w(tag, message);
                 break;
+
             case INFO:
                 Log.i(tag, message);
                 break;
+
             case VERBOSE:
                 Log.v(tag, message);
                 break;
+
             default:
                 throw new IllegalArgumentException("Unknown log level");
         }
