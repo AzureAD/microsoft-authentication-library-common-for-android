@@ -216,7 +216,7 @@ public final class HttpRequest {
 
             final int statusCode = urlConnection.getResponseCode();
 
-            String responseBody = responseStream == null
+            final String responseBody = responseStream == null
                     ? ""
                     : convertStreamToString(responseStream);
 
