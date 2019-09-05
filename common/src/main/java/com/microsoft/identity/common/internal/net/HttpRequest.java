@@ -60,14 +60,14 @@ public final class HttpRequest {
     static final String REQUEST_METHOD_POST = "POST";
 
     /**
-     * Default value of read timeout in milliseconds.
+     * Value of read timeout in milliseconds.
      */
-    private static final int DEFAULT_READ_TIMEOUT = 30000;
+    public static int READ_TIMEOUT = 30000;
 
     /**
-     * Default value of connect timeout in milliseconds.
+     * Value of connect timeout in milliseconds.
      */
-    private static final int DEFAULT_CONNECT_TIMEOUT = 30000;
+    public static int CONNECT_TIMEOUT = 30000;
 
     // class variables
     private final URL mRequestUrl;
@@ -238,8 +238,8 @@ public final class HttpRequest {
             urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
         }
 
-        urlConnection.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT);
-        urlConnection.setReadTimeout(DEFAULT_READ_TIMEOUT);
+        urlConnection.setConnectTimeout(CONNECT_TIMEOUT);
+        urlConnection.setReadTimeout(READ_TIMEOUT);
         urlConnection.setInstanceFollowRedirects(true);
         urlConnection.setUseCaches(false);
         urlConnection.setDoInput(true);
