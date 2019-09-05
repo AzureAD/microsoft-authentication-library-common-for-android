@@ -149,7 +149,7 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
                         && null != responseTimeMap.get(eventEndTimeKey)) {
                     final String eventResponseTimeKey = entryKey.replace(START, "response");
                     final long startTime = Long.parseLong(entry.getValue());
-                    final long endTime = Long.parseLong(eventEndTimeKey);
+                    final long endTime = Long.parseLong(responseTimeMap.get(eventEndTimeKey));
                     aggregatedData.put(eventResponseTimeKey, String.valueOf(endTime - startTime));
                 }
             }
