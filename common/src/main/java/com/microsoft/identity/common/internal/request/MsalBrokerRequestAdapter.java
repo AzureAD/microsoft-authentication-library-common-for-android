@@ -133,9 +133,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 )
         );
 
-        AzureActiveDirectory.setEnvironment(
-                Environment.valueOf(brokerRequest.getEnvironment())
-        );
+        if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
+            AzureActiveDirectory.setEnvironment(
+                    Environment.valueOf(brokerRequest.getEnvironment())
+            );
+        }
 
         parameters.setScopes(getScopesAsSet(brokerRequest.getScope()));
 
@@ -200,9 +202,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         );
         parameters.setAuthority(authority);
 
-        AzureActiveDirectory.setEnvironment(
-                Environment.valueOf(brokerRequest.getEnvironment())
-        );
+        if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
+            AzureActiveDirectory.setEnvironment(
+                    Environment.valueOf(brokerRequest.getEnvironment())
+            );
+        }
 
         String correlationIdString = bundle.getString(
                 brokerRequest.getCorrelationId()
