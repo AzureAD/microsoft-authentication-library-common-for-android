@@ -41,12 +41,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactory.createHttpURLConnection;
+
 /**
  * Internal class for handling http request.
  */
 public final class HttpRequest {
 
     private static final String HOST = "Host";
+
     /**
      * The waiting time before doing retry to prevent hitting the server immediately failure.
      */
@@ -55,10 +58,12 @@ public final class HttpRequest {
 
     static final String REQUEST_METHOD_GET = "GET";
     static final String REQUEST_METHOD_POST = "POST";
+
     /**
      * Default value of read timeout in milliseconds.
      */
     private static final int DEFAULT_READ_TIMEOUT = 30000;
+
     /**
      * Default value of connect timeout in milliseconds.
      */
@@ -84,8 +89,8 @@ public final class HttpRequest {
     }
 
     /**
-     * Constructor for {@link HttpRequest} with request {@link URL}, headers, post message and the request content
-     * type.
+     * Constructor for {@link HttpRequest} with request {@link URL}, headers, post message and the
+     * request content type.
      *
      * @param requestUrl         The {@link URL} to make the http request.
      * @param requestHeaders     Headers used to send the http request.
@@ -163,8 +168,8 @@ public final class HttpRequest {
     }
 
     /**
-     * Execute the send request, and retry if needed. Retry happens on all the endpoint when receiving
-     * {@link SocketTimeoutException} or retryable error 500/503/504.
+     * Execute the send request, and retry if needed. Retry happens on all the endpoint when
+     * receiving {@link SocketTimeoutException} or retryable error 500/503/504.
      */
     private HttpResponse sendWithRetry() throws IOException {
         final HttpResponse httpResponse;
@@ -172,8 +177,9 @@ public final class HttpRequest {
         try {
             httpResponse = executeHttpSend();
         } catch (final SocketTimeoutException socketTimeoutException) {
-            // In android, network timeout is thrown as the SocketTimeOutException, we need to catch this and perform
-            // retry. If retry also fails with timeout, the socketTimeoutException will be bubbled up
+            // In android, network timeout is thrown as the SocketTimeOutException, we need to
+            // catch this and perform retry. If retry also fails with timeout, the
+            // socketTimeoutException will be bubbled up
             waitBeforeRetry();
             return executeHttpSend();
         }
@@ -200,8 +206,9 @@ public final class HttpRequest {
             try {
                 responseStream = urlConnection.getInputStream();
             } catch (final SocketTimeoutException socketTimeoutException) {
-                // SocketTimeoutExcetion is thrown when connection timeout happens. For connection timeout, we want
-                // to retry once. Throw the exception to the upper layer, and the upper layer will handle the rety.
+                // SocketTimeoutExcetion is thrown when connection timeout happens. For connection
+                // timeout, we want to retry once. Throw the exception to the upper layer, and the
+                // upper layer will handle the rety.
                 throw socketTimeoutException;
             } catch (final IOException ioException) {
                 responseStream = urlConnection.getErrorStream();
@@ -209,7 +216,9 @@ public final class HttpRequest {
 
             final int statusCode = urlConnection.getResponseCode();
 
-            String responseBody = responseStream == null ? "" : convertStreamToString(responseStream);
+            String responseBody = responseStream == null
+                    ? ""
+                    : convertStreamToString(responseStream);
 
             response = new HttpResponse(statusCode, responseBody, urlConnection.getHeaderFields());
         } finally {
@@ -220,7 +229,7 @@ public final class HttpRequest {
     }
 
     private HttpURLConnection setupConnection() throws IOException {
-        final HttpURLConnection urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(mRequestUrl);
+        final HttpURLConnection urlConnection = createHttpURLConnection(mRequestUrl);
 
         // Apply request headers and update the headers with default attributes first
         final Set<Map.Entry<String, String>> headerEntries = mRequestHeaders.entrySet();
@@ -317,7 +326,8 @@ public final class HttpRequest {
     }
 
     /**
-     * Having the thread wait for 1 second before doing the retry to avoid hitting server immediately.
+     * Having the thread wait for 1 second before doing the retry to avoid hitting server
+     * immediately.
      */
     private void waitBeforeRetry() {
         try {
