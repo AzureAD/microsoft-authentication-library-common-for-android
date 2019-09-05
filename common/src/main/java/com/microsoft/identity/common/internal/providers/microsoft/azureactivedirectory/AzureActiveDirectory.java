@@ -91,6 +91,10 @@ public class AzureActiveDirectory
         sEnvironment = environment;
     }
 
+    public static Environment getEnvironment() {
+        return sEnvironment;
+    }
+
     /**
      * @param authorityUrl URL
      * @return AzureActiveDirectoryCloud

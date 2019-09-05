@@ -5,18 +5,18 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Pair;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
@@ -28,6 +28,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
@@ -55,6 +58,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
                 .msalVersion(parameters.getSdkVersion())
+                .environment(AzureActiveDirectory.getEnvironment().name())
                 .build();
 
         return brokerRequest;
@@ -79,6 +83,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
                 .msalVersion(parameters.getSdkVersion())
+                .environment(AzureActiveDirectory.getEnvironment().name())
                 .build();
 
         return brokerRequest;
@@ -126,6 +131,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         brokerRequest.getAuthority(),
                         extraQP
                 )
+        );
+
+        AzureActiveDirectory.setEnvironment(
+                Environment.valueOf(brokerRequest.getEnvironment())
         );
 
         parameters.setScopes(getScopesAsSet(brokerRequest.getScope()));
@@ -190,6 +199,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 brokerRequest.getAuthority()
         );
         parameters.setAuthority(authority);
+
+        AzureActiveDirectory.setEnvironment(
+                Environment.valueOf(brokerRequest.getEnvironment())
+        );
 
         String correlationIdString = bundle.getString(
                 brokerRequest.getCorrelationId()
