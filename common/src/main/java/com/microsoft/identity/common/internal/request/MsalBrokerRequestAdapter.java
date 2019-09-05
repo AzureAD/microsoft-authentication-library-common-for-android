@@ -133,12 +133,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 )
         );
 
-        if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
-            AzureActiveDirectory.setEnvironment(
-                    Environment.valueOf(brokerRequest.getEnvironment())
-            );
-        }
-
         parameters.setScopes(getScopesAsSet(brokerRequest.getScope()));
 
         parameters.setClientId(brokerRequest.getClientId());
@@ -162,6 +156,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         );
 
         parameters.setAuthorizationAgent(AuthorizationAgent.WEBVIEW);
+
+        // Set Global environment variable for instance discovery if present
+        if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
+            AzureActiveDirectory.setEnvironment(
+                    Environment.valueOf(brokerRequest.getEnvironment())
+            );
+        }
 
         return parameters;
 
@@ -202,12 +203,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         );
         parameters.setAuthority(authority);
 
-        if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
-            AzureActiveDirectory.setEnvironment(
-                    Environment.valueOf(brokerRequest.getEnvironment())
-            );
-        }
-
         String correlationIdString = bundle.getString(
                 brokerRequest.getCorrelationId()
         );
@@ -238,6 +233,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         if(!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
             parameters.setExtraQueryStringParameters(
                     QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter())
+            );
+        }
+
+        // Set Global environment variable for instance discovery if present
+        if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
+            AzureActiveDirectory.setEnvironment(
+                    Environment.valueOf(brokerRequest.getEnvironment())
             );
         }
 
