@@ -39,12 +39,4 @@ public class MockTokenResponse {
         return tokenResponse;
     }
 
-    public static TokenResponse getTokenResponseWithoutAccessToken() {
-        MicrosoftStsTokenResponse tokenResponse = (MicrosoftStsTokenResponse) getTokenResponse();
-        tokenResponse.setExpiresIn(null);
-        tokenResponse.setExtExpiresIn(null);
-        tokenResponse.setAccessToken(null);
-        return tokenResponse;
-    }
-
 }
