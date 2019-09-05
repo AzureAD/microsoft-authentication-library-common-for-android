@@ -88,7 +88,7 @@ public final class PasswordGrantTest {
     public void requestFailsIfUsernameNotProvided() throws IOException {
 
         Scenario scenario = getDefaultTestScenario();
-        Credential credential = scenario.getCredential();;
+        Credential credential = scenario.getCredential();
 
         AADTestAuthority aadTestAuthority = new AADTestAuthority();
         OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();

@@ -12,6 +12,7 @@ public class AADTestAuthority extends AzureActiveDirectoryAuthority {
     private static transient final String TAG = AADTestAuthority.class.getSimpleName();
 
     public AADTestAuthority() {
+        // using organizations audience as common does not support ropc
         super(new AnyOrganizationalAccount());
     }
 
@@ -51,6 +52,7 @@ public class AADTestAuthority extends AzureActiveDirectoryAuthority {
 
         config.setMultipleCloudsSupported(mMultipleCloudsSupported);
 
+        // return a custom ropc test strategy to perform ropc flow for test automation
         return new ResourceOwnerPasswordCredentialsTestStrategy(config);
     }
 

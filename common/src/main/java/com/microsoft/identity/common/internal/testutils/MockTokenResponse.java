@@ -2,7 +2,6 @@ package com.microsoft.identity.common.internal.testutils;
 
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 public class MockTokenResponse {
 

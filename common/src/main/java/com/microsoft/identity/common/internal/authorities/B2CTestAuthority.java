@@ -23,6 +23,8 @@ public class B2CTestAuthority extends AzureActiveDirectoryB2CAuthority {
         MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
         config.setMultipleCloudsSupported(false);
         config.setAuthorityUrl(this.getAuthorityURL());
+
+        // return a custom ropc test strategy to perform ropc flow for test automation
         return new ResourceOwnerPasswordCredentialsTestStrategy(config);
     }
 }

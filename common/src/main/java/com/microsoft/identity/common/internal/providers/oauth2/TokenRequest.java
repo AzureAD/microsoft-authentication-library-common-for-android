@@ -213,27 +213,36 @@ public class TokenRequest {
      *
      * @return the user's username
      */
-    public String getUsername() { return mUsername; }
+    public String getUsername() {
+        return mUsername;
+    }
 
     /**
      * Sets the username
      *
      * @param username the user's username
      */
-    public void setUsername(final String username) { mUsername = username; }
+    public void setUsername(final String username) {
+        mUsername = username;
+    }
 
     /**
      * Gets the password
      *
      * @return the user's password
      */
-    public String getPassword() { return mPassword; }
+    public String getPassword() {
+        return mPassword;
+    }
 
     /**
      * Sets the password
+     *
      * @param password the user's password
      */
-    public void setPassword(final String password) { mPassword = password; }
+    public void setPassword(final String password) {
+        mPassword = password;
+    }
 
     public static class GrantTypes {
         public final static String AUTHORIZATION_CODE = "authorization_code";

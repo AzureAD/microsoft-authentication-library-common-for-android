@@ -51,6 +51,7 @@ public class MockAuthority extends AzureActiveDirectoryAuthority {
 
         config.setMultipleCloudsSupported(mMultipleCloudsSupported);
 
+        // return a mock strategy that returns mocked token responses when tokens are requested
         return new MockTestStrategy(config);
     }
 
