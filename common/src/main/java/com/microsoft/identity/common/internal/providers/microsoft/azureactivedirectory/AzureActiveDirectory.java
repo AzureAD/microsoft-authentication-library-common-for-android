@@ -88,7 +88,13 @@ public class AzureActiveDirectory
     }
 
     public static void setEnvironment(Environment environment) {
-        sEnvironment = environment;
+        if(environment != sEnvironment){
+            // Environment changed, so mark sIsInitialized to false
+            // to make a instance discovery network request for this environment.
+            sIsInitialized = false;
+            sEnvironment = environment;
+        }
+
     }
 
     public static Environment getEnvironment() {
