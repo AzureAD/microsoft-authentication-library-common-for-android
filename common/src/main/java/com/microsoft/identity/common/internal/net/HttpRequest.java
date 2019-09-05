@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.BufferedReader;
@@ -74,7 +77,9 @@ public final class HttpRequest {
      * @param requestUrl     The {@link URL} to make the http request.
      * @param requestHeaders Headers used to send the http request.
      */
-    private HttpRequest(final URL requestUrl, final Map<String, String> requestHeaders, final String requestMethod) {
+    private HttpRequest(@NonNull final URL requestUrl,
+                        @NonNull final Map<String, String> requestHeaders,
+                        @NonNull final String requestMethod) {
         this(requestUrl, requestHeaders, requestMethod, null, null);
     }
 
@@ -87,18 +92,17 @@ public final class HttpRequest {
      * @param requestContent     Post message sent in the post request.
      * @param requestContentType Request content type.
      */
-    private HttpRequest(final URL requestUrl, final Map<String, String> requestHeaders,
-                        final String requestMethod, final byte[] requestContent,
-                        final String requestContentType) {
+    private HttpRequest(@NonNull final URL requestUrl,
+                        @NonNull final Map<String, String> requestHeaders,
+                        @NonNull final String requestMethod,
+                        @Nullable final byte[] requestContent,
+                        @Nullable final String requestContentType) {
         mRequestUrl = requestUrl;
-
         mRequestHeaders.put(HOST, requestUrl.getAuthority());
         mRequestHeaders.putAll(requestHeaders);
-
         mRequestMethod = requestMethod;
         mRequestContent = requestContent;
         mRequestContentType = requestContentType;
-
     }
 
     /**
@@ -111,11 +115,18 @@ public final class HttpRequest {
      * @return HttpResponse
      * @throws IOException throw if error happen during http send request.
      */
-    public static HttpResponse sendPost(final URL requestUrl, final Map<String, String> requestHeaders,
-                                        final byte[] requestContent, final String requestContentType)
-            throws IOException {
-        final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_POST,
-                requestContent, requestContentType);
+    public static HttpResponse sendPost(final URL requestUrl,
+                                        final Map<String, String> requestHeaders,
+                                        final byte[] requestContent,
+                                        final String requestContentType) throws IOException {
+        final HttpRequest httpRequest = new HttpRequest(
+                requestUrl,
+                requestHeaders,
+                REQUEST_METHOD_POST,
+                requestContent,
+                requestContentType
+        );
+
         return httpRequest.send();
     }
 
@@ -127,9 +138,13 @@ public final class HttpRequest {
      * @return HttpResponse
      * @throws IOException throw if service error happen during http request.
      */
-    public static HttpResponse sendGet(final URL requestUrl, final Map<String, String> requestHeaders)
-            throws IOException {
-        final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
+    public static HttpResponse sendGet(final URL requestUrl,
+                                       final Map<String, String> requestHeaders) throws IOException {
+        final HttpRequest httpRequest = new HttpRequest(
+                requestUrl,
+                requestHeaders,
+                REQUEST_METHOD_GET
+        );
 
         return httpRequest.send();
     }
@@ -153,6 +168,7 @@ public final class HttpRequest {
      */
     private HttpResponse sendWithRetry() throws IOException {
         final HttpResponse httpResponse;
+
         try {
             httpResponse = executeHttpSend();
         } catch (final SocketTimeoutException socketTimeoutException) {
@@ -208,6 +224,7 @@ public final class HttpRequest {
 
         // Apply request headers and update the headers with default attributes first
         final Set<Map.Entry<String, String>> headerEntries = mRequestHeaders.entrySet();
+
         for (final Map.Entry<String, String> entry : headerEntries) {
             urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
         }
@@ -221,8 +238,9 @@ public final class HttpRequest {
         return urlConnection;
     }
 
-    private static void setRequestBody(final HttpURLConnection connection, final byte[] contentRequest,
-                                       final String requestContentType) throws IOException {
+    private static void setRequestBody(@NonNull final HttpURLConnection connection,
+                                       @Nullable final byte[] contentRequest,
+                                       @Nullable final String requestContentType) throws IOException {
         if (contentRequest == null) {
             return;
         }
@@ -236,6 +254,7 @@ public final class HttpRequest {
         connection.setRequestProperty("Content-Length", String.valueOf(contentRequest.length));
 
         OutputStream out = null;
+
         try {
             out = connection.getOutputStream();
             out.write(contentRequest);
@@ -257,6 +276,7 @@ public final class HttpRequest {
             final char[] buffer = new char[STREAM_BUFFER_SIZE];
             final StringBuilder stringBuilder = new StringBuilder();
             int charsRead;
+
             while ((charsRead = reader.read(buffer)) > -1) {
                 stringBuilder.append(buffer, 0, charsRead);
             }
@@ -272,7 +292,7 @@ public final class HttpRequest {
      *
      * @param stream stream to be closed
      */
-    private static void safeCloseStream(final Closeable stream) {
+    private static void safeCloseStream(@Nullable final Closeable stream) {
         if (stream == null) {
             return;
         }
