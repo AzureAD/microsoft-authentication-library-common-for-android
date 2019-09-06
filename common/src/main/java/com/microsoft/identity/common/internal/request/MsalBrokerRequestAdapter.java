@@ -13,10 +13,12 @@ import android.util.Pair;
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
@@ -55,6 +57,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
                 .msalVersion(parameters.getSdkVersion())
+                .environment(AzureActiveDirectory.getEnvironment().name())
                 .build();
 
         return brokerRequest;
@@ -79,6 +82,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
                 .msalVersion(parameters.getSdkVersion())
+                .environment(AzureActiveDirectory.getEnvironment().name())
                 .build();
 
         return brokerRequest;
@@ -152,6 +156,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         parameters.setAuthorizationAgent(AuthorizationAgent.WEBVIEW);
 
+        // Set Global environment variable for instance discovery if present
+        if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
+            AzureActiveDirectory.setEnvironment(
+                    Environment.valueOf(brokerRequest.getEnvironment())
+            );
+        }
+
         return parameters;
 
     }
@@ -221,6 +232,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         if(!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
             parameters.setExtraQueryStringParameters(
                     QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter())
+            );
+        }
+
+        // Set Global environment variable for instance discovery if present
+        if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
+            AzureActiveDirectory.setEnvironment(
+                    Environment.valueOf(brokerRequest.getEnvironment())
             );
         }
 
