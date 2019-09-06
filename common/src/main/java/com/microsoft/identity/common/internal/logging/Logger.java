@@ -26,8 +26,6 @@ import android.os.Build;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
 import java.text.SimpleDateFormat;
