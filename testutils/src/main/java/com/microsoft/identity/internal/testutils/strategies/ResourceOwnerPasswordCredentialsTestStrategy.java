@@ -129,6 +129,11 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
         }
     }
 
+    String getPasswordForUser(String username) {
+        String password = Scenario.getPasswordForUser(username);
+        return password;
+    }
+
     @Override
     public MicrosoftStsTokenRequest createTokenRequest(@NonNull final MicrosoftStsAuthorizationRequest request,
                                                        @NonNull final MicrosoftStsAuthorizationResponse response) {
@@ -139,7 +144,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
         );
 
         String username = request.getLoginHint();
-        String password = Scenario.getPasswordForUser(username);
+        String password = getPasswordForUser(username);
 
         MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setUsername(username);
