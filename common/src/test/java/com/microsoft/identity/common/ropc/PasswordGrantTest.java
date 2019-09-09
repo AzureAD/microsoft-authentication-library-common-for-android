@@ -52,7 +52,7 @@ public final class PasswordGrantTest {
     private static final String CLIENT_ID = "4b0db8c2-9f26-4417-8bde-3f0e3656f8e0";
 
     private Scenario getDefaultTestScenario() {
-        TestConfigurationQuery query = new TestConfigurationQuery();
+        final TestConfigurationQuery query = new TestConfigurationQuery();
         query.userType = "Member";
         query.isFederated = false;
         query.federationProvider = "ADFSv4";
@@ -76,7 +76,7 @@ public final class PasswordGrantTest {
     private TokenRequest createTokenRequest(String[] scopes, String username, String password) {
         String scope = convertScopesArrayToString(scopes);
 
-        TokenRequest tokenRequest = new MicrosoftStsTokenRequest();
+        final TokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setClientId(CLIENT_ID);
         tokenRequest.setScope(scope);
         tokenRequest.setUsername(username);
@@ -88,14 +88,13 @@ public final class PasswordGrantTest {
 
     @Test
     public void canPerformROPC() throws IOException {
+        final Scenario scenario = getDefaultTestScenario();
+        final Credential credential = scenario.getCredential();
 
-        Scenario scenario = getDefaultTestScenario();
-        Credential credential = scenario.getCredential();
+        final AADTestAuthority aadTestAuthority = new AADTestAuthority();
+        final OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
 
-        AADTestAuthority aadTestAuthority = new AADTestAuthority();
-        OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
-
-        TokenRequest tokenRequest = createTokenRequest(SCOPES, credential.userName, credential.password);
+        final TokenRequest tokenRequest = createTokenRequest(SCOPES, credential.userName, credential.password);
 
         try {
             final TokenResult tokenResult = testStrategy.requestToken(tokenRequest);
@@ -108,14 +107,13 @@ public final class PasswordGrantTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void requestFailsIfUsernameNotProvided() throws IOException {
+        final Scenario scenario = getDefaultTestScenario();
+        final Credential credential = scenario.getCredential();
 
-        Scenario scenario = getDefaultTestScenario();
-        Credential credential = scenario.getCredential();
+        final AADTestAuthority aadTestAuthority = new AADTestAuthority();
+        final OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
 
-        AADTestAuthority aadTestAuthority = new AADTestAuthority();
-        OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
-
-        TokenRequest tokenRequest = createTokenRequest(SCOPES, null, credential.password);
+        final TokenRequest tokenRequest = createTokenRequest(SCOPES, null, credential.password);
 
         try {
             final TokenResult tokenResult = testStrategy.requestToken(tokenRequest);
@@ -128,14 +126,13 @@ public final class PasswordGrantTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void requestFailsIfPasswordNotProvided() throws IOException {
+        final Scenario scenario = getDefaultTestScenario();
+        final Credential credential = scenario.getCredential();
 
-        Scenario scenario = getDefaultTestScenario();
-        Credential credential = scenario.getCredential();
+        final AADTestAuthority aadTestAuthority = new AADTestAuthority();
+        final OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
 
-        AADTestAuthority aadTestAuthority = new AADTestAuthority();
-        OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
-
-        TokenRequest tokenRequest = createTokenRequest(SCOPES, credential.userName, null);
+        final TokenRequest tokenRequest = createTokenRequest(SCOPES, credential.userName, null);
 
         try {
             final TokenResult tokenResult = testStrategy.requestToken(tokenRequest);
@@ -148,14 +145,13 @@ public final class PasswordGrantTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void requestFailsIfScopeNotProvided() throws IOException {
+        final Scenario scenario = getDefaultTestScenario();
+        final Credential credential = scenario.getCredential();
 
-        Scenario scenario = getDefaultTestScenario();
-        Credential credential = scenario.getCredential();
+        final AADTestAuthority aadTestAuthority = new AADTestAuthority();
+        final OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
 
-        AADTestAuthority aadTestAuthority = new AADTestAuthority();
-        OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
-
-        TokenRequest tokenRequest = createTokenRequest(null, credential.userName, credential.password);
+        final TokenRequest tokenRequest = createTokenRequest(null, credential.userName, credential.password);
 
         try {
             final TokenResult tokenResult = testStrategy.requestToken(tokenRequest);

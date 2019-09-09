@@ -74,8 +74,8 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
     public Future<AuthorizationResult> requestAuthorization(
             final MicrosoftStsAuthorizationRequest request,
             final AuthorizationStrategy authorizationStrategy) {
-        FakeAuthorizationResult authorizationResult = new FakeAuthorizationResult();
-        ResultFuture<AuthorizationResult> future = new ResultFuture<>();
+        final FakeAuthorizationResult authorizationResult = new FakeAuthorizationResult();
+        final ResultFuture<AuthorizationResult> future = new ResultFuture<>();
         future.setResult(authorizationResult);
         return future;
     }
@@ -94,7 +94,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
                 "Requesting token..."
         );
 
-        String grantType = request.getGrantType();
+        final String grantType = request.getGrantType();
 
         // check for the grant type and change to password if it is AUTH CODE
         // otherwise it is REFRESH_TOKEN, and lets proceed to make a Refresh Token Request
@@ -130,7 +130,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
     }
 
     String getPasswordForUser(String username) {
-        String password = Scenario.getPasswordForUser(username);
+        final String password = Scenario.getPasswordForUser(username);
         return password;
     }
 
@@ -143,10 +143,10 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
                 "Creating TokenRequest..."
         );
 
-        String username = request.getLoginHint();
-        String password = getPasswordForUser(username);
+        final String username = request.getLoginHint();
+        final String password = getPasswordForUser(username);
 
-        MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
+        final MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setUsername(username);
         tokenRequest.setPassword(password);
         tokenRequest.setClientId(request.getClientId());

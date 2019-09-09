@@ -65,22 +65,22 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
     }
 
     public TokenResult getTokenResult() {
-        TokenResponse tokenResponse = MockTokenResponse.getTokenResponse();
-        TokenResult tokenResult = new TokenResult(tokenResponse);
+        final TokenResponse tokenResponse = MockTokenResponse.getTokenResponse();
+        final TokenResult tokenResult = new TokenResult(tokenResponse);
         return tokenResult;
     }
 
     @Override
     protected HttpResponse performTokenRequest(final MicrosoftStsTokenRequest tokenRequest) {
-        TokenResult tokenResult = getTokenResult();
-        TokenResponse tokenResponse = tokenResult.getTokenResponse();
-        HttpResponse httpResponse = makeHttpResponseFromResponseObject(tokenResponse);
+        final TokenResult tokenResult = getTokenResult();
+        final TokenResponse tokenResponse = tokenResult.getTokenResponse();
+        final HttpResponse httpResponse = makeHttpResponseFromResponseObject(tokenResponse);
         return httpResponse;
     }
 
     public HttpResponse makeHttpResponseFromResponseObject(final Object obj) {
         final String httpResponseBody = ObjectMapper.serializeObjectToJsonString(obj);
-        HttpResponse httpResponse = new HttpResponse(200, httpResponseBody, null);
+        final HttpResponse httpResponse = new HttpResponse(200, httpResponseBody, null);
         return httpResponse;
     }
 
