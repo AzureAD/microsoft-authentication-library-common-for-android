@@ -74,11 +74,6 @@ android {
             outputFileName = "${archivesBaseName}-${version}.aar"
         }
     }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
 }
 
 dependencies {
@@ -86,7 +81,6 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
-    implementation "org.robolectric:annotations:$rootProject.ext.robolectricVersion"
 
     // Test dependencies
     // Needed to resolve JSONObject inside of non-instrumented tests
