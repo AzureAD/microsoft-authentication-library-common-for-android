@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.testutils;
+package com.microsoft.identity.internal.testutils;
 
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;

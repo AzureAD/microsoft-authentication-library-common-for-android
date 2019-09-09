@@ -1,9 +1,11 @@
-package com.microsoft.identity.common.internal.authorities;
+package com.microsoft.identity.internal.testutils.authorities;
 
+import com.microsoft.identity.common.internal.authorities.AnyOrganizationalAccount;
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.ropc.MockTestStrategy;
+import com.microsoft.identity.internal.testutils.strategies.MockTestStrategy;
 
 import java.util.Map;
 

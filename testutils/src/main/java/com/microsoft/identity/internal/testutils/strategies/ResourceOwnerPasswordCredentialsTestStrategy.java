@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.providers.ropc;
+package com.microsoft.identity.internal.testutils.strategies;
 
 import androidx.annotation.NonNull;
 
@@ -6,7 +6,6 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
-import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
@@ -15,30 +14,30 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.internal.testutils.FakeAuthorizationResult;
 import com.microsoft.identity.common.internal.result.ResultFuture;
-import com.microsoft.identity.common.internal.testutils.MockTokenResponse;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.internal.testutils.labutils.Scenario;
 
 import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.Future;
 
-public class MockTestStrategy extends MicrosoftStsOAuth2Strategy {
+public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOAuth2Strategy {
 
     private static final String TAG = ResourceOwnerPasswordCredentialsTestStrategy.class.getSimpleName();
 
-    public final String USERNAME_EMPTY_OR_NULL = "username_empty_or_null";
-    public final String PASSWORD_EMPTY_OR_NULL = "password_empty_or_null";
-    public final String SCOPE_EMPTY_OR_NULL = "scope_empty_or_null";
+    public static final String USERNAME_EMPTY_OR_NULL = "username_empty_or_null";
+    public static final String PASSWORD_EMPTY_OR_NULL = "password_empty_or_null";
+    public static final String SCOPE_EMPTY_OR_NULL = "scope_empty_or_null";
 
     /**
-     * Constructor of MockTestStrategy.
+     * Constructor of ResourceOwnerPasswordCredentialsTestStrategy.
      *
      * @param config Microsoft Sts OAuth2 configuration
      */
-    public MockTestStrategy(MicrosoftStsOAuth2Configuration config) {
+    public ResourceOwnerPasswordCredentialsTestStrategy(MicrosoftStsOAuth2Configuration config) {
         super(config);
     }
 
@@ -118,7 +117,7 @@ public class MockTestStrategy extends MicrosoftStsOAuth2Strategy {
         );
 
         String username = request.getLoginHint();
-        String password = "fake-password";
+        String password = Scenario.getPasswordForUser(username);
 
         MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setUsername(username);
@@ -145,25 +144,4 @@ public class MockTestStrategy extends MicrosoftStsOAuth2Strategy {
 
         return tokenRequest;
     }
-
-    public TokenResult getTokenResult() {
-        TokenResponse tokenResponse = MockTokenResponse.getTokenResponse();
-        TokenResult tokenResult = new TokenResult(tokenResponse);
-        return tokenResult;
-    }
-
-    @Override
-    protected HttpResponse performTokenRequest(final MicrosoftStsTokenRequest tokenRequest) {
-        TokenResult tokenResult = getTokenResult();
-        TokenResponse tokenResponse = tokenResult.getTokenResponse();
-        HttpResponse httpResponse = makeHttpResponseFromResponseObject(tokenResponse);
-        return httpResponse;
-    }
-
-    public HttpResponse makeHttpResponseFromResponseObject(final Object obj) {
-        final String httpResponseBody = ObjectMapper.serializeObjectToJsonString(obj);
-        HttpResponse httpResponse = new HttpResponse(200, httpResponseBody, null);
-        return httpResponse;
-    }
-
 }

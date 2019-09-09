@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.providers.ropc;
+package com.microsoft.identity.internal.testutils;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;

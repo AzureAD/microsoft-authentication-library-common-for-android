@@ -21,7 +21,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.utilities;
+package com.microsoft.identity.internal.testutils.labutils;
 
 /**
  * Created by shoatman on 3/12/2018.

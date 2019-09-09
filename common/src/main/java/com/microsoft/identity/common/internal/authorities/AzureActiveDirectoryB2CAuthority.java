@@ -36,7 +36,7 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
 
     private static final String TAG = AzureActiveDirectoryB2CAuthority.class.getName();
 
-    AzureActiveDirectoryB2CAuthority(String authorityUrl) {
+    public AzureActiveDirectoryB2CAuthority(String authorityUrl) {
         mAuthorityTypeString = "B2C";
         mAuthorityUrl = authorityUrl;
     }

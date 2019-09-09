@@ -1,15 +1,15 @@
 package com.microsoft.identity.common.ropc;
 
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.authorities.AADTestAuthority;
+import com.microsoft.identity.internal.testutils.authorities.AADTestAuthority;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
-import com.microsoft.identity.common.utilities.Credential;
-import com.microsoft.identity.common.utilities.Scenario;
-import com.microsoft.identity.common.utilities.TestConfigurationQuery;
+import com.microsoft.identity.internal.testutils.labutils.Credential;
+import com.microsoft.identity.internal.testutils.labutils.Scenario;
+import com.microsoft.identity.internal.testutils.labutils.TestConfigurationQuery;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

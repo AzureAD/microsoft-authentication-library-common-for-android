@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.testutils;
+package com.microsoft.identity.internal.testutils;
 
 import android.util.Base64;
 
