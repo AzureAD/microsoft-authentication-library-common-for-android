@@ -33,7 +33,7 @@ import java.util.Map;
 
 public class AADTestAuthority extends AzureActiveDirectoryAuthority {
 
-    private static transient final String TAG = AADTestAuthority.class.getSimpleName();
+    private static final String TAG = AADTestAuthority.class.getSimpleName();
 
     public AADTestAuthority() {
         // using organizations audience as common does not support ropc
