@@ -35,6 +35,11 @@ public class ArgumentException extends BaseException {
     private String mOperationName;
     private String mArgumentName;
 
+    public ArgumentException(final String argumentName, final String message) {
+        super(ILLEGAL_ARGUMENT_ERROR_CODE, message);
+        mArgumentName = argumentName;
+    }
+
     public ArgumentException(final String operationName, final String argumentName, final String message) {
         super(ILLEGAL_ARGUMENT_ERROR_CODE, message);
         mOperationName = operationName;
