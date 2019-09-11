@@ -384,7 +384,7 @@ public final class ErrorStrings {
      * Some or all requested scopes where declined by the server. Developer should decide whether to continue
      * authentication with the granted scopes or end the authentication process.
      */
-    public static final String DECLINED_SCOPE_ERROR_CODE = "Declined scope error";
+    public static final String DECLINED_SCOPE_ERROR_CODE = "declined_scope_error";
     public static final String DECLINED_SCOPE_ERROR_MESSAGE = "Some or all requested scopes have been declined by the Server";
 
 }
