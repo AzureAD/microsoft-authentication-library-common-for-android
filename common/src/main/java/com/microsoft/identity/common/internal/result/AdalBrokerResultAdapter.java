@@ -71,7 +71,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         );
         resultBundle.putString(
                 AuthenticationConstants.Broker.ACCOUNT_USERINFO_GIVEN_NAME,
-                accountRecord.getName()
+                accountRecord.getFirstName()
         );
         resultBundle.putString(
                 AuthenticationConstants.Broker.ACCOUNT_USERINFO_FAMILY_NAME,
