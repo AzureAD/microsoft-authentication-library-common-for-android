@@ -130,7 +130,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         // callers to pass non-URL-encoded signature hashes into the library despite the documentation
         // prescribing otherwise. The ADAL.NET implementation unfortunately RELIES on this behavior,
         // forcing customers to use non-encoded values in order to pass validation check inside of
-        // ADAL.NET. In order to not regress this experience, the redirect URI must not be computed
+        // ADAL.NET. In order to not regress this experience, the redirect URI must now be computed
         // meaning that the ACCOUNT_REDIRECT parameter is basically ignored.
         parameters.setRedirectUri(
                 BrokerValidator.getBrokerRedirectUri(
