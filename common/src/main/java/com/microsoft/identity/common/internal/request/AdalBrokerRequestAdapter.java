@@ -28,10 +28,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Pair;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
@@ -39,6 +40,7 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
@@ -48,6 +50,8 @@ import com.microsoft.identity.common.internal.result.AdalBrokerResultAdapter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -105,7 +109,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         // V1 endpoint always add an organizational account if the tenant id is common.
         // We need to explicitly add tenant id as organizations if we want similar behavior from V2 endpoint
 
-        if(authority.getAudience().getTenantId().equalsIgnoreCase(AzureActiveDirectoryAudience.ALL)){
+        if (authority.getAudience().getTenantId().equalsIgnoreCase(AzureActiveDirectoryAudience.ALL)) {
             authority.getAudience().setTenantId(AzureActiveDirectoryAudience.ORGANIZATIONS);
         }
         parameters.setAuthority(authority);
@@ -121,8 +125,18 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY)
         );
 
+        // V1 Broker would compute the redirect_uri for the calling package, rather than
+        // 'trust' the provided value -- this had the unfortunate consequence of allowing
+        // callers to pass non-URL-encoded signature hashes into the library despite the documentation
+        // prescribing otherwise. The ADAL.NET implementation unfortunately RELIES on this behavior,
+        // forcing customers to use non-encoded values in order to pass validation check inside of
+        // ADAL.NET. In order to not regress this experience, the redirect URI must now be computed
+        // meaning that the ACCOUNT_REDIRECT parameter is basically ignored.
         parameters.setRedirectUri(
-                intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_REDIRECT)
+                BrokerValidator.getBrokerRedirectUri(
+                        callingActivity,
+                        parameters.getCallerPackageName()
+                )
         );
 
         parameters.setLoginHint(intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_NAME));
@@ -207,13 +221,8 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 )
         );
 
-        String redirectUri = bundle.getString(
-                AuthenticationConstants.Broker.ACCOUNT_REDIRECT);
-        // Adal might not pass in the redirect uri, in that case calculate from broker validator
-        if(TextUtils.isEmpty(redirectUri)){
-            redirectUri = BrokerValidator.getBrokerRedirectUri(context, packageName);
-        }
-        parameters.setRedirectUri(redirectUri);
+        // Always compute the redirect uri
+        parameters.setRedirectUri(BrokerValidator.getBrokerRedirectUri(context, packageName));
 
         parameters.setForceRefresh(Boolean.parseBoolean(
                 bundle.getString(AuthenticationConstants.Broker.BROKER_FORCE_REFRESH))
@@ -270,7 +279,6 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     /**
      * TODO : Refactor to remove this code and move the logic to better place
-     *
      */
     public static AzureActiveDirectoryAuthority getRequestAuthorityWithExtraQP(final String authority,
                                                                                final List<Pair<String, String>> extraQP) {
@@ -301,7 +309,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
                     requestAuthority.mMultipleCloudsSupported =
                             null != parameter.second &&
-                            parameter.second.equalsIgnoreCase(Boolean.TRUE.toString());
+                                    parameter.second.equalsIgnoreCase(Boolean.TRUE.toString());
 
                     extraQP.remove(parameter);
 

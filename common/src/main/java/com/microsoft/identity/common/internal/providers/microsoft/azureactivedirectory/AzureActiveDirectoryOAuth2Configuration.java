@@ -34,7 +34,7 @@ public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration
     private URL mAuthorityUrl;
     private Map<String, String> mFlightParameters = new HashMap<>();
     private AzureActiveDirectorySlice mSlice;
-    private Boolean mMultipleCloudsSupported;
+    private boolean mMultipleCloudsSupported;
 
     /**
      * @return True if authority host validation enabled, false otherwise.
@@ -74,11 +74,11 @@ public class AzureActiveDirectoryOAuth2Configuration extends OAuth2Configuration
         mSlice = slice;
     }
 
-    public void setMultipleCloudsSupported(Boolean supported){
+    public void setMultipleCloudsSupported(boolean supported){
         mMultipleCloudsSupported = supported;
     }
 
-    public Boolean getMultipleCloudsSupported(){
+    public boolean getMultipleCloudsSupported(){
         return mMultipleCloudsSupported;
     }
 

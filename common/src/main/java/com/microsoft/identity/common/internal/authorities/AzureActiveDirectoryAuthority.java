@@ -50,7 +50,7 @@ public class AzureActiveDirectoryAuthority extends Authority {
     @SerializedName("flight_parameters")
     public Map<String, String> mFlightParameters;
 
-    public Boolean mMultipleCloudsSupported = false;
+    public boolean mMultipleCloudsSupported = false;
 
 
     private AzureActiveDirectoryCloud mAzureActiveDirectoryCloud;
@@ -97,11 +97,11 @@ public class AzureActiveDirectoryAuthority extends Authority {
         return this.mFlightParameters;
     }
 
-    public void setMultipleCloudsSupported(Boolean supported) {
+    public void setMultipleCloudsSupported(boolean supported) {
         mMultipleCloudsSupported = supported;
     }
 
-    public Boolean getMultipleCloudsSupported() {
+    public boolean getMultipleCloudsSupported() {
         return mMultipleCloudsSupported;
     }
 
