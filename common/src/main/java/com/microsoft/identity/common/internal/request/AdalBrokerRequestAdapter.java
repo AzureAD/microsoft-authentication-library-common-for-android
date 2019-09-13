@@ -28,10 +28,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Pair;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
@@ -105,7 +106,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         // V1 endpoint always add an organizational account if the tenant id is common.
         // We need to explicitly add tenant id as organizations if we want similar behavior from V2 endpoint
 
-        if(authority.getAudience().getTenantId().equalsIgnoreCase(AzureActiveDirectoryAudience.ALL)){
+        if (authority.getAudience().getTenantId().equalsIgnoreCase(AzureActiveDirectoryAudience.ALL)) {
             authority.getAudience().setTenantId(AzureActiveDirectoryAudience.ORGANIZATIONS);
         }
         parameters.setAuthority(authority);
@@ -210,7 +211,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         String redirectUri = bundle.getString(
                 AuthenticationConstants.Broker.ACCOUNT_REDIRECT);
         // Adal might not pass in the redirect uri, in that case calculate from broker validator
-        if(TextUtils.isEmpty(redirectUri)){
+        if (TextUtils.isEmpty(redirectUri)) {
             redirectUri = BrokerValidator.getBrokerRedirectUri(context, packageName);
         }
         parameters.setRedirectUri(redirectUri);
@@ -270,7 +271,6 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     /**
      * TODO : Refactor to remove this code and move the logic to better place
-     *
      */
     public static AzureActiveDirectoryAuthority getRequestAuthorityWithExtraQP(final String authority,
                                                                                final List<Pair<String, String>> extraQP) {
@@ -301,7 +301,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
                     requestAuthority.mMultipleCloudsSupported =
                             null != parameter.second &&
-                            parameter.second.equalsIgnoreCase(Boolean.TRUE.toString());
+                                    parameter.second.equalsIgnoreCase(Boolean.TRUE.toString());
 
                     extraQP.remove(parameter);
 
