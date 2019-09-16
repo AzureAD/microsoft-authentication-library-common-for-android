@@ -68,8 +68,8 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
                 @Override
                 public void run() {
                     String loadUrl = pKeyAuthChallenge.getSubmitUrl();
-                    Logger.verbose(TAG, "Respond to pkeyAuth challenge");
-                    Logger.verbosePII(TAG, "Challenge submit url:" + pKeyAuthChallenge.getSubmitUrl());
+                    Logger.info(TAG, "Respond to pkeyAuth challenge");
+                    Logger.infoPII(TAG, "Challenge submit url:" + pKeyAuthChallenge.getSubmitUrl());
 
                     mWebView.loadUrl(loadUrl, header);
                 }

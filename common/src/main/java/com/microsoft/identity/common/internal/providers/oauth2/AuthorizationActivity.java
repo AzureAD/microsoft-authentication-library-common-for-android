@@ -123,7 +123,7 @@ public final class AuthorizationActivity extends Activity {
                 resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_SUBCODE));
             }
         } else {
-            Logger.verbose(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
+            Logger.info(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
             resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
         }
 
@@ -202,8 +202,8 @@ public final class AuthorizationActivity extends Activity {
                 public void run() {
                     // load blank first to avoid error for not loading webView
                     mWebView.loadUrl("about:blank");
-                    Logger.verbose(TAG + methodName, "Launching embedded WebView for acquiring auth code.");
-                    Logger.verbosePII(TAG + methodName, "The start url is " + mAuthorizationRequestUrl);
+                    Logger.info(TAG + methodName, "Launching embedded WebView for acquiring auth code.");
+                    Logger.infoPII(TAG + methodName, "The start url is " + mAuthorizationRequestUrl);
                     mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
                 }
             });
@@ -413,7 +413,7 @@ public final class AuthorizationActivity extends Activity {
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {
         @Override
         public void onChallengeResponseReceived(final int returnCode, final Intent responseIntent) {
-            Logger.verbose(TAG, null, "onChallengeResponseReceived:" + returnCode);
+            Logger.info(TAG, null, "onChallengeResponseReceived:" + returnCode);
             sendResult(returnCode, responseIntent);
             finish();
         }
@@ -421,7 +421,7 @@ public final class AuthorizationActivity extends Activity {
         @Override
         public void setPKeyAuthStatus(final boolean status) {
             mPkeyAuthStatus = status;
-            Logger.verbose(TAG, null, "setPKeyAuthStatus:" + status);
+            Logger.info(TAG, null, "setPKeyAuthStatus:" + status);
         }
     }
 }

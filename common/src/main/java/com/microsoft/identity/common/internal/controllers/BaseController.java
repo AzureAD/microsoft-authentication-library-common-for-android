@@ -193,7 +193,7 @@ public abstract class BaseController {
                                     @NonNull final ICacheRecord cacheRecord)
             throws IOException, ClientException {
         final String methodName = ":renewAccessToken";
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Renewing access token..."
         );
@@ -207,7 +207,7 @@ public abstract class BaseController {
         logResult(TAG + methodName, tokenResult);
 
         if (tokenResult.getSuccess()) {
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "Token request was successful"
             );
@@ -249,7 +249,7 @@ public abstract class BaseController {
         final String TAG = tag + ":" + result.getClass().getSimpleName();
 
         if (result.getSuccess()) {
-            Logger.verbose(
+            Logger.info(
                     TAG,
                     "Success Result"
             );
@@ -284,7 +284,7 @@ public abstract class BaseController {
             AuthorizationResult authResult = (AuthorizationResult) result;
 
             if (authResult.getAuthorizationStatus() != null) {
-                Logger.verbose(
+                Logger.info(
                         TAG,
                         "Authorization Status: " + authResult.getAuthorizationStatus().toString()
                 );
@@ -302,16 +302,16 @@ public abstract class BaseController {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
         if (Logger.getAllowPii()) {
-            Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+            Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
         } else {
-            Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
+            Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
         }
     }
 
     protected static void logExposedFieldsOfObject(@NonNull final String tag,
                                                    @NonNull final Object object) {
         final String TAG = tag + ":" + object.getClass().getSimpleName();
-        Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
+        Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
     }
 
     protected TokenResult performSilentTokenRequest(
@@ -320,7 +320,7 @@ public abstract class BaseController {
             throws ClientException, IOException {
         final String methodName = ":performSilentTokenRequest";
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Requesting tokens..."
         );
@@ -351,7 +351,7 @@ public abstract class BaseController {
         }
 
         if (!StringExtensions.isNullOrBlank(refreshTokenRequest.getScope())) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "Scopes: [" + refreshTokenRequest.getScope() + "]"
             );
@@ -366,7 +366,7 @@ public abstract class BaseController {
                                             @NonNull final OAuth2TokenCache tokenCache) throws ClientException {
         final String methodName = ":saveTokens";
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Saving tokens..."
         );
@@ -461,6 +461,7 @@ public abstract class BaseController {
     }
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
+        final String methodName = ":isMsaAccount";
         final String tenantId = SchemaUtil.getTenantId(
                 microsoftTokenResponse.getClientInfo(),
                 microsoftTokenResponse.getIdToken()
