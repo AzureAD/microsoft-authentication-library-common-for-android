@@ -101,7 +101,7 @@ public class Telemetry {
         return sTelemetryInstance;
     }
 
-    TelemetryContext getTelemetryContext() {
+    public TelemetryContext getTelemetryContext() {
         return mTelemetryContext;
     }
 
@@ -239,6 +239,7 @@ public class Telemetry {
             finalRawMap.add(applyPiiOiiRule(mTelemetryContext.getProperties()));
 
             for (ITelemetryObserver observer : mObservers) {
+                //You can add more obersers by implementing the ITelemetryDefaultObserver interface.
                 if (observer instanceof ITelemetryAggregatedObserver) {
                     new TelemetryAggregationAdapter((ITelemetryAggregatedObserver)observer).process(finalRawMap);
                 } else if (observer instanceof ITelemetryDefaultObserver) {

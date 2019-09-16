@@ -81,7 +81,7 @@ public abstract class Credential extends AccountCredentialBase {
     private String mClientId;
 
     /**
-     * A designated {@link CredentialType} represnted as a String.
+     * A designated {@link CredentialType} represented as a String.
      */
     @SerializedName(CREDENTIAL_TYPE)
     private String mCredentialType;

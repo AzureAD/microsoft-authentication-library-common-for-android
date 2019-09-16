@@ -35,4 +35,9 @@ public class BrokerStartEvent extends BaseEvent {
         put(Key.BROKER_ACTION, actionName);
         return this;
     }
+
+    public BrokerStartEvent putStrategy(final String strategyName) {
+        put(Key.BROKER_STRATEGY, strategyName);
+        return this;
+    }
 }

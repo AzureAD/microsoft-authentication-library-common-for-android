@@ -41,11 +41,16 @@ public class CacheStartEvent extends BaseEvent {
     }
 
     public CacheStartEvent isMrrt(final boolean isMrrt) {
-        put(Key.IS_FRT, String.valueOf(isMrrt));
+        put(Key.IS_MRRT, String.valueOf(isMrrt));
         return this;
     }
     public CacheStartEvent isRt(final boolean isRt) {
-        put(Key.IS_FRT, String.valueOf(isRt));
+        put(Key.IS_RT, String.valueOf(isRt));
+        return this;
+    }
+
+    public CacheStartEvent isAt(final boolean isAt) {
+        put(Key.IS_AT, String.valueOf(isAt));
         return this;
     }
 
