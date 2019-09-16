@@ -187,22 +187,11 @@ public final class SchemaUtil {
                 final Map<String, ?> idTokenClaims = idToken.getTokenClaims();
 
                 if (null != idTokenClaims) {
-                    final String aadVersion = (String) idTokenClaims.get(
-                            AuthenticationConstants.OAuth2.AAD_VERSION
-                    );
-                    if (!TextUtils.isEmpty(aadVersion) &&
-                            aadVersion.equalsIgnoreCase(AuthenticationConstants.OAuth2.AAD_VERSION_V1)) {
-
-                        idp = (String) idTokenClaims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
-
-                    } else if (!TextUtils.isEmpty(aadVersion) &&
-                            aadVersion.equalsIgnoreCase(AuthenticationConstants.OAuth2.AAD_VERSION_V2)) {
-
-                        idp = (String) idTokenClaims.get(MicrosoftIdToken.ISSUER);
-                    }
+                    // IDP claim is present only in case of guest scenerio and is empty for home tenants.
+                    // Few Apps consuming ADAL use this to differentiate between home vs guest accounts.
+                    idp = (String) idTokenClaims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
 
                     Logger.verbosePII(TAG + ":" + methodName, "idp: " + idp);
-
                     if (null == idp) {
                         Logger.info(TAG + ":" + methodName, "idp claim was null.");
                     }
