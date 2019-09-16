@@ -195,14 +195,6 @@ public final class SchemaUtil {
 
                         idp = (String) idTokenClaims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
 
-                        // For home accounts idp claim is not available, use iss claim instead.
-                        if (TextUtils.isEmpty(idp)) {
-                            Logger.info(TAG + ":" + methodName,
-                                    "idp claim was null, using iss claim"
-                            );
-                            idp = (String) idTokenClaims.get(MicrosoftIdToken.ISSUER);
-                        }
-
                     } else if (!TextUtils.isEmpty(aadVersion) &&
                             aadVersion.equalsIgnoreCase(AuthenticationConstants.OAuth2.AAD_VERSION_V2)) {
 
@@ -212,7 +204,7 @@ public final class SchemaUtil {
                     Logger.verbosePII(TAG + ":" + methodName, "idp: " + idp);
 
                     if (null == idp) {
-                        Logger.warn(TAG + ":" + methodName, "idp claim was null.");
+                        Logger.info(TAG + ":" + methodName, "idp claim was null.");
                     }
                 } else {
                     Logger.warn(TAG + ":" + methodName, "IDToken claims were null.");
