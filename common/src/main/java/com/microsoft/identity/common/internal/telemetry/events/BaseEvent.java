@@ -31,10 +31,10 @@ import com.microsoft.identity.common.internal.telemetry.Properties;
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
 public class BaseEvent extends Properties {
-    BaseEvent() {
+    public BaseEvent() {
         super();
         occurs(System.currentTimeMillis());
-        correlationId(DiagnosticContext.getRequestContext().get(Key.CORRELATION_ID));
+        correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
     }
 
     /**

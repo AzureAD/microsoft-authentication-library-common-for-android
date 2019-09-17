@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.HttpEndEvent;
+import com.microsoft.identity.common.internal.telemetry.events.HttpStartEvent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -41,6 +44,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
 import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactory.createHttpURLConnection;
 
 /**
@@ -120,19 +124,22 @@ public final class HttpRequest {
      * @return HttpResponse
      * @throws IOException throw if error happen during http send request.
      */
-    public static HttpResponse sendPost(final URL requestUrl,
-                                        final Map<String, String> requestHeaders,
-                                        final byte[] requestContent,
-                                        final String requestContentType) throws IOException {
-        final HttpRequest httpRequest = new HttpRequest(
-                requestUrl,
-                requestHeaders,
-                REQUEST_METHOD_POST,
-                requestContent,
-                requestContentType
+    public static HttpResponse sendPost(final URL requestUrl, final Map<String, String> requestHeaders,
+                                        final byte[] requestContent, final String requestContentType)
+            throws IOException {
+        Telemetry.emit(
+                new HttpStartEvent()
+                        .putMethod(REQUEST_METHOD_POST)
+                        .putPath(requestUrl)
+                        .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
         );
 
-        return httpRequest.send();
+        final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_POST,
+                requestContent, requestContentType);
+        final HttpResponse response = httpRequest.send();
+        Telemetry.emit(new HttpEndEvent().putStatusCode(response.getStatusCode()));
+
+        return response;
     }
 
     /**
@@ -143,15 +150,23 @@ public final class HttpRequest {
      * @return HttpResponse
      * @throws IOException throw if service error happen during http request.
      */
-    public static HttpResponse sendGet(final URL requestUrl,
-                                       final Map<String, String> requestHeaders) throws IOException {
-        final HttpRequest httpRequest = new HttpRequest(
-                requestUrl,
-                requestHeaders,
-                REQUEST_METHOD_GET
+    public static HttpResponse sendGet(final URL requestUrl, final Map<String, String> requestHeaders)
+            throws IOException {
+        Telemetry.emit(
+                new HttpStartEvent()
+                        .putMethod(REQUEST_METHOD_GET)
+                        .putPath(requestUrl)
+                        .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
         );
 
-        return httpRequest.send();
+        final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
+        final HttpResponse response =  httpRequest.send();
+
+        Telemetry.emit(
+                new HttpEndEvent()
+                        .putStatusCode(response.getStatusCode())
+        );
+        return response;
     }
 
     /**

@@ -26,9 +26,15 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.provider.Settings;
+
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
+
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -53,7 +59,7 @@ public class TelemetryContext extends Properties {
     static synchronized TelemetryContext create(final Context context) {
         final TelemetryContext telemetryContext = new TelemetryContext(new ConcurrentHashMap<String, String>());
         telemetryContext.addApplicationInfo(context);
-        telemetryContext.addDeviceInfo();
+        telemetryContext.addDeviceInfo(context);
         telemetryContext.addOsInfo();
         telemetryContext.put(Device.TIMEZONE, TimeZone.getDefault().getID());
         return telemetryContext;
@@ -63,7 +69,7 @@ public class TelemetryContext extends Properties {
         try {
             final PackageManager packageManager = context.getPackageManager();
             final PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
-            put(App.NAME, packageInfo.applicationInfo.loadLabel(packageManager).toString());
+            put(App.NAME, packageInfo.applicationInfo.packageName);
             put(App.VERSION, packageInfo.versionName);
             put(App.BUILD, String.valueOf(packageInfo.versionCode));
         } catch (final PackageManager.NameNotFoundException e) {
@@ -72,10 +78,23 @@ public class TelemetryContext extends Properties {
         }
     }
 
-    void addDeviceInfo() {
+    void addDeviceInfo(@NonNull final Context context) {
         put(Device.MANUFACTURER, Build.MANUFACTURER);
         put(Device.MODEL, Build.MODEL);
         put(Device.NAME, Build.DEVICE);
+        try {
+            put(
+                    Device.ID,
+                    StringExtensions.createHash(
+                            Settings.Secure.getString(
+                                    context.getContentResolver(),
+                                    Settings.Secure.ANDROID_ID
+                            )
+                    )
+            );
+        } catch (final NoSuchAlgorithmException | UnsupportedEncodingException exception) {
+            Logger.warn(TAG, "Unable to get the device id.");
+        }
     }
 
     void addOsInfo() {
@@ -85,5 +104,13 @@ public class TelemetryContext extends Properties {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             put(Os.SECURITY_PATCH, Build.VERSION.SECURITY_PATCH);
         }
+    }
+
+    public void isNetworkDisabledFromOptimizations(final boolean isDozed) {
+        put(Key.POWER_OPTIMIZATION, String.valueOf(isDozed));
+    }
+
+    public void isNetworkConnected(final boolean isConnected) {
+        put(Key.NETWORK_CONNECTION, String.valueOf(isConnected));
     }
 }

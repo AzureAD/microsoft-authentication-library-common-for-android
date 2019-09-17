@@ -38,7 +38,7 @@ final public class TelemetryPiiOiiRules {
 
     final private String piiArray[] = {
             Key.USER_ID,
-            Key.DEVICE_ID,
+            Device.ID,
             Key.LOGIN_HINT,
             Key.ERROR_DESCRIPTION,
             Key.REQUEST_QUERY_PARAMS,
@@ -53,9 +53,7 @@ final public class TelemetryPiiOiiRules {
             Key.REDIRECT_URI,
             Key.HTTP_PATH,
             Key.AUTHORITY,
-            Key.IDP,
-            Key.APPLICATION_NAME,
-            Key.APPLICATION_VERSION
+            Key.IDP_NAME
     };
 
     private TelemetryPiiOiiRules() {
@@ -100,10 +98,6 @@ final public class TelemetryPiiOiiRules {
      * @return true if the property belongs to PII/OII. False otherwise.
      */
     public boolean isPiiOrOii (final String propertyName) {
-        if (StringUtil.isEmpty(propertyName)) {
-            return false;
-        }
-
-        return piiPropertiesSet.contains(propertyName) || oiiPropertiesSet.contains(propertyName);
+        return isPii(propertyName) || isOii(propertyName);
     }
 }
