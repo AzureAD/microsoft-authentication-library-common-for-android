@@ -461,8 +461,7 @@ public abstract class BaseController {
     }
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
-        final String methodName = ":isMsaAccount";
-        final String tenantId = SchemaUtil.getTenantId(
+                final String tenantId = SchemaUtil.getTenantId(
                 microsoftTokenResponse.getClientInfo(),
                 microsoftTokenResponse.getIdToken()
         );
