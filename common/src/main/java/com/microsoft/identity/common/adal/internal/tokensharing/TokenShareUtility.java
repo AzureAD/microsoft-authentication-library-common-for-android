@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
+import android.net.Uri;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
@@ -64,6 +65,8 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     private static final String TAG = TokenShareUtility.class.getSimpleName();
     private static final Map<String, String> sClaimRemapper = new HashMap<>();
+    private static final String AUDIENCE_PATH_CONSUMERS = "/consumers";
+    private static final String AUDIENCE_PATH_ORGANIZATIONS = "/organizations";
 
     /**
      * To support caching lookups in ADAL, the following authority is used to signal
@@ -232,7 +235,25 @@ public class TokenShareUtility implements ITokenShareInternal {
                 sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
                     public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
-                        final ADALTokenCacheItem cacheItemToRenew = createTokenCacheItem(refreshToken);
+                        // Use the /consumers endpoint relative to the current cloud
+                        final Uri defaultAuthorityUri = Uri.parse(mDefaultAuthority);
+
+                        final String tenantPath = defaultAuthorityUri.getPath();
+                        final String requestAuthority;
+
+                        if (null != tenantPath) {
+                            requestAuthority = mDefaultAuthority.replace(
+                                    tenantPath,
+                                    AUDIENCE_PATH_CONSUMERS
+                            );
+                        } else {
+                            requestAuthority = mDefaultAuthority;
+                        }
+
+                        final ADALTokenCacheItem cacheItemToRenew = createTokenCacheItem(
+                                refreshToken,
+                                requestAuthority
+                        );
 
                         // Check that instance discovery metadata is loaded before making the request...
                         final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata();
@@ -255,11 +276,12 @@ public class TokenShareUtility implements ITokenShareInternal {
         saveResult(resultPair);
     }
 
-    private ADALTokenCacheItem createTokenCacheItem(@NonNull final String refreshToken) {
+    private ADALTokenCacheItem createTokenCacheItem(@NonNull final String refreshToken,
+                                                    @NonNull final String authority) {
         final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem();
 
         // Set only the minimally required properties...
-        cacheItem.setAuthority(mDefaultAuthority);
+        cacheItem.setAuthority(authority);
         cacheItem.setClientId(mClientId);
         cacheItem.setRefreshToken(refreshToken);
 
