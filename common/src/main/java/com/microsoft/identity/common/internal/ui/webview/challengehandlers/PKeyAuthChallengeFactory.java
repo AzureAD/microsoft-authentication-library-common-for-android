@@ -103,12 +103,12 @@ public class PKeyAuthChallengeFactory {
         // the device is not managed. To account for the behavior of how ADFS performs device auth, below code is checking
         // if it's already workplace joined before checking the existence of cert thumbprint or authority from returned challenge.
         if (!isWorkplaceJoined()) {
-            Logger.verbose(TAG, "Device is not workplace joined. ");
+            Logger.info(TAG, "Device is not workplace joined. ");
         } else if (!StringExtensions.isNullOrBlank(headerItems.get(PKeyAuthChallengeHandler.RequestField.CertThumbprint.name()))) {
-            Logger.verbose(TAG, "CertThumbprint exists in the device auth challenge.");
+            Logger.info(TAG, "CertThumbprint exists in the device auth challenge.");
             builder.setThumbprint(headerItems.get(PKeyAuthChallengeHandler.RequestField.CertThumbprint.name()));
         } else if (headerItems.containsKey(PKeyAuthChallengeHandler.RequestField.CertAuthorities.name())) {
-            Logger.verbose(TAG, "CertAuthorities exists in the device auth challenge.");
+            Logger.info(TAG, "CertAuthorities exists in the device auth challenge.");
             String authorities = headerItems.get(PKeyAuthChallengeHandler.RequestField.CertAuthorities.name());
             builder.setCertAuthorities(StringExtensions.getStringTokens(authorities,
                     CHALLENGE_REQUEST_CERT_AUTH_DELIMITER));

@@ -236,7 +236,7 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
         final String methodName = ":createAuthorizationRequestBuilder";
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Creating AuthorizationRequestBuilder..."
         );
@@ -245,7 +245,7 @@ public class MicrosoftStsOAuth2Strategy
         builder.setAuthority(mConfig.getAuthorityUrl());
 
         if (mConfig.getSlice() != null) {
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "Setting slice params..."
             );
@@ -270,7 +270,7 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder(
             @Nullable final IAccountRecord account) {
         final String methodName = ":createAuthorizationRequestBuilder";
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Creating AuthorizationRequestBuilder"
         );
@@ -286,12 +286,12 @@ public class MicrosoftStsOAuth2Strategy
                 builder.setUid(uidUtidPair.first);
                 builder.setUtid(uidUtidPair.second);
 
-                Logger.verbosePII(
+                Logger.infoPII(
                         TAG + methodName,
                         "Builder w/ uid: [" + uidUtidPair.first + "]"
                 );
 
-                Logger.verbosePII(
+                Logger.infoPII(
                         TAG + methodName,
                         "Builder w/ utid: [" + uidUtidPair.second + "]"
                 );
