@@ -66,7 +66,6 @@ public class TokenShareUtility implements ITokenShareInternal {
     private static final String TAG = TokenShareUtility.class.getSimpleName();
     private static final Map<String, String> sClaimRemapper = new HashMap<>();
     private static final String AUDIENCE_PATH_CONSUMERS = "/consumers";
-    private static final String AUDIENCE_PATH_ORGANIZATIONS = "/organizations";
 
     /**
      * To support caching lookups in ADAL, the following authority is used to signal
