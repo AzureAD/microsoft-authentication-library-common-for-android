@@ -300,7 +300,7 @@ public final class AuthorizationActivity extends Activity {
     @Override
     protected void onDestroy() {
         final String methodName = "#onDestroy";
-        Logger.verbose(TAG + methodName, "");
+        Logger.info(TAG + methodName, "");
         if(!mAuthResultSent){
             Logger.info(TAG + methodName,
                     "Activity is destroyed before Auth request is completed, sending request cancel"
@@ -330,7 +330,7 @@ public final class AuthorizationActivity extends Activity {
             final String appLink = parameters.get(INSTALL_URL_KEY);
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(appLink));
             startActivity(browserIntent);
-            Logger.verbose(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
+            Logger.info(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
             sendResult(AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME, resultIntent);
         } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL))) {
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, resultIntent);
@@ -371,7 +371,7 @@ public final class AuthorizationActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        Logger.verbose(TAG, "Back button is pressed");
+        Logger.info(TAG, "Back button is pressed");
         if ( null != mWebView && mWebView.canGoBack()) {
             // User should be able to click back button to cancel. Counting blank page as well.
             final int BACK_PRESSED_STEPS = -2;

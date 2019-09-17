@@ -53,7 +53,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     @Override
     public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult) {
 
-        Logger.info(TAG , "Constructing success bundle from Authentication Result.");
+        Logger.verbose(TAG , "Constructing success bundle from Authentication Result.");
         final Bundle resultBundle = new Bundle();
 
         IAccountRecord accountRecord = authenticationResult.getAccountRecord();
@@ -123,7 +123,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     @Override
     public Bundle bundleFromBaseException(BaseException baseException) {
 
-        Logger.info(TAG , "Constructing error bundle from exception.");
+        Logger.verbose(TAG , "Constructing error bundle from exception.");
         final Bundle resultBundle = new Bundle();
 
         resultBundle.putString(
