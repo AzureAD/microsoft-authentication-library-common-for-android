@@ -240,8 +240,12 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 )
         );
 
-        // Always compute the redirect uri
-        parameters.setRedirectUri(BrokerValidator.getBrokerRedirectUri(context, packageName));
+        String redirectUri = bundle.getString(AuthenticationConstants.Broker.ACCOUNT_REDIRECT);
+        // Adal might not pass in the redirect uri, in that case calculate from broker validator
+        if (TextUtils.isEmpty(redirectUri)) {
+            redirectUri = BrokerValidator.getBrokerRedirectUri(context, packageName);
+        }
+        parameters.setRedirectUri(redirectUri);
 
         parameters.setForceRefresh(Boolean.parseBoolean(
                 bundle.getString(AuthenticationConstants.Broker.BROKER_FORCE_REFRESH))
