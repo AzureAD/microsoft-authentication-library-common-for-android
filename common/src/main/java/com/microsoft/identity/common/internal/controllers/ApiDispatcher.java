@@ -25,12 +25,13 @@ package com.microsoft.identity.common.internal.controllers;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
 import android.util.Pair;
+
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.UserCancelException;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
@@ -38,6 +39,7 @@ import com.microsoft.identity.common.internal.request.AcquireTokenOperationParam
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
 import java.util.List;
 import java.util.UUID;
@@ -62,9 +64,9 @@ public class ApiDispatcher {
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                initializeDiagnosticContext();
+                final String correlationId = initializeDiagnosticContext();
 
-                List<AccountRecord> result = null;
+                List<ICacheRecord> result = null;
                 BaseException baseException = null;
                 Handler handler = new Handler(Looper.getMainLooper());
 
@@ -91,7 +93,7 @@ public class ApiDispatcher {
                         }
                     });
                 } else {
-                    final List<AccountRecord> finalAccountsList = result;
+                    final List<ICacheRecord> finalAccountsList = result;
 
                     handler.post(new Runnable() {
                         @Override
@@ -100,6 +102,8 @@ public class ApiDispatcher {
                         }
                     });
                 }
+
+                Telemetry.getInstance().flush(correlationId);
             }
         });
     }
@@ -113,7 +117,7 @@ public class ApiDispatcher {
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                initializeDiagnosticContext();
+                final String correlationId = initializeDiagnosticContext();
 
                 boolean result = false;
                 BaseException baseException = null;
@@ -151,36 +155,39 @@ public class ApiDispatcher {
                         }
                     });
                 }
+
+                Telemetry.getInstance().flush(correlationId);
             }
         });
     }
 
     public static void beginInteractive(final InteractiveTokenCommand command) {
         final String methodName = ":beginInteractive";
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Beginning interactive request"
         );
         synchronized (sLock) {
             // Send a broadcast to cancel if any active auth request is present.
             command.getParameters().getAppContext().sendBroadcast(
-                            new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
+                    new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
             );
 
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    initializeDiagnosticContext();
+                    final String correlationId = initializeDiagnosticContext();
 
                     if (command.mParameters instanceof AcquireTokenOperationParameters) {
                         logInteractiveRequestParameters(methodName, (AcquireTokenOperationParameters) command.mParameters);
                     }
 
-                    sCommand = command;
                     AcquireTokenResult result = null;
                     BaseException baseException = null;
 
                     try {
+                        sCommand = command;
+                        
                         //Try executing request
                         result = command.execute();
                     } catch (Exception e) {
@@ -195,6 +202,8 @@ public class ApiDispatcher {
                         } else {
                             baseException = ExceptionAdapter.baseExceptionFromException(e);
                         }
+                    } finally {
+                        sCommand = null;
                     }
 
                     Handler handler = new Handler(Looper.getMainLooper());
@@ -240,6 +249,8 @@ public class ApiDispatcher {
                             }
                         }
                     }
+
+                    Telemetry.getInstance().flush(correlationId);
                 }
             });
         }
@@ -247,47 +258,47 @@ public class ApiDispatcher {
 
     private static void logInteractiveRequestParameters(final String methodName,
                                                         final AcquireTokenOperationParameters params) {
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Requested "
                         + params.getScopes().size()
                         + " scopes"
         );
 
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "----\nRequested scopes:"
         );
         for (final String scope : params.getScopes()) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "\t" + scope
             );
         }
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "----"
         );
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "ClientId: [" + params.getClientId() + "]"
         );
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "RedirectUri: [" + params.getRedirectUri() + "]"
         );
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "Login hint: [" + params.getLoginHint() + "]"
         );
 
         if (null != params.getExtraQueryStringParameters()) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "Extra query params:"
             );
             for (final Pair<String, String> qp : params.getExtraQueryStringParameters()) {
-                Logger.verbosePII(
+                Logger.infoPII(
                         TAG + methodName,
                         "\t\"" + qp.first + "\":\"" + qp.second + "\""
                 );
@@ -295,25 +306,25 @@ public class ApiDispatcher {
         }
 
         if (null != params.getExtraScopesToConsent()) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "Extra scopes to consent:"
             );
             for (final String extraScope : params.getExtraScopesToConsent()) {
-                Logger.verbosePII(
+                Logger.infoPII(
                         TAG + methodName,
                         "\t" + extraScope
                 );
             }
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Using authorization agent: " + params.getAuthorizationAgent().toString()
         );
 
         if (null != params.getAccount()) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "Using account: " + params.getAccount().getHomeAccountId()
             );
@@ -322,53 +333,58 @@ public class ApiDispatcher {
 
     private static void logSilentRequestParams(final String methodName,
                                                final AcquireTokenSilentOperationParameters parameters) {
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "ClientId: [" + parameters.getClientId() + "]"
         );
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "----\nRequested scopes:"
         );
 
         for (final String scope : parameters.getScopes()) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "\t" + scope
             );
         }
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "----"
         );
 
         if (null != parameters.getAccount()) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "Using account: " + parameters.getAccount().getHomeAccountId()
             );
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Force refresh? [" + parameters.getForceRefresh() + "]"
         );
     }
 
     public static void completeInteractive(int requestCode, int resultCode, final Intent data) {
-        sCommand.notify(requestCode, resultCode, data);
+        final String methodName = ":completeInteractive";
+        if (sCommand != null) {
+            sCommand.notify(requestCode, resultCode, data);
+        } else {
+            Logger.warn(TAG + methodName, "sCommand is null, No interactive call in progress to complete.");
+        }
     }
 
     public static void submitSilent(final TokenCommand command) {
         final String methodName = ":submitSilent";
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Beginning silent request"
         );
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                initializeDiagnosticContext();
+                final String correlationId = initializeDiagnosticContext();
 
                 if (command.mParameters instanceof AcquireTokenSilentOperationParameters) {
                     logSilentRequestParams(
@@ -410,7 +426,6 @@ public class ApiDispatcher {
                     });
                 } else {
                     if (null != result && result.getSucceeded()) {
-                        //Post Success
                         final ILocalAuthenticationResult authenticationResult = result.getLocalAuthenticationResult();
                         handler.post(new Runnable() {
                             @Override
@@ -422,6 +437,7 @@ public class ApiDispatcher {
                         //Get MsalException from Authorization and/or Token Error Response
                         baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
                         final BaseException finalException = baseException;
+
                         if (finalException instanceof UserCancelException) {
                             //Post Cancel
                             handler.post(new Runnable() {
@@ -440,6 +456,8 @@ public class ApiDispatcher {
                         }
                     }
                 }
+
+                Telemetry.getInstance().flush(correlationId);
             }
         });
     }

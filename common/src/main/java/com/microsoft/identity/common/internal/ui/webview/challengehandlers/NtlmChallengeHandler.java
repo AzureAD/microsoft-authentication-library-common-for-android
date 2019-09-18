@@ -33,7 +33,6 @@ import android.widget.EditText;
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 /**
  * Http authorization handler for NTLM challenge on web view.
@@ -62,21 +61,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
      */
     @Override
     public Void processChallenge(final NtlmChallenge ntlmChallenge) {
-        if (ntlmChallenge.getHandler().useHttpAuthUsernamePassword()
-                && ntlmChallenge.getView() != null) {
-            final String[] haup = ntlmChallenge.getView()
-                    .getHttpAuthUsernamePassword(ntlmChallenge.getHost(), ntlmChallenge.getRealm());
-            if (haup != null && haup.length == 2) {
-                final String userName = haup[0];
-                final String password = haup[1];
-                if (!StringUtil.isEmpty(userName) && !StringUtil.isEmpty(password)) {
-                    ntlmChallenge.getHandler().proceed(userName, password);
-                }
-            }
-        } else {
-            showHttpAuthDialog(ntlmChallenge);
-        }
-
+        showHttpAuthDialog(ntlmChallenge);
         return null;
     }
 
@@ -92,6 +77,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
                 .setPositiveButton(R.string.http_auth_dialog_login,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
+                                Logger.info(TAG, "Proceeding with user supplied username and password.");
                                 ntlmChallenge.getHandler().proceed(usernameView.getText().toString(), passwordView.getText().toString());
                             }
                         })
@@ -112,7 +98,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
     }
 
     private void cancelRequest() {
-        Logger.verbose(TAG, "Sending intent to cancel authentication activity");
+        Logger.info(TAG, "Sending intent to cancel authentication activity");
         mChallengeCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, new Intent());
     }
 }

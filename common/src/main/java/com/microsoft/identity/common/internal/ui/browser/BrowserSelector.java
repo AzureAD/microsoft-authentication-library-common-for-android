@@ -29,7 +29,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -60,7 +60,7 @@ public class BrowserSelector {
         for (Browser browser : allBrowsers) {
             for (BrowserDescriptor browserDescriptor : browserSafeList) {
                 if (browserDescriptor.matches(browser)) {
-                    Logger.verbose(
+                    Logger.info(
                             TAG,
                             "Browser's package name: "
                                     + browser.getPackageName()

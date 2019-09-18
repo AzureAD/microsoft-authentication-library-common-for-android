@@ -22,8 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -170,6 +170,11 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 matches = matches && realm.equalsIgnoreCase(accessToken.getRealm());
             }
 
+            if (mustMatchOnRealm && credential instanceof IdTokenRecord) {
+                final IdTokenRecord idToken = (IdTokenRecord) credential;
+                matches = matches && realm.equalsIgnoreCase(idToken.getRealm());
+            }
+
             if (mustMatchOnTarget) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
@@ -198,8 +203,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
      * @return True, if the credentialTarget contains all of the targets (scopes) declared by
      * targetToMatch. False otherwise.
      */
-    private static boolean targetsIntersect(@NonNull final String targetToMatch,
-                                            @NonNull final String credentialTarget) {
+    static boolean targetsIntersect(@NonNull final String targetToMatch,
+                                    @NonNull final String credentialTarget) {
         // The credentialTarget must contain all of the scopes in the targetToMatch
         // It may contain more, but it must contain minimally those
         // Matching is case-insensitive

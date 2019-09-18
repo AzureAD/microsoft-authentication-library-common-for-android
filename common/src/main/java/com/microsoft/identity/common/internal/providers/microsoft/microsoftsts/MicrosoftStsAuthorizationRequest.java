@@ -33,6 +33,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAutho
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.Map;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
@@ -58,6 +59,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
     //@SerializedName("login_hint")
     private transient String mDisplayableId;
+
+    private transient String mTokenScope;
 
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
@@ -89,6 +92,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mUid = builder.mUid;
         mUtid = builder.mUtid;
         mDisplayableId = builder.mDisplayableId;
+        mTokenScope = builder.mTokenScope;
     }
 
     public static class Builder extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest.Builder> {
@@ -96,6 +100,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         private String mUid;
         private String mUtid;
         private String mDisplayableId;
+        private String mTokenScope;
 
         public MicrosoftStsAuthorizationRequest.Builder setUid(String uid) {
             mUid = uid;
@@ -109,6 +114,11 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
         public MicrosoftStsAuthorizationRequest.Builder setDisplayableId(String displayableId) {
             mDisplayableId = displayableId;
+            return self();
+        }
+
+        public MicrosoftStsAuthorizationRequest.Builder setTokenScope(String tokenScope) {
+            mTokenScope = tokenScope;
             return self();
         }
 
@@ -138,31 +148,40 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         return mPrompt;
     }
 
+    public String getTokenScope() {return mTokenScope;}
+
     @Override
-    public Uri getAuthorizationRequestAsHttpRequest() throws UnsupportedEncodingException {
-        Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
-        for (Map.Entry<String, Object> entry : ObjectMapper.serializeObjectHashMap(this).entrySet()) {
-            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
+    public Uri getAuthorizationRequestAsHttpRequest() {
+        final Map<String, Object> qpMap = new HashMap<>();
+        qpMap.putAll(ObjectMapper.serializeObjectHashMap(this));
+
+        for (Map.Entry<String, String> entry : mFlightParameters.entrySet()) {
+            qpMap.put(entry.getKey(), entry.getValue());
+        }
+
+        if (mSlice != null) {
+            if (!TextUtils.isEmpty(mSlice.getSlice())) {
+                qpMap.put(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
+            }
+            if (!TextUtils.isEmpty(mSlice.getDC())) {
+                qpMap.put(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDC());
+            }
         }
 
         // Add extra qp, if present...
         if (null != getExtraQueryParams() && !getExtraQueryParams().isEmpty()) {
             for (final Pair<String, String> queryParam : getExtraQueryParams()) {
-                uriBuilder.appendQueryParameter(queryParam.first, queryParam.second);
+                //Skip appending for duplicated extra query parameters
+                if (!qpMap.containsKey(queryParam.first)) {
+                    qpMap.put(queryParam.first, queryParam.second);
+                }
             }
         }
 
-        for (Map.Entry<String, String> entry : mFlightParameters.entrySet()) {
-            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue());
-        }
+        final Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
 
-        if (mSlice != null) {
-            if(!TextUtils.isEmpty(mSlice.getSlice())) {
-                uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
-            }
-            if(!TextUtils.isEmpty(mSlice.getDC())) {
-                uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDC());
-            }
+        for (Map.Entry<String, Object> entry : qpMap.entrySet()) {
+            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
         }
 
         return uriBuilder.build();

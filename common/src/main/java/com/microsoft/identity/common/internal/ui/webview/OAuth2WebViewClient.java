@@ -27,7 +27,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.view.View;
 import android.webkit.HttpAuthHandler;
 import android.webkit.SslErrorHandler;
@@ -36,7 +36,6 @@ import android.webkit.WebViewClient;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
@@ -152,25 +151,25 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                               final String url,
                               final Bitmap favicon) {
         checkStartUrl(url);
-        Logger.verbose(TAG, "WebView starts loading.");
+        Logger.info(TAG, "WebView starts loading.");
         super.onPageStarted(view, url, favicon);
     }
 
     private void checkStartUrl(final String url) {
         if (StringUtil.isEmpty(url)) {
-            Logger.verbose(TAG, "onPageStarted: Null url for page to load.");
+            Logger.info(TAG, "onPageStarted: Null url for page to load.");
             return;
         }
 
         final Uri uri = Uri.parse(url);
         if (uri.isOpaque()) {
-            Logger.verbose(TAG, "onPageStarted: Non-hierarchical loading uri.");
-            Logger.verbosePII(TAG, "start url: " + url);
+            Logger.info(TAG, "onPageStarted: Non-hierarchical loading uri.");
+            Logger.infoPII(TAG, "start url: " + url);
         } else if (StringUtil.isEmpty(uri.getQueryParameter(AuthenticationConstants.OAuth2.CODE))) {
-            Logger.verbosePII(TAG, "Host: " + uri.getHost() + " Path: " + uri.getPath());
+            Logger.infoPII(TAG, "Host: " + uri.getHost() + " Path: " + uri.getPath());
         } else {
-            Logger.verbose(TAG, "Auth code is returned for the loading url.");
-            Logger.verbosePII(TAG, "Host: " + uri.getHost() + " Path: " + uri.getPath());
+            Logger.info(TAG, "Auth code is returned for the loading url.");
+            Logger.infoPII(TAG, "Host: " + uri.getHost() + " Path: " + uri.getPath());
         }
     }
 }

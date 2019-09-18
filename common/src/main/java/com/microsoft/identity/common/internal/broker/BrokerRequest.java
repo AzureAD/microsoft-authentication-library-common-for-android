@@ -22,8 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -50,6 +50,7 @@ public class BrokerRequest implements Serializable {
         final static String CLIENT_APP_NAME = "client_app_name";
         final static String CLIENT_APP_VERSION = "client_app_version";
         final static String CLIENT_VERSION = "client_version";
+        final static String ENVIRONMENT = "environment";
     }
 
     /**
@@ -160,6 +161,13 @@ public class BrokerRequest implements Serializable {
     @SerializedName(SerializedNames.CLIENT_VERSION)
     private String mMsalVersion;
 
+    /**
+     * AAD Environment
+     */
+    @NonNull
+    @SerializedName(SerializedNames.ENVIRONMENT)
+    private String mEnvironment;
+
 
     private BrokerRequest(BrokerRequest.Builder builder) {
         mAuthority = builder.mAuthority;
@@ -177,6 +185,7 @@ public class BrokerRequest implements Serializable {
         mApplicationName = builder.mApplicationName;
         mApplicationVersion = builder.mApplicationVersion;
         mMsalVersion = builder.mMsalVersion;
+        mEnvironment = builder.mEnvironment;
 
     }
 
@@ -241,6 +250,10 @@ public class BrokerRequest implements Serializable {
         return mMsalVersion;
     }
 
+    public String getEnvironment(){
+        return mEnvironment;
+    }
+
     /**
      * Builder class for Broker Request.
      */
@@ -275,6 +288,8 @@ public class BrokerRequest implements Serializable {
         private String mApplicationVersion;
 
         private String mMsalVersion;
+
+        private String mEnvironment;
 
 
         /**
@@ -400,6 +415,11 @@ public class BrokerRequest implements Serializable {
         @NonNull
         public BrokerRequest.Builder msalVersion(@NonNull final String version) {
             this.mMsalVersion = version;
+            return this;
+        }
+
+        public BrokerRequest.Builder environment(@NonNull final String environment){
+            this.mEnvironment = environment;
             return this;
         }
 

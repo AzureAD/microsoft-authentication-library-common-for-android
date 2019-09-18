@@ -22,8 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
@@ -35,6 +35,7 @@ import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallba
 import com.microsoft.identity.common.internal.request.SdkType;
 
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -50,12 +51,9 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private String mFamilyId;
     private String mSpeRing;
     private String mRefreshTokenAge;
+    private List<ICacheRecord> mCompleteResultFromCache;
 
     private static final String TAG = LocalAuthenticationResult.class.getName();
-
-    public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord) {
-        this(cacheRecord, SdkType.MSAL); // default sdk type as MSAL
-    }
 
     public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
                                      @Nullable String refreshToken,
@@ -67,6 +65,13 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
         mRawIdToken = rawIdToken;
         mFamilyId = familyId;
         mAccountRecord = accountRecord;
+    }
+
+    public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
+                                     @NonNull final List<ICacheRecord> completeResultFromCache,
+                                     @NonNull final SdkType sdkType) {
+        this(lastAuthorized, sdkType);
+        mCompleteResultFromCache = completeResultFromCache;
     }
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord, @NonNull SdkType sdkType) {
@@ -82,16 +87,16 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
                 cacheRecord.getIdToken();
         if (idTokenRecord != null) {
             mRawIdToken = idTokenRecord.getSecret();
-            Logger.verbose(TAG, "Id Token type: " +
+            Logger.info(TAG, "Id Token type: " +
                     idTokenRecord.getCredentialType());
         } else if (cacheRecord.getV1IdToken() != null) {
             // For all AAD requests, we hit the V2 endpoint, so the id token returned will be of version 2.0 (V2 )
             // However for B2C we might get back v1 id tokens, so check if getV1IdToken() is not null and add it
-            Logger.verbose(TAG, "V1 Id Token returned here, ");
+            Logger.info(TAG, "V1 Id Token returned here, ");
             mRawIdToken = cacheRecord.getV1IdToken().getSecret();
         }
 
-        Logger.verbose(TAG, "Constructing LocalAuthentication result" +
+        Logger.info(TAG, "Constructing LocalAuthentication result" +
                 ", AccessTokenRecord null: " + (mAccessTokenRecord == null) +
                 ", AccountRecord null: " + (mAccountRecord == null) +
                 ", RefreshTokenRecord null or empty: " + TextUtils.isEmpty(mRefreshToken) +
@@ -183,6 +188,11 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     @Override
     public String getFamilyId() {
         return mFamilyId;
+    }
+
+    @Override
+    public List<ICacheRecord> getCacheRecordWithTenantProfileData() {
+        return mCompleteResultFromCache;
     }
 
     /**

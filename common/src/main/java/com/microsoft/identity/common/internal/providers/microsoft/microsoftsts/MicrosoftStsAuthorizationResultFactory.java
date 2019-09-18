@@ -66,7 +66,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
         MicrosoftStsAuthorizationResult result;
         switch (resultCode) {
             case AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL:
-                Logger.verbose(TAG, null, "User cancel the authorization request in UI.");
+                Logger.info(TAG, null, "User cancel the authorization request in UI.");
                 result = createAuthorizationResultWithErrorResponse(
                         AuthorizationStatus.USER_CANCEL,
                         MicrosoftAuthorizationErrorResponse.USER_CANCEL,
@@ -75,7 +75,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL:
-                Logger.verbose(TAG, null, "SDK cancelled the authorization request.");
+                Logger.info(TAG, null, "SDK cancelled the authorization request.");
                 result = createAuthorizationResultWithErrorResponse(
                         AuthorizationStatus.SDK_CANCEL,
                         MicrosoftAuthorizationErrorResponse.SDK_AUTH_CANCEL,
@@ -109,7 +109,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                 break;
 
             case AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME:
-                Logger.verbose(TAG, "Device needs to have broker installed, we expect the apps to call us"
+                Logger.info(TAG, "Device needs to have broker installed, we expect the apps to call us"
                         + "back when the broker is installed");
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
@@ -117,7 +117,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER:
-                Logger.verbose(TAG, "Device Registration needed, need to start WPJ");
+                Logger.info(TAG, "Device Registration needed, need to start WPJ");
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED,
                         MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED);

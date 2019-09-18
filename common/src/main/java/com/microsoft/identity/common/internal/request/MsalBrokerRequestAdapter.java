@@ -5,18 +5,18 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Pair;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
@@ -29,6 +29,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     private static final String TAG = MsalBrokerRequestAdapter.class.getName();
@@ -36,7 +39,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     @Override
     public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final AcquireTokenOperationParameters parameters) {
 
-        Logger.verbose(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
+        Logger.info(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
 
         final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
@@ -55,6 +58,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
                 .msalVersion(parameters.getSdkVersion())
+                .environment(AzureActiveDirectory.getEnvironment().name())
                 .build();
 
         return brokerRequest;
@@ -63,7 +67,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     @Override
     public BrokerRequest brokerRequestFromSilentOperationParameters(@NonNull final AcquireTokenSilentOperationParameters parameters) {
 
-        Logger.verbose(TAG, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
+        Logger.info(TAG, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
 
         final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
@@ -79,6 +83,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
                 .msalVersion(parameters.getSdkVersion())
+                .environment(AzureActiveDirectory.getEnvironment().name())
                 .build();
 
         return brokerRequest;
@@ -88,7 +93,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public BrokerAcquireTokenOperationParameters brokerInteractiveParametersFromActivity(
             @NonNull final Activity callingActivity) {
 
-        Logger.verbose(TAG, "Constructing BrokerAcquireTokenOperationParameters from calling activity");
+        Logger.info(TAG, "Constructing BrokerAcquireTokenOperationParameters from calling activity");
 
         final BrokerAcquireTokenOperationParameters parameters =
                 new BrokerAcquireTokenOperationParameters();
@@ -152,6 +157,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         parameters.setAuthorizationAgent(AuthorizationAgent.WEBVIEW);
 
+        // Set Global environment variable for instance discovery if present
+        if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
+            AzureActiveDirectory.setEnvironment(
+                    Environment.valueOf(brokerRequest.getEnvironment())
+            );
+        }
+
         return parameters;
 
     }
@@ -162,7 +174,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             @NonNull final Context context,
             @NonNull final Account account) {
 
-        Logger.verbose(TAG, "Constructing BrokerAcquireTokenSilentOperationParameters from result bundle");
+        Logger.info(TAG, "Constructing BrokerAcquireTokenSilentOperationParameters from result bundle");
 
         final BrokerRequest brokerRequest = new Gson().fromJson(
                 bundle.getString(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
@@ -214,9 +226,20 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         parameters.setLoginHint(brokerRequest.getUserName());
 
+        parameters.setHomeAccountId(brokerRequest.getHomeAccountId());
+
+        parameters.setLocalAccountId(brokerRequest.getLocalAccountId());
+
         if(!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
             parameters.setExtraQueryStringParameters(
                     QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter())
+            );
+        }
+
+        // Set Global environment variable for instance discovery if present
+        if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
+            AzureActiveDirectory.setEnvironment(
+                    Environment.valueOf(brokerRequest.getEnvironment())
             );
         }
 
@@ -239,7 +262,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * @param parameters AcquireTokenSilentOperationParameters
      * @return request bundle
      */
-    public static Bundle getBrokerHelloBundle(@NonNull final AcquireTokenSilentOperationParameters parameters) {
+    public static Bundle getBrokerHelloBundle(@NonNull final OperationParameters parameters) {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
                 AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);

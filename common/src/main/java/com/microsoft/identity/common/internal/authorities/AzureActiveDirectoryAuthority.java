@@ -28,10 +28,10 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -50,7 +50,7 @@ public class AzureActiveDirectoryAuthority extends Authority {
     @SerializedName("flight_parameters")
     public Map<String, String> mFlightParameters;
 
-    public Boolean mMultipleCloudsSupported = false;
+    public boolean mMultipleCloudsSupported = false;
 
 
     private AzureActiveDirectoryCloud mAzureActiveDirectoryCloud;
@@ -97,11 +97,11 @@ public class AzureActiveDirectoryAuthority extends Authority {
         return this.mFlightParameters;
     }
 
-    public void setMultipleCloudsSupported(Boolean supported) {
+    public void setMultipleCloudsSupported(boolean supported) {
         mMultipleCloudsSupported = supported;
     }
 
-    public Boolean getMultipleCloudsSupported() {
+    public boolean getMultipleCloudsSupported() {
         return mMultipleCloudsSupported;
     }
 

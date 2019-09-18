@@ -23,8 +23,8 @@
 package com.microsoft.identity.common.internal.request;
 
 import android.app.Activity;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Pair;
 
 import com.google.gson.annotations.Expose;
@@ -45,7 +45,7 @@ public class AcquireTokenOperationParameters extends OperationParameters {
     private List<String> mExtraScopesToConsent;
     @Expose()
     private OpenIdConnectPromptParameter mOpenIdConnectPromptParameter;
-    private HashMap<String, String> mRequestHeaders;
+    private transient HashMap<String, String> mRequestHeaders;
     private List<BrowserDescriptor> mBrowserSafeList;
 
     public AuthorizationAgent getAuthorizationAgent() {

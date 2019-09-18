@@ -335,4 +335,56 @@ public final class ErrorStrings {
      */
     public static final String UNSUPPORTED_BROKER_VERSION = "unsupported_broker_version";
 
+    /**
+     * Decryption failed.
+     */
+    public static final String DECRYPTION_FAILED = "decryption_failed";
+
+    /**
+     * Caller of the request is not a known instance.
+     */
+    public static final String UNKNOWN_CALLER = "unknown_caller";
+
+    /**
+     * The key cannot be found.
+     */
+    public static final String KEY_NOT_FOUND = "key_not_found";
+
+    /**
+     * AccountMode in configuration is set to multiple. However, the device is marked as shared (which requires single account mode).
+     */
+    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ON_SHARED_DEVICE_ERROR_CODE = "multiple_account_pca_init_fail_on_shared_device";
+    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ON_SHARED_DEVICE_ERROR_MESSAGE = "AccountMode in configuration is set to multiple. However, the device is marked as shared (which requires single account mode).";
+
+    /**
+     * Multiple account PublicClientApplication could not be created for unknown reasons
+     */
+    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_CODE = "multiple_account_pca_init_fail_unknown_reason";
+    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE = "Multiple account PublicClientApplication could not be created for unknown reasons";
+
+    /**
+     * AccountMode in configuration is not set to multiple. Cannot initialize multiple account PublicClientApplication.
+     */
+    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ACCOUNT_MODE_ERROR_CODE = "multiple_account_pca_init_fail_account_mode";
+    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ACCOUNT_MODE_ERROR_MESSAGE = "AccountMode in configuration is not set to multiple. Cannot initialize multiple account PublicClientApplication.";
+
+    /**
+     * AccountMode in configuration is not set to single. Cannot initialize single account PublicClientApplication.
+     */
+    public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_ACCOUNT_MODE_ERROR_CODE = "single_account_pca_init_fail_account_mode";
+    public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_ACCOUNT_MODE_ERROR_MESSAGE = "AccountMode in configuration is not set to single. Cannot initialize single account PublicClientApplication.";
+
+    /**
+     * A single account public client application could not be created for unknown reasons.
+     */
+    public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_CODE = "single_account_pca_init_fail_unknown_reason";
+    public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE = "A single account public client application could not be created for unknown reasons.";
+
+    /**
+     * Some or all requested scopes where declined by the server. Developer should decide whether to continue
+     * authentication with the granted scopes or end the authentication process.
+     */
+    public static final String DECLINED_SCOPE_ERROR_CODE = "declined_scope_error";
+    public static final String DECLINED_SCOPE_ERROR_MESSAGE = "Some or all requested scopes have been declined by the Server";
+
 }

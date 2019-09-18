@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
 import android.content.Intent;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.webkit.WebView;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -68,8 +68,8 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
                 @Override
                 public void run() {
                     String loadUrl = pKeyAuthChallenge.getSubmitUrl();
-                    Logger.verbose(TAG, "Respond to pkeyAuth challenge");
-                    Logger.verbosePII(TAG, "Challenge submit url:" + pKeyAuthChallenge.getSubmitUrl());
+                    Logger.info(TAG, "Respond to pkeyAuth challenge");
+                    Logger.infoPII(TAG, "Challenge submit url:" + pKeyAuthChallenge.getSubmitUrl());
 
                     mWebView.loadUrl(loadUrl, header);
                 }
@@ -117,7 +117,7 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
                         "%s AuthToken=\"%s\",Context=\"%s\",Version=\"%s\"",
                         AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE, jwt,
                         pKeyAuthChallenge.getContext(), pKeyAuthChallenge.getVersion());
-                Logger.verbose(TAG, "Receive challenge response. ");
+                Logger.info(TAG, "Receive challenge response. ");
             }
         }
 

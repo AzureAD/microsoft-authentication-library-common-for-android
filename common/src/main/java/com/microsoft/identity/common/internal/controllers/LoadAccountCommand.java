@@ -25,10 +25,10 @@ package com.microsoft.identity.common.internal.controllers;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.os.RemoteException;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 
 import java.io.IOException;
@@ -40,7 +40,7 @@ import java.util.concurrent.ExecutionException;
  * Command class to call controllers to load accounts and return the account list to
  * {@see com.microsoft.identity.common.internal.controllers.ApiDispatcher}.
  */
-public class LoadAccountCommand extends BaseAccountCommand<List<AccountRecord>> {
+public class LoadAccountCommand extends BaseAccountCommand<List<ICacheRecord>> {
     private static final String TAG = LoadAccountCommand.class.getSimpleName();
 
     public LoadAccountCommand(@NonNull final OperationParameters parameters,
@@ -56,11 +56,12 @@ public class LoadAccountCommand extends BaseAccountCommand<List<AccountRecord>> 
     }
 
     @Override
-    public List<AccountRecord> execute()
-            throws ClientException, InterruptedException, ExecutionException, RemoteException, OperationCanceledException, IOException, AuthenticatorException {
+    public List<ICacheRecord> execute()
+            throws ClientException, InterruptedException, ExecutionException, RemoteException,
+            OperationCanceledException, IOException, AuthenticatorException {
         final String methodName = ":execute";
 
-        List<AccountRecord> result = new ArrayList<>();
+        List<ICacheRecord> result = new ArrayList<>();
 
         for (int ii = 0; ii < getControllers().size(); ii++) {
             final BaseController controller = getControllers().get(ii);

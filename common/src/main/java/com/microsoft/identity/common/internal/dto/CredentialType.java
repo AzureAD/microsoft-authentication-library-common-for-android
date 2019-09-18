@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.dto;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -63,6 +63,8 @@ public enum CredentialType {
      * Certificate.
      */
     Certificate;
+
+    public static final CredentialType[] ID_TOKEN_TYPES = new CredentialType[]{IdToken, V1IdToken};
 
     /**
      * Get the credential type name set.

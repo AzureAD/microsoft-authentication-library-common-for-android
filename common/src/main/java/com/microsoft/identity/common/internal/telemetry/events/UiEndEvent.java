@@ -20,29 +20,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.internal.telemetry.events;
 
-import java.net.URL;
-import java.util.List;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
 
-/*
- * Represents the information returned from the OpenID Provider Configuration Endpoint
- * https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
- */
+public class UiEndEvent extends BaseEvent {
+    public UiEndEvent() {
+        super();
+        names(Event.UI_END_EVENT);
+        types(EventType.UI_EVENT);
+    }
 
-@SuppressWarnings("PMD")
-public class OpenIDProviderConfiguration {
+    public UiEndEvent isUserCancelled() {
+        put(Key.USER_CANCEL, Boolean.TRUE.toString());
+        return this;
+    }
 
-    private String mIssuer;
-    private URL mAuthorizationEndpoint;
-    private URL mTokenEndpoint;
-    private URL mUserInfoEndpoint;
-    private URL mJWKSUri;
-    private List<String> mSupportedScopes;
-    private List<String> mResponseTypesSupported;
-    private List<String> mACRValuesSupported;
-    private List<String> mSubjectTypesSupported;
-    private List<String> mIDTokenSigningAlgValuesSupported;
-    private List<String> mClaimsSupported;
+    public UiEndEvent isUiCancelled() {
+        put(Key.UI_CANCELLED, Boolean.TRUE.toString());
+        return this;
+    }
 
+    public UiEndEvent isUiComplete() {
+        put(Key.UI_COMPLETE, Boolean.TRUE.toString());
+        return this;
+    }
 }

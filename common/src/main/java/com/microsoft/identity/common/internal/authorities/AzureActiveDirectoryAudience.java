@@ -77,14 +77,14 @@ public abstract class AzureActiveDirectoryAudience {
                         TAG + methodName,
                         "Audience: AnyPersonalAccount"
                 );
-                audience = new AnyPersonalAccount();
+                audience = new AnyPersonalAccount(cloudUrl);
                 break;
             case ALL:
                 Logger.verbose(
                         TAG + methodName,
                         "Audience: AllAccounts"
                 );
-                audience = new AllAccounts();
+                audience = new AllAccounts(cloudUrl);
                 break;
             default:
                 Logger.verbose(

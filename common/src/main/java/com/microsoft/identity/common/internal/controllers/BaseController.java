@@ -26,7 +26,7 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Intent;
 import android.os.RemoteException;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -35,15 +35,12 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -51,10 +48,7 @@ import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
@@ -72,7 +66,8 @@ import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
-import com.microsoft.identity.common.internal.util.DateUtilities;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -80,7 +75,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 public abstract class BaseController {
 
@@ -95,12 +89,15 @@ public abstract class BaseController {
             final Intent data
     );
 
-    public abstract AcquireTokenResult acquireTokenSilent(final AcquireTokenSilentOperationParameters request)
-            throws IOException, BaseException;
+    public abstract AcquireTokenResult acquireTokenSilent(
+            final AcquireTokenSilentOperationParameters request) throws IOException, BaseException;
 
-    public abstract List<AccountRecord> getAccounts(final OperationParameters parameters) throws ClientException, InterruptedException, ExecutionException, RemoteException, OperationCanceledException, IOException, AuthenticatorException;
+    public abstract List<ICacheRecord> getAccounts(final OperationParameters parameters)
+            throws ClientException, InterruptedException, ExecutionException, RemoteException,
+            OperationCanceledException, IOException, AuthenticatorException;
 
-    public abstract boolean removeAccount(final OperationParameters parameters) throws BaseException, InterruptedException, ExecutionException, RemoteException;
+    public abstract boolean removeAccount(final OperationParameters parameters)
+            throws BaseException, InterruptedException, ExecutionException, RemoteException;
 
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
@@ -121,6 +118,19 @@ public abstract class BaseController {
 
         if (parameters instanceof AcquireTokenOperationParameters) {
             AcquireTokenOperationParameters acquireTokenOperationParameters = (AcquireTokenOperationParameters) parameters;
+            // Set the multipleCloudAware and slice fields.
+            if (acquireTokenOperationParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
+                final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) acquireTokenOperationParameters.getAuthority();
+                ((MicrosoftAuthorizationRequest.Builder) builder)
+                        .setAuthority(requestAuthority.getAuthorityURL())
+                        .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
+                        .setSlice(requestAuthority.mSlice);
+            }
+
+            if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
+                ((MicrosoftStsAuthorizationRequest.Builder) builder).setTokenScope(TextUtils.join(" ", parameters.getScopes()));
+            }
+
             if (acquireTokenOperationParameters.getExtraScopesToConsent() != null) {
                 parameters.getScopes().addAll(acquireTokenOperationParameters.getExtraScopesToConsent());
             }
@@ -144,14 +154,7 @@ public abstract class BaseController {
                 builder.setPrompt(null);
             }
 
-            // Set the multipleCloudAware and slice fields.
-            if (acquireTokenOperationParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
-                final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) acquireTokenOperationParameters.getAuthority();
-                ((MicrosoftAuthorizationRequest.Builder) builder)
-                        .setAuthority(requestAuthority.getAuthorityURL())
-                        .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
-                        .setSlice(requestAuthority.mSlice);
-            }
+
         }
 
         builder.setScope(TextUtils.join(" ", parameters.getScopes()));
@@ -192,7 +195,7 @@ public abstract class BaseController {
                                     @NonNull final ICacheRecord cacheRecord)
             throws IOException, ClientException {
         final String methodName = ":renewAccessToken";
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Renewing access token..."
         );
@@ -206,21 +209,23 @@ public abstract class BaseController {
         logResult(TAG + methodName, tokenResult);
 
         if (tokenResult.getSuccess()) {
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "Token request was successful"
             );
 
-            final ICacheRecord savedRecord = tokenCache.save(
+            final List<ICacheRecord> savedRecords = tokenCache.saveAndLoadAggregatedAccountData(
                     strategy,
                     getAuthorizationRequest(strategy, parameters),
                     tokenResult.getTokenResponse()
             );
+            final ICacheRecord savedRecord = savedRecords.get(0);
 
             // Create a new AuthenticationResult to hold the saved record
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
                     savedRecord,
-                    parameters.getSdkType()
+                    savedRecords,
+                    SdkType.MSAL
             );
 
             // Set the client telemetry...
@@ -229,6 +234,8 @@ public abstract class BaseController {
                 authenticationResult.setSpeRing(cliTelemInfo.getSpeRing());
                 authenticationResult.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
             }
+
+            Telemetry.emit(new CacheEndEvent().putSpeInfo(tokenResult.getCliTelemInfo().getSpeRing()));
 
             // Set the AuthenticationResult on the final result object
             acquireTokenSilentResult.setLocalAuthenticationResult(authenticationResult);
@@ -246,7 +253,7 @@ public abstract class BaseController {
         final String TAG = tag + ":" + result.getClass().getSimpleName();
 
         if (result.getSuccess()) {
-            Logger.verbose(
+            Logger.info(
                     TAG,
                     "Success Result"
             );
@@ -281,7 +288,7 @@ public abstract class BaseController {
             AuthorizationResult authResult = (AuthorizationResult) result;
 
             if (authResult.getAuthorizationStatus() != null) {
-                Logger.verbose(
+                Logger.info(
                         TAG,
                         "Authorization Status: " + authResult.getAuthorizationStatus().toString()
                 );
@@ -299,16 +306,16 @@ public abstract class BaseController {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
         if (Logger.getAllowPii()) {
-            Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+            Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
         } else {
-            Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
+            Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
         }
     }
 
     protected static void logExposedFieldsOfObject(@NonNull final String tag,
                                                    @NonNull final Object object) {
         final String TAG = tag + ":" + object.getClass().getSimpleName();
-        Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
+        Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
     }
 
     protected TokenResult performSilentTokenRequest(
@@ -317,7 +324,7 @@ public abstract class BaseController {
             throws ClientException, IOException {
         final String methodName = ":performSilentTokenRequest";
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Requesting tokens..."
         );
@@ -339,7 +346,7 @@ public abstract class BaseController {
         refreshTokenRequest.setRedirectUri(parameters.getRedirectUri());
 
         if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
-            ((MicrosoftTokenRequest)refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
+            ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
         }
 
         //NOTE: this should be moved to the strategy; however requires a larger refactor
@@ -348,7 +355,7 @@ public abstract class BaseController {
         }
 
         if (!StringExtensions.isNullOrBlank(refreshTokenRequest.getScope())) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "Scopes: [" + refreshTokenRequest.getScope() + "]"
             );
@@ -357,18 +364,22 @@ public abstract class BaseController {
         return strategy.requestToken(refreshTokenRequest);
     }
 
-    protected ICacheRecord saveTokens(@NonNull final OAuth2Strategy strategy,
-                                      @NonNull final AuthorizationRequest request,
-                                      @NonNull final TokenResponse tokenResponse,
-                                      @NonNull final OAuth2TokenCache tokenCache) throws ClientException {
+    protected List<ICacheRecord> saveTokens(@NonNull final OAuth2Strategy strategy,
+                                            @NonNull final AuthorizationRequest request,
+                                            @NonNull final TokenResponse tokenResponse,
+                                            @NonNull final OAuth2TokenCache tokenCache) throws ClientException {
         final String methodName = ":saveTokens";
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Saving tokens..."
         );
 
-        return tokenCache.save(strategy, request, tokenResponse);
+        return tokenCache.saveAndLoadAggregatedAccountData(
+                strategy,
+                request,
+                tokenResponse
+        );
     }
 
     protected boolean refreshTokenIsNull(@NonNull final ICacheRecord cacheRecord) {
@@ -395,64 +406,7 @@ public abstract class BaseController {
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
         operationParameters.setScopes(requestScopes);
-    }
 
-    public AccessTokenRecord getAccessTokenRecord(@NonNull final MicrosoftStsTokenResponse tokenResponse,
-                                                  @NonNull final OperationParameters requestParameters) {
-        final String methodName = ":getAccessTokenRecord";
-
-        final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
-
-        try {
-            final ClientInfo clientInfo = new ClientInfo(tokenResponse.getClientInfo());
-            accessTokenRecord.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-            accessTokenRecord.setRealm(SchemaUtil.getTenantId(
-                    tokenResponse.getClientInfo(),
-                    tokenResponse.getIdToken()
-                    )
-            );
-            final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.
-                    getAzureActiveDirectoryCloud(
-                            requestParameters.getAuthority().getAuthorityURL()
-                    );
-
-            if (cloudEnv != null) {
-                Logger.info(TAG, "Using preferred cache host name...");
-                accessTokenRecord.setEnvironment(cloudEnv.getPreferredCacheHostName());
-            } else {
-                accessTokenRecord.setEnvironment(
-                        requestParameters.getAuthority().getAuthorityURL().getHost()
-                );
-            }
-        } catch (final ServiceException e) {
-            Logger.error(TAG + methodName, "ClientInfo construction failed ", e);
-        }
-        accessTokenRecord.setClientId(requestParameters.getClientId());
-        accessTokenRecord.setSecret(tokenResponse.getAccessToken());
-        accessTokenRecord.setAccessTokenType(tokenResponse.getTokenType());
-        accessTokenRecord.setAuthority(
-                requestParameters.getAuthority().getAuthorityURL().toString()
-        );
-        accessTokenRecord.setTarget(TextUtils.join(" ", requestParameters.getScopes()));
-        accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
-
-        if (tokenResponse.getExpiresIn() != null) {
-            accessTokenRecord.setExpiresOn(
-                    String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExpiresIn()))
-            );
-        }
-
-        if (tokenResponse.getExtExpiresIn() != null) {
-            accessTokenRecord.setExtendedExpiresOn(
-                    String.valueOf(DateUtilities.getExpiresOn(tokenResponse.getExtExpiresIn()))
-            );
-        }
-
-        accessTokenRecord.setCachedAt(
-                String.valueOf(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()))
-        );
-
-        return accessTokenRecord;
     }
 
     /**
@@ -477,7 +431,7 @@ public abstract class BaseController {
         final AccountRecord targetAccount =
                 parameters
                         .getTokenCache()
-                        .getAccountWithLocalAccountId(
+                        .getAccountByLocalAccountId(
                                 null,
                                 clientId,
                                 localAccountId
@@ -510,8 +464,8 @@ public abstract class BaseController {
         return targetAccount;
     }
 
-    protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse){
-        final String tenantId = SchemaUtil.getTenantId(
+    protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
+                final String tenantId = SchemaUtil.getTenantId(
                 microsoftTokenResponse.getClientInfo(),
                 microsoftTokenResponse.getIdToken()
         );
