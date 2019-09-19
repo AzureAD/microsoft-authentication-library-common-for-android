@@ -181,7 +181,9 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         final Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
 
         for (Map.Entry<String, Object> entry : qpMap.entrySet()) {
-            uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
+            if(entry.getKey() != null && entry.getValue() != null) {
+                uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
+            }
         }
 
         return uriBuilder.build();
