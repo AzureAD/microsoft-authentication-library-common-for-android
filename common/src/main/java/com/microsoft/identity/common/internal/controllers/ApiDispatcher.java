@@ -39,6 +39,7 @@ import com.microsoft.identity.common.internal.request.AcquireTokenOperationParam
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.internal.servertelemetry.ServerTelemetry;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
 import java.util.List;
@@ -225,17 +226,20 @@ public class ApiDispatcher {
                                 @Override
                                 public void run() {
                                     command.getCallback().onSuccess(authenticationResult);
+                                    ServerTelemetry.completeScenario(correlationId, null);
                                 }
                             });
                         } else {
                             //Get MsalException from Authorization and/or Token Error Response
                             baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
                             final BaseException finalException = baseException;
+                            final String error = ServerTelemetry.errorFromAcquireTokenResult(result);
                             if (finalException instanceof UserCancelException) {
                                 //Post Cancel
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
+                                        ServerTelemetry.completeScenario(null,null);
                                         command.getCallback().onCancel();
                                     }
                                 });
@@ -243,6 +247,7 @@ public class ApiDispatcher {
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
+                                        ServerTelemetry.completeScenario(correlationId, error);
                                         command.getCallback().onError(finalException);
                                     }
                                 });
@@ -430,6 +435,7 @@ public class ApiDispatcher {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
+                                ServerTelemetry.completeScenario(correlationId, null);
                                 command.getCallback().onSuccess(authenticationResult);
                             }
                         });
@@ -437,12 +443,13 @@ public class ApiDispatcher {
                         //Get MsalException from Authorization and/or Token Error Response
                         baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
                         final BaseException finalException = baseException;
-
+                        final String error = ServerTelemetry.errorFromAcquireTokenResult(result);
                         if (finalException instanceof UserCancelException) {
                             //Post Cancel
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
+                                    ServerTelemetry.completeScenario(null, null);
                                     command.getCallback().onCancel();
                                 }
                             });
@@ -450,6 +457,7 @@ public class ApiDispatcher {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
+                                    ServerTelemetry.completeScenario(correlationId, error);
                                     command.getCallback().onError(finalException);
                                 }
                             });

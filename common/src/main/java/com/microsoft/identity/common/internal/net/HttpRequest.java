@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
+import com.microsoft.identity.common.internal.servertelemetry.RequestTelemetry;
+import com.microsoft.identity.common.internal.servertelemetry.ServerTelemetry;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.HttpEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.HttpStartEvent;
@@ -126,6 +128,16 @@ public final class HttpRequest {
                         .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
         );
 
+        final RequestTelemetry currentRequestTelemetry = ServerTelemetry.getCurrentTelemetry();
+        final RequestTelemetry lastRequestTelemetry = ServerTelemetry.getLastTelemetry();
+
+        final String currentString = ServerTelemetry.getCurrentTelemetryHeaderString();
+        final String lastString = ServerTelemetry.getLastTelemetryHeaderString();
+
+        final Map<String, String> telemetryHeaders = ServerTelemetry.getTelemetryHeaders();
+
+        requestHeaders.putAll(telemetryHeaders);
+
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_POST,
                 requestContent, requestContentType);
         final HttpResponse response = httpRequest.send();
@@ -151,6 +163,16 @@ public final class HttpRequest {
                         .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
         );
 
+        final RequestTelemetry currentRequestTelemetry = ServerTelemetry.getCurrentTelemetry();
+        final RequestTelemetry lastRequestTelemetry = ServerTelemetry.getLastTelemetry();
+
+        final String currentString = ServerTelemetry.getCurrentTelemetryHeaderString();
+        final String lastString = ServerTelemetry.getLastTelemetryHeaderString();
+
+        final Map<String, String> telemetryHeaders = ServerTelemetry.getTelemetryHeaders();
+
+        requestHeaders.putAll(telemetryHeaders);
+
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
         final HttpResponse response =  httpRequest.send();
 
@@ -158,6 +180,7 @@ public final class HttpRequest {
                 new HttpEndEvent()
                         .putStatusCode(response.getStatusCode())
         );
+
         return response;
     }
 
