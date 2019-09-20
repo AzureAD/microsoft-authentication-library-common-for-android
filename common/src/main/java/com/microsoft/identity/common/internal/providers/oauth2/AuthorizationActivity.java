@@ -6,9 +6,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebSettings;
@@ -30,6 +31,7 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INSTALL_URL_KEY;
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR;
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_DESCRIPTION;
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_SUBCODE;
@@ -315,7 +317,14 @@ public final class AuthorizationActivity extends Activity {
         Logger.info(TAG, null, "Received redirect from customTab/browser.");
         final String url = getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
         final Intent resultIntent = createResultIntent(url);
-        if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL))) {
+        final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
+        if (parameters.containsKey(INSTALL_URL_KEY)) {
+            final String appLink = parameters.get(INSTALL_URL_KEY);
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(appLink));
+            startActivity(browserIntent);
+            Logger.verbose(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
+            sendResult(AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME, resultIntent);
+        } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL))) {
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, resultIntent);
         } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE))
                 && resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE).equalsIgnoreCase("cancel")) {

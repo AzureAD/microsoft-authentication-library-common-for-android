@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 
 /**

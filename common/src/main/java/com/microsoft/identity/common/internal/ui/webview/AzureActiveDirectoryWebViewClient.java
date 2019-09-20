@@ -25,12 +25,13 @@ package com.microsoft.identity.common.internal.ui.webview;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.webkit.ClientCertRequest;
 import android.webkit.WebResourceRequest;
@@ -38,10 +39,10 @@ import android.webkit.WebView;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.util.PackageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
@@ -106,6 +107,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @return return true means the host application handles the url, while return false means the current WebView handles the url.
      */
     @Override
+    @TargetApi(Build.VERSION_CODES.N)
     @RequiresApi(Build.VERSION_CODES.N)
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
         final Uri requestUrl = request.getUrl();
@@ -211,10 +213,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodName = "#processWebsiteRequest";
-        final PackageHelper packageHelper = new PackageHelper(getActivity().getApplicationContext());
+        final PackageHelper packageHelper = new PackageHelper(getActivity().getPackageManager());
+        final Context applicationContext = getActivity().getApplicationContext();
         if (url.startsWith(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL)
-                && packageHelper.isPackageInstalledAndEnabled(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)
-                && packageHelper.isPackageInstalledAndEnabled(AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME)
+                && packageHelper.isPackageInstalledAndEnabled(applicationContext, AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)
+                && packageHelper.isPackageInstalledAndEnabled(applicationContext, AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME)
                 && AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE.equals(
                 packageHelper.getCurrentSignatureForPackage(AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME))) {
             // TODO: This flow should really check if the Microsoft Intune or the Company Portal apps are installed,

@@ -22,8 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -328,7 +328,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
         boolean accountRemoved = false;
         for (final Map.Entry<String, AccountRecord> entry : accounts.entrySet()) {
-            Logger.infoPII(TAG, "Inspecting: [" + entry.getKey() + "]");
+            Logger.verbosePII(TAG, "Inspecting: [" + entry.getKey() + "]");
             final IAccountRecord currentAccount = entry.getValue();
 
             if (currentAccount.equals(accountToRemove)) {
@@ -346,6 +346,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     @Override
     public boolean removeCredential(@NonNull final Credential credentialToRemove) {
         Logger.info(TAG, "Removing Credential...");
+
         if (null == credentialToRemove) {
             throw new IllegalArgumentException("Param [credentialToRemove] cannot be null.");
         }
@@ -354,7 +355,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
         boolean credentialRemoved = false;
         for (final Map.Entry<String, Credential> entry : credentials.entrySet()) {
-            Logger.infoPII(TAG, "Inspecting: [" + entry.getKey() + "]");
+            Logger.verbosePII(TAG, "Inspecting: [" + entry.getKey() + "]");
             final Credential currentCredential = entry.getValue();
 
             if (currentCredential.equals(credentialToRemove)) {
@@ -410,7 +411,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         CredentialType type = null;
         for (final String credentialTypeStr : credentialTypesLowerCase) {
             if (cacheKey.contains(CACHE_VALUE_SEPARATOR + credentialTypeStr + CACHE_VALUE_SEPARATOR)) {
-                Logger.info(TAG, "Cache key is a Credential type...");
+                Logger.verbose(TAG, "Cache key is a Credential type...");
 
                 if (credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken.name())) {
                     type = CredentialType.AccessToken;
@@ -431,7 +432,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             }
         }
 
-        Logger.info(TAG, "Cache key was type: [" + type + "]");
+        Logger.verbose(TAG, "Cache key was type: [" + type + "]");
 
         return type;
     }

@@ -26,7 +26,7 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Intent;
 import android.os.RemoteException;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -48,6 +48,7 @@ import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
@@ -86,12 +87,15 @@ public abstract class BaseController {
             final Intent data
     );
 
-    public abstract AcquireTokenResult acquireTokenSilent(final AcquireTokenSilentOperationParameters request)
-            throws IOException, BaseException;
+    public abstract AcquireTokenResult acquireTokenSilent(
+            final AcquireTokenSilentOperationParameters request) throws IOException, BaseException;
 
-    public abstract List<AccountRecord> getAccounts(final OperationParameters parameters) throws ClientException, InterruptedException, ExecutionException, RemoteException, OperationCanceledException, IOException, AuthenticatorException;
+    public abstract List<ICacheRecord> getAccounts(final OperationParameters parameters)
+            throws ClientException, InterruptedException, ExecutionException, RemoteException,
+            OperationCanceledException, IOException, AuthenticatorException;
 
-    public abstract boolean removeAccount(final OperationParameters parameters) throws BaseException, InterruptedException, ExecutionException, RemoteException;
+    public abstract boolean removeAccount(final OperationParameters parameters)
+            throws BaseException, InterruptedException, ExecutionException, RemoteException;
 
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
@@ -112,6 +116,19 @@ public abstract class BaseController {
 
         if (parameters instanceof AcquireTokenOperationParameters) {
             AcquireTokenOperationParameters acquireTokenOperationParameters = (AcquireTokenOperationParameters) parameters;
+            // Set the multipleCloudAware and slice fields.
+            if (acquireTokenOperationParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
+                final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) acquireTokenOperationParameters.getAuthority();
+                ((MicrosoftAuthorizationRequest.Builder) builder)
+                        .setAuthority(requestAuthority.getAuthorityURL())
+                        .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
+                        .setSlice(requestAuthority.mSlice);
+            }
+
+            if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
+                ((MicrosoftStsAuthorizationRequest.Builder) builder).setTokenScope(TextUtils.join(" ", parameters.getScopes()));
+            }
+
             if (acquireTokenOperationParameters.getExtraScopesToConsent() != null) {
                 parameters.getScopes().addAll(acquireTokenOperationParameters.getExtraScopesToConsent());
             }
@@ -135,14 +152,7 @@ public abstract class BaseController {
                 builder.setPrompt(null);
             }
 
-            // Set the multipleCloudAware and slice fields.
-            if (acquireTokenOperationParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
-                final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) acquireTokenOperationParameters.getAuthority();
-                ((MicrosoftAuthorizationRequest.Builder) builder)
-                        .setAuthority(requestAuthority.getAuthorityURL())
-                        .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
-                        .setSlice(requestAuthority.mSlice);
-            }
+
         }
 
         builder.setScope(TextUtils.join(" ", parameters.getScopes()));
@@ -202,16 +212,18 @@ public abstract class BaseController {
                     "Token request was successful"
             );
 
-            final ICacheRecord savedRecord = tokenCache.save(
+            final List<ICacheRecord> savedRecords = tokenCache.saveAndLoadAggregatedAccountData(
                     strategy,
                     getAuthorizationRequest(strategy, parameters),
                     tokenResult.getTokenResponse()
             );
+            final ICacheRecord savedRecord = savedRecords.get(0);
 
             // Create a new AuthenticationResult to hold the saved record
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
                     savedRecord,
-                    parameters.getSdkType()
+                    savedRecords,
+                    SdkType.MSAL
             );
 
             // Set the client telemetry...
@@ -330,7 +342,7 @@ public abstract class BaseController {
         refreshTokenRequest.setRedirectUri(parameters.getRedirectUri());
 
         if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
-            ((MicrosoftTokenRequest)refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
+            ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
         }
 
         //NOTE: this should be moved to the strategy; however requires a larger refactor
@@ -348,10 +360,10 @@ public abstract class BaseController {
         return strategy.requestToken(refreshTokenRequest);
     }
 
-    protected ICacheRecord saveTokens(@NonNull final OAuth2Strategy strategy,
-                                      @NonNull final AuthorizationRequest request,
-                                      @NonNull final TokenResponse tokenResponse,
-                                      @NonNull final OAuth2TokenCache tokenCache) throws ClientException {
+    protected List<ICacheRecord> saveTokens(@NonNull final OAuth2Strategy strategy,
+                                            @NonNull final AuthorizationRequest request,
+                                            @NonNull final TokenResponse tokenResponse,
+                                            @NonNull final OAuth2TokenCache tokenCache) throws ClientException {
         final String methodName = ":saveTokens";
 
         Logger.verbose(
@@ -359,7 +371,11 @@ public abstract class BaseController {
                 "Saving tokens..."
         );
 
-        return tokenCache.save(strategy, request, tokenResponse);
+        return tokenCache.saveAndLoadAggregatedAccountData(
+                strategy,
+                request,
+                tokenResponse
+        );
     }
 
     protected boolean refreshTokenIsNull(@NonNull final ICacheRecord cacheRecord) {
@@ -386,6 +402,7 @@ public abstract class BaseController {
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
         operationParameters.setScopes(requestScopes);
+
     }
 
     /**
@@ -410,7 +427,7 @@ public abstract class BaseController {
         final AccountRecord targetAccount =
                 parameters
                         .getTokenCache()
-                        .getAccountWithLocalAccountId(
+                        .getAccountByLocalAccountId(
                                 null,
                                 clientId,
                                 localAccountId
@@ -443,7 +460,7 @@ public abstract class BaseController {
         return targetAccount;
     }
 
-    protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse){
+    protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
         final String tenantId = SchemaUtil.getTenantId(
                 microsoftTokenResponse.getClientInfo(),
                 microsoftTokenResponse.getIdToken()

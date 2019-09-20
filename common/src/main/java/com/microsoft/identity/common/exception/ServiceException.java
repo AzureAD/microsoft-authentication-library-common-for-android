@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.exception;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
@@ -34,6 +34,9 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ServiceException extends BaseException {
+
+    public static final String OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD =
+            "failed_to_load_openid_configuration";
 
     /**
      * This request is missing a required parameter, includes an invalid parameter, includes a

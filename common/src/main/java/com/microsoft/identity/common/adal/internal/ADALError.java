@@ -27,10 +27,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 
-import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ServiceException;
 
 import java.util.HashMap;
 import java.util.Map;

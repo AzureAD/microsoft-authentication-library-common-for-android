@@ -20,21 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.internal.telemetry.observers;
+
+import java.util.List;
+import java.util.Map;
 
 /**
- * A class for pulling the OpenIDConfiguratino document from the OpenID Provider server.
+ * The default telemetry observer interface which upload raw telemetry data.
  */
-public class OpenIDProviderConfigurationClient {
-
-    /**
-     * Get OpenID provider configuration.
-     *
-     * @return OpenIDProviderConfiguration
-     */
-    public OpenIDProviderConfiguration getOpenIDProviderConfiguration() {
-        OpenIDProviderConfiguration config = new OpenIDProviderConfiguration();
-        return config;
-    }
-
+public interface ITelemetryDefaultObserver extends ITelemetryObserver<List<Map<String, String>>> {
+    @Override
+    void onReceived(List<Map<String, String>> telemetryData);
 }
