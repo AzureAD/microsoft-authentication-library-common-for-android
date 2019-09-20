@@ -22,9 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
+import android.net.Uri;
+import android.util.Pair;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.util.Pair;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -53,6 +55,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2.ID_TOKEN_OBJECT_ID;
 import static com.microsoft.identity.common.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.renewToken;
@@ -61,14 +64,21 @@ import static com.microsoft.identity.common.internal.migration.TokenCacheItemMig
 public class TokenShareUtility implements ITokenShareInternal {
 
     private static final String TAG = TokenShareUtility.class.getSimpleName();
-    private static final Map<String, String> mClaimRemapper = new HashMap<>();
+    private static final Map<String, String> sClaimRemapper = new HashMap<>();
+    private static final String AUDIENCE_PATH_CONSUMERS = "/consumers";
+
+    /**
+     * To support caching lookups in ADAL, the following authority is used to signal
+     * that the tokens being yielded belong to the target user's home tenant.
+     */
+    private static final String sHomeTenantAuthority = "https://login.windows.net/common";
 
     static {
         applyV1ToV2Mappings();
     }
 
     private static void applyV1ToV2Mappings() {
-        mClaimRemapper.put(
+        sClaimRemapper.put(
                 IDToken.PREFERRED_USERNAME, // v2 value
                 AzureActiveDirectoryIdToken.UPN // v1 value
         );
@@ -224,7 +234,25 @@ public class TokenShareUtility implements ITokenShareInternal {
                 sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
                     public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
-                        final ADALTokenCacheItem cacheItemToRenew = createTokenCacheItem(refreshToken);
+                        // Use the /consumers endpoint relative to the current cloud
+                        final Uri defaultAuthorityUri = Uri.parse(mDefaultAuthority);
+
+                        final String tenantPath = defaultAuthorityUri.getPath();
+                        final String requestAuthority;
+
+                        if (null != tenantPath) {
+                            requestAuthority = mDefaultAuthority.replace(
+                                    tenantPath,
+                                    AUDIENCE_PATH_CONSUMERS
+                            );
+                        } else {
+                            requestAuthority = mDefaultAuthority;
+                        }
+
+                        final ADALTokenCacheItem cacheItemToRenew = createTokenCacheItem(
+                                refreshToken,
+                                requestAuthority
+                        );
 
                         // Check that instance discovery metadata is loaded before making the request...
                         final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata();
@@ -247,11 +275,12 @@ public class TokenShareUtility implements ITokenShareInternal {
         saveResult(resultPair);
     }
 
-    private ADALTokenCacheItem createTokenCacheItem(@NonNull final String refreshToken) {
+    private ADALTokenCacheItem createTokenCacheItem(@NonNull final String refreshToken,
+                                                    @NonNull final String authority) {
         final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem();
 
         // Set only the minimally required properties...
-        cacheItem.setAuthority(mDefaultAuthority);
+        cacheItem.setAuthority(authority);
         cacheItem.setClientId(mClientId);
         cacheItem.setRefreshToken(refreshToken);
 
@@ -264,12 +293,57 @@ public class TokenShareUtility implements ITokenShareInternal {
                                             @NonNull final RefreshTokenRecord refreshTokenRecord) throws ServiceException {
         final ADALTokenCacheItem tokenCacheItem = new ADALTokenCacheItem();
         tokenCacheItem.setClientId(refreshTokenRecord.getClientId());
-        tokenCacheItem.setAuthority(idTokenRecord.getAuthority());
         tokenCacheItem.setRefreshToken(refreshTokenRecord.getSecret());
         tokenCacheItem.setRawIdToken(mintV1IdTokenFromRawV2IdToken(idTokenRecord.getSecret()));
         tokenCacheItem.setFamilyClientId(refreshTokenRecord.getFamilyId());
 
+        final String authority;
+
+        // In order to support ADAL cache lookups when the cache is empty, always use /common
+        // when the outbound token is from the home tenant
+        if (isFromHomeTenant(idTokenRecord)) {
+            authority = sHomeTenantAuthority;
+        } else {
+            authority = idTokenRecord.getAuthority();
+        }
+
+        tokenCacheItem.setAuthority(authority);
+
         return tokenCacheItem;
+    }
+
+    private static boolean isFromHomeTenant(@NonNull final IdTokenRecord idTokenRecord) {
+        final String methodName = ":isFromHomeTenant";
+        boolean isHomeTenant;
+
+        // If the home account id contains the OID, then this is the user's home tenant...
+        final String homeAccountId = idTokenRecord.getHomeAccountId();
+
+        // In order to get the claims, we need to first parse the token....
+        try {
+            final Map<String, ?> tokenClaims = IDToken.parseJWT(idTokenRecord.getSecret());
+            final String oid = (String) tokenClaims.get(ID_TOKEN_OBJECT_ID);
+
+            if (null != oid) {
+                isHomeTenant = homeAccountId.contains(oid);
+            } else {
+                Logger.warn(
+                        TAG + methodName,
+                        "OID claims was missing from token."
+                );
+
+                isHomeTenant = false;
+            }
+        } catch (final ServiceException e) {
+            Logger.warn(
+                    TAG + methodName,
+                    "Failed to parse IdToken."
+            );
+
+            isHomeTenant = false;
+        }
+
+        return isHomeTenant;
     }
 
     @NonNull
@@ -313,7 +387,7 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     @NonNull
     private static String remap(@NonNull final String claimKey) {
-        String remappedValue = mClaimRemapper.get(claimKey);
+        String remappedValue = sClaimRemapper.get(claimKey);
 
         if (null == remappedValue) {
             remappedValue = claimKey;
