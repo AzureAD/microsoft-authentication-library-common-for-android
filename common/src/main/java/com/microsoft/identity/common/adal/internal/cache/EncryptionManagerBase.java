@@ -194,13 +194,9 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         }
     }
 
-    protected boolean isEncryptionKeyLoaded(){
-        return mEncryptionKey != null && mBlobVersion != null;
-    }
-
     @Nullable
-    protected Pair<SecretKey, String> getCachedEncryptionKey(){
-        if (isEncryptionKeyLoaded()){
+    private Pair<SecretKey, String> getCachedEncryptionKey(){
+        if (mEncryptionKey != null && mBlobVersion != null){
             return new Pair<>(mEncryptionKey, mBlobVersion);
         }
         return null;
@@ -217,13 +213,18 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
 
         Logger.verbose(TAG + methodName, "Starting encryption");
 
-        // load key for encryption if not loaded
-        final Pair<SecretKey, String> encryptionKeyAndBlobKeyPair = loadSecretKeyForEncryption();
+        // Loading key only once for performance.
+        final Pair<SecretKey, String> cachedKey = getCachedEncryptionKey();
+        if (cachedKey != null) {
+            mEncryptionKey = cachedKey.first;
+            mBlobVersion = cachedKey.second;
+        } else {
+            final Pair<SecretKey, String> encryptionKeyAndBlobKeyPair = loadSecretKeyForEncryption();
+            mEncryptionKey = encryptionKeyAndBlobKeyPair.first;
+            mBlobVersion = encryptionKeyAndBlobKeyPair.second;
+        }
 
-        mEncryptionKey = encryptionKeyAndBlobKeyPair.first;
         mEncryptionHMACKey = getHMacKey(mEncryptionKey);
-
-        mBlobVersion = encryptionKeyAndBlobKeyPair.second;
 
         Logger.verbose(TAG + methodName, "Encrypt version:" + mBlobVersion);
         final byte[] blobVersion = mBlobVersion.getBytes(AuthenticationConstants.ENCODING_UTF8);

@@ -74,13 +74,6 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
             GeneralSecurityException {
         final String methodName = ":loadSecretKeyForEncryption";
 
-        // Loading key only once for performance. If API is upgraded, it will
-        // restart the device anyway. It will load the correct key for new API.
-        final Pair<SecretKey, String> cachedKey = getCachedEncryptionKey();
-        if (cachedKey != null) {
-            return cachedKey;
-        }
-
         // The current app runtime is the broker; load its secret key.
         if (!sShouldEncryptWithKeyStoreKey &&
                 AuthenticationSettings.INSTANCE.getBrokerSecretKeys().containsKey(getPackageName())) {

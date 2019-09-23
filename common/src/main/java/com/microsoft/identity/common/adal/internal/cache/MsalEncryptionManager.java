@@ -71,13 +71,6 @@ public class MsalEncryptionManager extends EncryptionManagerBase {
             GeneralSecurityException {
         final String methodName = ":loadSecretKeyForEncryption";
 
-        // Loading key only once for performance. If API is upgraded, it will
-        // restart the device anyway. It will load the correct key for new API.
-        final Pair<SecretKey, String> cachedKey = getCachedEncryptionKey();
-        if (cachedKey != null) {
-            return cachedKey;
-        }
-
         // Try to get user defined key (ADAL/MSAL).
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() != null) {
             return new Pair<>(loadSecretKey(IEncryptionManager.KeyType.ADAL_USER_DEFINED_KEY), VERSION_USER_DEFINED);
