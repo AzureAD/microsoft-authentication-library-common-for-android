@@ -23,24 +23,27 @@
 package com.microsoft.identity.common.internal.telemetry;
 
 public final class TelemetryEventStrings {
+    private static final String EVENT_PREFIX = "Microsoft.MSAL.";
+
     public static final class App {
-        public static final String BUILD = "app_build";
-        public static final String NAME = "app_name";
-        public static final String VERSION = "app_version";
+        public static final String BUILD = EVENT_PREFIX + "application_build";
+        public static final String NAME = EVENT_PREFIX + "application_name";
+        public static final String VERSION = EVENT_PREFIX + "application_version";
     }
 
     public static final class Os {
-        public static final String NAME = "os_name";
+        public static final String NAME = EVENT_PREFIX + "os_name";
         public static final String OS_NAME = "android";
-        public static final String VERSION = "os_version";
-        public static final String SECURITY_PATCH = "security_patch";
+        public static final String VERSION = EVENT_PREFIX + "os_version";
+        public static final String SECURITY_PATCH = EVENT_PREFIX + "security_patch";
     }
 
     public static final class Device {
-        public static final String MANUFACTURER = "device_manufacturer";
-        public static final String MODEL = "device_model";
-        public static final String NAME = "device_name";
-        public static final String TIMEZONE = "time_zone";
+        public static final String MANUFACTURER = EVENT_PREFIX + "device_manufacturer";
+        public static final String MODEL = EVENT_PREFIX + "device_model";
+        public static final String NAME = EVENT_PREFIX + "device_name";
+        public static final String TIMEZONE = EVENT_PREFIX + "time_zone";
+        public static final String ID = EVENT_PREFIX + "device_id";
     }
 
     public static final class Event {
@@ -58,112 +61,97 @@ public final class TelemetryEventStrings {
 
         public static final String BROKER_START_EVENT = "broker_start_event";
         public static final String BROKER_END_EVENT = "broker_end_event";
-
-        public static final String AUTHORITY_VALIDATION_START_EVENT = "authority_validation_start_event";
-        public static final String AUTHORITY_VALIDATION_END_EVENT = "authority_validation_end_event";
     }
 
     public static final class EventType {
-        public static final String API_EVENT = "api_event";
-        public static final String CACHE_EVENT = "cache_event";
-        public static final String UI_EVENT = "ui_event";
-        public static final String HTTP_EVENT = "http_event";
-        public static final String BROKER_EVENT = "broker_event";
-        public static final String AUTHORITY_VALIDATION_EVENT = "authority_validation_event";
-
+        public static final String API_EVENT = EVENT_PREFIX + "api_event";
+        public static final String CACHE_EVENT = EVENT_PREFIX + "cache_event";
+        public static final String UI_EVENT = EVENT_PREFIX + "ui_event";
+        public static final String HTTP_EVENT = EVENT_PREFIX + "http_event";
+        public static final String BROKER_EVENT = EVENT_PREFIX + "broker_event";
     }
 
     public static final class Key {
-        public static final String EVENT_NAME = "event_name";
-        public static final String EVENT_TYPE = "event_type";
-        public static final String AUTHORITY_TYPE = "authority_type";
-        public static final String AUTHORITY_VALIDATION_STATUS = "authority_validation_status";
-        public static final String EXTENDED_EXPIRES_ON_SETTING = "extended_expires_on_setting";
-        public static final String PROMPT_BEHAVIOR = "prompt_behavior";
-        public static final String UI_BEHAVIOR = "ui_behavior";
-        public static final String RESULT_STATUS = "status";
-        public static final String IDP = "idp";
-        public static final String TENANT_ID = "tenant_id";
-        public static final String USER_ID = "user_id";
-        public static final String OCCUR_TIME = "occur_time";
-        public static final String START_TIME = "start_time";
-        public static final String END_TIME = "stop_time";
+        public static final String EVENT_NAME = EVENT_PREFIX + "event_name";
+        public static final String EVENT_TYPE = EVENT_PREFIX + "event_type";
+        public static final String AUTHORITY_TYPE = EVENT_PREFIX + "authority_type";
+        public static final String AUTHORITY_NAME = EVENT_PREFIX + "authority_name"; //adal
+        public static final String AUTHORITY_VALIDATION_STATUS = EVENT_PREFIX + "authority_validation_status";
+        public static final String EXTENDED_EXPIRES_ON_SETTING = EVENT_PREFIX + "extended_expires_on_setting";
+        public static final String PROMPT_BEHAVIOR = EVENT_PREFIX + "prompt_behavior";
+        public static final String IDP_NAME = EVENT_PREFIX + "idp";
+        public static final String TENANT_ID = EVENT_PREFIX + "tenant_id";
+        public static final String USER_ID = EVENT_PREFIX + "user_id";
+        public static final String OCCUR_TIME = EVENT_PREFIX + "occur_time"; //msal only
+        public static final String START_TIME = EVENT_PREFIX + "start_time";
+        public static final String END_TIME = EVENT_PREFIX + "stop_time";
         public static final String RESPONSE_TIME = "response_time";
-        public static final String NETWORK_CONNECTION = "network_connection";
-        public static final String POWER_OPTIMIZATION = "power_optimization";
-        public static final String IS_FORCE_PROMPT = "force_prompt";
-        public static final String IS_FORCE_REFRESH = "force_refresh";
-        public static final String DEVICE_ID = "device_id";
-        public static final String APPLICATION_NAME = "application_name";
-        public static final String APPLICATION_VERSION = "application_version";
-        public static final String SDK_NAME = "sdk_name";
-        public static final String SDK_VERSION = "sdk_version";
-        public static final String LOGIN_HINT = "login_hint";
-        public static final String CLAIM_REQUEST = "claim_request";
-        public static final String REDIRECT_URI = "redirect_uri";
-        public static final String SCOPE_SIZE = "scope_size";
-        public static final String SCOPE = "scope_value";
-        public static final String NTLM_HANDLED = "ntlm";
-        public static final String UI_EVENT_COUNT = "ui_event_count";
-        public static final String EVENT_COUNT = "event_count";
-        public static final String BROKER_APP = "broker_app";
-        public static final String BROKER_VERSION = "broker_version";
-        public static final String BROKER_PROTOCOL_VERSION = "broker_protocol_version";
-        public static final String BROKER_APP_USED = "broker_app_used";
-        public static final String CLIENT_ID = "client_id";
-        public static final String HTTP_EVENT_COUNT = "http_event_count";
-        public static final String CACHE_EVENT_COUNT = "cache_event_count";
-        public static final String API_ID = "api_id";
-        public static final String TOKEN_TYPE = "token_type";
-        public static final String IS_RT = "is_rt";
-        public static final String IS_MRRT = "is_mrrt";
-        public static final String IS_FRT = "is_frt";
-        public static final String RT_STATUS = "token_rt_status";
-        public static final String MRRT_STATUS = "token_mrrt_status";
-        public static final String FRT_STATUS = "token_frt_status";
-        public static final String CORRELATION_ID = "correlation_id";
-        public static final String IS_EXTENED_LIFE_TIME_TOKEN = "is_extended_life_time_token";
-        public static final String ERROR_CODE = "error_code";
-        public static final String PROTOCOL_CODE = "error_protocol_code";
-        public static final String ERROR_DESCRIPTION = "error_description";
-        public static final String ERROR_DOMAIN = "error_domain";
-        public static final String HTTP_METHOD = "method";
-        public static final String HTTP_PATH = "http_path";
-        public static final String HTTP_REQUEST_ID_HEADER = "x_ms_request_id";
-        public static final String HTTP_RESPONSE_CODE = "response_code";
-        public static final String OAUTH_ERROR_CODE = "oauth_error_code";
-        public static final String HTTP_RESPONSE_METHOD = "response_method";
-        public static final String REQUEST_QUERY_PARAMS = "query_params";
-        public static final String USER_AGENT = "user_agent";
-        public static final String HTTP_ERROR_DOMAIN = "http_error_domain";
-        public static final String AUTHORITY = "authority";
-        public static final String GRANT_TYPE = "grant_type";
-        public static final String STATUS = "status";
-        public static final String REQUEST_CODE = "request_code";
-        public static final String RESULT_CODE = "result_code";
-        public static final String USER_CANCEL = "user_cancel";
-        public static final String UI_CANCELLED = "ui_cancelled";
-        public static final String SERVER_ERROR_CODE = "server_error_code";
-        public static final String SERVER_SUBERROR_CODE = "server_sub_error_code";
-        public static final String RT_AGE = "rt_age";
-        public static final String SPE_INFO = "spe_info";
-        public static final String SPE_RING = "spe_ring";
-        public static final String IS_SUCCESSFUL = "is_successful";
-        public static final String WIPE_APP = "wipe_app";
-        public static final String WIPE_TIME = "wipe_time";
-        public static final String BROKER_ACTION = "broker_action";
-        public static final String USER_CANCELLED = "user_cancelled";
-
-        public static final String TOKEN_GRANT = "token_grant";
-        public static final String ACQUIRE_TOKEN_SILENT = "acquire_token_silent_handler";
-        public static final String AUTHORIZATION_CODE = "authorization_code";
-        public static final String TOKEN_CACHE_LOOKUP = "token_cache_lookup";
-        public static final String TOKEN_CACHE_WRITE = "token_cache_write";
-        public static final String TOKEN_CACHE_DELETE = "token_cache_delete";
-        public static final String APP_METADATA_WRITE = "app_metadata_write";
-        public static final String APP_METADATA_DELETE = "app_metadata_delete";
+        public static final String NETWORK_CONNECTION = EVENT_PREFIX + "network_connection"; //msal only
+        public static final String POWER_OPTIMIZATION = EVENT_PREFIX + "power_optimization"; //msal only
+        public static final String IS_FORCE_PROMPT = EVENT_PREFIX + "force_prompt"; //msal only
+        public static final String IS_FORCE_REFRESH = EVENT_PREFIX + "force_refresh"; //msal only
+        public static final String SDK_NAME = EVENT_PREFIX + "sdk_name"; //msal only
+        public static final String SDK_VERSION = EVENT_PREFIX + "sdk_version"; //msal only
+        public static final String LOGIN_HINT = EVENT_PREFIX + "login_hint";
+        public static final String CLAIM_REQUEST = EVENT_PREFIX + "claim_request"; //msal only
+        public static final String REDIRECT_URI = EVENT_PREFIX + "redirect_uri"; //msal only
+        public static final String SCOPE_SIZE = EVENT_PREFIX + "scope_size"; //msal only
+        public static final String SCOPE = EVENT_PREFIX + "scope_value";//msal only
+        public static final String NTLM_HANDLED = EVENT_PREFIX + "ntlm";
+        public static final String UI_EVENT_COUNT = EVENT_PREFIX + "ui_event_count";
+        public static final String CACHE_EVENT_COUNT = EVENT_PREFIX + "cache_event_count";
+        public static final String HTTP_EVENT_COUNT = EVENT_PREFIX + "http_event_count";
+        public static final String BROKER_APP = EVENT_PREFIX + "broker_app";
+        public static final String BROKER_VERSION = EVENT_PREFIX + "broker_version";
+        public static final String BROKER_PROTOCOL_VERSION = EVENT_PREFIX + "broker_protocol_version"; //msal only
+        public static final String BROKER_APP_USED = EVENT_PREFIX + "broker_app_used";
+        public static final String CLIENT_ID = EVENT_PREFIX + "client_id";
+        public static final String API_ID = EVENT_PREFIX + "api_id";
+        public static final String TOKEN_TYPE = EVENT_PREFIX + "token_type";
+        public static final String IS_RT = EVENT_PREFIX + "is_rt";
+        public static final String IS_AT = EVENT_PREFIX + "is_at";
+        public static final String IS_MRRT = EVENT_PREFIX + "is_mrrt";
+        public static final String IS_FRT = EVENT_PREFIX + "is_frt";
+        public static final String RT_STATUS = EVENT_PREFIX + "rt_status";  //msal only
+        public static final String AT_STATUS = EVENT_PREFIX + "at_status";  //msal only
+        public static final String ID_TOKEN_STATUS = EVENT_PREFIX + "id_token_status";  //msal only
+        public static final String V1_ID_TOKEN_STATUS = EVENT_PREFIX + "v1_id_token_status";
+        public static final String ACCOUNT_STATUS = EVENT_PREFIX + "account_status";
+        public static final String MRRT_STATUS = EVENT_PREFIX + "mrrt_status"; //msal only
+        public static final String FRT_STATUS = EVENT_PREFIX + "frt_status"; //msal only
+        public static final String CORRELATION_ID = EVENT_PREFIX + "correlation_id";
+        public static final String ERROR_CODE = EVENT_PREFIX + "api_error_code";
+        public static final String ERROR_DESCRIPTION = EVENT_PREFIX + "error_description"; //msal only
+        public static final String ERROR_DOMAIN = EVENT_PREFIX + "error_domain"; //msal only
+        public static final String HTTP_METHOD = EVENT_PREFIX + "method";
+        public static final String HTTP_PATH = EVENT_PREFIX + "http_path";
+        public static final String HTTP_REQUEST_ID_HEADER = EVENT_PREFIX + "x_ms_request_id";
+        public static final String HTTP_RESPONSE_CODE = EVENT_PREFIX + "response_code";
+        public static final String OAUTH_ERROR_CODE = EVENT_PREFIX + "oauth_error_code";
+        public static final String REQUEST_QUERY_PARAMS = EVENT_PREFIX + "query_params";
+        public static final String USER_AGENT = EVENT_PREFIX + "user_agent";
+        public static final String HTTP_ERROR_DOMAIN = EVENT_PREFIX + "http_error_domain"; //msal only
+        public static final String AUTHORITY = EVENT_PREFIX +"authority";
+        public static final String GRANT_TYPE = EVENT_PREFIX +"grant_type"; //msal only
+        public static final String REQUEST_CODE = EVENT_PREFIX +"request_code"; //msal only
+        public static final String RESULT_CODE = EVENT_PREFIX +"result_code"; //msal only
+        public static final String USER_CANCEL = EVENT_PREFIX +"user_cancel";
+        public static final String UI_CANCELLED = EVENT_PREFIX +"ui_cancelled"; //msal only
+        public static final String UI_COMPLETE = EVENT_PREFIX +"ui_complete"; //msal only
+        public static final String SERVER_ERROR_CODE = EVENT_PREFIX + "server_error_code";
+        public static final String SERVER_SUBERROR_CODE = EVENT_PREFIX + "server_sub_error_code";
+        public static final String RT_AGE = EVENT_PREFIX +"rt_age";
+        public static final String SPE_INFO = EVENT_PREFIX +"spe_info";
+        public static final String SPE_RING = EVENT_PREFIX +"spe_ring"; //msal only
+        public static final String IS_SUCCESSFUL = "_is_successful"; //sub key
+        public static final String WIPE_APP = EVENT_PREFIX +"wipe_app"; //msal only
+        public static final String WIPE_TIME = EVENT_PREFIX +"wipe_time"; //msal only
+        public static final String BROKER_ACTION = EVENT_PREFIX +"broker_action"; //msal only
+        public static final String BROKER_STRATEGY = EVENT_PREFIX +"broker_strategy";
+        public static final String ACCOUNTS_NUMBER = EVENT_PREFIX + "accounts_number";
+        public static final String IS_DEVICE_SHARED = EVENT_PREFIX + "is_device_shared";
     }
-    
+
     public static final class Value {
         public static final String TRUE = "true";
         public static final String FALSE = "false";
@@ -183,6 +171,8 @@ public final class TelemetryEventStrings {
         public static final String AUTHORITY_AAD = "aad";
         public static final String AUTHORITY_ADFS = "adfs";
         public static final String AUTHORITY_B2C = "b2c";
+        public static final String ACCOUNT_MANAGER = "account_manager";
+        public static final String BOUND_SERVICE = "bound_service";
     }
 
     public static final class Api {

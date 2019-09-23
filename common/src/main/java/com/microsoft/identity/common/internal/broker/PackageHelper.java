@@ -123,7 +123,7 @@ public class PackageHelper {
             Logger.error(TAG + methodName, "Package is not found. Package name: " + packageName, e);
         }
 
-        Logger.verbose(TAG + methodName, " Is package installed and enabled? [" + enabled + "]");
+        Logger.info(TAG + methodName, " Is package installed and enabled? [" + enabled + "]");
         return enabled;
     }
 

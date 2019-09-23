@@ -23,9 +23,10 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
+import android.util.Pair;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
@@ -235,22 +236,23 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
         final String methodName = ":createAuthorizationRequestBuilder";
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Creating AuthorizationRequestBuilder..."
         );
 
-        MicrosoftStsAuthorizationRequest.Builder builder = new MicrosoftStsAuthorizationRequest.Builder();
+        final MicrosoftStsAuthorizationRequest.Builder builder = new MicrosoftStsAuthorizationRequest.Builder();
         builder.setAuthority(mConfig.getAuthorityUrl());
 
         if (mConfig.getSlice() != null) {
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "Setting slice params..."
             );
             builder.setSlice(mConfig.getSlice());
         }
-        Map<String, String> platformParameters = Device.getPlatformIdParameters();
+
+        final Map<String, String> platformParameters = Device.getPlatformIdParameters();
         builder.setLibraryName(platformParameters.get(
                 Device.PlatformIdParameters.PRODUCT)
         );
@@ -268,7 +270,7 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder(
             @Nullable final IAccountRecord account) {
         final String methodName = ":createAuthorizationRequestBuilder";
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Creating AuthorizationRequestBuilder"
         );
@@ -284,12 +286,12 @@ public class MicrosoftStsOAuth2Strategy
                 builder.setUid(uidUtidPair.first);
                 builder.setUtid(uidUtidPair.second);
 
-                Logger.verbosePII(
+                Logger.infoPII(
                         TAG + methodName,
                         "Builder w/ uid: [" + uidUtidPair.first + "]"
                 );
 
-                Logger.verbosePII(
+                Logger.infoPII(
                         TAG + methodName,
                         "Builder w/ utid: [" + uidUtidPair.second + "]"
                 );
@@ -313,7 +315,7 @@ public class MicrosoftStsOAuth2Strategy
             setTokenEndpoint(getCloudSpecificTenantEndpoint(response));
         }
 
-        MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
+        final MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setCodeVerifier(request.getPkceChallenge().getCodeVerifier());
         tokenRequest.setCode(response.getCode());
         tokenRequest.setRedirectUri(request.getRedirectUri());
@@ -392,19 +394,26 @@ public class MicrosoftStsOAuth2Strategy
         headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
 
-        String challengeHeader = response.getHeaders().get(CHALLENGE_REQUEST_HEADER).get(0);
+        final String challengeHeader = response.getHeaders().get(CHALLENGE_REQUEST_HEADER).get(0);
         Logger.info(TAG + methodName, "Device certificate challenge request. ");
         Logger.infoPII(TAG + methodName, "Challenge header: " + challengeHeader);
+
         try {
             final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
             final URL authority = StringExtensions.getUrl(mTokenEndpoint);
-            final PKeyAuthChallenge pkeyAuthChallenge = factory.getPKeyAuthChallenge(challengeHeader, authority.toString());
+            final PKeyAuthChallenge pkeyAuthChallenge = factory.getPKeyAuthChallenge(
+                    challengeHeader,
+                    authority.toString()
+            );
             headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
+
             final HttpResponse pkeyAuthResponse = HttpRequest.sendPost(
                     authority,
                     headers,
                     requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
-                    TOKEN_REQUEST_CONTENT_TYPE);
+                    TOKEN_REQUEST_CONTENT_TYPE
+            );
+
             return pkeyAuthResponse;
         } catch (final UnsupportedEncodingException exception) {
             throw new ClientException(ErrorStrings.UNSUPPORTED_ENCODING,

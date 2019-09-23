@@ -41,7 +41,7 @@ public class MicrosoftAuthServiceConnection implements android.content.ServiceCo
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-        Logger.verbose(TAG, "MicrosoftAuthService is connected.");
+        Logger.info(TAG, "MicrosoftAuthService is connected.");
         mMicrosoftAuthService = IMicrosoftAuthService.Stub.asInterface(service);
         mMicrosoftAuthServiceFuture.setMicrosoftAuthService(mMicrosoftAuthService);
     }
@@ -64,7 +64,7 @@ public class MicrosoftAuthServiceConnection implements android.content.ServiceCo
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-        Logger.verbose(TAG, "MicrosoftAuthService is disconnected.");
+        Logger.info(TAG, "MicrosoftAuthService is disconnected.");
     }
 
 

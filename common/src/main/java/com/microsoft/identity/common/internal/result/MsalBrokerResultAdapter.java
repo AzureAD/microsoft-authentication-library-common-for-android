@@ -63,7 +63,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     @Override
     public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult) {
-        Logger.verbose(TAG, "Constructing result bundle from ILocalAuthenticationResult");
+        Logger.info(TAG, "Constructing result bundle from ILocalAuthenticationResult");
 
         final IAccountRecord accountRecord = authenticationResult.getAccountRecord();
 
@@ -105,7 +105,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     @Override
     public Bundle bundleFromBaseException(@NonNull final BaseException exception) {
-        Logger.verbose(TAG, "Constructing result bundle from BaseException");
+        Logger.info(TAG, "Constructing result bundle from BaseException");
 
         final BrokerResult.Builder builder = new BrokerResult.Builder()
                 .success(false)
@@ -154,7 +154,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             return null;
         }
 
-        Logger.verbose(TAG, "Broker Result returned from Bundle, constructing authentication result");
+        Logger.info(TAG, "Broker Result returned from Bundle, constructing authentication result");
 
         final List<ICacheRecord> tenantProfileCacheRecords = brokerResult.getTenantProfileData();
         final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
@@ -186,7 +186,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         if (!StringUtil.isEmpty(bundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY))) {
             final String negotiatedBrokerProtocolVersion = bundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY);
-            Logger.verbose(TAG + methodName,
+            Logger.info(TAG + methodName,
                     "Able to establish the connect, " +
                             "the broker protocol version in common is ["
                             + negotiatedBrokerProtocolVersion + "]");
@@ -212,7 +212,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     @Override
     public BaseException baseExceptionFromBundle(@NonNull final Bundle resultBundle) {
-        Logger.verbose(TAG, "Constructing exception from result bundle");
+        Logger.info(TAG, "Constructing exception from result bundle");
 
         final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
 

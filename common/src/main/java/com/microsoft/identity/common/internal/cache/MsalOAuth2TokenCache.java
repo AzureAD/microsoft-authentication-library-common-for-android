@@ -47,6 +47,10 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
+import com.microsoft.identity.common.internal.telemetry.events.CacheStartEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -489,6 +493,8 @@ public class MsalOAuth2TokenCache
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
                              @NonNull final AccountRecord account) {
+        Telemetry.emit(new CacheStartEvent());
+
         final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
                 account.getAuthorityType()
         );
@@ -544,6 +550,7 @@ public class MsalOAuth2TokenCache
         result.setIdToken(idTokens.isEmpty() ? null : (IdTokenRecord) idTokens.get(0));
         result.setV1IdToken(v1IdTokens.isEmpty() ? null : (IdTokenRecord) v1IdTokens.get(0));
 
+        Telemetry.emit(new CacheEndEvent().putCacheRecordStatus(result));
         return result;
     }
 
@@ -618,7 +625,7 @@ public class MsalOAuth2TokenCache
                 "Removing credential..."
         );
 
-        Logger.infoPII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "ClientId: [" + credential.getClientId() + "]"
                         + "\n"
@@ -644,7 +651,7 @@ public class MsalOAuth2TokenCache
                                     @Nullable final String realm) {
         final String methodName = ":getAccount";
 
-        Logger.infoPII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "Environment: [" + environment + "]"
                         + "\n"
@@ -719,7 +726,7 @@ public class MsalOAuth2TokenCache
 
         final List<AccountRecord> accounts = getAccounts(environment, clientId);
 
-        Logger.infoPII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "LocalAccountId: [" + localAccountId + "]"
         );
@@ -831,7 +838,7 @@ public class MsalOAuth2TokenCache
                                            @NonNull final String clientId) {
         final String methodName = ":getAccounts";
 
-        Logger.infoPII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "Environment: [" + environment + "]"
                         + "\n"
@@ -848,7 +855,7 @@ public class MsalOAuth2TokenCache
                         null // wildcard (*) realm
                 );
 
-        Logger.info(
+        Logger.verbose(
                 TAG + methodName,
                 "Found " + accountsForEnvironment.size() + " accounts for this environment"
         );
@@ -883,7 +890,7 @@ public class MsalOAuth2TokenCache
             }
         }
 
-        Logger.info(
+        Logger.verbose(
                 TAG + methodName,
                 "Found " + accountsForThisApp.size() + " accounts for this clientId"
         );
@@ -953,7 +960,7 @@ public class MsalOAuth2TokenCache
 
         }
 
-        Logger.info(
+        Logger.verbose(
                 TAG + methodName,
                 "Found " + result.size() + " accounts with IdTokens"
         );
@@ -976,7 +983,7 @@ public class MsalOAuth2TokenCache
         final String accountHomeId = account.getHomeAccountId();
         final String accountEnvironment = account.getEnvironment();
 
-        Logger.infoPII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "HomeAccountId: [" + accountHomeId + "]"
                         + "\n"
@@ -1020,7 +1027,7 @@ public class MsalOAuth2TokenCache
                                                @Nullable final String realm) {
         final String methodName = ":removeAccount";
 
-        Logger.infoPII(
+        Logger.verbosePII(
                 TAG + methodName,
                 "Environment: [" + environment + "]"
                         + "\n"
@@ -1054,7 +1061,7 @@ public class MsalOAuth2TokenCache
         // If no realm is provided, remove the Account/Credentials from all realms.
         final boolean isRealmAgnostic = (null == realm);
 
-        Logger.info(
+        Logger.verbose(
                 TAG + methodName,
                 "IsRealmAgnostic? " + isRealmAgnostic
         );
@@ -1238,7 +1245,7 @@ public class MsalOAuth2TokenCache
             @NonNull final RefreshTokenRecord refreshTokenToSave,
             @NonNull final IdTokenRecord idTokenToSave) throws ClientException {
         final String methodName = ":validateCacheArtifacts";
-        Logger.info(
+        Logger.verbose(
                 TAG + methodName,
                 "Validating cache artifacts..."
         );

@@ -28,10 +28,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Pair;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
@@ -71,6 +72,11 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
     @Override
     public BrokerAcquireTokenOperationParameters brokerInteractiveParametersFromActivity(@NonNull final Activity callingActivity) {
 
+        final String methodName = "brokerInteractiveParametersFromActivity";
+        Logger.verbose(
+                TAG + methodName,
+                "Constructing BrokerAcquireTokenOperationParameters from activity "
+        );
         final BrokerAcquireTokenOperationParameters parameters =
                 new BrokerAcquireTokenOperationParameters();
 
@@ -87,8 +93,21 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         );
         parameters.setCallerUId(callingAppUid);
 
+        // There are two constants that need to be checked for the presence of the caller pkg name:
+        // 1. CALLER_INFO_PACKAGE
+        // 2. APP_PACKAGE_NAME
+        //
+        // But wait! There are also versions of the ADAL library (Android) that did not send this value
+        // in those cases, we simply 'lie' and say that the request came from **current** execution
+        // context. This will not always be correct. We'll set a flag here to signal when the param
+        // is used.
+        final boolean callerPackageNameProvided = packageNameWasProvidedInBundle(intent.getExtras());
+
         parameters.setCallerPackageName(
-                getPackageNameFromBundle(intent.getExtras(), callingActivity.getApplicationContext())
+                getPackageNameFromBundle(
+                        intent.getExtras(),
+                        callingActivity.getApplicationContext()
+                )
         );
         parameters.setCallerAppVersion(intent.getStringExtra(
                 AuthenticationConstants.AAD.APP_VERSION)
@@ -105,7 +124,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         // V1 endpoint always add an organizational account if the tenant id is common.
         // We need to explicitly add tenant id as organizations if we want similar behavior from V2 endpoint
 
-        if(authority.getAudience().getTenantId().equalsIgnoreCase(AzureActiveDirectoryAudience.ALL)){
+        if (authority.getAudience().getTenantId().equalsIgnoreCase(AzureActiveDirectoryAudience.ALL)) {
             authority.getAudience().setTenantId(AzureActiveDirectoryAudience.ORGANIZATIONS);
         }
         parameters.setAuthority(authority);
@@ -121,9 +140,28 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY)
         );
 
-        parameters.setRedirectUri(
-                intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_REDIRECT)
-        );
+        // If the caller package name was provided, compute their redirect
+        if (callerPackageNameProvided) {
+            // V1 Broker would compute the redirect_uri for the calling package, rather than
+            // 'trust' the provided value -- this had the unfortunate consequence of allowing
+            // callers to pass non-URL-encoded signature hashes into the library despite the documentation
+            // prescribing otherwise. The ADAL.NET implementation unfortunately RELIES on this behavior,
+            // forcing customers to use non-encoded values in order to pass validation check inside of
+            // ADAL.NET. In order to not regress this experience, the redirect URI must now be computed
+            // meaning that the ACCOUNT_REDIRECT parameter is basically ignored.
+            parameters.setRedirectUri(
+                    BrokerValidator.getBrokerRedirectUri(
+                            callingActivity,
+                            parameters.getCallerPackageName()
+                    )
+            );
+        } else {
+            // The caller's package name was not provided, so we cannot compute the redirect for them.
+            // In this case, use the provided value...
+            parameters.setRedirectUri(
+                    intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_REDIRECT)
+            );
+        }
 
         parameters.setLoginHint(intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_NAME));
 
@@ -131,6 +169,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID
         );
         if (TextUtils.isEmpty(correlationIdString)) {
+            Logger.info(TAG, "Correlation id not set by Adal, creating a new one");
             UUID correlationId = UUID.randomUUID();
             correlationIdString = correlationId.toString();
         }
@@ -155,6 +194,11 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public BrokerAcquireTokenSilentOperationParameters brokerSilentParametersFromBundle(Bundle bundle,
                                                                                         Context context,
                                                                                         Account account) {
+        final String methodName = ":brokerSilentParametersFromBundle";
+        Logger.verbose(
+                TAG + methodName,
+                "Constructing BrokerAcquireTokenOperationParameters from activity "
+        );
         final BrokerAcquireTokenSilentOperationParameters parameters =
                 new BrokerAcquireTokenSilentOperationParameters();
 
@@ -168,6 +212,16 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.CALLER_INFO_UID
         );
         parameters.setCallerUId(callingAppUid);
+
+        // There are two constants that need to be checked for the presence of the caller pkg name:
+        // 1. CALLER_INFO_PACKAGE
+        // 2. APP_PACKAGE_NAME
+        //
+        // But wait! There are also versions of the ADAL library (Android) that did not send this value
+        // in those cases, we simply 'lie' and say that the request came from **current** execution
+        // context. This will not always be correct. We'll set a flag here to signal when the param
+        // is used.
+        final boolean callerPackageNameProvided = packageNameWasProvidedInBundle(bundle);
 
         final String packageName = getPackageNameFromBundle(bundle, context);
         parameters.setCallerPackageName(packageName);
@@ -184,6 +238,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID
         );
         if (TextUtils.isEmpty(correlationIdString)) {
+            Logger.info(TAG, "Correlation id not set by Adal, creating a new one");
             UUID correlationId = UUID.randomUUID();
             correlationIdString = correlationId.toString();
         }
@@ -207,10 +262,9 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 )
         );
 
-        String redirectUri = bundle.getString(
-                AuthenticationConstants.Broker.ACCOUNT_REDIRECT);
+        String redirectUri = bundle.getString(AuthenticationConstants.Broker.ACCOUNT_REDIRECT);
         // Adal might not pass in the redirect uri, in that case calculate from broker validator
-        if(TextUtils.isEmpty(redirectUri)){
+        if (callerPackageNameProvided || TextUtils.isEmpty(redirectUri)) {
             redirectUri = BrokerValidator.getBrokerRedirectUri(context, packageName);
         }
         parameters.setRedirectUri(redirectUri);
@@ -235,11 +289,24 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return parameters;
     }
 
+    private boolean packageNameWasProvidedInBundle(@Nullable final Bundle bundle) {
+        if (null == bundle) {
+            return false;
+        }
+
+        final String callerInfoPkg = bundle.getString(AuthenticationConstants.Broker.CALLER_INFO_PACKAGE);
+        final String appPkgName = bundle.getString(AuthenticationConstants.AAD.APP_PACKAGE_NAME);
+
+        // If either value is non-null/empty, then the param was populated
+        return !TextUtils.isEmpty(callerInfoPkg) || !TextUtils.isEmpty(appPkgName);
+    }
+
     private String getPackageNameFromBundle(final Bundle bundle, final Context context) {
         String packageName = bundle.getString(AuthenticationConstants.Broker.CALLER_INFO_PACKAGE);
         if (TextUtils.isEmpty(packageName)) {
             packageName = bundle.getString(AuthenticationConstants.AAD.APP_PACKAGE_NAME);
             if (TextUtils.isEmpty(packageName)) {
+                Logger.warn(TAG, "Caller package name not set by app, getting from context");
                 packageName = context.getPackageName();
             }
         }
@@ -270,7 +337,6 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     /**
      * TODO : Refactor to remove this code and move the logic to better place
-     *
      */
     public static AzureActiveDirectoryAuthority getRequestAuthorityWithExtraQP(final String authority,
                                                                                final List<Pair<String, String>> extraQP) {
@@ -287,13 +353,13 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 if (StringUtil.isEmpty(parameter.first)) {
                     Logger.warn(TAG, "The extra query parameter.first is empty.");
                 } else if (parameter.first.equalsIgnoreCase(MicrosoftAuthorizationRequest.INSTANCE_AWARE)) {
-                    Logger.verbose(TAG,
+                    Logger.info(TAG,
 
                             "Set the extra query parameter mMultipleCloudAware" +
                                     " for MicrosoftStsAuthorizationRequest."
                     );
 
-                    Logger.verbosePII(
+                    Logger.infoPII(
                             TAG,
                             "Set the mMultipleCloudAware to " +
                                     (parameter.second == null ? "null" : parameter.second)
@@ -301,7 +367,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
                     requestAuthority.mMultipleCloudsSupported =
                             null != parameter.second &&
-                            parameter.second.equalsIgnoreCase(Boolean.TRUE.toString());
+                                    parameter.second.equalsIgnoreCase(Boolean.TRUE.toString());
 
                     extraQP.remove(parameter);
 

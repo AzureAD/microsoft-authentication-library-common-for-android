@@ -36,7 +36,9 @@ public class TelemetryAggregationRules {
 
     final private String aggregatedArray[] = {
             Key.EVENT_NAME,
-            Key.OCCUR_TIME
+            Key.OCCUR_TIME,
+            Key.EVENT_TYPE,
+            Key.IS_SUCCESSFUL
     };
 
     private TelemetryAggregationRules() {
