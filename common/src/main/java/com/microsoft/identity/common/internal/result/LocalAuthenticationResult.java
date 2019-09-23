@@ -87,16 +87,16 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
                 cacheRecord.getIdToken();
         if (idTokenRecord != null) {
             mRawIdToken = idTokenRecord.getSecret();
-            Logger.verbose(TAG, "Id Token type: " +
+            Logger.info(TAG, "Id Token type: " +
                     idTokenRecord.getCredentialType());
         } else if (cacheRecord.getV1IdToken() != null) {
             // For all AAD requests, we hit the V2 endpoint, so the id token returned will be of version 2.0 (V2 )
             // However for B2C we might get back v1 id tokens, so check if getV1IdToken() is not null and add it
-            Logger.verbose(TAG, "V1 Id Token returned here, ");
+            Logger.info(TAG, "V1 Id Token returned here, ");
             mRawIdToken = cacheRecord.getV1IdToken().getSecret();
         }
 
-        Logger.verbose(TAG, "Constructing LocalAuthentication result" +
+        Logger.info(TAG, "Constructing LocalAuthentication result" +
                 ", AccessTokenRecord null: " + (mAccessTokenRecord == null) +
                 ", AccountRecord null: " + (mAccountRecord == null) +
                 ", RefreshTokenRecord null or empty: " + TextUtils.isEmpty(mRefreshToken) +

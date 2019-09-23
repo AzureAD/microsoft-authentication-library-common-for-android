@@ -22,6 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.HttpEndEvent;
+import com.microsoft.identity.common.internal.telemetry.events.HttpStartEvent;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.BufferedReader;
@@ -38,12 +44,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
+import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactory.createHttpURLConnection;
+
 /**
  * Internal class for handling http request.
  */
 public final class HttpRequest {
 
     private static final String HOST = "Host";
+
     /**
      * The waiting time before doing retry to prevent hitting the server immediately failure.
      */
@@ -52,14 +62,16 @@ public final class HttpRequest {
 
     static final String REQUEST_METHOD_GET = "GET";
     static final String REQUEST_METHOD_POST = "POST";
+
     /**
-     * Default value of read timeout in milliseconds.
+     * Value of read timeout in milliseconds.
      */
-    private static final int DEFAULT_READ_TIMEOUT = 30000;
+    public static int READ_TIMEOUT = 30000;
+
     /**
-     * Default value of connect timeout in milliseconds.
+     * Value of connect timeout in milliseconds.
      */
-    private static final int DEFAULT_CONNECT_TIMEOUT = 30000;
+    public static int CONNECT_TIMEOUT = 30000;
 
     // class variables
     private final URL mRequestUrl;
@@ -74,31 +86,32 @@ public final class HttpRequest {
      * @param requestUrl     The {@link URL} to make the http request.
      * @param requestHeaders Headers used to send the http request.
      */
-    private HttpRequest(final URL requestUrl, final Map<String, String> requestHeaders, final String requestMethod) {
+    private HttpRequest(@NonNull final URL requestUrl,
+                        @NonNull final Map<String, String> requestHeaders,
+                        @NonNull final String requestMethod) {
         this(requestUrl, requestHeaders, requestMethod, null, null);
     }
 
     /**
-     * Constructor for {@link HttpRequest} with request {@link URL}, headers, post message and the request content
-     * type.
+     * Constructor for {@link HttpRequest} with request {@link URL}, headers, post message and the
+     * request content type.
      *
      * @param requestUrl         The {@link URL} to make the http request.
      * @param requestHeaders     Headers used to send the http request.
      * @param requestContent     Post message sent in the post request.
      * @param requestContentType Request content type.
      */
-    private HttpRequest(final URL requestUrl, final Map<String, String> requestHeaders,
-                        final String requestMethod, final byte[] requestContent,
-                        final String requestContentType) {
+    private HttpRequest(@NonNull final URL requestUrl,
+                        @NonNull final Map<String, String> requestHeaders,
+                        @NonNull final String requestMethod,
+                        @Nullable final byte[] requestContent,
+                        @Nullable final String requestContentType) {
         mRequestUrl = requestUrl;
-
         mRequestHeaders.put(HOST, requestUrl.getAuthority());
         mRequestHeaders.putAll(requestHeaders);
-
         mRequestMethod = requestMethod;
         mRequestContent = requestContent;
         mRequestContentType = requestContentType;
-
     }
 
     /**
@@ -114,9 +127,19 @@ public final class HttpRequest {
     public static HttpResponse sendPost(final URL requestUrl, final Map<String, String> requestHeaders,
                                         final byte[] requestContent, final String requestContentType)
             throws IOException {
+        Telemetry.emit(
+                new HttpStartEvent()
+                        .putMethod(REQUEST_METHOD_POST)
+                        .putPath(requestUrl)
+                        .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
+        );
+
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_POST,
                 requestContent, requestContentType);
-        return httpRequest.send();
+        final HttpResponse response = httpRequest.send();
+        Telemetry.emit(new HttpEndEvent().putStatusCode(response.getStatusCode()));
+
+        return response;
     }
 
     /**
@@ -129,21 +152,28 @@ public final class HttpRequest {
      */
     public static HttpResponse sendGet(final URL requestUrl, final Map<String, String> requestHeaders)
             throws IOException {
-        final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
+        Telemetry.emit(
+                new HttpStartEvent()
+                        .putMethod(REQUEST_METHOD_GET)
+                        .putPath(requestUrl)
+                        .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
+        );
 
-        return httpRequest.send();
+        final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
+        final HttpResponse response =  httpRequest.send();
+
+        Telemetry.emit(
+                new HttpEndEvent()
+                        .putStatusCode(response.getStatusCode())
+        );
+        return response;
     }
 
     /**
      * Send http request.
      */
-    private HttpResponse send() throws IOException, SocketTimeoutException, UnknownServiceException {
-        final HttpResponse response;
-        try {
-            response = sendWithRetry();
-        } catch (final SocketTimeoutException socketTimeoutException) {
-            throw socketTimeoutException;
-        }
+    private HttpResponse send() throws IOException {
+        final HttpResponse response = sendWithRetry();
 
         if (response != null && isRetryableError(response.getStatusCode())) {
             throw new UnknownServiceException("Retry failed again with 500/503/504");
@@ -153,16 +183,18 @@ public final class HttpRequest {
     }
 
     /**
-     * Execute the send request, and retry if needed. Retry happens on all the endpoint when receiving
-     * {@link SocketTimeoutException} or retryable error 500/503/504.
+     * Execute the send request, and retry if needed. Retry happens on all the endpoint when
+     * receiving {@link SocketTimeoutException} or retryable error 500/503/504.
      */
     private HttpResponse sendWithRetry() throws IOException {
         final HttpResponse httpResponse;
+
         try {
             httpResponse = executeHttpSend();
         } catch (final SocketTimeoutException socketTimeoutException) {
-            // In android, network timeout is thrown as the SocketTimeOutException, we need to catch this and perform
-            // retry. If retry also fails with timeout, the socketTimeoutException will be bubbled up
+            // In android, network timeout is thrown as the SocketTimeOutException, we need to
+            // catch this and perform retry. If retry also fails with timeout, the
+            // socketTimeoutException will be bubbled up
             waitBeforeRetry();
             return executeHttpSend();
         }
@@ -189,8 +221,9 @@ public final class HttpRequest {
             try {
                 responseStream = urlConnection.getInputStream();
             } catch (final SocketTimeoutException socketTimeoutException) {
-                // SocketTimeoutExcetion is thrown when connection timeout happens. For connection timeout, we want
-                // to retry once. Throw the exception to the upper layer, and the upper layer will handle the rety.
+                // SocketTimeoutExcetion is thrown when connection timeout happens. For connection
+                // timeout, we want to retry once. Throw the exception to the upper layer, and the
+                // upper layer will handle the rety.
                 throw socketTimeoutException;
             } catch (final IOException ioException) {
                 responseStream = urlConnection.getErrorStream();
@@ -198,7 +231,9 @@ public final class HttpRequest {
 
             final int statusCode = urlConnection.getResponseCode();
 
-            String responseBody = responseStream == null ? "" : convertStreamToString(responseStream);
+            final String responseBody = responseStream == null
+                    ? ""
+                    : convertStreamToString(responseStream);
 
             response = new HttpResponse(statusCode, responseBody, urlConnection.getHeaderFields());
         } finally {
@@ -209,16 +244,17 @@ public final class HttpRequest {
     }
 
     private HttpURLConnection setupConnection() throws IOException {
-        final HttpURLConnection urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(mRequestUrl);
+        final HttpURLConnection urlConnection = createHttpURLConnection(mRequestUrl);
 
         // Apply request headers and update the headers with default attributes first
         final Set<Map.Entry<String, String>> headerEntries = mRequestHeaders.entrySet();
+
         for (final Map.Entry<String, String> entry : headerEntries) {
             urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
         }
 
-        urlConnection.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT);
-        urlConnection.setReadTimeout(DEFAULT_READ_TIMEOUT);
+        urlConnection.setConnectTimeout(CONNECT_TIMEOUT);
+        urlConnection.setReadTimeout(READ_TIMEOUT);
         urlConnection.setInstanceFollowRedirects(true);
         urlConnection.setUseCaches(false);
         urlConnection.setDoInput(true);
@@ -226,8 +262,9 @@ public final class HttpRequest {
         return urlConnection;
     }
 
-    private static void setRequestBody(final HttpURLConnection connection, final byte[] contentRequest,
-                                       final String requestContentType) throws IOException {
+    private static void setRequestBody(@NonNull final HttpURLConnection connection,
+                                       @Nullable final byte[] contentRequest,
+                                       @Nullable final String requestContentType) throws IOException {
         if (contentRequest == null) {
             return;
         }
@@ -241,6 +278,7 @@ public final class HttpRequest {
         connection.setRequestProperty("Content-Length", String.valueOf(contentRequest.length));
 
         OutputStream out = null;
+
         try {
             out = connection.getOutputStream();
             out.write(contentRequest);
@@ -262,6 +300,7 @@ public final class HttpRequest {
             final char[] buffer = new char[STREAM_BUFFER_SIZE];
             final StringBuilder stringBuilder = new StringBuilder();
             int charsRead;
+
             while ((charsRead = reader.read(buffer)) > -1) {
                 stringBuilder.append(buffer, 0, charsRead);
             }
@@ -277,7 +316,7 @@ public final class HttpRequest {
      *
      * @param stream stream to be closed
      */
-    private static void safeCloseStream(final Closeable stream) {
+    private static void safeCloseStream(@Nullable final Closeable stream) {
         if (stream == null) {
             return;
         }
@@ -302,7 +341,8 @@ public final class HttpRequest {
     }
 
     /**
-     * Having the thread wait for 1 second before doing the retry to avoid hitting server immediately.
+     * Having the thread wait for 1 second before doing the retry to avoid hitting server
+     * immediately.
      */
     private void waitBeforeRetry() {
         try {

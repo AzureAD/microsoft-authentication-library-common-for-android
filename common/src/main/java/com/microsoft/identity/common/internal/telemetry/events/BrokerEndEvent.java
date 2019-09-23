@@ -41,6 +41,7 @@ public class BrokerEndEvent extends BaseEvent {
         return this;
     }
 
+
     public BrokerEndEvent isSuccessful(final boolean isSuccessful) {
         put(Key.IS_SUCCESSFUL, String.valueOf(isSuccessful));
         return this;
@@ -48,7 +49,7 @@ public class BrokerEndEvent extends BaseEvent {
 
     public BrokerEndEvent putException(@NonNull final BaseException exception) {
         if (exception  instanceof UserCancelException) {
-            put(Key.USER_CANCELLED, Value.TRUE);
+            put(Key.USER_CANCEL, Value.TRUE);
         }
 
         put(Key.SERVER_ERROR_CODE, exception.getCliTelemErrorCode());

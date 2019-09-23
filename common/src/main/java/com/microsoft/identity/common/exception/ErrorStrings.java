@@ -380,4 +380,11 @@ public final class ErrorStrings {
     public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_CODE = "single_account_pca_init_fail_unknown_reason";
     public static final String SINGLE_ACCOUNT_PCA_INIT_FAIL_UNKNOWN_REASON_ERROR_MESSAGE = "A single account public client application could not be created for unknown reasons.";
 
+    /**
+     * Some or all requested scopes where declined by the server. Developer should decide whether to continue
+     * authentication with the granted scopes or end the authentication process.
+     */
+    public static final String DECLINED_SCOPE_ERROR_CODE = "declined_scope_error";
+    public static final String DECLINED_SCOPE_ERROR_MESSAGE = "Some or all requested scopes have been declined by the Server";
+
 }
