@@ -69,6 +69,11 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
         super(context);
     }
 
+    /**
+     * Loads key for Broker.
+     * If the legacy key is set and is enabled, use legacy key.
+     * Otherwise, it will return a keystore-encrypted key.
+     * */
     @Override
     public synchronized Pair<SecretKey, String> loadSecretKeyForEncryption() throws IOException,
             GeneralSecurityException {
