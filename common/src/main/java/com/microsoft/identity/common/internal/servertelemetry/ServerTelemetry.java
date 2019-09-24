@@ -21,10 +21,10 @@ public class ServerTelemetry {
     private static final String LAST_REQUEST_TELEMETRY_SHARED_PREFERENCES =
             "com.microsoft.identity.client.last_request_telemetry";
 
-    private static IRequestTelemetryCache mLastRequestTelemetryCache;
+    private static IRequestTelemetryCache sLastRequestTelemetryCache;
 
-    private static RequestTelemetry mCurrentRequestTelemetry;
-    private static RequestTelemetry mLastRequestTelemetry;
+    private static RequestTelemetry sCurrentRequestTelemetry = null;
+    private static RequestTelemetry sLastRequestTelemetry = null;
 
     public static void initializeServerTelemetry(Context context) {
         final String methodName = ":initializeServerTelemetry";
@@ -35,15 +35,68 @@ public class ServerTelemetry {
         );
 
         final IRequestTelemetryCache lastRequestTelemetryCache = createLastRequestTelemetryCache(context);
-        mLastRequestTelemetryCache = lastRequestTelemetryCache;
-        startScenario();
+        sLastRequestTelemetryCache = lastRequestTelemetryCache;
+        startScenario(); // do we need to call this here?
+    }
+
+    public static void emit(Map<String, String> telemetry) {
+        for(Map.Entry<String, String> entry: telemetry.entrySet()) {
+            emit(entry.getKey(), entry.getValue());
+        }
+    }
+
+    // always emits to current request
+    public static void emit(String key, String value) {
+        putForCurrent(key, value);
+    }
+
+    private static RequestTelemetry getCurrentTelemetryInstance() {
+        final String methodName = ":getCurrentTelemetryInstance";
+
+        /**
+         * This should never happen. If it does happen, it means there is an error in the code.
+         * Lets check for null here to avoid a NullPointerException,
+         * and create a new RequestTelemetry object to continue capturing telemetry data.
+         **/
+        if (sCurrentRequestTelemetry == null) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "sCurrentRequestTelemetry object was null. " +
+                            "Creating a new object to capture as much data as possible"
+            );
+
+            sCurrentRequestTelemetry = new RequestTelemetry(Schema.Value.SCHEMA_VERSION, true);
+        }
+
+        return sCurrentRequestTelemetry;
+    }
+
+    private static RequestTelemetry getLastTelemetryInstance() {
+        final String methodName = ":getLastTelemetryInstance";
+
+        /**
+         * This should never happen. If it does happen, it means there is an error in the code.
+         * Lets check for null here to avoid a NullPointerException,
+         * and create a new RequestTelemetry object to continue capturing telemetry data.
+         **/
+        if (sLastRequestTelemetry == null) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "sLastRequestTelemetry object was null. " +
+                            "Creating a new object to capture as much data as possible"
+            );
+
+            sLastRequestTelemetry = new RequestTelemetry(Schema.Value.SCHEMA_VERSION, false);
+        }
+
+        return sLastRequestTelemetry;
     }
 
     public static void startScenario() {
         final String methodName = ":startScenario";
-        mCurrentRequestTelemetry = new RequestTelemetry(true);
+        sCurrentRequestTelemetry = new RequestTelemetry(true);
         //putCurrentLoggingEnabled(Logger.getAllowLogcat());
-        if (mLastRequestTelemetryCache == null) {
+        if (sLastRequestTelemetryCache == null) {
             Logger.verbose(
                     TAG + methodName,
                     "Last Request Telemetry Cache has not been initialized. " +
@@ -52,85 +105,63 @@ public class ServerTelemetry {
             return;
         }
 
-        mLastRequestTelemetry = mLastRequestTelemetryCache.getRequestTelemetryFromCache();
+        sLastRequestTelemetry = sLastRequestTelemetryCache.getRequestTelemetryFromCache();
     }
 
-    private static void putForCurrent(String key, Object value) {
-        final String methodName = ":putForCurrent";
+    private static void transformCurrentToLast() {
+        sLastRequestTelemetry = new RequestTelemetry(sCurrentRequestTelemetry.getSchemaVersion(), false);
 
-        /**
-         * This should never happen. If it does happen, it means there is an error in the code.
-         * Lets check for null here to avoid a NullPointerException,
-         * and create a new RequestTelemetry object to continue capturing telemetry data.
-         **/
-        if (mCurrentRequestTelemetry == null) {
-            Logger.verbose(
-                    TAG + methodName,
-                    "mCurrentRequestTelemetry object was null. " +
-                            "Creating a new object to capture as much data as possible"
-            );
-
-            mCurrentRequestTelemetry = new RequestTelemetry(Schema.Value.SCHEMA_VERSION, true);
+        for(Map.Entry<String, String> entry : sCurrentRequestTelemetry.getCommonTelemetry().entrySet()) {
+            putForLast(entry.getKey(), entry.getValue());
         }
 
-        mCurrentRequestTelemetry.putTelemetry(key, value);
-    }
-
-    private static void putForLast(String key, Object value) {
-        final String methodName = ":putForLast";
-
-        /**
-         * This should never happen. If it does happen, it means there is an error in the code.
-         * Lets check for null here to avoid a NullPointerException,
-         * and create a new RequestTelemetry object to continue capturing telemetry data.
-         **/
-        if (mLastRequestTelemetry == null) {
-            Logger.verbose(
-                    TAG + methodName,
-                    "mLastRequestTelemetry object was null. " +
-                            "Creating a new object to capture as much data as possible"
-            );
-
-            mLastRequestTelemetry = new RequestTelemetry(Schema.Value.SCHEMA_VERSION, false);
+        for(Map.Entry<String, String> entry : sCurrentRequestTelemetry.getPlatformTelemetry().entrySet()) {
+            putForLast(entry.getKey(), entry.getValue());
         }
-
-        mLastRequestTelemetry.putTelemetry(key, value);
     }
 
-    public static void putCurrentApiId(String apiId) {
-        putForCurrent(Schema.Key.API_ID, apiId);
+    private static void putForCurrent(String key, String value) {
+        getCurrentTelemetryInstance().putTelemetry(key, value);
     }
 
-    public static void putCurrentScenarioId(String scenarioId) {
-        putForCurrent(Schema.Key.SCENARIO_ID, scenarioId);
+    private static void putForLast(String key, String value) {
+        getLastTelemetryInstance().putTelemetry(key, value);
     }
 
-    public static void putCurrentTelemetryEnabled(boolean telemetryEnabled) {
-        putForCurrent(Schema.Key.TELEMETRY_ENABLED, telemetryEnabled);
-    }
-
-    public static void putCurrentLoggingEnabled(boolean loggingEnabled) {
-        putForCurrent(Schema.Key.LOGGING_ENABLED, loggingEnabled);
-    }
-
-    public static void putCurrentForceRefresh(boolean forceRefresh) {
-        putForCurrent(Schema.Key.FORCE_REFRESH, forceRefresh);
-    }
-
-    public static void putLastErrorCode(String errorCode) {
+//    public static void putCurrentApiId(String apiId) {
+//        putForCurrent(Schema.Key.API_ID, apiId);
+//    }
+//
+//    public static void putCurrentScenarioId(String scenarioId) {
+//        putForCurrent(Schema.Key.SCENARIO_ID, scenarioId);
+//    }
+//
+//    public static void putCurrentTelemetryEnabled(boolean telemetryEnabled) {
+//        putForCurrent(Schema.Key.TELEMETRY_ENABLED, telemetryEnabled);
+//    }
+//
+//    public static void putCurrentLoggingEnabled(boolean loggingEnabled) {
+//        putForCurrent(Schema.Key.LOGGING_ENABLED, loggingEnabled);
+//    }
+//
+//    public static void putCurrentForceRefresh(boolean forceRefresh) {
+//        putForCurrent(Schema.Key.FORCE_REFRESH, forceRefresh);
+//    }
+//
+    private static void putLastErrorCode(String errorCode) {
         putForLast(Schema.Key.ERROR_CODE, errorCode);
     }
 
-    public static void putLastCorrelationId(String correlationId) {
+    private static void putLastCorrelationId(String correlationId) {
         putForLast(Schema.Key.CORRELATION_ID, correlationId);
     }
 
     public static RequestTelemetry getCurrentTelemetry() {
-        return mCurrentRequestTelemetry;
+        return sCurrentRequestTelemetry;
     }
 
     public static RequestTelemetry getLastTelemetry() {
-        return mLastRequestTelemetry;
+        return sLastRequestTelemetry;
     }
 
     private static IRequestTelemetryCache createLastRequestTelemetryCache(Context context) {
@@ -154,49 +185,57 @@ public class ServerTelemetry {
     }
 
     private static void clearLastRequestTelemetry() {
-        mLastRequestTelemetry.clearTelemetry();
-        mLastRequestTelemetryCache.clearAll();
-        mLastRequestTelemetry = null;
+        if (sLastRequestTelemetry != null) {
+            sLastRequestTelemetry.clearTelemetry();
+            sLastRequestTelemetry = null; // do we need to create new objects for each request? or is clearing the hashmap going to be enough?
+        }
+
+        if (sLastRequestTelemetryCache != null) {
+            sLastRequestTelemetryCache.clearAll();
+        }
     }
 
     private static void clearCurrentRequestTelemetry() {
-        mCurrentRequestTelemetry.clearTelemetry();
-        mCurrentRequestTelemetry = null;
+        if (sCurrentRequestTelemetry != null) {
+            sCurrentRequestTelemetry.clearTelemetry();
+            sCurrentRequestTelemetry = null;
+        }
     }
 
-    private static void setupLastFromCurrent(String correlationId) {
-        mLastRequestTelemetry = new RequestTelemetry(mCurrentRequestTelemetry.getSchemaVersion(), false);
+    private static void setupLastFromCurrent() {
+        sLastRequestTelemetry = new RequestTelemetry(sCurrentRequestTelemetry.getSchemaVersion(), false);
 
-        mLastRequestTelemetry.putTelemetry(
-                Schema.Key.API_ID,
-                mCurrentRequestTelemetry.getTelemetryFieldValue(Schema.Key.API_ID)
-        );
+        // grab whatever common fields we can from current request
+        for(Map.Entry<String, String> entry: sCurrentRequestTelemetry.getCommonTelemetry().entrySet()) {
+            putForLast(entry.getKey(), entry.getValue());
+        }
 
-        mLastRequestTelemetry.putTelemetry(
-                Schema.Key.SCENARIO_ID,
-                mCurrentRequestTelemetry.getTelemetryFieldValue(Schema.Key.SCENARIO_ID)
-        );
-
-        mLastRequestTelemetry.putTelemetry(
-                Schema.Key.CORRELATION_ID,
-                correlationId
-        );
+        // grab whatever platform fields we can from current request
+        for(Map.Entry<String, String> entry: sCurrentRequestTelemetry.getPlatformTelemetry().entrySet()) {
+            putForLast(entry.getKey(), entry.getValue());
+        }
     }
 
     public static void completeScenario(String correlationId, String errorCode) {
-        ServerTelemetry.clearLastRequestTelemetry();
-        ServerTelemetry.setupLastFromCurrent(correlationId);
-        ServerTelemetry.putLastErrorCode(errorCode);
-        mLastRequestTelemetryCache.saveRequestTelemetryToCache(mLastRequestTelemetry);
+        clearLastRequestTelemetry();
+        setupLastFromCurrent();
+        putLastCorrelationId(correlationId);
+        putLastErrorCode(errorCode);
+        sLastRequestTelemetryCache.saveRequestTelemetryToCache(sLastRequestTelemetry);
         clearCurrentRequestTelemetry();
     }
 
+    public static void completeScenario(String correlationId, AcquireTokenResult acquireTokenResult) {
+        final String errorCode = errorFromAcquireTokenResult(acquireTokenResult);
+        completeScenario(correlationId, errorCode);
+    }
+
     public static String getCurrentTelemetryHeaderString() {
-        return mCurrentRequestTelemetry.getCompleteTelemetryHeaderString();
+        return sCurrentRequestTelemetry.getCompleteTelemetryHeaderString();
     }
 
     public static String getLastTelemetryHeaderString() {
-        return mLastRequestTelemetry.getCompleteTelemetryHeaderString();
+        return sLastRequestTelemetry.getCompleteTelemetryHeaderString();
     }
 
     public static Map<String, String> getTelemetryHeaders() {

@@ -27,11 +27,17 @@ public class RequestTelemetry {
     }
 
     private void putInCommonTelemetry(String key, String value) {
-        mCommonTelemetry.put(key, value);
+        // avoid overwrites
+        if (!mCommonTelemetry.containsKey(key)) {
+            mCommonTelemetry.put(key, value);
+        }
     }
 
     private void putInPlatformTelemetry(String key, String value) {
-        mPlatformTelemetry.put(key, value);
+        // avoid overwrites
+        if (!mPlatformTelemetry.containsKey(key)) {
+            mPlatformTelemetry.put(key, value);
+        }
     }
 
     void clearTelemetry() {
@@ -39,7 +45,7 @@ public class RequestTelemetry {
         mPlatformTelemetry.clear();
     }
 
-    void putTelemetry(String key, Object value) {
+    void putTelemetry(String key, String value) {
         final String methodName = ":putTelemetry";
         final String schemaCompliantValueString = Schema.getSchemaCompliantString(value);
 
@@ -89,10 +95,10 @@ public class RequestTelemetry {
             return null;
         }
 
-        final String schemaString = Schema.getSchemaCompliantString(mSchemaVersion);
+        final String schemaVersionString = Schema.getSchemaCompliantString(mSchemaVersion);
         final String commonSchemaString = getCommonTelemetryHeaderString();
         final String platformSchemaString = getPlatformTelemetryHeaderString();
-        return schemaString + "|" + commonSchemaString + "|" + platformSchemaString;
+        return schemaVersionString + "|" + commonSchemaString + "|" + platformSchemaString;
     }
 
     private String getCommonTelemetryHeaderString() {

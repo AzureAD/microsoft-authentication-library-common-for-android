@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.servertelemetry.ServerTelemetry;
 import com.microsoft.identity.common.internal.telemetry.adapter.TelemetryAggregationAdapter;
 import com.microsoft.identity.common.internal.telemetry.adapter.TelemetryDefaultAdapter;
 import com.microsoft.identity.common.internal.telemetry.events.BaseEvent;
@@ -188,6 +189,9 @@ public class Telemetry {
             //only enqueue the telemetry properties when the telemetry is enabled.
             getInstance().getRequestMap().add(event.getProperties());
         }
+
+        // Server telemetry is always enabled and will always be emitted
+        ServerTelemetry.emit(event.getProperties());
     }
 
     /**

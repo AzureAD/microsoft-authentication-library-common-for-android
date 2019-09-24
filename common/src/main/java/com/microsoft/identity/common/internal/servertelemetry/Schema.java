@@ -1,23 +1,36 @@
 package com.microsoft.identity.common.internal.servertelemetry;
 
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.Arrays;
 
+/**
+ * This class defines the schema for server-side telemetry
+ */
 public class Schema {
 
     public static final String CURRENT_REQUEST_HEADER_NAME = "x-client-current-telemetry";
     public static final String LAST_REQUEST_HEADER_NAME = "x-client-last-telemetry";
 
     public static final class Key {
+        // new keys
         public static final String SCHEMA_VERSION = "schema_version";
-        public static final String API_ID = "api_id";
         public static final String SCENARIO_ID = "scenario_id";
         public static final String TELEMETRY_ENABLED = "telemetry_enabled";
-        public static final String FORCE_REFRESH = "force_refresh";
         public static final String LOGGING_ENABLED = "logging_enabled";
-        public static final String CORRELATION_ID = "correlation_id";
-        public static final String ERROR_CODE = "error_code";
+
+        //imported keys
+        public static final String API_ID = TelemetryEventStrings.Key.API_ID;
+        public static final String FORCE_REFRESH = TelemetryEventStrings.Key.IS_FORCE_REFRESH;
+        public static final String CORRELATION_ID = TelemetryEventStrings.Key.CORRELATION_ID;
+        public static final String ERROR_CODE = TelemetryEventStrings.Key.ERROR_CODE;
+        public static final String ACCOUNT_STATUS = TelemetryEventStrings.Key.ACCOUNT_STATUS;
+        public static final String ID_TOKEN_STATUS = TelemetryEventStrings.Key.ID_TOKEN_STATUS;
+        public static final String AT_STATUS = TelemetryEventStrings.Key.AT_STATUS;
+        public static final String RT_STATUS = TelemetryEventStrings.Key.RT_STATUS;
+        public static final String FRT_STATUS = TelemetryEventStrings.Key.FRT_STATUS;
+        public static final String MRRT_STATUS = TelemetryEventStrings.Key.MRRT_STATUS;
     }
 
     public static final class Value {
@@ -34,8 +47,7 @@ public class Schema {
      */
     private static final String[] currentRequestCommonFields = new String[]{
             Key.API_ID,
-            Key.FORCE_REFRESH,
-
+            Key.FORCE_REFRESH
     };
 
     /**
@@ -44,7 +56,12 @@ public class Schema {
      *      Failure do so will break the schema.
      */
     private static final String[] currentRequestPlatformFields = new String[] {
-
+            Key.ACCOUNT_STATUS,
+            Key.ID_TOKEN_STATUS,
+            Key.AT_STATUS,
+            Key.RT_STATUS,
+            Key.FRT_STATUS,
+            Key.MRRT_STATUS
     };
 
     /**
@@ -56,7 +73,6 @@ public class Schema {
             Key.API_ID,
             Key.CORRELATION_ID,
             Key.ERROR_CODE
-
     };
 
     /**
@@ -126,23 +142,23 @@ public class Schema {
         return isCurrent ? isCurrentPlatformField(key) : isLastPlatformField(key);
     }
 
-    private static String getSchemaCompliantStringFromBoolean(boolean value) {
-        return value ? Schema.Value.TRUE : Schema.Value.FALSE;
+    static boolean isCurrentField(String key) {
+        return isCurrentCommonField(key) || isCurrentPlatformField(key);
     }
 
-    private static String getSchemaCompliantStringFromString(String value) {
-        return StringUtil.isEmpty(value) ? Schema.Value.EMPTY : value;
+    static boolean isLastField(String key) {
+        return isLastCommonField(key) || isLastPlatformField(key);
     }
 
-    static String getSchemaCompliantString(Object obj) {
-        if (obj == null) {
-            return Schema.Value.EMPTY;
-        } else if (obj instanceof String) {
-            return getSchemaCompliantStringFromString((String) obj);
-        } else if (obj instanceof Boolean) {
-            return getSchemaCompliantStringFromBoolean(((Boolean) obj).booleanValue());
+    static String getSchemaCompliantString(String s) {
+        if (StringUtil.isEmpty(s)) {
+            return Value.EMPTY;
+        } else if (s.equals(TelemetryEventStrings.Value.TRUE)) {
+            return Value.TRUE;
+        } else if (s.equals(TelemetryEventStrings.Value.FALSE)) {
+            return Value.FALSE;
         } else {
-            return obj.toString();
+            return s;
         }
     }
 }

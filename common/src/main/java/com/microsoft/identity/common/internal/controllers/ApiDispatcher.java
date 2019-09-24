@@ -179,6 +179,8 @@ public class ApiDispatcher {
                 public void run() {
                     final String correlationId = initializeDiagnosticContext();
 
+                    ServerTelemetry.startScenario();
+
                     if (command.mParameters instanceof AcquireTokenOperationParameters) {
                         logInteractiveRequestParameters(methodName, (AcquireTokenOperationParameters) command.mParameters);
                     }
@@ -226,20 +228,17 @@ public class ApiDispatcher {
                                 @Override
                                 public void run() {
                                     command.getCallback().onSuccess(authenticationResult);
-                                    ServerTelemetry.completeScenario(correlationId, null);
                                 }
                             });
                         } else {
                             //Get MsalException from Authorization and/or Token Error Response
                             baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
                             final BaseException finalException = baseException;
-                            final String error = ServerTelemetry.errorFromAcquireTokenResult(result);
                             if (finalException instanceof UserCancelException) {
                                 //Post Cancel
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        ServerTelemetry.completeScenario(null,null);
                                         command.getCallback().onCancel();
                                     }
                                 });
@@ -247,7 +246,6 @@ public class ApiDispatcher {
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        ServerTelemetry.completeScenario(correlationId, error);
                                         command.getCallback().onError(finalException);
                                     }
                                 });
@@ -256,6 +254,7 @@ public class ApiDispatcher {
                     }
 
                     Telemetry.getInstance().flush(correlationId);
+                    ServerTelemetry.completeScenario(correlationId, result);
                 }
             });
         }
@@ -391,6 +390,8 @@ public class ApiDispatcher {
             public void run() {
                 final String correlationId = initializeDiagnosticContext();
 
+                ServerTelemetry.startScenario();
+
                 if (command.mParameters instanceof AcquireTokenSilentOperationParameters) {
                     logSilentRequestParams(
                             methodName,
@@ -435,7 +436,6 @@ public class ApiDispatcher {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                ServerTelemetry.completeScenario(correlationId, null);
                                 command.getCallback().onSuccess(authenticationResult);
                             }
                         });
@@ -449,7 +449,6 @@ public class ApiDispatcher {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    ServerTelemetry.completeScenario(null, null);
                                     command.getCallback().onCancel();
                                 }
                             });
@@ -457,7 +456,6 @@ public class ApiDispatcher {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    ServerTelemetry.completeScenario(correlationId, error);
                                     command.getCallback().onError(finalException);
                                 }
                             });
@@ -466,6 +464,7 @@ public class ApiDispatcher {
                 }
 
                 Telemetry.getInstance().flush(correlationId);
+                ServerTelemetry.completeScenario(correlationId, result);
             }
         });
     }
