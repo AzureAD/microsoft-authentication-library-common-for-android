@@ -45,7 +45,9 @@ import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
-
+/**
+ * This class contains helper methods to obtain passwords from KeyVault using the {@link SecretsApi}
+ */
 public class Secrets {
 
     private static String mAccessToken = null;

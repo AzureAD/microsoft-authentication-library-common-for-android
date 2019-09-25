@@ -55,16 +55,21 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
         }
     }
 
-    @Override
-    public OAuth2Strategy createOAuth2Strategy() {
-        final String methodName = ":createOAuth2Strategy";
+    protected MicrosoftStsOAuth2Configuration createOAuth2Configuration() {
+        final String methodName = ":createOAuth2Configuration";
         Logger.verbose(
                 TAG + methodName,
-                "Creating OAuth2Strategy "
+                "Creating OAuth2Configuration"
         );
         MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
         config.setMultipleCloudsSupported(false);
         config.setAuthorityUrl(this.getAuthorityURL());
+        return config;
+    }
+
+    @Override
+    public OAuth2Strategy createOAuth2Strategy() {
+        MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
         return new MicrosoftStsOAuth2Strategy(config);
     }
 }

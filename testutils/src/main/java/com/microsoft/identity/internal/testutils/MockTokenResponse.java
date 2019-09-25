@@ -23,14 +23,13 @@
 package com.microsoft.identity.internal.testutils;
 
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 public class MockTokenResponse {
 
     private static final long ACCESS_TOKEN_AGE = 3599;
     private static final String TOKEN_TYPE = "Bearer";
 
-    public static TokenResponse getMockSuccessTokenResponse() {
+    public static MicrosoftStsTokenResponse getMockSuccessTokenResponse() {
         String mockAccessToken = "aaaa.BBBB.123";
         String mockRefreshToken = "abcDeFGhijkl";
         String mockIdToken = MockTokenCreator.createMockIdToken();
@@ -54,8 +53,8 @@ public class MockTokenResponse {
         return tokenResponse;
     }
 
-    public static TokenResponse getMockTokenResponseWithExpiredAccessToken() {
-        MicrosoftStsTokenResponse tokenResponse = (MicrosoftStsTokenResponse) getMockSuccessTokenResponse();
+    public static MicrosoftStsTokenResponse getMockTokenResponseWithExpiredAccessToken() {
+        MicrosoftStsTokenResponse tokenResponse = getMockSuccessTokenResponse();
         tokenResponse.setExpiresIn(Long.valueOf(0));
         tokenResponse.setExtExpiresIn(Long.valueOf(0));
         return tokenResponse;

@@ -23,7 +23,10 @@
 
 package com.microsoft.identity.internal.testutils.labutils;
 
-
+/**
+ * This class defines the parameters we can send to the LabApi when requesting a user.
+ * Please refer to Lab Api documents for more information
+ */
 public class TestConfigurationQuery {
     public String appName = null;
     public String appId = null;

@@ -25,6 +25,10 @@ package com.microsoft.identity.internal.testutils.labutils;
 
 import com.microsoft.identity.internal.test.labapi.model.TestConfiguration;
 
+/**
+ * This class contains methods necessary to obtain a Scenario for a given test case
+ * A Scenario is defined by a {@link TestConfiguration} object, and a {@link Credential} object
+ */
 public class Scenario {
 
     private TestConfiguration mTestConfiguration;
