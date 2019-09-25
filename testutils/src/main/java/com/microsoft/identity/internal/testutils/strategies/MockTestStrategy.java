@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.strategies;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
@@ -29,6 +30,11 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.internal.testutils.MockTokenResponse;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrategy {
 
@@ -62,7 +68,9 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
 
     public HttpResponse makeHttpResponseFromResponseObject(final Object obj) {
         final String httpResponseBody = ObjectMapper.serializeObjectToJsonString(obj);
-        final HttpResponse httpResponse = new HttpResponse(200, httpResponseBody, null);
+        final HashMap<String, List<String>> responseHeaders = new HashMap<>();
+        responseHeaders.put(AuthenticationConstants.HeaderField.X_MS_CLITELEM, new ArrayList<>(Collections.singleton("1,0,0,,")));
+        final HttpResponse httpResponse = new HttpResponse(200, httpResponseBody, responseHeaders);
         return httpResponse;
     }
 
