@@ -28,7 +28,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.internal.testutils.MockTokenResponse;
 
 public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrategy {
@@ -48,12 +47,9 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
     }
 
     public TokenResult getTokenResult() {
-        final TokenResponse mockTokenResponse = MockTokenResponse.getMockSuccessTokenResponse();
-        final TokenResult mockTokenResult = new TokenResult(mockTokenResponse);
-        final CliTelemInfo mockCliTelemInfo = new CliTelemInfo();
-        mockCliTelemInfo.setSpeRing("");
-        mockTokenResult.setCliTelemInfo(mockCliTelemInfo);
-        return mockTokenResult;
+        final TokenResponse tokenResponse = MockTokenResponse.getMockSuccessTokenResponse();
+        final TokenResult tokenResult = new TokenResult(tokenResponse);
+        return tokenResult;
     }
 
     @Override
