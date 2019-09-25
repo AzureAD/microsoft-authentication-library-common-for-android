@@ -27,6 +27,7 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.internal.testutils.strategies.MockTestStrategy;
 
 public class MockAuthority extends AzureActiveDirectoryAuthority {
 
@@ -37,7 +38,7 @@ public class MockAuthority extends AzureActiveDirectoryAuthority {
     @Override
     public OAuth2Strategy createOAuth2Strategy() {
         MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
-        return new MicrosoftStsOAuth2Strategy(config);
+        return new MockTestStrategy(config);
     }
 
 }
