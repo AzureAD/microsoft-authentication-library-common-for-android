@@ -22,31 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.strategies;
 
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.DiagnosticContext;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
-import com.microsoft.identity.internal.testutils.FakeAuthorizationResult;
-import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.internal.testutils.MockTokenResponse;
-import com.microsoft.identity.common.internal.util.StringUtil;
-
-import java.io.IOException;
-import java.util.UUID;
-import java.util.concurrent.Future;
 
 public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrategy {
 
@@ -65,7 +47,7 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
     }
 
     public TokenResult getTokenResult() {
-        final TokenResponse tokenResponse = MockTokenResponse.getTokenResponse();
+        final TokenResponse tokenResponse = MockTokenResponse.getMockSuccessTokenResponse();
         final TokenResult tokenResult = new TokenResult(tokenResponse);
         return tokenResult;
     }

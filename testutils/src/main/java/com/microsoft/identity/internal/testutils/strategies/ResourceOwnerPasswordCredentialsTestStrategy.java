@@ -37,9 +37,10 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
-import com.microsoft.identity.internal.testutils.FakeAuthorizationResult;
+import com.microsoft.identity.internal.testutils.MockSuccessAuthorizationResult;
 import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.internal.testutils.MicrosoftStsRopcTokenRequest;
 import com.microsoft.identity.internal.testutils.labutils.Scenario;
 
 import java.io.IOException;
@@ -74,7 +75,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
     public Future<AuthorizationResult> requestAuthorization(
             final MicrosoftStsAuthorizationRequest request,
             final AuthorizationStrategy authorizationStrategy) {
-        final FakeAuthorizationResult authorizationResult = new FakeAuthorizationResult();
+        final MockSuccessAuthorizationResult authorizationResult = new MockSuccessAuthorizationResult();
         final ResultFuture<AuthorizationResult> future = new ResultFuture<>();
         future.setResult(authorizationResult);
         return future;
@@ -120,11 +121,19 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
     }
 
     private void validateTokenRequestForPasswordGrant(MicrosoftStsTokenRequest request) {
-        if (StringUtil.isEmpty(request.getUsername())) {
+        MicrosoftStsRopcTokenRequest ropcRequest;
+
+        if (!(request instanceof MicrosoftStsRopcTokenRequest)) {
+            throw new IllegalArgumentException("Did you make sure to pass a MicrosoftStsRopcTokenRequest");
+        }
+
+        ropcRequest = (MicrosoftStsRopcTokenRequest) request;
+
+        if (StringUtil.isEmpty(ropcRequest.getUsername())) {
             throw new IllegalArgumentException(USERNAME_EMPTY_OR_NULL);
         }
 
-        if (StringUtil.isEmpty(request.getPassword())) {
+        if (StringUtil.isEmpty(ropcRequest.getPassword())) {
             throw new IllegalArgumentException(PASSWORD_EMPTY_OR_NULL);
         }
     }
@@ -146,7 +155,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
         final String username = request.getLoginHint();
         final String password = getPasswordForUser(username);
 
-        final MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
+        final MicrosoftStsRopcTokenRequest tokenRequest = new MicrosoftStsRopcTokenRequest();
         tokenRequest.setUsername(username);
         tokenRequest.setPassword(password);
         tokenRequest.setClientId(request.getClientId());

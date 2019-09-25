@@ -39,7 +39,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class TokenCreator {
+public class MockTokenCreator {
 
     private static final String NAME_CLAIM = "name";
     private static final String OBJECT_ID_CLAIM = "oid";
@@ -59,13 +59,13 @@ public class TokenCreator {
     private static final String UTID = "some-tid";
     private static final String ENCODING_UTF8 = "UTF-8";
 
-    private static String createToken(final String issuer,
-                                      final String subject,
-                                      final String audience,
-                                      final Date issuedAt,
-                                      final Date notBefore,
-                                      final Date expiration,
-                                      final Map<String, Object> extraClaims) {
+    private static String createMockToken(final String issuer,
+                                          final String subject,
+                                          final String audience,
+                                          final Date issuedAt,
+                                          final Date notBefore,
+                                          final Date expiration,
+                                          final Map<String, Object> extraClaims) {
         final SecureRandom random = new SecureRandom();
         final byte[] secret = new byte[32];
         random.nextBytes(secret);
@@ -102,18 +102,18 @@ public class TokenCreator {
         }
     }
 
-    private static String createIdToken(final String issuer,
-                                        final String subject,
-                                        final String audience,
-                                        final String name,
-                                        final String preferredName,
-                                        final String objectId,
-                                        final String tenantId,
-                                        final String version,
-                                        final Date issuedAt,
-                                        final Date notBefore,
-                                        final Date expiration) {
-        return createToken(
+    private static String createMockIdToken(final String issuer,
+                                            final String subject,
+                                            final String audience,
+                                            final String name,
+                                            final String preferredName,
+                                            final String objectId,
+                                            final String tenantId,
+                                            final String version,
+                                            final Date issuedAt,
+                                            final Date notBefore,
+                                            final Date expiration) {
+        return createMockToken(
                 issuer,
                 subject,
                 audience,
@@ -129,13 +129,13 @@ public class TokenCreator {
                 }});
     }
 
-    public static String createIdToken() {
+    public static String createMockIdToken() {
         long exp = getExpirationTimeAfterSpecifiedTime(3600);
-        return createIdTokenWithExp(exp);
+        return createMockIdTokenWithExp(exp);
     }
 
-    public static String createIdTokenWithExp(long exp) {
-        return createIdToken(
+    public static String createMockIdTokenWithExp(long exp) {
+        return createMockIdToken(
                 ISSUER,
                 SUBJECT,
                 AUDIENCE,
@@ -150,15 +150,15 @@ public class TokenCreator {
         );
     }
 
-    private static String createRawClientInfo(final String uid, final String utid) {
+    private static String createMockRawClientInfo(final String uid, final String utid) {
         final String claims = "{\"uid\":\"" + uid + "\",\"utid\":\"" + utid + "\"}";
 
         return new String(Base64.encode(claims.getBytes(
                 Charset.forName(ENCODING_UTF8)), Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE));
     }
 
-    public static String createRawClientInfo() {
-        return createRawClientInfo(UID, UTID);
+    public static String createMockRawClientInfo() {
+        return createMockRawClientInfo(UID, UTID);
     }
 
     public static long getExpirationTimeAfterSpecifiedTime(long numberOfSecondsAfterCurrentTime) {

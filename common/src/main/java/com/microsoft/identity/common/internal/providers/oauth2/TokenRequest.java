@@ -70,14 +70,6 @@ public class TokenRequest {
     @SerializedName("refresh_token")
     private String mRefreshToken;
 
-    @Expose()
-    @SerializedName("username")
-    private String mUsername;
-
-    @Expose()
-    @SerializedName("password")
-    private String mPassword;
-
     /**
      * @return mCode of the token request.
      */
@@ -206,42 +198,6 @@ public class TokenRequest {
      */
     public void setRefreshToken(final String refreshToken) {
         mRefreshToken = refreshToken;
-    }
-
-    /**
-     * Gets the username
-     *
-     * @return the user's username
-     */
-    public String getUsername() {
-        return mUsername;
-    }
-
-    /**
-     * Sets the username
-     *
-     * @param username the user's username
-     */
-    public void setUsername(final String username) {
-        mUsername = username;
-    }
-
-    /**
-     * Gets the password
-     *
-     * @return the user's password
-     */
-    public String getPassword() {
-        return mPassword;
-    }
-
-    /**
-     * Sets the password
-     *
-     * @param password the user's password
-     */
-    public void setPassword(final String password) {
-        mPassword = password;
     }
 
     public static class GrantTypes {

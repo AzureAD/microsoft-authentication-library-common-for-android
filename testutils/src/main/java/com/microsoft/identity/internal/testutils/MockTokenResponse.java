@@ -30,22 +30,22 @@ public class MockTokenResponse {
     private static final long ACCESS_TOKEN_AGE = 3599;
     private static final String TOKEN_TYPE = "Bearer";
 
-    public static TokenResponse getTokenResponse() {
-        String fakeAccessToken = "aaaa.BBBB.123";
-        String fakeRefreshToken = "abcDeFGhijkl";
-        String fakeIdToken = TokenCreator.createIdToken();
-        String fakeClientInfo = TokenCreator.createRawClientInfo();
+    public static TokenResponse getMockSuccessTokenResponse() {
+        String mockAccessToken = "aaaa.BBBB.123";
+        String mockRefreshToken = "abcDeFGhijkl";
+        String mockIdToken = MockTokenCreator.createMockIdToken();
+        String mockClientInfo = MockTokenCreator.createMockRawClientInfo();
 
         MicrosoftStsTokenResponse tokenResponse = new MicrosoftStsTokenResponse();
 
         tokenResponse.setExpiresIn(ACCESS_TOKEN_AGE);
         tokenResponse.setExtExpiresIn(ACCESS_TOKEN_AGE);
-        tokenResponse.setAccessToken(fakeAccessToken);
+        tokenResponse.setAccessToken(mockAccessToken);
         tokenResponse.setTokenType(TOKEN_TYPE);
-        tokenResponse.setRefreshToken(fakeRefreshToken);
+        tokenResponse.setRefreshToken(mockRefreshToken);
         tokenResponse.setScope("User.Read");
-        tokenResponse.setIdToken(fakeIdToken);
-        tokenResponse.setClientInfo(fakeClientInfo);
+        tokenResponse.setIdToken(mockIdToken);
+        tokenResponse.setClientInfo(mockClientInfo);
         tokenResponse.setRefreshTokenAge("");
         tokenResponse.setCliTelemErrorCode("0");
         tokenResponse.setCliTelemSubErrorCode("0");
@@ -54,8 +54,8 @@ public class MockTokenResponse {
         return tokenResponse;
     }
 
-    public static TokenResponse getTokenResponseWithExpiredAccessToken() {
-        MicrosoftStsTokenResponse tokenResponse = (MicrosoftStsTokenResponse) getTokenResponse();
+    public static TokenResponse getMockTokenResponseWithExpiredAccessToken() {
+        MicrosoftStsTokenResponse tokenResponse = (MicrosoftStsTokenResponse) getMockSuccessTokenResponse();
         tokenResponse.setExpiresIn(Long.valueOf(0));
         tokenResponse.setExtExpiresIn(Long.valueOf(0));
         return tokenResponse;

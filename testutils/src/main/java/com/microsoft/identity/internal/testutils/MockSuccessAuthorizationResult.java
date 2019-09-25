@@ -28,9 +28,9 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStat
 /**
  * A class to provide a Fake Authorization Result object to be used in ROPC flow
  */
-public class FakeAuthorizationResult extends AuthorizationResult {
+public class MockSuccessAuthorizationResult extends AuthorizationResult {
 
-    public FakeAuthorizationResult() {
+    public MockSuccessAuthorizationResult() {
         // assume that we have auth code and auth request was successful
         this.setAuthorizationStatus(AuthorizationStatus.SUCCESS);
     }
