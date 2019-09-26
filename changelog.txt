@@ -1,3 +1,7 @@
+Version 1.0.5
+-------------
+- Updated MSAL version in common to 1.0.0
+
 Version 1.0.4
 -------------
 - Artifact for MSAL GA
