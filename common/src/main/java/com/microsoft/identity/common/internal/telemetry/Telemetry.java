@@ -103,11 +103,11 @@ public class Telemetry {
         return sTelemetryInstance;
     }
 
-    TelemetryContext getTelemetryContext() {
+    private TelemetryContext getTelemetryContext() {
         return mTelemetryContext;
     }
 
-    List<Map<String, String>> getRequestMap() {
+    private List<Map<String, String>> getRequestMap() {
         return mTelemetryRawDataMap;
     }
 
