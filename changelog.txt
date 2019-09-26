@@ -1,3 +1,7 @@
+Version 1.0.6
+-------------
+Fix Concurrent exception issue in Telemetry emit.
+
 Version 1.0.5
 -------------
 - Updated MSAL version in common to 1.0.0
