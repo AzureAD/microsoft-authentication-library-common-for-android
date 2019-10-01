@@ -1,7 +1,5 @@
 package com.microsoft.identity.common.internal.servertelemetry;
 
-import java.util.Map;
-
 public interface IRequestTelemetryCache {
 
     /**
@@ -12,7 +10,8 @@ public interface IRequestTelemetryCache {
     void saveRequestTelemetryToCache(final RequestTelemetry requestTelemetry);
 
     /**
-     * Get the telemetry associated to the..
+     * Get the telemetry from the cache
+     *
      * @return a {@link RequestTelemetry} object
      */
     RequestTelemetry getRequestTelemetryFromCache();

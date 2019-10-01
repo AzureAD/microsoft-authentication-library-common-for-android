@@ -40,7 +40,7 @@ public class Schema {
     /**
      * This array defines the common schema for current request.
      * NOTE: These fields must always be listed in the correct order in this array.
-     *      Failure do so will break the schema.
+     * Failure do so will break the schema.
      */
     private static final String[] currentRequestCommonFields = new String[]{
             Key.API_ID,
@@ -50,9 +50,9 @@ public class Schema {
     /**
      * This array defines the platform schema for current request
      * NOTE: These fields must always be listed in the correct order in this array.
-     *      Failure do so will break the schema.
+     * Failure do so will break the schema.
      */
-    private static final String[] currentRequestPlatformFields = new String[] {
+    private static final String[] currentRequestPlatformFields = new String[]{
             Key.ACCOUNT_STATUS,
             Key.ID_TOKEN_STATUS,
             Key.AT_STATUS,
@@ -64,7 +64,7 @@ public class Schema {
     /**
      * This array defines the common schema for last request
      * NOTE: These fields must always be listed in the correct order in this array.
-     *      Failure do so will break the schema.
+     * Failure do so will break the schema.
      */
     private static final String[] lastRequestCommonFields = new String[]{
             Key.API_ID,
@@ -75,9 +75,9 @@ public class Schema {
     /**
      * This array defines the platform schema for last request
      * NOTE: These fields must always be listed in the correct order in this array.
-     *      Failure do so will break the schema.
+     * Failure do so will break the schema.
      */
-    private static final String[] lastRequestPlatformFields = new String[] {
+    private static final String[] lastRequestPlatformFields = new String[]{
 
     };
 

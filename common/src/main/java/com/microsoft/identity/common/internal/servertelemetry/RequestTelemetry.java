@@ -63,16 +63,8 @@ public class RequestTelemetry {
         }
     }
 
-    public String getSchemaVersion() {
+    String getSchemaVersion() {
         return mSchemaVersion;
-    }
-
-    String getTelemetryFieldValue(String key) {
-        // no need to check if it is a common field or platform field when getting value
-        final String commonValue = mCommonTelemetry.get(key);
-        // if it is found in common return it
-        // otherwise return the value obtained from lookup in platform (null or valid value if exists)
-        return commonValue == null ? mPlatformTelemetry.get(key) : commonValue;
     }
 
     Map<String, String> getCommonTelemetry() {
