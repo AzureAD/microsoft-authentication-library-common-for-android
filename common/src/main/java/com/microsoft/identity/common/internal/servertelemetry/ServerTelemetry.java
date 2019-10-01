@@ -62,7 +62,7 @@ public class ServerTelemetry {
             Logger.verbose(
                     TAG + methodName,
                     "sCurrentRequestTelemetry object was null. " +
-                            "Creating a new object to capture as much data as possible"
+                            "Creating a new current request telemetry object."
             );
 
             sCurrentRequestTelemetry = new RequestTelemetry(Schema.Value.SCHEMA_VERSION, true);
@@ -83,7 +83,7 @@ public class ServerTelemetry {
             Logger.verbose(
                     TAG + methodName,
                     "sLastRequestTelemetry object was null. " +
-                            "Creating a new object to capture as much data as possible"
+                            "Creating a new last request telemetry object."
             );
 
             sLastRequestTelemetry = new RequestTelemetry(Schema.Value.SCHEMA_VERSION, false);

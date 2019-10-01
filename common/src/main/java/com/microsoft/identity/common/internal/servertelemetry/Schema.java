@@ -116,22 +116,12 @@ public class Schema {
         return lastRequestPlatformFields;
     }
 
-    private static String[] getFieldsCopy(String[] fields) {
-        return Arrays.copyOf(fields, fields.length);
-    }
-
     static String[] getCommonFields(boolean isCurrent) {
-        final String[] fields =  isCurrent ? getCurrentRequestCommonFields() : getLastRequestCommonFields();
-
-        // returning a copy here so other classes cannot modify the schema
-        return getFieldsCopy(fields);
+        return isCurrent ? getCurrentRequestCommonFields() : getLastRequestCommonFields();
     }
 
     static String[] getPlatformFields(boolean isCurrent) {
-        final String[] fields =  isCurrent ? getCurrentRequestPlatformFields() : getLastRequestPlatformFields();
-
-        // returning a copy here so other classes cannot modify the schema
-        return getFieldsCopy(fields);
+        return isCurrent ? getCurrentRequestPlatformFields() : getLastRequestPlatformFields();
     }
 
     static boolean isCommonField(String key, boolean isCurrent) {
@@ -140,14 +130,6 @@ public class Schema {
 
     static boolean isPlatformField(String key, boolean isCurrent) {
         return isCurrent ? isCurrentPlatformField(key) : isLastPlatformField(key);
-    }
-
-    static boolean isCurrentField(String key) {
-        return isCurrentCommonField(key) || isCurrentPlatformField(key);
-    }
-
-    static boolean isLastField(String key) {
-        return isLastCommonField(key) || isLastPlatformField(key);
     }
 
     static String getSchemaCompliantString(String s) {
