@@ -3,8 +3,9 @@ package com.microsoft.identity.common.internal.servertelemetry;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class RequestTelemetry {
 
@@ -12,8 +13,8 @@ public class RequestTelemetry {
 
     private boolean mIsCurrentRequest;
     private String mSchemaVersion;
-    private Map<String, String> mCommonTelemetry;
-    private Map<String, String> mPlatformTelemetry;
+    private ConcurrentMap<String, String> mCommonTelemetry;
+    private ConcurrentMap<String, String> mPlatformTelemetry;
 
     RequestTelemetry(boolean isCurrentRequest) {
         this(Schema.Value.SCHEMA_VERSION, isCurrentRequest);
@@ -22,8 +23,8 @@ public class RequestTelemetry {
     RequestTelemetry(String schemaVersion, boolean isCurrentRequest) {
         mIsCurrentRequest = isCurrentRequest;
         mSchemaVersion = schemaVersion;
-        mCommonTelemetry = new HashMap<>();
-        mPlatformTelemetry = new HashMap<>();
+        mCommonTelemetry = new ConcurrentHashMap<>();
+        mPlatformTelemetry = new ConcurrentHashMap<>();
     }
 
     private void putInCommonTelemetry(String key, String value) {
@@ -51,14 +52,14 @@ public class RequestTelemetry {
 
         if (Schema.isCommonField(key, mIsCurrentRequest)) {
             putInCommonTelemetry(key, schemaCompliantValueString);
-        } else if (Schema.isPlatformField(key, mIsCurrentRequest)){
+        } else if (Schema.isPlatformField(key, mIsCurrentRequest)) {
             putInPlatformTelemetry(key, schemaCompliantValueString);
         } else {
             Logger.verbose(
                     TAG + methodName,
                     "Supplied key not added to Server telemetry map " +
                             "as it is not part of either common or platform schema."
-                    );
+            );
         }
     }
 
@@ -88,9 +89,9 @@ public class RequestTelemetry {
         if (StringUtil.isEmpty(mSchemaVersion)) {
             Logger.verbose(
                     TAG + methodName,
-                        "SCHEMA_VERSION is null or empty. " +
-                                "Telemetry Header String cannot be formed."
-                    );
+                    "SCHEMA_VERSION is null or empty. " +
+                            "Telemetry Header String cannot be formed."
+            );
 
             return null;
         }
@@ -112,12 +113,12 @@ public class RequestTelemetry {
     }
 
     /**
-     *  This method loops over provided telemetry fields and creates a header string for those fields.
-     *  It is important to ensure that the fields array passed to this method is in the correct order,
-     *  as determined in {@link Schema}.
-     *  Failure to do so will return a malformed header string.
+     * This method loops over provided telemetry fields and creates a header string for those fields.
+     * It is important to ensure that the fields array passed to this method is in the correct order,
+     * as determined in {@link Schema}.
+     * Failure to do so will return a malformed header string.
      *
-     * @param fields The fields that need to be included in the header string
+     * @param fields    The fields that need to be included in the header string
      * @param telemetry A HashMap of telemetry data that maps keys (fields) to their values
      * @return a telemetry header string composed from provided telemetry fields and values
      */
