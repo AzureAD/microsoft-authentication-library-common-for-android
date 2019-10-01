@@ -6,6 +6,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.Map;
+
 @RunWith(JUnit4.class)
 public class ServerTelemetryTest {
 
@@ -23,13 +25,15 @@ public class ServerTelemetryTest {
         String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
         String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,0|";
 
+        Map<String, String> headers = ServerTelemetry.getTelemetryHeaders();
+
         Assert.assertEquals(expectedResult, actualResult);
     }
 
     @Test
     public void testHeaderStringWithNullTelemObject() {
         String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
-        String expectedResult = "";
+        String expectedResult = null;
 
         Assert.assertEquals(expectedResult, actualResult);
     }
@@ -65,6 +69,12 @@ public class ServerTelemetryTest {
         String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,|";
 
         Assert.assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    public void testEmptyHeaderStrings() {
+        Map<String, String> headerStrings = ServerTelemetry.getTelemetryHeaders();
+        Assert.assertEquals(0, headerStrings.size());
     }
 
     // more tests need to be added

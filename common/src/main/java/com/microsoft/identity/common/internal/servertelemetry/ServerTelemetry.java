@@ -198,7 +198,7 @@ public class ServerTelemetry {
 
     public static String getCurrentTelemetryHeaderString() {
         if (sCurrentRequestTelemetry == null) {
-            return "";
+            return null;
         }
 
         return sCurrentRequestTelemetry.getCompleteTelemetryHeaderString();
@@ -206,17 +206,38 @@ public class ServerTelemetry {
 
     public static String getLastTelemetryHeaderString() {
         if (sLastRequestTelemetry == null) {
-            return "";
+            return null;
         }
 
         return sLastRequestTelemetry.getCompleteTelemetryHeaderString();
     }
 
     public static Map<String, String> getTelemetryHeaders() {
-        return new HashMap<String, String>() {{
-            put(Schema.CURRENT_REQUEST_HEADER_NAME, getCurrentTelemetryHeaderString());
-            put(Schema.LAST_REQUEST_HEADER_NAME, getLastTelemetryHeaderString());
-        }};
+        final String methodName = ":getTelemetryHeaders";
+        final Map<String, String> headerMap = new HashMap<>();
+
+        final String currentHeader = getCurrentTelemetryHeaderString();
+        final String lastHeader = getLastTelemetryHeaderString();
+
+        if (currentHeader != null) {
+            headerMap.put(Schema.CURRENT_REQUEST_HEADER_NAME, currentHeader);
+        } else {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Current Request Telemetry Header is null"
+            );
+        }
+
+        if (lastHeader != null) {
+            headerMap.put(Schema.LAST_REQUEST_HEADER_NAME, lastHeader);
+        } else {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Last Request Telemetry Header is null"
+            );
+        }
+
+        return headerMap;
     }
 
 }
