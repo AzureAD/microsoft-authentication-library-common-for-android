@@ -7,7 +7,12 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 public class TelemetryUtils {
 
     static String errorFromAcquireTokenResult(final AcquireTokenResult acquireTokenResult) {
+        if (acquireTokenResult == null) {
+            return "unknown_error";
+        }
+
         final String errorFromAuthorization = getErrorFromAuthorizationResult(acquireTokenResult.getAuthorizationResult());
+
         if (errorFromAuthorization != null) {
             return errorFromAuthorization;
         } else {

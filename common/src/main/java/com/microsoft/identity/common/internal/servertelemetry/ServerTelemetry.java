@@ -138,7 +138,7 @@ public class ServerTelemetry {
         return lastRequestTelemetryCache;
     }
 
-    private static void clearLastRequestTelemetry() {
+    static void clearLastRequestTelemetry() {
         if (sLastRequestTelemetry != null) {
             sLastRequestTelemetry.clearTelemetry();
             sLastRequestTelemetry = null;
@@ -149,7 +149,7 @@ public class ServerTelemetry {
         }
     }
 
-    private static void clearCurrentRequestTelemetry() {
+    static void clearCurrentRequestTelemetry() {
         if (sCurrentRequestTelemetry != null) {
             sCurrentRequestTelemetry.clearTelemetry();
             sCurrentRequestTelemetry = null;
@@ -197,10 +197,18 @@ public class ServerTelemetry {
     }
 
     public static String getCurrentTelemetryHeaderString() {
+        if (sCurrentRequestTelemetry == null) {
+            return "";
+        }
+
         return sCurrentRequestTelemetry.getCompleteTelemetryHeaderString();
     }
 
     public static String getLastTelemetryHeaderString() {
+        if (sLastRequestTelemetry == null) {
+            return "";
+        }
+
         return sLastRequestTelemetry.getCompleteTelemetryHeaderString();
     }
 
