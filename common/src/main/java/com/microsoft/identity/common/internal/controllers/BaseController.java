@@ -233,9 +233,11 @@ public abstract class BaseController {
                 final CliTelemInfo cliTelemInfo = tokenResult.getCliTelemInfo();
                 authenticationResult.setSpeRing(cliTelemInfo.getSpeRing());
                 authenticationResult.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
+                Telemetry.emit(new CacheEndEvent().putSpeInfo(tokenResult.getCliTelemInfo().getSpeRing()));
+            } else {
+                // we can't put SpeInfo as the CliTelemInfo is null
+                Telemetry.emit(new CacheEndEvent());
             }
-
-            Telemetry.emit(new CacheEndEvent().putSpeInfo(tokenResult.getCliTelemInfo().getSpeRing()));
 
             // Set the AuthenticationResult on the final result object
             acquireTokenSilentResult.setLocalAuthenticationResult(authenticationResult);
