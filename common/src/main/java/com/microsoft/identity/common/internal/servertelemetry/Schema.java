@@ -16,9 +16,6 @@ public class Schema {
     public static final class Key {
         // new keys
         public static final String SCHEMA_VERSION = "schema_version";
-        public static final String SCENARIO_ID = "scenario_id";
-        public static final String TELEMETRY_ENABLED = "telemetry_enabled";
-        public static final String LOGGING_ENABLED = "logging_enabled";
 
         //imported keys
         public static final String API_ID = TelemetryEventStrings.Key.API_ID;
