@@ -128,12 +128,6 @@ public final class HttpRequest {
                         .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
         );
 
-        final RequestTelemetry currentRequestTelemetry = ServerTelemetry.getCurrentTelemetry();
-        final RequestTelemetry lastRequestTelemetry = ServerTelemetry.getLastTelemetry();
-
-        final String currentString = ServerTelemetry.getCurrentTelemetryHeaderString();
-        final String lastString = ServerTelemetry.getLastTelemetryHeaderString();
-
         final Map<String, String> telemetryHeaders = ServerTelemetry.getTelemetryHeaders();
 
         requestHeaders.putAll(telemetryHeaders);
@@ -162,12 +156,6 @@ public final class HttpRequest {
                         .putPath(requestUrl)
                         .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
         );
-
-        final RequestTelemetry currentRequestTelemetry = ServerTelemetry.getCurrentTelemetry();
-        final RequestTelemetry lastRequestTelemetry = ServerTelemetry.getLastTelemetry();
-
-        final String currentString = ServerTelemetry.getCurrentTelemetryHeaderString();
-        final String lastString = ServerTelemetry.getLastTelemetryHeaderString();
 
         final Map<String, String> telemetryHeaders = ServerTelemetry.getTelemetryHeaders();
 
