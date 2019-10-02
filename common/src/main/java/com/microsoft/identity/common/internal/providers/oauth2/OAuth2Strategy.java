@@ -43,6 +43,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
+
 /**
  * Serves as the abstract base class for an oAuth2 client implementation; The base class should be extended
  * by Identity Provider specific implementations; For example: Azure Active Directory, ADFS, Microsoft STS, Etc...
@@ -131,7 +133,7 @@ public abstract class OAuth2Strategy
 
         final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
         final Map<String, String> headers = new TreeMap<>();
-        headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        headers.put(CLIENT_REQUEST_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
 
         if(request instanceof MicrosoftTokenRequest &&
                 !TextUtils.isEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())){

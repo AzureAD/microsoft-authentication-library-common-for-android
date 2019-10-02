@@ -164,7 +164,7 @@ public class ApiDispatcher {
 
     public static void beginInteractive(final InteractiveTokenCommand command) {
         final String methodName = ":beginInteractive";
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Beginning interactive request"
         );
@@ -262,47 +262,47 @@ public class ApiDispatcher {
 
     private static void logInteractiveRequestParameters(final String methodName,
                                                         final AcquireTokenOperationParameters params) {
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Requested "
                         + params.getScopes().size()
                         + " scopes"
         );
 
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "----\nRequested scopes:"
         );
         for (final String scope : params.getScopes()) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "\t" + scope
             );
         }
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "----"
         );
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "ClientId: [" + params.getClientId() + "]"
         );
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "RedirectUri: [" + params.getRedirectUri() + "]"
         );
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "Login hint: [" + params.getLoginHint() + "]"
         );
 
         if (null != params.getExtraQueryStringParameters()) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "Extra query params:"
             );
             for (final Pair<String, String> qp : params.getExtraQueryStringParameters()) {
-                Logger.verbosePII(
+                Logger.infoPII(
                         TAG + methodName,
                         "\t\"" + qp.first + "\":\"" + qp.second + "\""
                 );
@@ -310,25 +310,25 @@ public class ApiDispatcher {
         }
 
         if (null != params.getExtraScopesToConsent()) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "Extra scopes to consent:"
             );
             for (final String extraScope : params.getExtraScopesToConsent()) {
-                Logger.verbosePII(
+                Logger.infoPII(
                         TAG + methodName,
                         "\t" + extraScope
                 );
             }
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Using authorization agent: " + params.getAuthorizationAgent().toString()
         );
 
         if (null != params.getAccount()) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "Using account: " + params.getAccount().getHomeAccountId()
             );
@@ -337,34 +337,34 @@ public class ApiDispatcher {
 
     private static void logSilentRequestParams(final String methodName,
                                                final AcquireTokenSilentOperationParameters parameters) {
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "ClientId: [" + parameters.getClientId() + "]"
         );
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "----\nRequested scopes:"
         );
 
         for (final String scope : parameters.getScopes()) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "\t" + scope
             );
         }
-        Logger.verbosePII(
+        Logger.infoPII(
                 TAG + methodName,
                 "----"
         );
 
         if (null != parameters.getAccount()) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "Using account: " + parameters.getAccount().getHomeAccountId()
             );
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Force refresh? [" + parameters.getForceRefresh() + "]"
         );
@@ -381,7 +381,7 @@ public class ApiDispatcher {
 
     public static void submitSilent(final TokenCommand command) {
         final String methodName = ":submitSilent";
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Beginning silent request"
         );

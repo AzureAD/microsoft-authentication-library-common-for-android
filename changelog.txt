@@ -1,3 +1,36 @@
+Version 1.0.7
+------------
+MSAL GA Artifact.
+
+Version 1.0.6
+-------------
+Fix Concurrent exception issue in Telemetry emit.
+
+Version 1.0.5
+-------------
+- Updated MSAL version in common to 1.0.0
+
+Version 1.0.4
+-------------
+- Artifact for MSAL GA
+- AndroidX changes included.
+
+Version 1.0.3
+-------------
+- Fix Null pointer on Authorixation Request builder.
+
+Version 1.0.0
+-------------
+- Broker V2 support with MSAL
+- TenantProfile support
+- FLW support
+- Multiple Bug Fixes.
+- Initial release with MSAL GA support.
+
+Version 0.0.20
+-------------
+Fix Ntlm challenge issue.
+
 Version 0.0.18
 -------------
 -BugFix : Complete the auth request as cancel if the activity is destroyed
