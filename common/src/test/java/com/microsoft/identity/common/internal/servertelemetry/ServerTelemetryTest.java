@@ -25,8 +25,6 @@ public class ServerTelemetryTest {
         String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
         String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,0|";
 
-        Map<String, String> headers = ServerTelemetry.getTelemetryHeaders();
-
         Assert.assertEquals(expectedResult, actualResult);
     }
 

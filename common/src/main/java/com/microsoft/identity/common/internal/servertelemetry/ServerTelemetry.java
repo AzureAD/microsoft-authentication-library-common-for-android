@@ -32,8 +32,7 @@ public class ServerTelemetry {
                 "Initializing server side telemetry"
         );
 
-        final IRequestTelemetryCache lastRequestTelemetryCache = createLastRequestTelemetryCache(context);
-        sLastRequestTelemetryCache = lastRequestTelemetryCache;
+        sLastRequestTelemetryCache = createLastRequestTelemetryCache(context);
     }
 
     public static void emit(Map<String, String> telemetry) {
@@ -132,10 +131,7 @@ public class ServerTelemetry {
                         LAST_REQUEST_TELEMETRY_SHARED_PREFERENCES
                 );
 
-        final IRequestTelemetryCache lastRequestTelemetryCache =
-                new SharedPreferencesLastRequestTelemetryCache(sharedPreferencesFileManager);
-
-        return lastRequestTelemetryCache;
+        return new SharedPreferencesLastRequestTelemetryCache(sharedPreferencesFileManager);
     }
 
     static void clearLastRequestTelemetry() {
@@ -196,7 +192,7 @@ public class ServerTelemetry {
         completeScenario(correlationId, errorCode);
     }
 
-    public static String getCurrentTelemetryHeaderString() {
+    static String getCurrentTelemetryHeaderString() {
         if (sCurrentRequestTelemetry == null) {
             return null;
         }
@@ -204,7 +200,7 @@ public class ServerTelemetry {
         return sCurrentRequestTelemetry.getCompleteTelemetryHeaderString();
     }
 
-    public static String getLastTelemetryHeaderString() {
+    static String getLastTelemetryHeaderString() {
         if (sLastRequestTelemetry == null) {
             return null;
         }
