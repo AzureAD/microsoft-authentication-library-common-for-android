@@ -109,14 +109,6 @@ public class ServerTelemetry {
         putForLast(Schema.Key.CORRELATION_ID, correlationId);
     }
 
-    public static RequestTelemetry getCurrentTelemetry() {
-        return sCurrentRequestTelemetry;
-    }
-
-    public static RequestTelemetry getLastTelemetry() {
-        return sLastRequestTelemetry;
-    }
-
     private static IRequestTelemetryCache createLastRequestTelemetryCache(Context context) {
         final String methodName = ":createLastRequestTelemetryCache";
 
