@@ -29,6 +29,19 @@ public class ServerTelemetryTest {
     }
 
     @Test
+    public void testEmitAvoidOverwrite() {
+        ServerTelemetry.emit(Schema.Key.API_ID, "101");
+        ServerTelemetry.emit(Schema.Key.API_ID, "102");
+        ServerTelemetry.emit(Schema.Key.API_ID, "103");
+        ServerTelemetry.emit(Schema.Key.FORCE_REFRESH, "false");
+
+        String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
+        String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,0|";
+
+        Assert.assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
     public void testHeaderStringWithNullTelemObject() {
         String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
         String expectedResult = null;

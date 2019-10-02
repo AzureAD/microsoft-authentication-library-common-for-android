@@ -28,17 +28,11 @@ public class RequestTelemetry {
     }
 
     private void putInCommonTelemetry(String key, String value) {
-        // avoid overwrites
-        if (!mCommonTelemetry.containsKey(key)) {
-            mCommonTelemetry.put(key, value);
-        }
+        mCommonTelemetry.putIfAbsent(key,value);
     }
 
     private void putInPlatformTelemetry(String key, String value) {
-        // avoid overwrites
-        if (!mPlatformTelemetry.containsKey(key)) {
-            mPlatformTelemetry.put(key, value);
-        }
+        mPlatformTelemetry.putIfAbsent(key, value);
     }
 
     void clearTelemetry() {
