@@ -22,12 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.events.HttpEndEvent;
-import com.microsoft.identity.common.internal.telemetry.events.HttpStartEvent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.HttpEndEvent;
+import com.microsoft.identity.common.internal.telemetry.events.HttpStartEvent;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.BufferedReader;
@@ -165,7 +165,7 @@ public final class HttpRequest {
         );
 
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
-        final HttpResponse response =  httpRequest.send();
+        final HttpResponse response = httpRequest.send();
 
         if (response != null) {
             Telemetry.emit(

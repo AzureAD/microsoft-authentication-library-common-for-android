@@ -24,7 +24,9 @@ package com.microsoft.identity.common.internal.telemetry.events;
 
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
 
 public class UiStartEvent extends BaseEvent {
     public UiStartEvent() {
