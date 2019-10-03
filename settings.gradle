@@ -1,1 +1,1 @@
-include ':common', ':keyvault', ':labapi'
+include ':common', ':keyvault', ':labapi', ':testutils'
