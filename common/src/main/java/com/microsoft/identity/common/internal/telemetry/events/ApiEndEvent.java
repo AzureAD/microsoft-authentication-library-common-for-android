@@ -39,6 +39,10 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     public ApiEndEvent putResult(@NonNull final AcquireTokenResult result) {
+        if (result == null) {
+            return this;
+        }
+
         put(Key.IS_SUCCESSFUL, result.getSucceeded().toString());
 
         if (null != result.getLocalAuthenticationResult()) {
@@ -52,6 +56,10 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     public ApiEndEvent putException(@NonNull final Exception exception) {
+        if (exception == null) {
+            return this;
+        }
+
         final BaseException adaptedException = ExceptionAdapter.baseExceptionFromException(exception);
         if (adaptedException  instanceof UserCancelException) {
             put(Key.USER_CANCEL, Value.TRUE);

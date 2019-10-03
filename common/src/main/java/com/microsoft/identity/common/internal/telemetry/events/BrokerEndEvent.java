@@ -48,6 +48,10 @@ public class BrokerEndEvent extends BaseEvent {
     }
 
     public BrokerEndEvent putException(@NonNull final BaseException exception) {
+        if (exception == null) {
+            return this;
+        }
+
         if (exception  instanceof UserCancelException) {
             put(Key.USER_CANCEL, Value.TRUE);
         }

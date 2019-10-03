@@ -56,6 +56,10 @@ public class ApiStartEvent extends BaseEvent {
     }
 
     public ApiStartEvent putProperties(@NonNull final OperationParameters parameters) {
+        if (parameters == null) {
+            return this;
+        }
+
         if (parameters.getAuthority() != null) {
             put(Key.AUTHORITY, parameters.getAuthority().getAuthorityURL().getAuthority()); //Pii
             put(Key.AUTHORITY_TYPE, parameters.getAuthority().getAuthorityTypeString());
@@ -183,6 +187,10 @@ public class ApiStartEvent extends BaseEvent {
      * @return the sanitized URL.
      */
     private static String sanitizeUrlForTelemetry(@NonNull final URL url) {
+        if (url == null) {
+            return null;
+        }
+
         final String authority = url.getAuthority();
         final String[] splitArray = url.getPath().split("/");
 

@@ -34,6 +34,10 @@ public class UiStartEvent extends BaseEvent {
     }
 
     public UiStartEvent putUserAgent(final AuthorizationAgent userAgent) {
+        if (userAgent == null) {
+            return this;
+        }
+
         put(Key.USER_AGENT, userAgent.name());
         return this;
     }

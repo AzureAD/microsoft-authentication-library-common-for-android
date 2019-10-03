@@ -38,6 +38,10 @@ public class HttpStartEvent extends BaseEvent {
     }
 
     public HttpStartEvent putPath(final URL path) {
+        if (path == null) {
+            return this;
+        }
+
         put(Key.HTTP_PATH, path.toExternalForm());
         return this;
     }
