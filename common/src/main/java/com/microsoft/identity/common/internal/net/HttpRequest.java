@@ -131,13 +131,18 @@ public final class HttpRequest {
                 new HttpStartEvent()
                         .putMethod(REQUEST_METHOD_POST)
                         .putPath(requestUrl)
-                        .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
+                        .putRequestIdHeader(requestHeaders == null ? null : requestHeaders.get(CLIENT_REQUEST_ID))
         );
 
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_POST,
                 requestContent, requestContentType);
         final HttpResponse response = httpRequest.send();
-        Telemetry.emit(new HttpEndEvent().putStatusCode(response.getStatusCode()));
+
+        if (response != null) {
+            Telemetry.emit(new HttpEndEvent().putStatusCode(response.getStatusCode()));
+        } else {
+            Telemetry.emit(new HttpEndEvent());
+        }
 
         return response;
     }
@@ -156,16 +161,21 @@ public final class HttpRequest {
                 new HttpStartEvent()
                         .putMethod(REQUEST_METHOD_GET)
                         .putPath(requestUrl)
-                        .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
+                        .putRequestIdHeader(requestHeaders == null ? null : requestHeaders.get(CLIENT_REQUEST_ID))
         );
 
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
         final HttpResponse response =  httpRequest.send();
 
-        Telemetry.emit(
-                new HttpEndEvent()
-                        .putStatusCode(response.getStatusCode())
-        );
+        if (response != null) {
+            Telemetry.emit(
+                    new HttpEndEvent()
+                            .putStatusCode(response.getStatusCode())
+            );
+        } else {
+            Telemetry.emit(new HttpEndEvent());
+        }
+
         return response;
     }
 
