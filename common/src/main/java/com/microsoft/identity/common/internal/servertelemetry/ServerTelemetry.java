@@ -2,6 +2,7 @@ package com.microsoft.identity.common.internal.servertelemetry;
 
 import android.content.Context;
 
+import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -78,9 +79,9 @@ public class ServerTelemetry {
         return sLastRequestTelemetry;
     }
 
-    public static void startScenario() {
-        final String methodName = ":startScenario";
-        sCurrentRequestTelemetry = new RequestTelemetry(true);
+    private static void loadLastRequestTelemetryFromCache() {
+        final String methodName = ":loadLastRequestTelemetry";
+
         if (sLastRequestTelemetryCache == null) {
             Logger.verbose(
                     TAG + methodName,
@@ -91,6 +92,15 @@ public class ServerTelemetry {
         }
 
         sLastRequestTelemetry = sLastRequestTelemetryCache.getRequestTelemetryFromCache();
+    }
+
+    public static void emitApiId(final String apiId) {
+        emit(Schema.Key.API_ID, apiId);
+    }
+
+    public static void emitForceRefresh(final boolean forceRefresh) {
+        String val = Schema.getSchemaCompliantStringFromBoolean(forceRefresh);
+        emit(Schema.Key.FORCE_REFRESH, val);
     }
 
     private static void putForCurrent(String key, String value) {
@@ -145,6 +155,11 @@ public class ServerTelemetry {
     }
 
     private static void setupLastFromCurrent() {
+        if (sCurrentRequestTelemetry == null) {
+            sLastRequestTelemetry = new RequestTelemetry(Schema.Value.SCHEMA_VERSION, false);
+            return;
+        }
+
         sLastRequestTelemetry = new RequestTelemetry(sCurrentRequestTelemetry.getSchemaVersion(), false);
 
         // grab whatever common fields we can from current request
@@ -158,8 +173,8 @@ public class ServerTelemetry {
         }
     }
 
-    private static void completeScenario(String correlationId, String errorCode) {
-        final String methodName = ":completeScenario";
+    public static void flush(String correlationId, String errorCode) {
+        final String methodName = ":flush";
 
         clearLastRequestTelemetry();
         setupLastFromCurrent();
@@ -177,11 +192,20 @@ public class ServerTelemetry {
         }
 
         clearCurrentRequestTelemetry();
+        clearLastRequestTelemetry();
     }
 
-    public static void completeScenario(String correlationId, AcquireTokenResult acquireTokenResult) {
+    public static void flush(String correlationId, BaseException baseException) {
+        flush(correlationId, baseException == null ? null : baseException.getErrorCode());
+    }
+
+    public static void flush(String correlationId) {
+        flush(correlationId, (String) null);
+    }
+
+    public static void flush(String correlationId, AcquireTokenResult acquireTokenResult) {
         final String errorCode = TelemetryUtils.errorFromAcquireTokenResult(acquireTokenResult);
-        completeScenario(correlationId, errorCode);
+        flush(correlationId, errorCode);
     }
 
     static String getCurrentTelemetryHeaderString() {
@@ -193,6 +217,8 @@ public class ServerTelemetry {
     }
 
     static String getLastTelemetryHeaderString() {
+        loadLastRequestTelemetryFromCache();
+
         if (sLastRequestTelemetry == null) {
             return null;
         }

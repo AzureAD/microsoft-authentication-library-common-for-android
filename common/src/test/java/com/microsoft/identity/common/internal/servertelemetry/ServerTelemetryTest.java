@@ -51,17 +51,14 @@ public class ServerTelemetryTest {
 
     @Test
     public void testHeaderStringWithNoFields() {
-        ServerTelemetry.startScenario();
-
         String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
-        String expectedResult = Schema.Value.SCHEMA_VERSION + "|,|";
+        String expectedResult = null;
 
         Assert.assertEquals(expectedResult, actualResult);
     }
 
     @Test
     public void testEmitWithInvalidField() {
-        ServerTelemetry.startScenario();
         ServerTelemetry.emit("invalid-fake-key", "102");
 
         String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
@@ -72,8 +69,7 @@ public class ServerTelemetryTest {
 
     @Test
     public void testEmitWithOneValidAndOneInvalidField() {
-        ServerTelemetry.startScenario();
-        ServerTelemetry.emit(Schema.Key.API_ID, "101");
+        ServerTelemetry.emitApiId("101");
         ServerTelemetry.emit("invalid-fake-key", "102");
 
         String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();

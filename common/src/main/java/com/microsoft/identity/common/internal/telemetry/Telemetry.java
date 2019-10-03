@@ -191,9 +191,6 @@ public class Telemetry {
             //only enqueue the telemetry properties when the telemetry is enabled.
             getInstance().getRequestMap().add(event.getProperties());
         }
-
-        // Server telemetry is always enabled and will always be emitted
-        ServerTelemetry.emit(event.getProperties());
     }
 
     /**
