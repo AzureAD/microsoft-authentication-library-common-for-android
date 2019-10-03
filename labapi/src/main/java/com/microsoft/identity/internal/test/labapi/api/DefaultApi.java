@@ -13,6 +13,7 @@
 
 package com.microsoft.identity.internal.test.labapi.api;
 
+import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.internal.test.labapi.ApiCallback;
 import com.microsoft.identity.internal.test.labapi.ApiClient;
 import com.microsoft.identity.internal.test.labapi.ApiException;
@@ -21,14 +22,9 @@ import com.microsoft.identity.internal.test.labapi.Configuration;
 import com.microsoft.identity.internal.test.labapi.Pair;
 import com.microsoft.identity.internal.test.labapi.ProgressRequestBody;
 import com.microsoft.identity.internal.test.labapi.ProgressResponseBody;
-
-import com.google.gson.reflect.TypeToken;
-
-import java.io.IOException;
-
-
 import com.microsoft.identity.internal.test.labapi.model.TestConfiguration;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,28 +52,30 @@ public class DefaultApi {
 
     /**
      * Build call for getTestConfiguration
-     * @param appName Name of an application (optional)
-     * @param appId App ID (optional)
-     * @param federationProvider Match string search for federation provider name (optional)
-     * @param mfa Whether or not MFA is enabled for the user (optional)
-     * @param mam Whether or not MAM policy has been applied to the user (optional)
-     * @param mdm Whether or not MDM policy has been applied to the user (optional)
-     * @param ca Whether or not conditional access is enabled? (Weird what does this mean) (optional)
-     * @param mamca Whether or not conditional access requiring a MAM enabled client was applied? (Weird what does this mean) (optional)
-     * @param mdmca Whether or not conditional access requiring a MDM enrolled device was applied? (Weird what does this mean) (optional)
-     * @param license Find a user with a matching license (optional)
-     * @param federated Find a federated tenant (optional)
-     * @param isFederated Find a federated user (optional)
-     * @param userType Find a user who is a member or a guest... by saying which you want (optional)
-     * @param role Find a user who is a member of the specified role (optional)
-     * @param external Find an external user (optional)
-     * @param upn Find an a user by their UPN (optional)
-     * @param progressListener Progress listener
+     *
+     * @param appName                 Name of an application (optional)
+     * @param appId                   App ID (optional)
+     * @param federationProvider      Match string search for federation provider name (optional)
+     * @param mfa                     Whether or not MFA is enabled for the user (optional)
+     * @param mam                     Whether or not MAM policy has been applied to the user (optional)
+     * @param mdm                     Whether or not MDM policy has been applied to the user (optional)
+     * @param ca                      Whether or not conditional access is enabled? (Weird what does this mean) (optional)
+     * @param mamca                   Whether or not conditional access requiring a MAM enabled client was applied? (Weird what does this mean) (optional)
+     * @param mdmca                   Whether or not conditional access requiring a MDM enrolled device was applied? (Weird what does this mean) (optional)
+     * @param license                 Find a user with a matching license (optional)
+     * @param federated               Find a federated tenant (optional)
+     * @param isFederated             Find a federated user (optional)
+     * @param userType                Find a user who is a member or a guest... by saying which you want (optional)
+     * @param role                    Find a user who is a member of the specified role (optional)
+     * @param external                Find an external user (optional)
+     * @param upn                     Find a user by their UPN (optional)
+     * @param b2cProvider             Find a user by their B2CProvider (optional)
+     * @param progressListener        Progress listener
      * @param progressRequestListener Progress request listener
      * @return Call to execute
      * @throws ApiException If fail to serialize the request body object
      */
-    public com.squareup.okhttp.Call getTestConfigurationCall(String appName, String appId, String federationProvider, Boolean mfa, Boolean mam, Boolean mdm, Boolean ca, Boolean mamca, Boolean mdmca, String license, Boolean federated, Boolean isFederated, String userType, String role, Boolean external, String upn, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+    public com.squareup.okhttp.Call getTestConfigurationCall(String appName, String appId, String federationProvider, Boolean mfa, Boolean mam, Boolean mdm, Boolean ca, Boolean mamca, Boolean mdmca, String license, Boolean federated, Boolean isFederated, String userType, String role, Boolean external, String upn, String b2cProvider, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
         Object localVarPostBody = null;
 
         // create path and map variables
@@ -86,75 +84,77 @@ public class DefaultApi {
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
         if (appName != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("AppName", appName));
+            localVarQueryParams.addAll(apiClient.parameterToPair("AppName", appName));
         if (appId != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("AppId", appId));
+            localVarQueryParams.addAll(apiClient.parameterToPair("AppId", appId));
         if (federationProvider != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("federationProvider", federationProvider));
+            localVarQueryParams.addAll(apiClient.parameterToPair("federationProvider", federationProvider));
         if (mfa != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("mfa", mfa));
+            localVarQueryParams.addAll(apiClient.parameterToPair("mfa", mfa));
         if (mam != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("mam", mam));
+            localVarQueryParams.addAll(apiClient.parameterToPair("mam", mam));
         if (mdm != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("mdm", mdm));
+            localVarQueryParams.addAll(apiClient.parameterToPair("mdm", mdm));
         if (ca != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("ca", ca));
+            localVarQueryParams.addAll(apiClient.parameterToPair("ca", ca));
         if (mamca != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("mamca", mamca));
+            localVarQueryParams.addAll(apiClient.parameterToPair("mamca", mamca));
         if (mdmca != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("mdmca", mdmca));
+            localVarQueryParams.addAll(apiClient.parameterToPair("mdmca", mdmca));
         if (license != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("license", license));
+            localVarQueryParams.addAll(apiClient.parameterToPair("license", license));
         if (federated != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("federated", federated));
+            localVarQueryParams.addAll(apiClient.parameterToPair("federated", federated));
         if (isFederated != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("isFederated", isFederated));
+            localVarQueryParams.addAll(apiClient.parameterToPair("isFederated", isFederated));
         if (userType != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("userType", userType));
+            localVarQueryParams.addAll(apiClient.parameterToPair("userType", userType));
         if (role != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("role", role));
+            localVarQueryParams.addAll(apiClient.parameterToPair("role", role));
         if (external != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("external", external));
+            localVarQueryParams.addAll(apiClient.parameterToPair("external", external));
         if (upn != null)
-        localVarQueryParams.addAll(apiClient.parameterToPair("upn", upn));
+            localVarQueryParams.addAll(apiClient.parameterToPair("upn", upn));
+        if (b2cProvider != null)
+            localVarQueryParams.addAll(apiClient.parameterToPair("B2CProvider", b2cProvider));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
         Map<String, Object> localVarFormParams = new HashMap<String, Object>();
 
         final String[] localVarAccepts = {
-            "application/json"
+                "application/json"
         };
         final String localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
         if (localVarAccept != null) localVarHeaderParams.put("Accept", localVarAccept);
 
         final String[] localVarContentTypes = {
-            
+
         };
         final String localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
         localVarHeaderParams.put("Content-Type", localVarContentType);
 
-        if(progressListener != null) {
+        if (progressListener != null) {
             apiClient.getHttpClient().networkInterceptors().add(new com.squareup.okhttp.Interceptor() {
                 @Override
                 public com.squareup.okhttp.Response intercept(com.squareup.okhttp.Interceptor.Chain chain) throws IOException {
                     com.squareup.okhttp.Response originalResponse = chain.proceed(chain.request());
                     return originalResponse.newBuilder()
-                    .body(new ProgressResponseBody(originalResponse.body(), progressListener))
-                    .build();
+                            .body(new ProgressResponseBody(originalResponse.body(), progressListener))
+                            .build();
                 }
             });
         }
 
-        String[] localVarAuthNames = new String[] {  };
+        String[] localVarAuthNames = new String[]{};
         return apiClient.buildCall(localVarPath, "GET", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
     }
 
     @SuppressWarnings("rawtypes")
-    private com.squareup.okhttp.Call getTestConfigurationValidateBeforeCall(String appName, String appId, String federationProvider, Boolean mfa, Boolean mam, Boolean mdm, Boolean ca, Boolean mamca, Boolean mdmca, String license, Boolean federated, Boolean isFederated, String userType, String role, Boolean external, String upn, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
-        
+    private com.squareup.okhttp.Call getTestConfigurationValidateBeforeCall(String appName, String appId, String federationProvider, Boolean mfa, Boolean mam, Boolean mdm, Boolean ca, Boolean mamca, Boolean mdmca, String license, Boolean federated, Boolean isFederated, String userType, String role, Boolean external, String upn, String b2cProvider, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
 
-        com.squareup.okhttp.Call call = getTestConfigurationCall(appName, appId, federationProvider, mfa, mam, mdm, ca, mamca, mdmca, license, federated, isFederated, userType, role, external, upn, progressListener, progressRequestListener);
+
+        com.squareup.okhttp.Call call = getTestConfigurationCall(appName, appId, federationProvider, mfa, mam, mdm, ca, mamca, mdmca, license, federated, isFederated, userType, role, external, upn, b2cProvider, progressListener, progressRequestListener);
         return call;
 
     }
@@ -162,82 +162,89 @@ public class DefaultApi {
     /**
      * Get a test configuration including client application, resources and user
      * Returns one or more matching applications and users
-     * @param appName Name of an application (optional)
-     * @param appId App ID (optional)
+     *
+     * @param appName            Name of an application (optional)
+     * @param appId              App ID (optional)
      * @param federationProvider Match string search for federation provider name (optional)
-     * @param mfa Whether or not MFA is enabled for the user (optional)
-     * @param mam Whether or not MAM policy has been applied to the user (optional)
-     * @param mdm Whether or not MDM policy has been applied to the user (optional)
-     * @param ca Whether or not conditional access is enabled? (Weird what does this mean) (optional)
-     * @param mamca Whether or not conditional access requiring a MAM enabled client was applied? (Weird what does this mean) (optional)
-     * @param mdmca Whether or not conditional access requiring a MDM enrolled device was applied? (Weird what does this mean) (optional)
-     * @param license Find a user with a matching license (optional)
-     * @param federated Find a federated tenant (optional)
-     * @param isFederated Find a federated user (optional)
-     * @param userType Find a user who is a member or a guest... by saying which you want (optional)
-     * @param role Find a user who is a member of the specified role (optional)
-     * @param external Find an external user (optional)
-     * @param upn Find an a user by their UPN (optional)
+     * @param mfa                Whether or not MFA is enabled for the user (optional)
+     * @param mam                Whether or not MAM policy has been applied to the user (optional)
+     * @param mdm                Whether or not MDM policy has been applied to the user (optional)
+     * @param ca                 Whether or not conditional access is enabled? (Weird what does this mean) (optional)
+     * @param mamca              Whether or not conditional access requiring a MAM enabled client was applied? (Weird what does this mean) (optional)
+     * @param mdmca              Whether or not conditional access requiring a MDM enrolled device was applied? (Weird what does this mean) (optional)
+     * @param license            Find a user with a matching license (optional)
+     * @param federated          Find a federated tenant (optional)
+     * @param isFederated        Find a federated user (optional)
+     * @param userType           Find a user who is a member or a guest... by saying which you want (optional)
+     * @param role               Find a user who is a member of the specified role (optional)
+     * @param external           Find an external user (optional)
+     * @param upn                Find a user by their UPN (optional)
+     * @param b2cProvider        Find a user by their B2CProvider (optional)
      * @return TestConfiguration
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public TestConfiguration getTestConfiguration(String appName, String appId, String federationProvider, Boolean mfa, Boolean mam, Boolean mdm, Boolean ca, Boolean mamca, Boolean mdmca, String license, Boolean federated, Boolean isFederated, String userType, String role, Boolean external, String upn) throws ApiException {
-        ApiResponse<TestConfiguration> resp = getTestConfigurationWithHttpInfo(appName, appId, federationProvider, mfa, mam, mdm, ca, mamca, mdmca, license, federated, isFederated, userType, role, external, upn);
+    public TestConfiguration getTestConfiguration(String appName, String appId, String federationProvider, Boolean mfa, Boolean mam, Boolean mdm, Boolean ca, Boolean mamca, Boolean mdmca, String license, Boolean federated, Boolean isFederated, String userType, String role, Boolean external, String upn, String b2cProvider) throws ApiException {
+        ApiResponse<TestConfiguration> resp = getTestConfigurationWithHttpInfo(appName, appId, federationProvider, mfa, mam, mdm, ca, mamca, mdmca, license, federated, isFederated, userType, role, external, upn, b2cProvider);
         return resp.getData();
     }
 
     /**
      * Get a test configuration including client application, resources and user
      * Returns one or more matching applications and users
-     * @param appName Name of an application (optional)
-     * @param appId App ID (optional)
+     *
+     * @param appName            Name of an application (optional)
+     * @param appId              App ID (optional)
      * @param federationProvider Match string search for federation provider name (optional)
-     * @param mfa Whether or not MFA is enabled for the user (optional)
-     * @param mam Whether or not MAM policy has been applied to the user (optional)
-     * @param mdm Whether or not MDM policy has been applied to the user (optional)
-     * @param ca Whether or not conditional access is enabled? (Weird what does this mean) (optional)
-     * @param mamca Whether or not conditional access requiring a MAM enabled client was applied? (Weird what does this mean) (optional)
-     * @param mdmca Whether or not conditional access requiring a MDM enrolled device was applied? (Weird what does this mean) (optional)
-     * @param license Find a user with a matching license (optional)
-     * @param federated Find a federated tenant (optional)
-     * @param isFederated Find a federated user (optional)
-     * @param userType Find a user who is a member or a guest... by saying which you want (optional)
-     * @param role Find a user who is a member of the specified role (optional)
-     * @param external Find an external user (optional)
-     * @param upn Find an a user by their UPN (optional)
+     * @param mfa                Whether or not MFA is enabled for the user (optional)
+     * @param mam                Whether or not MAM policy has been applied to the user (optional)
+     * @param mdm                Whether or not MDM policy has been applied to the user (optional)
+     * @param ca                 Whether or not conditional access is enabled? (Weird what does this mean) (optional)
+     * @param mamca              Whether or not conditional access requiring a MAM enabled client was applied? (Weird what does this mean) (optional)
+     * @param mdmca              Whether or not conditional access requiring a MDM enrolled device was applied? (Weird what does this mean) (optional)
+     * @param license            Find a user with a matching license (optional)
+     * @param federated          Find a federated tenant (optional)
+     * @param isFederated        Find a federated user (optional)
+     * @param userType           Find a user who is a member or a guest... by saying which you want (optional)
+     * @param role               Find a user who is a member of the specified role (optional)
+     * @param external           Find an external user (optional)
+     * @param upn                Find a user by their UPN (optional)
+     * @param b2cProvider        Find a user by their B2CProvider (optional)
      * @return ApiResponse&lt;TestConfiguration&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public ApiResponse<TestConfiguration> getTestConfigurationWithHttpInfo(String appName, String appId, String federationProvider, Boolean mfa, Boolean mam, Boolean mdm, Boolean ca, Boolean mamca, Boolean mdmca, String license, Boolean federated, Boolean isFederated, String userType, String role, Boolean external, String upn) throws ApiException {
-        com.squareup.okhttp.Call call = getTestConfigurationValidateBeforeCall(appName, appId, federationProvider, mfa, mam, mdm, ca, mamca, mdmca, license, federated, isFederated, userType, role, external, upn, null, null);
-        Type localVarReturnType = new TypeToken<TestConfiguration>(){}.getType();
+    public ApiResponse<TestConfiguration> getTestConfigurationWithHttpInfo(String appName, String appId, String federationProvider, Boolean mfa, Boolean mam, Boolean mdm, Boolean ca, Boolean mamca, Boolean mdmca, String license, Boolean federated, Boolean isFederated, String userType, String role, Boolean external, String upn, String b2cProvider) throws ApiException {
+        com.squareup.okhttp.Call call = getTestConfigurationValidateBeforeCall(appName, appId, federationProvider, mfa, mam, mdm, ca, mamca, mdmca, license, federated, isFederated, userType, role, external, upn, b2cProvider, null, null);
+        Type localVarReturnType = new TypeToken<TestConfiguration>() {
+        }.getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
     /**
      * Get a test configuration including client application, resources and user (asynchronously)
      * Returns one or more matching applications and users
-     * @param appName Name of an application (optional)
-     * @param appId App ID (optional)
+     *
+     * @param appName            Name of an application (optional)
+     * @param appId              App ID (optional)
      * @param federationProvider Match string search for federation provider name (optional)
-     * @param mfa Whether or not MFA is enabled for the user (optional)
-     * @param mam Whether or not MAM policy has been applied to the user (optional)
-     * @param mdm Whether or not MDM policy has been applied to the user (optional)
-     * @param ca Whether or not conditional access is enabled? (Weird what does this mean) (optional)
-     * @param mamca Whether or not conditional access requiring a MAM enabled client was applied? (Weird what does this mean) (optional)
-     * @param mdmca Whether or not conditional access requiring a MDM enrolled device was applied? (Weird what does this mean) (optional)
-     * @param license Find a user with a matching license (optional)
-     * @param federated Find a federated tenant (optional)
-     * @param isFederated Find a federated user (optional)
-     * @param userType Find a user who is a member or a guest... by saying which you want (optional)
-     * @param role Find a user who is a member of the specified role (optional)
-     * @param external Find an external user (optional)
-     * @param upn Find an a user by their UPN (optional)
-     * @param callback The callback to be executed when the API call finishes
+     * @param mfa                Whether or not MFA is enabled for the user (optional)
+     * @param mam                Whether or not MAM policy has been applied to the user (optional)
+     * @param mdm                Whether or not MDM policy has been applied to the user (optional)
+     * @param ca                 Whether or not conditional access is enabled? (Weird what does this mean) (optional)
+     * @param mamca              Whether or not conditional access requiring a MAM enabled client was applied? (Weird what does this mean) (optional)
+     * @param mdmca              Whether or not conditional access requiring a MDM enrolled device was applied? (Weird what does this mean) (optional)
+     * @param license            Find a user with a matching license (optional)
+     * @param federated          Find a federated tenant (optional)
+     * @param isFederated        Find a federated user (optional)
+     * @param userType           Find a user who is a member or a guest... by saying which you want (optional)
+     * @param role               Find a user who is a member of the specified role (optional)
+     * @param external           Find an external user (optional)
+     * @param upn                Find a user by their UPN (optional)
+     * @param b2cProvider        Find a user by their b2cProvider (optional)
+     * @param callback           The callback to be executed when the API call finishes
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object
      */
-    public com.squareup.okhttp.Call getTestConfigurationAsync(String appName, String appId, String federationProvider, Boolean mfa, Boolean mam, Boolean mdm, Boolean ca, Boolean mamca, Boolean mdmca, String license, Boolean federated, Boolean isFederated, String userType, String role, Boolean external, String upn, final ApiCallback<TestConfiguration> callback) throws ApiException {
+    public com.squareup.okhttp.Call getTestConfigurationAsync(String appName, String appId, String federationProvider, Boolean mfa, Boolean mam, Boolean mdm, Boolean ca, Boolean mamca, Boolean mdmca, String license, Boolean federated, Boolean isFederated, String userType, String role, Boolean external, String upn, String b2cProvider, final ApiCallback<TestConfiguration> callback) throws ApiException {
 
         ProgressResponseBody.ProgressListener progressListener = null;
         ProgressRequestBody.ProgressRequestListener progressRequestListener = null;
@@ -258,8 +265,9 @@ public class DefaultApi {
             };
         }
 
-        com.squareup.okhttp.Call call = getTestConfigurationValidateBeforeCall(appName, appId, federationProvider, mfa, mam, mdm, ca, mamca, mdmca, license, federated, isFederated, userType, role, external, upn, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<TestConfiguration>(){}.getType();
+        com.squareup.okhttp.Call call = getTestConfigurationValidateBeforeCall(appName, appId, federationProvider, mfa, mam, mdm, ca, mamca, mdmca, license, federated, isFederated, userType, role, external, upn, b2cProvider, progressListener, progressRequestListener);
+        Type localVarReturnType = new TypeToken<TestConfiguration>() {
+        }.getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

@@ -203,6 +203,7 @@ public class TokenRequest {
     public static class GrantTypes {
         public final static String AUTHORIZATION_CODE = "authorization_code";
         public final static String REFRESH_TOKEN = "refresh_token";
+        public final static String PASSWORD = "password";
     }
 
 }

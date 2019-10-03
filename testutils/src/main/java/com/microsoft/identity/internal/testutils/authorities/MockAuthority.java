@@ -20,56 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.authorities;
+package com.microsoft.identity.internal.testutils.authorities;
 
-import android.net.Uri;
-
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.authorities.AnyOrganizationalAccount;
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.internal.testutils.strategies.MockTestStrategy;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+public class MockAuthority extends AzureActiveDirectoryAuthority {
 
-public class AzureActiveDirectoryB2CAuthority extends Authority {
-
-    private static final String TAG = AzureActiveDirectoryB2CAuthority.class.getName();
-
-    public AzureActiveDirectoryB2CAuthority(String authorityUrl) {
-        mAuthorityTypeString = "B2C";
-        mAuthorityUrl = authorityUrl;
-    }
-
-    @Override
-    public Uri getAuthorityUri() {
-        return Uri.parse(mAuthorityUrl);
-    }
-
-    @Override
-    public URL getAuthorityURL() {
-        try {
-            return new URL(this.getAuthorityUri().toString());
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("Authority URL is not a URL.", e);
-        }
-    }
-
-    protected MicrosoftStsOAuth2Configuration createOAuth2Configuration() {
-        final String methodName = ":createOAuth2Configuration";
-        Logger.verbose(
-                TAG + methodName,
-                "Creating OAuth2Configuration"
-        );
-        MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
-        config.setMultipleCloudsSupported(false);
-        config.setAuthorityUrl(this.getAuthorityURL());
-        return config;
+    public MockAuthority() {
+        super(new AnyOrganizationalAccount());
     }
 
     @Override
     public OAuth2Strategy createOAuth2Strategy() {
         MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
-        return new MicrosoftStsOAuth2Strategy(config);
+        return new MockTestStrategy(config);
     }
+
 }
