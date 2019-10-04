@@ -24,7 +24,7 @@ public class ServerTelemetryTest {
         ServerTelemetry.emit(Schema.Key.FORCE_REFRESH, "false");
 
         String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
-        String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,0|";
+        String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,0|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
     }
@@ -37,7 +37,7 @@ public class ServerTelemetryTest {
         ServerTelemetry.emit(Schema.Key.FORCE_REFRESH, "false");
 
         String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
-        String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,0|";
+        String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,0|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
     }
@@ -63,7 +63,7 @@ public class ServerTelemetryTest {
         ServerTelemetry.emit("invalid-fake-key", "102");
 
         String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
-        String expectedResult = Schema.Value.SCHEMA_VERSION + "|,|";
+        String expectedResult = Schema.Value.SCHEMA_VERSION + "|,|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
     }
@@ -74,7 +74,7 @@ public class ServerTelemetryTest {
         ServerTelemetry.emit("invalid-fake-key", "102");
 
         String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
-        String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,|";
+        String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
     }
