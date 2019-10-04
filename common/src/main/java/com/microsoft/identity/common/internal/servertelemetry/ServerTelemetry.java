@@ -11,7 +11,6 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerTelemetry {
@@ -58,7 +57,6 @@ public class ServerTelemetry {
     }
 
     private static RequestTelemetry getCurrentTelemetryInstance(String correlationId) {
-        final String methodName = ":getCurrentTelemetryInstance";
         if (sTelemetryMap == null) {
             return null;
         }

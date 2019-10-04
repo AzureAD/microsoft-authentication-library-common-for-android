@@ -39,7 +39,6 @@ import com.microsoft.identity.common.internal.request.AcquireTokenOperationParam
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
-import com.microsoft.identity.common.internal.servertelemetry.Schema;
 import com.microsoft.identity.common.internal.servertelemetry.ServerTelemetry;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
@@ -196,7 +195,7 @@ public class ApiDispatcher {
 
                     try {
                         sCommand = command;
-                        
+
                         //Try executing request
                         result = command.execute();
                     } catch (Exception e) {

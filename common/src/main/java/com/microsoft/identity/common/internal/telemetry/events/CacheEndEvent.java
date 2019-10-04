@@ -27,7 +27,10 @@ import com.microsoft.identity.common.internal.servertelemetry.ServerTelemetry;
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
 
 public class CacheEndEvent extends BaseEvent {
     public CacheEndEvent() {
@@ -63,7 +66,7 @@ public class CacheEndEvent extends BaseEvent {
         put(Key.ID_TOKEN_STATUS, cacheRecord.getIdToken() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
         put(Key.V1_ID_TOKEN_STATUS, cacheRecord.getV1IdToken() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
         put(Key.ACCOUNT_STATUS, cacheRecord.getAccount() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
-        //ServerTelemetry.emit(this.getProperties());
+        ServerTelemetry.emit(this.getProperties());
         return this;
     }
 

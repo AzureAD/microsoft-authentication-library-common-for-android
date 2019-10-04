@@ -28,7 +28,7 @@ public class RequestTelemetry {
     }
 
     private void putInCommonTelemetry(String key, String value) {
-        mCommonTelemetry.putIfAbsent(key,value);
+        mCommonTelemetry.putIfAbsent(key, value);
     }
 
     private void putInPlatformTelemetry(String key, String value) {

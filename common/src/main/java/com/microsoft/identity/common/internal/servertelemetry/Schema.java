@@ -53,12 +53,12 @@ public class Schema {
      * Failure do so will break the schema.
      */
     private static final String[] currentRequestPlatformFields = new String[]{
-//            Key.ACCOUNT_STATUS,
-//            Key.ID_TOKEN_STATUS,
-//            Key.AT_STATUS,
-//            Key.RT_STATUS,
-//            Key.FRT_STATUS,
-//            Key.MRRT_STATUS
+            Key.ACCOUNT_STATUS,
+            Key.ID_TOKEN_STATUS,
+            Key.AT_STATUS,
+            Key.RT_STATUS,
+            Key.FRT_STATUS,
+            Key.MRRT_STATUS
     };
 
     /**

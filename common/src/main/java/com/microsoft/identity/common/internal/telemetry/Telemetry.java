@@ -31,7 +31,6 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.servertelemetry.ServerTelemetry;
 import com.microsoft.identity.common.internal.telemetry.adapter.TelemetryAggregationAdapter;
 import com.microsoft.identity.common.internal.telemetry.adapter.TelemetryDefaultAdapter;
 import com.microsoft.identity.common.internal.telemetry.events.BaseEvent;

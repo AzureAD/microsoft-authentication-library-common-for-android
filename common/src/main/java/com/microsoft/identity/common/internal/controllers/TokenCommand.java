@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
