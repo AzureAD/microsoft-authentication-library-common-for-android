@@ -39,7 +39,7 @@ public abstract class SharedPreferencesRequestTelemetryCache implements IRequest
         saveTelemetryDataToCache(requestTelemetry.getPlatformTelemetry());
     }
 
-    private synchronized void saveTelemetryDataToCache(Map<String, String> data) {
+    private synchronized void saveTelemetryDataToCache(@NonNull final Map<String, String> data) {
         for (Map.Entry<String, String> entry : data.entrySet()) {
             final String cacheKey = entry.getKey();
             final String cacheValue = entry.getValue();

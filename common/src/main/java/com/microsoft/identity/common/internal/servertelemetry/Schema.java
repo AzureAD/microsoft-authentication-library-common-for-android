@@ -81,19 +81,19 @@ public class Schema {
 
     };
 
-    private static boolean isCurrentCommonField(String key) {
+    private static boolean isCurrentCommonField(final String key) {
         return Arrays.asList(currentRequestCommonFields).contains(key);
     }
 
-    private static boolean isLastCommonField(String key) {
+    private static boolean isLastCommonField(final String key) {
         return Arrays.asList(lastRequestCommonFields).contains(key);
     }
 
-    private static boolean isCurrentPlatformField(String key) {
+    private static boolean isCurrentPlatformField(final String key) {
         return Arrays.asList(currentRequestPlatformFields).contains(key);
     }
 
-    private static boolean isLastPlatformField(String key) {
+    private static boolean isLastPlatformField(final String key) {
         return Arrays.asList(lastRequestPlatformFields).contains(key);
     }
 
@@ -113,27 +113,27 @@ public class Schema {
         return lastRequestPlatformFields;
     }
 
-    static String[] getCommonFields(boolean isCurrent) {
+    static String[] getCommonFields(final boolean isCurrent) {
         return isCurrent ? getCurrentRequestCommonFields() : getLastRequestCommonFields();
     }
 
-    static String[] getPlatformFields(boolean isCurrent) {
+    static String[] getPlatformFields(final boolean isCurrent) {
         return isCurrent ? getCurrentRequestPlatformFields() : getLastRequestPlatformFields();
     }
 
-    static boolean isCommonField(String key, boolean isCurrent) {
+    static boolean isCommonField(final String key, final boolean isCurrent) {
         return isCurrent ? isCurrentCommonField(key) : isLastCommonField(key);
     }
 
-    static boolean isPlatformField(String key, boolean isCurrent) {
+    static boolean isPlatformField(final String key, final boolean isCurrent) {
         return isCurrent ? isCurrentPlatformField(key) : isLastPlatformField(key);
     }
 
-    static String getSchemaCompliantStringFromBoolean(boolean val) {
+    static String getSchemaCompliantStringFromBoolean(final boolean val) {
         return val ? Value.TRUE : Value.FALSE;
     }
 
-    static String getSchemaCompliantString(String s) {
+    static String getSchemaCompliantString(final String s) {
         if (StringUtil.isEmpty(s)) {
             return Value.EMPTY;
         } else if (s.equals(TelemetryEventStrings.Value.TRUE)) {

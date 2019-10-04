@@ -2,6 +2,9 @@ package com.microsoft.identity.common.internal.servertelemetry;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
@@ -25,7 +28,7 @@ public class ServerTelemetry {
     private static IRequestTelemetryCache sLastRequestTelemetryCache;
     private static Map<String, RequestTelemetry> sTelemetryMap;
 
-    public static void initializeServerTelemetry(Context context) {
+    public static void initializeServerTelemetry(@NonNull final Context context) {
         final String methodName = ":initializeServerTelemetry";
 
         Logger.verbose(
@@ -38,26 +41,30 @@ public class ServerTelemetry {
         sLastRequestTelemetryCache = createLastRequestTelemetryCache(context);
     }
 
-    public static void emit(Map<String, String> telemetry) {
+    public static void emit(@NonNull final Map<String, String> telemetry) {
+        if (telemetry == null) {
+            return;
+        }
+
         for (Map.Entry<String, String> entry : telemetry.entrySet()) {
             emit(entry.getKey(), entry.getValue());
         }
     }
 
-    public static void emit(String key, String value) {
+    public static void emit(final String key, final String value) {
         final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
         emit(correlationId, key, value);
     }
 
-    private static void emit(String correlationId, String key, String value) {
+    private static void emit(final String correlationId, final String key, final String value) {
         RequestTelemetry currentTelemetryInstance = getCurrentTelemetryInstance(correlationId);
         if (currentTelemetryInstance != null) {
             currentTelemetryInstance.putTelemetry(key, value);
         }
     }
 
-    private static RequestTelemetry getCurrentTelemetryInstance(String correlationId) {
-        if (sTelemetryMap == null) {
+    private static RequestTelemetry getCurrentTelemetryInstance(final String correlationId) {
+        if (sTelemetryMap == null || correlationId == null) {
             return null;
         }
 
@@ -96,7 +103,7 @@ public class ServerTelemetry {
         emit(Schema.Key.FORCE_REFRESH, val);
     }
 
-    private static IRequestTelemetryCache createLastRequestTelemetryCache(Context context) {
+    private static IRequestTelemetryCache createLastRequestTelemetryCache(@NonNull final Context context) {
         final String methodName = ":createLastRequestTelemetryCache";
 
         Logger.verbose(
@@ -113,15 +120,12 @@ public class ServerTelemetry {
         return new SharedPreferencesLastRequestTelemetryCache(sharedPreferencesFileManager);
     }
 
-    private static RequestTelemetry setupLastFromCurrent(RequestTelemetry currentTelemetry) {
-        RequestTelemetry lastTelemetry;
-
+    private static RequestTelemetry setupLastFromCurrent(@Nullable RequestTelemetry currentTelemetry) {
         if (currentTelemetry == null) {
-            lastTelemetry = new RequestTelemetry(Schema.Value.SCHEMA_VERSION, false);
-            return lastTelemetry;
+            return new RequestTelemetry(Schema.Value.SCHEMA_VERSION, false);
         }
 
-        lastTelemetry = new RequestTelemetry(currentTelemetry.getSchemaVersion(), false);
+        RequestTelemetry lastTelemetry = new RequestTelemetry(currentTelemetry.getSchemaVersion(), false);
 
         // grab whatever common fields we can from current request
         for (Map.Entry<String, String> entry : currentTelemetry.getCommonTelemetry().entrySet()) {
@@ -136,8 +140,11 @@ public class ServerTelemetry {
         return lastTelemetry;
     }
 
-    public static void flush(String correlationId, String errorCode) {
+    public static void flush(final String correlationId, final String errorCode) {
         final String methodName = ":flush";
+        if (sTelemetryMap == null) {
+            return;
+        }
 
         RequestTelemetry currentTelemetry = sTelemetryMap.get(correlationId);
         if (currentTelemetry == null) {
@@ -163,22 +170,22 @@ public class ServerTelemetry {
         }
     }
 
-    public static void flush(String correlationId, BaseException baseException) {
+    public static void flush(final String correlationId, final BaseException baseException) {
         flush(correlationId, baseException == null ? null : baseException.getErrorCode());
     }
 
-    public static void flush(String correlationId) {
+    public static void flush(final String correlationId) {
         flush(correlationId, (String) null);
     }
 
-    public static void flush(String correlationId, AcquireTokenResult acquireTokenResult) {
+    public static void flush(final String correlationId, final AcquireTokenResult acquireTokenResult) {
         final String errorCode = TelemetryUtils.errorFromAcquireTokenResult(acquireTokenResult);
         flush(correlationId, errorCode);
     }
 
     static String getCurrentTelemetryHeaderString() {
         final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
-        if (correlationId == null) {
+        if (sTelemetryMap == null || correlationId == null) {
             return null;
         }
 

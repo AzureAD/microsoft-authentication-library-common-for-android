@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RunWith(RobolectricTestRunner.class)
@@ -83,6 +84,30 @@ public class ServerTelemetryTest {
     public void testEmptyHeaderStrings() {
         Map<String, String> headerStrings = ServerTelemetry.getTelemetryHeaders();
         Assert.assertEquals(0, headerStrings.size());
+    }
+
+    @Test
+    public void testEmitEntireMap() {
+        Map<String, String> telemetry = new HashMap<>();
+        telemetry.put(Schema.Key.API_ID, "101");
+        telemetry.put(Schema.Key.FORCE_REFRESH, "0");
+        ServerTelemetry.emit(telemetry);
+
+        String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
+        String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,0|,,,,,";
+
+        Assert.assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    public void testEmitNullMap() {
+        Map<String, String> telemetry = null;
+        ServerTelemetry.emit(telemetry);
+
+        String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
+        String expectedResult = null;
+
+        Assert.assertEquals(expectedResult, actualResult);
     }
 
     //TODO: add more tests

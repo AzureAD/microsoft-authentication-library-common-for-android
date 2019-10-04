@@ -16,22 +16,22 @@ public class RequestTelemetry {
     private ConcurrentMap<String, String> mCommonTelemetry;
     private ConcurrentMap<String, String> mPlatformTelemetry;
 
-    RequestTelemetry(boolean isCurrentRequest) {
+    RequestTelemetry(final boolean isCurrentRequest) {
         this(Schema.Value.SCHEMA_VERSION, isCurrentRequest);
     }
 
-    RequestTelemetry(String schemaVersion, boolean isCurrentRequest) {
+    RequestTelemetry(final String schemaVersion, final boolean isCurrentRequest) {
         mIsCurrentRequest = isCurrentRequest;
         mSchemaVersion = schemaVersion;
         mCommonTelemetry = new ConcurrentHashMap<>();
         mPlatformTelemetry = new ConcurrentHashMap<>();
     }
 
-    private void putInCommonTelemetry(String key, String value) {
+    private void putInCommonTelemetry(final String key, final String value) {
         mCommonTelemetry.putIfAbsent(key, value);
     }
 
-    private void putInPlatformTelemetry(String key, String value) {
+    private void putInPlatformTelemetry(final String key, final String value) {
         mPlatformTelemetry.putIfAbsent(key, value);
     }
 
@@ -40,7 +40,11 @@ public class RequestTelemetry {
         mPlatformTelemetry.clear();
     }
 
-    void putTelemetry(String key, String value) {
+    void putTelemetry(final String key, final String value) {
+        if (key == null) {
+            return;
+        }
+
         final String methodName = ":putTelemetry";
         final String schemaCompliantValueString = Schema.getSchemaCompliantString(value);
 
@@ -109,6 +113,10 @@ public class RequestTelemetry {
      * @return a telemetry header string composed from provided telemetry fields and values
      */
     private String getTelemetryHeaderStringFromFields(String[] fields, Map<String, String> telemetry) {
+        if (fields == null || telemetry == null) {
+            return "";
+        }
+
         StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i < fields.length; i++) {
