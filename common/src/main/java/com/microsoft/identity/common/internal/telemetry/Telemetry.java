@@ -40,6 +40,7 @@ import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryObse
 import com.microsoft.identity.common.internal.telemetry.rules.TelemetryPiiOiiRules;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -171,8 +172,9 @@ public class Telemetry {
      *
      * @return Queue of ITelemetryObserver object.
      */
-    public Queue<ITelemetryObserver> getObservers() {
-        return mObservers;
+    public List<ITelemetryObserver> getObservers() {
+        List observersList = new CopyOnWriteArrayList<>(mObservers);
+        return Collections.unmodifiableList(observersList);
     }
 
     /**
