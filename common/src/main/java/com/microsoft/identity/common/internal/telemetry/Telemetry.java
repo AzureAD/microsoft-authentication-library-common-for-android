@@ -158,7 +158,7 @@ public class Telemetry {
         if (null == observer || null == mObservers) {
             Logger.warn(
                     TAG,
-                    "Unable to remove the observe. Either the observer is null or the observer list is empty."
+                    "Unable to remove the observer. Either the observer is null or the observer list is empty."
             );
             return;
         }
