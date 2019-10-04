@@ -138,11 +138,11 @@ public final class HttpRequest {
                 requestContent, requestContentType);
         final HttpResponse response = httpRequest.send();
 
+        final HttpEndEvent httpEndEvent = new HttpEndEvent();
         if (response != null) {
-            Telemetry.emit(new HttpEndEvent().putStatusCode(response.getStatusCode()));
-        } else {
-            Telemetry.emit(new HttpEndEvent());
+            httpEndEvent.putStatusCode(response.getStatusCode());
         }
+        Telemetry.emit(httpEndEvent);
 
         return response;
     }
@@ -167,14 +167,11 @@ public final class HttpRequest {
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
         final HttpResponse response = httpRequest.send();
 
+        final HttpEndEvent httpEndEvent = new HttpEndEvent();
         if (response != null) {
-            Telemetry.emit(
-                    new HttpEndEvent()
-                            .putStatusCode(response.getStatusCode())
-            );
-        } else {
-            Telemetry.emit(new HttpEndEvent());
+            httpEndEvent.putStatusCode(response.getStatusCode());
         }
+        Telemetry.emit(httpEndEvent);
 
         return response;
     }
