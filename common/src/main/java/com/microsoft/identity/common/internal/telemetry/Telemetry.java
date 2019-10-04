@@ -40,8 +40,10 @@ import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryObse
 import com.microsoft.identity.common.internal.telemetry.rules.TelemetryPiiOiiRules;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -54,7 +56,7 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
     private static volatile Telemetry sTelemetryInstance = null;
-    private static Queue<ITelemetryObserver> mObservers;
+    private static List<ITelemetryObserver> mObservers;
     private Queue<Map<String, String>> mTelemetryRawDataMap;
     private TelemetryConfiguration mDefaultConfiguration;
     private TelemetryContext mTelemetryContext;
@@ -112,14 +114,14 @@ public class Telemetry {
      *
      * @param observer ITelemetryReceiver.
      */
-    public void addObserver(final ITelemetryObserver observer) {
+    public synchronized void addObserver(final ITelemetryObserver observer) {
         if (null == observer) {
             throw new IllegalArgumentException("Telemetry Observer instance cannot be null");
         }
 
         // check to make sure we're not already dispatching elsewhere
         if (null == mObservers) {
-            mObservers = new ConcurrentLinkedQueue<>();
+            mObservers = new LinkedList<>();
         }
 
         mObservers.add(observer);
@@ -130,7 +132,7 @@ public class Telemetry {
      *
      * @param cls type of the observer.
      */
-    public void removeObserver(final Class<?> cls) {
+    public synchronized void removeObserver(final Class<?> cls) {
         if (null == cls || null == mObservers) {
             Logger.warn(
                     TAG,
@@ -154,7 +156,7 @@ public class Telemetry {
      *
      * @param observer ITelemetryObserver object.
      */
-    public void removeObserver(final ITelemetryObserver observer) {
+    public synchronized void removeObserver(final ITelemetryObserver observer) {
         if (null == observer || null == mObservers) {
             Logger.warn(
                     TAG,
@@ -167,12 +169,12 @@ public class Telemetry {
     }
 
     /**
-     * Return the queue of observers registered.
+     * Return the list of observers registered.
      *
-     * @return Queue of ITelemetryObserver object.
+     * @return List of ITelemetryObserver object.
      */
-    public Queue<ITelemetryObserver> getObservers() {
-        return mObservers;
+    public List<ITelemetryObserver> getObservers() {
+        return Collections.unmodifiableList(mObservers);
     }
 
     /**
