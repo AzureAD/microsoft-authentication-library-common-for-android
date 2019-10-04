@@ -32,7 +32,9 @@ import java.util.List;
 public abstract class BaseAccountCommand<T> implements Command<T> {
     private OperationParameters mParameters;
     private List<BaseController> mControllers;
+
     private TaskCompletedCallbackWithError mCallback;
+    private String mPublicApiId;
 
     public BaseAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final BaseController controller,
@@ -74,6 +76,14 @@ public abstract class BaseAccountCommand<T> implements Command<T> {
 
     public void setCallback(TaskCompletedCallbackWithError callback) {
         this.mCallback = callback;
+    }
+
+    public void setPublicApiId(String publicApiId) {
+        this.mPublicApiId = publicApiId;
+    }
+
+    public String getPublicApiId() {
+        return mPublicApiId;
     }
 
     public abstract T execute() throws Exception;

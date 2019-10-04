@@ -137,7 +137,6 @@ public final class HttpRequest {
         );
 
         final Map<String, String> telemetryHeaders = ServerTelemetry.getTelemetryHeaders();
-
         requestHeaders.putAll(telemetryHeaders);
 
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_POST,
@@ -166,7 +165,6 @@ public final class HttpRequest {
         );
 
         final Map<String, String> telemetryHeaders = ServerTelemetry.getTelemetryHeaders();
-
         requestHeaders.putAll(telemetryHeaders);
 
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);

@@ -47,7 +47,7 @@ public class TokenCommand implements TokenOperation {
     protected OperationParameters mParameters;
     protected List<BaseController> mControllers;
     protected ILocalAuthenticationCallback mCallback;
-
+    protected String mPublicApiId;
 
     public TokenCommand() {
     }
@@ -153,5 +153,13 @@ public class TokenCommand implements TokenOperation {
 
     public void setCallback(final ILocalAuthenticationCallback callback) {
         this.mCallback = callback;
+    }
+
+    public String getPublicApiId() {
+        return mPublicApiId;
+    }
+
+    public void setPublicApiId(String publicApiId) {
+        this.mPublicApiId = publicApiId;
     }
 }

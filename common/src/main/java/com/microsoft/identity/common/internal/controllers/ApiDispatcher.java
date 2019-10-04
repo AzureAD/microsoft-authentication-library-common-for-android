@@ -39,6 +39,7 @@ import com.microsoft.identity.common.internal.request.AcquireTokenOperationParam
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.internal.servertelemetry.Schema;
 import com.microsoft.identity.common.internal.servertelemetry.ServerTelemetry;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
@@ -66,6 +67,7 @@ public class ApiDispatcher {
             @Override
             public void run() {
                 final String correlationId = initializeDiagnosticContext();
+                ServerTelemetry.emitApiId(command.getPublicApiId());
 
                 List<ICacheRecord> result = null;
                 BaseException baseException = null;
@@ -121,6 +123,7 @@ public class ApiDispatcher {
             @Override
             public void run() {
                 final String correlationId = initializeDiagnosticContext();
+                ServerTelemetry.emitApiId(command.getPublicApiId());
 
                 boolean result = false;
                 BaseException baseException = null;
@@ -182,6 +185,7 @@ public class ApiDispatcher {
                 @Override
                 public void run() {
                     final String correlationId = initializeDiagnosticContext();
+                    ServerTelemetry.emitApiId(command.getPublicApiId());
 
                     if (command.mParameters instanceof AcquireTokenOperationParameters) {
                         logInteractiveRequestParameters(methodName, (AcquireTokenOperationParameters) command.mParameters);
@@ -394,6 +398,7 @@ public class ApiDispatcher {
             @Override
             public void run() {
                 final String correlationId = initializeDiagnosticContext();
+                ServerTelemetry.emitApiId(command.getPublicApiId());
 
                 if (command.mParameters instanceof AcquireTokenSilentOperationParameters) {
                     logSilentRequestParams(

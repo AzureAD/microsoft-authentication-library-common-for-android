@@ -5,11 +5,14 @@ import android.content.Context;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerTelemetry {
     private final static String TAG = ServerTelemetry.class.getSimpleName();
@@ -21,9 +24,7 @@ public class ServerTelemetry {
             "com.microsoft.identity.client.last_request_telemetry";
 
     private static IRequestTelemetryCache sLastRequestTelemetryCache;
-
-    private static RequestTelemetry sCurrentRequestTelemetry = null;
-    private static RequestTelemetry sLastRequestTelemetry = null;
+    private static Map<String, RequestTelemetry> sTelemetryMap;
 
     public static void initializeServerTelemetry(Context context) {
         final String methodName = ":initializeServerTelemetry";
@@ -32,6 +33,8 @@ public class ServerTelemetry {
                 TAG + methodName,
                 "Initializing server side telemetry"
         );
+
+        sTelemetryMap = new ConcurrentHashMap<>();
 
         sLastRequestTelemetryCache = createLastRequestTelemetryCache(context);
     }
@@ -42,44 +45,35 @@ public class ServerTelemetry {
         }
     }
 
-    // always emits to current request
     public static void emit(String key, String value) {
-        putForCurrent(key, value);
+        final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+        emit(correlationId, key, value);
     }
 
-    private static RequestTelemetry getCurrentTelemetryInstance() {
+    private static void emit(String correlationId, String key, String value) {
+        RequestTelemetry currentTelemetryInstance = getCurrentTelemetryInstance(correlationId);
+        if (currentTelemetryInstance != null) {
+            currentTelemetryInstance.putTelemetry(key, value);
+        }
+    }
+
+    private static RequestTelemetry getCurrentTelemetryInstance(String correlationId) {
         final String methodName = ":getCurrentTelemetryInstance";
-
-        if (sCurrentRequestTelemetry == null) {
-            Logger.verbose(
-                    TAG + methodName,
-                    "sCurrentRequestTelemetry object was null. " +
-                            "Creating a new current request telemetry object."
-            );
-
-            sCurrentRequestTelemetry = new RequestTelemetry(Schema.Value.SCHEMA_VERSION, true);
+        if (sTelemetryMap == null) {
+            return null;
         }
 
-        return sCurrentRequestTelemetry;
-    }
-
-    private static RequestTelemetry getLastTelemetryInstance() {
-        final String methodName = ":getLastTelemetryInstance";
-
-        if (sLastRequestTelemetry == null) {
-            Logger.verbose(
-                    TAG + methodName,
-                    "sLastRequestTelemetry object was null. " +
-                            "Creating a new last request telemetry object."
-            );
-
-            sLastRequestTelemetry = new RequestTelemetry(Schema.Value.SCHEMA_VERSION, false);
+        RequestTelemetry currentTelemetry = sTelemetryMap.get(correlationId);
+        if (currentTelemetry != null) {
+            return currentTelemetry;
+        } else {
+            RequestTelemetry telemetry = new RequestTelemetry(true);
+            sTelemetryMap.put(correlationId, telemetry);
+            return telemetry;
         }
-
-        return sLastRequestTelemetry;
     }
 
-    private static void loadLastRequestTelemetryFromCache() {
+    private static RequestTelemetry loadLastRequestTelemetryFromCache() {
         final String methodName = ":loadLastRequestTelemetry";
 
         if (sLastRequestTelemetryCache == null) {
@@ -88,11 +82,12 @@ public class ServerTelemetry {
                     "Last Request Telemetry Cache has not been initialized. " +
                             "Cannot load Last Request Telemetry data from cache."
             );
-            return;
+            return null;
         }
 
-        sLastRequestTelemetry = sLastRequestTelemetryCache.getRequestTelemetryFromCache();
+        return sLastRequestTelemetryCache.getRequestTelemetryFromCache();
     }
+
 
     public static void emitApiId(final String apiId) {
         emit(Schema.Key.API_ID, apiId);
@@ -101,22 +96,6 @@ public class ServerTelemetry {
     public static void emitForceRefresh(final boolean forceRefresh) {
         String val = Schema.getSchemaCompliantStringFromBoolean(forceRefresh);
         emit(Schema.Key.FORCE_REFRESH, val);
-    }
-
-    private static void putForCurrent(String key, String value) {
-        getCurrentTelemetryInstance().putTelemetry(key, value);
-    }
-
-    private static void putForLast(String key, String value) {
-        getLastTelemetryInstance().putTelemetry(key, value);
-    }
-
-    private static void putLastErrorCode(String errorCode) {
-        putForLast(Schema.Key.ERROR_CODE, errorCode);
-    }
-
-    private static void putLastCorrelationId(String correlationId) {
-        putForLast(Schema.Key.CORRELATION_ID, correlationId);
     }
 
     private static IRequestTelemetryCache createLastRequestTelemetryCache(Context context) {
@@ -136,53 +115,47 @@ public class ServerTelemetry {
         return new SharedPreferencesLastRequestTelemetryCache(sharedPreferencesFileManager);
     }
 
-    static void clearLastRequestTelemetry() {
-        if (sLastRequestTelemetry != null) {
-            sLastRequestTelemetry.clearTelemetry();
-            sLastRequestTelemetry = null;
+    private static RequestTelemetry setupLastFromCurrent(RequestTelemetry currentTelemetry) {
+        RequestTelemetry lastTelemetry;
+
+        if (currentTelemetry == null) {
+            lastTelemetry = new RequestTelemetry(Schema.Value.SCHEMA_VERSION, false);
+            return lastTelemetry;
         }
 
-        if (sLastRequestTelemetryCache != null) {
-            sLastRequestTelemetryCache.clearAll();
-        }
-    }
-
-    static void clearCurrentRequestTelemetry() {
-        if (sCurrentRequestTelemetry != null) {
-            sCurrentRequestTelemetry.clearTelemetry();
-            sCurrentRequestTelemetry = null;
-        }
-    }
-
-    private static void setupLastFromCurrent() {
-        if (sCurrentRequestTelemetry == null) {
-            sLastRequestTelemetry = new RequestTelemetry(Schema.Value.SCHEMA_VERSION, false);
-            return;
-        }
-
-        sLastRequestTelemetry = new RequestTelemetry(sCurrentRequestTelemetry.getSchemaVersion(), false);
+        lastTelemetry = new RequestTelemetry(currentTelemetry.getSchemaVersion(), false);
 
         // grab whatever common fields we can from current request
-        for (Map.Entry<String, String> entry : sCurrentRequestTelemetry.getCommonTelemetry().entrySet()) {
-            putForLast(entry.getKey(), entry.getValue());
+        for (Map.Entry<String, String> entry : currentTelemetry.getCommonTelemetry().entrySet()) {
+            lastTelemetry.putTelemetry(entry.getKey(), entry.getValue());
         }
 
         // grab whatever platform fields we can from current request
-        for (Map.Entry<String, String> entry : sCurrentRequestTelemetry.getPlatformTelemetry().entrySet()) {
-            putForLast(entry.getKey(), entry.getValue());
+        for (Map.Entry<String, String> entry : currentTelemetry.getPlatformTelemetry().entrySet()) {
+            lastTelemetry.putTelemetry(entry.getKey(), entry.getValue());
         }
+
+        return lastTelemetry;
     }
 
     public static void flush(String correlationId, String errorCode) {
         final String methodName = ":flush";
 
-        clearLastRequestTelemetry();
-        setupLastFromCurrent();
-        putLastCorrelationId(correlationId);
-        putLastErrorCode(errorCode);
+        RequestTelemetry currentTelemetry = sTelemetryMap.get(correlationId);
+        if (currentTelemetry == null) {
+            return;
+        }
+
+        RequestTelemetry lastTelemetry = setupLastFromCurrent(currentTelemetry);
+        lastTelemetry.putTelemetry(Schema.Key.CORRELATION_ID, correlationId);
+        lastTelemetry.putTelemetry(Schema.Key.ERROR_CODE, errorCode);
+
+        currentTelemetry.clearTelemetry();
+        sTelemetryMap.remove(correlationId);
+
 
         if (sLastRequestTelemetryCache != null) {
-            sLastRequestTelemetryCache.saveRequestTelemetryToCache(sLastRequestTelemetry);
+            sLastRequestTelemetryCache.saveRequestTelemetryToCache(lastTelemetry);
         } else {
             Logger.verbose(
                     TAG + methodName,
@@ -190,9 +163,6 @@ public class ServerTelemetry {
                             "Unable to save request telemetry to cache."
             );
         }
-
-        clearCurrentRequestTelemetry();
-        clearLastRequestTelemetry();
     }
 
     public static void flush(String correlationId, BaseException baseException) {
@@ -209,21 +179,28 @@ public class ServerTelemetry {
     }
 
     static String getCurrentTelemetryHeaderString() {
-        if (sCurrentRequestTelemetry == null) {
+        final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+        if (correlationId == null) {
             return null;
         }
 
-        return sCurrentRequestTelemetry.getCompleteTelemetryHeaderString();
+        RequestTelemetry currentTelemetry = sTelemetryMap.get(correlationId);
+
+        if (currentTelemetry == null) {
+            return null;
+        }
+
+        return currentTelemetry.getCompleteTelemetryHeaderString();
     }
 
     static String getLastTelemetryHeaderString() {
-        loadLastRequestTelemetryFromCache();
+        RequestTelemetry lastTelemetry = loadLastRequestTelemetryFromCache();
 
-        if (sLastRequestTelemetry == null) {
+        if (lastTelemetry == null) {
             return null;
         }
 
-        return sLastRequestTelemetry.getCompleteTelemetryHeaderString();
+        return lastTelemetry.getCompleteTelemetryHeaderString();
     }
 
     public static Map<String, String> getTelemetryHeaders() {
