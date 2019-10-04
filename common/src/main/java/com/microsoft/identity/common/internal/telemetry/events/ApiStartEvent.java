@@ -38,7 +38,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
 
 public class ApiStartEvent extends BaseEvent {
     private static final String TAG = ApiStartEvent.class.getSimpleName();
@@ -56,6 +59,10 @@ public class ApiStartEvent extends BaseEvent {
     }
 
     public ApiStartEvent putProperties(@NonNull final OperationParameters parameters) {
+        if (parameters == null) {
+            return this;
+        }
+
         if (parameters.getAuthority() != null) {
             put(Key.AUTHORITY, parameters.getAuthority().getAuthorityURL().getAuthority()); //Pii
             put(Key.AUTHORITY_TYPE, parameters.getAuthority().getAuthorityTypeString());
@@ -65,7 +72,7 @@ public class ApiStartEvent extends BaseEvent {
         put(Key.SDK_VERSION, parameters.getSdkVersion());
 
         put(Key.CLAIM_REQUEST, StringUtil.isEmpty(
-                parameters.getClaimsRequestJson())? Value.FALSE : Value.TRUE
+                parameters.getClaimsRequestJson()) ? Value.FALSE : Value.TRUE
         );
 
         put(Key.REDIRECT_URI, parameters.getRedirectUri()); //Pii
@@ -150,7 +157,7 @@ public class ApiStartEvent extends BaseEvent {
         return this;
     }
 
-    public ApiStartEvent putExtendedExpiresOnSetting(@NonNull final  String extendedExpiresOnSetting) {
+    public ApiStartEvent putExtendedExpiresOnSetting(@NonNull final String extendedExpiresOnSetting) {
         put(Key.EXTENDED_EXPIRES_ON_SETTING, extendedExpiresOnSetting);
         return this;
     }
@@ -183,6 +190,10 @@ public class ApiStartEvent extends BaseEvent {
      * @return the sanitized URL.
      */
     private static String sanitizeUrlForTelemetry(@NonNull final URL url) {
+        if (url == null) {
+            return null;
+        }
+
         final String authority = url.getAuthority();
         final String[] splitArray = url.getPath().split("/");
 

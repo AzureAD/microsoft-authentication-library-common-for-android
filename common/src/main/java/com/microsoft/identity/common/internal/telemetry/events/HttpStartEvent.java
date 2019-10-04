@@ -21,9 +21,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
+
 import java.net.URL;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
 
 public class HttpStartEvent extends BaseEvent {
     public HttpStartEvent() {
@@ -38,6 +41,10 @@ public class HttpStartEvent extends BaseEvent {
     }
 
     public HttpStartEvent putPath(final URL path) {
+        if (path == null) {
+            return this;
+        }
+
         put(Key.HTTP_PATH, path.toExternalForm());
         return this;
     }
