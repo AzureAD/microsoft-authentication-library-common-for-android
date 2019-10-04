@@ -31,7 +31,7 @@ public abstract class SharedPreferencesRequestTelemetryCache implements IRequest
     }
 
     @Override
-    public void saveRequestTelemetryToCache(@NonNull final RequestTelemetry requestTelemetry) {
+    public synchronized void saveRequestTelemetryToCache(@NonNull final RequestTelemetry requestTelemetry) {
         Logger.verbose(TAG, "Saving Request Telemetry to cache...");
 
         mSharedPreferencesFileManager.putString(Schema.Key.SCHEMA_VERSION, Schema.Value.SCHEMA_VERSION);
@@ -48,7 +48,7 @@ public abstract class SharedPreferencesRequestTelemetryCache implements IRequest
     }
 
     @Override
-    public void clearAll() {
+    public synchronized void clearAll() {
         Logger.info(TAG, "Clearing all SharedPreferences entries...");
         mSharedPreferencesFileManager.clear();
         Logger.info(TAG, "SharedPreferences cleared.");

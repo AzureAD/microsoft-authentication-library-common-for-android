@@ -160,6 +160,9 @@ public class ServerTelemetry {
 
 
         if (sLastRequestTelemetryCache != null) {
+            // remove old last request telemetry data from cache
+            sLastRequestTelemetryCache.clearAll();
+            // save new last request telemetry data to cache
             sLastRequestTelemetryCache.saveRequestTelemetryToCache(lastTelemetry);
         } else {
             Logger.verbose(
