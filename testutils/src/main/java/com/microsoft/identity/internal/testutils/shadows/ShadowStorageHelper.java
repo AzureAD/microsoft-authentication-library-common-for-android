@@ -43,4 +43,14 @@ public class ShadowStorageHelper {
         return;
     }
 
+    public String encrypt(final String clearText) throws GeneralSecurityException, IOException {
+        return clearText;
+    }
+
+    public String decrypt(final String encryptedBlob) throws GeneralSecurityException, IOException {
+        return encryptedBlob;
+    }
+
+
+
 }

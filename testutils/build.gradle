@@ -26,6 +26,19 @@ android {
         }
     }
 
+    lintOptions {
+        abortOnError true
+        disable 'MissingPermission'
+        disable 'LongLogTag'
+        disable 'DefaultLocale'
+        disable 'UnusedResources'
+        disable 'GradleDependency'
+        disable 'GradleOverrides'
+        disable 'OldTargetApi'
+        disable 'RtlHardcoded'
+        disable 'InvalidPackage'
+    }
+
 }
 
 dependencies {
