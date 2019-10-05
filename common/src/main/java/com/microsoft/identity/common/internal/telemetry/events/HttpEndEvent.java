@@ -22,7 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
 
 public class HttpEndEvent extends BaseEvent {
     public HttpEndEvent() {

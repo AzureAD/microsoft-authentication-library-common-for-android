@@ -22,7 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
 
 public class UiEndEvent extends BaseEvent {
     public UiEndEvent() {
