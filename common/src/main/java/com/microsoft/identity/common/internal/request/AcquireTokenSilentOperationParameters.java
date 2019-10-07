@@ -31,8 +31,7 @@ import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
     private RefreshTokenRecord mRefreshToken;
-    @Expose()
-    private boolean mForceRefresh;
+
 
     public RefreshTokenRecord getRefreshToken() {
         return mRefreshToken;
@@ -40,14 +39,6 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
     public void setRefreshToken(@Nullable final RefreshTokenRecord refreshToken) {
         mRefreshToken = refreshToken;
-    }
-
-    public void setForceRefresh(final boolean forceRefresh) {
-        mForceRefresh = forceRefresh;
-    }
-
-    public boolean getForceRefresh() {
-        return mForceRefresh;
     }
 
     @Override

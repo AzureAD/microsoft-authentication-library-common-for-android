@@ -63,6 +63,8 @@ public class OperationParameters {
     private String mApplicationVersion;
     @Expose()
     private String mRequiredBrokerProtocolVersion; //Move the required broker protocol var into parent class, as the interactive call also needs Bound Service.
+    @Expose()
+    private boolean mForceRefresh;
 
     public String getRequiredBrokerProtocolVersion() {
         return mRequiredBrokerProtocolVersion;
@@ -166,6 +168,14 @@ public class OperationParameters {
 
     public void setApplicationVersion(@Nullable final String applicationVersion) {
         mApplicationVersion = applicationVersion;
+    }
+
+    public void setForceRefresh(final boolean forceRefresh) {
+        mForceRefresh = forceRefresh;
+    }
+
+    public boolean getForceRefresh() {
+        return mForceRefresh;
     }
 
 
