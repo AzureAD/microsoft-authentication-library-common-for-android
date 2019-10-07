@@ -132,7 +132,7 @@ public final class HttpRequest {
                 new HttpStartEvent()
                         .putMethod(REQUEST_METHOD_POST)
                         .putPath(requestUrl)
-                        .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
+                        .putRequestIdHeader(requestHeaders == null ? null : requestHeaders.get(CLIENT_REQUEST_ID))
         );
 
         final Map<String, String> telemetryHeaders = ServerTelemetry.getTelemetryHeaders();
@@ -141,7 +141,12 @@ public final class HttpRequest {
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_POST,
                 requestContent, requestContentType);
         final HttpResponse response = httpRequest.send();
-        Telemetry.emit(new HttpEndEvent().putStatusCode(response.getStatusCode()));
+
+        final HttpEndEvent httpEndEvent = new HttpEndEvent();
+        if (response != null) {
+            httpEndEvent.putStatusCode(response.getStatusCode());
+        }
+        Telemetry.emit(httpEndEvent);
 
         return response;
     }
@@ -160,7 +165,7 @@ public final class HttpRequest {
                 new HttpStartEvent()
                         .putMethod(REQUEST_METHOD_GET)
                         .putPath(requestUrl)
-                        .putRequestIdHeader(requestHeaders.get(CLIENT_REQUEST_ID))
+                        .putRequestIdHeader(requestHeaders == null ? null : requestHeaders.get(CLIENT_REQUEST_ID))
         );
 
         final Map<String, String> telemetryHeaders = ServerTelemetry.getTelemetryHeaders();
@@ -169,10 +174,11 @@ public final class HttpRequest {
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
         final HttpResponse response = httpRequest.send();
 
-        Telemetry.emit(
-                new HttpEndEvent()
-                        .putStatusCode(response.getStatusCode())
-        );
+        final HttpEndEvent httpEndEvent = new HttpEndEvent();
+        if (response != null) {
+            httpEndEvent.putStatusCode(response.getStatusCode());
+        }
+        Telemetry.emit(httpEndEvent);
 
         return response;
     }
