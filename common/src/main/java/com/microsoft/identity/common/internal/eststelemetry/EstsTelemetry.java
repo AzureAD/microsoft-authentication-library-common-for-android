@@ -47,10 +47,9 @@ public class EstsTelemetry {
     private static final String LAST_REQUEST_TELEMETRY_SHARED_PREFERENCES =
             "com.microsoft.identity.client.last_request_telemetry";
 
+    private static volatile EstsTelemetry sEstsTelemetryInstance = null;
     private static IRequestTelemetryCache sLastRequestTelemetryCache;
     private Map<String, RequestTelemetry> sTelemetryMap;
-
-    private static volatile EstsTelemetry sEstsTelemetryInstance = null;
 
     private EstsTelemetry(@Nullable final Context context) {
         sTelemetryMap = new ConcurrentHashMap<>();
@@ -78,7 +77,6 @@ public class EstsTelemetry {
             return prepareInstance(context);
         }
     }
-
 
     public static void initializeEstsTelemetryCache(@NonNull final Context context) {
         final String methodName = ":initializeEstsTelemetryCache";
@@ -191,9 +189,33 @@ public class EstsTelemetry {
         return lastTelemetry;
     }
 
+    public void flush() {
+        String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+        flush(correlationId);
+    }
+
+    public void flush(final String errorCode) {
+        String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+        flush(correlationId, errorCode);
+    }
+
+    public void flush(final BaseException baseException) {
+        String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+        flush(correlationId, baseException);
+    }
+
+    public void flush(final String correlationId, final BaseException baseException) {
+        flush(correlationId, baseException == null ? null : baseException.getErrorCode());
+    }
+
+    public void flush(final String correlationId, final AcquireTokenResult acquireTokenResult) {
+        final String errorCode = TelemetryUtils.errorFromAcquireTokenResult(acquireTokenResult);
+        flush(correlationId, errorCode);
+    }
+
     public void flush(final String correlationId, final String errorCode) {
         final String methodName = ":flush";
-        if (sTelemetryMap == null) {
+        if (sTelemetryMap == null || correlationId == null) {
             return;
         }
 
@@ -222,24 +244,6 @@ public class EstsTelemetry {
                             "Unable to save request telemetry to cache."
             );
         }
-    }
-
-    public void flush(final String correlationId, final BaseException baseException) {
-        flush(correlationId, baseException == null ? null : baseException.getErrorCode());
-    }
-
-    public void flush(final String correlationId) {
-        flush(correlationId, (String) null);
-    }
-
-    public void flush(final String correlationId, final AcquireTokenResult acquireTokenResult) {
-        final String errorCode = TelemetryUtils.errorFromAcquireTokenResult(acquireTokenResult);
-        flush(correlationId, errorCode);
-    }
-
-    public void flush() {
-        String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
-        flush(correlationId);
     }
 
     String getCurrentTelemetryHeaderString() {
