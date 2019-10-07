@@ -24,6 +24,9 @@ package com.microsoft.identity.common.internal.eststelemetry;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.internal.logging.DiagnosticContext;
+import com.microsoft.identity.common.internal.logging.Logger;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,6 +36,7 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RunWith(RobolectricTestRunner.class)
 public class EstsTelemetryTest {
@@ -40,11 +44,20 @@ public class EstsTelemetryTest {
     @Before
     public void setup() {
         EstsTelemetry.initializeEstsTelemetryCache(ApplicationProvider.getApplicationContext());
+        initializeDiagnosticContext();
     }
 
     @After
     public void cleanup() {
         EstsTelemetry.getInstance().flush();
+    }
+
+    public void initializeDiagnosticContext() {
+        final String correlationId = UUID.randomUUID().toString();
+        final com.microsoft.identity.common.internal.logging.RequestContext rc =
+                new com.microsoft.identity.common.internal.logging.RequestContext();
+        rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
+        DiagnosticContext.setRequestContext(rc);
     }
 
     @Test
@@ -134,6 +147,21 @@ public class EstsTelemetryTest {
 
         String actualResult = EstsTelemetry.getInstance().getCurrentTelemetryHeaderString();
         String expectedResult = null;
+
+        Assert.assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    public void testLastTelemetryHeaderString() {
+        EstsTelemetry.getInstance().emit(Schema.Key.API_ID, "101");
+
+        EstsTelemetry.getInstance().flush();
+
+        String actualResult = EstsTelemetry.getInstance().getLastTelemetryHeaderString();
+
+        final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+
+        String expectedResult = Schema.CURRENT_SCHEMA_VERSION + "|101," + correlationId + ",|";
 
         Assert.assertEquals(expectedResult, actualResult);
     }

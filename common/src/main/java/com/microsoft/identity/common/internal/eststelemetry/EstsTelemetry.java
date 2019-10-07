@@ -36,6 +36,7 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class EstsTelemetry {
@@ -112,7 +113,7 @@ public class EstsTelemetry {
     }
 
     private RequestTelemetry getCurrentTelemetryInstance(@Nullable final String correlationId) {
-        if (sTelemetryMap == null || correlationId == null) {
+        if (sTelemetryMap == null || correlationId == null || correlationId.equals("UNSET")) {
             return null;
         }
 
@@ -190,8 +191,7 @@ public class EstsTelemetry {
     }
 
     public void flush() {
-        String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
-        flush(correlationId);
+        flush((String) null);
     }
 
     public void flush(final String errorCode) {
@@ -213,7 +213,7 @@ public class EstsTelemetry {
         flush(correlationId, errorCode);
     }
 
-    public void flush(final String correlationId, final String errorCode) {
+    private void flush(final String correlationId, final String errorCode) {
         final String methodName = ":flush";
         if (sTelemetryMap == null || correlationId == null) {
             return;
