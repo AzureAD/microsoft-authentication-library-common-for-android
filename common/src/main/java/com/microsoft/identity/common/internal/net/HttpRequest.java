@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.net;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.servertelemetry.ServerTelemetry;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.HttpEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.HttpStartEvent;
@@ -135,9 +134,6 @@ public final class HttpRequest {
                         .putRequestIdHeader(requestHeaders == null ? null : requestHeaders.get(CLIENT_REQUEST_ID))
         );
 
-        final Map<String, String> telemetryHeaders = ServerTelemetry.getTelemetryHeaders();
-        requestHeaders.putAll(telemetryHeaders);
-
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_POST,
                 requestContent, requestContentType);
         final HttpResponse response = httpRequest.send();
@@ -167,9 +163,6 @@ public final class HttpRequest {
                         .putPath(requestUrl)
                         .putRequestIdHeader(requestHeaders == null ? null : requestHeaders.get(CLIENT_REQUEST_ID))
         );
-
-        final Map<String, String> telemetryHeaders = ServerTelemetry.getTelemetryHeaders();
-        requestHeaders.putAll(telemetryHeaders);
 
         final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
         final HttpResponse response = httpRequest.send();

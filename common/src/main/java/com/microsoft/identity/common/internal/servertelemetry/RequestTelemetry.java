@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.servertelemetry;
 
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -95,6 +97,7 @@ public class RequestTelemetry {
         return mPlatformTelemetry;
     }
 
+    @Nullable
     String getCompleteTelemetryHeaderString() {
         final String methodName = ":getCompleteTelemetryHeaderString";
 

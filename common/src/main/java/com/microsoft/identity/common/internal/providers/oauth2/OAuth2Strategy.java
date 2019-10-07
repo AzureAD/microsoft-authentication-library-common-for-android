@@ -35,6 +35,7 @@ import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
+import com.microsoft.identity.common.internal.servertelemetry.ServerTelemetry;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -135,14 +136,15 @@ public abstract class OAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put(CLIENT_REQUEST_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
 
-        if(request instanceof MicrosoftTokenRequest &&
-                !TextUtils.isEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())){
+        if (request instanceof MicrosoftTokenRequest &&
+                !TextUtils.isEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())) {
             headers.put(
                     Device.PlatformIdParameters.BROKER_VERSION,
                     ((MicrosoftTokenRequest) request).getBrokerVersion()
             );
         }
         headers.putAll(Device.getPlatformIdParameters());
+        headers.putAll(ServerTelemetry.getTelemetryHeaders());
 
         return HttpRequest.sendPost(
                 new URL(mTokenEndpoint),

@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
+import com.microsoft.identity.common.internal.servertelemetry.ServerTelemetry;
 
 import org.json.JSONException;
 
@@ -88,7 +89,7 @@ public class AzureActiveDirectory
     }
 
     public static void setEnvironment(Environment environment) {
-        if(environment != sEnvironment){
+        if (environment != sEnvironment) {
             // Environment changed, so mark sIsInitialized to false
             // to make a instance discovery network request for this environment.
             sIsInitialized = false;
@@ -168,9 +169,12 @@ public class AzureActiveDirectory
                 .appendQueryParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
                 .build();
 
+        Map<String, String> headers = new HashMap<>();
+        headers.putAll(ServerTelemetry.getTelemetryHeaders());
+
         HttpResponse response = HttpRequest.sendGet(
                 new URL(instanceDiscoveryRequestUri.toString()),
-                new HashMap<String, String>()
+                headers
         );
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {

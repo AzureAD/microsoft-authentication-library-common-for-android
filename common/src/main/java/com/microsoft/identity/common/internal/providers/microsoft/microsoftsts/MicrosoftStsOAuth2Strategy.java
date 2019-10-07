@@ -51,6 +51,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.servertelemetry.ServerTelemetry;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeFactory;
@@ -406,6 +407,7 @@ public class MicrosoftStsOAuth2Strategy
                     authority.toString()
             );
             headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
+            headers.putAll(ServerTelemetry.getTelemetryHeaders());
 
             final HttpResponse pkeyAuthResponse = HttpRequest.sendPost(
                     authority,
