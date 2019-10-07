@@ -29,9 +29,13 @@ import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.util.Map;
 
-public class SharedPreferencesLastRequestTelemetryCache extends SharedPreferencesRequestTelemetryCache {
+public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelemetryCache {
 
     private final static String TAG = SharedPreferencesLastRequestTelemetryCache.class.getSimpleName();
+
+
+    // SharedPreferences used to store request telemetry data
+    private final ISharedPreferencesFileManager mSharedPreferencesFileManager;
 
     /**
      * Constructor of SharedPreferencesLastRequestTelemetryCache.
@@ -40,14 +44,19 @@ public class SharedPreferencesLastRequestTelemetryCache extends SharedPreference
      */
     SharedPreferencesLastRequestTelemetryCache(
             @NonNull final ISharedPreferencesFileManager sharedPreferencesFileManager) {
-        super(sharedPreferencesFileManager);
+        Logger.verbose(TAG, "Init: " + TAG);
+        mSharedPreferencesFileManager = sharedPreferencesFileManager;
+    }
+
+    ISharedPreferencesFileManager getSharedPreferencesFileManager() {
+        return mSharedPreferencesFileManager;
     }
 
     @Override
     public synchronized RequestTelemetry getRequestTelemetryFromCache() {
         final String methodName = ":getRequestTelemetryFromCache";
 
-        final Map<String, String> data = super.getSharedPreferencesFileManager().getAll();
+        final Map<String, String> data = mSharedPreferencesFileManager.getAll();
 
         if (data == null || data.isEmpty()) {
             Logger.verbose(TAG + methodName,
@@ -74,4 +83,30 @@ public class SharedPreferencesLastRequestTelemetryCache extends SharedPreference
 
         return lastRequestTelemetry;
     }
+
+    @Override
+    public synchronized void saveRequestTelemetryToCache(@NonNull final RequestTelemetry requestTelemetry) {
+        Logger.verbose(TAG, "Saving Request Telemetry to cache...");
+
+        mSharedPreferencesFileManager.putString(Schema.SCHEMA_VERSION_KEY, Schema.CURRENT_SCHEMA_VERSION);
+        saveTelemetryDataToCache(requestTelemetry.getCommonTelemetry());
+        saveTelemetryDataToCache(requestTelemetry.getPlatformTelemetry());
+    }
+
+    private synchronized void saveTelemetryDataToCache(@NonNull final Map<String, String> data) {
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            final String cacheKey = entry.getKey();
+            final String cacheValue = entry.getValue();
+            mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
+        }
+    }
+
+    @Override
+    public synchronized void clearAll() {
+        Logger.info(TAG, "Clearing all SharedPreferences entries...");
+        mSharedPreferencesFileManager.clear();
+        Logger.info(TAG, "SharedPreferences cleared.");
+    }
+
+
 }
