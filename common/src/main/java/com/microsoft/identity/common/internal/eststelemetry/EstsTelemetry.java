@@ -145,7 +145,7 @@ public class EstsTelemetry {
 
     private static RequestTelemetry setupLastFromCurrent(@Nullable RequestTelemetry currentTelemetry) {
         if (currentTelemetry == null) {
-            return new RequestTelemetry(Schema.Value.SCHEMA_VERSION, false);
+            return new RequestTelemetry(Schema.CURRENT_SCHEMA_VERSION, false);
         }
 
         RequestTelemetry lastTelemetry = new RequestTelemetry(currentTelemetry.getSchemaVersion(), false);
