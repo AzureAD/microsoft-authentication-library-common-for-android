@@ -42,7 +42,7 @@ public class RequestTelemetry {
     private ConcurrentMap<String, String> mPlatformTelemetry;
 
     RequestTelemetry(@NonNull final boolean isCurrentRequest) {
-        this(Schema.Value.SCHEMA_VERSION, isCurrentRequest);
+        this(Schema.CURRENT_SCHEMA_VERSION, isCurrentRequest);
     }
 
     RequestTelemetry(@NonNull final String schemaVersion, @NonNull final boolean isCurrentRequest) {
