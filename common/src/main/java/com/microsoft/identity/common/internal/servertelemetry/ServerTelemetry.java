@@ -85,7 +85,7 @@ public class ServerTelemetry {
         }
     }
 
-    private static RequestTelemetry getCurrentTelemetryInstance(final String correlationId) {
+    private static RequestTelemetry getCurrentTelemetryInstance(@Nullable final String correlationId) {
         if (sTelemetryMap == null || correlationId == null) {
             return null;
         }
@@ -100,6 +100,7 @@ public class ServerTelemetry {
         }
     }
 
+    @Nullable
     private static RequestTelemetry loadLastRequestTelemetryFromCache() {
         final String methodName = ":loadLastRequestTelemetry";
 

@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.servertelemetry;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -40,11 +41,11 @@ public class RequestTelemetry {
     private ConcurrentMap<String, String> mCommonTelemetry;
     private ConcurrentMap<String, String> mPlatformTelemetry;
 
-    RequestTelemetry(final boolean isCurrentRequest) {
+    RequestTelemetry(@NonNull final boolean isCurrentRequest) {
         this(Schema.Value.SCHEMA_VERSION, isCurrentRequest);
     }
 
-    RequestTelemetry(final String schemaVersion, final boolean isCurrentRequest) {
+    RequestTelemetry(@NonNull final String schemaVersion, @NonNull final boolean isCurrentRequest) {
         mIsCurrentRequest = isCurrentRequest;
         mSchemaVersion = schemaVersion;
         mCommonTelemetry = new ConcurrentHashMap<>();
@@ -64,7 +65,7 @@ public class RequestTelemetry {
         mPlatformTelemetry.clear();
     }
 
-    void putTelemetry(final String key, final String value) {
+    void putTelemetry(@Nullable final String key, @Nullable final String value) {
         if (key == null) {
             return;
         }
@@ -137,7 +138,8 @@ public class RequestTelemetry {
      * @param telemetry A HashMap of telemetry data that maps keys (fields) to their values
      * @return a telemetry header string composed from provided telemetry fields and values
      */
-    private String getTelemetryHeaderStringFromFields(String[] fields, Map<String, String> telemetry) {
+    @NonNull
+    private String getTelemetryHeaderStringFromFields(@Nullable final String[] fields, @Nullable final Map<String, String> telemetry) {
         if (fields == null || telemetry == null) {
             return "";
         }
