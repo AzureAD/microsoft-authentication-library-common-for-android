@@ -29,7 +29,10 @@ import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
 
 public class ApiEndEvent extends BaseEvent {
     public ApiEndEvent() {
@@ -39,6 +42,10 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     public ApiEndEvent putResult(@NonNull final AcquireTokenResult result) {
+        if (result == null) {
+            return this;
+        }
+
         put(Key.IS_SUCCESSFUL, result.getSucceeded().toString());
 
         if (null != result.getLocalAuthenticationResult()) {
@@ -52,8 +59,12 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     public ApiEndEvent putException(@NonNull final Exception exception) {
+        if (exception == null) {
+            return this;
+        }
+
         final BaseException adaptedException = ExceptionAdapter.baseExceptionFromException(exception);
-        if (adaptedException  instanceof UserCancelException) {
+        if (adaptedException instanceof UserCancelException) {
             put(Key.USER_CANCEL, Value.TRUE);
         }
 
