@@ -64,4 +64,21 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AcquireTokenSilentOperationParameters)) return false;
+        if (!super.equals(o)) return false;
+
+        AcquireTokenSilentOperationParameters that = (AcquireTokenSilentOperationParameters) o;
+
+        return mForceRefresh == that.mForceRefresh;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (mForceRefresh ? 1 : 0);
+        return result;
+    }
 }

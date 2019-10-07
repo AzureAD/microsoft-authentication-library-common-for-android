@@ -205,4 +205,33 @@ public class OperationParameters {
 
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OperationParameters)) return false;
+
+        OperationParameters that = (OperationParameters) o;
+
+        if (mScopes != null ? !mScopes.equals(that.mScopes) : that.mScopes != null) return false;
+        if (mAccount != null ? !mAccount.equals(that.mAccount) : that.mAccount != null)
+            return false;
+        if (getClientId() != null ? !getClientId().equals(that.getClientId()) : that.getClientId() != null)
+            return false;
+        if (getRedirectUri() != null ? !getRedirectUri().equals(that.getRedirectUri()) : that.getRedirectUri() != null)
+            return false;
+        if (mAuthority != null ? !mAuthority.equals(that.mAuthority) : that.mAuthority != null)
+            return false;
+        return mClaimsRequestJson != null ? mClaimsRequestJson.equals(that.mClaimsRequestJson) : that.mClaimsRequestJson == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = mScopes != null ? mScopes.hashCode() : 0;
+        result = 31 * result + (mAccount != null ? mAccount.hashCode() : 0);
+        result = 31 * result + (getClientId() != null ? getClientId().hashCode() : 0);
+        result = 31 * result + (getRedirectUri() != null ? getRedirectUri().hashCode() : 0);
+        result = 31 * result + (mAuthority != null ? mAuthority.hashCode() : 0);
+        result = 31 * result + (mClaimsRequestJson != null ? mClaimsRequestJson.hashCode() : 0);
+        return result;
+    }
 }

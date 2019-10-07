@@ -77,4 +77,19 @@ public abstract class BaseAccountCommand<T> implements Command<T> {
     }
 
     public abstract T execute() throws Exception;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BaseAccountCommand)) return false;
+
+        BaseAccountCommand<?> that = (BaseAccountCommand<?>) o;
+
+        return mParameters.equals(that.mParameters);
+    }
+
+    @Override
+    public int hashCode() {
+        return mParameters.hashCode();
+    }
 }

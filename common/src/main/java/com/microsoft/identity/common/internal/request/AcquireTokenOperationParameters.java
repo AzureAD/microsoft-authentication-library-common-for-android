@@ -118,4 +118,33 @@ public class AcquireTokenOperationParameters extends OperationParameters {
     public List<BrowserDescriptor> getBrowserSafeList() {
         return mBrowserSafeList;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AcquireTokenOperationParameters)) return false;
+        if (!super.equals(o)) return false;
+
+        AcquireTokenOperationParameters that = (AcquireTokenOperationParameters) o;
+
+        if (mLoginHint != null ? !mLoginHint.equals(that.mLoginHint) : that.mLoginHint != null)
+            return false;
+        if (mExtraQueryStringParameters != null ? !mExtraQueryStringParameters.equals(that.mExtraQueryStringParameters) : that.mExtraQueryStringParameters != null)
+            return false;
+        if (mExtraScopesToConsent != null ? !mExtraScopesToConsent.equals(that.mExtraScopesToConsent) : that.mExtraScopesToConsent != null)
+            return false;
+        if (mOpenIdConnectPromptParameter != that.mOpenIdConnectPromptParameter) return false;
+        return mRequestHeaders != null ? mRequestHeaders.equals(that.mRequestHeaders) : that.mRequestHeaders == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (mLoginHint != null ? mLoginHint.hashCode() : 0);
+        result = 31 * result + (mExtraQueryStringParameters != null ? mExtraQueryStringParameters.hashCode() : 0);
+        result = 31 * result + (mExtraScopesToConsent != null ? mExtraScopesToConsent.hashCode() : 0);
+        result = 31 * result + (mOpenIdConnectPromptParameter != null ? mOpenIdConnectPromptParameter.hashCode() : 0);
+        result = 31 * result + (mRequestHeaders != null ? mRequestHeaders.hashCode() : 0);
+        return result;
+    }
 }
