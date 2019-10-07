@@ -20,7 +20,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.internal.controllers.ApiDispatcher;
+import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -313,7 +313,7 @@ public final class AuthorizationActivity extends Activity {
     }
 
     private void sendResult(int resultCode, final Intent resultIntent) {
-        ApiDispatcher.completeInteractive(
+        CommandDispatcher.completeInteractive(
                 AuthorizationStrategy.BROWSER_FLOW,
                 resultCode,
                 resultIntent
