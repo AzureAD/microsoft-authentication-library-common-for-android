@@ -56,7 +56,7 @@ public abstract class SharedPreferencesRequestTelemetryCache implements IRequest
     public synchronized void saveRequestTelemetryToCache(@NonNull final RequestTelemetry requestTelemetry) {
         Logger.verbose(TAG, "Saving Request Telemetry to cache...");
 
-        mSharedPreferencesFileManager.putString(Schema.Key.SCHEMA_VERSION, Schema.Value.SCHEMA_VERSION);
+        mSharedPreferencesFileManager.putString(Schema.SCHEMA_VERSION_KEY, Schema.CURRENT_SCHEMA_VERSION);
         saveTelemetryDataToCache(requestTelemetry.getCommonTelemetry());
         saveTelemetryDataToCache(requestTelemetry.getPlatformTelemetry());
     }

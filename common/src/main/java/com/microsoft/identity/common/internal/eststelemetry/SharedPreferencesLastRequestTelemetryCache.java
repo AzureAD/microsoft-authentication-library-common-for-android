@@ -58,7 +58,7 @@ public class SharedPreferencesLastRequestTelemetryCache extends SharedPreference
             return new RequestTelemetry(null, false);
         }
 
-        final String schemaVersion = data.get(Schema.Key.SCHEMA_VERSION);
+        final String schemaVersion = data.get(Schema.SCHEMA_VERSION_KEY);
         final RequestTelemetry lastRequestTelemetry = new RequestTelemetry(schemaVersion, false);
 
         final String[] lastCommonFields = Schema.getCommonFields(false);

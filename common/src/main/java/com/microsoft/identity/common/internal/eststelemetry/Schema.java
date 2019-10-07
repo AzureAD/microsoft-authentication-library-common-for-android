@@ -32,14 +32,13 @@ import java.util.Arrays;
  */
 public class Schema {
 
+    public static final String SCHEMA_VERSION_KEY = "schema_version";
+    public static final String CURRENT_SCHEMA_VERSION = "1";
+
     public static final String CURRENT_REQUEST_HEADER_NAME = "x-client-current-telemetry";
     public static final String LAST_REQUEST_HEADER_NAME = "x-client-last-telemetry";
 
     public static final class Key {
-        // new keys
-        public static final String SCHEMA_VERSION = "schema_version";
-
-        //imported keys
         public static final String API_ID = TelemetryEventStrings.Key.API_ID;
         public static final String FORCE_REFRESH = TelemetryEventStrings.Key.IS_FORCE_REFRESH;
         public static final String CORRELATION_ID = TelemetryEventStrings.Key.CORRELATION_ID;
@@ -53,7 +52,6 @@ public class Schema {
     }
 
     public static final class Value {
-        public static final String SCHEMA_VERSION = "1";
         public static final String TRUE = "1";
         public static final String FALSE = "0";
         public static final String EMPTY = "";
