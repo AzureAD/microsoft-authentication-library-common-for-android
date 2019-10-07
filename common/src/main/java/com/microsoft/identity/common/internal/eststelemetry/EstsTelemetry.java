@@ -52,26 +52,42 @@ public class EstsTelemetry {
     private static IRequestTelemetryCache sLastRequestTelemetryCache;
     private Map<String, RequestTelemetry> sTelemetryMap;
 
-    private EstsTelemetry(@Nullable final Context context) {
+    private EstsTelemetry() {
         sTelemetryMap = new ConcurrentHashMap<>();
-        if (context != null) {
-            sLastRequestTelemetryCache = createLastRequestTelemetryCache(context);
+    }
+
+    private EstsTelemetry(@NonNull final Context context) {
+        this();
+        sLastRequestTelemetryCache = createLastRequestTelemetryCache(context);
+    }
+
+    /**
+     * Creates and returns an instance of EstsTelemetry class
+     **/
+    private synchronized static EstsTelemetry prepareInstance(@Nullable final Context context) {
+        sEstsTelemetryInstance = context == null ? new EstsTelemetry() : new EstsTelemetry(context);
+        return sEstsTelemetryInstance;
+    }
+
+    /**
+     * Get an instance of EstsTelemetry by passing a context. This method will return an instance
+     * that has both the telemetry map initialized however the cache might not be initialized.
+     * @return EstsTelemetry object
+     */
+    public static synchronized EstsTelemetry getInstance() {
+        if (sEstsTelemetryInstance != null) {
+            return sEstsTelemetryInstance;
+        } else {
+            return prepareInstance(null);
         }
     }
 
     /**
-     * Prepares instance using context.
-     **/
-    private synchronized static EstsTelemetry prepareInstance(@Nullable final Context context) {
-        sEstsTelemetryInstance = new EstsTelemetry(context);
-        return sEstsTelemetryInstance;
-    }
-
-    public static synchronized EstsTelemetry getInstance() {
-        return getInstance(null);
-    }
-
-    public static synchronized EstsTelemetry getInstance(@Nullable final Context context) {
+     * Get an instance of EstsTelemetry by passing a context. This method will always return an instance
+     * that has both the telemetry map and the cache initialized.
+     * @return EstsTelemetry object
+     */
+    public static synchronized EstsTelemetry getInstance(@NonNull final Context context) {
         if (sEstsTelemetryInstance != null) {
             return sEstsTelemetryInstance;
         } else {
@@ -79,6 +95,10 @@ public class EstsTelemetry {
         }
     }
 
+    /**
+     * Initialize the Ests Telemetry Cache for last request
+     * @param context the application context
+     */
     public static void initializeEstsTelemetryCache(@NonNull final Context context) {
         final String methodName = ":initializeEstsTelemetryCache";
 
@@ -90,6 +110,10 @@ public class EstsTelemetry {
         sLastRequestTelemetryCache = createLastRequestTelemetryCache(context);
     }
 
+    /**
+     * Emit multiple telemetry fields by passing a map of telemetry fields
+     * @param telemetry a map containing telemetry fields and their values
+     */
     public void emit(@Nullable final Map<String, String> telemetry) {
         if (telemetry == null) {
             return;
@@ -100,6 +124,11 @@ public class EstsTelemetry {
         }
     }
 
+    /**
+     * Emit the provided telemetry field
+     * @param key the key associated to the telemetry field
+     * @param value the value associated to the telemetry field
+     */
     public void emit(final String key, final String value) {
         final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
         emit(correlationId, key, value);
@@ -157,7 +186,7 @@ public class EstsTelemetry {
         final String methodName = ":createLastRequestTelemetryCache";
 
         Logger.verbose(
-                TAG + methodName,
+                TAG + methodName,Add test for last telemetry header string
                 "Creating Last Request Telemetry Cache"
         );
 
@@ -213,7 +242,14 @@ public class EstsTelemetry {
         flush(correlationId, errorCode);
     }
 
-    private void flush(final String correlationId, final String errorCode) {
+    /**
+     * Flush the telemetry data associated to the correlation id.
+     * Remove the telemetry associated to the correlation id from the telemetry map,
+     * and saves it to the cache as the last request telemetry.
+     * @param correlationId correlation id of the request
+     * @param errorCode error that may have occurred during the request
+     */
+    public void flush(final String correlationId, final String errorCode) {
         final String methodName = ":flush";
         if (sTelemetryMap == null || correlationId == null) {
             return;
@@ -271,6 +307,10 @@ public class EstsTelemetry {
         return lastTelemetry.getCompleteTelemetryHeaderString();
     }
 
+    /**
+     * Get the headers for the Ests Telemetry. These headers can be attached to the requests made to the ests.
+     * @return a map containing telemetry headers and their values
+     */
     public Map<String, String> getTelemetryHeaders() {
         final String methodName = ":getTelemetryHeaders";
         final Map<String, String> headerMap = new HashMap<>();
