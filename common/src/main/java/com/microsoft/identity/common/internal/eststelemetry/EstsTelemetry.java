@@ -48,22 +48,50 @@ public class EstsTelemetry {
             "com.microsoft.identity.client.last_request_telemetry";
 
     private static IRequestTelemetryCache sLastRequestTelemetryCache;
-    private static Map<String, RequestTelemetry> sTelemetryMap;
+    private Map<String, RequestTelemetry> sTelemetryMap;
 
-    public static void initializeServerTelemetry(@NonNull final Context context) {
-        final String methodName = ":initializeServerTelemetry";
+    private static volatile EstsTelemetry sEstsTelemetryInstance = null;
+
+    private EstsTelemetry(@Nullable final Context context) {
+        sTelemetryMap = new ConcurrentHashMap<>();
+        if (context != null) {
+            sLastRequestTelemetryCache = createLastRequestTelemetryCache(context);
+        }
+    }
+
+    /**
+     * Prepares instance using context.
+     **/
+    private synchronized static EstsTelemetry prepareInstance(@Nullable final Context context) {
+        sEstsTelemetryInstance = new EstsTelemetry(context);
+        return sEstsTelemetryInstance;
+    }
+
+    public static synchronized EstsTelemetry getInstance() {
+        return getInstance(null);
+    }
+
+    public static synchronized EstsTelemetry getInstance(@Nullable final Context context) {
+        if (sEstsTelemetryInstance != null) {
+            return sEstsTelemetryInstance;
+        } else {
+            return prepareInstance(context);
+        }
+    }
+
+
+    public static void initializeEstsTelemetryCache(@NonNull final Context context) {
+        final String methodName = ":initializeEstsTelemetryCache";
 
         Logger.verbose(
                 TAG + methodName,
-                "Initializing server side telemetry"
+                "Initializing ests telemetry cache"
         );
-
-        sTelemetryMap = new ConcurrentHashMap<>();
 
         sLastRequestTelemetryCache = createLastRequestTelemetryCache(context);
     }
 
-    public static void emit(@NonNull final Map<String, String> telemetry) {
+    public void emit(@Nullable final Map<String, String> telemetry) {
         if (telemetry == null) {
             return;
         }
@@ -73,19 +101,19 @@ public class EstsTelemetry {
         }
     }
 
-    public static void emit(final String key, final String value) {
+    public void emit(final String key, final String value) {
         final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
         emit(correlationId, key, value);
     }
 
-    private static void emit(final String correlationId, final String key, final String value) {
+    private void emit(final String correlationId, final String key, final String value) {
         RequestTelemetry currentTelemetryInstance = getCurrentTelemetryInstance(correlationId);
         if (currentTelemetryInstance != null) {
             currentTelemetryInstance.putTelemetry(key, value);
         }
     }
 
-    private static RequestTelemetry getCurrentTelemetryInstance(@Nullable final String correlationId) {
+    private RequestTelemetry getCurrentTelemetryInstance(@Nullable final String correlationId) {
         if (sTelemetryMap == null || correlationId == null) {
             return null;
         }
@@ -101,7 +129,7 @@ public class EstsTelemetry {
     }
 
     @Nullable
-    private static RequestTelemetry loadLastRequestTelemetryFromCache() {
+    private RequestTelemetry loadLastRequestTelemetryFromCache() {
         final String methodName = ":loadLastRequestTelemetry";
 
         if (sLastRequestTelemetryCache == null) {
@@ -117,11 +145,11 @@ public class EstsTelemetry {
     }
 
 
-    public static void emitApiId(final String apiId) {
+    public void emitApiId(final String apiId) {
         emit(Schema.Key.API_ID, apiId);
     }
 
-    public static void emitForceRefresh(final boolean forceRefresh) {
+    public void emitForceRefresh(final boolean forceRefresh) {
         String val = Schema.getSchemaCompliantStringFromBoolean(forceRefresh);
         emit(Schema.Key.FORCE_REFRESH, val);
     }
@@ -143,7 +171,7 @@ public class EstsTelemetry {
         return new SharedPreferencesLastRequestTelemetryCache(sharedPreferencesFileManager);
     }
 
-    private static RequestTelemetry setupLastFromCurrent(@Nullable RequestTelemetry currentTelemetry) {
+    private RequestTelemetry setupLastFromCurrent(@Nullable RequestTelemetry currentTelemetry) {
         if (currentTelemetry == null) {
             return new RequestTelemetry(Schema.CURRENT_SCHEMA_VERSION, false);
         }
@@ -163,7 +191,7 @@ public class EstsTelemetry {
         return lastTelemetry;
     }
 
-    public static void flush(final String correlationId, final String errorCode) {
+    public void flush(final String correlationId, final String errorCode) {
         final String methodName = ":flush";
         if (sTelemetryMap == null) {
             return;
@@ -196,20 +224,25 @@ public class EstsTelemetry {
         }
     }
 
-    public static void flush(final String correlationId, final BaseException baseException) {
+    public void flush(final String correlationId, final BaseException baseException) {
         flush(correlationId, baseException == null ? null : baseException.getErrorCode());
     }
 
-    public static void flush(final String correlationId) {
+    public void flush(final String correlationId) {
         flush(correlationId, (String) null);
     }
 
-    public static void flush(final String correlationId, final AcquireTokenResult acquireTokenResult) {
+    public void flush(final String correlationId, final AcquireTokenResult acquireTokenResult) {
         final String errorCode = TelemetryUtils.errorFromAcquireTokenResult(acquireTokenResult);
         flush(correlationId, errorCode);
     }
 
-    static String getCurrentTelemetryHeaderString() {
+    public void flush() {
+        String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+        flush(correlationId);
+    }
+
+    String getCurrentTelemetryHeaderString() {
         final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
         if (sTelemetryMap == null || correlationId == null) {
             return null;
@@ -224,7 +257,7 @@ public class EstsTelemetry {
         return currentTelemetry.getCompleteTelemetryHeaderString();
     }
 
-    static String getLastTelemetryHeaderString() {
+    String getLastTelemetryHeaderString() {
         RequestTelemetry lastTelemetry = loadLastRequestTelemetryFromCache();
 
         if (lastTelemetry == null) {
@@ -234,7 +267,7 @@ public class EstsTelemetry {
         return lastTelemetry.getCompleteTelemetryHeaderString();
     }
 
-    public static Map<String, String> getTelemetryHeaders() {
+    public Map<String, String> getTelemetryHeaders() {
         final String methodName = ":getTelemetryHeaders";
         final Map<String, String> headerMap = new HashMap<>();
 

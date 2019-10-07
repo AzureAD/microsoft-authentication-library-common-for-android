@@ -29,12 +29,12 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.authorities.Environment;
+import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
-import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 
 import org.json.JSONException;
 
@@ -170,7 +170,7 @@ public class AzureActiveDirectory
                 .build();
 
         Map<String, String> headers = new HashMap<>();
-        headers.putAll(EstsTelemetry.getTelemetryHeaders());
+        headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
         HttpResponse response = HttpRequest.sendGet(
                 new URL(instanceDiscoveryRequestUri.toString()),

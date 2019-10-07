@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
+/**
+ * This is a "cache of one" i.e. there will always be only one RequestTelemetry object saved
+ * saved in the cache at any given time
+ */
 public interface IRequestTelemetryCache {
 
     /**

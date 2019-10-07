@@ -66,7 +66,7 @@ public class ApiDispatcher {
             @Override
             public void run() {
                 final String correlationId = initializeDiagnosticContext();
-                EstsTelemetry.emitApiId(command.getPublicApiId());
+                EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                 List<ICacheRecord> result = null;
                 BaseException baseException = null;
@@ -91,7 +91,7 @@ public class ApiDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            EstsTelemetry.flush(correlationId, finalException);
+                            EstsTelemetry.getInstance().flush(correlationId, finalException);
                             command.getCallback().onError(finalException);
                         }
                     });
@@ -101,7 +101,7 @@ public class ApiDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            EstsTelemetry.flush(correlationId);
+                            EstsTelemetry.getInstance().flush(correlationId);
                             command.getCallback().onTaskCompleted(finalAccountsList);
                         }
                     });
@@ -122,7 +122,7 @@ public class ApiDispatcher {
             @Override
             public void run() {
                 final String correlationId = initializeDiagnosticContext();
-                EstsTelemetry.emitApiId(command.getPublicApiId());
+                EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                 boolean result = false;
                 BaseException baseException = null;
@@ -148,7 +148,7 @@ public class ApiDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            EstsTelemetry.flush(correlationId, finalException);
+                            EstsTelemetry.getInstance().flush(correlationId, finalException);
                             command.getCallback().onError(finalException);
                         }
                     });
@@ -157,7 +157,7 @@ public class ApiDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            EstsTelemetry.flush(correlationId);
+                            EstsTelemetry.getInstance().flush(correlationId);
                             command.getCallback().onTaskCompleted(finalResult);
                         }
                     });
@@ -184,7 +184,7 @@ public class ApiDispatcher {
                 @Override
                 public void run() {
                     final String correlationId = initializeDiagnosticContext();
-                    EstsTelemetry.emitApiId(command.getPublicApiId());
+                    EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                     if (command.mParameters instanceof AcquireTokenOperationParameters) {
                         logInteractiveRequestParameters(methodName, (AcquireTokenOperationParameters) command.mParameters);
@@ -222,7 +222,7 @@ public class ApiDispatcher {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                EstsTelemetry.flush(correlationId, finalException);
+                                EstsTelemetry.getInstance().flush(correlationId, finalException);
                                 command.getCallback().onError(finalException);
                             }
                         });
@@ -233,7 +233,7 @@ public class ApiDispatcher {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    EstsTelemetry.flush(correlationId);
+                                    EstsTelemetry.getInstance().flush(correlationId);
                                     command.getCallback().onSuccess(authenticationResult);
                                 }
                             });
@@ -246,7 +246,7 @@ public class ApiDispatcher {
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        EstsTelemetry.flush(correlationId, finalException);
+                                        EstsTelemetry.getInstance().flush(correlationId, finalException);
                                         command.getCallback().onCancel();
                                     }
                                 });
@@ -254,7 +254,7 @@ public class ApiDispatcher {
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        EstsTelemetry.flush(correlationId, finalException);
+                                        EstsTelemetry.getInstance().flush(correlationId, finalException);
                                         command.getCallback().onError(finalException);
                                     }
                                 });
@@ -397,14 +397,14 @@ public class ApiDispatcher {
             @Override
             public void run() {
                 final String correlationId = initializeDiagnosticContext();
-                EstsTelemetry.emitApiId(command.getPublicApiId());
+                EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                 if (command.mParameters instanceof AcquireTokenSilentOperationParameters) {
                     logSilentRequestParams(
                             methodName,
                             (AcquireTokenSilentOperationParameters) command.mParameters
                     );
-                    EstsTelemetry.emitForceRefresh(((AcquireTokenSilentOperationParameters) command.mParameters).getForceRefresh());
+                    EstsTelemetry.getInstance().emitForceRefresh(((AcquireTokenSilentOperationParameters) command.mParameters).getForceRefresh());
                 }
 
                 AcquireTokenResult result = null;
@@ -435,7 +435,7 @@ public class ApiDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            EstsTelemetry.flush(correlationId, finalException);
+                            EstsTelemetry.getInstance().flush(correlationId, finalException);
                             command.getCallback().onError(finalException);
                         }
                     });
@@ -445,7 +445,7 @@ public class ApiDispatcher {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                EstsTelemetry.flush(correlationId);
+                                EstsTelemetry.getInstance().flush(correlationId);
                                 command.getCallback().onSuccess(authenticationResult);
                             }
                         });
@@ -458,7 +458,7 @@ public class ApiDispatcher {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    EstsTelemetry.flush(correlationId, finalException);
+                                    EstsTelemetry.getInstance().flush(correlationId, finalException);
                                     command.getCallback().onCancel();
                                 }
                             });
@@ -466,7 +466,7 @@ public class ApiDispatcher {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    EstsTelemetry.flush(correlationId, finalException);
+                                    EstsTelemetry.getInstance().flush(correlationId, finalException);
                                     command.getCallback().onError(finalException);
                                 }
                             });

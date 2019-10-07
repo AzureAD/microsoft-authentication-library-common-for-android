@@ -28,6 +28,7 @@ import android.text.TextUtils;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpRequest;
@@ -35,7 +36,6 @@ import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
-import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -144,7 +144,7 @@ public abstract class OAuth2Strategy
             );
         }
         headers.putAll(Device.getPlatformIdParameters());
-        headers.putAll(EstsTelemetry.getTelemetryHeaders());
+        headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
         return HttpRequest.sendPost(
                 new URL(mTokenEndpoint),

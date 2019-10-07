@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.eststelemetry;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,15 +39,20 @@ public class EstsTelemetryTest {
 
     @Before
     public void setup() {
-        EstsTelemetry.initializeServerTelemetry(ApplicationProvider.getApplicationContext());
+        EstsTelemetry.initializeEstsTelemetryCache(ApplicationProvider.getApplicationContext());
+    }
+
+    @After
+    public void cleanup() {
+        EstsTelemetry.getInstance().flush();
     }
 
     @Test
     public void testEmitSuccessValidFields() {
-        EstsTelemetry.emit(Schema.Key.API_ID, "101");
-        EstsTelemetry.emit(Schema.Key.FORCE_REFRESH, "false");
+        EstsTelemetry.getInstance().emit(Schema.Key.API_ID, "101");
+        EstsTelemetry.getInstance().emit(Schema.Key.FORCE_REFRESH, "false");
 
-        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getInstance().getCurrentTelemetryHeaderString();
         String expectedResult = Schema.CURRENT_SCHEMA_VERSION + "|101,0|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -54,12 +60,12 @@ public class EstsTelemetryTest {
 
     @Test
     public void testEmitAvoidOverwrite() {
-        EstsTelemetry.emit(Schema.Key.API_ID, "101");
-        EstsTelemetry.emit(Schema.Key.API_ID, "102");
-        EstsTelemetry.emit(Schema.Key.API_ID, "103");
-        EstsTelemetry.emit(Schema.Key.FORCE_REFRESH, "false");
+        EstsTelemetry.getInstance().emit(Schema.Key.API_ID, "101");
+        EstsTelemetry.getInstance().emit(Schema.Key.API_ID, "102");
+        EstsTelemetry.getInstance().emit(Schema.Key.API_ID, "103");
+        EstsTelemetry.getInstance().emit(Schema.Key.FORCE_REFRESH, "false");
 
-        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getInstance().getCurrentTelemetryHeaderString();
         String expectedResult = Schema.CURRENT_SCHEMA_VERSION + "|101,0|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -67,7 +73,7 @@ public class EstsTelemetryTest {
 
     @Test
     public void testHeaderStringWithNullTelemObject() {
-        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getInstance().getCurrentTelemetryHeaderString();
         String expectedResult = null;
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -75,7 +81,7 @@ public class EstsTelemetryTest {
 
     @Test
     public void testHeaderStringWithNoFields() {
-        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getInstance().getCurrentTelemetryHeaderString();
         String expectedResult = null;
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -83,9 +89,9 @@ public class EstsTelemetryTest {
 
     @Test
     public void testEmitWithInvalidField() {
-        EstsTelemetry.emit("invalid-fake-key", "102");
+        EstsTelemetry.getInstance().emit("invalid-fake-key", "102");
 
-        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getInstance().getCurrentTelemetryHeaderString();
         String expectedResult = Schema.CURRENT_SCHEMA_VERSION + "|,|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -93,10 +99,10 @@ public class EstsTelemetryTest {
 
     @Test
     public void testEmitWithOneValidAndOneInvalidField() {
-        EstsTelemetry.emitApiId("101");
-        EstsTelemetry.emit("invalid-fake-key", "102");
+        EstsTelemetry.getInstance().emitApiId("101");
+        EstsTelemetry.getInstance().emit("invalid-fake-key", "102");
 
-        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getInstance().getCurrentTelemetryHeaderString();
         String expectedResult = Schema.CURRENT_SCHEMA_VERSION + "|101,|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -104,7 +110,7 @@ public class EstsTelemetryTest {
 
     @Test
     public void testEmptyHeaderStrings() {
-        Map<String, String> headerStrings = EstsTelemetry.getTelemetryHeaders();
+        Map<String, String> headerStrings = EstsTelemetry.getInstance().getTelemetryHeaders();
         Assert.assertEquals(0, headerStrings.size());
     }
 
@@ -113,9 +119,9 @@ public class EstsTelemetryTest {
         Map<String, String> telemetry = new HashMap<>();
         telemetry.put(Schema.Key.API_ID, "101");
         telemetry.put(Schema.Key.FORCE_REFRESH, "0");
-        EstsTelemetry.emit(telemetry);
+        EstsTelemetry.getInstance().emit(telemetry);
 
-        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getInstance().getCurrentTelemetryHeaderString();
         String expectedResult = Schema.CURRENT_SCHEMA_VERSION + "|101,0|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -124,9 +130,9 @@ public class EstsTelemetryTest {
     @Test
     public void testEmitNullMap() {
         Map<String, String> telemetry = null;
-        EstsTelemetry.emit(telemetry);
+        EstsTelemetry.getInstance().emit(telemetry);
 
-        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getInstance().getCurrentTelemetryHeaderString();
         String expectedResult = null;
 
         Assert.assertEquals(expectedResult, actualResult);
