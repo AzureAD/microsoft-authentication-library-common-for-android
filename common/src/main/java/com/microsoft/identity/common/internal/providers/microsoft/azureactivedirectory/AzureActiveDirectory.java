@@ -34,7 +34,7 @@ import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
-import com.microsoft.identity.common.internal.servertelemetry.ServerTelemetry;
+import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 
 import org.json.JSONException;
 
@@ -170,7 +170,7 @@ public class AzureActiveDirectory
                 .build();
 
         Map<String, String> headers = new HashMap<>();
-        headers.putAll(ServerTelemetry.getTelemetryHeaders());
+        headers.putAll(EstsTelemetry.getTelemetryHeaders());
 
         HttpResponse response = HttpRequest.sendGet(
                 new URL(instanceDiscoveryRequestUri.toString()),

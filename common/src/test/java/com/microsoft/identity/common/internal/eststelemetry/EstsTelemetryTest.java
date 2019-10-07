@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.servertelemetry;
+package com.microsoft.identity.common.internal.eststelemetry;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -34,19 +34,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RunWith(RobolectricTestRunner.class)
-public class ServerTelemetryTest {
+public class EstsTelemetryTest {
 
     @Before
     public void setup() {
-        ServerTelemetry.initializeServerTelemetry(ApplicationProvider.getApplicationContext());
+        EstsTelemetry.initializeServerTelemetry(ApplicationProvider.getApplicationContext());
     }
 
     @Test
     public void testEmitSuccessValidFields() {
-        ServerTelemetry.emit(Schema.Key.API_ID, "101");
-        ServerTelemetry.emit(Schema.Key.FORCE_REFRESH, "false");
+        EstsTelemetry.emit(Schema.Key.API_ID, "101");
+        EstsTelemetry.emit(Schema.Key.FORCE_REFRESH, "false");
 
-        String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
         String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,0|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -54,12 +54,12 @@ public class ServerTelemetryTest {
 
     @Test
     public void testEmitAvoidOverwrite() {
-        ServerTelemetry.emit(Schema.Key.API_ID, "101");
-        ServerTelemetry.emit(Schema.Key.API_ID, "102");
-        ServerTelemetry.emit(Schema.Key.API_ID, "103");
-        ServerTelemetry.emit(Schema.Key.FORCE_REFRESH, "false");
+        EstsTelemetry.emit(Schema.Key.API_ID, "101");
+        EstsTelemetry.emit(Schema.Key.API_ID, "102");
+        EstsTelemetry.emit(Schema.Key.API_ID, "103");
+        EstsTelemetry.emit(Schema.Key.FORCE_REFRESH, "false");
 
-        String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
         String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,0|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -67,7 +67,7 @@ public class ServerTelemetryTest {
 
     @Test
     public void testHeaderStringWithNullTelemObject() {
-        String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
         String expectedResult = null;
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -75,7 +75,7 @@ public class ServerTelemetryTest {
 
     @Test
     public void testHeaderStringWithNoFields() {
-        String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
         String expectedResult = null;
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -83,9 +83,9 @@ public class ServerTelemetryTest {
 
     @Test
     public void testEmitWithInvalidField() {
-        ServerTelemetry.emit("invalid-fake-key", "102");
+        EstsTelemetry.emit("invalid-fake-key", "102");
 
-        String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
         String expectedResult = Schema.Value.SCHEMA_VERSION + "|,|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -93,10 +93,10 @@ public class ServerTelemetryTest {
 
     @Test
     public void testEmitWithOneValidAndOneInvalidField() {
-        ServerTelemetry.emitApiId("101");
-        ServerTelemetry.emit("invalid-fake-key", "102");
+        EstsTelemetry.emitApiId("101");
+        EstsTelemetry.emit("invalid-fake-key", "102");
 
-        String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
         String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -104,7 +104,7 @@ public class ServerTelemetryTest {
 
     @Test
     public void testEmptyHeaderStrings() {
-        Map<String, String> headerStrings = ServerTelemetry.getTelemetryHeaders();
+        Map<String, String> headerStrings = EstsTelemetry.getTelemetryHeaders();
         Assert.assertEquals(0, headerStrings.size());
     }
 
@@ -113,9 +113,9 @@ public class ServerTelemetryTest {
         Map<String, String> telemetry = new HashMap<>();
         telemetry.put(Schema.Key.API_ID, "101");
         telemetry.put(Schema.Key.FORCE_REFRESH, "0");
-        ServerTelemetry.emit(telemetry);
+        EstsTelemetry.emit(telemetry);
 
-        String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
         String expectedResult = Schema.Value.SCHEMA_VERSION + "|101,0|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
@@ -124,9 +124,9 @@ public class ServerTelemetryTest {
     @Test
     public void testEmitNullMap() {
         Map<String, String> telemetry = null;
-        ServerTelemetry.emit(telemetry);
+        EstsTelemetry.emit(telemetry);
 
-        String actualResult = ServerTelemetry.getCurrentTelemetryHeaderString();
+        String actualResult = EstsTelemetry.getCurrentTelemetryHeaderString();
         String expectedResult = null;
 
         Assert.assertEquals(expectedResult, actualResult);

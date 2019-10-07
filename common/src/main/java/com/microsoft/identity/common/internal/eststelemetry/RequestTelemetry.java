@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.servertelemetry;
+package com.microsoft.identity.common.internal.eststelemetry;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

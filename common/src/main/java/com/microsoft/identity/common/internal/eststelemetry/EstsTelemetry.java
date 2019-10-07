@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.servertelemetry;
+package com.microsoft.identity.common.internal.eststelemetry;
 
 import android.content.Context;
 
@@ -38,8 +38,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ServerTelemetry {
-    private final static String TAG = ServerTelemetry.class.getSimpleName();
+public class EstsTelemetry {
+    private final static String TAG = EstsTelemetry.class.getSimpleName();
 
     /**
      * The name of the SharedPreferences file on disk for the last request.
