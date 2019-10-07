@@ -133,10 +133,25 @@ public class Schema {
         return lastRequestPlatformFields;
     }
 
+    /**
+     * Get a list of common telemetry fields. These are telemetry fields that are shared between
+     * all MSAL platforms and each platform includes these fields as headers in each request to ests.
+     *
+     * @param isCurrent denotes if to get common fields for current or last request
+     * @return A string array that contains the common fields based on the value of isCurrent parameter
+     */
     static String[] getCommonFields(final boolean isCurrent) {
         return isCurrent ? getCurrentRequestCommonFields() : getLastRequestCommonFields();
     }
 
+    /**
+     * Get a list of platform specific telemetry fields. These are specific to the Android platform.
+     * The platform has complete control over what platform fields they want to track as part of
+     * telemetry sent in each header to ests.
+     *
+     * @param isCurrent denotes if to get common fields for current or last request
+     * @return A string array that contains the common fields based on the value of isCurrent parameter
+     */
     static String[] getPlatformFields(final boolean isCurrent) {
         return isCurrent ? getCurrentRequestPlatformFields() : getLastRequestPlatformFields();
     }
