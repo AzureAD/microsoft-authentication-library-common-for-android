@@ -53,7 +53,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                                 : null
                 ).prompt(parameters.getOpenIdConnectPromptParameter().name())
                 .claims(parameters.getClaimsRequestJson())
-                .forceRefresh(!TextUtils.isEmpty(parameters.getClaimsRequestJson()))
+                .forceRefresh(parameters.getForceRefresh())
                 .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
@@ -78,7 +78,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .localAccountId(parameters.getAccount().getLocalAccountId())
                 .username(parameters.getAccount().getUsername())
                 .claims(parameters.getClaimsRequestJson())
-                .forceRefresh(parameters.getForceRefresh() || !TextUtils.isEmpty(parameters.getClaimsRequestJson()))
+                .forceRefresh(parameters.getForceRefresh())
                 .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
