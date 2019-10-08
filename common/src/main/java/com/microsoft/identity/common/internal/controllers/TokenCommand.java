@@ -40,34 +40,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class TokenCommand implements TokenOperation {
+public class TokenCommand extends BaseCommand<AcquireTokenResult> implements TokenOperation {
 
     private static final String TAG = TokenCommand.class.getSimpleName();
 
-    protected OperationParameters mParameters;
-    protected List<BaseController> mControllers;
-    protected ILocalAuthenticationCallback mCallback;
 
-
-    public TokenCommand() {
-    }
 
     public TokenCommand(@NonNull final OperationParameters parameters,
                         @NonNull final BaseController controller,
-                        @NonNull final ILocalAuthenticationCallback callback) {
-        mParameters = parameters;
-        mControllers = new ArrayList<>();
-        mCallback = callback;
-
-        mControllers.add(controller);
+                        @NonNull final CommandCallback callback) {
+        super(parameters, controller, callback);
     }
 
     public TokenCommand(@NonNull final OperationParameters parameters,
                         @NonNull final List<BaseController> controllers,
-                        @NonNull final ILocalAuthenticationCallback callback) {
-        mParameters = parameters;
-        mControllers = controllers;
-        mCallback = callback;
+                        @NonNull final CommandCallback callback) {
+        super(parameters, controllers, callback);
     }
 
     @Override
@@ -76,8 +64,8 @@ public class TokenCommand implements TokenOperation {
         AcquireTokenResult result = null;
         final String methodName = ":execute";
 
-        for (int ii = 0; ii < mControllers.size(); ii++) {
-            final BaseController controller = mControllers.get(ii);
+        for (int ii = 0; ii < this.getControllers().size(); ii++) {
+            final BaseController controller = this.getControllers().get(ii);
 
             try {
                 com.microsoft.identity.common.internal.logging.Logger.verbose(
@@ -102,11 +90,11 @@ public class TokenCommand implements TokenOperation {
                 }
             } catch (UiRequiredException | ClientException e) {
                 if (e.getErrorCode().equals(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT) // was invalid_grant
-                        && mControllers.size() > ii + 1) { // isn't the last controller we can try
+                        && this.getControllers().size() > ii + 1) { // isn't the last controller we can try
                     continue;
                 } else if ((e.getErrorCode().equals(ErrorStrings.NO_TOKENS_FOUND)
                         || e.getErrorCode().equals(ErrorStrings.NO_ACCOUNT_FOUND))
-                        && mControllers.size() > ii + 1) {
+                        && this.getControllers().size() > ii + 1) {
                     //if no token or account for this silent call, we should continue to the next silent call.
                     continue;
                 } else {
@@ -123,35 +111,4 @@ public class TokenCommand implements TokenOperation {
         throw new UnsupportedOperationException();
     }
 
-    public OperationParameters getParameters() {
-        return mParameters;
-    }
-
-    public void setParameters(final OperationParameters parameters) {
-        if (!(parameters instanceof AcquireTokenSilentOperationParameters)) {
-            throw new IllegalArgumentException("Invalid operation parameters");
-        }
-
-        this.mParameters = parameters;
-    }
-
-    public BaseController getDefaultController() {
-        return mControllers.get(0);
-    }
-
-    public List<BaseController> getControllers() {
-        return mControllers;
-    }
-
-    public void setControllers(final List<BaseController> controllers) {
-        this.mControllers = controllers;
-    }
-
-    public ILocalAuthenticationCallback getCallback() {
-        return mCallback;
-    }
-
-    public void setCallback(final ILocalAuthenticationCallback callback) {
-        this.mCallback = callback;
-    }
 }
