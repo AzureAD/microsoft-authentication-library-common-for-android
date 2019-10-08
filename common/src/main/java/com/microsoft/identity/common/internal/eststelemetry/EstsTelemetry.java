@@ -186,7 +186,7 @@ public class EstsTelemetry {
         final String methodName = ":createLastRequestTelemetryCache";
 
         Logger.verbose(
-                TAG + methodName,Add test for last telemetry header string
+                TAG + methodName,
                 "Creating Last Request Telemetry Cache"
         );
 
