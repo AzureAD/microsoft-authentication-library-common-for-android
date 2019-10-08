@@ -24,8 +24,8 @@ package com.microsoft.identity.common.internal.eststelemetry;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
-import com.microsoft.identity.common.internal.logging.Logger;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -36,28 +36,19 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @RunWith(RobolectricTestRunner.class)
 public class EstsTelemetryTest {
 
     @Before
     public void setup() {
-        EstsTelemetry.initializeEstsTelemetryCache(ApplicationProvider.getApplicationContext());
-        initializeDiagnosticContext();
+        EstsTelemetry.initializeEstsTelemetry(ApplicationProvider.getApplicationContext());
+        CommandDispatcher.initializeDiagnosticContext();
     }
 
     @After
     public void cleanup() {
         EstsTelemetry.getInstance().flush();
-    }
-
-    public void initializeDiagnosticContext() {
-        final String correlationId = UUID.randomUUID().toString();
-        final com.microsoft.identity.common.internal.logging.RequestContext rc =
-                new com.microsoft.identity.common.internal.logging.RequestContext();
-        rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
-        DiagnosticContext.setRequestContext(rc);
     }
 
     @Test

@@ -77,6 +77,7 @@ public class CommandDispatcher {
 
                 if (command.getParameters() instanceof AcquireTokenSilentOperationParameters) {
                     logSilentRequestParams(methodName, (AcquireTokenSilentOperationParameters) command.getParameters());
+                    EstsTelemetry.getInstance().emitForceRefresh(command.getParameters().getForceRefresh());
                 }
 
                 try {
