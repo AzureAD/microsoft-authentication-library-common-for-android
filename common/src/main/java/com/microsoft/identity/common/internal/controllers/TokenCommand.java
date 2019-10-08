@@ -32,12 +32,10 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
-import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 

@@ -36,7 +36,6 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class EstsTelemetry {
@@ -72,6 +71,7 @@ public class EstsTelemetry {
     /**
      * Get an instance of EstsTelemetry by passing a context. This method will return an instance
      * that has both the telemetry map initialized however the cache might not be initialized.
+     *
      * @return EstsTelemetry object
      */
     public static synchronized EstsTelemetry getInstance() {
@@ -85,6 +85,7 @@ public class EstsTelemetry {
     /**
      * Get an instance of EstsTelemetry by passing a context. This method will always return an instance
      * that has both the telemetry map and the cache initialized.
+     *
      * @return EstsTelemetry object
      */
     public static synchronized EstsTelemetry getInstance(@NonNull final Context context) {
@@ -97,6 +98,7 @@ public class EstsTelemetry {
 
     /**
      * Initialize the Ests Telemetry Cache for last request
+     *
      * @param context the application context
      */
     public static void initializeEstsTelemetryCache(@NonNull final Context context) {
@@ -112,6 +114,7 @@ public class EstsTelemetry {
 
     /**
      * Emit multiple telemetry fields by passing a map of telemetry fields
+     *
      * @param telemetry a map containing telemetry fields and their values
      */
     public void emit(@Nullable final Map<String, String> telemetry) {
@@ -126,7 +129,8 @@ public class EstsTelemetry {
 
     /**
      * Emit the provided telemetry field
-     * @param key the key associated to the telemetry field
+     *
+     * @param key   the key associated to the telemetry field
      * @param value the value associated to the telemetry field
      */
     public void emit(final String key, final String value) {
@@ -246,8 +250,9 @@ public class EstsTelemetry {
      * Flush the telemetry data associated to the correlation id.
      * Remove the telemetry associated to the correlation id from the telemetry map,
      * and saves it to the cache as the last request telemetry.
+     *
      * @param correlationId correlation id of the request
-     * @param errorCode error that may have occurred during the request
+     * @param errorCode     error that may have occurred during the request
      */
     public void flush(final String correlationId, final String errorCode) {
         final String methodName = ":flush";
@@ -309,6 +314,7 @@ public class EstsTelemetry {
 
     /**
      * Get the headers for the Ests Telemetry. These headers can be attached to the requests made to the ests.
+     *
      * @return a map containing telemetry headers and their values
      */
     public Map<String, String> getTelemetryHeaders() {
