@@ -39,7 +39,7 @@ public class InteractiveTokenCommand extends TokenCommand {
 
     public InteractiveTokenCommand(AcquireTokenOperationParameters parameters,
                                    BaseController controller,
-                                   ILocalAuthenticationCallback callback) {
+                                   CommandCallback callback) {
 
         super(parameters, controller, callback);
     }
