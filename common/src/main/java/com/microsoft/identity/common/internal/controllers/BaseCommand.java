@@ -29,14 +29,14 @@ import com.microsoft.identity.common.internal.request.OperationParameters;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class BaseAccountCommand<T> implements Command<T> {
+public abstract class BaseCommand<T> implements Command<T> {
     private OperationParameters mParameters;
     private List<BaseController> mControllers;
-    private TaskCompletedCallbackWithError mCallback;
+    private CommandCallback mCallback;
 
-    public BaseAccountCommand(@NonNull final OperationParameters parameters,
-                              @NonNull final BaseController controller,
-                              @NonNull final TaskCompletedCallbackWithError callback) {
+    public BaseCommand(@NonNull final OperationParameters parameters,
+                       @NonNull final BaseController controller,
+                       @NonNull final CommandCallback callback) {
         mParameters = parameters;
         mControllers = new ArrayList<>();
         mCallback = callback;
@@ -44,9 +44,9 @@ public abstract class BaseAccountCommand<T> implements Command<T> {
         mControllers.add(controller);
     }
 
-    public BaseAccountCommand(@NonNull final OperationParameters parameters,
-                              @NonNull final List<BaseController> controllers,
-                              @NonNull final TaskCompletedCallbackWithError callback) {
+    public BaseCommand(@NonNull final OperationParameters parameters,
+                       @NonNull final List<BaseController> controllers,
+                       @NonNull final CommandCallback callback) {
         mParameters = parameters;
         mControllers = controllers;
         mCallback = callback;
@@ -68,13 +68,18 @@ public abstract class BaseAccountCommand<T> implements Command<T> {
         mControllers = controllers;
     }
 
-    public TaskCompletedCallbackWithError getCallback() {
+    public CommandCallback getCallback() {
         return mCallback;
     }
 
-    public void setCallback(TaskCompletedCallbackWithError callback) {
+    public void setCallback(CommandCallback callback) {
         this.mCallback = callback;
     }
 
     public abstract T execute() throws Exception;
+
+    public BaseController getDefaultController() {
+        return mControllers.get(0);
+    }
+
 }

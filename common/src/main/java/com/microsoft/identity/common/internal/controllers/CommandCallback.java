@@ -20,39 +20,9 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.request;
+package com.microsoft.identity.common.internal.controllers;
 
-import androidx.annotation.Nullable;
-
-import com.google.gson.annotations.Expose;
-import com.microsoft.identity.common.exception.ArgumentException;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
-
-public class AcquireTokenSilentOperationParameters extends OperationParameters {
-
-    private RefreshTokenRecord mRefreshToken;
-
-
-    public RefreshTokenRecord getRefreshToken() {
-        return mRefreshToken;
-    }
-
-    public void setRefreshToken(@Nullable final RefreshTokenRecord refreshToken) {
-        mRefreshToken = refreshToken;
-    }
-
-    @Override
-    public void validate() throws ArgumentException {
-        super.validate();
-
-        if (mAccount == null) {
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    ArgumentException.IACCOUNT_ARGUMENT_NAME,
-                    "account is null"
-            );
-        }
-
-    }
-
+public interface CommandCallback<T, U> extends TaskCompletedCallbackWithError<T, U> {
+    void onCancel();
 }
+

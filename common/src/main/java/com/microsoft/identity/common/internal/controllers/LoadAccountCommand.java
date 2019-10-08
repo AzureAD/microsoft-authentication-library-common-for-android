@@ -38,20 +38,20 @@ import java.util.concurrent.ExecutionException;
 
 /**
  * Command class to call controllers to load accounts and return the account list to
- * {@see com.microsoft.identity.common.internal.controllers.ApiDispatcher}.
+ * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class LoadAccountCommand extends BaseAccountCommand<List<ICacheRecord>> {
+public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
     private static final String TAG = LoadAccountCommand.class.getSimpleName();
 
     public LoadAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final BaseController controller,
-                              @NonNull final TaskCompletedCallbackWithError callback) {
+                              @NonNull final CommandCallback callback) {
         super(parameters, controller, callback);
     }
 
     public LoadAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final List<BaseController> controllers,
-                              @NonNull final TaskCompletedCallbackWithError callback) {
+                              @NonNull final CommandCallback callback) {
         super(parameters, controllers, callback);
     }
 
