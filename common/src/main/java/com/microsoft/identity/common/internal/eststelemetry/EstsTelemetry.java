@@ -220,12 +220,12 @@ public class EstsTelemetry {
     }
 
     public void flush() {
-        flush((String) null);
+        String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+        flush(correlationId);
     }
 
-    public void flush(final String errorCode) {
-        String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
-        flush(correlationId, errorCode);
+    public void flush(final String correlationId) {
+        flush(correlationId, (String) null);
     }
 
     public void flush(final BaseException baseException) {

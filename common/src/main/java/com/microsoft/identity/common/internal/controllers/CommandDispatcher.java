@@ -118,6 +118,7 @@ public class CommandDispatcher {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
+                                EstsTelemetry.getInstance().flush(correlationId);
                                 command.getCallback().onTaskCompleted(returnResult);
                             }
                         });
@@ -143,6 +144,7 @@ public class CommandDispatcher {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
+                    EstsTelemetry.getInstance().flush();
                     command.getCallback().onTaskCompleted(authenticationResult);
                 }
             });
@@ -153,6 +155,7 @@ public class CommandDispatcher {
 
             if (finalException instanceof UserCancelException) {
                 //Post Cancel
+                EstsTelemetry.getInstance().flush(finalException);
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -163,6 +166,7 @@ public class CommandDispatcher {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
+                        EstsTelemetry.getInstance().flush(finalException);
                         command.getCallback().onError(finalException);
                     }
                 });
@@ -235,6 +239,7 @@ public class CommandDispatcher {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
+                                    EstsTelemetry.getInstance().flush(correlationId);
                                     command.getCallback().onTaskCompleted(authenticationResult);
                                 }
                             });

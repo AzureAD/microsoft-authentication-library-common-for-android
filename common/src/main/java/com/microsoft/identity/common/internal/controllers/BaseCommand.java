@@ -33,6 +33,7 @@ public abstract class BaseCommand<T> implements Command<T> {
     private OperationParameters mParameters;
     private List<BaseController> mControllers;
     private CommandCallback mCallback;
+    private String mPublicApiId;
 
     public BaseCommand(@NonNull final OperationParameters parameters,
                        @NonNull final BaseController controller,
