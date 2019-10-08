@@ -55,11 +55,15 @@ public class CommandDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
 
+    /**
+     * submitSilent - Run a command using the silent thread pool
+     * @param command
+     */
     public static void submitSilent(@NonNull final BaseCommand command){
-        final String methodName = ":getAccounts";
+        final String methodName = ":submitSilent";
         Logger.verbose(
                 TAG + methodName,
-                "Beginning load accounts."
+                "Beginning execution of silent command."
         );
         sSilentExecutor.execute(new Runnable() {
             @Override
@@ -102,38 +106,10 @@ public class CommandDispatcher {
                     });
                 } else {
                     if(result != null && result instanceof AcquireTokenResult){
-                        AcquireTokenResult localResult = (AcquireTokenResult)result;
-                        if(localResult.getSucceeded()){
-                            final ILocalAuthenticationResult authenticationResult = localResult.getLocalAuthenticationResult();
-                            handler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    command.getCallback().onTaskCompleted(authenticationResult);
-                                }
-                            });
-                        }else{
-                            //Get MsalException from Authorization and/or Token Error Response
-                            baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(localResult);
-                            final BaseException finalException = baseException;
-
-                            if (finalException instanceof UserCancelException) {
-                                //Post Cancel
-                                handler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        command.getCallback().onCancel();
-                                    }
-                                });
-                            } else {
-                                handler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        command.getCallback().onError(finalException);
-                                    }
-                                });
-                            }
-                        }
+                        //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
+                        processTokenResult(handler, command, baseException, (AcquireTokenResult)result );
                     }else{
+                        //For commands that don't return an AcquireTokenResult
                         final Object returnResult = result;
 
                         handler.post(new Runnable() {
@@ -148,6 +124,47 @@ public class CommandDispatcher {
                 Telemetry.getInstance().flush(correlationId);
             }
         });
+    }
+
+    /**
+     * We need to inspect the AcquireTokenResult type to determine whether the request was successful, cancelled or encountered an exception
+     * @param handler
+     * @param command
+     * @param baseException
+     * @param result
+     */
+    private static void processTokenResult(Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result){
+        //Token Commands
+        if(result.getSucceeded()){
+            final ILocalAuthenticationResult authenticationResult = result.getLocalAuthenticationResult();
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    command.getCallback().onTaskCompleted(authenticationResult);
+                }
+            });
+        }else{
+            //Get MsalException from Authorization and/or Token Error Response
+            baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
+            final BaseException finalException = baseException;
+
+            if (finalException instanceof UserCancelException) {
+                //Post Cancel
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        command.getCallback().onCancel();
+                    }
+                });
+            } else {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        command.getCallback().onError(finalException);
+                    }
+                });
+            }
+        }
     }
 
     public static void beginInteractive(final InteractiveTokenCommand command) {
