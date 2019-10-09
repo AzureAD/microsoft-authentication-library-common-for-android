@@ -91,4 +91,31 @@ public abstract class BaseCommand<T> implements Command<T> {
         return mControllers.get(0);
     }
 
+
+    //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
+    @SuppressWarnings("PMD")
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BaseCommand)) return false;
+
+        BaseCommand<?> that = (BaseCommand<?>) o;
+
+        return mParameters.equals(that.mParameters);
+    }
+    //CHECKSTYLE:ON
+
+    //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
+    @SuppressWarnings("PMD")
+    @Override
+    public int hashCode() {
+        return mParameters.hashCode();
+    }
+    //CHECKSTYLE:ON
 }
