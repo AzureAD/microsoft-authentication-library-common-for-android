@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.eststelemetry;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -53,6 +54,7 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
     }
 
     @Override
+    @Nullable
     public synchronized RequestTelemetry getRequestTelemetryFromCache() {
         final String methodName = ":getRequestTelemetryFromCache";
 
@@ -60,11 +62,10 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
 
         if (data == null || data.isEmpty()) {
             Logger.verbose(TAG + methodName,
-                    "Last Request telemetry not found in cache. " +
-                            "Returning an empty RequestTelemetry object."
+                    "Last Request telemetry not found in cache. "
             );
 
-            return new RequestTelemetry(null, false);
+            return null;
         }
 
         final String schemaVersion = data.get(Schema.SCHEMA_VERSION_KEY);

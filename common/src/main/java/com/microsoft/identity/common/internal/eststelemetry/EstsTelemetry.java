@@ -55,11 +55,6 @@ public class EstsTelemetry {
         mTelemetryMap = new ConcurrentHashMap<>();
     }
 
-    private EstsTelemetry(@NonNull final Context context) {
-        this();
-        mLastRequestTelemetryCache = createLastRequestTelemetryCache(context);
-    }
-
     /**
      * Get an instance of {@link EstsTelemetry}. This method will return an existing
      * instance of EstsTelemetry or create and return a new instance if the existing instance is null.
@@ -74,20 +69,26 @@ public class EstsTelemetry {
         return sEstsTelemetryInstance;
     }
 
+    private void setupLastRequestTelemetryCache(@NonNull final Context context) {
+        this.mLastRequestTelemetryCache = createLastRequestTelemetryCache(context);
+    }
+
     /**
-     * Initializes the Ests Telemetry by creating a new instance of {@link EstsTelemetry}
+     * Initializes the Ests Telemetry Cache by creating a new instance of {@link EstsTelemetry} if
+     * an instance already didn't exist, and then creates and sets the last request telemetry cache
+     * on that instance.
      *
      * @param context the application context
      */
-    public static void initializeEstsTelemetry(@NonNull final Context context) {
-        final String methodName = ":initializeEstsTelemetry";
+    public static synchronized void initializeEstsTelemetryCache(@NonNull final Context context) {
+        final String methodName = ":initializeEstsTelemetryCache";
 
         Logger.verbose(
                 TAG + methodName,
                 "Initializing ests telemetry"
         );
 
-        sEstsTelemetryInstance = new EstsTelemetry(context);
+        getInstance().setupLastRequestTelemetryCache(context);
     }
 
     /**
