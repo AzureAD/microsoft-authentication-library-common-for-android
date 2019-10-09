@@ -43,7 +43,7 @@ public class EstsTelemetryTest {
 
     @Before
     public void setup() {
-        EstsTelemetry.initializeEstsTelemetryCache(ApplicationProvider.getApplicationContext());
+        EstsTelemetry.getInstance().setupLastRequestTelemetryCache(ApplicationProvider.getApplicationContext());
         CommandDispatcher.initializeDiagnosticContext();
     }
 
@@ -111,13 +111,6 @@ public class EstsTelemetryTest {
         String expectedResult = Schema.CURRENT_SCHEMA_VERSION + "|101,|,,,,,";
 
         Assert.assertEquals(expectedResult, actualResult);
-    }
-
-    @Test
-    @Ignore
-    public void testEmptyHeaderStrings() {
-        Map<String, String> headerStrings = EstsTelemetry.getInstance().getTelemetryHeaders();
-        Assert.assertEquals(0, headerStrings.size());
     }
 
     @Test

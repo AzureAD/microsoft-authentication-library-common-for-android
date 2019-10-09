@@ -69,26 +69,8 @@ public class EstsTelemetry {
         return sEstsTelemetryInstance;
     }
 
-    private void setupLastRequestTelemetryCache(@NonNull final Context context) {
+    public void setupLastRequestTelemetryCache(@NonNull final Context context) {
         this.mLastRequestTelemetryCache = createLastRequestTelemetryCache(context);
-    }
-
-    /**
-     * Initializes the Ests Telemetry Cache by creating a new instance of {@link EstsTelemetry} if
-     * an instance already didn't exist, and then creates and sets the last request telemetry cache
-     * on that instance.
-     *
-     * @param context the application context
-     */
-    public static synchronized void initializeEstsTelemetryCache(@NonNull final Context context) {
-        final String methodName = ":initializeEstsTelemetryCache";
-
-        Logger.verbose(
-                TAG + methodName,
-                "Initializing ests telemetry"
-        );
-
-        getInstance().setupLastRequestTelemetryCache(context);
     }
 
     /**
