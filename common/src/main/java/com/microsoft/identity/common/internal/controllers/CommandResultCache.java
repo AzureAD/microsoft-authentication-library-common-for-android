@@ -68,4 +68,8 @@ public class CommandResultCache {
         //We may want to log old if we see problems here, since the the old value is the value being replace with the new item.
     }
 
+    public int getSize(){
+        return this.mCache.size();
+    }
+
 }

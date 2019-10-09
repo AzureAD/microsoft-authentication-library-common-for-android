@@ -474,4 +474,9 @@ public class CommandDispatcher {
 
         return correlationId;
     }
+
+    public static int getCachedResultCount(){
+        return sCommandResultCache.getSize();
+    }
+
 }
