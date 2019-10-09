@@ -29,11 +29,9 @@ import android.util.Pair;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
@@ -43,12 +41,9 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import javax.xml.transform.Result;
 
 public class CommandDispatcher {
 
