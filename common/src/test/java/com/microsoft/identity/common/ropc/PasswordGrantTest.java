@@ -77,7 +77,7 @@ public final class PasswordGrantTest {
         return StringUtil.convertSetToString(scopesInSet, " ");
     }
 
-    private MicrosoftStsRopcTokenRequest createTokenRequest(String[] scopes, String username, String password) {
+    private MicrosoftStsRopcTokenRequest createRopcTokenRequest(String[] scopes, String username, String password) {
         String scope = convertScopesArrayToString(scopes);
 
         final MicrosoftStsRopcTokenRequest tokenRequest = new MicrosoftStsRopcTokenRequest();
@@ -100,7 +100,7 @@ public final class PasswordGrantTest {
         final ResourceOwnerPasswordCredentialsTestStrategy testStrategy =
                 (ResourceOwnerPasswordCredentialsTestStrategy) aadTestAuthority.createOAuth2Strategy();
 
-        final MicrosoftStsRopcTokenRequest tokenRequest = createTokenRequest(scopes, username, password);
+        final MicrosoftStsRopcTokenRequest tokenRequest = createRopcTokenRequest(scopes, username, password);
 
         return testStrategy.requestToken(tokenRequest);
     }
