@@ -118,6 +118,11 @@ public class ClientException extends BaseException {
     public static final String USER_MISMATCH = "user_mismatch";
 
     /**
+     * Home tenant of the BRT acccount doesn't match with WPJ account's tenant.
+     */
+    public static final String BRT_TENANT_MISMATCH = "brt_tenant_mismatch";
+
+    /**
      * Extra query parameters set by the client app is already sent by the sdk.
      */
     public static final String DUPLICATE_QUERY_PARAMETER = "duplicate_query_parameter";
