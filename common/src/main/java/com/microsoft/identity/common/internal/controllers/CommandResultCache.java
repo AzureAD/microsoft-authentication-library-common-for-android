@@ -72,4 +72,10 @@ public class CommandResultCache {
         return this.mCache.size();
     }
 
+    public void clear(){
+        synchronized (mCache) {
+            mCache = new LruCache<>(DEFAULT_ITEM_COUNT);
+        }
+    }
+
 }
