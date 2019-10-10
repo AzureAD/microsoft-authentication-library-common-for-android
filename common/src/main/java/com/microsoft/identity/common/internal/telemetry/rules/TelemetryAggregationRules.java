@@ -22,19 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.rules;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
 
 public class TelemetryAggregationRules {
     private static TelemetryAggregationRules sInstance;
     private Set<String> aggregatedPropertiesSet;
 
-    final private String aggregatedArray[] = {
+    final private String[] aggregatedArray = {
             Key.EVENT_NAME,
             Key.OCCUR_TIME,
             Key.EVENT_TYPE,
@@ -45,6 +47,7 @@ public class TelemetryAggregationRules {
         aggregatedPropertiesSet = new HashSet<>(Arrays.asList(aggregatedArray));
     }
 
+    @NonNull
     public synchronized static TelemetryAggregationRules getInstance() {
         if (sInstance == null) {
             sInstance = new TelemetryAggregationRules();
