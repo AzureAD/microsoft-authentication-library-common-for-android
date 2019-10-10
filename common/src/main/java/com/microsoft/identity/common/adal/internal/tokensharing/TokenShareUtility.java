@@ -178,6 +178,8 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     @Override
     public void saveOrgIdFamilyRefreshToken(@NonNull final String ssoStateSerializerBlob) throws Exception {
+        final String methodName = "saveOrgIdFamilyRefreshToken";
+
         final Future<Pair<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
                 sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
@@ -194,6 +196,18 @@ public class TokenShareUtility implements ITokenShareInternal {
                         // You may be tempted to use graph as the resource, but this doesn't
                         // necessarily work for all sovereign clouds.
                         cacheItemToRenew.setResource(null);
+
+                        // Check that instance discovery metadata is loaded before making the request...
+                        final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata();
+
+                        if (!cloudMetadataLoaded) {
+                            Logger.warn(
+                                    TAG + methodName,
+                                    "Failed to load cloud metadata, aborting."
+                            );
+
+                            return null;
+                        }
 
                         return renewToken(mRedirectUri, cacheItemToRenew);
                     }
