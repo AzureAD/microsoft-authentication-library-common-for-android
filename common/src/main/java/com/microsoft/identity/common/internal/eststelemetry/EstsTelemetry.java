@@ -71,6 +71,13 @@ public class EstsTelemetry {
 
     public void setupLastRequestTelemetryCache(@NonNull final Context context) {
         this.mLastRequestTelemetryCache = createLastRequestTelemetryCache(context);
+
+        if (this.mLastRequestTelemetryCache != null) {
+            com.microsoft.identity.common.internal.logging.Logger.verbose(
+                    TAG,
+                    "Ests Telemetry cache has been initialized properly."
+            );
+        }
     }
 
     /**
@@ -163,6 +170,14 @@ public class EstsTelemetry {
 
     private IRequestTelemetryCache createLastRequestTelemetryCache(@NonNull final Context context) {
         final String methodName = ":createLastRequestTelemetryCache";
+
+        if (context == null) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Context is NULL. Unable to create last request telemetry cache."
+            );
+            return null;
+        }
 
         Logger.verbose(
                 TAG + methodName,
