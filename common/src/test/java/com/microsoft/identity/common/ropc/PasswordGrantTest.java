@@ -44,6 +44,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -62,8 +64,7 @@ public final class PasswordGrantTest {
         query.isFederated = false;
         query.federationProvider = "ADFSv4";
 
-        Scenario scenario = Scenario.GetScenario(query);
-        return scenario;
+        return Scenario.GetScenario(query);
     }
 
     private boolean isEmpty(String[] arr) {
@@ -93,17 +94,15 @@ public final class PasswordGrantTest {
 
     private Credential getUserCredentialsForManagedUser() {
         final Scenario scenario = getManagedUserTestScenario();
-        final Credential credential = scenario.getCredential();
-        return credential;
+        return scenario.getCredential();
     }
 
     private TokenResult performRopcTokenRequest(String[] scopes, String username, String password) throws IOException, ClientException {
         final AADTestAuthority aadTestAuthority = new AADTestAuthority();
         final OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
 
-        final TokenRequest tokenRequest = createTokenRequest(SCOPES, username, password);
-        final TokenResult tokenResult = testStrategy.requestToken(tokenRequest);
-        return tokenResult;
+        final TokenRequest tokenRequest = createTokenRequest(scopes, username, password);
+        return testStrategy.requestToken(tokenRequest);
     }
 
     @Test
@@ -114,7 +113,7 @@ public final class PasswordGrantTest {
         try {
             final TokenResult tokenResult = performRopcTokenRequest(SCOPES, credential.userName, credential.password);
 
-            assertEquals(true, tokenResult.getSuccess());
+            assertTrue(tokenResult.getSuccess());
         } catch (ClientException exception) {
             fail("Unexpected exception.");
         }
@@ -128,7 +127,7 @@ public final class PasswordGrantTest {
         try {
             final TokenResult tokenResult = performRopcTokenRequest(SCOPES, null, credential.password);
 
-            assertEquals(true, tokenResult.getSuccess());
+            assertFalse(tokenResult.getSuccess());
         } catch (ClientException exception) {
             fail("Unexpected exception.");
         }
@@ -142,21 +141,21 @@ public final class PasswordGrantTest {
         try {
             final TokenResult tokenResult = performRopcTokenRequest(SCOPES, credential.userName, null);
 
-            assertEquals(true, tokenResult.getSuccess());
+            assertFalse(tokenResult.getSuccess());
         } catch (ClientException exception) {
             fail("Unexpected exception.");
         }
     }
 
     @Test(expected = IllegalArgumentException.class)
-    @Ignore // this has started to fail for some reason, will need investigation
+    // test that ROPC flow fails if scope is not provided
     public void testRopcFailureManagedUserNoScope() throws IOException {
         final Credential credential = getUserCredentialsForManagedUser();
 
         try {
             final TokenResult tokenResult = performRopcTokenRequest(null, credential.userName, credential.password);
 
-            assertEquals(true, tokenResult.getSuccess());
+            assertFalse(tokenResult.getSuccess());
         } catch (ClientException exception) {
             fail("Unexpected exception.");
         }
