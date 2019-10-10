@@ -55,8 +55,6 @@ public class BrokerAcquireTokenOperationParameters extends AcquireTokenOperation
 
     private String mCallerAppVersion;
 
-    private String mCorrelationId;
-
     /** Specifying that this acquireToken operation was hit by an interrupt, which needs to be interactively resolved.*/
     private boolean mShouldResolveInterrupt;
 
@@ -84,14 +82,6 @@ public class BrokerAcquireTokenOperationParameters extends AcquireTokenOperation
 
     public void setCallerAppVersion(final String callerAppVersion) {
         this.mCallerAppVersion = callerAppVersion;
-    }
-
-    public String getCorrelationId() {
-        return mCorrelationId;
-    }
-
-    public void setCorrelationId(final String correlationId) {
-        this.mCorrelationId = correlationId;
     }
 
     public RequestType getRequestType() {
