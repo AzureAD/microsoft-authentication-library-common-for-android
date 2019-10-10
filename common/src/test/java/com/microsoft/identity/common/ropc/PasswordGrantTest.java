@@ -125,9 +125,9 @@ public final class PasswordGrantTest {
         final Credential credential = getUserCredentialsForManagedUser();
 
         try {
-            final TokenResult tokenResult = performRopcTokenRequest(SCOPES, null, credential.password);
+            performRopcTokenRequest(SCOPES, null, credential.password);
 
-            assertFalse(tokenResult.getSuccess());
+            fail("Unexpected Success");
         } catch (ClientException exception) {
             fail("Unexpected exception.");
         }
@@ -139,9 +139,9 @@ public final class PasswordGrantTest {
         final Credential credential = getUserCredentialsForManagedUser();
 
         try {
-            final TokenResult tokenResult = performRopcTokenRequest(SCOPES, credential.userName, null);
+            performRopcTokenRequest(SCOPES, credential.userName, null);
 
-            assertFalse(tokenResult.getSuccess());
+            fail("Unexpected Success");
         } catch (ClientException exception) {
             fail("Unexpected exception.");
         }
@@ -153,9 +153,9 @@ public final class PasswordGrantTest {
         final Credential credential = getUserCredentialsForManagedUser();
 
         try {
-            final TokenResult tokenResult = performRopcTokenRequest(null, credential.userName, credential.password);
+            performRopcTokenRequest(null, credential.userName, credential.password);
 
-            assertFalse(tokenResult.getSuccess());
+            fail("Unexpected Success");
         } catch (ClientException exception) {
             fail("Unexpected exception.");
         }
