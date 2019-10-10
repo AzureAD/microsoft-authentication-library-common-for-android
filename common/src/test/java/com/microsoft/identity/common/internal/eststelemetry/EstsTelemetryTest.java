@@ -30,7 +30,6 @@ import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -44,7 +43,7 @@ public class EstsTelemetryTest {
     @Before
     public void setup() {
         EstsTelemetry.getInstance().setupLastRequestTelemetryCache(ApplicationProvider.getApplicationContext());
-        CommandDispatcher.initializeDiagnosticContext();
+        CommandDispatcher.initializeDiagnosticContext(null);
     }
 
     @After
