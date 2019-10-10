@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.ropc;
 
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -32,8 +31,8 @@ import com.microsoft.identity.internal.testutils.authorities.AADTestAuthority;
 import com.microsoft.identity.internal.testutils.labutils.Credential;
 import com.microsoft.identity.internal.testutils.labutils.Scenario;
 import com.microsoft.identity.internal.testutils.labutils.TestConfigurationQuery;
+import com.microsoft.identity.internal.testutils.strategies.ResourceOwnerPasswordCredentialsTestStrategy;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -43,7 +42,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -79,7 +77,7 @@ public final class PasswordGrantTest {
         return StringUtil.convertSetToString(scopesInSet, " ");
     }
 
-    private TokenRequest createTokenRequest(String[] scopes, String username, String password) {
+    private MicrosoftStsRopcTokenRequest createTokenRequest(String[] scopes, String username, String password) {
         String scope = convertScopesArrayToString(scopes);
 
         final MicrosoftStsRopcTokenRequest tokenRequest = new MicrosoftStsRopcTokenRequest();
@@ -99,9 +97,11 @@ public final class PasswordGrantTest {
 
     private TokenResult performRopcTokenRequest(String[] scopes, String username, String password) throws IOException, ClientException {
         final AADTestAuthority aadTestAuthority = new AADTestAuthority();
-        final OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
+        final ResourceOwnerPasswordCredentialsTestStrategy testStrategy =
+                (ResourceOwnerPasswordCredentialsTestStrategy) aadTestAuthority.createOAuth2Strategy();
 
-        final TokenRequest tokenRequest = createTokenRequest(scopes, username, password);
+        final MicrosoftStsRopcTokenRequest tokenRequest = createTokenRequest(scopes, username, password);
+
         return testStrategy.requestToken(tokenRequest);
     }
 
