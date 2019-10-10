@@ -25,9 +25,8 @@ package com.microsoft.identity.common.internal.controllers;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.util.Pair;
-
-import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.UserCancelException;
@@ -44,6 +43,9 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class CommandDispatcher {
 
@@ -68,7 +70,7 @@ public class CommandDispatcher {
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                final String correlationId = initializeDiagnosticContext();
+                final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
                 EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                 Object result = null;
@@ -190,7 +192,9 @@ public class CommandDispatcher {
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    final String correlationId = initializeDiagnosticContext();
+                    final String correlationId = initializeDiagnosticContext(
+                            command.getParameters().getCorrelationId()
+                    );
                     EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                     if (command.getParameters() instanceof AcquireTokenOperationParameters) {
@@ -394,9 +398,13 @@ public class CommandDispatcher {
         }
     }
 
-    public static String initializeDiagnosticContext() {
+    public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId) {
         final String methodName = ":initializeDiagnosticContext";
-        final String correlationId = UUID.randomUUID().toString();
+
+        final String correlationId = TextUtils.isEmpty(requestCorrelationId) ?
+                UUID.randomUUID().toString() :
+                requestCorrelationId;
+
         final com.microsoft.identity.common.internal.logging.RequestContext rc =
                 new com.microsoft.identity.common.internal.logging.RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
