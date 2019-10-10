@@ -173,7 +173,7 @@ public class CommandDispatcher {
     }
 
     /**
-     * Return the result of the command to the caller via teh callback associated with the command
+     * Return the result of the command to the caller via the callback associated with the command
      * @param command
      * @param result
      * @param handler
