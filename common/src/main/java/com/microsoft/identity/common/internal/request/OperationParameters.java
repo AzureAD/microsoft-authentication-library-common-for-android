@@ -65,6 +65,8 @@ public class OperationParameters {
     private String mRequiredBrokerProtocolVersion; //Move the required broker protocol var into parent class, as the interactive call also needs Bound Service.
     @Expose()
     private boolean mForceRefresh;
+    @Expose
+    private String mCorrelationId;
 
     public String getRequiredBrokerProtocolVersion() {
         return mRequiredBrokerProtocolVersion;
@@ -176,6 +178,14 @@ public class OperationParameters {
 
     public boolean getForceRefresh() {
         return mForceRefresh;
+    }
+
+    public String getCorrelationId() {
+        return mCorrelationId;
+    }
+
+    public void setCorrelationId(final String correlationId) {
+        this.mCorrelationId = correlationId;
     }
 
 
