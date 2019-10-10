@@ -30,6 +30,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -41,6 +42,9 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,6 +58,7 @@ public class CommandDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
+    private static final Set sExecutingCommands = Collections.synchronizedSet(new HashSet<BaseCommand>());
 
     /**
      * submitSilent - Run a command using the silent thread pool
@@ -65,6 +70,18 @@ public class CommandDispatcher {
                 TAG + methodName,
                 "Beginning execution of silent command."
         );
+
+        if(sExecutingCommands.contains(command)){
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    command.getCallback().onError(new ClientException(ClientException.DUPLICATE_COMMAND, "The same command was already received and is being processed."));
+                }
+            });
+        }else{
+            sExecutingCommands.add(command);
+        }
+
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -85,14 +102,25 @@ public class CommandDispatcher {
                 if(commandResult == null) {
                     commandResult = executeCommand(command);
                     cacheCommandResult(command, commandResult);
+                }else{
+                    Logger.info(
+                            TAG + methodName,
+                            "Silent command result returned from cache."
+                    );
                 }
 
                 //Return the result via the callback
                 returnCommandResult(command, commandResult, handler);
 
+                sExecutingCommands.remove(command);
+
                 Telemetry.getInstance().flush(correlationId);
             }
         });
+    }
+
+    public static void clearCommandCache(){
+        sCommandResultCache.clear();
     }
 
     /**
