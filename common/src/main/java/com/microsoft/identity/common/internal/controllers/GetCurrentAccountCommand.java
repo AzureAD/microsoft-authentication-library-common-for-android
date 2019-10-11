@@ -24,28 +24,36 @@ package com.microsoft.identity.common.internal.controllers;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Command class to call controllers to remove the account and return the result to
+ * Command class to call controllers to load accounts and return the account list to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class RemoveAccountCommand extends BaseCommand<Boolean> {
-    private static final String TAG = RemoveAccountCommand.class.getSimpleName();
+public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
+    private static final String TAG = GetCurrentAccountCommand.class.getSimpleName();
 
-    public RemoveAccountCommand(@NonNull final OperationParameters parameters,
-                                @NonNull final List<BaseController> controllers,
-                                @NonNull final CommandCallback callback) {
+    public GetCurrentAccountCommand(@NonNull final OperationParameters parameters,
+                              @NonNull final BaseController controller,
+                              @NonNull final CommandCallback callback) {
+        super(parameters, controller, callback);
+    }
+
+    public GetCurrentAccountCommand(@NonNull final OperationParameters parameters,
+                              @NonNull final List<BaseController> controllers,
+                              @NonNull final CommandCallback callback) {
         super(parameters, controllers, callback);
     }
 
     @Override
-    public Boolean execute() throws Exception {
+    public List<ICacheRecord> execute() throws Exception {
         final String methodName = ":execute";
 
-        boolean result = false;
+        List<ICacheRecord> result = new ArrayList<>();
 
         for (int ii = 0; ii < getControllers().size(); ii++) {
             final BaseController controller = getControllers().get(ii);
@@ -55,7 +63,7 @@ public class RemoveAccountCommand extends BaseCommand<Boolean> {
                             + controller.getClass().getSimpleName()
             );
 
-            result = controller.removeAccount(getParameters());
+            result.addAll(controller.getCurrentAccount(getParameters()));
         }
 
         return result;

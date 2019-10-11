@@ -26,38 +26,19 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.request.OperationParameters;
 
-import java.util.List;
-
 /**
  * Command class to call controllers to remove the account and return the result to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class RemoveAccountCommand extends BaseCommand<Boolean> {
-    private static final String TAG = RemoveAccountCommand.class.getSimpleName();
-
-    public RemoveAccountCommand(@NonNull final OperationParameters parameters,
-                                @NonNull final List<BaseController> controllers,
+public class GetDeviceModeCommand extends BaseCommand<Boolean> {
+    public GetDeviceModeCommand(@NonNull final OperationParameters parameters,
+                                @NonNull final BaseController controller,
                                 @NonNull final CommandCallback callback) {
-        super(parameters, controllers, callback);
+        super(parameters, controller, callback);
     }
 
     @Override
     public Boolean execute() throws Exception {
-        final String methodName = ":execute";
-
-        boolean result = false;
-
-        for (int ii = 0; ii < getControllers().size(); ii++) {
-            final BaseController controller = getControllers().get(ii);
-            com.microsoft.identity.common.internal.logging.Logger.verbose(
-                    TAG + methodName,
-                    "Executing with controller: "
-                            + controller.getClass().getSimpleName()
-            );
-
-            result = controller.removeAccount(getParameters());
-        }
-
-        return result;
+        return getDefaultController().getDeviceMode(getParameters());
     }
 }

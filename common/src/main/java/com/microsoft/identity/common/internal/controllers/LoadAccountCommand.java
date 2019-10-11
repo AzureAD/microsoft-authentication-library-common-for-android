@@ -22,19 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
-import android.os.RemoteException;
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Command class to call controllers to load accounts and return the account list to
@@ -56,9 +50,7 @@ public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
     }
 
     @Override
-    public List<ICacheRecord> execute()
-            throws ClientException, InterruptedException, ExecutionException, RemoteException,
-            OperationCanceledException, IOException, AuthenticatorException {
+    public List<ICacheRecord> execute() throws Exception {
         final String methodName = ":execute";
 
         List<ICacheRecord> result = new ArrayList<>();

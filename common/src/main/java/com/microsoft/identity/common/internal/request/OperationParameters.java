@@ -32,8 +32,10 @@ import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 public class OperationParameters {
@@ -42,6 +44,9 @@ public class OperationParameters {
 
     private transient Context mAppContext;
     private transient OAuth2TokenCache mTokenCache;
+    private transient boolean mIsSharedDevice;
+    private transient List<BrowserDescriptor> mBrowserSafeList;
+
     @Expose()
     private Set<String> mScopes;
     protected IAccountRecord mAccount;
@@ -90,6 +95,14 @@ public class OperationParameters {
 
     public void setAppContext(@NonNull final Context mAppContext) {
         this.mAppContext = mAppContext;
+    }
+
+    public boolean getIsSharedDevice() {
+        return mIsSharedDevice;
+    }
+
+    public void setIsSharedDevice(@NonNull final boolean isSharedDevice) {
+        this.mIsSharedDevice = isSharedDevice;
     }
 
     public Set<String> getScopes() {
@@ -188,6 +201,17 @@ public class OperationParameters {
         this.mCorrelationId = correlationId;
     }
 
+    public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
+        this.mBrowserSafeList = browserSafeList;
+    }
+
+    /**
+     * Get the list of browsers which are safe to launch for auth flow.
+     * @return list of browser descriptors
+     */
+    public List<BrowserDescriptor> getBrowserSafeList() {
+        return mBrowserSafeList;
+    }
 
     /**
      * Since this is about validating MSAL Parameters and not an authorization request or token request.  I've placed this here.

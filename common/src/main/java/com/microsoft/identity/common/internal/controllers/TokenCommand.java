@@ -43,7 +43,6 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
 
     private static final String TAG = TokenCommand.class.getSimpleName();
 
-
     public TokenCommand(@NonNull final OperationParameters parameters,
                         @NonNull final BaseController controller,
                         @NonNull final CommandCallback callback) {
@@ -57,8 +56,7 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
     }
 
     @Override
-    public AcquireTokenResult execute()
-            throws InterruptedException, ExecutionException, IOException, BaseException {
+    public AcquireTokenResult execute() throws Exception {
         AcquireTokenResult result = null;
         final String methodName = ":execute";
 
