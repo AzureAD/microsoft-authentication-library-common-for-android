@@ -33,6 +33,7 @@ public abstract class BaseCommand<T> implements Command<T> {
     private OperationParameters mParameters;
     private List<BaseController> mControllers;
     private CommandCallback mCallback;
+    private String mPublicApiId;
 
     public BaseCommand(@NonNull final OperationParameters parameters,
                        @NonNull final BaseController controller,
@@ -74,6 +75,14 @@ public abstract class BaseCommand<T> implements Command<T> {
 
     public void setCallback(CommandCallback callback) {
         this.mCallback = callback;
+    }
+
+    public void setPublicApiId(String publicApiId) {
+        this.mPublicApiId = publicApiId;
+    }
+
+    public String getPublicApiId() {
+        return mPublicApiId;
     }
 
     public abstract T execute() throws Exception;

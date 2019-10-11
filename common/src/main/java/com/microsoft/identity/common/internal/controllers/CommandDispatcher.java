@@ -30,6 +30,7 @@ import android.util.Pair;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
@@ -57,9 +58,10 @@ public class CommandDispatcher {
 
     /**
      * submitSilent - Run a command using the silent thread pool
+     *
      * @param command
      */
-    public static void submitSilent(@NonNull final BaseCommand command){
+    public static void submitSilent(@NonNull final BaseCommand command) {
         final String methodName = ":submitSilent";
         Logger.verbose(
                 TAG + methodName,
@@ -69,6 +71,7 @@ public class CommandDispatcher {
             @Override
             public void run() {
                 final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
+                EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                 Object result = null;
                 BaseException baseException = null;
@@ -76,6 +79,7 @@ public class CommandDispatcher {
 
                 if (command.getParameters() instanceof AcquireTokenSilentOperationParameters) {
                     logSilentRequestParams(methodName, (AcquireTokenSilentOperationParameters) command.getParameters());
+                    EstsTelemetry.getInstance().emitForceRefresh(command.getParameters().getForceRefresh());
                 }
 
                 try {
@@ -101,20 +105,22 @@ public class CommandDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
+                            EstsTelemetry.getInstance().flush(correlationId, finalException);
                             command.getCallback().onError(finalException);
                         }
                     });
                 } else {
-                    if(result != null && result instanceof AcquireTokenResult){
+                    if (result != null && result instanceof AcquireTokenResult) {
                         //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
-                        processTokenResult(handler, command, baseException, (AcquireTokenResult)result );
-                    }else{
+                        processTokenResult(handler, command, baseException, (AcquireTokenResult) result);
+                    } else {
                         //For commands that don't return an AcquireTokenResult
                         final Object returnResult = result;
 
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
+                                EstsTelemetry.getInstance().flush(correlationId);
                                 command.getCallback().onTaskCompleted(returnResult);
                             }
                         });
@@ -128,28 +134,31 @@ public class CommandDispatcher {
 
     /**
      * We need to inspect the AcquireTokenResult type to determine whether the request was successful, cancelled or encountered an exception
+     *
      * @param handler
      * @param command
      * @param baseException
      * @param result
      */
-    private static void processTokenResult(Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result){
+    private static void processTokenResult(Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result) {
         //Token Commands
-        if(result.getSucceeded()){
+        if (result.getSucceeded()) {
             final ILocalAuthenticationResult authenticationResult = result.getLocalAuthenticationResult();
             handler.post(new Runnable() {
                 @Override
                 public void run() {
+                    EstsTelemetry.getInstance().flush();
                     command.getCallback().onTaskCompleted(authenticationResult);
                 }
             });
-        }else{
+        } else {
             //Get MsalException from Authorization and/or Token Error Response
             baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
             final BaseException finalException = baseException;
 
             if (finalException instanceof UserCancelException) {
                 //Post Cancel
+                EstsTelemetry.getInstance().flush(finalException);
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -160,6 +169,7 @@ public class CommandDispatcher {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
+                        EstsTelemetry.getInstance().flush(finalException);
                         command.getCallback().onError(finalException);
                     }
                 });
@@ -185,6 +195,7 @@ public class CommandDispatcher {
                     final String correlationId = initializeDiagnosticContext(
                             command.getParameters().getCorrelationId()
                     );
+                    EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                     if (command.getParameters() instanceof AcquireTokenOperationParameters) {
                         logInteractiveRequestParameters(methodName, (AcquireTokenOperationParameters) command.getParameters());
@@ -195,7 +206,7 @@ public class CommandDispatcher {
 
                     try {
                         sCommand = command;
-                        
+
                         //Try executing request
                         result = command.execute();
                     } catch (Exception e) {
@@ -222,6 +233,7 @@ public class CommandDispatcher {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
+                                EstsTelemetry.getInstance().flush(correlationId, finalException);
                                 command.getCallback().onError(finalException);
                             }
                         });
@@ -232,6 +244,7 @@ public class CommandDispatcher {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
+                                    EstsTelemetry.getInstance().flush(correlationId);
                                     command.getCallback().onTaskCompleted(authenticationResult);
                                 }
                             });
@@ -244,6 +257,7 @@ public class CommandDispatcher {
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
+                                        EstsTelemetry.getInstance().flush(correlationId, finalException);
                                         command.getCallback().onCancel();
                                     }
                                 });
@@ -251,6 +265,7 @@ public class CommandDispatcher {
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
+                                        EstsTelemetry.getInstance().flush(correlationId, finalException);
                                         command.getCallback().onError(finalException);
                                     }
                                 });
