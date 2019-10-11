@@ -119,12 +119,12 @@ public class CommandDispatcher {
         });
     }
 
-    public static void clearCommandCache(){
+    static void clearCommandCache(){
         sCommandResultCache.clear();
     }
 
     /**
-     * Execute the command provide to the command dispatcher
+     * Execute the command provided to the command dispatcher
      * @param command
      * @return
      */
