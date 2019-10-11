@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.ropc;
 
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -32,8 +31,8 @@ import com.microsoft.identity.internal.testutils.authorities.AADTestAuthority;
 import com.microsoft.identity.internal.testutils.labutils.Credential;
 import com.microsoft.identity.internal.testutils.labutils.Scenario;
 import com.microsoft.identity.internal.testutils.labutils.TestConfigurationQuery;
+import com.microsoft.identity.internal.testutils.strategies.ResourceOwnerPasswordCredentialsTestStrategy;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -43,7 +42,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -62,8 +62,7 @@ public final class PasswordGrantTest {
         query.isFederated = false;
         query.federationProvider = "ADFSv4";
 
-        Scenario scenario = Scenario.GetScenario(query);
-        return scenario;
+        return Scenario.GetScenario(query);
     }
 
     private boolean isEmpty(String[] arr) {
@@ -78,7 +77,7 @@ public final class PasswordGrantTest {
         return StringUtil.convertSetToString(scopesInSet, " ");
     }
 
-    private TokenRequest createTokenRequest(String[] scopes, String username, String password) {
+    private MicrosoftStsRopcTokenRequest createRopcTokenRequest(String[] scopes, String username, String password) {
         String scope = convertScopesArrayToString(scopes);
 
         final MicrosoftStsRopcTokenRequest tokenRequest = new MicrosoftStsRopcTokenRequest();
@@ -93,17 +92,17 @@ public final class PasswordGrantTest {
 
     private Credential getUserCredentialsForManagedUser() {
         final Scenario scenario = getManagedUserTestScenario();
-        final Credential credential = scenario.getCredential();
-        return credential;
+        return scenario.getCredential();
     }
 
     private TokenResult performRopcTokenRequest(String[] scopes, String username, String password) throws IOException, ClientException {
         final AADTestAuthority aadTestAuthority = new AADTestAuthority();
-        final OAuth2Strategy testStrategy = aadTestAuthority.createOAuth2Strategy();
+        final ResourceOwnerPasswordCredentialsTestStrategy testStrategy =
+                (ResourceOwnerPasswordCredentialsTestStrategy) aadTestAuthority.createOAuth2Strategy();
 
-        final TokenRequest tokenRequest = createTokenRequest(SCOPES, username, password);
-        final TokenResult tokenResult = testStrategy.requestToken(tokenRequest);
-        return tokenResult;
+        final MicrosoftStsRopcTokenRequest tokenRequest = createRopcTokenRequest(scopes, username, password);
+
+        return testStrategy.requestToken(tokenRequest);
     }
 
     @Test
@@ -114,7 +113,7 @@ public final class PasswordGrantTest {
         try {
             final TokenResult tokenResult = performRopcTokenRequest(SCOPES, credential.userName, credential.password);
 
-            assertEquals(true, tokenResult.getSuccess());
+            assertTrue(tokenResult.getSuccess());
         } catch (ClientException exception) {
             fail("Unexpected exception.");
         }
@@ -126,9 +125,9 @@ public final class PasswordGrantTest {
         final Credential credential = getUserCredentialsForManagedUser();
 
         try {
-            final TokenResult tokenResult = performRopcTokenRequest(SCOPES, null, credential.password);
+            performRopcTokenRequest(SCOPES, null, credential.password);
 
-            assertEquals(true, tokenResult.getSuccess());
+            fail("Unexpected Success");
         } catch (ClientException exception) {
             fail("Unexpected exception.");
         }
@@ -140,23 +139,23 @@ public final class PasswordGrantTest {
         final Credential credential = getUserCredentialsForManagedUser();
 
         try {
-            final TokenResult tokenResult = performRopcTokenRequest(SCOPES, credential.userName, null);
+            performRopcTokenRequest(SCOPES, credential.userName, null);
 
-            assertEquals(true, tokenResult.getSuccess());
+            fail("Unexpected Success");
         } catch (ClientException exception) {
             fail("Unexpected exception.");
         }
     }
 
     @Test(expected = IllegalArgumentException.class)
-    @Ignore // this has started to fail for some reason, will need investigation
+    // test that ROPC flow fails if scope is not provided
     public void testRopcFailureManagedUserNoScope() throws IOException {
         final Credential credential = getUserCredentialsForManagedUser();
 
         try {
-            final TokenResult tokenResult = performRopcTokenRequest(null, credential.userName, credential.password);
+            performRopcTokenRequest(null, credential.userName, credential.password);
 
-            assertEquals(true, tokenResult.getSuccess());
+            fail("Unexpected Success");
         } catch (ClientException exception) {
             fail("Unexpected exception.");
         }
