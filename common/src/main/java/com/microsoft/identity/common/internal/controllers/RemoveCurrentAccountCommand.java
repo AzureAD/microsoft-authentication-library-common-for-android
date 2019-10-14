@@ -22,16 +22,23 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.content.Intent;
+import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.request.OperationParameters;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
+/**
+ * Command class to call controllers to remove the account and return the result to
+ * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
+ */
+public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
+    public RemoveCurrentAccountCommand(@NonNull final OperationParameters parameters,
+                                       @NonNull final BaseController controller,
+                                       @NonNull final CommandCallback callback) {
+        super(parameters, controller, callback);
+    }
 
-public interface TokenOperation {
-    AcquireTokenResult execute() throws Exception;
-
-    void notify(int requestCode, int resultCode, final Intent data);
+    @Override
+    public Boolean execute() throws Exception {
+        return getDefaultController().removeCurrentAccount(getParameters());
+    }
 }

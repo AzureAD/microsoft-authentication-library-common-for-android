@@ -45,7 +45,7 @@ public class InteractiveTokenCommand extends TokenCommand {
     }
 
     @Override
-    public AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, BaseException {
+    public AcquireTokenResult execute() throws Exception {
         final String methodName = ":execute";
         if (getParameters() instanceof AcquireTokenOperationParameters) {
             Logger.info(

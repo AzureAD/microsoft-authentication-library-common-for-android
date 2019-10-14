@@ -22,16 +22,24 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.content.Intent;
+public class CommandResult {
 
-import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+    public enum ResultStatus { CANCEL, COMPLETED, ERROR };
 
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
+    private ResultStatus mStatus;
+    private Object mResult;
 
-public interface TokenOperation {
-    AcquireTokenResult execute() throws Exception;
+    public CommandResult(ResultStatus status, Object result){
+        mStatus = status;
+        mResult = result;
+    }
 
-    void notify(int requestCode, int resultCode, final Intent data);
+    public ResultStatus getStatus(){
+        return mStatus;
+    }
+
+    public Object getResult(){
+        return mResult;
+    }
+
 }

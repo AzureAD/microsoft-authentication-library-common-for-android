@@ -20,18 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.internal.testutils.authorities;
 
-import android.content.Intent;
+import com.microsoft.identity.common.internal.authorities.AnyOrganizationalAccount;
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.internal.testutils.strategies.MockTestStrategy;
 
-import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+public class MockDelayedResponseAuthority extends AzureActiveDirectoryAuthority {
 
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
+    public MockDelayedResponseAuthority() {
+        super(new AnyOrganizationalAccount());
+    }
 
-public interface TokenOperation {
-    AcquireTokenResult execute() throws Exception;
+    @Override
+    public OAuth2Strategy createOAuth2Strategy() {
+        MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
+        return new MockTestStrategy(config);
+    }
 
-    void notify(int requestCode, int resultCode, final Intent data);
 }

@@ -139,6 +139,11 @@ public class ClientException extends BaseException {
     static final String ADFS_AUTHORITY_VALIDATION_FAILED = "adfs_authority_validation_failed";
 
     /**
+     * Duplicate command.  The same command is already be processed.
+     */
+    public static final String DUPLICATE_COMMAND = "duplicate_command";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String
