@@ -94,8 +94,8 @@ public final class PublicApiId {
 
     // SingleAccountPublicClientApplication
     //==============================================================================================
-    public static final String SINGLE_ACCOUNT_PCA_SIGN_OUT = "927"; //REMOVE
-    public static final String SINGLE_ACCOUNT_PCA_SIGN_OUT_WITH_CALLBACK = "928"; //REMOVE
+    public static final String SINGLE_ACCOUNT_PCA_SIGN_OUT = "927";
+    public static final String SINGLE_ACCOUNT_PCA_SIGN_OUT_WITH_CALLBACK = "928";
 
     // MultipleAccountPublicClientApplication
     //==============================================================================================
