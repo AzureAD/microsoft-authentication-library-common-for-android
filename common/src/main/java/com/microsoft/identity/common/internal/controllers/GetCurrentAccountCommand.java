@@ -68,4 +68,9 @@ public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
 
         return result;
     }
+
+    @Override
+    public int getCommandCode() {
+        return TAG.hashCode();
+    }
 }

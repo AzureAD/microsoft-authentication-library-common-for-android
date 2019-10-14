@@ -103,6 +103,11 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
     }
 
     @Override
+    public int getCommandCode() {
+        return TAG.hashCode();
+    }
+
+    @Override
     public void notify(int requestCode, int resultCode, Intent data) {
         throw new UnsupportedOperationException();
     }

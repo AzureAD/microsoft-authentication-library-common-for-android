@@ -31,6 +31,8 @@ import com.microsoft.identity.common.internal.request.OperationParameters;
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
 public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
+    private static final String TAG = RemoveCurrentAccountCommand.class.getSimpleName();
+
     public RemoveCurrentAccountCommand(@NonNull final OperationParameters parameters,
                                        @NonNull final BaseController controller,
                                        @NonNull final CommandCallback callback) {
@@ -40,5 +42,10 @@ public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
     @Override
     public Boolean execute() throws Exception {
         return getDefaultController().removeCurrentAccount(getParameters());
+    }
+
+    @Override
+    public int getCommandCode() {
+        return TAG.hashCode();
     }
 }

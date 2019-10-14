@@ -297,6 +297,4 @@ public class OperationParameters {
         }
 
     }
-
-
 }

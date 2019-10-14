@@ -60,4 +60,9 @@ public class RemoveAccountCommand extends BaseCommand<Boolean> {
 
         return result;
     }
+
+    @Override
+    public int getCommandCode() {
+        return TAG.hashCode();
+    }
 }
