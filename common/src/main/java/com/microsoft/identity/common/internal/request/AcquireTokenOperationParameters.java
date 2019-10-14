@@ -105,4 +105,56 @@ public class AcquireTokenOperationParameters extends OperationParameters {
     public void setRequestHeaders(@Nullable final HashMap<String, String> requestHeaders) {
         this.mRequestHeaders = requestHeaders;
     }
+
+    public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
+        this.mBrowserSafeList = browserSafeList;
+    }
+
+    /**
+     * Get the list of browsers which are safe to launch for auth flow.
+     * @return list of browser descriptors
+     */
+    public List<BrowserDescriptor> getBrowserSafeList() {
+        return mBrowserSafeList;
+    }
+
+    //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
+    @SuppressWarnings("PMD")
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AcquireTokenOperationParameters)) return false;
+        if (!super.equals(o)) return false;
+
+        AcquireTokenOperationParameters that = (AcquireTokenOperationParameters) o;
+
+        if (mLoginHint != null ? !mLoginHint.equals(that.mLoginHint) : that.mLoginHint != null)
+            return false;
+        if (mExtraQueryStringParameters != null ? !mExtraQueryStringParameters.equals(that.mExtraQueryStringParameters) : that.mExtraQueryStringParameters != null)
+            return false;
+        if (mExtraScopesToConsent != null ? !mExtraScopesToConsent.equals(that.mExtraScopesToConsent) : that.mExtraScopesToConsent != null)
+            return false;
+        return mOpenIdConnectPromptParameter == that.mOpenIdConnectPromptParameter;
+    }
+    //CHECKSTYLE:ON
+
+    //CHECKSTYLE:OFF
+    // This method is generated. Checkstyle and/or PMD has been disabled.
+    // This method *must* be regenerated if the class' structural definition changes through the
+    // addition/subtraction of fields.
+    @SuppressWarnings("PMD")
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (mLoginHint != null ? mLoginHint.hashCode() : 0);
+        result = 31 * result + (mExtraQueryStringParameters != null ? mExtraQueryStringParameters.hashCode() : 0);
+        result = 31 * result + (mExtraScopesToConsent != null ? mExtraScopesToConsent.hashCode() : 0);
+        result = 31 * result + (mOpenIdConnectPromptParameter != null ? mOpenIdConnectPromptParameter.hashCode() : 0);
+        return result;
+    }
+    //CHECKSTYLE:ON
+
 }

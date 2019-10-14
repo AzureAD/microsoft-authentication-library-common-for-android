@@ -28,7 +28,12 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -40,12 +45,13 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 public class CommandDispatcher {
 
@@ -55,6 +61,8 @@ public class CommandDispatcher {
     private static final ExecutorService sSilentExecutor = Executors.newCachedThreadPool();
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
+    private static final CommandResultCache sCommandResultCache = new CommandResultCache();
+    private static final Set sExecutingCommands = Collections.synchronizedSet(new HashSet<BaseCommand>());
 
     /**
      * submitSilent - Run a command using the silent thread pool
@@ -67,112 +75,189 @@ public class CommandDispatcher {
                 TAG + methodName,
                 "Beginning execution of silent command."
         );
+
+        if(sExecutingCommands.contains(command)){
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    command.getCallback().onError(new ClientException(ClientException.DUPLICATE_COMMAND, "The same command was already received and is being processed."));
+                }
+            });
+        }else{
+            sExecutingCommands.add(command);
+        }
+
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
                 EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
-                Object result = null;
-                BaseException baseException = null;
+                CommandResult commandResult = null;
                 Handler handler = new Handler(Looper.getMainLooper());
 
+                //Log operation parameters
                 if (command.getParameters() instanceof AcquireTokenSilentOperationParameters) {
                     logSilentRequestParams(methodName, (AcquireTokenSilentOperationParameters) command.getParameters());
                     EstsTelemetry.getInstance().emitForceRefresh(command.getParameters().getForceRefresh());
                 }
 
-                try {
-                    //Try executing request
-                    result = command.execute();
-                } catch (final Exception e) {
-                    //Capture any resulting exception and map to MsalException type
-                    Logger.errorPII(
+                //Check cache to see if the same command completed in the last 30 seconds
+                commandResult = sCommandResultCache.get(command);
+
+                //If nothing in cache, execute the command and cache the result
+                if(commandResult == null) {
+                    commandResult = executeCommand(command);
+                    cacheCommandResult(command, commandResult);
+                }else{
+                    Logger.info(
                             TAG + methodName,
-                            "Silent request failed with Exception",
-                            e
+                            "Silent command result returned from cache."
                     );
-                    if (e instanceof BaseException) {
-                        baseException = (BaseException) e;
-                    } else {
-                        baseException = ExceptionAdapter.baseExceptionFromException(e);
-                    }
                 }
 
-                if (baseException != null) {
-                    //Post On Error
-                    final BaseException finalException = baseException;
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            EstsTelemetry.getInstance().flush(correlationId, finalException);
-                            command.getCallback().onError(finalException);
-                        }
-                    });
-                } else {
-                    if (result != null && result instanceof AcquireTokenResult) {
-                        //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
-                        processTokenResult(handler, command, baseException, (AcquireTokenResult) result);
-                    } else {
-                        //For commands that don't return an AcquireTokenResult
-                        final Object returnResult = result;
+                //Return the result via the callback
+                returnCommandResult(command, commandResult, handler);
 
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                EstsTelemetry.getInstance().flush(correlationId);
-                                command.getCallback().onTaskCompleted(returnResult);
-                            }
-                        });
-                    }
-                }
+                sExecutingCommands.remove(command);
 
                 Telemetry.getInstance().flush(correlationId);
             }
         });
     }
 
+    static void clearCommandCache(){
+        sCommandResultCache.clear();
+    }
+
     /**
      * We need to inspect the AcquireTokenResult type to determine whether the request was successful, cancelled or encountered an exception
      *
-     * @param handler
+     * Execute the command provided to the command dispatcher
      * @param command
+     * @return
+     */
+    private static CommandResult executeCommand(BaseCommand command){
+
+        Object result = null;
+        BaseException baseException = null;
+        CommandResult commandResult;
+
+        try {
+            //Try executing request
+            result = command.execute();
+        } catch (final Exception e) {
+            if (e instanceof BaseException) {
+                baseException = (BaseException) e;
+            } else {
+                baseException = ExceptionAdapter.baseExceptionFromException(e);
+            }
+        }
+
+        if (baseException != null) {
+            //Post On Error
+            commandResult = new CommandResult(CommandResult.ResultStatus.ERROR, baseException);
+        } else {
+            if(result != null && result instanceof AcquireTokenResult){
+                //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
+                commandResult = getCommandResultFromTokenResult(baseException, (AcquireTokenResult)result );
+            }else{
+                //For commands that don't return an AcquireTokenResult
+                commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result);
+            }
+        }
+
+        return commandResult;
+
+    }
+
+    /**
+     * Return the result of the command to the caller via the callback associated with the command
+     * @param command
+     * @param result
+     * @param handler
+     */
+    private static void returnCommandResult(final BaseCommand command, final CommandResult result, Handler handler){
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                switch(result.getStatus()){
+                    case ERROR:
+                        EstsTelemetry.getInstance().flush((BaseException)result.getResult());
+                        command.getCallback().onError(result.getResult());
+                        break;
+                    case COMPLETED:
+                        EstsTelemetry.getInstance().flush();
+                        command.getCallback().onTaskCompleted(result.getResult());
+                        break;
+                    case CANCEL:
+                        EstsTelemetry.getInstance().flush();
+                        command.getCallback().onCancel();
+                    default:
+
+                }
+            }
+        });
+    }
+
+    /**
+     * Cache the result of the command (if eligible to do so) in order to protect the service from clients
+     * making the requests in a tight loop
+     * @param command
+     * @param commandResult
+     */
+    private static void cacheCommandResult(BaseCommand command, CommandResult commandResult){
+        if(eligibleToCache(commandResult)){
+            sCommandResultCache.put(command, commandResult);
+        }
+    }
+
+    /**
+     * Determine if the command result should be cached
+     * @param commandResult
+     * @return
+     */
+    private static boolean eligibleToCache(CommandResult commandResult){
+        switch(commandResult.getStatus()){
+            case ERROR:
+                return eligibleToCacheException((BaseException)commandResult.getResult());
+            case COMPLETED:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Determine if the exception type is eligible to be cached
+     * @param exception
+     * @return
+     */
+    private static boolean eligibleToCacheException(BaseException exception){
+        if(exception instanceof IntuneAppProtectionPolicyRequiredException){
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get Commandresult from acquiretokenresult
+     *
      * @param baseException
      * @param result
      */
-    private static void processTokenResult(Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result) {
+    private static CommandResult getCommandResultFromTokenResult(BaseException baseException, AcquireTokenResult result){
         //Token Commands
-        if (result.getSucceeded()) {
-            final ILocalAuthenticationResult authenticationResult = result.getLocalAuthenticationResult();
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    EstsTelemetry.getInstance().flush();
-                    command.getCallback().onTaskCompleted(authenticationResult);
-                }
-            });
-        } else {
+        if(result.getSucceeded()){
+            return new CommandResult(CommandResult.ResultStatus.COMPLETED, result.getLocalAuthenticationResult());
+        }else{
             //Get MsalException from Authorization and/or Token Error Response
             baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
-            final BaseException finalException = baseException;
-
-            if (finalException instanceof UserCancelException) {
-                //Post Cancel
-                EstsTelemetry.getInstance().flush(finalException);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        command.getCallback().onCancel();
-                    }
-                });
+            if (baseException instanceof UserCancelException) {
+                return new CommandResult(CommandResult.ResultStatus.CANCEL, null);
             } else {
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        EstsTelemetry.getInstance().flush(finalException);
-                        command.getCallback().onError(finalException);
-                    }
-                });
+                return new CommandResult(CommandResult.ResultStatus.ERROR, baseException);
             }
         }
     }
@@ -416,4 +501,9 @@ public class CommandDispatcher {
 
         return correlationId;
     }
+
+    public static int getCachedResultCount(){
+        return sCommandResultCache.getSize();
+    }
+
 }
