@@ -116,7 +116,6 @@ public class CommandDispatcher {
                     );
                 }
 
-
                 //Return the result via the callback
                 returnCommandResult(command, commandResult, handler);
 
