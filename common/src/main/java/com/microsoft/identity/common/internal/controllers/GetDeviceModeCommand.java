@@ -45,7 +45,7 @@ public class GetDeviceModeCommand extends BaseCommand<Boolean> {
     }
 
     @Override
-    public int getCommandCode() {
+    public int getCommandNameHashCode() {
         return TAG.hashCode();
     }
 }

@@ -70,7 +70,7 @@ public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
     }
 
     @Override
-    public int getCommandCode() {
+    public int getCommandNameHashCode() {
         return TAG.hashCode();
     }
 }

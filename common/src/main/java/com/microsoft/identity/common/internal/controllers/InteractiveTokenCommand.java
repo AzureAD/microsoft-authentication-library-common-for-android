@@ -67,7 +67,7 @@ public class InteractiveTokenCommand extends TokenCommand {
     }
 
     @Override
-    public int getCommandCode() {
+    public int getCommandNameHashCode() {
         return TAG.hashCode();
     }
 }

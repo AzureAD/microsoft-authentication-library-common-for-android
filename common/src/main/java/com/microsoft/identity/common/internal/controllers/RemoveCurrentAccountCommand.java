@@ -45,7 +45,7 @@ public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
     }
 
     @Override
-    public int getCommandCode() {
+    public int getCommandNameHashCode() {
         return TAG.hashCode();
     }
 }

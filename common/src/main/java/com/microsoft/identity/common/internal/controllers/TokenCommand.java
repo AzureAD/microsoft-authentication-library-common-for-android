@@ -103,7 +103,7 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
     }
 
     @Override
-    public int getCommandCode() {
+    public int getCommandNameHashCode() {
         return TAG.hashCode();
     }
 

@@ -91,7 +91,7 @@ public abstract class BaseCommand<T> implements Command<T> {
         return mControllers.get(0);
     }
 
-    public abstract int getCommandCode();
+    public abstract int getCommandNameHashCode();
 
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
@@ -116,7 +116,7 @@ public abstract class BaseCommand<T> implements Command<T> {
     @SuppressWarnings("PMD")
     @Override
     public int hashCode() {
-        return  31 * getCommandCode() + mParameters.hashCode();
+        return  31 * getCommandNameHashCode() + mParameters.hashCode();
     }
     //CHECKSTYLE:ON
 }
