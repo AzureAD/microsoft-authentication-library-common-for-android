@@ -46,7 +46,6 @@ public class AcquireTokenOperationParameters extends OperationParameters {
     @Expose()
     private OpenIdConnectPromptParameter mOpenIdConnectPromptParameter;
     private transient HashMap<String, String> mRequestHeaders;
-    private List<BrowserDescriptor> mBrowserSafeList;
 
     public AuthorizationAgent getAuthorizationAgent() {
         return mAuthorizationAgent;
@@ -105,17 +104,5 @@ public class AcquireTokenOperationParameters extends OperationParameters {
 
     public void setRequestHeaders(@Nullable final HashMap<String, String> requestHeaders) {
         this.mRequestHeaders = requestHeaders;
-    }
-
-    public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
-        this.mBrowserSafeList = browserSafeList;
-    }
-
-    /**
-     * Get the list of browsers which are safe to launch for auth flow.
-     * @return list of browser descriptors
-     */
-    public List<BrowserDescriptor> getBrowserSafeList() {
-        return mBrowserSafeList;
     }
 }
