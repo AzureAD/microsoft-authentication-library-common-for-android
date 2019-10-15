@@ -27,7 +27,10 @@ import android.support.annotation.NonNull;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.UserCancelException;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
 
 public class BrokerEndEvent extends BaseEvent {
     public BrokerEndEvent() {
@@ -41,14 +44,19 @@ public class BrokerEndEvent extends BaseEvent {
         return this;
     }
 
+
     public BrokerEndEvent isSuccessful(final boolean isSuccessful) {
         put(Key.IS_SUCCESSFUL, String.valueOf(isSuccessful));
         return this;
     }
 
     public BrokerEndEvent putException(@NonNull final BaseException exception) {
-        if (exception  instanceof UserCancelException) {
-            put(Key.USER_CANCELLED, Value.TRUE);
+        if (exception == null) {
+            return this;
+        }
+
+        if (exception instanceof UserCancelException) {
+            put(Key.USER_CANCEL, Value.TRUE);
         }
 
         put(Key.SERVER_ERROR_CODE, exception.getCliTelemErrorCode());

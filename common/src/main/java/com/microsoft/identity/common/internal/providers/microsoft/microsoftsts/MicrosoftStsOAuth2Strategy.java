@@ -32,6 +32,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpRequest;
@@ -235,7 +236,7 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder() {
         final String methodName = ":createAuthorizationRequestBuilder";
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Creating AuthorizationRequestBuilder..."
         );
@@ -244,7 +245,7 @@ public class MicrosoftStsOAuth2Strategy
         builder.setAuthority(mConfig.getAuthorityUrl());
 
         if (mConfig.getSlice() != null) {
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "Setting slice params..."
             );
@@ -269,7 +270,7 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsAuthorizationRequest.Builder createAuthorizationRequestBuilder(
             @Nullable final IAccountRecord account) {
         final String methodName = ":createAuthorizationRequestBuilder";
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Creating AuthorizationRequestBuilder"
         );
@@ -285,12 +286,12 @@ public class MicrosoftStsOAuth2Strategy
                 builder.setUid(uidUtidPair.first);
                 builder.setUtid(uidUtidPair.second);
 
-                Logger.verbosePII(
+                Logger.infoPII(
                         TAG + methodName,
                         "Builder w/ uid: [" + uidUtidPair.first + "]"
                 );
 
-                Logger.verbosePII(
+                Logger.infoPII(
                         TAG + methodName,
                         "Builder w/ utid: [" + uidUtidPair.second + "]"
                 );
@@ -405,6 +406,7 @@ public class MicrosoftStsOAuth2Strategy
                     authority.toString()
             );
             headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
+            headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
             final HttpResponse pkeyAuthResponse = HttpRequest.sendPost(
                     authority,

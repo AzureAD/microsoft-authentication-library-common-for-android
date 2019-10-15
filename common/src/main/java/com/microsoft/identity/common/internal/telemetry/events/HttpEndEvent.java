@@ -22,8 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import com.microsoft.identity.common.internal.net.HttpResponse;
-import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
 
 public class HttpEndEvent extends BaseEvent {
     public HttpEndEvent() {
@@ -32,9 +33,8 @@ public class HttpEndEvent extends BaseEvent {
         types(EventType.HTTP_EVENT);
     }
 
-    public HttpEndEvent putResponse(final HttpResponse httpResponse) {
-        put(Key.HTTP_RESPONSE_CODE, String.valueOf(httpResponse.getStatusCode()));
-        //TODO discuss what kind of telemetry need to be refined from response body and header.
+    public HttpEndEvent putStatusCode(final int statusCode) {
+        put(Key.HTTP_RESPONSE_CODE, String.valueOf(statusCode));
         return this;
     }
 }

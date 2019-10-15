@@ -26,9 +26,13 @@ import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.internal.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
 
 public class ApiEndEvent extends BaseEvent {
     public ApiEndEvent() {
@@ -38,11 +42,17 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     public ApiEndEvent putResult(@NonNull final AcquireTokenResult result) {
-        put(Key.IS_SUCCESSFUL, result.getSucceeded().toString());
+        if (result == null) {
+            return this;
+        }
+
+        if (result.getSucceeded() != null) {
+            put(Key.IS_SUCCESSFUL, result.getSucceeded().toString());
+        }
 
         if (null != result.getLocalAuthenticationResult()) {
-            put(Key.USER_ID, result.getLocalAuthenticationResult().getUniqueId());
-            put(Key.TENANT_ID, result.getLocalAuthenticationResult().getTenantId());
+            put(Key.USER_ID, result.getLocalAuthenticationResult().getUniqueId()); //pii
+            put(Key.TENANT_ID, result.getLocalAuthenticationResult().getTenantId()); //pii
             put(Key.SPE_RING, result.getLocalAuthenticationResult().getSpeRing());
             put(Key.RT_AGE, result.getLocalAuthenticationResult().getRefreshTokenAge());
         }
@@ -50,17 +60,22 @@ public class ApiEndEvent extends BaseEvent {
         return this;
     }
 
-    public ApiEndEvent putException(@NonNull final BaseException exception) {
-        if (exception  instanceof UserCancelException) {
-            put(Key.USER_CANCELLED, Value.TRUE);
+    public ApiEndEvent putException(@NonNull final Exception exception) {
+        if (exception == null) {
+            return this;
         }
 
-        put(Key.SERVER_ERROR_CODE, exception.getCliTelemErrorCode());
-        put(Key.SERVER_SUBERROR_CODE, exception.getCliTelemSubErrorCode());
-        put(Key.ERROR_CODE, exception.getErrorCode());
-        put(Key.SPE_RING, exception.getSpeRing());
-        put(Key.ERROR_DESCRIPTION, exception.getMessage()); //OII
-        put(Key.RT_AGE, exception.getRefreshTokenAge());
+        final BaseException adaptedException = ExceptionAdapter.baseExceptionFromException(exception);
+        if (adaptedException instanceof UserCancelException) {
+            put(Key.USER_CANCEL, Value.TRUE);
+        }
+
+        put(Key.SERVER_ERROR_CODE, adaptedException.getCliTelemErrorCode());
+        put(Key.SERVER_SUBERROR_CODE, adaptedException.getCliTelemSubErrorCode());
+        put(Key.ERROR_CODE, adaptedException.getErrorCode());
+        put(Key.SPE_RING, adaptedException.getSpeRing());
+        put(Key.ERROR_DESCRIPTION, adaptedException.getMessage()); //oii
+        put(Key.RT_AGE, adaptedException.getRefreshTokenAge());
         put(Key.IS_SUCCESSFUL, Value.FALSE);
         return this;
     }
@@ -77,7 +92,9 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     public ApiEndEvent isApiCallSuccessful(final Boolean isSuccessful) {
-        put(Key.IS_SUCCESSFUL, isSuccessful.toString());
+        if (isSuccessful != null) {
+            put(Key.IS_SUCCESSFUL, isSuccessful.toString());
+        }
         return this;
     }
 

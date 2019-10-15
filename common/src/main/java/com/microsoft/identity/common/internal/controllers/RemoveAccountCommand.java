@@ -22,36 +22,27 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.os.RemoteException;
 import android.support.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Command class to call controllers to remove the account and return the result to
- * {@see com.microsoft.identity.common.internal.controllers.ApiDispatcher}.
+ * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class RemoveAccountCommand extends BaseAccountCommand<Boolean> {
+public class RemoveAccountCommand extends BaseCommand<Boolean> {
     private static final String TAG = RemoveAccountCommand.class.getSimpleName();
 
     public RemoveAccountCommand(@NonNull final OperationParameters parameters,
-                                @NonNull final BaseController controller,
-                                @NonNull final TaskCompletedCallbackWithError callback) {
-        super(parameters, controller, callback);
-    }
-
-    public RemoveAccountCommand(@NonNull final OperationParameters parameters,
                                 @NonNull final List<BaseController> controllers,
-                                @NonNull final TaskCompletedCallbackWithError callback) {
+                                @NonNull final CommandCallback callback) {
         super(parameters, controllers, callback);
     }
 
     @Override
-    public Boolean execute() throws BaseException, InterruptedException, ExecutionException, RemoteException {
+    public Boolean execute() throws Exception {
         final String methodName = ":execute";
 
         boolean result = false;
@@ -68,5 +59,10 @@ public class RemoveAccountCommand extends BaseAccountCommand<Boolean> {
         }
 
         return result;
+    }
+
+    @Override
+    public int getCommandNameHashCode() {
+        return TAG.hashCode();
     }
 }

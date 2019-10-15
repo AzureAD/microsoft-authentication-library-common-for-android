@@ -117,7 +117,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String formattedURL = url.toLowerCase(Locale.US);
 
         if (isPkeyAuthUrl(formattedURL)) {
-            Logger.verbose(TAG, "WebView detected request for pkeyauth challenge.");
+            Logger.info(TAG, "WebView detected request for pkeyauth challenge.");
             try {
                 final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallenge(url);
@@ -131,16 +131,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
             return true;
         } else if (isRedirectUrl(formattedURL)) {
-            Logger.verbose(TAG, "Navigation starts with the redirect uri.");
+            Logger.info(TAG, "Navigation starts with the redirect uri.");
             return processRedirectUrl(view, url);
         } else if (isWebsiteRequestUrl(formattedURL)) {
-            Logger.verbose(TAG, "It is an external website request");
+            Logger.info(TAG, "It is an external website request");
             return processWebsiteRequest(view, url);
         } else if (isInstallRequestUrl(formattedURL)) {
-            Logger.verbose(TAG, "It is an install request");
+            Logger.info(TAG, "It is an install request");
             return processInstallRequest(view, url);
         } else {
-            Logger.verbose(TAG, "It is an invalid redirect uri.");
+            Logger.info(TAG, "It is an invalid redirect uri.");
             return processInvalidUrl(view, url);
         }
     }
@@ -196,7 +196,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
             view.stopLoading();
         } else {
-            Logger.verbose(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
+            Logger.info(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
             Intent resultIntent = new Intent();
             resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
             //TODO log request info
@@ -222,7 +222,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // TODO: This flow should really check if the Microsoft Intune or the Company Portal apps are installed,
             // which is the correct client app to launch depending on the enrollment, and launch that app, to permanently skip the browser.
             // Also it must handle 3rd party MDMs as appropriate, which will depend on the browser flow determining the authority.
-            Logger.verbose(TAG + methodName, "It is a device CA request on IPPhone. Company Portal is installed.");
+            Logger.info(TAG + methodName, "It is a device CA request on IPPhone. Company Portal is installed.");
             try {
                 Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
                 final Intent intent = new Intent();
@@ -246,7 +246,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private void openLinkInBrowser(final String url) {
         final String methodName = "#openLinkInBrowser";
-        Logger.verbose(TAG + methodName, "Try to open url link in browser");
+        Logger.info(TAG + methodName, "Try to open url link in browser");
         final String link = url
                 .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
@@ -264,7 +264,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String installLink = parameters.get(AuthenticationConstants.Broker.INSTALL_URL_KEY);
         final String userName = parameters.get(AuthenticationConstants.Broker.INSTALL_UPN_KEY);
         if (TextUtils.isEmpty(installLink)) {
-            Logger.verbose(TAG, "Install link is null or empty, Return to caller with BROWSER_CODE_DEVICE_REGISTER");
+            Logger.info(TAG, "Install link is null or empty, " +
+                    "Return to caller with BROWSER_CODE_DEVICE_REGISTER"
+            );
             resultIntent.putExtra(AuthenticationConstants.Broker.INSTALL_UPN_KEY, userName);
             getCompletionCallback().onChallengeResponseReceived(
                     AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER,
@@ -274,8 +276,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return true;
         }
 
-        Logger.verbose(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
-        getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME, resultIntent);
+        Logger.info(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
+        getCompletionCallback().onChallengeResponseReceived(
+                AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME,
+                resultIntent
+        );
 
         // Having thread sleep for 1 second for calling activity to receive the result from
         // prepareForBrokerResumeRequest, thus the receiver for listening broker result return
@@ -283,7 +288,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // play store and broker app download page which brought the calling activity down
         // in the activity stack.
 
-        Logger.verbose(TAG, "Error occurred when having thread sleeping for 1 second.");
         final Handler handler = new Handler();
         final int threadSleepForCallingActivity = 1000;
         handler.postDelayed(new Runnable() {

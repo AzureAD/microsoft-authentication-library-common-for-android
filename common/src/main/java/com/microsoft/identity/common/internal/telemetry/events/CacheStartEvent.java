@@ -21,7 +21,10 @@ package com.microsoft.identity.common.internal.telemetry.events;
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
 
 public class CacheStartEvent extends BaseEvent {
     public CacheStartEvent() {
@@ -41,11 +44,17 @@ public class CacheStartEvent extends BaseEvent {
     }
 
     public CacheStartEvent isMrrt(final boolean isMrrt) {
-        put(Key.IS_FRT, String.valueOf(isMrrt));
+        put(Key.IS_MRRT, String.valueOf(isMrrt));
         return this;
     }
+
     public CacheStartEvent isRt(final boolean isRt) {
-        put(Key.IS_FRT, String.valueOf(isRt));
+        put(Key.IS_RT, String.valueOf(isRt));
+        return this;
+    }
+
+    public CacheStartEvent isAt(final boolean isAt) {
+        put(Key.IS_AT, String.valueOf(isAt));
         return this;
     }
 

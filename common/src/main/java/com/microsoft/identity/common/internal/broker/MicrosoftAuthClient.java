@@ -72,7 +72,7 @@ public class MicrosoftAuthClient {
         mMicrosoftAuthServiceConnection = new MicrosoftAuthServiceConnection(future);
 
         mBound = mContext.bindService(mMicrosoftAuthServiceIntent, mMicrosoftAuthServiceConnection, Context.BIND_AUTO_CREATE);
-        Logger.verbose(TAG + "connect", "The status for MicrosoftAuthService bindService call is: " + Boolean.valueOf(mBound));
+        Logger.info(TAG + "connect", "The status for MicrosoftAuthService bindService call is: " + Boolean.valueOf(mBound));
 
         if (!mBound) {
             throw new ClientException("Service is unavailable or does not support binding.  Microsoft Auth Service.");

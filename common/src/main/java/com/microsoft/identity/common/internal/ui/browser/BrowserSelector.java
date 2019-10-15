@@ -60,7 +60,7 @@ public class BrowserSelector {
         for (Browser browser : allBrowsers) {
             for (BrowserDescriptor browserDescriptor : browserSafeList) {
                 if (browserDescriptor.matches(browser)) {
-                    Logger.verbose(
+                    Logger.info(
                             TAG,
                             "Browser's package name: "
                                     + browser.getPackageName()

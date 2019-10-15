@@ -22,17 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
 import android.content.Intent;
-import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.authorities.Authority;
@@ -66,20 +62,21 @@ import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 public abstract class BaseController {
 
     private static final String TAG = BaseController.class.getSimpleName();
 
     public abstract AcquireTokenResult acquireToken(final AcquireTokenOperationParameters request)
-            throws ExecutionException, InterruptedException, BaseException, IOException;
+            throws Exception;
 
     public abstract void completeAcquireToken(
             final int requestCode,
@@ -87,15 +84,23 @@ public abstract class BaseController {
             final Intent data
     );
 
-    public abstract AcquireTokenResult acquireTokenSilent(
-            final AcquireTokenSilentOperationParameters request) throws IOException, BaseException;
+    public abstract AcquireTokenResult acquireTokenSilent(final AcquireTokenSilentOperationParameters request)
+            throws Exception;
 
     public abstract List<ICacheRecord> getAccounts(final OperationParameters parameters)
-            throws ClientException, InterruptedException, ExecutionException, RemoteException,
-            OperationCanceledException, IOException, AuthenticatorException;
+            throws Exception;
 
     public abstract boolean removeAccount(final OperationParameters parameters)
-            throws BaseException, InterruptedException, ExecutionException, RemoteException;
+            throws Exception;
+
+    public abstract boolean getDeviceMode(final OperationParameters parameters)
+            throws Exception;
+
+    public abstract List<ICacheRecord> getCurrentAccount(final OperationParameters parameters)
+            throws Exception;
+
+    public abstract boolean removeCurrentAccount(final OperationParameters parameters)
+            throws Exception;
 
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
@@ -193,7 +198,7 @@ public abstract class BaseController {
                                     @NonNull final ICacheRecord cacheRecord)
             throws IOException, ClientException {
         final String methodName = ":renewAccessToken";
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Renewing access token..."
         );
@@ -207,7 +212,7 @@ public abstract class BaseController {
         logResult(TAG + methodName, tokenResult);
 
         if (tokenResult.getSuccess()) {
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "Token request was successful"
             );
@@ -231,6 +236,10 @@ public abstract class BaseController {
                 final CliTelemInfo cliTelemInfo = tokenResult.getCliTelemInfo();
                 authenticationResult.setSpeRing(cliTelemInfo.getSpeRing());
                 authenticationResult.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
+                Telemetry.emit(new CacheEndEvent().putSpeInfo(tokenResult.getCliTelemInfo().getSpeRing()));
+            } else {
+                // we can't put SpeInfo as the CliTelemInfo is null
+                Telemetry.emit(new CacheEndEvent());
             }
 
             // Set the AuthenticationResult on the final result object
@@ -249,7 +258,7 @@ public abstract class BaseController {
         final String TAG = tag + ":" + result.getClass().getSimpleName();
 
         if (result.getSuccess()) {
-            Logger.verbose(
+            Logger.info(
                     TAG,
                     "Success Result"
             );
@@ -284,7 +293,7 @@ public abstract class BaseController {
             AuthorizationResult authResult = (AuthorizationResult) result;
 
             if (authResult.getAuthorizationStatus() != null) {
-                Logger.verbose(
+                Logger.info(
                         TAG,
                         "Authorization Status: " + authResult.getAuthorizationStatus().toString()
                 );
@@ -302,16 +311,16 @@ public abstract class BaseController {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
         if (Logger.getAllowPii()) {
-            Logger.verbosePII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+            Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
         } else {
-            Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
+            Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
         }
     }
 
     protected static void logExposedFieldsOfObject(@NonNull final String tag,
                                                    @NonNull final Object object) {
         final String TAG = tag + ":" + object.getClass().getSimpleName();
-        Logger.verbose(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
+        Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
     }
 
     protected TokenResult performSilentTokenRequest(
@@ -320,7 +329,7 @@ public abstract class BaseController {
             throws ClientException, IOException {
         final String methodName = ":performSilentTokenRequest";
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Requesting tokens..."
         );
@@ -351,7 +360,7 @@ public abstract class BaseController {
         }
 
         if (!StringExtensions.isNullOrBlank(refreshTokenRequest.getScope())) {
-            Logger.verbosePII(
+            Logger.infoPII(
                     TAG + methodName,
                     "Scopes: [" + refreshTokenRequest.getScope() + "]"
             );
@@ -366,7 +375,7 @@ public abstract class BaseController {
                                             @NonNull final OAuth2TokenCache tokenCache) throws ClientException {
         final String methodName = ":saveTokens";
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Saving tokens..."
         );
@@ -461,7 +470,7 @@ public abstract class BaseController {
     }
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
-        final String tenantId = SchemaUtil.getTenantId(
+                final String tenantId = SchemaUtil.getTenantId(
                 microsoftTokenResponse.getClientInfo(),
                 microsoftTokenResponse.getIdToken()
         );

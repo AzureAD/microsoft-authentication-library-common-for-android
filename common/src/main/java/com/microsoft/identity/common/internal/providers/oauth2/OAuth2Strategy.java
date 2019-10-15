@@ -28,6 +28,7 @@ import android.text.TextUtils;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpRequest;
@@ -135,14 +136,15 @@ public abstract class OAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put(CLIENT_REQUEST_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
 
-        if(request instanceof MicrosoftTokenRequest &&
-                !TextUtils.isEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())){
+        if (request instanceof MicrosoftTokenRequest &&
+                !TextUtils.isEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())) {
             headers.put(
                     Device.PlatformIdParameters.BROKER_VERSION,
                     ((MicrosoftTokenRequest) request).getBrokerVersion()
             );
         }
         headers.putAll(Device.getPlatformIdParameters());
+        headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
         return HttpRequest.sendPost(
                 new URL(mTokenEndpoint),

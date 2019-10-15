@@ -22,43 +22,35 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
-import android.os.RemoteException;
 import android.support.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Command class to call controllers to load accounts and return the account list to
- * {@see com.microsoft.identity.common.internal.controllers.ApiDispatcher}.
+ * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class LoadAccountCommand extends BaseAccountCommand<List<ICacheRecord>> {
+public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
     private static final String TAG = LoadAccountCommand.class.getSimpleName();
 
     public LoadAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final BaseController controller,
-                              @NonNull final TaskCompletedCallbackWithError callback) {
+                              @NonNull final CommandCallback callback) {
         super(parameters, controller, callback);
     }
 
     public LoadAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final List<BaseController> controllers,
-                              @NonNull final TaskCompletedCallbackWithError callback) {
+                              @NonNull final CommandCallback callback) {
         super(parameters, controllers, callback);
     }
 
     @Override
-    public List<ICacheRecord> execute()
-            throws ClientException, InterruptedException, ExecutionException, RemoteException,
-            OperationCanceledException, IOException, AuthenticatorException {
+    public List<ICacheRecord> execute() throws Exception {
         final String methodName = ":execute";
 
         List<ICacheRecord> result = new ArrayList<>();
@@ -75,5 +67,10 @@ public class LoadAccountCommand extends BaseAccountCommand<List<ICacheRecord>> {
         }
 
         return result;
+    }
+
+    @Override
+    public int getCommandNameHashCode() {
+        return TAG.hashCode();
     }
 }

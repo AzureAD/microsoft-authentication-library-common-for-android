@@ -38,7 +38,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     @Override
     public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final AcquireTokenOperationParameters parameters) {
 
-        Logger.verbose(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
+        Logger.info(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
 
         final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
@@ -52,7 +52,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                                 : null
                 ).prompt(parameters.getOpenIdConnectPromptParameter().name())
                 .claims(parameters.getClaimsRequestJson())
-                .forceRefresh(!TextUtils.isEmpty(parameters.getClaimsRequestJson()))
+                .forceRefresh(parameters.getForceRefresh())
                 .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
@@ -66,7 +66,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     @Override
     public BrokerRequest brokerRequestFromSilentOperationParameters(@NonNull final AcquireTokenSilentOperationParameters parameters) {
 
-        Logger.verbose(TAG, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
+        Logger.info(TAG, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
 
         final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
@@ -77,7 +77,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .localAccountId(parameters.getAccount().getLocalAccountId())
                 .username(parameters.getAccount().getUsername())
                 .claims(parameters.getClaimsRequestJson())
-                .forceRefresh(parameters.getForceRefresh() || !TextUtils.isEmpty(parameters.getClaimsRequestJson()))
+                .forceRefresh(parameters.getForceRefresh())
                 .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
@@ -92,7 +92,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public BrokerAcquireTokenOperationParameters brokerInteractiveParametersFromActivity(
             @NonNull final Activity callingActivity) {
 
-        Logger.verbose(TAG, "Constructing BrokerAcquireTokenOperationParameters from calling activity");
+        Logger.info(TAG, "Constructing BrokerAcquireTokenOperationParameters from calling activity");
 
         final BrokerAcquireTokenOperationParameters parameters =
                 new BrokerAcquireTokenOperationParameters();
@@ -173,7 +173,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             @NonNull final Context context,
             @NonNull final Account account) {
 
-        Logger.verbose(TAG, "Constructing BrokerAcquireTokenSilentOperationParameters from result bundle");
+        Logger.info(TAG, "Constructing BrokerAcquireTokenSilentOperationParameters from result bundle");
 
         final BrokerRequest brokerRequest = new Gson().fromJson(
                 bundle.getString(AuthenticationConstants.Broker.BROKER_REQUEST_V2),

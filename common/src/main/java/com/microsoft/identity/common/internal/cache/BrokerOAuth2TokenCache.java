@@ -235,7 +235,7 @@ public class BrokerOAuth2TokenCache
     }
 
     @SuppressWarnings("unchecked")
-    public List<ICacheRecord> saveAndLoadAggregatedAccountData(
+    public synchronized List<ICacheRecord> saveAndLoadAggregatedAccountData(
             @NonNull final AccountRecord accountRecord,
             @NonNull final IdTokenRecord idTokenRecord,
             @NonNull final AccessTokenRecord accessTokenRecord,
