@@ -214,6 +214,7 @@ public class OperationParameters {
     }
 
 
+
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
@@ -235,10 +236,7 @@ public class OperationParameters {
             return false;
         if (mAuthority != null ? !mAuthority.equals(that.mAuthority) : that.mAuthority != null)
             return false;
-        if (mClaimsRequestJson != null ? !mClaimsRequestJson.equals(that.mClaimsRequestJson) : that.mClaimsRequestJson != null)
-            return false;
-        if (mSdkType != that.mSdkType) return false;
-        return mSdkVersion != null ? mSdkVersion.equals(that.mSdkVersion) : that.mSdkVersion == null;
+        return mClaimsRequestJson != null ? mClaimsRequestJson.equals(that.mClaimsRequestJson) : that.mClaimsRequestJson == null;
     }
     //CHECKSTYLE:ON
 
@@ -255,12 +253,11 @@ public class OperationParameters {
         result = 31 * result + (getRedirectUri() != null ? getRedirectUri().hashCode() : 0);
         result = 31 * result + (mAuthority != null ? mAuthority.hashCode() : 0);
         result = 31 * result + (mClaimsRequestJson != null ? mClaimsRequestJson.hashCode() : 0);
-        result = 31 * result + (mSdkType != null ? mSdkType.hashCode() : 0);
-        result = 31 * result + (mSdkVersion != null ? mSdkVersion.hashCode() : 0);
         result = 31 * result + (mForceRefresh ? 1 : 0);
         return result;
     }
     //CHECKSTYLE:ON
+
 
     /**
      * Since this is about validating MSAL Parameters and not an authorization request or token request.  I've placed this here.

@@ -48,7 +48,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.CacheStartEvent;
 
@@ -356,9 +355,11 @@ public class MsalOAuth2TokenCache
             @NonNull final GenericOAuth2Strategy oAuth2Strategy,
             @NonNull final GenericAuthorizationRequest request,
             @NonNull final GenericTokenResponse response) throws ClientException {
-        return mergeCacheRecordWithOtherTenantCacheRecords(
-                save(oAuth2Strategy, request, response)
-        );
+        synchronized (this) {
+            return mergeCacheRecordWithOtherTenantCacheRecords(
+                    save(oAuth2Strategy, request, response)
+            );
+        }
     }
 
     /**
@@ -559,28 +560,30 @@ public class MsalOAuth2TokenCache
     public List<ICacheRecord> loadWithAggregatedAccountData(@NonNull final String clientId,
                                                             @Nullable final String target,
                                                             @NonNull final AccountRecord account) {
-        final List<ICacheRecord> result = new ArrayList<>();
+        synchronized (this) {
+            final List<ICacheRecord> result = new ArrayList<>();
 
-        final ICacheRecord primaryCacheRecord = load(clientId, target, account);
+            final ICacheRecord primaryCacheRecord = load(clientId, target, account);
 
-        // Set this result as the 0th entry in the result...
-        result.add(primaryCacheRecord);
+            // Set this result as the 0th entry in the result...
+            result.add(primaryCacheRecord);
 
-        final List<ICacheRecord> corollaryCacheRecords = getAccountsWithAggregatedAccountData(
-                account.getEnvironment(),
-                clientId,
-                account.getHomeAccountId()
-        );
+            final List<ICacheRecord> corollaryCacheRecords = getAccountsWithAggregatedAccountData(
+                    account.getEnvironment(),
+                    clientId,
+                    account.getHomeAccountId()
+            );
 
-        // corollaryCacheRecords will contain the original element that we've already added to
-        // our result so skip that element, but add the rest...
-        for (final ICacheRecord cacheRecord : corollaryCacheRecords) {
-            if (!account.equals(cacheRecord.getAccount())) {
-                result.add(cacheRecord);
+            // corollaryCacheRecords will contain the original element that we've already added to
+            // our result so skip that element, but add the rest...
+            for (final ICacheRecord cacheRecord : corollaryCacheRecords) {
+                if (!account.equals(cacheRecord.getAccount())) {
+                    result.add(cacheRecord);
+                }
             }
-        }
 
-        return result;
+            return result;
+        }
     }
 
     @Override
