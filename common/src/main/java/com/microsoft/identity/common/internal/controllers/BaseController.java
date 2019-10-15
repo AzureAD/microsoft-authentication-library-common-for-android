@@ -22,17 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
 import android.content.Intent;
-import android.os.RemoteException;
+
 import androidx.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.authorities.Authority;
@@ -74,14 +71,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 public abstract class BaseController {
 
     private static final String TAG = BaseController.class.getSimpleName();
 
     public abstract AcquireTokenResult acquireToken(final AcquireTokenOperationParameters request)
-            throws ExecutionException, InterruptedException, BaseException, IOException;
+            throws Exception;
 
     public abstract void completeAcquireToken(
             final int requestCode,
@@ -89,15 +85,23 @@ public abstract class BaseController {
             final Intent data
     );
 
-    public abstract AcquireTokenResult acquireTokenSilent(
-            final AcquireTokenSilentOperationParameters request) throws IOException, BaseException;
+    public abstract AcquireTokenResult acquireTokenSilent(final AcquireTokenSilentOperationParameters request)
+            throws Exception;
 
     public abstract List<ICacheRecord> getAccounts(final OperationParameters parameters)
-            throws ClientException, InterruptedException, ExecutionException, RemoteException,
-            OperationCanceledException, IOException, AuthenticatorException;
+            throws Exception;
 
     public abstract boolean removeAccount(final OperationParameters parameters)
-            throws BaseException, InterruptedException, ExecutionException, RemoteException;
+            throws Exception;
+
+    public abstract boolean getDeviceMode(final OperationParameters parameters)
+            throws Exception;
+
+    public abstract List<ICacheRecord> getCurrentAccount(final OperationParameters parameters)
+            throws Exception;
+
+    public abstract boolean removeCurrentAccount(final OperationParameters parameters)
+            throws Exception;
 
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder

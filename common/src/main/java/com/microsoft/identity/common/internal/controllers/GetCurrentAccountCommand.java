@@ -34,16 +34,16 @@ import java.util.List;
  * Command class to call controllers to load accounts and return the account list to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
-    private static final String TAG = LoadAccountCommand.class.getSimpleName();
+public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
+    private static final String TAG = GetCurrentAccountCommand.class.getSimpleName();
 
-    public LoadAccountCommand(@NonNull final OperationParameters parameters,
+    public GetCurrentAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final BaseController controller,
                               @NonNull final CommandCallback callback) {
         super(parameters, controller, callback);
     }
 
-    public LoadAccountCommand(@NonNull final OperationParameters parameters,
+    public GetCurrentAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final List<BaseController> controllers,
                               @NonNull final CommandCallback callback) {
         super(parameters, controllers, callback);
@@ -63,7 +63,7 @@ public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
                             + controller.getClass().getSimpleName()
             );
 
-            result.addAll(controller.getAccounts(getParameters()));
+            result.addAll(controller.getCurrentAccount(getParameters()));
         }
 
         return result;

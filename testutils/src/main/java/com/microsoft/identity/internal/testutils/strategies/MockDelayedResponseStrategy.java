@@ -36,14 +36,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrategy {
+public class MockDelayedResponseStrategy extends ResourceOwnerPasswordCredentialsTestStrategy {
+
+    private final static long RESPONSE_DELAY = 1000;
 
     /**
      * Constructor of MockTestStrategy.
      *
      * @param config Microsoft Sts OAuth2 configuration
      */
-    public MockTestStrategy(MicrosoftStsOAuth2Configuration config) {
+    public MockDelayedResponseStrategy(MicrosoftStsOAuth2Configuration config) {
         super(config);
     }
 
@@ -62,13 +64,11 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
     protected HttpResponse performTokenRequest(final MicrosoftStsTokenRequest tokenRequest) {
         final TokenResult tokenResult = getTokenResult();
         final TokenResponse tokenResponse = tokenResult.getTokenResponse();
-        /*
         try {
-            Thread.sleep(1000);
+            Thread.sleep(RESPONSE_DELAY);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        */
         final HttpResponse httpResponse = makeHttpResponseFromResponseObject(tokenResponse);
         return httpResponse;
     }

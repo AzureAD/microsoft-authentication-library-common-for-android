@@ -22,16 +22,37 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.content.Intent;
+import java.util.Calendar;
+import java.util.Date;
 
-import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+public class CommandResultCacheItem {
 
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
+    private final static int VALIDITY_DURATION = 30;
 
-public interface TokenOperation {
-    AcquireTokenResult execute() throws Exception;
+    private CommandResult mValue;
+    private Date mExpiresOn;
 
-    void notify(int requestCode, int resultCode, final Intent data);
+    public CommandResultCacheItem(CommandResult value){
+        mValue = value;
+        mExpiresOn = getExpiresOn();
+    }
+
+    private Date getExpiresOn(){
+        final Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.SECOND, VALIDITY_DURATION);
+        return calendar.getTime();
+    }
+
+    public boolean isExpired(){
+        final Calendar calendar = Calendar.getInstance();
+        final Date now = calendar.getTime();
+
+        return now.after(mExpiresOn);
+    }
+
+    public CommandResult getValue(){
+        return mValue;
+    }
+
+
 }

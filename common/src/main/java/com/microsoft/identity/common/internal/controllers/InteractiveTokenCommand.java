@@ -34,7 +34,6 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 public class InteractiveTokenCommand extends TokenCommand {
-
     private static final String TAG = InteractiveTokenCommand.class.getSimpleName();
 
     public InteractiveTokenCommand(AcquireTokenOperationParameters parameters,
@@ -45,7 +44,7 @@ public class InteractiveTokenCommand extends TokenCommand {
     }
 
     @Override
-    public AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, BaseException {
+    public AcquireTokenResult execute() throws Exception {
         final String methodName = ":execute";
         if (getParameters() instanceof AcquireTokenOperationParameters) {
             Logger.info(
@@ -65,5 +64,10 @@ public class InteractiveTokenCommand extends TokenCommand {
     @Override
     public void notify(int requestCode, int resultCode, final Intent data) {
         getDefaultController().completeAcquireToken(requestCode, resultCode, data);
+    }
+
+    @Override
+    public int getCommandNameHashCode() {
+        return TAG.hashCode();
     }
 }

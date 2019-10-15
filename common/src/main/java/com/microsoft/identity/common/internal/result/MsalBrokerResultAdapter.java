@@ -397,15 +397,21 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * @param bundle Bundle
      * @return List<ICacheRecord> of the current account. This could be null.
      */
-    public static List<ICacheRecord> accountsFromBundle(@NonNull final Bundle bundle) throws ClientException {
+    public static List<ICacheRecord> accountsFromBundle(@NonNull final Bundle bundle) throws BaseException {
         final String accountJson = bundle.getString(BROKER_ACCOUNTS);
 
         if (accountJson == null) {
-            throw new ClientException(ErrorStrings.NO_ACCOUNT_FOUND,
-                    "No account found. The bundle does not contain the BROKER_ACCOUNTS value.");
+            throw new MsalBrokerResultAdapter().baseExceptionFromBundle(bundle);
         }
 
         return getICacheRecordListFromJsonString(accountJson);
+    }
+
+    public static void verifyRemoveAccountResultFromBundle(@NonNull final Bundle bundle) throws BaseException {
+        if (bundle != null) {
+            Logger.warn(TAG, "Failed to sign out from shared device.");
+            throw new MsalBrokerResultAdapter().baseExceptionFromBundle(bundle);
+        }
     }
 
     public static List<ICacheRecord> getICacheRecordListFromJsonString(String accountJson) {
