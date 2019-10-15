@@ -93,6 +93,10 @@ public abstract class BaseCommand<T> implements Command<T> {
 
     public abstract int getCommandNameHashCode();
 
+    public boolean isEligibleForCaching(){
+        return false;
+    }
+
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
