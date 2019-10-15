@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.rules;
 
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.util.StringUtil;

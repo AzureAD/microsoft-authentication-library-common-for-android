@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.request.OperationParameters;
 
