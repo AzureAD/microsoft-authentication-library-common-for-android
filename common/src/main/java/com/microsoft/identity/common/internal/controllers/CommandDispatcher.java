@@ -207,7 +207,7 @@ public class CommandDispatcher {
      * @param commandResult
      */
     private static void cacheCommandResult(BaseCommand command, CommandResult commandResult){
-        if(eligibleToCache(commandResult)){
+        if(command.isEligibleForCaching() && eligibleToCache(commandResult)){
             sCommandResultCache.put(command, commandResult);
         }
     }
@@ -237,9 +237,10 @@ public class CommandDispatcher {
         if(exception instanceof IntuneAppProtectionPolicyRequiredException){
             return false;
         }
-
         return true;
     }
+
+
 
     /**
      * Get Commandresult from acquiretokenresult
