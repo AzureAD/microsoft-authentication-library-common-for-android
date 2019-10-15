@@ -31,6 +31,8 @@ import com.microsoft.identity.common.internal.request.OperationParameters;
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
 public class GetDeviceModeCommand extends BaseCommand<Boolean> {
+    private static final String TAG = GetDeviceModeCommand.class.getSimpleName();
+
     public GetDeviceModeCommand(@NonNull final OperationParameters parameters,
                                 @NonNull final BaseController controller,
                                 @NonNull final CommandCallback callback) {
@@ -40,5 +42,10 @@ public class GetDeviceModeCommand extends BaseCommand<Boolean> {
     @Override
     public Boolean execute() throws Exception {
         return getDefaultController().getDeviceMode(getParameters());
+    }
+
+    @Override
+    public int getCommandNameHashCode() {
+        return TAG.hashCode();
     }
 }
