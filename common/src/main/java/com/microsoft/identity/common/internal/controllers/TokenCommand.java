@@ -103,6 +103,11 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
     }
 
     @Override
+    public boolean isEligibleForCaching(){
+        return true;
+    }
+
+    @Override
     public int getCommandNameHashCode() {
         return TAG.hashCode();
     }
