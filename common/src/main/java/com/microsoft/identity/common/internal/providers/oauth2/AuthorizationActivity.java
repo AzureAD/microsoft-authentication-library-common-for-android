@@ -2,13 +2,11 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -180,31 +178,10 @@ public final class AuthorizationActivity extends Activity {
         }
     }
 
-    public static String getProcessName(@NonNull final Context context) {
-        final ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningAppProcessInfo processInfo : manager.getRunningAppProcesses()) {
-            if (processInfo.pid == android.os.Process.myPid()) {
-                return processInfo.processName;
-            }
-        }
-
-        return null;
-    }
-
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         final String methodName = "#onCreate";
         super.onCreate(savedInstanceState);
-
-        // Must be invoked before WebvView in common_activity_authentication is inflated.
-        // See https://developer.android.com/about/versions/pie/android-9.0-changes-28#web-data-dirs for more info.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            try {
-                WebView.setDataDirectorySuffix(getProcessName(getApplicationContext()));
-            } catch (final IllegalStateException e) {
-                // If webView is already initialized, this will be thrown.
-            }
-        }
 
         setContentView(R.layout.common_activity_authentication);
 
