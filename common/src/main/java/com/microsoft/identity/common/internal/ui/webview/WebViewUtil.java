@@ -27,22 +27,69 @@ import android.content.Context;
 import android.os.Build;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
+import android.webkit.WebView;
+
+import androidx.annotation.NonNull;
+
+import static com.microsoft.identity.common.internal.ui.webview.ProcessUtil.AuthServiceProcess;
 
 public class WebViewUtil {
     /**
-     * Clear cookies from embedded webview.
+     * Must be invoked before WebView or CookieManager is invoked in the process.
+     * See https://developer.android.com/about/versions/pie/android-9.0-changes-28#web-data-dirs for more info.
      * */
-    public static void clearCookiesFromWebView(final Context context){
-        final CookieManager cookieManager = CookieManager.getInstance();
+    public static void setDataDirectorySuffix(@NonNull final Context context){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            try {
+                if (ProcessUtil.isRunningOnAuthService(context)) {
+                    WebView.setDataDirectorySuffix(AuthServiceProcess);
+                }
+            } catch (final IllegalStateException e) {
+                // If webView is already initialized, this will be thrown.
+            }
+        }
+    }
+
+    /**
+     * Sets whether WebView should send and accept cookies.
+     * */
+    public static void setAcceptCookie(final boolean acceptCookie, final Context context) {
+        final CookieManager cookieManager = getCookieManager(context);
+        cookieManager.setAcceptCookie(acceptCookie);
+    }
+
+    /**
+     * Clear all cookies from embedded webview.
+     * */
+    public static void removeCookiesFromWebView(final Context context){
+        final CookieManager cookieManager = getCookieManager(context);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
             cookieManager.removeAllCookies(null);
             cookieManager.flush();
         } else {
             final CookieSyncManager syncManager = CookieSyncManager.createInstance(context);
-            syncManager.startSync();
             cookieManager.removeAllCookie();
-            syncManager.stopSync();
             syncManager.sync();
         }
+    }
+
+    /**
+     * Clear session cookies from embedded webview.
+     * */
+    public static void removeSessionCookiesFromWebView(final Context context){
+        final CookieManager cookieManager = getCookieManager(context);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+            cookieManager.removeAllCookies(null);
+            cookieManager.flush();
+        } else {
+            final CookieSyncManager syncManager = CookieSyncManager.createInstance(context);
+            cookieManager.removeSessionCookie();
+            syncManager.sync();
+        }
+    }
+
+    private static CookieManager getCookieManager(final Context context) {
+        setDataDirectorySuffix(context);
+        return CookieManager.getInstance();
     }
 }
