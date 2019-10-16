@@ -23,6 +23,7 @@
 
 package com.microsoft.identity.common.internal.ui.webview;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.webkit.CookieManager;
@@ -38,6 +39,7 @@ public class WebViewUtil {
      * Must be invoked before WebView or CookieManager is invoked in the process.
      * See https://developer.android.com/about/versions/pie/android-9.0-changes-28#web-data-dirs for more info.
      * */
+    @SuppressLint("NewApi")
     public static void setDataDirectorySuffix(@NonNull final Context context){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             try {
