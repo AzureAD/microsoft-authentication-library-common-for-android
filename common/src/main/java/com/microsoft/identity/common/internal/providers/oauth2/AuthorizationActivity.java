@@ -183,6 +183,8 @@ public final class AuthorizationActivity extends Activity {
     protected void onCreate(final Bundle savedInstanceState) {
         final String methodName = "#onCreate";
         super.onCreate(savedInstanceState);
+
+        WebViewUtil.setDataDirectorySuffix(getApplicationContext());
         setContentView(R.layout.common_activity_authentication);
 
         // Register Broadcast receiver to cancel the auth request
@@ -395,9 +397,6 @@ public final class AuthorizationActivity extends Activity {
     private void setUpWebView(final AzureActiveDirectoryWebViewClient webViewClient) {
         // Create the Web View to show the page
         mWebView = findViewById(R.id.common_auth_webview);
-
-        WebViewUtil.setDataDirectorySuffix(getApplicationContext());
-
         WebSettings userAgentSetting = mWebView.getSettings();
         final String userAgent = userAgentSetting.getUserAgentString();
         mWebView.getSettings().setUserAgentString(
