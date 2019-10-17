@@ -32,22 +32,28 @@ import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.internal.logging.Logger;
+
 import static com.microsoft.identity.common.internal.ui.webview.ProcessUtil.AuthServiceProcess;
 
 public class WebViewUtil {
+    private static final String TAG = WebViewUtil.class.getSimpleName();
+
     /**
      * Must be invoked before WebView or CookieManager is invoked in the process.
      * See https://developer.android.com/about/versions/pie/android-9.0-changes-28#web-data-dirs for more info.
      * */
     @SuppressLint("NewApi")
     public static void setDataDirectorySuffix(@NonNull final Context context){
+        final String methodName = ":setDataDirectorySuffix";
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             try {
                 if (ProcessUtil.isRunningOnAuthService(context)) {
                     WebView.setDataDirectorySuffix(AuthServiceProcess);
                 }
             } catch (final IllegalStateException e) {
-                // If webView is already initialized, this will be thrown.
+                Logger.warn(TAG + methodName, "WebView is already initialized. IllegalStateException is expected when setDataDirectorySuffix() is invoked");
             }
         }
     }
@@ -62,6 +68,7 @@ public class WebViewUtil {
 
     /**
      * Clear all cookies from embedded webview.
+     * This is a blocking call and so should not be called on UI thread.
      * */
     public static void removeCookiesFromWebView(final Context context){
         final CookieManager cookieManager = getCookieManager(context);
@@ -77,6 +84,7 @@ public class WebViewUtil {
 
     /**
      * Clear session cookies from embedded webview.
+     * This is a blocking call and so should not be called on UI thread.
      * */
     public static void removeSessionCookiesFromWebView(final Context context){
         final CookieManager cookieManager = getCookieManager(context);
