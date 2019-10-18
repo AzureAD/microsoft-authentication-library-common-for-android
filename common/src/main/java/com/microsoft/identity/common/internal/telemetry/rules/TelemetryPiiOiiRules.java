@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.rules;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -29,14 +31,15 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Device;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
 
 final public class TelemetryPiiOiiRules {
     private static TelemetryPiiOiiRules sInstance;
     private Set<String> piiPropertiesSet;
     private Set<String> oiiPropertiesSet;
 
-    final private String piiArray[] = {
+    final private String[] piiArray = {
             Key.USER_ID,
             Device.ID,
             Key.LOGIN_HINT,
@@ -45,9 +48,9 @@ final public class TelemetryPiiOiiRules {
             Key.REDIRECT_URI,
             Key.SCOPE,
             Key.CLAIM_REQUEST
-    } ;
+    };
 
-    final private String oiiArray[] = {
+    final private String[] oiiArray = {
             Key.TENANT_ID,
             Key.CLIENT_ID,
             Key.REDIRECT_URI,
@@ -61,6 +64,7 @@ final public class TelemetryPiiOiiRules {
         oiiPropertiesSet = new HashSet<>(Arrays.asList(oiiArray));
     }
 
+    @NonNull
     public synchronized static TelemetryPiiOiiRules getInstance() {
         if (sInstance == null) {
             sInstance = new TelemetryPiiOiiRules();
@@ -73,7 +77,7 @@ final public class TelemetryPiiOiiRules {
      * @param propertyName String of propertyName {@link TelemetryEventStrings}
      * @return true if the property belongs to Personally identifiable information. False otherwise.
      */
-    public boolean isPii (final String propertyName) {
+    public boolean isPii(final String propertyName) {
         if (StringUtil.isEmpty(propertyName)) {
             return false;
         }
@@ -85,7 +89,7 @@ final public class TelemetryPiiOiiRules {
      * @param propertyName String of propertyName {@link TelemetryEventStrings}
      * @return true if the property belongs to Objective identifiable information. False otherwise.
      */
-    public boolean isOii (final String propertyName) {
+    public boolean isOii(final String propertyName) {
         if (StringUtil.isEmpty(propertyName)) {
             return false;
         }
@@ -97,7 +101,7 @@ final public class TelemetryPiiOiiRules {
      * @param propertyName String of propertyName {@link TelemetryEventStrings}
      * @return true if the property belongs to PII/OII. False otherwise.
      */
-    public boolean isPiiOrOii (final String propertyName) {
+    public boolean isPiiOrOii(final String propertyName) {
         return isPii(propertyName) || isOii(propertyName);
     }
 }

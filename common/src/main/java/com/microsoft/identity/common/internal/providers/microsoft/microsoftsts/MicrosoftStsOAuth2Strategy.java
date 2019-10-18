@@ -33,6 +33,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpRequest;
@@ -406,6 +407,7 @@ public class MicrosoftStsOAuth2Strategy
                     authority.toString()
             );
             headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
+            headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
             final HttpResponse pkeyAuthResponse = HttpRequest.sendPost(
                     authority,

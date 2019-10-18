@@ -29,7 +29,10 @@ import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
 
 public class ApiEndEvent extends BaseEvent {
     public ApiEndEvent() {
@@ -39,7 +42,13 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     public ApiEndEvent putResult(@NonNull final AcquireTokenResult result) {
-        put(Key.IS_SUCCESSFUL, result.getSucceeded().toString());
+        if (result == null) {
+            return this;
+        }
+
+        if (result.getSucceeded() != null) {
+            put(Key.IS_SUCCESSFUL, result.getSucceeded().toString());
+        }
 
         if (null != result.getLocalAuthenticationResult()) {
             put(Key.USER_ID, result.getLocalAuthenticationResult().getUniqueId()); //pii
@@ -52,8 +61,12 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     public ApiEndEvent putException(@NonNull final Exception exception) {
+        if (exception == null) {
+            return this;
+        }
+
         final BaseException adaptedException = ExceptionAdapter.baseExceptionFromException(exception);
-        if (adaptedException  instanceof UserCancelException) {
+        if (adaptedException instanceof UserCancelException) {
             put(Key.USER_CANCEL, Value.TRUE);
         }
 
@@ -79,7 +92,9 @@ public class ApiEndEvent extends BaseEvent {
     }
 
     public ApiEndEvent isApiCallSuccessful(final Boolean isSuccessful) {
-        put(Key.IS_SUCCESSFUL, isSuccessful.toString());
+        if (isSuccessful != null) {
+            put(Key.IS_SUCCESSFUL, isSuccessful.toString());
+        }
         return this;
     }
 

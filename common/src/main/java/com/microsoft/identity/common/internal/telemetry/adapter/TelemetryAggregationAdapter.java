@@ -29,11 +29,10 @@ import com.microsoft.identity.common.internal.telemetry.rules.TelemetryAggregati
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
 
 public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
     private ITelemetryAggregatedObserver mObserver;
@@ -52,9 +51,7 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
         final Map<String, String> aggregatedData = new HashMap<>();
         final Map<String, String> responseTimeMap = new HashMap<>();
 
-        final Iterator<Map<String, String>> iterator = rawData.iterator();
-        while (iterator.hasNext()) {
-            Map<String, String> event = iterator.next();
+        for (Map<String, String> event : rawData) {
             final String eventName = event.get(Key.EVENT_NAME);
             final String eventType = event.get(Key.EVENT_TYPE);
 
@@ -65,16 +62,17 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
 
             //Count the events. Only check the "*_start_event" when counting.
             if (eventName.contains(START)) {
-                final String eventTypeCount = eventType + "_count";
+                final String eventTypeCountKey = eventType + "_count";
+                final String currentEventTypeCount = aggregatedData.get(eventTypeCountKey);
+                final int currentEventTypeCountValue = Integer.parseInt(currentEventTypeCount == null ? "0" : currentEventTypeCount);
+                final int newEventTypeCountValue = currentEventTypeCountValue + 1;
                 aggregatedData.put(
-                        eventTypeCount,
-                        null == aggregatedData.get(eventTypeCount) ?
-                                "1"
-                                : String.valueOf(Integer.parseInt(aggregatedData.get(eventTypeCount)) + 1)
+                        eventTypeCountKey,
+                        String.valueOf(newEventTypeCountValue)
                 );
             }
 
-            if(!StringUtil.isEmpty(event.get(Key.IS_SUCCESSFUL))) {
+            if (!StringUtil.isEmpty(event.get(Key.IS_SUCCESSFUL))) {
                 aggregatedData.put(
                         eventType + Key.IS_SUCCESSFUL,
                         event.get(Key.IS_SUCCESSFUL)
@@ -109,23 +107,19 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
         final String eventName = event.get(Key.EVENT_NAME);
         final String eventType = event.get(Key.EVENT_TYPE);
 
-        if (eventName.contains(START)) {
+        if (eventName != null && eventName.contains(START)) {
             final String eventStartTime = eventType + "_start_time";
             responseTimeMap.put(
                     eventStartTime,
-                    null == event.get(Key.OCCUR_TIME) ?
-                            null
-                            : event.get(Key.OCCUR_TIME)
+                    event.get(Key.OCCUR_TIME)
             );
         }
 
-        if (eventName.contains(END)) {
+        if (eventName != null && eventName.contains(END)) {
             final String eventEndTime = eventType + "_end_time";
             responseTimeMap.put(
                     eventEndTime,
-                    null == event.get(Key.OCCUR_TIME) ?
-                            null
-                            : event.get(Key.OCCUR_TIME)
+                    event.get(Key.OCCUR_TIME)
             );
         }
     }
@@ -137,19 +131,19 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
      * The response time of each event type is added into the result aggregated data map.
      *
      * @param responseTimeMap has the start time and end time of each event type.
-     * @param aggregatedData the result map of the aggregation adapter.
+     * @param aggregatedData  the result map of the aggregation adapter.
      */
     private void calculateEventResponseTime(@NonNull final Map<String, String> responseTimeMap,
                                             @NonNull final Map<String, String> aggregatedData) {
-        for (Map.Entry<String,String> entry : responseTimeMap.entrySet()) {
+        for (Map.Entry<String, String> entry : responseTimeMap.entrySet()) {
             final String entryKey = entry.getKey();
             if (entryKey.contains(START)) {
                 final String eventEndTimeKey = entryKey.replace(START, END);
-                if (responseTimeMap.containsKey(eventEndTimeKey)
-                        && null != responseTimeMap.get(eventEndTimeKey)) {
+                final String eventEndTimeValue = responseTimeMap.get(eventEndTimeKey);
+                if (eventEndTimeValue != null) {
                     final String eventResponseTimeKey = entryKey.replace(START, "response");
                     final long startTime = Long.parseLong(entry.getValue());
-                    final long endTime = Long.parseLong(responseTimeMap.get(eventEndTimeKey));
+                    final long endTime = Long.parseLong(eventEndTimeValue);
                     aggregatedData.put(eventResponseTimeKey, String.valueOf(endTime - startTime));
                 }
             }

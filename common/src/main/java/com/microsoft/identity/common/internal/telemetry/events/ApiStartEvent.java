@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.telemetry.events;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
@@ -38,7 +39,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
 
 public class ApiStartEvent extends BaseEvent {
     private static final String TAG = ApiStartEvent.class.getSimpleName();
@@ -56,47 +60,66 @@ public class ApiStartEvent extends BaseEvent {
     }
 
     public ApiStartEvent putProperties(@NonNull final OperationParameters parameters) {
-        if (parameters.getAuthority() != null) {
-            put(Key.AUTHORITY, parameters.getAuthority().getAuthorityURL().getAuthority()); //Pii
-            put(Key.AUTHORITY_TYPE, parameters.getAuthority().getAuthorityTypeString());
+        if (parameters == null) {
+            return this;
         }
 
-        put(Key.SDK_NAME, parameters.getSdkType().name());
+        final Authority authority = parameters.getAuthority();
+
+        if (authority != null) {
+            if (authority.getAuthorityURL() != null) {
+                put(Key.AUTHORITY, authority.getAuthorityURL().getAuthority()); //Pii
+            }
+            put(Key.AUTHORITY_TYPE, authority.getAuthorityTypeString());
+        }
+
+        if (parameters.getSdkType() != null) {
+            put(Key.SDK_NAME, parameters.getSdkType().name());
+        }
+
         put(Key.SDK_VERSION, parameters.getSdkVersion());
 
         put(Key.CLAIM_REQUEST, StringUtil.isEmpty(
-                parameters.getClaimsRequestJson())? Value.FALSE : Value.TRUE
+                parameters.getClaimsRequestJson()) ? Value.FALSE : Value.TRUE
         );
 
         put(Key.REDIRECT_URI, parameters.getRedirectUri()); //Pii
         put(Key.CLIENT_ID, parameters.getClientId()); //Pii
 
         if (parameters instanceof AcquireTokenOperationParameters) {
-            put(
-                    Key.USER_AGENT,
-                    ((AcquireTokenOperationParameters) parameters).getAuthorizationAgent().name()
-            );
+            final AcquireTokenOperationParameters atOperationParameters = (AcquireTokenOperationParameters) parameters;
 
-            put(Key.LOGIN_HINT, //Pii
-                    ((AcquireTokenOperationParameters) parameters).getLoginHint()
-            );
-
-            if (null != ((AcquireTokenOperationParameters) parameters).getExtraQueryStringParameters()) {
-                put(Key.REQUEST_QUERY_PARAMS, //Pii
-                        String.valueOf(((AcquireTokenOperationParameters) parameters).getExtraQueryStringParameters().size())
+            if (atOperationParameters.getAuthorizationAgent() != null) {
+                put(
+                        Key.USER_AGENT,
+                        atOperationParameters.getAuthorizationAgent().name()
                 );
             }
 
-            put(Key.PROMPT_BEHAVIOR,
-                    ((AcquireTokenOperationParameters) parameters).getOpenIdConnectPromptParameter().toString()
+            put(Key.LOGIN_HINT, //Pii
+                    atOperationParameters.getLoginHint()
             );
+
+            if (atOperationParameters.getExtraQueryStringParameters() != null) {
+                put(Key.REQUEST_QUERY_PARAMS, //Pii
+                        String.valueOf(atOperationParameters.getExtraQueryStringParameters().size())
+                );
+            }
+
+            if (atOperationParameters.getOpenIdConnectPromptParameter() != null) {
+                put(Key.PROMPT_BEHAVIOR,
+                        atOperationParameters.getOpenIdConnectPromptParameter().toString()
+                );
+            }
         }
 
         if (parameters instanceof AcquireTokenSilentOperationParameters) {
-            put(Key.USER_ID, parameters.getAccount().getHomeAccountId()); //Pii
+            if (parameters.getAccount() != null) {
+                put(Key.USER_ID, parameters.getAccount().getHomeAccountId()); //Pii
+            }
             put(
                     Key.IS_FORCE_REFRESH,
-                    String.valueOf(((AcquireTokenSilentOperationParameters) parameters).getForceRefresh())
+                    String.valueOf(parameters.getForceRefresh())
             );
             put(
                     Key.BROKER_PROTOCOL_VERSION,
@@ -150,7 +173,7 @@ public class ApiStartEvent extends BaseEvent {
         return this;
     }
 
-    public ApiStartEvent putExtendedExpiresOnSetting(@NonNull final  String extendedExpiresOnSetting) {
+    public ApiStartEvent putExtendedExpiresOnSetting(@NonNull final String extendedExpiresOnSetting) {
         put(Key.EXTENDED_EXPIRES_ON_SETTING, extendedExpiresOnSetting);
         return this;
     }
@@ -183,6 +206,10 @@ public class ApiStartEvent extends BaseEvent {
      * @return the sanitized URL.
      */
     private static String sanitizeUrlForTelemetry(@NonNull final URL url) {
+        if (url == null) {
+            return null;
+        }
+
         final String authority = url.getAuthority();
         final String[] splitArray = url.getPath().split("/");
 

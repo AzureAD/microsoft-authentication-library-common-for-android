@@ -28,7 +28,7 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.telemetry.Properties;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
 
 public class BaseEvent extends Properties {
     public BaseEvent() {

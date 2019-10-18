@@ -57,6 +57,7 @@ android {
     testOptions {
         unitTests.all {
             exclude 'com/microsoft/identity/common/integration'
+            exclude 'com/microsoft/identity/common/ropc'
         }
     }
 
@@ -91,6 +92,9 @@ dependencies {
     testImplementation "org.powermock:powermock-module-junit4-rule:$rootProject.ext.powerMockVersion"
     testImplementation "org.powermock:powermock-api-mockito:$rootProject.ext.powerMockVersion"
     testImplementation "org.powermock:powermock-classloading-xstream:$rootProject.ext.powerMockVersion"
+    testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
+    testImplementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
+    testImplementation project(':testutils')
 
     // Instrumented dependencies
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidxJunitVersion"

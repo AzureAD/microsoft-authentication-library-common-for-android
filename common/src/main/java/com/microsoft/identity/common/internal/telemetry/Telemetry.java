@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.telemetry;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.BuildConfig;
@@ -39,21 +40,23 @@ import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryObse
 import com.microsoft.identity.common.internal.telemetry.rules.TelemetryPiiOiiRules;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.microsoft.identity.common.internal.logging.DiagnosticContext.CORRELATION_ID;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
 
 public class Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
     private static volatile Telemetry sTelemetryInstance = null;
-    private static List<ITelemetryObserver> mObservers;
-    private List<Map<String, String>> mTelemetryRawDataMap;
+    private static Queue<ITelemetryObserver> mObservers;
+    private Queue<Map<String, String>> mTelemetryRawDataMap;
     private TelemetryConfiguration mDefaultConfiguration;
     private TelemetryContext mTelemetryContext;
     private boolean mIsDebugging;
@@ -76,7 +79,7 @@ public class Telemetry {
             mDefaultConfiguration = builder.mDefaultConfiguration;
             mTelemetryContext = builder.mTelemetryContext;
             mIsDebugging = builder.mIsDebugging;
-            mTelemetryRawDataMap = new LinkedList<>();
+            mTelemetryRawDataMap = new ConcurrentLinkedQueue<>();
         }
     }
 
@@ -101,11 +104,7 @@ public class Telemetry {
         return sTelemetryInstance;
     }
 
-    public TelemetryContext getTelemetryContext() {
-        return mTelemetryContext;
-    }
-
-    List<Map<String, String>> getRequestMap() {
+    private Queue<Map<String, String>> getRequestMap() {
         return mTelemetryRawDataMap;
     }
 
@@ -114,14 +113,14 @@ public class Telemetry {
      *
      * @param observer ITelemetryReceiver.
      */
-    public synchronized void addObserver(final ITelemetryObserver observer) {
+    public void addObserver(final ITelemetryObserver observer) {
         if (null == observer) {
             throw new IllegalArgumentException("Telemetry Observer instance cannot be null");
         }
 
         // check to make sure we're not already dispatching elsewhere
         if (null == mObservers) {
-            mObservers = new LinkedList<>();
+            mObservers = new ConcurrentLinkedQueue<>();
         }
 
         mObservers.add(observer);
@@ -132,7 +131,7 @@ public class Telemetry {
      *
      * @param cls type of the observer.
      */
-    public synchronized void removeObserver(final Class<?> cls) {
+    public void removeObserver(final Class<?> cls) {
         if (null == cls || null == mObservers) {
             Logger.warn(
                     TAG,
@@ -143,7 +142,7 @@ public class Telemetry {
 
         final Iterator<ITelemetryObserver> observerIterator = mObservers.iterator();
 
-        while(observerIterator.hasNext()) {
+        while (observerIterator.hasNext()) {
             if (observerIterator.next().getClass() == cls) {
                 Logger.verbose(TAG, "The [" + cls.getSimpleName() + "] observer is removed.");
                 observerIterator.remove();
@@ -156,11 +155,11 @@ public class Telemetry {
      *
      * @param observer ITelemetryObserver object.
      */
-    public synchronized void removeObserver(final ITelemetryObserver observer) {
+    public void removeObserver(final ITelemetryObserver observer) {
         if (null == observer || null == mObservers) {
             Logger.warn(
                     TAG,
-                    "Unable to remove the observe. Either the observer is null or the observer list is empty."
+                    "Unable to remove the observer. Either the observer is null or the observer list is empty."
             );
             return;
         }
@@ -169,12 +168,13 @@ public class Telemetry {
     }
 
     /**
-     * Return the list of observers registered.
+     * Return the queue of observers registered.
      *
-     * @return List of ITelemetryObserver object.
+     * @return Queue of ITelemetryObserver object.
      */
     public List<ITelemetryObserver> getObservers() {
-        return mObservers;
+        List observersList = new CopyOnWriteArrayList<>(mObservers);
+        return Collections.unmodifiableList(observersList);
     }
 
     /**
@@ -219,34 +219,31 @@ public class Telemetry {
             return;
         }
 
-        synchronized (this) {
-            //check the configuration
-            if (!mDefaultConfiguration.isDebugEnabled() && mIsDebugging) {
-                return;
+        //check the configuration
+        if (!mDefaultConfiguration.isDebugEnabled() && mIsDebugging) {
+            return;
+        }
+
+        List<Map<String, String>> finalRawMap = new CopyOnWriteArrayList<>();
+
+        for (Iterator<Map<String, String>> iterator = mTelemetryRawDataMap.iterator(); iterator.hasNext(); ) {
+            Map<String, String> event = iterator.next();
+            if (correlationId.equalsIgnoreCase(event.get(Key.CORRELATION_ID))) {
+                finalRawMap.add(applyPiiOiiRule(event));
+                iterator.remove();
             }
+        }
 
-            List<Map<String, String>> finalRawMap = new ArrayList<>();
+        //Add the telemetry context to the telemetry data
+        finalRawMap.add(applyPiiOiiRule(mTelemetryContext.getProperties()));
 
-            for (Iterator<Map<String, String>> iterator = mTelemetryRawDataMap.iterator(); iterator.hasNext(); ) {
-                Map<String, String> event = iterator.next();
-                if (correlationId.equalsIgnoreCase(event.get(Key.CORRELATION_ID))) {
-                    finalRawMap.add(applyPiiOiiRule(event));
-                    iterator.remove();
-                }
-            }
-
-            //Add the telemetry context to the telemetry data
-            finalRawMap.add(applyPiiOiiRule(mTelemetryContext.getProperties()));
-
-            for (ITelemetryObserver observer : mObservers) {
-                //You can add more obersers by implementing the ITelemetryDefaultObserver interface.
-                if (observer instanceof ITelemetryAggregatedObserver) {
-                    new TelemetryAggregationAdapter((ITelemetryAggregatedObserver)observer).process(finalRawMap);
-                } else if (observer instanceof ITelemetryDefaultObserver) {
-                    new TelemetryDefaultAdapter((ITelemetryDefaultObserver) observer).process(finalRawMap);
-                } else {
-                    Logger.warn(TAG, "Unknown observer type: " + observer.getClass());
-                }
+        for (ITelemetryObserver observer : mObservers) {
+            if (observer instanceof ITelemetryAggregatedObserver) {
+                new TelemetryAggregationAdapter((ITelemetryAggregatedObserver) observer).process(finalRawMap);
+            } else if (observer instanceof ITelemetryDefaultObserver) {
+                new TelemetryDefaultAdapter((ITelemetryDefaultObserver) observer).process(finalRawMap);
+            } else {
+                Logger.warn(TAG, "Unknown observer type: " + observer.getClass());
             }
         }
     }
