@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.request;
 
 import android.support.annotation.Nullable;
 
-import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -50,6 +49,11 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
         if (mAccount == null) {
             Logger.warn(TAG, "The account set on silent operation parameters is NULL.");
+            throw new ArgumentException(
+                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
+                    ArgumentException.IACCOUNT_ARGUMENT_NAME,
+                    "account is null"
+            );
         }
 
     }
