@@ -173,7 +173,12 @@ public class Telemetry {
      * @return Queue of ITelemetryObserver object.
      */
     public List<ITelemetryObserver> getObservers() {
-        List observersList = new CopyOnWriteArrayList<>(mObservers);
+        List observersList;
+        if (mObservers != null) {
+            observersList = new CopyOnWriteArrayList(mObservers);
+        } else {
+            observersList = new CopyOnWriteArrayList();
+        }
         return Collections.unmodifiableList(observersList);
     }
 
