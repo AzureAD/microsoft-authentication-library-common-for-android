@@ -10,6 +10,7 @@ import android.util.Pair;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
@@ -19,6 +20,8 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
+import com.microsoft.identity.common.internal.ui.browser.Browser;
+import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -31,6 +34,11 @@ import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
@@ -255,6 +263,44 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
         final String[] scopes = scopeString.split(" ");
         return new HashSet<>(Arrays.asList(scopes));
+    }
+
+    public static Bundle getSilentBrokerRequestBundle(final AcquireTokenSilentOperationParameters parameters) {
+        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+
+        final Bundle requestBundle = new Bundle();
+        final BrokerRequest brokerRequest = msalBrokerRequestAdapter.
+                brokerRequestFromSilentOperationParameters(parameters);
+
+        requestBundle.putString(
+                AuthenticationConstants.Broker.BROKER_REQUEST_V2,
+                new Gson().toJson(brokerRequest, BrokerRequest.class)
+        );
+
+        requestBundle.putInt(
+                AuthenticationConstants.Broker.CALLER_INFO_UID,
+                parameters.getAppContext().getApplicationInfo().uid
+        );
+
+        return requestBundle;
+    }
+
+    public static Bundle getRequestBundleForRemoveAccount(@NonNull final OperationParameters parameters) {
+        final Bundle requestBundle = new Bundle();
+        if (null != parameters.getAccount()) {
+            requestBundle.putString(ENVIRONMENT, parameters.getAccount().getEnvironment());
+            requestBundle.putString(ACCOUNT_HOME_ACCOUNT_ID, parameters.getAccount().getHomeAccountId());
+        }
+
+        return requestBundle;
+    }
+
+    public static Bundle getRequestBundleForGetAccounts(@NonNull final OperationParameters parameters) {
+        final Bundle requestBundle = new Bundle();
+        requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
+        requestBundle.putString(ACCOUNT_REDIRECT, parameters.getRedirectUri());
+        //Disable the environment and tenantID. Just return all accounts belong to this clientID.
+        return requestBundle;
     }
 
     /**

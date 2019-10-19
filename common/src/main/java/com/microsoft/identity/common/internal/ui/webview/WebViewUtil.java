@@ -25,13 +25,18 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import static com.microsoft.identity.common.internal.ui.webview.ProcessUtil.AuthServiceProcess;
@@ -42,9 +47,9 @@ public class WebViewUtil {
     /**
      * Must be invoked before WebView or CookieManager is invoked in the process.
      * See https://developer.android.com/about/versions/pie/android-9.0-changes-28#web-data-dirs for more info.
-     * */
+     */
     @SuppressLint("NewApi")
-    public static void setDataDirectorySuffix(@NonNull final Context context){
+    public static void setDataDirectorySuffix(@NonNull final Context context) {
         final String methodName = ":setDataDirectorySuffix";
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -59,8 +64,26 @@ public class WebViewUtil {
     }
 
     /**
+     * Invoke the logout endpoint on the specified browser.
+     * If there are more than 1 session, an account picker will be displayed.
+     * (Alternatively, we could pass the optional sessionID as one of the query string parameter, but we're not storing that at the moment).
+     */
+    public static void logOutFromBrowser(@NonNull final Context context,
+                                         @Nullable final String browserPackageName) {
+
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse(AuthenticationConstants.Browser.LOGOUT_ENDPOINT_V2));
+
+        if (!StringExtensions.isNullOrBlank(browserPackageName)) {
+            intent.setPackage(browserPackageName);
+        }
+
+        context.startActivity(intent);
+    }
+
+    /**
      * Sets whether WebView should send and accept cookies.
-     * */
+     */
     public static void setAcceptCookie(final boolean acceptCookie, final Context context) {
         final CookieManager cookieManager = getCookieManager(context);
         cookieManager.setAcceptCookie(acceptCookie);
@@ -69,10 +92,10 @@ public class WebViewUtil {
     /**
      * Clear all cookies from embedded webview.
      * This is a blocking call and so should not be called on UI thread.
-     * */
-    public static void removeCookiesFromWebView(final Context context){
+     */
+    public static void removeCookiesFromWebView(final Context context) {
         final CookieManager cookieManager = getCookieManager(context);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             cookieManager.removeAllCookies(null);
             cookieManager.flush();
         } else {
@@ -85,10 +108,10 @@ public class WebViewUtil {
     /**
      * Clear session cookies from embedded webview.
      * This is a blocking call and so should not be called on UI thread.
-     * */
-    public static void removeSessionCookiesFromWebView(final Context context){
+     */
+    public static void removeSessionCookiesFromWebView(final Context context) {
         final CookieManager cookieManager = getCookieManager(context);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             cookieManager.removeAllCookies(null);
             cookieManager.flush();
         } else {

@@ -23,8 +23,9 @@
 package com.microsoft.identity.common.internal.result;
 
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -421,5 +422,19 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
         }.getType();
         return builder.create().fromJson(accountJson, listOfCacheRecords);
+    }
+
+    public static AcquireTokenResult getAcquireTokenResult(@NonNull final Bundle resultBundle) throws BaseException {
+        final MsalBrokerResultAdapter resultAdapter = new MsalBrokerResultAdapter();
+        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
+            final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
+            acquireTokenResult.setLocalAuthenticationResult(
+                    resultAdapter.authenticationResultFromBundle(resultBundle)
+            );
+
+            return acquireTokenResult;
+        }
+
+        throw resultAdapter.baseExceptionFromBundle(resultBundle);
     }
 }
