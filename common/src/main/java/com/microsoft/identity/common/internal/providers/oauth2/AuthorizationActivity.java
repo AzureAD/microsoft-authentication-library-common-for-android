@@ -20,11 +20,15 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.internal.controllers.ApiDispatcher;
+import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
+import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
+import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -84,6 +88,7 @@ public final class AuthorizationActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             Logger.info(TAG, "Received Authorization flow cancel request from SDK");
+            Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
             finish();
         }
@@ -123,7 +128,7 @@ public final class AuthorizationActivity extends Activity {
                 resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_SUBCODE));
             }
         } else {
-            Logger.verbose(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
+            Logger.info(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
             resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
         }
 
@@ -178,6 +183,8 @@ public final class AuthorizationActivity extends Activity {
     protected void onCreate(final Bundle savedInstanceState) {
         final String methodName = "#onCreate";
         super.onCreate(savedInstanceState);
+
+        WebViewUtil.setDataDirectorySuffix(getApplicationContext());
         setContentView(R.layout.common_activity_authentication);
 
         // Register Broadcast receiver to cancel the auth request
@@ -193,6 +200,7 @@ public final class AuthorizationActivity extends Activity {
             Logger.verbose(TAG + methodName, "Extract state from the saved bundle.");
             extractState(savedInstanceState);
         }
+        Telemetry.emit(new UiStartEvent().putUserAgent(mAuthorizationAgent));
 
         if (mAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
             AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(this, new AuthorizationCompletionCallback(), mRedirectUri);
@@ -202,8 +210,8 @@ public final class AuthorizationActivity extends Activity {
                 public void run() {
                     // load blank first to avoid error for not loading webView
                     mWebView.loadUrl("about:blank");
-                    Logger.verbose(TAG + methodName, "Launching embedded WebView for acquiring auth code.");
-                    Logger.verbosePII(TAG + methodName, "The start url is " + mAuthorizationRequestUrl);
+                    Logger.info(TAG + methodName, "Launching embedded WebView for acquiring auth code.");
+                    Logger.infoPII(TAG + methodName, "The start url is " + mAuthorizationRequestUrl);
                     mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
                 }
             });
@@ -285,6 +293,7 @@ public final class AuthorizationActivity extends Activity {
             Logger.info(TAG + methodName,
                     "Activity is destroyed before Auth request is completed, sending request cancel"
             );
+            Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
         }
         super.onStop();
@@ -293,11 +302,12 @@ public final class AuthorizationActivity extends Activity {
     @Override
     protected void onDestroy() {
         final String methodName = "#onDestroy";
-        Logger.verbose(TAG + methodName, "");
+        Logger.info(TAG + methodName, "");
         if(!mAuthResultSent){
             Logger.info(TAG + methodName,
                     "Activity is destroyed before Auth request is completed, sending request cancel"
             );
+            Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
         }
         unregisterReceiver(mCancelRequestReceiver);
@@ -305,7 +315,7 @@ public final class AuthorizationActivity extends Activity {
     }
 
     private void sendResult(int resultCode, final Intent resultIntent) {
-        ApiDispatcher.completeInteractive(
+        CommandDispatcher.completeInteractive(
                 AuthorizationStrategy.BROWSER_FLOW,
                 resultCode,
                 resultIntent
@@ -322,15 +332,18 @@ public final class AuthorizationActivity extends Activity {
             final String appLink = parameters.get(INSTALL_URL_KEY);
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(appLink));
             startActivity(browserIntent);
-            Logger.verbose(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
+            Logger.info(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
             sendResult(AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME, resultIntent);
         } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL))) {
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, resultIntent);
+            Telemetry.emit(new UiEndEvent().isUiComplete());
         } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE))
                 && resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE).equalsIgnoreCase("cancel")) {
             //when the user click the "cancel" button in the UI, server will send the the redirect uri with "cancel" error sub-code and redirects back to the calling app
+            Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, resultIntent);
         } else {
+            Telemetry.emit(new UiEndEvent().isUiCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
         }
 
@@ -342,6 +355,7 @@ public final class AuthorizationActivity extends Activity {
         final Intent resultIntent = new Intent();
         resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
+        Telemetry.emit(new UiEndEvent().isUserCancelled());
         finish();
     }
 
@@ -359,7 +373,7 @@ public final class AuthorizationActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        Logger.verbose(TAG, "Back button is pressed");
+        Logger.info(TAG, "Back button is pressed");
         if ( null != mWebView && mWebView.canGoBack()) {
             // User should be able to click back button to cancel. Counting blank page as well.
             final int BACK_PRESSED_STEPS = -2;
@@ -413,7 +427,7 @@ public final class AuthorizationActivity extends Activity {
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {
         @Override
         public void onChallengeResponseReceived(final int returnCode, final Intent responseIntent) {
-            Logger.verbose(TAG, null, "onChallengeResponseReceived:" + returnCode);
+            Logger.info(TAG, null, "onChallengeResponseReceived:" + returnCode);
             sendResult(returnCode, responseIntent);
             finish();
         }
@@ -421,7 +435,7 @@ public final class AuthorizationActivity extends Activity {
         @Override
         public void setPKeyAuthStatus(final boolean status) {
             mPkeyAuthStatus = status;
-            Logger.verbose(TAG, null, "setPKeyAuthStatus:" + status);
+            Logger.info(TAG, null, "setPKeyAuthStatus:" + status);
         }
     }
 }

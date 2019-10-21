@@ -72,6 +72,11 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
     @Override
     public BrokerAcquireTokenOperationParameters brokerInteractiveParametersFromActivity(@NonNull final Activity callingActivity) {
 
+        final String methodName = "brokerInteractiveParametersFromActivity";
+        Logger.verbose(
+                TAG + methodName,
+                "Constructing BrokerAcquireTokenOperationParameters from activity "
+        );
         final BrokerAcquireTokenOperationParameters parameters =
                 new BrokerAcquireTokenOperationParameters();
 
@@ -164,6 +169,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID
         );
         if (TextUtils.isEmpty(correlationIdString)) {
+            Logger.info(TAG, "Correlation id not set by Adal, creating a new one");
             UUID correlationId = UUID.randomUUID();
             correlationIdString = correlationId.toString();
         }
@@ -188,6 +194,11 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public BrokerAcquireTokenSilentOperationParameters brokerSilentParametersFromBundle(Bundle bundle,
                                                                                         Context context,
                                                                                         Account account) {
+        final String methodName = ":brokerSilentParametersFromBundle";
+        Logger.verbose(
+                TAG + methodName,
+                "Constructing BrokerAcquireTokenOperationParameters from activity "
+        );
         final BrokerAcquireTokenSilentOperationParameters parameters =
                 new BrokerAcquireTokenSilentOperationParameters();
 
@@ -227,6 +238,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID
         );
         if (TextUtils.isEmpty(correlationIdString)) {
+            Logger.info(TAG, "Correlation id not set by Adal, creating a new one");
             UUID correlationId = UUID.randomUUID();
             correlationIdString = correlationId.toString();
         }
@@ -294,6 +306,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         if (TextUtils.isEmpty(packageName)) {
             packageName = bundle.getString(AuthenticationConstants.AAD.APP_PACKAGE_NAME);
             if (TextUtils.isEmpty(packageName)) {
+                Logger.warn(TAG, "Caller package name not set by app, getting from context");
                 packageName = context.getPackageName();
             }
         }
@@ -340,13 +353,13 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 if (StringUtil.isEmpty(parameter.first)) {
                     Logger.warn(TAG, "The extra query parameter.first is empty.");
                 } else if (parameter.first.equalsIgnoreCase(MicrosoftAuthorizationRequest.INSTANCE_AWARE)) {
-                    Logger.verbose(TAG,
+                    Logger.info(TAG,
 
                             "Set the extra query parameter mMultipleCloudAware" +
                                     " for MicrosoftStsAuthorizationRequest."
                     );
 
-                    Logger.verbosePII(
+                    Logger.infoPII(
                             TAG,
                             "Set the mMultipleCloudAware to " +
                                     (parameter.second == null ? "null" : parameter.second)

@@ -29,6 +29,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.authorities.Environment;
+import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -88,7 +89,7 @@ public class AzureActiveDirectory
     }
 
     public static void setEnvironment(Environment environment) {
-        if(environment != sEnvironment){
+        if (environment != sEnvironment) {
             // Environment changed, so mark sIsInitialized to false
             // to make a instance discovery network request for this environment.
             sIsInitialized = false;
@@ -168,9 +169,12 @@ public class AzureActiveDirectory
                 .appendQueryParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
                 .build();
 
+        Map<String, String> headers = new HashMap<>();
+        headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
+
         HttpResponse response = HttpRequest.sendGet(
                 new URL(instanceDiscoveryRequestUri.toString()),
-                new HashMap<String, String>()
+                headers
         );
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {

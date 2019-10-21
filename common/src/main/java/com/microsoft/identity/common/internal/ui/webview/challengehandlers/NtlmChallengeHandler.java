@@ -77,7 +77,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
                 .setPositiveButton(R.string.http_auth_dialog_login,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
-                                Logger.verbose(TAG, "Proceeding with user supplied username and password.");
+                                Logger.info(TAG, "Proceeding with user supplied username and password.");
                                 ntlmChallenge.getHandler().proceed(usernameView.getText().toString(), passwordView.getText().toString());
                             }
                         })
@@ -98,7 +98,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
     }
 
     private void cancelRequest() {
-        Logger.verbose(TAG, "Sending intent to cancel authentication activity");
+        Logger.info(TAG, "Sending intent to cancel authentication activity");
         mChallengeCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, new Intent());
     }
 }

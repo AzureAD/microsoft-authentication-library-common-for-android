@@ -50,8 +50,6 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
 
     private String mLoginHint;
 
-    private String mCorrelationId;
-
     private List<Pair<String, String>> mExtraQueryStringParameters;
 
     // Device state might not be propagated to MSODS yet, so we might want to wait before re-acquiring PRT.
@@ -111,15 +109,6 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
 
     public void setLoginHint(final String loginHint) {
         this.mLoginHint = loginHint;
-    }
-
-
-    public String getCorrelationId() {
-        return mCorrelationId;
-    }
-
-    public void setCorrelationId(final String correlationId) {
-        this.mCorrelationId = correlationId;
     }
 
     public List<Pair<String, String>> getExtraQueryStringParameters() {

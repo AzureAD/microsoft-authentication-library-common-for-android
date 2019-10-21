@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 public interface TokenOperation {
-    AcquireTokenResult execute() throws InterruptedException, ExecutionException, IOException, BaseException;
+    AcquireTokenResult execute() throws Exception;
 
     void notify(int requestCode, int resultCode, final Intent data);
 }

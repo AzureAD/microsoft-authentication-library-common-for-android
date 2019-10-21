@@ -22,17 +22,18 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.request;
 
-import androidx.annotation.Nullable;
-
-import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.internal.logging.Logger;
+
+import androidx.annotation.Nullable;
 
 public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
+    private final static String TAG = AcquireTokenSilentOperationParameters.class.getSimpleName();
+
     private RefreshTokenRecord mRefreshToken;
-    @Expose()
-    private boolean mForceRefresh;
+
 
     public RefreshTokenRecord getRefreshToken() {
         return mRefreshToken;
@@ -42,24 +43,12 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
         mRefreshToken = refreshToken;
     }
 
-    public void setForceRefresh(final boolean forceRefresh) {
-        mForceRefresh = forceRefresh;
-    }
-
-    public boolean getForceRefresh() {
-        return mForceRefresh;
-    }
-
     @Override
     public void validate() throws ArgumentException {
         super.validate();
 
         if (mAccount == null) {
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    ArgumentException.IACCOUNT_ARGUMENT_NAME,
-                    "account is null"
-            );
+            Logger.warn(TAG, "The account set on silent operation parameters is NULL.");
         }
 
     }

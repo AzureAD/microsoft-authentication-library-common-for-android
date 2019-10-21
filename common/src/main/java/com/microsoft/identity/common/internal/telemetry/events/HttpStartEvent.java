@@ -21,7 +21,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+
+import java.net.URL;
+
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
 
 public class HttpStartEvent extends BaseEvent {
     public HttpStartEvent() {
@@ -35,23 +40,17 @@ public class HttpStartEvent extends BaseEvent {
         return this;
     }
 
-    public HttpStartEvent putPath(String path) {
-        put(Key.HTTP_PATH, path);
+    public HttpStartEvent putPath(final URL path) {
+        if (path == null) {
+            return this;
+        }
+
+        put(Key.HTTP_PATH, path.toExternalForm());
         return this;
     }
 
     public HttpStartEvent putRequestIdHeader(String requestIdHeader) {
         put(Key.HTTP_REQUEST_ID_HEADER, requestIdHeader);
-        return this;
-    }
-
-    public HttpStartEvent putResponseCode(String responseCode) {
-        put(Key.HTTP_RESPONSE_CODE, responseCode);
-        return this;
-    }
-
-    public HttpStartEvent putResponseMethod(String responseMethod) {
-        this.put(Key.HTTP_RESPONSE_METHOD, responseMethod);
         return this;
     }
 
@@ -62,16 +61,6 @@ public class HttpStartEvent extends BaseEvent {
 
     public HttpStartEvent putErrorDomain(String errorDomain) {
         put(Key.HTTP_ERROR_DOMAIN, errorDomain);
-        return this;
-    }
-
-    public HttpStartEvent isNetworkConnected(boolean isConnected) {
-        put(Key.NETWORK_CONNECTION, String.valueOf(isConnected));
-        return this;
-    }
-
-    public HttpStartEvent isPowerOptimizationOn(boolean isDozed) {
-        put(Key.POWER_OPTIMIZATION, String.valueOf(isDozed));
         return this;
     }
 }

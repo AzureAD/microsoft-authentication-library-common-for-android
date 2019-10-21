@@ -22,7 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import com.microsoft.identity.common.internal.cache.CacheRecord;
+import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.internal.util.StringUtil;
+
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
 
 public class CacheEndEvent extends BaseEvent {
     public CacheEndEvent() {
@@ -31,23 +39,38 @@ public class CacheEndEvent extends BaseEvent {
         types(EventType.CACHE_EVENT);
     }
 
-    public CacheEndEvent putResultStatus(final String resultStatus) {
-        put(Key.RESULT_STATUS, resultStatus);
-        return this;
-    }
-
     public CacheEndEvent putRtStatus(final String rtStatus) {
         put(Key.RT_STATUS, rtStatus);
         return this;
     }
 
-    public CacheEndEvent putMrrtStatus(final String mrrtStatus) {
-        put(Key.MRRT_STATUS, mrrtStatus);
+    public CacheEndEvent putAtStatus(final String rtStatus) {
+        put(Key.AT_STATUS, rtStatus);
         return this;
     }
 
     public CacheEndEvent putFrtStatus(final String frtStatus) {
         put(Key.FRT_STATUS, frtStatus);
+        return this;
+    }
+
+    public CacheEndEvent putCacheRecordStatus(final CacheRecord cacheRecord) {
+        if (cacheRecord == null) {
+            return this;
+        }
+
+        put(Key.AT_STATUS, cacheRecord.getAccessToken() == null ? Value.FALSE : Value.TRUE);
+        if (null != cacheRecord.getRefreshToken()) {
+            put(Key.MRRT_STATUS, Value.TRUE); //MSAL RT is MRRT and ADFS is not supported by now.
+            put(Key.RT_STATUS, Value.TRUE);
+            put(Key.FRT_STATUS, StringUtil.isEmpty(cacheRecord.getRefreshToken().getFamilyId()) ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
+        } else {
+            put(Key.RT_STATUS, Value.FALSE);
+        }
+        put(Key.ID_TOKEN_STATUS, cacheRecord.getIdToken() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
+        put(Key.V1_ID_TOKEN_STATUS, cacheRecord.getV1IdToken() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
+        put(Key.ACCOUNT_STATUS, cacheRecord.getAccount() == null ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
+        EstsTelemetry.getInstance().emit(this.getProperties());
         return this;
     }
 

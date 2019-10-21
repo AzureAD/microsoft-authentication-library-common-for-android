@@ -56,7 +56,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
             for (Principal issuer : acceptableCertIssuers) {
                 if (issuer.getName().contains(ACCEPTABLE_ISSUER)) {
                     //Checking if received acceptable issuers contain "CN=MS-Organization-Access"
-                    Logger.verbose(TAG, "Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.");
+                    Logger.info(TAG, "Cancelling the TLS request, not respond to TLS challenge triggered by device authentication.");
                     request.cancel();
                     return null;
                 }
@@ -67,7 +67,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                     @Override
                     public void alias(String alias) {
                         if (alias == null) {
-                            Logger.verbose(TAG, "No certificate chosen by user, cancelling the TLS request.");
+                            Logger.info(TAG, "No certificate chosen by user, cancelling the TLS request.");
                             request.cancel();
                             return;
                         }
@@ -78,7 +78,7 @@ public final class ClientCertAuthChallengeHandler implements IChallengeHandler<C
                             final PrivateKey privateKey = KeyChain.getPrivateKey(
                                     mActivity, alias);
 
-                            Logger.verbose(TAG, "Certificate is chosen by user, proceed with TLS request.");
+                            Logger.info(TAG, "Certificate is chosen by user, proceed with TLS request.");
                             request.proceed(privateKey, certChain);
                             return;
                         } catch (final KeyChainException e) {
