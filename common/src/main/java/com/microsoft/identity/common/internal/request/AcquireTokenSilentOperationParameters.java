@@ -49,11 +49,6 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
         if (mAccount == null) {
             Logger.warn(TAG, "The account set on silent operation parameters is NULL.");
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    ArgumentException.IACCOUNT_ARGUMENT_NAME,
-                    "account is null"
-            );
         }
 
     }

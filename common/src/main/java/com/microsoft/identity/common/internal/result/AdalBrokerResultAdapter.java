@@ -250,11 +250,6 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
                     AccountManager.ERROR_CODE_NETWORK_ERROR,
                     ADALError.IO_EXCEPTION.getDescription()
             );
-        }else {
-            // Default to Error code Bad Request, just like V1 implementation.
-            setErrorToResultBundle(resultBundle,
-                    AccountManager.ERROR_CODE_BAD_REQUEST,
-                    clientException.getErrorCode());
         }
     }
 
