@@ -13,7 +13,6 @@ import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryObse
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -32,10 +31,10 @@ public class TelemetryTest {
         setupTelemetry(context);
     }
 
-    private Telemetry setupTelemetry(@NonNull final Context context) {
+    private void setupTelemetry(@NonNull final Context context) {
         TelemetryConfiguration telemetryConfiguration = new TelemetryConfiguration();
 
-        return new Telemetry.Builder()
+        new Telemetry.Builder()
                 .withContext(context)
                 .defaultConfiguration(telemetryConfiguration)
                 .build();
@@ -48,7 +47,7 @@ public class TelemetryTest {
     }
 
     @Test
-    public void testGetObserversEmpty() {
+    public void testGetObserversEmptySuccess() {
         Telemetry telemetry = Telemetry.getInstance();
         Assert.assertEquals(0, telemetry.getObservers().size());
     }
@@ -127,5 +126,17 @@ public class TelemetryTest {
         telemetry.removeObserver(telemetryObserver);
 
         Assert.assertEquals(0, telemetry.getObservers().size());
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testGetObserversReturnsUnmodifiableListSuccess() {
+        Telemetry telemetry = Telemetry.getInstance();
+
+        telemetry.getObservers().add(new ITelemetryObserver() {
+            @Override
+            public void onReceived(Object telemetryData) {
+
+            }
+        });
     }
 }
