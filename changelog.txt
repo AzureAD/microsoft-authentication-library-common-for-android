@@ -6,12 +6,12 @@ Version 1.0.8
 - Lock the cache during read/writes.
 - Fix to remove defaulting BadError on the ClientException in AdalResultAdapter.
 - Add IOException translation to AdalBrokerResultAdapter.
-- Fix NullPointerException in Telemetry getObservers if mObservers is null.
+- Fixes Telemetry thread issues and NullPointerExceptions.
 - Fix WebView SDK28 issue.
 - Refactor code to support FLW command migration
 - Get Correlation id from Operation parameters if available.
 - Fixed minor bugs as needed.
-- Add more roboelectric tests.
+- Added more robolectric tests.
 - Artifact for Broker 3.1.4 release.
 
 Version 1.0.7
