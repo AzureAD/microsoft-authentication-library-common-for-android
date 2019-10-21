@@ -37,11 +37,9 @@ public class TelemetryTest {
     }
 
     private void setupTelemetry(@NonNull final Context context) {
-        TelemetryConfiguration telemetryConfiguration = new TelemetryConfiguration();
-
         new Telemetry.Builder()
                 .withContext(context)
-                .defaultConfiguration(telemetryConfiguration)
+                .defaultConfiguration(new TelemetryConfiguration())
                 .build();
     }
 
@@ -73,7 +71,6 @@ public class TelemetryTest {
         ITelemetryAggregatedObserver telemetryAggregatedObserver = new ITelemetryAggregatedObserver() {
             @Override
             public void onReceived(Map<String, String> telemetryData) {
-
             }
         };
 
@@ -92,21 +89,18 @@ public class TelemetryTest {
         ITelemetryAggregatedObserver telemetryAggregatedObserver = new ITelemetryAggregatedObserver() {
             @Override
             public void onReceived(Map<String, String> telemetryData) {
-
             }
         };
 
         ITelemetryDefaultObserver telemetryDefaultObserver = new ITelemetryDefaultObserver() {
             @Override
             public void onReceived(List<Map<String, String>> telemetryData) {
-
             }
         };
 
         ITelemetryObserver telemetryObserver = new ITelemetryObserver() {
             @Override
             public void onReceived(Object telemetryData) {
-
             }
         };
 
@@ -131,7 +125,6 @@ public class TelemetryTest {
         Telemetry.getInstance().getObservers().add(new ITelemetryObserver() {
             @Override
             public void onReceived(Object telemetryData) {
-
             }
         });
     }
