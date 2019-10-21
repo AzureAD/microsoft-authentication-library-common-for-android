@@ -27,6 +27,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -165,6 +166,15 @@ public class Telemetry {
         }
 
         mObservers.remove(observer);
+    }
+
+    @VisibleForTesting
+    void removeAllObservers() {
+        if (mObservers == null) {
+            return;
+        }
+
+        mObservers.clear();
     }
 
     /**
