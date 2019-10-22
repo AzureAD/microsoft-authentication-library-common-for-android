@@ -22,12 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.request;
 
-import androidx.annotation.Nullable;
-
-import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+
+import androidx.annotation.Nullable;
 
 public class AcquireTokenSilentOperationParameters extends OperationParameters {
 

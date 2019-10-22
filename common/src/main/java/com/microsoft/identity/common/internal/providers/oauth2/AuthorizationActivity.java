@@ -28,6 +28,7 @@ import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
+import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -183,6 +184,7 @@ public final class AuthorizationActivity extends Activity {
         final String methodName = "#onCreate";
         super.onCreate(savedInstanceState);
 
+        WebViewUtil.setDataDirectorySuffix(getApplicationContext());
         setContentView(R.layout.common_activity_authentication);
 
         // Register Broadcast receiver to cancel the auth request
