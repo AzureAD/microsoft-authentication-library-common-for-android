@@ -111,7 +111,7 @@ public class Telemetry {
     /**
      * Register the observer to upload the telemetry data.
      *
-     * @param observer ITelemetryReceiver.
+     * @param observer ITelemetryObserver
      */
     public void addObserver(final ITelemetryObserver observer) {
         if (null == observer) {
@@ -168,9 +168,9 @@ public class Telemetry {
     }
 
     /**
-     * Return the queue of observers registered.
+     * Return the list of observers registered.
      *
-     * @return Queue of ITelemetryObserver object.
+     * @return List of ITelemetryObserver object.
      */
     public List<ITelemetryObserver> getObservers() {
         List observersList;
