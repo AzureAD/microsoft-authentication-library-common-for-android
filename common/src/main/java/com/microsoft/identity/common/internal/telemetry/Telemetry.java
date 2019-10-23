@@ -27,6 +27,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -111,7 +112,7 @@ public class Telemetry {
     /**
      * Register the observer to upload the telemetry data.
      *
-     * @param observer ITelemetryReceiver.
+     * @param observer ITelemetryObserver
      */
     public void addObserver(final ITelemetryObserver observer) {
         if (null == observer) {
@@ -167,10 +168,19 @@ public class Telemetry {
         mObservers.remove(observer);
     }
 
+    @VisibleForTesting
+    void removeAllObservers() {
+        if (mObservers == null) {
+            return;
+        }
+
+        mObservers.clear();
+    }
+
     /**
-     * Return the queue of observers registered.
+     * Return the list of observers registered.
      *
-     * @return Queue of ITelemetryObserver object.
+     * @return List of ITelemetryObserver object.
      */
     public List<ITelemetryObserver> getObservers() {
         List observersList;
