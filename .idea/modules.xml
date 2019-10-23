@@ -8,6 +8,7 @@
       <module fileurl="file://$PROJECT_DIR$/labapi/labapi.iml" filepath="$PROJECT_DIR$/labapi/labapi.iml" />
       <module fileurl="file://$PROJECT_DIR$/microsoft-authentication-library-common-for-android.iml" filepath="$PROJECT_DIR$/microsoft-authentication-library-common-for-android.iml" />
       <module fileurl="file://$PROJECT_DIR$/common/microsoft-authentication-library-common-for-android-common.iml" filepath="$PROJECT_DIR$/common/microsoft-authentication-library-common-for-android-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/pop-benchmarker/pop-benchmarker.iml" filepath="$PROJECT_DIR$/pop-benchmarker/pop-benchmarker.iml" />
       <module fileurl="file://$PROJECT_DIR$/testutils/testutils.iml" filepath="$PROJECT_DIR$/testutils/testutils.iml" />
     </modules>
   </component>
