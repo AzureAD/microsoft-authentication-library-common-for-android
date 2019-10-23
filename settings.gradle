@@ -1,1 +1,1 @@
-include ':common', ':keyvault', ':labapi', ':testutils', ':pop-benchmarker'
+include ':common', ':keyvault', ':labapi', ':testutils', ':pop-benchmarker', ':package-inspector'
