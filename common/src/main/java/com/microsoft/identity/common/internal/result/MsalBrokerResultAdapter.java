@@ -409,10 +409,17 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     public static void verifyRemoveAccountResultFromBundle(@NonNull final Bundle bundle) throws BaseException {
-        if (bundle != null) {
-            Logger.warn(TAG, "Failed to sign out from shared device.");
-            throw new MsalBrokerResultAdapter().baseExceptionFromBundle(bundle);
+        if (bundle == null) {
+            return;
         }
+
+        final BrokerResult brokerResult = brokerResultFromBundle(bundle);
+        if (brokerResult != null && brokerResult.isSuccess()) {
+            return;
+        }
+
+        Logger.warn(TAG, "Failed to sign out from shared device.");
+        throw new MsalBrokerResultAdapter().baseExceptionFromBundle(bundle);
     }
 
     public static List<ICacheRecord> getICacheRecordListFromJsonString(String accountJson) {

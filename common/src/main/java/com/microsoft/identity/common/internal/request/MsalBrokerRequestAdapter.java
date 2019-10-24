@@ -38,6 +38,7 @@ import androidx.annotation.Nullable;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEFAULT_BROWSER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
@@ -49,9 +50,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.info(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
 
-        final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
+        final BrokerRequest brokerRequest = new BrokerRequest.Builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
-                .scope(TextUtils.join( " ", parameters.getScopes()))
+                .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(getRedirectUri(parameters))
                 .clientId(parameters.getClientId())
                 .username(parameters.getLoginHint())
@@ -77,9 +78,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.info(TAG, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
 
-        final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
+        final BrokerRequest brokerRequest = new BrokerRequest.Builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
-                .scope(TextUtils.join( " ", parameters.getScopes()))
+                .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(getRedirectUri(parameters))
                 .clientId(parameters.getClientId())
                 .homeAccountId(parameters.getAccount().getHomeAccountId())
@@ -238,7 +239,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         parameters.setLocalAccountId(brokerRequest.getLocalAccountId());
 
-        if(!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
+        if (!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
             parameters.setExtraQueryStringParameters(
                     QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter())
             );
@@ -304,7 +305,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     /**
-     * Create the request bundle for IMicrosoftAuthService.hello().
+     * Create the request bundle for hello().
+     *
      * @param parameters AcquireTokenSilentOperationParameters
      * @return request bundle
      */
@@ -316,6 +318,20 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {
             requestBundle.putString(AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
                     parameters.getRequiredBrokerProtocolVersion());
+        }
+
+        return requestBundle;
+    }
+
+    public static Bundle getRequestBundleForRemoveAccountFromSharedDevice(@NonNull final OperationParameters parameters) {
+        final Bundle requestBundle = new Bundle();
+
+        try {
+            Browser browser = BrowserSelector.select(parameters.getAppContext(), parameters.getBrowserSafeList());
+            requestBundle.putString(DEFAULT_BROWSER_PACKAGE_NAME, browser.getPackageName());
+        } catch (ClientException e) {
+            // Best effort. If none is passed to broker, then it will let the OS decide.
+            Logger.error(TAG, e.getErrorCode(), e);
         }
 
         return requestBundle;

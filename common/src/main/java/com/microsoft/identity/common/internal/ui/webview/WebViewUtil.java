@@ -25,18 +25,13 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Build;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import static com.microsoft.identity.common.internal.ui.webview.ProcessUtil.AuthServiceProcess;
@@ -61,24 +56,6 @@ public class WebViewUtil {
                 Logger.warn(TAG + methodName, "WebView is already initialized. IllegalStateException is expected when setDataDirectorySuffix() is invoked");
             }
         }
-    }
-
-    /**
-     * Invoke the logout endpoint on the specified browser.
-     * If there are more than 1 session, an account picker will be displayed.
-     * (Alternatively, we could pass the optional sessionID as one of the query string parameter, but we're not storing that at the moment).
-     */
-    public static void logOutFromBrowser(@NonNull final Context context,
-                                         @Nullable final String browserPackageName) {
-
-        final Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse(AuthenticationConstants.Browser.LOGOUT_ENDPOINT_V2));
-
-        if (!StringExtensions.isNullOrBlank(browserPackageName)) {
-            intent.setPackage(browserPackageName);
-        }
-
-        context.startActivity(intent);
     }
 
     /**
