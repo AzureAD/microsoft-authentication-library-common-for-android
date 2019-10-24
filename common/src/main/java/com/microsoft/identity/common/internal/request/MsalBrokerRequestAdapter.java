@@ -289,6 +289,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public static Bundle getRequestBundleForRemoveAccount(@NonNull final OperationParameters parameters) {
         final Bundle requestBundle = new Bundle();
         if (null != parameters.getAccount()) {
+            requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
             requestBundle.putString(ENVIRONMENT, parameters.getAccount().getEnvironment());
             requestBundle.putString(ACCOUNT_HOME_ACCOUNT_ID, parameters.getAccount().getHomeAccountId());
         }
