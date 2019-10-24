@@ -1136,7 +1136,7 @@ public final class AuthenticationConstants {
 
         /**
          * String indicating a broker flow that Authenticator should route to.
-         * See MsalAccountManagerOperation for more info.
+         * See BrokerAccountManagerOperation for more info.
          */
         public static final String BROKER_ACCOUNT_MANAGER_OPERATION_KEY = "com.microsoft.broker_accountmanager_operation_key";
 
@@ -1197,7 +1197,7 @@ public final class AuthenticationConstants {
      * Represents Broker operations that should be invoked by Authenticator.java (MSAL-Broker AccountManager flow).
      * See MicrosoftAuthServiceOperation for more info.
      */
-    public static final class MsalAccountManagerOperation {
+    public static final class BrokerAccountManagerOperation {
 
         public static final String HELLO = "HELLO";
 
