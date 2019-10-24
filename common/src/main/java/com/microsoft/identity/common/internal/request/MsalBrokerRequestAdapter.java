@@ -8,6 +8,9 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
@@ -31,9 +34,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
@@ -266,7 +266,33 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return new HashSet<>(Arrays.asList(scopes));
     }
 
-    public static Bundle getSilentBrokerRequestBundle(final AcquireTokenSilentOperationParameters parameters) {
+    /**
+     * Helper method to get redirect uri from parameters, calculates from package signature if not available.
+     */
+    private String getRedirectUri(@NonNull OperationParameters parameters) {
+        if (TextUtils.isEmpty(parameters.getRedirectUri())) {
+            return BrokerValidator.getBrokerRedirectUri(
+                    parameters.getAppContext(),
+                    parameters.getApplicationName()
+            );
+        }
+        return parameters.getRedirectUri();
+    }
+
+    public Bundle getRequestBundleForHello(@NonNull final OperationParameters parameters) {
+        final Bundle requestBundle = new Bundle();
+        requestBundle.putString(AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
+                AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);
+
+        if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {
+            requestBundle.putString(AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
+                    parameters.getRequiredBrokerProtocolVersion());
+        }
+
+        return requestBundle;
+    }
+
+    public Bundle getRequestBundleForAcquireTokenSilent(final AcquireTokenSilentOperationParameters parameters) {
         final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
 
         final Bundle requestBundle = new Bundle();
@@ -286,7 +312,15 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
-    public static Bundle getRequestBundleForRemoveAccount(@NonNull final OperationParameters parameters) {
+    public Bundle getRequestBundleForGetAccounts(@NonNull final OperationParameters parameters) {
+        final Bundle requestBundle = new Bundle();
+        requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
+        requestBundle.putString(ACCOUNT_REDIRECT, parameters.getRedirectUri());
+        //Disable the environment and tenantID. Just return all accounts belong to this clientID.
+        return requestBundle;
+    }
+
+    public Bundle getRequestBundleForRemoveAccount(@NonNull final OperationParameters parameters) {
         final Bundle requestBundle = new Bundle();
         if (null != parameters.getAccount()) {
             requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
@@ -297,34 +331,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
-    public static Bundle getRequestBundleForGetAccounts(@NonNull final OperationParameters parameters) {
-        final Bundle requestBundle = new Bundle();
-        requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
-        requestBundle.putString(ACCOUNT_REDIRECT, parameters.getRedirectUri());
-        //Disable the environment and tenantID. Just return all accounts belong to this clientID.
-        return requestBundle;
-    }
-
-    /**
-     * Create the request bundle for hello().
-     *
-     * @param parameters AcquireTokenSilentOperationParameters
-     * @return request bundle
-     */
-    public static Bundle getBrokerHelloBundle(@NonNull final OperationParameters parameters) {
-        final Bundle requestBundle = new Bundle();
-        requestBundle.putString(AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
-                AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);
-
-        if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {
-            requestBundle.putString(AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
-                    parameters.getRequiredBrokerProtocolVersion());
-        }
-
-        return requestBundle;
-    }
-
-    public static Bundle getRequestBundleForRemoveAccountFromSharedDevice(@NonNull final OperationParameters parameters) {
+    public Bundle getRequestBundleForRemoveAccountFromSharedDevice(@NonNull final OperationParameters parameters) {
         final Bundle requestBundle = new Bundle();
 
         try {
@@ -336,18 +343,5 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
 
         return requestBundle;
-    }
-
-    /**
-     * Helper method to get redirect uri from parameters, calculates from package signature if not available.
-     */
-    private String getRedirectUri(@NonNull OperationParameters parameters) {
-        if (TextUtils.isEmpty(parameters.getRedirectUri())) {
-            return BrokerValidator.getBrokerRedirectUri(
-                    parameters.getAppContext(),
-                    parameters.getApplicationName()
-            );
-        }
-        return parameters.getRedirectUri();
     }
 }
