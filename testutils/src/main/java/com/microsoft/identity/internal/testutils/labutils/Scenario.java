@@ -23,23 +23,23 @@
 
 package com.microsoft.identity.internal.testutils.labutils;
 
-import com.microsoft.identity.internal.test.labapi.model.TestConfiguration;
+import com.microsoft.identity.internal.test.labapi.model.UserInfo;
 
 /**
  * This class contains methods necessary to obtain a Scenario for a given test case
- * A Scenario is defined by a {@link TestConfiguration} object, and a {@link Credential} object
+ * A Scenario is defined by a {@link UserInfo} object, and a {@link Credential} object
  */
 public class Scenario {
 
-    private TestConfiguration mTestConfiguration;
+    private UserInfo mUserInfo;
     private Credential mCredential;
 
-    public TestConfiguration getTestConfiguration() {
-        return mTestConfiguration;
+    public UserInfo getUserInfo() {
+        return mUserInfo;
     }
 
-    public void setTestConfiguration(TestConfiguration testConfiguration) {
-        this.mTestConfiguration = testConfiguration;
+    public void setUserInfo(UserInfo userInfo) {
+        this.mUserInfo = userInfo;
     }
 
     public Credential getCredential() {
@@ -51,29 +51,34 @@ public class Scenario {
     }
 
     public static String getPasswordForUser(String upn) {
-        TestConfigurationQuery query = new TestConfigurationQuery();
-        query.upn = upn;
+        LabUserQuery query = new LabUserQuery();
+        query.homeUpn = upn;
         Scenario scenario = GetScenario(query);
         String password = scenario.getCredential().password;
         return password;
     }
 
-    public static Scenario GetScenario(TestConfigurationQuery query) {
-        TestConfiguration tc = TestConfigurationHelper.GetTestConfiguration(query);
-        String keyVaultLocation = tc.getUsers().getCredentialVaultKeyName();
-        String secretName = keyVaultLocation.substring(keyVaultLocation.lastIndexOf('/') + 1);
+    public static String getUserFromUpn(final String upn) {
+        return upn;
+    }
 
-        Credential credential = null;
-        try {
-            credential = Secrets.GetCredential(tc.getUsers().getUpn(), secretName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public static Scenario GetScenario(LabUserQuery query) {
+        return null;
+        /**UserInfo userInfo = LabUserHelper.getUserInfo(query);
+         String keyVaultLocation = userInfo.getCredentialVaultKeyName();
+         String secretName = keyVaultLocation.substring(keyVaultLocation.lastIndexOf('/') + 1);
 
-        Scenario scenario = new Scenario();
-        scenario.setTestConfiguration(tc);
-        scenario.setCredential(credential);
+         Credential credential = null;
+         try {
+         credential = Secrets.GetCredential(tc.getUsers().getUpn(), secretName);
+         } catch (Exception e) {
+         e.printStackTrace();
+         }
 
-        return scenario;
+         Scenario scenario = new Scenario();
+         scenario.setTestConfiguration(tc);
+         scenario.setCredential(credential);
+
+         return scenario;**/
     }
 }
