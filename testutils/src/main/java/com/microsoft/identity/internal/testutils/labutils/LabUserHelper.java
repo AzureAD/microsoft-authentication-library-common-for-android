@@ -17,7 +17,10 @@ public class LabUserHelper {
             throw new RuntimeException("Error retrieving lab user", ex);
         }
 
-        return userInfos.get(0);
+        final UserInfo pickedUser = userInfos.get(0);
+        CurrentLabUser.userInfo = pickedUser;
+
+        return pickedUser;
 
     }
 
@@ -32,7 +35,10 @@ public class LabUserHelper {
             throw new RuntimeException("Error retrieving lab user", ex);
         }
 
-        return userInfos.get(0);
+        final UserInfo pickedUser = userInfos.get(0);
+        CurrentLabUser.userInfo = pickedUser;
+
+        return pickedUser;
     }
 
     public static String getUpnForTest(LabUserQuery query) {

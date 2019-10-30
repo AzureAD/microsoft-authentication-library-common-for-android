@@ -46,7 +46,7 @@ public class LabConstants {
     }
 
     public static final class FederationProvider {
-        public static final String NONE = "none";
+        public static final String NA = "na";
         public static final String ADFS_V2 = "adfsv2";
         public static final String ADFS_V3 = "adfsv3";
         public static final String ADFS_V4 = "adfsv4";
