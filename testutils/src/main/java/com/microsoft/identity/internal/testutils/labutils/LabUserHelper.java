@@ -42,11 +42,11 @@ public class LabUserHelper {
 
     public static String getPasswordForUser(final String username) {
         final UserInfo userInfo = getUserInfoFromUpn(username);
-        return LabUserSecretHelper.getPasswordForLab(userInfo.getLabName());
+        return LabSecretHelper.getPasswordForLab(userInfo.getLabName());
     }
 
     public static String getPasswordForUser(final UserInfo userInfo) {
-        return LabUserSecretHelper.getPasswordForLab(userInfo.getLabName());
+        return LabSecretHelper.getPasswordForLab(userInfo.getLabName());
     }
 
     public static Credential getCredentials(LabUserQuery query) {

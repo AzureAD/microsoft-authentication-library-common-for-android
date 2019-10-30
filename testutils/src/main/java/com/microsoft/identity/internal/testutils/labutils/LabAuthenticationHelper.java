@@ -12,8 +12,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.internal.test.keyvault.Configuration;
-import com.microsoft.identity.internal.test.keyvault.api.SecretsApi;
-import com.microsoft.identity.internal.test.keyvault.model.SecretBundle;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -80,31 +78,11 @@ public class LabAuthenticationHelper {
 
     }
 
-
-    public static Credential GetCredential(String upn, String secretName) throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException, InterruptedException {
-
-        Configuration.getDefaultApiClient().setBasePath("https://msidlabs.vault.azure.net");
-        Configuration.getDefaultApiClient().setAccessToken(Secrets.getAccessToken());
-
-        SecretsApi secretsApi = new SecretsApi();
-        Credential credential = new Credential();
-        credential.userName = upn;
-
-        try {
-            SecretBundle secretBundle = secretsApi.getSecret(secretName, "", Secrets.API_VERSION);
-            credential.password = secretBundle.getValue();
-        } catch (com.microsoft.identity.internal.test.keyvault.ApiException ex) {
-            throw new RuntimeException("exception accessing secret", ex);
-        }
-
-        return credential;
-    }
-
-    public static void setupApiClientWithAccessToken(final String accessToken) {
+    static void setupApiClientWithAccessToken(final String accessToken) {
         Configuration.getDefaultApiClient().setAccessToken(accessToken);
     }
 
-    public static void setupApiClientWithAccessToken() {
+    static void setupApiClientWithAccessToken() {
         try {
             setupApiClientWithAccessToken(LabAuthenticationHelper.getAccessToken());
         } catch (CertificateException e) {

@@ -41,7 +41,8 @@ import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.internal.testutils.MicrosoftStsRopcTokenRequest;
 import com.microsoft.identity.internal.testutils.MockSuccessAuthorizationResult;
-import com.microsoft.identity.internal.testutils.labutils.Scenario;
+import com.microsoft.identity.internal.testutils.labutils.CurrentLabUser;
+import com.microsoft.identity.internal.testutils.labutils.LabSecretHelper;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -139,7 +140,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
     }
 
     String getPasswordForUser(String username) {
-        final String password = Scenario.getPasswordForUser(username);
+        final String password = LabSecretHelper.getPasswordForLab(CurrentLabUser.userInfo.getLabName());
         return password;
     }
 
