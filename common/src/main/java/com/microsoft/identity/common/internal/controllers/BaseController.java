@@ -23,9 +23,10 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
+import android.net.Uri;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
@@ -46,6 +47,8 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAutho
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
@@ -186,6 +189,23 @@ public abstract class BaseController {
         tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
 
         TokenResult tokenResult = strategy.requestToken(tokenRequest);
+
+        if (null != tokenResult.getTokenResponse()
+                && tokenResult.getTokenResponse() instanceof MicrosoftStsTokenResponse
+                && response instanceof MicrosoftStsAuthorizationResponse) {
+            if (null != ((MicrosoftStsAuthorizationResponse) response).getCloudInstanceHostName()) {
+                //Update the token response authority with cloud instance host name.
+                final String cloudAuthority = new Uri.Builder().scheme("https")
+                        .authority(((MicrosoftStsAuthorizationResponse) response).getCloudInstanceHostName())
+                        .path(parameters.getAuthority().getAuthorityURL().getPath())
+                        .build().toString();
+                ((MicrosoftStsTokenResponse) tokenResult.getTokenResponse()).setAuthority(cloudAuthority);
+            } else {
+                // Update the token response authority with request authority.
+                ((MicrosoftStsTokenResponse) tokenResult.getTokenResponse())
+                        .setAuthority(parameters.getAuthority().getAuthorityURL().toString());
+            }
+        }
 
         logResult(TAG, tokenResult);
 
@@ -471,7 +491,7 @@ public abstract class BaseController {
     }
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
-                final String tenantId = SchemaUtil.getTenantId(
+        final String tenantId = SchemaUtil.getTenantId(
                 microsoftTokenResponse.getClientInfo(),
                 microsoftTokenResponse.getIdToken()
         );
