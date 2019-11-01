@@ -327,6 +327,11 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
             }
 
             @Override
+            protected boolean shouldEncryptWithKeyStoreKey(){
+                return false;
+            }
+            
+            @Override
             protected String getPackageName() {
                 return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
             }
@@ -357,6 +362,11 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         class LegacyStorageHelperMock extends StorageHelper {
             public LegacyStorageHelperMock(@NonNull Context context) {
                 super(context);
+            }
+
+            @Override
+            protected boolean shouldEncryptWithKeyStoreKey(){
+                return false;
             }
 
             @Override

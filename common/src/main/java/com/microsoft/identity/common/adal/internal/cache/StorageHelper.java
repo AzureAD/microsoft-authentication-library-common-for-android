@@ -486,6 +486,11 @@ public class StorageHelper implements IStorageHelper {
         }
     }
 
+    // To be overridden by test cases.
+    protected boolean shouldEncryptWithKeyStoreKey(){
+        return sShouldEncryptWithKeyStoreKey;
+    }
+
     @Override
     public synchronized SecretKey loadSecretKeyForEncryption() throws IOException,
             GeneralSecurityException {
@@ -498,7 +503,7 @@ public class StorageHelper implements IStorageHelper {
         }
 
         // The current app runtime is the broker; load its secret key.
-        if (!sShouldEncryptWithKeyStoreKey &&
+        if (!shouldEncryptWithKeyStoreKey() &&
                 AuthenticationSettings.INSTANCE.getBrokerSecretKeys().containsKey(getPackageName())) {
 
             // Try to read keystore key - so that we get telemetry data on its reliability.
