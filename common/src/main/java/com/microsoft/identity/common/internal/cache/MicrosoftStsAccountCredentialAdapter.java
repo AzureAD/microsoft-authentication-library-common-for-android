@@ -84,7 +84,7 @@ public class MicrosoftStsAccountCredentialAdapter
             if (!StringUtil.isEmpty(response.getAuthority())) {
                 accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromAuthority(new URL(response.getAuthority())));
             } else {
-                accessToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
+                accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
             }
 
             accessToken.setClientId(request.getClientId());
@@ -153,7 +153,7 @@ public class MicrosoftStsAccountCredentialAdapter
             if (null != response.getAuthority()) {
                 refreshToken.setEnvironment(strategy.getIssuerCacheIdentifierFromAuthority(new URL(response.getAuthority())));
             } else {
-                refreshToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
+                refreshToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
             }
 
             refreshToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
@@ -193,7 +193,7 @@ public class MicrosoftStsAccountCredentialAdapter
                         )
                 );
             } else {
-                idToken.setEnvironment(strategy.getIssuerCacheIdentifier(request));
+                idToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
             }
 
             idToken.setRealm(getRealm(strategy, response));

@@ -155,6 +155,27 @@ public class MicrosoftStsOAuth2Strategy
         return authority.getHost();
     }
 
+    public String getIssuerCacheIdentifierFromTokenEndpoint() {
+        final String methodName = ":getIssuerCacheIdentifierFromTokenEndpoint";
+        URL authority = null;
+        String cacheIdentifier = null;
+
+        try {
+            authority = new URL(mTokenEndpoint);
+        } catch (MalformedURLException e) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Getting issuer cache identifier from token endpoint failed due to malformed URL (mTokenEndpoint)..."
+            );
+        }
+
+        if (authority != null) {
+            cacheIdentifier = getIssuerCacheIdentifierFromAuthority(authority);
+        }
+
+        return cacheIdentifier;
+    }
+
     @Override
     public MicrosoftStsAccessToken getAccessTokenFromResponse(
             @NonNull final MicrosoftStsTokenResponse response) {
@@ -212,23 +233,7 @@ public class MicrosoftStsOAuth2Strategy
 
         MicrosoftStsAccount account = new MicrosoftStsAccount(idToken, clientInfo);
 
-        // The Account created by the strategy sets the environment to get the 'iss' from the IdToken
-        // For caching purposes, this may not be the correct value due to the preferred cache identifier
-        // in the InstanceDiscoveryMetadata
-        URL authority = null;
-
-        try {
-            authority = new URL(mTokenEndpoint);
-        } catch (MalformedURLException e) {
-            Logger.verbose(
-                    TAG + methodName,
-                    "Creating account from TokenResponse failed due to malformed URL (mTokenEndpoint)..."
-            );
-        }
-
-        if (authority != null) {
-            account.setEnvironment(getIssuerCacheIdentifierFromAuthority(authority));
-        }
+        account.setEnvironment(getIssuerCacheIdentifierFromTokenEndpoint());
 
         return account;
     }
