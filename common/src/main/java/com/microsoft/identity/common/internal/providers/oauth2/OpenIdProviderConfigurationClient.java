@@ -77,7 +77,11 @@ public class OpenIdProviderConfigurationClient {
         mVersion = NA;
     }
 
-    public OpenIdProviderConfigurationClient(@NonNull final MicrosoftAuthorizationRequest request, @NonNull final MicrosoftAuthorizationResponse response, @Nullable final String version) {
+    public OpenIdProviderConfigurationClient(@NonNull final MicrosoftAuthorizationRequest request, @NonNull final MicrosoftAuthorizationResponse response) {
+        this(request, response, NA);
+    }
+
+    public OpenIdProviderConfigurationClient(@NonNull final MicrosoftAuthorizationRequest request, @NonNull final MicrosoftAuthorizationResponse response, @NonNull final String version) {
         mIssuer = response.getCloudInstanceHostName();
         mPath = request.getAuthority().getPath();
         mVersion = version;
