@@ -1,3 +1,7 @@
+Version 1.0.9
+------------
+- Disable command caching.
+
 Version 1.0.8
 ------------
 - Command caching and Throttling requests related changes.
