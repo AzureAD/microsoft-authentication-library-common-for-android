@@ -49,6 +49,8 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
+import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationClient;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
@@ -131,7 +133,7 @@ public class MicrosoftStsOAuth2Strategy
         return authority.getHost();
     }
 
-    public String getIssuerCacheIdentifierFromAuthority(final URL authority) {
+    private String getIssuerCacheIdentifierFromAuthority(final URL authority) {
         final String methodName = ":getIssuerCacheIdentifierFromAuthority";
 
         final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
@@ -316,10 +318,22 @@ public class MicrosoftStsOAuth2Strategy
                 "Creating TokenRequest..."
         );
 
-        if (mConfig.getMultipleCloudsSupported() || request.getMultipleCloudAware()) {
-            Logger.verbose(TAG, "get cloud specific authority based on authorization response.");
-            setTokenEndpoint(getCloudSpecificTenantEndpoint(response));
+        OpenIdProviderConfigurationClient configurationClient = new OpenIdProviderConfigurationClient(request, response, "v2.0");
+
+        OpenIdProviderConfiguration openIdConfig = null;
+        String tokenEndpoint;
+
+        try {
+            openIdConfig = configurationClient.loadOpenIdProviderConfiguration();
+            tokenEndpoint = openIdConfig.getTokenEndpoint();
+        } catch (ServiceException e) {
+            Logger.error(TAG + methodName,
+                    e.getMessage(),
+                    e);
+            tokenEndpoint = getCloudSpecificTenantEndpoint(response);
         }
+
+        setTokenEndpoint(tokenEndpoint);
 
         final MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setCodeVerifier(request.getPkceChallenge().getCodeVerifier());

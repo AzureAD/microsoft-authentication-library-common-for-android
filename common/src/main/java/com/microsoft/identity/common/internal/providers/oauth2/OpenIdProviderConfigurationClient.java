@@ -22,17 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.net.Uri;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
 import com.microsoft.identity.common.adal.internal.net.IWebRequestHandler;
 import com.microsoft.identity.common.adal.internal.net.WebRequestHandler;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.net.HttpRequest;
+import com.microsoft.identity.common.internal.net.HttpResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -54,16 +59,28 @@ public class OpenIdProviderConfigurationClient {
     private static final ExecutorService sBackgroundExecutor = Executors.newCachedThreadPool();
     private static final Map<URL, OpenIdProviderConfiguration> sConfigCache = new HashMap<>();
 
+    private static final String NA = "";
+
     public interface OpenIdProviderConfigurationCallback
             extends TaskCompletedCallbackWithError<OpenIdProviderConfiguration, Exception> {
     }
 
     private final String mIssuer;
+    private final String mPath;
+    private final String mVersion;
     private final Gson mGson = new Gson();
     private final IWebRequestHandler mWebRequestHandler = new WebRequestHandler();
 
     public OpenIdProviderConfigurationClient(@NonNull final String issuer) {
         mIssuer = sanitize(issuer);
+        mPath = NA;
+        mVersion = NA;
+    }
+
+    public OpenIdProviderConfigurationClient(@NonNull final MicrosoftAuthorizationRequest request, @NonNull final MicrosoftAuthorizationResponse response, @Nullable final String version) {
+        mIssuer = response.getCloudInstanceHostName();
+        mPath = request.getAuthority().getPath();
+        mVersion = version;
     }
 
     private String sanitize(@NonNull final String issuer) {
@@ -100,7 +117,15 @@ public class OpenIdProviderConfigurationClient {
         final String methodName = ":loadOpenIdProviderConfiguration";
 
         try {
-            final URL configUrl = new URL(mIssuer + sWellKnownConfig);
+            //Update the token response authority with cloud instance host name.
+            final String configUriString = new Uri.Builder().scheme("https")
+                    .authority(mIssuer)
+                    .appendPath(mPath)
+                    .appendPath(mVersion)
+                    .appendPath(sWellKnownConfig)
+                    .build().toString();
+
+            final URL configUrl = new URL(configUriString);
 
             // Check first for a cached copy...
             final OpenIdProviderConfiguration cacheResult = sConfigCache.get(configUrl);
@@ -124,10 +149,7 @@ public class OpenIdProviderConfigurationClient {
                     "Using request URL: " + configUrl
             );
 
-            final HttpWebResponse providerConfigResponse = mWebRequestHandler.sendGet(
-                    configUrl,
-                    new HashMap<String, String>()
-            );
+            final HttpResponse providerConfigResponse = HttpRequest.sendGet(configUrl, new HashMap<String, String>());
 
             final int statusCode = providerConfigResponse.getStatusCode();
 

@@ -42,8 +42,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 public class MicrosoftStsAccountCredentialAdapter
@@ -81,11 +79,7 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             accessToken.setRealm(getRealm(strategy, response));
 
-            if (!StringUtil.isEmpty(response.getAuthority())) {
-                accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromAuthority(new URL(response.getAuthority())));
-            } else {
-                accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
-            }
+            accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
 
             accessToken.setClientId(request.getClientId());
             /*
@@ -112,7 +106,7 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setAccessTokenType(response.getTokenType());
 
             return accessToken;
-        } catch (ServiceException | MalformedURLException e) {
+        } catch (ServiceException e) {
             // TODO handle this properly
             throw new RuntimeException(e);
         }
@@ -150,11 +144,7 @@ public class MicrosoftStsAccountCredentialAdapter
             final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
             // Required
             refreshToken.setCredentialType(CredentialType.RefreshToken.name());
-            if (null != response.getAuthority()) {
-                refreshToken.setEnvironment(strategy.getIssuerCacheIdentifierFromAuthority(new URL(response.getAuthority())));
-            } else {
-                refreshToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
-            }
+            refreshToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
 
             refreshToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             refreshToken.setClientId(request.getClientId());
@@ -168,7 +158,7 @@ public class MicrosoftStsAccountCredentialAdapter
             refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
 
             return refreshToken;
-        } catch (ServiceException | MalformedURLException e) {
+        } catch (ServiceException e) {
             // TODO handle this properly
             throw new RuntimeException(e);
         }
@@ -186,15 +176,8 @@ public class MicrosoftStsAccountCredentialAdapter
             // Required fields
             idToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
 
-            if (null != response.getAuthority()) {
-                idToken.setEnvironment(
-                        strategy.getIssuerCacheIdentifierFromAuthority(
-                                new URL(response.getAuthority())
-                        )
-                );
-            } else {
-                idToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
-            }
+            idToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
+
 
             idToken.setRealm(getRealm(strategy, response));
             idToken.setCredentialType(
@@ -213,7 +196,7 @@ public class MicrosoftStsAccountCredentialAdapter
             }
 
             return idToken;
-        } catch (ServiceException | MalformedURLException e) {
+        } catch (ServiceException e) {
             // TODO handle this properly
             throw new RuntimeException(e);
         }
