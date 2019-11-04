@@ -26,7 +26,6 @@ import android.net.Uri;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.net.IWebRequestHandler;
