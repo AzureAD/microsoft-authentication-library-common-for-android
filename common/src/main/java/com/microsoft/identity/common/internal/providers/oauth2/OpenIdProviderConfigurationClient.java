@@ -117,7 +117,7 @@ public class OpenIdProviderConfigurationClient {
         final String methodName = ":loadOpenIdProviderConfiguration";
 
         try {
-            //Update the token response authority with cloud instance host name.
+            //Create config uri from issuer, path and version
             final String configUriString = new Uri.Builder().scheme("https")
                     .authority(mIssuer)
                     .appendPath(mPath)
