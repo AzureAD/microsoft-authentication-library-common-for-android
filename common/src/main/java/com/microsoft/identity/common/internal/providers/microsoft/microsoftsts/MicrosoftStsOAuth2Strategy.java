@@ -322,6 +322,7 @@ public class MicrosoftStsOAuth2Strategy
         );
 
         if (mConfig.getMultipleCloudsSupported() || request.getMultipleCloudAware()) {
+            Logger.verbose(TAG, "get cloud specific authority based on authorization response.");
             setTokenEndpoint(getCloudSpecificTokenEndpoint(request, response));
         }
 
