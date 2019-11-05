@@ -69,19 +69,16 @@ public class OpenIdProviderConfigurationClient {
         mIssuer = Uri.parse(sanitize(issuer)).toString();
     }
 
-    public OpenIdProviderConfigurationClient(@NonNull final MicrosoftAuthorizationRequest request, @NonNull final MicrosoftAuthorizationResponse response) {
-        this(request, response, NA);
+    public OpenIdProviderConfigurationClient(@NonNull final String authority, @NonNull final String path) {
+        this(authority, path, NA);
     }
 
-    public OpenIdProviderConfigurationClient(@NonNull final MicrosoftAuthorizationRequest request, @NonNull final MicrosoftAuthorizationResponse response, @NonNull final String version) {
-        final String authority = response.getCloudInstanceHostName();
-        final String path = request.getAuthority().getPath();
-
+    public OpenIdProviderConfigurationClient(@NonNull final String authority, @NonNull final String path, @NonNull final String endpointVersion) {
         mIssuer = new Uri.Builder()
                 .scheme("https")
                 .authority(authority)
                 .appendPath(path)
-                .appendPath(version)
+                .appendPath(endpointVersion)
                 .build().toString();
     }
 
