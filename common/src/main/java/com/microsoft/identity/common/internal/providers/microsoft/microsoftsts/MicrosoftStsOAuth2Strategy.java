@@ -93,8 +93,6 @@ public class MicrosoftStsOAuth2Strategy
 
     private static final String TAG = MicrosoftStsOAuth2Strategy.class.getSimpleName();
 
-    private static final String ENDPOINT_VERSION = "v2.0";
-
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
      *
