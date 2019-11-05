@@ -63,14 +63,10 @@ public class OpenIdProviderConfigurationClient {
     }
 
     private final String mIssuer;
-    private final String mPath;
-    private final String mVersion;
     private final Gson mGson = new Gson();
 
     public OpenIdProviderConfigurationClient(@NonNull final String issuer) {
-        mIssuer = sanitize(issuer);
-        mPath = NA;
-        mVersion = NA;
+        mIssuer = Uri.parse(sanitize(issuer)).toString();
     }
 
     public OpenIdProviderConfigurationClient(@NonNull final MicrosoftAuthorizationRequest request, @NonNull final MicrosoftAuthorizationResponse response) {
@@ -78,9 +74,15 @@ public class OpenIdProviderConfigurationClient {
     }
 
     public OpenIdProviderConfigurationClient(@NonNull final MicrosoftAuthorizationRequest request, @NonNull final MicrosoftAuthorizationResponse response, @NonNull final String version) {
-        mIssuer = response.getCloudInstanceHostName();
-        mPath = request.getAuthority().getPath();
-        mVersion = version;
+        final String authority = response.getCloudInstanceHostName();
+        final String path = request.getAuthority().getPath();
+
+        mIssuer = new Uri.Builder()
+                .scheme("https")
+                .authority(authority)
+                .appendPath(path)
+                .appendPath(version)
+                .build().toString();
     }
 
     private String sanitize(@NonNull final String issuer) {
@@ -117,15 +119,7 @@ public class OpenIdProviderConfigurationClient {
         final String methodName = ":loadOpenIdProviderConfiguration";
 
         try {
-            //Create config uri from issuer, path and version
-            final String configUriString = new Uri.Builder().scheme("https")
-                    .authority(mIssuer)
-                    .appendPath(mPath)
-                    .appendPath(mVersion)
-                    .appendPath(sWellKnownConfig)
-                    .build().toString();
-
-            final URL configUrl = new URL(configUriString);
+            final URL configUrl = new URL(mIssuer + sWellKnownConfig);
 
             // Check first for a cached copy...
             final OpenIdProviderConfiguration cacheResult = sConfigCache.get(configUrl);
