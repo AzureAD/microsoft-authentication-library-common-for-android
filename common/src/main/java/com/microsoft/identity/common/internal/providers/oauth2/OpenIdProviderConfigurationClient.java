@@ -33,8 +33,6 @@ import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackW
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -56,8 +54,6 @@ public class OpenIdProviderConfigurationClient {
     private static final ExecutorService sBackgroundExecutor = Executors.newCachedThreadPool();
     private static final Map<URL, OpenIdProviderConfiguration> sConfigCache = new HashMap<>();
 
-    private static final String NA = "";
-
     public interface OpenIdProviderConfigurationCallback
             extends TaskCompletedCallbackWithError<OpenIdProviderConfiguration, Exception> {
     }
@@ -69,11 +65,13 @@ public class OpenIdProviderConfigurationClient {
         mIssuer = Uri.parse(sanitize(issuer)).toString();
     }
 
-    public OpenIdProviderConfigurationClient(@NonNull final String authority, @NonNull final String path) {
-        this(authority, path, NA);
+    public OpenIdProviderConfigurationClient(@NonNull final String authority,
+                                             @NonNull final String path) {
+        this(authority, path, "");
     }
 
-    public OpenIdProviderConfigurationClient(@NonNull final String authority, @NonNull final String path, @NonNull final String endpointVersion) {
+    public OpenIdProviderConfigurationClient(@NonNull final String authority,
+                                             @NonNull final String path, @NonNull final String endpointVersion) {
         mIssuer = new Uri.Builder()
                 .scheme("https")
                 .authority(authority)

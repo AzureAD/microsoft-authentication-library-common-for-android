@@ -320,22 +320,20 @@ public class MicrosoftStsOAuth2Strategy
                 "Creating TokenRequest..."
         );
 
-        OpenIdProviderConfigurationClient configurationClient = new OpenIdProviderConfigurationClient(request, response, ENDPOINT_VERSION);
+        final String tokenEndpoint = getTokenEndpointFromWellKnownConfig(
+                response.getCloudInstanceHostName(),
+                request.getAuthority().getPath()
+        );
 
-        OpenIdProviderConfiguration openIdConfig = null;
-        String tokenEndpoint;
-
-        try {
-            openIdConfig = configurationClient.loadOpenIdProviderConfiguration();
-            tokenEndpoint = openIdConfig.getTokenEndpoint();
-        } catch (ServiceException e) {
-            Logger.error(TAG + methodName,
-                    e.getMessage(),
-                    e);
-            tokenEndpoint = getCloudSpecificTenantEndpoint(response);
+        // set token endpoint as the one obtained from the open id config if available
+        if (tokenEndpoint != null) {
+            setTokenEndpoint(tokenEndpoint);
+        } else {
+            Logger.verbose(TAG + methodName,
+                    "Token Endpoint not obtained from well known config. Building token endpoint manually.");
+            // otherwise build it manually
+            setTokenEndpoint(getCloudSpecificTenantEndpoint(response));
         }
-
-        setTokenEndpoint(tokenEndpoint);
 
         final MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
         tokenRequest.setCodeVerifier(request.getPkceChallenge().getCodeVerifier());
@@ -523,6 +521,25 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return mTokenEndpoint;
+    }
+
+    private String getTokenEndpointFromWellKnownConfig(final String hostName,
+                                                       final String audience) {
+        final String methodName = ":getTokenEndpointFromWellKnownConfig";
+        final OpenIdProviderConfigurationClient configurationClient = new OpenIdProviderConfigurationClient(
+                hostName, audience, MicrosoftStsOAuth2Strategy.ENDPOINT_VERSION);
+
+        String tokenEndpoint = null;
+
+        try {
+            final OpenIdProviderConfiguration openIdConfig = configurationClient.loadOpenIdProviderConfiguration();
+            tokenEndpoint = openIdConfig.getTokenEndpoint();
+        } catch (ServiceException e) {
+            Logger.error(TAG + methodName,
+                    e.getMessage(),
+                    e);
+        }
+        return tokenEndpoint;
     }
 
 }
