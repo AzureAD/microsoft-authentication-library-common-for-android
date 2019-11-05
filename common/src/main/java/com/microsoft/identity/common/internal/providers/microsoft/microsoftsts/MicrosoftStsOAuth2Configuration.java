@@ -24,18 +24,48 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
 
+import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Configuration;
+import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
+import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationClient;
 
 import java.net.URL;
 
 public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2Configuration {
 
+    private static final String TAG = MicrosoftStsOAuth2Configuration.class.getSimpleName();
+
+    private static final String ENDPOINT_VERSION = "v2.0";
+    private static final String FALLBACK_ENDPOINT_SUFFIX = "/oAuth2/v2.0";
+    private static final String FALLBACK_AUTHORIZE_ENDPOINT_SUFFIX = FALLBACK_ENDPOINT_SUFFIX + "/authorize";
+    private static final String FALLBACK_TOKEN_ENDPOINT_SUFFIX = FALLBACK_ENDPOINT_SUFFIX + "/token";
+
     public URL getAuthorizationEndpoint() {
-        return getEndpoint(getAuthorityUrl(), "/oAuth2/v2.0/authorize");
+        final OpenIdProviderConfiguration openIdConfig = getOpenIdWellKnownConfigForAuthority();
+        if (openIdConfig != null) {
+            return getEndpoint(openIdConfig.getAuthorizationEndpoint());
+        }
+        return getEndpoint(getAuthorityUrl(), FALLBACK_AUTHORIZE_ENDPOINT_SUFFIX);
     }
 
     public URL getTokenEndpoint() {
-        return getEndpoint(getAuthorityUrl(), "/oAuth2/v2.0/token");
+        final OpenIdProviderConfiguration openIdConfig = getOpenIdWellKnownConfigForAuthority();
+        if (openIdConfig != null && openIdConfig.getTokenEndpoint() != null) {
+            return getEndpoint(openIdConfig.getTokenEndpoint());
+        }
+        return getEndpoint(getAuthorityUrl(), FALLBACK_TOKEN_ENDPOINT_SUFFIX);
+    }
+
+
+    private URL getEndpoint(String endpoint) {
+        try {
+            return new URL(endpoint);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     private URL getEndpoint(URL root, String endpoint) {
@@ -51,6 +81,31 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
 
         return null;
 
+    }
+
+    private OpenIdProviderConfiguration getOpenIdWellKnownConfigForAuthority() {
+        final URL authority = getAuthorityUrl();
+        return getOpenIdWellKnownConfig(authority.getHost(), authority.getPath());
+    }
+
+    OpenIdProviderConfiguration getOpenIdWellKnownConfig(final String host, final String audience) {
+        final String methodName = ":getOpenIdWellKnownConfig";
+        final OpenIdProviderConfigurationClient configurationClient = new OpenIdProviderConfigurationClient(
+                host,
+                audience,
+                ENDPOINT_VERSION);
+
+        OpenIdProviderConfiguration openIdConfig = null;
+
+        try {
+            openIdConfig = configurationClient.loadOpenIdProviderConfiguration();
+        } catch (ServiceException e) {
+            Logger.error(TAG + methodName,
+                    e.getMessage(),
+                    e);
+        }
+
+        return openIdConfig;
     }
 
 }

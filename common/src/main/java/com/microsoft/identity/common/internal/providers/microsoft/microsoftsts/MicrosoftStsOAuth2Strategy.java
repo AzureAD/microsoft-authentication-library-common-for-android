@@ -40,6 +40,8 @@ import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
@@ -50,7 +52,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStra
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
-import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationClient;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
@@ -320,19 +321,8 @@ public class MicrosoftStsOAuth2Strategy
                 "Creating TokenRequest..."
         );
 
-        final String tokenEndpoint = getTokenEndpointFromWellKnownConfig(
-                response.getCloudInstanceHostName(),
-                request.getAuthority().getPath()
-        );
-
-        // set token endpoint as the one obtained from the open id config if available
-        if (tokenEndpoint != null) {
-            setTokenEndpoint(tokenEndpoint);
-        } else {
-            Logger.verbose(TAG + methodName,
-                    "Token Endpoint not obtained from well known config. Building token endpoint manually.");
-            // otherwise build it manually
-            setTokenEndpoint(getCloudSpecificTenantEndpoint(response));
+        if (mConfig.getMultipleCloudsSupported() || request.getMultipleCloudAware()) {
+            setTokenEndpoint(getCloudSpecificTokenEndpoint(request, response));
         }
 
         final MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
@@ -507,7 +497,7 @@ public class MicrosoftStsOAuth2Strategy
         return result;
     }
 
-    private String getCloudSpecificTenantEndpoint(
+    private String buildCloudSpecificTokenEndpoint(
             @NonNull final MicrosoftStsAuthorizationResponse response) {
         if (!StringUtil.isEmpty(response.getCloudGraphHostName())) {
             final String updatedTokenEndpoint =
@@ -523,22 +513,25 @@ public class MicrosoftStsOAuth2Strategy
         return mTokenEndpoint;
     }
 
-    private String getTokenEndpointFromWellKnownConfig(final String hostName,
-                                                       final String audience) {
-        final String methodName = ":getTokenEndpointFromWellKnownConfig";
-        final OpenIdProviderConfigurationClient configurationClient = new OpenIdProviderConfigurationClient(
-                hostName, audience, MicrosoftStsOAuth2Strategy.ENDPOINT_VERSION);
+    private String getCloudSpecificTokenEndpoint(MicrosoftAuthorizationRequest request,
+                                                 MicrosoftAuthorizationResponse response) {
+        final String methodName = ":getCloudSpecificTokenEndpoint";
+        String tokenEndpoint;
 
-        String tokenEndpoint = null;
+        final OpenIdProviderConfiguration openIdConfig = mConfig.getOpenIdWellKnownConfig(
+                response.getCloudInstanceHostName(),
+                request.getAuthority().getPath()
+        );
 
-        try {
-            final OpenIdProviderConfiguration openIdConfig = configurationClient.loadOpenIdProviderConfiguration();
+        if (openIdConfig != null && openIdConfig.getTokenEndpoint() != null) {
             tokenEndpoint = openIdConfig.getTokenEndpoint();
-        } catch (ServiceException e) {
-            Logger.error(TAG + methodName,
-                    e.getMessage(),
-                    e);
+        } else {
+            Logger.verbose(TAG + methodName,
+                    "Token Endpoint not obtained from well known config. Building token endpoint manually.");
+            // otherwise build it manually
+            tokenEndpoint = buildCloudSpecificTokenEndpoint((MicrosoftStsAuthorizationResponse) response);
         }
+
         return tokenEndpoint;
     }
 
