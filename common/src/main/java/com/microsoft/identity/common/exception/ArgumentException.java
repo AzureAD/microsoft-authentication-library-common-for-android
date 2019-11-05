@@ -28,6 +28,7 @@ public class ArgumentException extends BaseException {
     public final static String ACQUIRE_TOKEN_SILENT_OPERATION_NAME = "acquireTokenSilent";
 
     public final static String SCOPE_ARGUMENT_NAME = "scopes";
+    public final static String AUTHORITY_ARGUMENT_NAME = "authority";
     public final static String IACCOUNT_ARGUMENT_NAME = "account";
 
     public final static String ILLEGAL_ARGUMENT_ERROR_CODE = "illegal_argument_exception";
