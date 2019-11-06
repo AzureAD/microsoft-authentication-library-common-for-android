@@ -30,6 +30,8 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 
+import java.io.IOException;
+
 public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
     private final static String TAG = AcquireTokenSilentOperationParameters.class.getSimpleName();
@@ -61,8 +63,32 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
     }
 
     private boolean authorityMatchesAccountEnvironment() {
-        final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(mAccount.getEnvironment());
-        return cloud.getPreferredNetworkHostName().equals(getAuthority().getAuthorityURL().getAuthority());
+        final String methodName = ":authorityMatchesAccountEnvironment";
+        try {
+            if (!AzureActiveDirectory.isInitialized()) {
+                performCloudDiscovery();
+            }
+            final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(mAccount.getEnvironment());
+            return cloud != null && cloud.getPreferredNetworkHostName().equals(getAuthority().getAuthorityURL().getAuthority());
+        } catch (IOException e) {
+            Logger.error(
+                    TAG + methodName,
+                    "Unable to perform cloud discovery",
+                    e);
+            return false;
+        }
+    }
+
+    private static void performCloudDiscovery() throws IOException {
+        final Object sLock = new Object();
+        final String methodName = ":performCloudDiscovery";
+        Logger.verbose(
+                TAG + methodName,
+                "Performing cloud discovery..."
+        );
+        synchronized (sLock) {
+            AzureActiveDirectory.performCloudDiscovery();
+        }
     }
 
 }
