@@ -499,7 +499,7 @@ public class MicrosoftStsOAuth2Strategy
 
     private String buildCloudSpecificTokenEndpoint(
             @NonNull final MicrosoftStsAuthorizationResponse response) {
-        if (!StringUtil.isEmpty(response.getCloudGraphHostName())) {
+        if (!StringUtil.isEmpty(response.getCloudInstanceHostName())) {
             final String updatedTokenEndpoint =
                     Uri.parse(mTokenEndpoint)
                             .buildUpon()
@@ -517,6 +517,10 @@ public class MicrosoftStsOAuth2Strategy
                                                  MicrosoftAuthorizationResponse response) {
         final String methodName = ":getCloudSpecificTokenEndpoint";
         String tokenEndpoint;
+
+        if (StringUtil.isEmpty(response.getCloudInstanceHostName())) {
+            return mTokenEndpoint;
+        }
 
         final OpenIdProviderConfiguration openIdConfig = mConfig.getOpenIdWellKnownConfig(
                 response.getCloudInstanceHostName(),
