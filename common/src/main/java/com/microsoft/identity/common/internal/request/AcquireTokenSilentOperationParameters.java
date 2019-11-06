@@ -36,6 +36,8 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
     private final static String TAG = AcquireTokenSilentOperationParameters.class.getSimpleName();
 
+    private static final Object sLock = new Object();
+
     private RefreshTokenRecord mRefreshToken;
 
 
@@ -80,7 +82,6 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
     }
 
     private static void performCloudDiscovery() throws IOException {
-        final Object sLock = new Object();
         final String methodName = ":performCloudDiscovery";
         Logger.verbose(
                 TAG + methodName,
