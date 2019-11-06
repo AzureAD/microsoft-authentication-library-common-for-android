@@ -24,6 +24,9 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Configuration;
@@ -41,6 +44,12 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
     private static final String FALLBACK_AUTHORIZE_ENDPOINT_SUFFIX = FALLBACK_ENDPOINT_SUFFIX + "/authorize";
     private static final String FALLBACK_TOKEN_ENDPOINT_SUFFIX = FALLBACK_ENDPOINT_SUFFIX + "/token";
 
+    /**
+     * Get the authorization endpoint to be used for making a authorization request.
+     * This must NOT be called from the main thread.
+     *
+     * @return URL the authorization endpoint
+     */
     public URL getAuthorizationEndpoint() {
         final OpenIdProviderConfiguration openIdConfig = getOpenIdWellKnownConfigForAuthority();
         if (openIdConfig != null) {
@@ -49,6 +58,12 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
         return getEndpoint(getAuthorityUrl(), FALLBACK_AUTHORIZE_ENDPOINT_SUFFIX);
     }
 
+    /**
+     * Get the token endpoint to be used for making a token request.
+     * This must NOT be called from the main thread.
+     *
+     * @return URL the token endpoint
+     */
     public URL getTokenEndpoint() {
         final OpenIdProviderConfiguration openIdConfig = getOpenIdWellKnownConfigForAuthority();
         if (openIdConfig != null && openIdConfig.getTokenEndpoint() != null) {
@@ -57,12 +72,22 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
         return getEndpoint(getAuthorityUrl(), FALLBACK_TOKEN_ENDPOINT_SUFFIX);
     }
 
-
-    private URL getEndpoint(String endpoint) {
+    @Nullable
+    private URL getEndpoint(@NonNull final String endpoint) {
+        final String methodName = ":getEndpoint";
         try {
             return new URL(endpoint);
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.error(
+                    TAG + methodName,
+                    "Unable to create URL from provided endpoint.",
+                    null);
+            Logger.errorPII(
+                    TAG + methodName,
+                    e.getMessage() +
+                            " Unable to create URL from provided endpoint." +
+                            " endpoint = " + endpoint,
+                    e);
         }
 
         return null;
@@ -83,12 +108,32 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
 
     }
 
+    /**
+     * Get the Open Id Provider Configuration from the authority.
+     * This operation must NOT be called from the main thread.
+     * This method can return null if errors are encountered and the caller should check the result
+     * before using it.
+     *
+     * @return OpenIdProviderConfiguration if available or null
+     */
+    @Nullable
     private OpenIdProviderConfiguration getOpenIdWellKnownConfigForAuthority() {
         final URL authority = getAuthorityUrl();
         return getOpenIdWellKnownConfig(authority.getHost(), authority.getPath());
     }
 
-    OpenIdProviderConfiguration getOpenIdWellKnownConfig(final String host, final String audience) {
+    /**
+     * Get the Open Id Provider Configuration based on the host and audience.
+     * This operation must NOT be called from the main thread.
+     * This method can return null if errors are encountered and the caller should check the result
+     * before using it.
+     *
+     * @param host     the host of authority url
+     * @param audience the audience (path) of the authority url
+     * @return OpenIdProviderConfiguration if available or null
+     */
+    @Nullable
+    OpenIdProviderConfiguration getOpenIdWellKnownConfig(@NonNull final String host, @NonNull final String audience) {
         final String methodName = ":getOpenIdWellKnownConfig";
         final OpenIdProviderConfigurationClient configurationClient = new OpenIdProviderConfigurationClient(
                 host,

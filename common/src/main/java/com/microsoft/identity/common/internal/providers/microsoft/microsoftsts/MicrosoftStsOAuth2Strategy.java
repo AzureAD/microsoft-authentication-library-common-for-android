@@ -166,9 +166,10 @@ public class MicrosoftStsOAuth2Strategy
         try {
             authority = new URL(mTokenEndpoint);
         } catch (MalformedURLException e) {
-            Logger.verbose(
+            Logger.error(
                     TAG + methodName,
-                    "Getting issuer cache identifier from token endpoint failed due to malformed URL (mTokenEndpoint)..."
+                    "Getting issuer cache identifier from token endpoint failed due to malformed URL (mTokenEndpoint)...",
+                    e
             );
         }
 
