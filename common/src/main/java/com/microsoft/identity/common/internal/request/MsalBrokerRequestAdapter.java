@@ -8,9 +8,13 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
@@ -29,9 +33,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     private static final String TAG = MsalBrokerRequestAdapter.class.getName();
@@ -41,9 +42,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.info(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
 
-        final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
+        final BrokerRequest brokerRequest = new BrokerRequest.Builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
-                .scope(TextUtils.join( " ", parameters.getScopes()))
+                .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(getRedirectUri(parameters))
                 .clientId(parameters.getClientId())
                 .username(parameters.getLoginHint())
@@ -59,6 +60,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .applicationVersion(parameters.getApplicationVersion())
                 .msalVersion(parameters.getSdkVersion())
                 .environment(AzureActiveDirectory.getEnvironment().name())
+                .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
                 .build();
 
         return brokerRequest;
@@ -69,9 +71,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.info(TAG, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
 
-        final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
+        final BrokerRequest brokerRequest = new BrokerRequest.Builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
-                .scope(TextUtils.join( " ", parameters.getScopes()))
+                .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(getRedirectUri(parameters))
                 .clientId(parameters.getClientId())
                 .homeAccountId(parameters.getAccount().getHomeAccountId())
@@ -84,6 +86,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .applicationVersion(parameters.getApplicationVersion())
                 .msalVersion(parameters.getSdkVersion())
                 .environment(AzureActiveDirectory.getEnvironment().name())
+                .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
                 .build();
 
         return brokerRequest;
@@ -126,12 +129,15 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             parameters.setExtraQueryStringParameters(extraQP);
         }
 
-        parameters.setAuthority(
-                AdalBrokerRequestAdapter.getRequestAuthorityWithExtraQP(
-                        brokerRequest.getAuthority(),
-                        extraQP
-                )
+        final AzureActiveDirectoryAuthority authority = AdalBrokerRequestAdapter.getRequestAuthorityWithExtraQP(
+                brokerRequest.getAuthority(),
+                extraQP
         );
+
+        if (authority != null) {
+            authority.setMultipleCloudsSupported(brokerRequest.getMultipleCloudsSupported());
+            parameters.setAuthority(authority);
+        }
 
         parameters.setScopes(getScopesAsSet(brokerRequest.getScope()));
 
@@ -201,6 +207,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final Authority authority = Authority.getAuthorityFromAuthorityUrl(
                 brokerRequest.getAuthority()
         );
+
+        if (authority instanceof AzureActiveDirectoryAuthority) {
+            ((AzureActiveDirectoryAuthority) authority).setMultipleCloudsSupported(brokerRequest.getMultipleCloudsSupported());
+        }
+
         parameters.setAuthority(authority);
 
         String correlationIdString = bundle.getString(
@@ -230,7 +241,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         parameters.setLocalAccountId(brokerRequest.getLocalAccountId());
 
-        if(!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
+        if (!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
             parameters.setExtraQueryStringParameters(
                     QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter())
             );
@@ -259,6 +270,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     /**
      * Create the request bundle for IMicrosoftAuthService.hello().
+     *
      * @param parameters AcquireTokenSilentOperationParameters
      * @return request bundle
      */
@@ -286,5 +298,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             );
         }
         return parameters.getRedirectUri();
+    }
+
+    private boolean getMultipleCloudsSupported(@NonNull final OperationParameters parameters) {
+        if (parameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
+            final AzureActiveDirectoryAuthority authority = (AzureActiveDirectoryAuthority) parameters.getAuthority();
+            return authority.getMultipleCloudsSupported();
+        } else {
+            return false;
+        }
     }
 }
