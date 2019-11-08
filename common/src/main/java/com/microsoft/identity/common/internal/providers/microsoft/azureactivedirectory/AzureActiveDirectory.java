@@ -111,6 +111,14 @@ public class AzureActiveDirectory
     }
 
     /**
+     * @param preferredCacheHostName String
+     * @return AzureActiveDirectoryCloud
+     */
+    public static AzureActiveDirectoryCloud getAzureActiveDirectoryCloudFromHostName(final String preferredCacheHostName) {
+        return sAadClouds.get(preferredCacheHostName.toLowerCase(Locale.US));
+    }
+
+    /**
      * @param host  String
      * @param cloud AzureActiveDirectoryCloud
      */

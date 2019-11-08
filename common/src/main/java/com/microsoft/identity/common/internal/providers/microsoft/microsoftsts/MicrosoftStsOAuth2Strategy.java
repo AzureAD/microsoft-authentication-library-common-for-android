@@ -40,6 +40,8 @@ import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
@@ -49,6 +51,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
@@ -131,7 +134,7 @@ public class MicrosoftStsOAuth2Strategy
         return authority.getHost();
     }
 
-    public String getIssuerCacheIdentifierFromAuthority(final URL authority) {
+    private String getIssuerCacheIdentifierFromAuthority(final URL authority) {
         final String methodName = ":getIssuerCacheIdentifierFromAuthority";
 
         final AzureActiveDirectoryCloud cloudEnv = AzureActiveDirectory.getAzureActiveDirectoryCloud(authority);
@@ -153,6 +156,28 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return authority.getHost();
+    }
+
+    public String getIssuerCacheIdentifierFromTokenEndpoint() {
+        final String methodName = ":getIssuerCacheIdentifierFromTokenEndpoint";
+        URL authority = null;
+        String cacheIdentifier = null;
+
+        try {
+            authority = new URL(mTokenEndpoint);
+        } catch (MalformedURLException e) {
+            Logger.error(
+                    TAG + methodName,
+                    "Getting issuer cache identifier from token endpoint failed due to malformed URL (mTokenEndpoint)...",
+                    e
+            );
+        }
+
+        if (authority != null) {
+            cacheIdentifier = getIssuerCacheIdentifierFromAuthority(authority);
+        }
+
+        return cacheIdentifier;
     }
 
     @Override
@@ -212,23 +237,7 @@ public class MicrosoftStsOAuth2Strategy
 
         MicrosoftStsAccount account = new MicrosoftStsAccount(idToken, clientInfo);
 
-        // The Account created by the strategy sets the environment to get the 'iss' from the IdToken
-        // For caching purposes, this may not be the correct value due to the preferred cache identifier
-        // in the InstanceDiscoveryMetadata
-        URL authority = null;
-
-        try {
-            authority = new URL(mTokenEndpoint);
-        } catch (MalformedURLException e) {
-            Logger.verbose(
-                    TAG + methodName,
-                    "Creating account from TokenResponse failed due to malformed URL (mTokenEndpoint)..."
-            );
-        }
-
-        if (authority != null) {
-            account.setEnvironment(getIssuerCacheIdentifierFromAuthority(authority));
-        }
+        account.setEnvironment(getIssuerCacheIdentifierFromTokenEndpoint());
 
         return account;
     }
@@ -313,7 +322,7 @@ public class MicrosoftStsOAuth2Strategy
 
         if (mConfig.getMultipleCloudsSupported() || request.getMultipleCloudAware()) {
             Logger.verbose(TAG, "get cloud specific authority based on authorization response.");
-            setTokenEndpoint(getCloudSpecificTenantEndpoint(response));
+            setTokenEndpoint(getCloudSpecificTokenEndpoint(request, response));
         }
 
         final MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
@@ -488,9 +497,9 @@ public class MicrosoftStsOAuth2Strategy
         return result;
     }
 
-    private String getCloudSpecificTenantEndpoint(
+    private String buildCloudSpecificTokenEndpoint(
             @NonNull final MicrosoftStsAuthorizationResponse response) {
-        if (!StringUtil.isEmpty(response.getCloudGraphHostName())) {
+        if (!StringUtil.isEmpty(response.getCloudInstanceHostName())) {
             final String updatedTokenEndpoint =
                     Uri.parse(mTokenEndpoint)
                             .buildUpon()
@@ -502,6 +511,32 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return mTokenEndpoint;
+    }
+
+    private String getCloudSpecificTokenEndpoint(MicrosoftAuthorizationRequest request,
+                                                 MicrosoftAuthorizationResponse response) {
+        final String methodName = ":getCloudSpecificTokenEndpoint";
+        String tokenEndpoint;
+
+        if (StringUtil.isEmpty(response.getCloudInstanceHostName())) {
+            return mTokenEndpoint;
+        }
+
+        final OpenIdProviderConfiguration openIdConfig = mConfig.getOpenIdWellKnownConfig(
+                response.getCloudInstanceHostName(),
+                request.getAuthority().getPath()
+        );
+
+        if (openIdConfig != null && openIdConfig.getTokenEndpoint() != null) {
+            tokenEndpoint = openIdConfig.getTokenEndpoint();
+        } else {
+            Logger.verbose(TAG + methodName,
+                    "Token Endpoint not obtained from well known config. Building token endpoint manually.");
+            // otherwise build it manually
+            tokenEndpoint = buildCloudSpecificTokenEndpoint((MicrosoftStsAuthorizationResponse) response);
+        }
+
+        return tokenEndpoint;
     }
 
 }
