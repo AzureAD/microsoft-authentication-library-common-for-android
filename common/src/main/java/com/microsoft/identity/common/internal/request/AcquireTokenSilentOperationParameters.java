@@ -70,7 +70,7 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
             if (!AzureActiveDirectory.isInitialized()) {
                 performCloudDiscovery();
             }
-            final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(mAccount.getEnvironment());
+            final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName(mAccount.getEnvironment());
             return cloud != null && cloud.getPreferredNetworkHostName().equals(getAuthority().getAuthorityURL().getAuthority());
         } catch (IOException e) {
             Logger.error(

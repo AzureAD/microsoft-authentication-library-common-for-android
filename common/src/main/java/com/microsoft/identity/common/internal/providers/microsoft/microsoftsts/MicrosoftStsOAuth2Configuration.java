@@ -53,9 +53,9 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
     public URL getAuthorizationEndpoint() {
         final OpenIdProviderConfiguration openIdConfig = getOpenIdWellKnownConfigForAuthority();
         if (openIdConfig != null) {
-            return getEndpoint(openIdConfig.getAuthorizationEndpoint());
+            return getEndpointUrlFromAuthority(openIdConfig.getAuthorizationEndpoint());
         }
-        return getEndpoint(getAuthorityUrl(), FALLBACK_AUTHORIZE_ENDPOINT_SUFFIX);
+        return getEndpointUrlFromRootAndSuffix(getAuthorityUrl(), FALLBACK_AUTHORIZE_ENDPOINT_SUFFIX);
     }
 
     /**
@@ -67,41 +67,51 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
     public URL getTokenEndpoint() {
         final OpenIdProviderConfiguration openIdConfig = getOpenIdWellKnownConfigForAuthority();
         if (openIdConfig != null && openIdConfig.getTokenEndpoint() != null) {
-            return getEndpoint(openIdConfig.getTokenEndpoint());
+            return getEndpointUrlFromAuthority(openIdConfig.getTokenEndpoint());
         }
-        return getEndpoint(getAuthorityUrl(), FALLBACK_TOKEN_ENDPOINT_SUFFIX);
+        return getEndpointUrlFromRootAndSuffix(getAuthorityUrl(), FALLBACK_TOKEN_ENDPOINT_SUFFIX);
     }
 
     @Nullable
-    private URL getEndpoint(@NonNull final String endpoint) {
-        final String methodName = ":getEndpoint";
+    private URL getEndpointUrlFromAuthority(@NonNull final String authorityUrl) {
+        final String methodName = ":getEndpointUrlFromAuthority";
         try {
-            return new URL(endpoint);
+            return new URL(authorityUrl);
         } catch (Exception e) {
             Logger.error(
                     TAG + methodName,
-                    "Unable to create URL from provided endpoint.",
+                    "Unable to create URL from provided authority.",
                     null);
             Logger.errorPII(
                     TAG + methodName,
                     e.getMessage() +
-                            " Unable to create URL from provided endpoint." +
-                            " endpoint = " + endpoint,
+                            " Unable to create URL from provided authority." +
+                            " authority = " + authorityUrl,
                     e);
         }
 
         return null;
     }
 
-    private URL getEndpoint(URL root, String endpoint) {
+    private URL getEndpointUrlFromRootAndSuffix(@NonNull URL root, @NonNull String endpointSuffix) {
+        final String methodName = ":getEndpointUrlFromRootAndSuffix";
         try {
             Uri authorityUri = Uri.parse(root.toString());
             Uri endpointUri = authorityUri.buildUpon()
-                    .appendPath(endpoint)
+                    .appendPath(endpointSuffix)
                     .build();
             return new URL(endpointUri.toString());
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.error(
+                    TAG + methodName,
+                    "Unable to create URL from provided root and suffix.",
+                    null);
+            Logger.errorPII(
+                    TAG + methodName,
+                    e.getMessage() +
+                            " Unable to create URL from provided root and suffix." +
+                            " root = " + root.toString() + " suffix = " + endpointSuffix,
+                    e);
         }
 
         return null;
