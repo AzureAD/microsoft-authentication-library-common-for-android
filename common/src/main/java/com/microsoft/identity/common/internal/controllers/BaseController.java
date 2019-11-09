@@ -183,7 +183,6 @@ public abstract class BaseController {
 
         TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
-        tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
 
         TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
