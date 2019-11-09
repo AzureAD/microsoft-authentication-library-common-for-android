@@ -57,43 +57,65 @@ public class RefreshTokenRequestParameters {
         return mIdTokenVersion;
     }
 
-    private RefreshTokenRequestParameters(@NonNull final String clientId,
-                                          @NonNull final String scopes,
-                                          @NonNull final String refreshToken,
-                                          @Nullable final String claims,
-                                          @Nullable final String idTokenVersion,
-                                          @Nullable final UUID correlationId) {
-        this.mClientId = clientId;
-        this.mScopes = scopes;
-        this.mRefreshToken = refreshToken;
-        this.mClaims = claims;
-        this.mIdTokenVersion = idTokenVersion;
-        this.mCorrelationId = correlationId;
+    private RefreshTokenRequestParameters(RefreshTokenRequestParameters.Builder builder) {
+        mClientId = builder.mClientId;
+        mScopes = builder.mScopes;
+        mRefreshToken = builder.mRefreshToken;
+        mClaims = builder.mClaims;
+        mIdTokenVersion = builder.mIdTokenVersion;
+        mCorrelationId = builder.mCorrelationId;
     }
 
-    public RefreshTokenRequestParameters(@NonNull final String clientId,
-                                          @NonNull final String scopes,
-                                          @NonNull final String refreshToken,
-                                          @Nullable final String idTokenVersion,
-                                          @Nullable final UUID correlationId) {
-        this(
-                clientId,
-                scopes,
-                refreshToken,
-                null,
-                idTokenVersion,
-                correlationId
-        );
-    }
+    public static class Builder {
+        private String mClientId;
+        private String mScopes;
+        private String mRefreshToken;
+        private String mClaims;
+        private String mIdTokenVersion;
+        private UUID mCorrelationId;
 
-    public RefreshTokenRequestParameters(@NonNull final AcquireTokenSilentOperationParameters parameters) {
-        this(
-                parameters.getClientId(),
-                TextUtils.join(" ", parameters.getScopes()),
-                parameters.getRefreshToken().getSecret(),
-                parameters.getClaimsRequestJson(),
-                parameters.getSdkType() == SdkType.ADAL ? "1" : null,
-                null
-        );
+        public RefreshTokenRequestParameters.Builder clientId(@NonNull final String clientId) {
+            this.mClientId = clientId;
+            return this;
+        }
+
+        public RefreshTokenRequestParameters.Builder scopes(@NonNull final String scopes) {
+            this.mScopes = scopes;
+            return this;
+        }
+
+        public RefreshTokenRequestParameters.Builder refreshToken(@NonNull final String refreshToken) {
+            this.mRefreshToken = refreshToken;
+            return this;
+        }
+
+        public RefreshTokenRequestParameters.Builder claims(@Nullable final String claims) {
+            this.mClaims = claims;
+            return this;
+        }
+
+        public RefreshTokenRequestParameters.Builder idTokenVersion(@Nullable final String idTokenVersion) {
+            this.mIdTokenVersion = idTokenVersion;
+            return this;
+        }
+
+        public RefreshTokenRequestParameters.Builder correlationId(@Nullable final UUID correlationId) {
+            this.mCorrelationId = correlationId;
+            return this;
+        }
+
+        public RefreshTokenRequestParameters.Builder fromParameters(@NonNull final AcquireTokenSilentOperationParameters parameters) {
+            this.mClientId = parameters.getClientId();
+            this.mScopes = TextUtils.join(" ", parameters.getScopes());
+            this.mRefreshToken = parameters.getRefreshToken().getSecret();
+            this.mClaims = parameters.getClaimsRequestJson();
+            this.mIdTokenVersion = parameters.getSdkType() == SdkType.ADAL ? "1" : null;
+            this.mCorrelationId = null;
+            return this;
+        }
+
+        public RefreshTokenRequestParameters build() {
+            return new RefreshTokenRequestParameters(this);
+        }
     }
 }

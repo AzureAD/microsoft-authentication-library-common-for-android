@@ -601,13 +601,13 @@ public class TokenCacheItemMigrationAdapter {
                                                               @Nullable final UUID correlationId,
                                                               @NonNull final String idTokenVersion) {
 
-        final RefreshTokenRequestParameters parameters = new RefreshTokenRequestParameters(
-                clientId,
-                scopes,
-                refreshToken,
-                idTokenVersion,
-                correlationId
-        );
+        final RefreshTokenRequestParameters parameters = new RefreshTokenRequestParameters.Builder()
+                .clientId(clientId)
+                .scopes(scopes)
+                .refreshToken(refreshToken)
+                .idTokenVersion(idTokenVersion)
+                .correlationId(correlationId)
+                .build();
 
         return strategy.createRefreshTokenRequest(parameters);
     }

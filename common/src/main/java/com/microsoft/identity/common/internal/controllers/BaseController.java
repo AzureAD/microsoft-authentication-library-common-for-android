@@ -345,7 +345,9 @@ public abstract class BaseController {
         }
 
         final RefreshTokenRequestParameters refreshTokenRequestParameters =
-                new RefreshTokenRequestParameters(parameters);
+                new RefreshTokenRequestParameters.Builder()
+                        .fromParameters(parameters)
+                        .build();
 
         final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(refreshTokenRequestParameters);
 
