@@ -26,6 +26,9 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
@@ -45,6 +48,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.request.RefreshTokenRequestParameters;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.IOException;
@@ -58,9 +62,6 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import static com.microsoft.identity.common.internal.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
@@ -185,7 +186,7 @@ public class TokenCacheItemMigrationAdapter {
                         + correlationId
                         + "]");
 
-        if(tokenResult.getSuccess()){
+        if (tokenResult.getSuccess()) {
             // Save the token record in tha cache so that we have an entry in BrokerApplicationMetadata for this client id.
             final MicrosoftStsAuthorizationRequest authorizationRequest = createAuthRequest(
                     strategy,
@@ -599,17 +600,16 @@ public class TokenCacheItemMigrationAdapter {
                                                               @NonNull final MicrosoftStsOAuth2Strategy strategy,
                                                               @Nullable final UUID correlationId,
                                                               @NonNull final String idTokenVersion) {
-        final MicrosoftStsTokenRequest tokenRequest = strategy.createRefreshTokenRequest();
 
-        // Set the request properties
-        tokenRequest.setClientId(clientId);
-        tokenRequest.setScope(scopes);
-        tokenRequest.setCorrelationId(correlationId);
-        tokenRequest.setRefreshToken(refreshToken);
-        tokenRequest.setRedirectUri(redirectUri);
-        tokenRequest.setIdTokenVersion(idTokenVersion);
+        final RefreshTokenRequestParameters parameters = new RefreshTokenRequestParameters(
+                clientId,
+                scopes,
+                refreshToken,
+                idTokenVersion,
+                correlationId
+        );
 
-        return tokenRequest;
+        return strategy.createRefreshTokenRequest(parameters);
     }
 
     public static MicrosoftStsAuthorizationRequest createAuthRequest(@NonNull final MicrosoftStsOAuth2Strategy strategy,
@@ -617,7 +617,7 @@ public class TokenCacheItemMigrationAdapter {
                                                                      @NonNull final String clientId,
                                                                      @NonNull final String redirectUri,
                                                                      @NonNull final String scope,
-                                                                     @Nullable final UUID correlationId){
+                                                                     @Nullable final UUID correlationId) {
         final MicrosoftStsAuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(
                 cacheRecord.getAccount()
         );

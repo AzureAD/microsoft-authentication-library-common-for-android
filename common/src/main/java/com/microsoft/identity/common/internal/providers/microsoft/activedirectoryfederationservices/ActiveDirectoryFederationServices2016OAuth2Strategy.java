@@ -37,6 +37,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.request.RefreshTokenRequestParameters;
 
 import java.util.concurrent.Future;
 
@@ -101,7 +102,7 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
     }
 
     @Override
-    public TokenRequest createRefreshTokenRequest() {
+    public TokenRequest createRefreshTokenRequest(RefreshTokenRequestParameters parameters) {
         return null;
     }
 

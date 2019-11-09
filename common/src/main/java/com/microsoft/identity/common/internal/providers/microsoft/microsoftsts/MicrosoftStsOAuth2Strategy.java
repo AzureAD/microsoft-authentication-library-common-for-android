@@ -55,6 +55,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderCon
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.request.RefreshTokenRequestParameters;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeFactory;
@@ -353,7 +354,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsTokenRequest createRefreshTokenRequest() {
+    public MicrosoftStsTokenRequest createRefreshTokenRequest(RefreshTokenRequestParameters parameters) {
         final String methodName = ":createRefreshTokenRequest";
         Logger.verbose(
                 TAG + methodName,
@@ -362,6 +363,34 @@ public class MicrosoftStsOAuth2Strategy
 
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
+
+        request.setClientId(parameters.getClientId());
+        request.setScope(parameters.getScopes());
+        request.setRefreshToken(parameters.getRefreshToken());
+        request.setClaims(parameters.getClaims());
+        request.setIdTokenVersion(parameters.getIdTokenVersion());
+
+        if (parameters.getCorrelationId() != null) {
+            request.setCorrelationId(parameters.getCorrelationId());
+        } else {
+            try {
+                request.setCorrelationId(
+                        UUID.fromString(
+                                DiagnosticContext
+                                        .getRequestContext()
+                                        .get(DiagnosticContext.CORRELATION_ID)
+                        )
+                );
+            } catch (IllegalArgumentException ex) {
+                //We're not setting the correlation id if we can't parse it from the diagnostic context
+                Logger.error(
+                        "MicrosoftSTSOAuth2Strategy",
+                        "Correlation id on diagnostic context is not a UUID.",
+                        ex
+                );
+            }
+        }
+
         return request;
     }
 

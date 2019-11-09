@@ -23,9 +23,9 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
@@ -43,7 +43,6 @@ import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -59,6 +58,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.request.RefreshTokenRequestParameters;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
@@ -345,20 +345,10 @@ public abstract class BaseController {
             throw authorityResult.getClientException();
         }
 
-        final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest();
-        refreshTokenRequest.setClientId(parameters.getClientId());
-        refreshTokenRequest.setScope(TextUtils.join(" ", parameters.getScopes()));
-        refreshTokenRequest.setRefreshToken(parameters.getRefreshToken().getSecret());
-        refreshTokenRequest.setRedirectUri(parameters.getRedirectUri());
+        final RefreshTokenRequestParameters refreshTokenRequestParameters =
+                new RefreshTokenRequestParameters(parameters);
 
-        if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
-            ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
-        }
-
-        //NOTE: this should be moved to the strategy; however requires a larger refactor
-        if (parameters.getSdkType() == SdkType.ADAL) {
-            ((MicrosoftTokenRequest) refreshTokenRequest).setIdTokenVersion("1");
-        }
+        final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(refreshTokenRequestParameters);
 
         if (!StringExtensions.isNullOrBlank(refreshTokenRequest.getScope())) {
             Logger.infoPII(
@@ -471,7 +461,7 @@ public abstract class BaseController {
     }
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
-                final String tenantId = SchemaUtil.getTenantId(
+        final String tenantId = SchemaUtil.getTenantId(
                 microsoftTokenResponse.getClientInfo(),
                 microsoftTokenResponse.getIdToken()
         );
