@@ -39,6 +39,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.request.RefreshTokenRequestParameters;
 
 import java.net.HttpURLConnection;
 
@@ -206,7 +207,7 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest() {
+    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(RefreshTokenRequestParameters parameters) {
         return null;
     }
 

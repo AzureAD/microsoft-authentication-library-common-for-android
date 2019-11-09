@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.request;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -207,12 +208,12 @@ public class OperationParameters {
 
     /**
      * Get the list of browsers which are safe to launch for auth flow.
+     *
      * @return list of browser descriptors
      */
     public List<BrowserDescriptor> getBrowserSafeList() {
         return mBrowserSafeList;
     }
-
 
 
     //CHECKSTYLE:OFF
