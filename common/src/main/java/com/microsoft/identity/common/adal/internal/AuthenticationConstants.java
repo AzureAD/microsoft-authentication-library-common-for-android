@@ -996,6 +996,11 @@ public final class AuthenticationConstants {
         public static final String REDIRECT_PREFIX = "msauth";
 
         /**
+         * Device Registration redirect url host name
+         */
+        public static final String DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME = "wpj";
+
+        /**
          * Encoded delimiter for redirect.
          */
         public static final Object REDIRECT_DELIMETER_ENCODED = "%2C";

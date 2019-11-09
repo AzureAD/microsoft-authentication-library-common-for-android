@@ -23,6 +23,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
+import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -61,6 +62,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .msalVersion(parameters.getSdkVersion())
                 .environment(AzureActiveDirectory.getEnvironment().name())
                 .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
+                .authorizationAgent(AuthorizationAgent.BROWSER.name()) // TODO take this from the API exposed to Intune COBO from MSAL.
                 .build();
 
         return brokerRequest;
@@ -161,7 +163,12 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 OpenIdConnectPromptParameter.valueOf(brokerRequest.getPrompt())
         );
 
-        parameters.setAuthorizationAgent(AuthorizationAgent.WEBVIEW);
+        if(brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())){
+            parameters.setAuthorizationAgent(AuthorizationAgent.BROWSER);
+            parameters.setBrowserSafeList(getBrowserSafeListForBroker());
+        }else {
+            parameters.setAuthorizationAgent(AuthorizationAgent.WEBVIEW);
+        }
 
         // Set Global environment variable for instance discovery if present
         if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
@@ -209,7 +216,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         );
 
         if (authority instanceof AzureActiveDirectoryAuthority) {
-            ((AzureActiveDirectoryAuthority) authority).setMultipleCloudsSupported(brokerRequest.getMultipleCloudsSupported());
+            ((AzureActiveDirectoryAuthority) authority).setMultipleCloudsSupported(
+                    brokerRequest.getMultipleCloudsSupported()
+            );
         }
 
         parameters.setAuthority(authority);
@@ -307,5 +316,33 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         } else {
             return false;
         }
+    }
+
+    /**
+     * List of System Browsers which can be used from broker, currently only Chrome is supported.
+     * @return
+     */
+    public List<BrowserDescriptor> getBrowserSafeListForBroker(){
+        List<BrowserDescriptor>  browserDescriptors = new ArrayList<>();
+        final HashSet<String> signatureHashes = new HashSet();
+        signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
+        final BrowserDescriptor chromeWithCustomTabs = new BrowserDescriptor(
+                "com.android.chrome",
+                signatureHashes,
+                true,
+                "45",
+                null
+        );
+        final BrowserDescriptor chromeWithoutCustomTabs = new BrowserDescriptor(
+                "com.android.chrome",
+                signatureHashes,
+                false,
+                null,
+                null
+        );
+        browserDescriptors.add(chromeWithCustomTabs);
+        browserDescriptors.add(chromeWithoutCustomTabs);
+
+        return browserDescriptors;
     }
 }
