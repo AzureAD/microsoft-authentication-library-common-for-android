@@ -52,6 +52,7 @@ public class BrokerRequest implements Serializable {
         final static String CLIENT_VERSION = "client_version";
         final static String ENVIRONMENT = "environment";
         final static String MULTIPLE_CLOUDS_SUPPORTED = "multiple_clouds_supported";
+        final static String AUTHOTIZATION_AGENT = "authorization_agent";
     }
 
     /**
@@ -176,6 +177,10 @@ public class BrokerRequest implements Serializable {
     @SerializedName(SerializedNames.MULTIPLE_CLOUDS_SUPPORTED)
     private boolean mMultipleCloudsSupported;
 
+    @NonNull
+    @SerializedName(SerializedNames.AUTHOTIZATION_AGENT)
+    private String mAuthorizationAgent;
+
 
     private BrokerRequest(BrokerRequest.Builder builder) {
         mAuthority = builder.mAuthority;
@@ -195,6 +200,7 @@ public class BrokerRequest implements Serializable {
         mMsalVersion = builder.mMsalVersion;
         mEnvironment = builder.mEnvironment;
         mMultipleCloudsSupported = builder.mMultipleCloudsSupported;
+        mAuthorizationAgent = builder.mAuthorizationAgent;
     }
 
 
@@ -266,6 +272,10 @@ public class BrokerRequest implements Serializable {
         return mMultipleCloudsSupported;
     }
 
+    public String getAuthorizationAgent() {
+        return mAuthorizationAgent;
+    }
+
     /**
      * Builder class for Broker Request.
      */
@@ -304,6 +314,8 @@ public class BrokerRequest implements Serializable {
         private String mEnvironment;
 
         private boolean mMultipleCloudsSupported;
+
+        private String mAuthorizationAgent;
 
 
         /**
@@ -441,6 +453,12 @@ public class BrokerRequest implements Serializable {
             this.mMultipleCloudsSupported = multipleCloudsSupported;
             return this;
         }
+
+        public BrokerRequest.Builder authorizationAgent(@NonNull final String authorizationAgent) {
+            this.mAuthorizationAgent = authorizationAgent;
+            return this;
+        }
+
 
         /**
          * Builds and returns a BrokerRequest
