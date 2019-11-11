@@ -23,13 +23,15 @@
 package com.microsoft.identity.common.internal.ui;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
+import com.microsoft.identity.common.internal.request.generated.InteractiveTokenCommandContext;
+import com.microsoft.identity.common.internal.request.generated.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
@@ -46,11 +48,13 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
         return sInstance;
     }
 
-    public GenericAuthorizationStrategy getAuthorizationStrategy(@NonNull final AcquireTokenOperationParameters parameters) {
+    public GenericAuthorizationStrategy getAuthorizationStrategy(
+            @NonNull final InteractiveTokenCommandContext context,
+            @NonNull final InteractiveTokenCommandParameters parameters) {
         //Valid if available browser installed. Will fallback to embedded webView if no browser available.
         final AuthorizationAgent validatedAuthorizationAgent = validAuthorizationAgent(
-                parameters.getAuthorizationAgent(),
-                parameters.getActivity().getApplicationContext()
+                parameters.authorizationAgent(),
+                context.androidApplicationContext()
         );
 
         if (validatedAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
@@ -61,7 +65,7 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
             // Use device browser auth flow as default.
             // Fall back to webview if no browser found.
             try {
-                BrowserSelector.select(parameters.getAppContext(), parameters.getBrowserSafeList());
+                BrowserSelector.select(context.androidApplicationContext(), context.);
             } catch (final ClientException exception) {
                 Logger.info(TAG, "No supported browser available found. Fallback to the webView authorization agent.");
                 if (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND)) {
@@ -71,12 +75,12 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
 
             Logger.info(TAG, "Use browser for authorization.");
             final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(parameters.getActivity());
-            browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
+            browserAuthorizationStrategy.setBrowserSafeList(context.browserSafeList());
             return (GenericAuthorizationStrategy) browserAuthorizationStrategy;
         } else {
             Logger.info(TAG, "Use browser for authorization.");
             final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(parameters.getActivity());
-            browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
+            browserAuthorizationStrategy.setBrowserSafeList(context.browserSafeList());
             return (GenericAuthorizationStrategy) browserAuthorizationStrategy;
         }
     }

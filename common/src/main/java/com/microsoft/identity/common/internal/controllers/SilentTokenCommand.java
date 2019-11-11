@@ -22,37 +22,38 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.content.Intent;
-
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.UiRequiredException;
-import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
-import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.request.generated.SilentTokenCommandContext;
+import com.microsoft.identity.common.internal.request.generated.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-public class TokenCommand extends BaseCommand<AcquireTokenResult> implements TokenOperation {
+public class SilentTokenCommand extends BaseCommand<AcquireTokenResult,
+        SilentTokenCommandContext,
+        SilentTokenCommandParameters,
+        CommandCallback
+        >  {
 
-    private static final String TAG = TokenCommand.class.getSimpleName();
+    private static final String TAG = SilentTokenCommand.class.getSimpleName();
 
-    public TokenCommand(@NonNull final OperationParameters parameters,
-                        @NonNull final BaseController controller,
-                        @NonNull final CommandCallback callback) {
-        super(parameters, controller, callback);
+    public SilentTokenCommand(@NonNull final SilentTokenCommandContext commandContext,
+                              @NonNull final SilentTokenCommandParameters commandParameters,
+                              @NonNull final BaseController controller,
+                              @NonNull final CommandCallback callback) {
+        super(commandContext, commandParameters, controller, callback);
     }
 
-    public TokenCommand(@NonNull final OperationParameters parameters,
-                        @NonNull final List<BaseController> controllers,
-                        @NonNull final CommandCallback callback) {
-        super(parameters, controllers, callback);
+    public SilentTokenCommand(@NonNull final SilentTokenCommandContext commandContext,
+                              @NonNull final SilentTokenCommandParameters commandParameters,
+                              @NonNull final List<BaseController> controllers,
+                              @NonNull final CommandCallback callback) {
+        super(commandContext, commandParameters, controllers, callback);
     }
 
     @Override
@@ -71,7 +72,8 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
                 );
 
                 result = controller.acquireTokenSilent(
-                        (AcquireTokenSilentOperationParameters) getParameters()
+                        this.getContext(),
+                        this.getParameters()
                 );
 
                 if (result.getSucceeded()) {
@@ -110,11 +112,6 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
     @Override
     public int getCommandNameHashCode() {
         return TAG.hashCode();
-    }
-
-    @Override
-    public void notify(int requestCode, int resultCode, Intent data) {
-        throw new UnsupportedOperationException();
     }
 
 }

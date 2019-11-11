@@ -24,44 +24,52 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
+import com.microsoft.identity.common.internal.request.generated.InteractiveTokenCommandContext;
+import com.microsoft.identity.common.internal.request.generated.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.request.generated.SilentTokenCommandContext;
+import com.microsoft.identity.common.internal.request.generated.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
-public class InteractiveTokenCommand extends TokenCommand {
+public class InteractiveTokenCommand extends BaseCommand<AcquireTokenResult,
+        InteractiveTokenCommandContext,
+        InteractiveTokenCommandParameters,
+        CommandCallback>
+        implements AsyncCommand{
     private static final String TAG = InteractiveTokenCommand.class.getSimpleName();
 
-    public InteractiveTokenCommand(AcquireTokenOperationParameters parameters,
-                                   BaseController controller,
-                                   CommandCallback callback) {
-
-        super(parameters, controller, callback);
+    public InteractiveTokenCommand(@NonNull final InteractiveTokenCommandContext commandContext,
+                                   @NonNull final InteractiveTokenCommandParameters commandParameters,
+                                   @NonNull final BaseController controller,
+                                   @NonNull final CommandCallback callback) {
+        super(commandContext, commandParameters, controller, callback);
     }
 
     @Override
     public AcquireTokenResult execute() throws Exception {
         final String methodName = ":execute";
-        if (getParameters() instanceof AcquireTokenOperationParameters) {
-            Logger.info(
-                    TAG + methodName,
-                    "Executing interactive token command..."
-            );
 
-            return getDefaultController()
-                    .acquireToken(
-                            (AcquireTokenOperationParameters) getParameters()
-                    );
-        } else {
-            throw new IllegalArgumentException("Invalid operation parameters");
-        }
+        Logger.info(
+                TAG + methodName,
+                "Executing interactive token command..."
+        );
+
+        return getDefaultController()
+                .acquireToken(
+                        this.getContext(),
+                        this.getParameters()
+                );
+
     }
 
-    @Override
     public void notify(int requestCode, int resultCode, final Intent data) {
         getDefaultController().completeAcquireToken(requestCode, resultCode, data);
     }

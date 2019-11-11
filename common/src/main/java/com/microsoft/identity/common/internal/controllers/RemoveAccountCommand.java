@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.controllers;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.request.generated.RemoveAccountCommandContext;
+import com.microsoft.identity.common.internal.request.generated.RemoveAccountCommandParameters;
 
 import java.util.List;
 
@@ -32,13 +34,17 @@ import java.util.List;
  * Command class to call controllers to remove the account and return the result to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class RemoveAccountCommand extends BaseCommand<Boolean> {
+public class RemoveAccountCommand extends BaseCommand<Boolean,
+        RemoveAccountCommandContext,
+        RemoveAccountCommandParameters,
+        CommandCallback> {
     private static final String TAG = RemoveAccountCommand.class.getSimpleName();
 
-    public RemoveAccountCommand(@NonNull final OperationParameters parameters,
-                                @NonNull final List<BaseController> controllers,
-                                @NonNull final CommandCallback callback) {
-        super(parameters, controllers, callback);
+    public RemoveAccountCommand(@NonNull final RemoveAccountCommandContext commandContext,
+                                    @NonNull final RemoveAccountCommandParameters commandParameters,
+                                    @NonNull final List<BaseController> controllers,
+                                    @NonNull final CommandCallback callback) {
+        super(commandContext, commandParameters, controllers, callback);
     }
 
     @Override
@@ -55,7 +61,7 @@ public class RemoveAccountCommand extends BaseCommand<Boolean> {
                             + controller.getClass().getSimpleName()
             );
 
-            result = controller.removeAccount(getParameters());
+            result = controller.removeAccount(this.getContext(), this.getParameters());
         }
 
         return result;

@@ -28,6 +28,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -64,6 +65,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -153,6 +155,15 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return authority.getHost();
+    }
+
+    @Override
+    public List<String> getDefaultScopes(){
+        List<String> defaultScopes = Arrays.asList(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE,
+                AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE,
+                AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE);
+
+        return defaultScopes;
     }
 
     @Override

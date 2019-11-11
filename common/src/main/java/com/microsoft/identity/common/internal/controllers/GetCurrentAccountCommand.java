@@ -25,7 +25,8 @@ package com.microsoft.identity.common.internal.controllers;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.request.generated.GetCurrentAccountCommandContext;
+import com.microsoft.identity.common.internal.request.generated.GetCurrentAccountCommandParameters;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,19 +35,24 @@ import java.util.List;
  * Command class to call controllers to load accounts and return the account list to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
+public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>,
+        GetCurrentAccountCommandContext,
+        GetCurrentAccountCommandParameters,
+        CommandCallback> {
     private static final String TAG = GetCurrentAccountCommand.class.getSimpleName();
 
-    public GetCurrentAccountCommand(@NonNull final OperationParameters parameters,
+    public GetCurrentAccountCommand(@NonNull final GetCurrentAccountCommandContext commandContext,
+                              @NonNull final GetCurrentAccountCommandParameters commandParameters,
                               @NonNull final BaseController controller,
                               @NonNull final CommandCallback callback) {
-        super(parameters, controller, callback);
+        super(commandContext, commandParameters, controller, callback);
     }
 
-    public GetCurrentAccountCommand(@NonNull final OperationParameters parameters,
+    public GetCurrentAccountCommand(@NonNull final GetCurrentAccountCommandContext commandContext,
+                              @NonNull final GetCurrentAccountCommandParameters commandParameters,
                               @NonNull final List<BaseController> controllers,
                               @NonNull final CommandCallback callback) {
-        super(parameters, controllers, callback);
+        super(commandContext, commandParameters, controllers, callback);
     }
 
     @Override
@@ -63,7 +69,7 @@ public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
                             + controller.getClass().getSimpleName()
             );
 
-            result.addAll(controller.getCurrentAccount(getParameters()));
+            result.addAll(controller.getCurrentAccount(this.getContext(),this.getParameters()));
         }
 
         return result;

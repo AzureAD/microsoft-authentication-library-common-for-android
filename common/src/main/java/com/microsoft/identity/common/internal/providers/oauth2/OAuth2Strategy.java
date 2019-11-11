@@ -40,6 +40,8 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftToken
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
@@ -101,6 +103,10 @@ public abstract class OAuth2Strategy
         }
 
         return future;
+    }
+
+    public List<String> getDefaultScopes(){
+        return new ArrayList<>();
     }
 
     public abstract AuthorizationResultFactory getAuthorizationResultFactory();

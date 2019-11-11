@@ -90,17 +90,20 @@ public class CommandDispatcher {
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
+
+                final String correlationId = initializeDiagnosticContext(command.getContext().correlationId());
                 EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                 CommandResult commandResult = null;
                 Handler handler = new Handler(Looper.getMainLooper());
 
                 //Log operation parameters
+                /*
                 if (command.getParameters() instanceof AcquireTokenSilentOperationParameters) {
                     logSilentRequestParams(methodName, (AcquireTokenSilentOperationParameters) command.getParameters());
                     EstsTelemetry.getInstance().emitForceRefresh(command.getParameters().getForceRefresh());
                 }
+                */
 
                 //Check cache to see if the same command completed in the last 30 seconds
                 commandResult = sCommandResultCache.get(command);
@@ -271,7 +274,7 @@ public class CommandDispatcher {
         );
         synchronized (sLock) {
             // Send a broadcast to cancel if any active auth request is present.
-            command.getParameters().getAppContext().sendBroadcast(
+            command.getContext().getAndroidApplicationContext().sendBroadcast(
                     new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
             );
 
@@ -279,13 +282,15 @@ public class CommandDispatcher {
                 @Override
                 public void run() {
                     final String correlationId = initializeDiagnosticContext(
-                            command.getParameters().getCorrelationId()
+                            command.getContext().correlationId()
                     );
                     EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
+                    /*
                     if (command.getParameters() instanceof AcquireTokenOperationParameters) {
                         logInteractiveRequestParameters(methodName, (AcquireTokenOperationParameters) command.getParameters());
                     }
+                     */
 
                     AcquireTokenResult result = null;
                     BaseException baseException = null;
@@ -365,6 +370,7 @@ public class CommandDispatcher {
         }
     }
 
+    /*
     private static void logInteractiveRequestParameters(final String methodName,
                                                         final AcquireTokenOperationParameters params) {
         Logger.info(
@@ -474,6 +480,8 @@ public class CommandDispatcher {
                 "Force refresh? [" + parameters.getForceRefresh() + "]"
         );
     }
+
+     */
 
     public static void completeInteractive(int requestCode, int resultCode, final Intent data) {
         final String methodName = ":completeInteractive";

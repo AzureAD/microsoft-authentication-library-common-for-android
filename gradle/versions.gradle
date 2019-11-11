@@ -31,6 +31,8 @@ ext {
     runnerVersion = "1.2.0"
     rulesVersion = "1.2.0"
     robolectricVersion = "4.0"
+    autoValueVersion = "1.7"
+    equalsVerifierVersion = "3.1.10"
 
     // TODO: adal automation test app.
     supportLibraryVersion = "27.1.+"

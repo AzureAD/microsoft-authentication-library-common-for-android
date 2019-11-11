@@ -26,6 +26,8 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.request.generated.LoadAccountCommandContext;
+import com.microsoft.identity.common.internal.request.generated.LoadAccountCommandParameters;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,20 +36,26 @@ import java.util.List;
  * Command class to call controllers to load accounts and return the account list to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
+public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>,
+        LoadAccountCommandContext,
+        LoadAccountCommandParameters,
+        CommandCallback> {
     private static final String TAG = LoadAccountCommand.class.getSimpleName();
 
-    public LoadAccountCommand(@NonNull final OperationParameters parameters,
-                              @NonNull final BaseController controller,
-                              @NonNull final CommandCallback callback) {
-        super(parameters, controller, callback);
+    public LoadAccountCommand(@NonNull final LoadAccountCommandContext commandContext,
+                                    @NonNull final LoadAccountCommandParameters commandParameters,
+                                    @NonNull final BaseController controller,
+                                    @NonNull final CommandCallback callback) {
+        super(commandContext, commandParameters, controller, callback);
     }
 
-    public LoadAccountCommand(@NonNull final OperationParameters parameters,
-                              @NonNull final List<BaseController> controllers,
-                              @NonNull final CommandCallback callback) {
-        super(parameters, controllers, callback);
+    public LoadAccountCommand(@NonNull final LoadAccountCommandContext commandContext,
+                                    @NonNull final LoadAccountCommandParameters commandParameters,
+                                    @NonNull final List<BaseController> controllers,
+                                    @NonNull final CommandCallback callback) {
+        super(commandContext, commandParameters, controllers, callback);
     }
+
 
     @Override
     public List<ICacheRecord> execute() throws Exception {
@@ -63,7 +71,7 @@ public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
                             + controller.getClass().getSimpleName()
             );
 
-            result.addAll(controller.getAccounts(getParameters()));
+            result.addAll(controller.getAccounts(this.getContext(), this.getParameters()));
         }
 
         return result;

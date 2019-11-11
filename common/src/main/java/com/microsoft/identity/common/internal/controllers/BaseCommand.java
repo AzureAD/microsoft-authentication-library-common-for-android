@@ -25,62 +25,58 @@ package com.microsoft.identity.common.internal.controllers;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.request.generated.CommandContext;
+import com.microsoft.identity.common.internal.request.generated.CommandParameters;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class BaseCommand<T> implements Command<T> {
-    private OperationParameters mParameters;
+public abstract class BaseCommand<T,
+        GenericCommandContext extends CommandContext,
+        GenericCommandParameters extends CommandParameters,
+        GenericCommandCallback extends CommandCallback> implements Command<T> {
+    private GenericCommandContext mCommandContext;
+    private GenericCommandParameters mCommandParameters;
     private List<BaseController> mControllers;
-    private CommandCallback mCallback;
+    private GenericCommandCallback mCallback;
     private String mPublicApiId;
 
-    public BaseCommand(@NonNull final OperationParameters parameters,
-                       @NonNull final BaseController controller,
-                       @NonNull final CommandCallback callback) {
-        mParameters = parameters;
-        mControllers = new ArrayList<>();
-        mCallback = callback;
-
-        mControllers.add(controller);
-    }
-
-    public BaseCommand(@NonNull final OperationParameters parameters,
+    public BaseCommand(@NonNull final GenericCommandContext GenericCommandContext,
+                       @NonNull final GenericCommandParameters commandParameters,
                        @NonNull final List<BaseController> controllers,
-                       @NonNull final CommandCallback callback) {
-        mParameters = parameters;
+                       @NonNull final GenericCommandCallback callback) {
+        mCommandContext = GenericCommandContext;
+        mCommandParameters = commandParameters;
         mControllers = controllers;
         mCallback = callback;
     }
 
-    public OperationParameters getParameters() {
-        return mParameters;
+    public BaseCommand(@NonNull final GenericCommandContext commandContext,
+                       @NonNull final GenericCommandParameters commandParameters,
+                       @NonNull final BaseController controller,
+                       @NonNull final GenericCommandCallback callback) {
+        mCommandContext = commandContext;
+        mCommandParameters = commandParameters;
+        mControllers = new ArrayList<>();
+        mControllers.add(controller);
+        mCallback = callback;
     }
 
-    public void setParameters(OperationParameters parameters) {
-        mParameters = parameters;
+    public GenericCommandParameters getParameters() {
+        return mCommandParameters;
     }
-
+    public GenericCommandContext getContext() {
+        return mCommandContext;
+    }
     public List<BaseController> getControllers() {
         return mControllers;
     }
-
-    public void setControllers(List<BaseController> controllers) {
-        mControllers = controllers;
-    }
-
-    public CommandCallback getCallback() {
+    public GenericCommandCallback getCallback() {
         return mCallback;
     }
-
-    public void setCallback(CommandCallback callback) {
-        this.mCallback = callback;
-    }
-
     public void setPublicApiId(String publicApiId) {
         this.mPublicApiId = publicApiId;
     }
-
     public String getPublicApiId() {
         return mPublicApiId;
     }
@@ -107,9 +103,9 @@ public abstract class BaseCommand<T> implements Command<T> {
         if (this == o) return true;
         if (!(o instanceof BaseCommand)) return false;
 
-        BaseCommand<?> that = (BaseCommand<?>) o;
+        BaseCommand<?, ?, ?, ?> that = (BaseCommand<?, ?, ?, ?>) o;
 
-        return mParameters.equals(that.mParameters);
+        return mCommandParameters.equals(that.mCommandParameters);
     }
     //CHECKSTYLE:ON
 
@@ -120,7 +116,7 @@ public abstract class BaseCommand<T> implements Command<T> {
     @SuppressWarnings("PMD")
     @Override
     public int hashCode() {
-        return  31 * getCommandNameHashCode() + mParameters.hashCode();
+        return  31 * getCommandNameHashCode() + mCommandParameters.hashCode();
     }
     //CHECKSTYLE:ON
 }

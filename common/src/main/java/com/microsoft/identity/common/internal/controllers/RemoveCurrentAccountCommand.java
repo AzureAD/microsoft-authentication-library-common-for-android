@@ -25,23 +25,30 @@ package com.microsoft.identity.common.internal.controllers;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.request.generated.RemoveCurrentAccountCommandContext;
+import com.microsoft.identity.common.internal.request.generated.RemoveCurrentAccountCommandParameters;
 
 /**
  * Command class to call controllers to remove the account and return the result to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
+public class RemoveCurrentAccountCommand extends BaseCommand<Boolean,
+        RemoveCurrentAccountCommandContext,
+        RemoveCurrentAccountCommandParameters,
+        CommandCallback> {
     private static final String TAG = RemoveCurrentAccountCommand.class.getSimpleName();
 
-    public RemoveCurrentAccountCommand(@NonNull final OperationParameters parameters,
-                                       @NonNull final BaseController controller,
-                                       @NonNull final CommandCallback callback) {
-        super(parameters, controller, callback);
+
+    public RemoveCurrentAccountCommand(@NonNull final RemoveCurrentAccountCommandContext commandContext,
+                                    @NonNull final RemoveCurrentAccountCommandParameters commandParameters,
+                                    @NonNull final BaseController controller,
+                                    @NonNull final CommandCallback callback) {
+        super(commandContext, commandParameters, controller, callback);
     }
 
     @Override
     public Boolean execute() throws Exception {
-        return getDefaultController().removeCurrentAccount(getParameters());
+        return getDefaultController().removeCurrentAccount(this.getContext(), this.getParameters());
     }
 
     @Override

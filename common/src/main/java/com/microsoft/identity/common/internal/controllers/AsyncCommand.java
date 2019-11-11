@@ -30,8 +30,6 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
-public interface TokenOperation {
-    AcquireTokenResult execute() throws Exception;
-
+public interface AsyncCommand {
     void notify(int requestCode, int resultCode, final Intent data);
 }

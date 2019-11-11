@@ -25,23 +25,29 @@ package com.microsoft.identity.common.internal.controllers;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.request.generated.GetDeviceModeCommandContext;
+import com.microsoft.identity.common.internal.request.generated.GetDeviceModeCommandParameters;
 
 /**
  * Command class to call controllers to remove the account and return the result to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class GetDeviceModeCommand extends BaseCommand<Boolean> {
+public class GetDeviceModeCommand extends BaseCommand<Boolean,
+        GetDeviceModeCommandContext,
+        GetDeviceModeCommandParameters,
+        CommandCallback> {
     private static final String TAG = GetDeviceModeCommand.class.getSimpleName();
 
-    public GetDeviceModeCommand(@NonNull final OperationParameters parameters,
-                                @NonNull final BaseController controller,
-                                @NonNull final CommandCallback callback) {
-        super(parameters, controller, callback);
+    public GetDeviceModeCommand(@NonNull final GetDeviceModeCommandContext commandContext,
+                                    @NonNull final GetDeviceModeCommandParameters commandParameters,
+                                    @NonNull final BaseController controller,
+                                    @NonNull final CommandCallback callback) {
+        super(commandContext, commandParameters, controller, callback);
     }
 
     @Override
     public Boolean execute() throws Exception {
-        return getDefaultController().getDeviceMode(getParameters());
+        return getDefaultController().getDeviceMode(this.getContext(), this.getParameters());
     }
 
     @Override
