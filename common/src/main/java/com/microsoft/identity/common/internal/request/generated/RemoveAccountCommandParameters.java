@@ -14,6 +14,7 @@ public abstract class RemoveAccountCommandParameters extends CommandParameters {
     public abstract static class Builder {
         public abstract Builder setClientId(String value);
         public abstract Builder setRedirectUri(String value);
+        public abstract Builder setAccountRecord(IAccountRecord value);
         public abstract RemoveAccountCommandParameters build();
     }
 }

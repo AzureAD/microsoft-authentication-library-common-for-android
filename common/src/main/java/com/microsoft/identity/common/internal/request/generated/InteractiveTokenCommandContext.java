@@ -3,8 +3,6 @@ package com.microsoft.identity.common.internal.request.generated;
 import android.app.Activity;
 import android.content.Context;
 
-import androidx.annotation.Nullable;
-
 import com.google.auto.value.AutoValue;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.request.SdkType;
@@ -17,7 +15,7 @@ import java.util.List;
 @Immutable
 @AutoValue
 @AutoValue.CopyAnnotations
-public abstract class InteractiveTokenCommandContext extends CommandContext {
+public abstract class InteractiveTokenCommandContext extends CommandContext implements IContext {
 
     //region Black Magic for keeping specific fields out of equals
     protected Context androidApplicationContext;
@@ -26,7 +24,7 @@ public abstract class InteractiveTokenCommandContext extends CommandContext {
 
     public abstract List<BrowserDescriptor> browserSafeList();
 
-    public Context androidApplicationContext(){
+    public Context androidApplicationContext() {
         return androidApplicationContext;
     }
 
@@ -34,7 +32,11 @@ public abstract class InteractiveTokenCommandContext extends CommandContext {
         return tokenCache;
     }
 
-    public Builder toBuilder(){
+    public Activity androidActivity(){
+        return androidActivity;
+    }
+
+    public Builder toBuilder() {
         Builder builder = autoToBuilder();
         builder.androidContext = this.androidApplicationContext;
         builder.tokenCache = this.tokenCache;
@@ -57,22 +59,22 @@ public abstract class InteractiveTokenCommandContext extends CommandContext {
         private OAuth2TokenCache tokenCache;
         private Activity androidActivity;
 
-        public Builder setAndroidApplicationContext(Context context){
+        public Builder setAndroidApplicationContext(Context context) {
             androidContext = context;
             return this;
         }
 
-        public Builder setOAuth2TokenCache(OAuth2TokenCache cache){
+        public Builder setOAuth2TokenCache(OAuth2TokenCache cache) {
             tokenCache = cache;
             return this;
         }
 
-        public Builder setActivity(Activity activity){
+        public Builder setActivity(Activity activity) {
             androidActivity = activity;
             return this;
         }
 
-        public InteractiveTokenCommandContext build(){
+        public InteractiveTokenCommandContext build() {
             InteractiveTokenCommandContext x = autoBuild();
             x.androidApplicationContext = this.androidContext;
             x.tokenCache = this.tokenCache;
@@ -84,11 +86,17 @@ public abstract class InteractiveTokenCommandContext extends CommandContext {
         //endregion
 
         public abstract Builder setApplicationName(String value);
+
         public abstract Builder setApplicationVersion(String value);
+
         public abstract Builder setRequiredBrokerProtocolVersion(String value);
+
         public abstract Builder setCorrelationId(String value);
+
         public abstract Builder setSdkType(SdkType value);
+
         public abstract Builder setSdkVersion(String value);
+
         public abstract Builder setBrowserSafeList(List<BrowserDescriptor> value);
 
 

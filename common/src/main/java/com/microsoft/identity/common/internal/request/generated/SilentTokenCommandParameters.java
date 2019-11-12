@@ -14,7 +14,7 @@ import java.util.Set;
 @AutoValue.CopyAnnotations
 public abstract class SilentTokenCommandParameters
         extends CommandParameters
-        implements IScopesAddable<SilentTokenCommandParameters>{
+        implements IScopesAddable<SilentTokenCommandParameters>, ITokenRequestParameters{
 
     public abstract Set<String> scopes();
     public abstract IAccountRecord account();

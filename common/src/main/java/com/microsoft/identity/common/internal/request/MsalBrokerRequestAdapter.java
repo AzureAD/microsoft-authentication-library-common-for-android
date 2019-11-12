@@ -18,6 +18,8 @@ import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
+import com.microsoft.identity.common.internal.request.generated.CommandContext;
+import com.microsoft.identity.common.internal.request.generated.IContext;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -259,17 +261,17 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     /**
      * Create the request bundle for IMicrosoftAuthService.hello().
-     * @param parameters AcquireTokenSilentOperationParameters
+     * @param context IContext
      * @return request bundle
      */
-    public static Bundle getBrokerHelloBundle(@NonNull final OperationParameters parameters) {
+    public static Bundle getBrokerHelloBundle(@NonNull final CommandContext context) {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
                 AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);
 
-        if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {
+        if (!StringUtil.isEmpty(context.requiredBrokerProtocolVersion())) {
             requestBundle.putString(AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
-                    parameters.getRequiredBrokerProtocolVersion());
+                    context.requiredBrokerProtocolVersion());
         }
 
         return requestBundle;

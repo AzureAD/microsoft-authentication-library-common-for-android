@@ -2,8 +2,6 @@ package com.microsoft.identity.common.internal.request.generated;
 
 import android.content.Context;
 
-import androidx.annotation.Nullable;
-
 import com.google.auto.value.AutoValue;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.request.SdkType;
@@ -13,14 +11,14 @@ import net.jcip.annotations.Immutable;
 @Immutable
 @AutoValue
 @AutoValue.CopyAnnotations
-public abstract class SilentTokenCommandContext extends CommandContext {
-
+public abstract class SilentTokenCommandContext
+        extends CommandContext implements IContext {
 
     //region Black Magic for keeping specific fields out of equals
     protected Context androidApplicationContext;
     protected OAuth2TokenCache tokenCache;
 
-    public Context androidApplicationContext(){
+    public Context androidApplicationContext() {
         return androidApplicationContext;
     }
 
@@ -28,7 +26,7 @@ public abstract class SilentTokenCommandContext extends CommandContext {
         return tokenCache;
     }
 
-    public Builder toBuilder(){
+    public Builder toBuilder() {
         Builder builder = autoToBuilder();
         builder.androidContext = this.androidApplicationContext;
         builder.tokenCache = this.tokenCache;
@@ -49,17 +47,17 @@ public abstract class SilentTokenCommandContext extends CommandContext {
         private Context androidContext;
         private OAuth2TokenCache tokenCache;
 
-        public Builder setAndroidApplicationContext(Context context){
+        public Builder setAndroidApplicationContext(Context context) {
             androidContext = context;
             return this;
         }
 
-        public Builder setOAuth2TokenCache(OAuth2TokenCache cache){
+        public Builder setOAuth2TokenCache(OAuth2TokenCache cache) {
             tokenCache = cache;
             return this;
         }
 
-        public SilentTokenCommandContext build(){
+        public SilentTokenCommandContext build() {
             SilentTokenCommandContext x = autoBuild();
             x.androidApplicationContext = this.androidContext;
             x.tokenCache = this.tokenCache;
@@ -70,10 +68,15 @@ public abstract class SilentTokenCommandContext extends CommandContext {
         //endregion
 
         public abstract Builder setApplicationName(String value);
+
         public abstract Builder setApplicationVersion(String value);
+
         public abstract Builder setRequiredBrokerProtocolVersion(String value);
+
         public abstract Builder setCorrelationId(String value);
+
         public abstract Builder setSdkType(SdkType value);
+
         public abstract Builder setSdkVersion(String value);
 
 

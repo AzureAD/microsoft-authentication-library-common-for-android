@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
@@ -49,9 +50,10 @@ import com.microsoft.identity.common.internal.request.generated.GetCurrentAccoun
 import com.microsoft.identity.common.internal.request.generated.GetCurrentAccountCommandParameters;
 import com.microsoft.identity.common.internal.request.generated.GetDeviceModeCommandContext;
 import com.microsoft.identity.common.internal.request.generated.GetDeviceModeCommandParameters;
+import com.microsoft.identity.common.internal.request.generated.IContext;
 import com.microsoft.identity.common.internal.request.generated.IScopesAddable;
+import com.microsoft.identity.common.internal.request.generated.ITokenRequestParameters;
 import com.microsoft.identity.common.internal.request.generated.InteractiveTokenCommandContext;
-import com.microsoft.identity.common.internal.request.generated.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.request.generated.LoadAccountCommandContext;
 import com.microsoft.identity.common.internal.request.generated.LoadAccountCommandParameters;
 import com.microsoft.identity.common.internal.request.generated.RemoveAccountCommandContext;
@@ -123,10 +125,11 @@ public abstract class BaseController<
     protected abstract TokenResult performTokenRequest(@NonNull final OAuth2Strategy strategy,
                                                        @NonNull final AuthorizationRequest request,
                                                        @NonNull final AuthorizationResponse response,
-                                                       @NonNull final InteractiveTokenCommandParameters parameters)
+                                                       @NonNull final InteractiveTokenCommandContext context)
             throws IOException, ClientException;
 
-    protected abstract void renewAccessToken(@NonNull final GenericSilentTokenCommandParameters parameters,
+    protected abstract void renewAccessToken(@NonNull final SilentTokenCommandContext context,
+                                             @NonNull final GenericSilentTokenCommandParameters parameters,
                                              @NonNull final AcquireTokenResult acquireTokenSilentResult,
                                              @NonNull final OAuth2TokenCache tokenCache,
                                              @NonNull final OAuth2Strategy strategy,
@@ -211,7 +214,9 @@ public abstract class BaseController<
 
     protected abstract TokenResult performSilentTokenRequest(
             @NonNull final OAuth2Strategy strategy,
-            @NonNull final GenericInteractiveTokenCommandParameters parameters)
+            @NonNull final RefreshTokenRecord refreshTokenRecord,
+            @NonNull final IContext context,
+            @NonNull final ITokenRequestParameters parameters)
             throws ClientException, IOException;
 
 
@@ -253,7 +258,9 @@ public abstract class BaseController<
         return parameters.addDefaultScopes(scopes);
     }
 
-    protected abstract AccountRecord getCachedAccountRecord(GenericSilentTokenCommandParameters parameters) throws ClientException;
+    protected abstract AccountRecord getCachedAccountRecord(
+            SilentTokenCommandContext context,
+            GenericSilentTokenCommandParameters parameters) throws ClientException;
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
         final String tenantId = SchemaUtil.getTenantId(

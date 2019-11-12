@@ -59,27 +59,27 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
 
         if (validatedAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
             Logger.info(TAG, "Use webView for authorization.");
-            return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(parameters.getActivity()));
+            return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(context.androidActivity()));
         } else if (validatedAuthorizationAgent == AuthorizationAgent.DEFAULT) {
             // When the authorization agent is set to DEFAULT,
             // Use device browser auth flow as default.
             // Fall back to webview if no browser found.
             try {
-                BrowserSelector.select(context.androidApplicationContext(), context.);
+                BrowserSelector.select(context.androidApplicationContext(), context.browserSafeList());
             } catch (final ClientException exception) {
                 Logger.info(TAG, "No supported browser available found. Fallback to the webView authorization agent.");
                 if (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND)) {
-                    return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(parameters.getActivity()));
+                    return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(context.androidActivity()));
                 }
             }
 
             Logger.info(TAG, "Use browser for authorization.");
-            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(parameters.getActivity());
+            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(context.androidActivity());
             browserAuthorizationStrategy.setBrowserSafeList(context.browserSafeList());
             return (GenericAuthorizationStrategy) browserAuthorizationStrategy;
         } else {
             Logger.info(TAG, "Use browser for authorization.");
-            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(parameters.getActivity());
+            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(context.androidActivity());
             browserAuthorizationStrategy.setBrowserSafeList(context.browserSafeList());
             return (GenericAuthorizationStrategy) browserAuthorizationStrategy;
         }

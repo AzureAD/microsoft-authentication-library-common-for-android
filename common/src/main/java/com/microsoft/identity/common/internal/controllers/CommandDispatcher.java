@@ -274,7 +274,7 @@ public class CommandDispatcher {
         );
         synchronized (sLock) {
             // Send a broadcast to cancel if any active auth request is present.
-            command.getContext().getAndroidApplicationContext().sendBroadcast(
+            command.getContext().androidApplicationContext().sendBroadcast(
                     new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
             );
 

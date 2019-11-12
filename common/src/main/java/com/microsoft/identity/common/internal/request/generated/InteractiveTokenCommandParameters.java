@@ -6,6 +6,8 @@ import androidx.annotation.Nullable;
 
 import com.google.auto.value.AutoValue;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
@@ -18,12 +20,14 @@ import java.util.Set;
 @AutoValue.CopyAnnotations
 public abstract class InteractiveTokenCommandParameters
         extends CommandParameters
-        implements IScopesAddable<InteractiveTokenCommandParameters>{
+        implements IScopesAddable<InteractiveTokenCommandParameters>, ITokenRequestParameters{
 
     public abstract Set<String> scopes();
     public abstract String clientId();
     public abstract String redirectUri();
     public abstract Authority authority();
+    @Nullable
+    public abstract IAccountRecord accountRecord();
     @Nullable
     public abstract String claimsRequestJson();
     @Nullable
@@ -69,6 +73,7 @@ public abstract class InteractiveTokenCommandParameters
         public abstract Builder setPrompt(OpenIdConnectPromptParameter value);
         public abstract Builder setRequestHeaders(HashMap<String, String> value);
         public abstract Builder setAuthorizationAgent(AuthorizationAgent value);
+        public abstract Builder setAccountRecord(IAccountRecord value);
         public abstract InteractiveTokenCommandParameters build();
     }
 
