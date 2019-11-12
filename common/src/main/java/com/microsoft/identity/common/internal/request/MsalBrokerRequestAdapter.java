@@ -163,7 +163,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 OpenIdConnectPromptParameter.valueOf(brokerRequest.getPrompt())
         );
 
-        if(brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())){
+        if(brokerRequest.getAuthorizationAgent() != null &&
+                brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())){
             parameters.setAuthorizationAgent(AuthorizationAgent.BROWSER);
             parameters.setBrowserSafeList(getBrowserSafeListForBroker());
         }else {
