@@ -22,12 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
-import com.microsoft.identity.internal.test.labapi.model.UserInfo;
+import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 
-public class CurrentLabUser {
+public class CurrentLabConfig {
 
     // allows to get the lab user currently being used for the test
     // can get the labname from the object to get the password
-    public static UserInfo userInfo;
+    public static ConfigInfo configInfo;
 
 }

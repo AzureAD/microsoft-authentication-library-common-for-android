@@ -22,55 +22,57 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
+import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
 import com.microsoft.identity.internal.test.labapi.api.UserApi;
+import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
 
 import java.util.List;
 
 public class LabUserHelper {
-    public static UserInfo getUserInfo(LabUserQuery query) {
+    public static ConfigInfo getConfigInfo(LabUserQuery query) {
         LabAuthenticationHelper.setupApiClientWithAccessToken();
-        UserApi api = new UserApi();
-        List<UserInfo> userInfos;
+        ConfigApi api = new ConfigApi();
+        List<ConfigInfo> configInfos;
 
         try {
-            userInfos = api.get(query.userType, query.mfa, query.protectionPolicy, query.homeDomain, query.homeUpn, query.b2cProvider, query.federationProvider, query.azureEnvironment, query.signInAudience);
+            configInfos = api.getConfig(query.userType, query.mfa, query.protectionPolicy, query.homeDomain, query.homeUpn, query.b2cProvider, query.federationProvider, query.azureEnvironment, query.signInAudience);
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new RuntimeException("Error retrieving lab user", ex);
         }
 
-        final UserInfo pickedUser = userInfos.get(0);
-        CurrentLabUser.userInfo = pickedUser;
+        final ConfigInfo pickedConfig = configInfos.get(0);
+        CurrentLabConfig.configInfo = pickedConfig;
 
-        return pickedUser;
+        return pickedConfig;
 
     }
 
-    public static UserInfo getUserInfoFromUpn(final String upn) {
+    public static ConfigInfo getConfigInfoFromUpn(final String upn) {
         LabAuthenticationHelper.setupApiClientWithAccessToken();
-        UserApi api = new UserApi();
-        List<UserInfo> userInfos;
+        ConfigApi api = new ConfigApi();
+        List<ConfigInfo> configInfos;
 
         try {
-            userInfos = api.getUserByUPN(upn);
+            configInfos = api.getConfigByUPN(upn);
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new RuntimeException("Error retrieving lab user", ex);
         }
 
-        final UserInfo pickedUser = userInfos.get(0);
-        CurrentLabUser.userInfo = pickedUser;
+        final ConfigInfo pickedConfig = configInfos.get(0);
+        CurrentLabConfig.configInfo = pickedConfig;
 
-        return pickedUser;
+        return pickedConfig;
     }
 
     public static String getUpnForTest(LabUserQuery query) {
-        final UserInfo userInfo = getUserInfo(query);
-        return userInfo.getUpn();
+        final ConfigInfo configInfo = getConfigInfo(query);
+        return configInfo.getUserInfo().getUpn();
     }
 
     public static String getPasswordForUser(final String username) {
-        final UserInfo userInfo = getUserInfoFromUpn(username);
-        return LabSecretHelper.getPasswordForLab(userInfo.getLabName());
+        final ConfigInfo configInfo = getConfigInfoFromUpn(username);
+        return LabSecretHelper.getPasswordForLab(configInfo.getUserInfo().getLabName());
     }
 
     public static String getPasswordForUser(final UserInfo userInfo) {
@@ -78,12 +80,12 @@ public class LabUserHelper {
     }
 
     public static Credential getCredentials(LabUserQuery query) {
-        UserInfo userInfo;
+        ConfigInfo configInfo;
         Credential credential = new Credential();
 
-        userInfo = getUserInfo(query);
-        credential.userName = userInfo.getUpn();
-        credential.password = getPasswordForUser(userInfo);
+        configInfo = getConfigInfo(query);
+        credential.userName = configInfo.getUserInfo().getUpn();
+        credential.password = getPasswordForUser(configInfo.getUserInfo());
 
         return credential;
     }
