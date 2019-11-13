@@ -295,7 +295,7 @@ public class StorageHelper implements IStorageHelper {
                 if (key == null) {
                     mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_DECRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
                 }
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 // Best effort.
                 mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_DECRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
             }
@@ -523,7 +523,7 @@ public class StorageHelper implements IStorageHelper {
                     if (key == null) {
                         mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
                     }
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     // Best effort.
                     mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
                 }
