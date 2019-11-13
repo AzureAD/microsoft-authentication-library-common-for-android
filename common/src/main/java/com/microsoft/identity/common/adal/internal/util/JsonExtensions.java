@@ -22,11 +22,25 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.util;
 
+import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.BrokerResult;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.internal.util.ICacheRecordGsonAdapter;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -58,5 +72,48 @@ public final class JsonExtensions {
         }
 
         return responseItems;
+    }
+
+    /**
+     * Extract JSON Object into List<ICacheRecord>.
+     *
+     * @param jsonString String
+     * @return List
+     */
+    public static List<ICacheRecord> getICacheRecordListFromJsonString(String accountJson) {
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter());
+
+        final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
+        }.getType();
+        return builder.create().fromJson(accountJson, listOfCacheRecords);
+    }
+
+    /**
+     * Converts List<ICacheRecord> into a json string.
+     *
+     * @param List
+     * @return a JSON string
+     */
+    public static String getJsonStringFromICacheRecordList(List<ICacheRecord> cacheRecords) {
+        final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
+        }.getType();
+        return new Gson().toJson(cacheRecords, listOfCacheRecords);
+    }
+
+    /**
+     * Extract JSON Object into BrokerResult.
+     *
+     * @param jsonString String
+     * @return BrokerResult
+     */
+    public static BrokerResult getBrokerResultFromJsonString(@NonNull final String jsonString) {
+        return new GsonBuilder()
+                .registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter())
+                .create()
+                .fromJson(
+                        jsonString,
+                        BrokerResult.class
+                );
     }
 }

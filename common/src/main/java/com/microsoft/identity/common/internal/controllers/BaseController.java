@@ -183,7 +183,6 @@ public abstract class BaseController {
 
         TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
-        tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
 
         TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
@@ -349,7 +348,6 @@ public abstract class BaseController {
         refreshTokenRequest.setClientId(parameters.getClientId());
         refreshTokenRequest.setScope(TextUtils.join(" ", parameters.getScopes()));
         refreshTokenRequest.setRefreshToken(parameters.getRefreshToken().getSecret());
-        refreshTokenRequest.setRedirectUri(parameters.getRedirectUri());
 
         if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
