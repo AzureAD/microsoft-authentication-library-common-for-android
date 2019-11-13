@@ -4,4 +4,5 @@ import android.content.Context;
 
 public interface IContext {
     Context androidApplicationContext();
+    String applicationName();
 }

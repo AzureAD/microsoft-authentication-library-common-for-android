@@ -1,5 +1,7 @@
 package com.microsoft.identity.common.internal.request.generated;
 
+import android.content.Context;
+
 import com.google.auto.value.AutoValue;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.request.SdkType;
@@ -11,16 +13,28 @@ import net.jcip.annotations.Immutable;
 @AutoValue.CopyAnnotations
 public abstract class RemoveAccountCommandContext extends CommandContext {
 
+    //region Black Magic for keeping specific fields out of equals
+    protected Context androidApplicationContext;
     protected OAuth2TokenCache tokenCache;
+
+    public Context androidApplicationContext() {
+        return androidApplicationContext;
+    }
 
     public OAuth2TokenCache tokenCache() {
         return tokenCache;
     }
 
-    public Builder toBuilder(){
+    public Builder toBuilder() {
         Builder builder = autoToBuilder();
+        builder.androidContext = this.androidApplicationContext;
         builder.tokenCache = this.tokenCache;
         return builder;
+    }
+    //endregion
+
+    public static RemoveAccountCommandContext.Builder builder() {
+        return new AutoValue_RemoveAccountCommandContext.Builder();
     }
 
     abstract Builder autoToBuilder();
@@ -28,26 +42,36 @@ public abstract class RemoveAccountCommandContext extends CommandContext {
     @AutoValue.Builder
     public abstract static class Builder {
 
+        //region Black Magic for keeping specific fields out of equals
+        private Context androidContext;
+        private OAuth2TokenCache tokenCache;
+
+        public Builder setAndroidApplicationContext(Context context) {
+            androidContext = context;
+            return this;
+        }
+
+        public Builder setOAuth2TokenCache(OAuth2TokenCache cache) {
+            tokenCache = cache;
+            return this;
+        }
+
+        public RemoveAccountCommandContext build() {
+            RemoveAccountCommandContext x = autoBuild();
+            x.androidApplicationContext = this.androidContext;
+            x.tokenCache = this.tokenCache;
+            return x;
+        }
+
+        abstract RemoveAccountCommandContext autoBuild();
+        //endregion
+
         public abstract Builder setApplicationName(String value);
         public abstract Builder setApplicationVersion(String value);
         public abstract Builder setRequiredBrokerProtocolVersion(String value);
         public abstract Builder setCorrelationId(String value);
         public abstract Builder setSdkType(SdkType value);
         public abstract Builder setSdkVersion(String value);
-        private OAuth2TokenCache tokenCache;
-
-        public Builder setOAuth2TokenCache(OAuth2TokenCache cache){
-            tokenCache = cache;
-            return this;
-        }
-
-        public RemoveAccountCommandContext build(){
-            RemoveAccountCommandContext x = autoBuild();
-            x.tokenCache = this.tokenCache;
-            return x;
-        }
-
-        abstract RemoveAccountCommandContext autoBuild();
 
     }
 }

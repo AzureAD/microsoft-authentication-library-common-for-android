@@ -45,6 +45,10 @@ import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationA
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
+import com.microsoft.identity.common.internal.request.generated.InteractiveTokenCommandContext;
+import com.microsoft.identity.common.internal.request.generated.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.request.generated.SilentTokenCommandContext;
+import com.microsoft.identity.common.internal.request.generated.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.result.AdalBrokerResultAdapter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -60,12 +64,16 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
     private static final String TAG = AdalBrokerResultAdapter.class.getName();
 
     @Override
-    public BrokerRequest brokerRequestFromAcquireTokenParameters(AcquireTokenOperationParameters parameters) {
+    public BrokerRequest brokerRequestFromAcquireTokenParameters(
+            @NonNull final InteractiveTokenCommandContext context,
+            @NonNull final InteractiveTokenCommandParameters parameters) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public BrokerRequest brokerRequestFromSilentOperationParameters(AcquireTokenSilentOperationParameters parameters) {
+    public BrokerRequest brokerRequestFromSilentOperationParameters(
+            @NonNull final SilentTokenCommandContext context,
+            @NonNull final SilentTokenCommandParameters parameters) {
         throw new UnsupportedOperationException();
     }
 

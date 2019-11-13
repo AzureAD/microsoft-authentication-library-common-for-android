@@ -20,6 +20,11 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.request.generated.CommandContext;
 import com.microsoft.identity.common.internal.request.generated.IContext;
+import com.microsoft.identity.common.internal.request.generated.ITokenRequestParameters;
+import com.microsoft.identity.common.internal.request.generated.InteractiveTokenCommandContext;
+import com.microsoft.identity.common.internal.request.generated.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.request.generated.SilentTokenCommandContext;
+import com.microsoft.identity.common.internal.request.generated.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -39,27 +44,29 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     private static final String TAG = MsalBrokerRequestAdapter.class.getName();
 
     @Override
-    public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final AcquireTokenOperationParameters parameters) {
+    public BrokerRequest brokerRequestFromAcquireTokenParameters(
+            @NonNull final InteractiveTokenCommandContext context,
+            @NonNull final InteractiveTokenCommandParameters parameters) {
 
         Logger.info(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
 
         final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
-                .authority(parameters.getAuthority().getAuthorityURL().toString())
-                .scope(TextUtils.join( " ", parameters.getScopes()))
-                .redirect(getRedirectUri(parameters))
-                .clientId(parameters.getClientId())
-                .username(parameters.getLoginHint())
+                .authority(parameters.authority().getAuthorityURL().toString())
+                .scope(TextUtils.join( " ", parameters.scopes()))
+                .redirect(getRedirectUri(context,parameters))
+                .clientId(parameters.clientId())
+                .username(parameters.loginHint())
                 .extraQueryStringParameter(
-                        parameters.getExtraQueryStringParameters() != null ?
-                                QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
+                        parameters.extraQueryStringParameters() != null ?
+                                QueryParamsAdapter._toJson(parameters.extraQueryStringParameters())
                                 : null
-                ).prompt(parameters.getOpenIdConnectPromptParameter().name())
-                .claims(parameters.getClaimsRequestJson())
-                .forceRefresh(parameters.getForceRefresh())
+                ).prompt(parameters.prompt().name())
+                .claims(parameters.claimsRequestJson())
+                .forceRefresh(parameters.forceRefresh())
                 .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
-                .applicationName(parameters.getApplicationName())
-                .applicationVersion(parameters.getApplicationVersion())
-                .msalVersion(parameters.getSdkVersion())
+                .applicationName(context.applicationName())
+                .applicationVersion(context.applicationVersion())
+                .msalVersion(context.sdkVersion())
                 .environment(AzureActiveDirectory.getEnvironment().name())
                 .build();
 
@@ -67,24 +74,26 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     @Override
-    public BrokerRequest brokerRequestFromSilentOperationParameters(@NonNull final AcquireTokenSilentOperationParameters parameters) {
+    public BrokerRequest brokerRequestFromSilentOperationParameters(
+            @NonNull final SilentTokenCommandContext context,
+            @NonNull final SilentTokenCommandParameters parameters) {
 
         Logger.info(TAG, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
 
         final BrokerRequest brokerRequest =  new BrokerRequest.Builder()
-                .authority(parameters.getAuthority().getAuthorityURL().toString())
-                .scope(TextUtils.join( " ", parameters.getScopes()))
-                .redirect(getRedirectUri(parameters))
-                .clientId(parameters.getClientId())
-                .homeAccountId(parameters.getAccount().getHomeAccountId())
-                .localAccountId(parameters.getAccount().getLocalAccountId())
-                .username(parameters.getAccount().getUsername())
-                .claims(parameters.getClaimsRequestJson())
-                .forceRefresh(parameters.getForceRefresh())
+                .authority(parameters.authority().getAuthorityURL().toString())
+                .scope(TextUtils.join( " ", parameters.scopes()))
+                .redirect(getRedirectUri(context,parameters))
+                .clientId(parameters.clientId())
+                .homeAccountId(parameters.account().getHomeAccountId())
+                .localAccountId(parameters.account().getLocalAccountId())
+                .username(parameters.account().getUsername())
+                .claims(parameters.claimsRequestJson())
+                .forceRefresh(parameters.forceRefresh())
                 .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
-                .applicationName(parameters.getApplicationName())
-                .applicationVersion(parameters.getApplicationVersion())
-                .msalVersion(parameters.getSdkVersion())
+                .applicationName(context.applicationName())
+                .applicationVersion(context.applicationVersion())
+                .msalVersion(context.sdkVersion())
                 .environment(AzureActiveDirectory.getEnvironment().name())
                 .build();
 
@@ -280,13 +289,15 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Helper method to get redirect uri from parameters, calculates from package signature if not available.
      */
-    private String getRedirectUri(@NonNull OperationParameters parameters) {
-        if (TextUtils.isEmpty(parameters.getRedirectUri())) {
+    private String getRedirectUri(
+            @NonNull IContext context,
+            @NonNull ITokenRequestParameters parameters) {
+        if (TextUtils.isEmpty(parameters.redirectUri())) {
             return BrokerValidator.getBrokerRedirectUri(
-                    parameters.getAppContext(),
-                    parameters.getApplicationName()
+                    context.androidApplicationContext(),
+                    context.applicationName()
             );
         }
-        return parameters.getRedirectUri();
+        return parameters.redirectUri();
     }
 }
