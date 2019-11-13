@@ -338,15 +338,15 @@ public final class AuthorizationActivity extends Activity {
         final Map<String, String> urlQueryParameters = StringExtensions.getUrlParameters(url);
         final String userName = urlQueryParameters.get(AuthenticationConstants.Broker.INSTALL_UPN_KEY);
 
-        if(isDeviceRegisterRedirect(url)){
-            if(!TextUtils.isEmpty(userName)){
-                resultIntent.putExtra(AuthenticationConstants.Broker.INSTALL_UPN_KEY, userName);
-                sendResult(
-                        AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER,
-                        resultIntent
-                );
-                return;
-            }
+        if (isDeviceRegisterRedirect(url) && !TextUtils.isEmpty(userName)) {
+            Logger.info(TAG, " Device needs to be registered, sending BROWSER_CODE_DEVICE_REGISTER");
+            Logger.infoPII(TAG , "Device Registration triggered for user: " + userName);
+            resultIntent.putExtra(AuthenticationConstants.Broker.INSTALL_UPN_KEY, userName);
+            sendResult(
+                    AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER,
+                    resultIntent
+            );
+            return;
         }
         if (urlQueryParameters.containsKey(INSTALL_URL_KEY)) {
             final String appLink = urlQueryParameters.get(INSTALL_URL_KEY);
