@@ -322,6 +322,7 @@ public final class AuthorizationActivity extends Activity {
     }
 
     private void sendResult(int resultCode, final Intent resultIntent) {
+        Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + resultCode);
         CommandDispatcher.completeInteractive(
                 AuthorizationStrategy.BROWSER_FLOW,
                 resultCode,
