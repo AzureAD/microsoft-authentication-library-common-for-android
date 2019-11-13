@@ -104,7 +104,7 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
 
     @Override
     public boolean isEligibleForCaching(){
-        return true;
+        return false;
     }
 
     @Override

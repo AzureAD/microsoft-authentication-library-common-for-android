@@ -29,8 +29,9 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.internal.testutils.MicrosoftStsRopcTokenRequest;
 import com.microsoft.identity.internal.testutils.authorities.AADTestAuthority;
 import com.microsoft.identity.internal.testutils.labutils.Credential;
-import com.microsoft.identity.internal.testutils.labutils.Scenario;
-import com.microsoft.identity.internal.testutils.labutils.TestConfigurationQuery;
+import com.microsoft.identity.internal.testutils.labutils.LabConstants;
+import com.microsoft.identity.internal.testutils.labutils.LabUserHelper;
+import com.microsoft.identity.internal.testutils.labutils.LabUserQuery;
 import com.microsoft.identity.internal.testutils.strategies.ResourceOwnerPasswordCredentialsTestStrategy;
 
 import org.junit.Test;
@@ -42,7 +43,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -55,15 +55,6 @@ public final class PasswordGrantTest {
 
     private static final String[] SCOPES = {"user.read", "openid", "offline_access", "profile"};
     private static final String CLIENT_ID = "4b0db8c2-9f26-4417-8bde-3f0e3656f8e0";
-
-    private Scenario getManagedUserTestScenario() {
-        final TestConfigurationQuery query = new TestConfigurationQuery();
-        query.userType = "Member";
-        query.isFederated = false;
-        query.federationProvider = "ADFSv4";
-
-        return Scenario.GetScenario(query);
-    }
 
     private boolean isEmpty(String[] arr) {
         return arr == null || arr.length == 0;
@@ -90,9 +81,10 @@ public final class PasswordGrantTest {
         return tokenRequest;
     }
 
-    private Credential getUserCredentialsForManagedUser() {
-        final Scenario scenario = getManagedUserTestScenario();
-        return scenario.getCredential();
+    private Credential getCredentialsForManagedUser() {
+        LabUserQuery query = new LabUserQuery();
+        query.userType = LabConstants.UserType.CLOUD;
+        return LabUserHelper.getCredentials(query);
     }
 
     private TokenResult performRopcTokenRequest(String[] scopes, String username, String password) throws IOException, ClientException {
@@ -108,7 +100,7 @@ public final class PasswordGrantTest {
     @Test
     // test that we can successfully perform ROPC if we supply required data to server
     public void testRopcSuccessManagedUser() throws IOException {
-        final Credential credential = getUserCredentialsForManagedUser();
+        final Credential credential = getCredentialsForManagedUser();
 
         try {
             final TokenResult tokenResult = performRopcTokenRequest(SCOPES, credential.userName, credential.password);
@@ -122,7 +114,7 @@ public final class PasswordGrantTest {
     @Test(expected = IllegalArgumentException.class)
     // test that ROPC flow fails if username is not provided
     public void testRopcFailureManagedUserNoUsername() throws IOException {
-        final Credential credential = getUserCredentialsForManagedUser();
+        final Credential credential = getCredentialsForManagedUser();
 
         try {
             performRopcTokenRequest(SCOPES, null, credential.password);
@@ -136,7 +128,7 @@ public final class PasswordGrantTest {
     @Test(expected = IllegalArgumentException.class)
     // test that ROPC flow fails if password is not provided
     public void testRopcFailureManagedUserNoPassword() throws IOException {
-        final Credential credential = getUserCredentialsForManagedUser();
+        final Credential credential = getCredentialsForManagedUser();
 
         try {
             performRopcTokenRequest(SCOPES, credential.userName, null);
@@ -150,7 +142,7 @@ public final class PasswordGrantTest {
     @Test(expected = IllegalArgumentException.class)
     // test that ROPC flow fails if scope is not provided
     public void testRopcFailureManagedUserNoScope() throws IOException {
-        final Credential credential = getUserCredentialsForManagedUser();
+        final Credential credential = getCredentialsForManagedUser();
 
         try {
             performRopcTokenRequest(null, credential.userName, credential.password);
