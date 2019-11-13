@@ -820,7 +820,7 @@ public class StorageHelper implements IStorageHelper {
         return unwrappedSecretKey;
     }
 
-    protected void deleteKeyFile() {
+    public void deleteKeyFile() {
         final String methodName = ":deleteKeyFile";
 
         final File keyFile = new File(mContext.getDir(getPackageName(),

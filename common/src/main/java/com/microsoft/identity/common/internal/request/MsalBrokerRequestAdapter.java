@@ -8,8 +8,12 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authorities.Environment;
@@ -21,6 +25,8 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
+import com.microsoft.identity.common.internal.ui.browser.Browser;
+import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -31,8 +37,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEFAULT_BROWSER_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
@@ -279,12 +288,19 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     /**
-     * Create the request bundle for IMicrosoftAuthService.hello().
-     *
-     * @param parameters AcquireTokenSilentOperationParameters
-     * @return request bundle
+     * Helper method to get redirect uri from parameters, calculates from package signature if not available.
      */
-    public static Bundle getBrokerHelloBundle(@NonNull final OperationParameters parameters) {
+    private String getRedirectUri(@NonNull OperationParameters parameters) {
+        if (TextUtils.isEmpty(parameters.getRedirectUri())) {
+            return BrokerValidator.getBrokerRedirectUri(
+                    parameters.getAppContext(),
+                    parameters.getApplicationName()
+            );
+        }
+        return parameters.getRedirectUri();
+    }
+
+    public Bundle getRequestBundleForHello(@NonNull final OperationParameters parameters) {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
                 AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);
@@ -297,17 +313,57 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
-    /**
-     * Helper method to get redirect uri from parameters, calculates from package signature if not available.
-     */
-    private String getRedirectUri(@NonNull OperationParameters parameters) {
-        if (TextUtils.isEmpty(parameters.getRedirectUri())) {
-            return BrokerValidator.getBrokerRedirectUri(
-                    parameters.getAppContext(),
-                    parameters.getApplicationName()
-            );
+    public Bundle getRequestBundleForAcquireTokenSilent(final AcquireTokenSilentOperationParameters parameters) {
+        final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
+
+        final Bundle requestBundle = new Bundle();
+        final BrokerRequest brokerRequest = msalBrokerRequestAdapter.
+                brokerRequestFromSilentOperationParameters(parameters);
+
+        requestBundle.putString(
+                AuthenticationConstants.Broker.BROKER_REQUEST_V2,
+                new Gson().toJson(brokerRequest, BrokerRequest.class)
+        );
+
+        requestBundle.putInt(
+                AuthenticationConstants.Broker.CALLER_INFO_UID,
+                parameters.getAppContext().getApplicationInfo().uid
+        );
+
+        return requestBundle;
+    }
+
+    public Bundle getRequestBundleForGetAccounts(@NonNull final OperationParameters parameters) {
+        final Bundle requestBundle = new Bundle();
+        requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
+        requestBundle.putString(ACCOUNT_REDIRECT, parameters.getRedirectUri());
+        //Disable the environment and tenantID. Just return all accounts belong to this clientID.
+        return requestBundle;
+    }
+
+    public Bundle getRequestBundleForRemoveAccount(@NonNull final OperationParameters parameters) {
+        final Bundle requestBundle = new Bundle();
+        if (null != parameters.getAccount()) {
+            requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
+            requestBundle.putString(ENVIRONMENT, parameters.getAccount().getEnvironment());
+            requestBundle.putString(ACCOUNT_HOME_ACCOUNT_ID, parameters.getAccount().getHomeAccountId());
         }
-        return parameters.getRedirectUri();
+
+        return requestBundle;
+    }
+
+    public Bundle getRequestBundleForRemoveAccountFromSharedDevice(@NonNull final OperationParameters parameters) {
+        final Bundle requestBundle = new Bundle();
+
+        try {
+            Browser browser = BrowserSelector.select(parameters.getAppContext(), parameters.getBrowserSafeList());
+            requestBundle.putString(DEFAULT_BROWSER_PACKAGE_NAME, browser.getPackageName());
+        } catch (ClientException e) {
+            // Best effort. If none is passed to broker, then it will let the OS decide.
+            Logger.error(TAG, e.getErrorCode(), e);
+        }
+
+        return requestBundle;
     }
 
     private boolean getMultipleCloudsSupported(@NonNull final OperationParameters parameters) {
