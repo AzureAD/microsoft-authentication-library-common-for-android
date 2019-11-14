@@ -71,8 +71,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .msalVersion(parameters.getSdkVersion())
                 .environment(AzureActiveDirectory.getEnvironment().name())
                 .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
-                .authorizationAgent(AuthorizationAgent.BROWSER.name()) // TODO take this from the API exposed to Intune COBO from MSAL.
-                .build();
+                .authorizationAgent(
+                        parameters.isBrokerBrowserSupportEnabled() ?
+                                AuthorizationAgent.BROWSER.name() :
+                                AuthorizationAgent.WEBVIEW.name()
+                ).build();
 
         return brokerRequest;
     }
