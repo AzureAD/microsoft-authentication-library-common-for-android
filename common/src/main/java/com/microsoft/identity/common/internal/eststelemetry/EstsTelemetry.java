@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.eststelemetry;
 
 import android.content.Context;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -218,7 +219,7 @@ public class EstsTelemetry {
      * Removes the telemetry associated to the correlation id from the telemetry map,
      * and saves it to the cache (SharedPreferences) as the last request telemetry.
      */
-    public void flush() {
+    void flush() {
         String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
         flush(correlationId);
     }
@@ -233,18 +234,6 @@ public class EstsTelemetry {
     public void flush(final String correlationId) {
         final String errorCode = null; // there was no error
         flush(correlationId, errorCode);
-    }
-
-    /**
-     * Flush the telemetry data for the current request to the {@link android.content.SharedPreferences} using the {@link SharedPreferencesLastRequestTelemetryCache}.
-     * Removes the telemetry associated to the correlation id from the telemetry map,
-     * and saves it to the cache (SharedPreferences) as the last request telemetry.
-     *
-     * @param baseException exception that may have occurred during the request
-     */
-    public void flush(final BaseException baseException) {
-        String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
-        flush(correlationId, baseException);
     }
 
     /**
@@ -298,19 +287,26 @@ public class EstsTelemetry {
         currentTelemetry.clearTelemetry();
         mTelemetryMap.remove(correlationId);
 
-
-        if (mLastRequestTelemetryCache != null) {
-            // remove old last request telemetry data from cache
-            mLastRequestTelemetryCache.clearAll();
-            // save new last request telemetry data to cache
-            mLastRequestTelemetryCache.saveRequestTelemetryToCache(lastTelemetry);
-        } else {
-            Logger.verbose(
+        if (mLastRequestTelemetryCache == null) {
+            Logger.warn(
                     TAG + methodName,
                     "Last Request Telemetry Cache object was null. " +
                             "Unable to save request telemetry to cache."
             );
+        } else if (eligibleToCache(lastTelemetry)) {
+            // remove old last request telemetry data from cache
+            mLastRequestTelemetryCache.clearAll();
+            // save new last request telemetry data to cache
+            mLastRequestTelemetryCache.saveRequestTelemetryToCache(lastTelemetry);
         }
+    }
+
+    // if we don't have api id then we won't save telemetry to cache
+    // this can happen for commands like the GetDeviceModeCommand
+    // that are generated via a method for which we don't want telemetry
+    private boolean eligibleToCache(RequestTelemetry lastTelemetry) {
+        return !TextUtils.isEmpty(lastTelemetry.getSchemaVersion()) &&
+                !TextUtils.isEmpty(lastTelemetry.getCommonTelemetry().get(Schema.Key.API_ID));
     }
 
     String getCurrentTelemetryHeaderString() {
