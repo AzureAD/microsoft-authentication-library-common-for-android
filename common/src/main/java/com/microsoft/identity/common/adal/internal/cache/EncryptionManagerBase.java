@@ -520,6 +520,10 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
 
         final byte[] keyWrapped = wrap(unencryptedKey);
         writeKeyData(keyWrapped);
+
+        // Clear cached data.
+        mEncryptionKey = null;
+        mBlobVersion = null;
     }
 
     /**
