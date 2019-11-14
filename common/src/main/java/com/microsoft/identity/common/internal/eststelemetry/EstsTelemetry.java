@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.eststelemetry;
 
 import android.content.Context;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -286,19 +287,23 @@ public class EstsTelemetry {
         currentTelemetry.clearTelemetry();
         mTelemetryMap.remove(correlationId);
 
-
-        if (mLastRequestTelemetryCache != null) {
-            // remove old last request telemetry data from cache
-            mLastRequestTelemetryCache.clearAll();
-            // save new last request telemetry data to cache
-            mLastRequestTelemetryCache.saveRequestTelemetryToCache(lastTelemetry);
-        } else {
-            Logger.verbose(
+        if (mLastRequestTelemetryCache == null) {
+            Logger.warn(
                     TAG + methodName,
                     "Last Request Telemetry Cache object was null. " +
                             "Unable to save request telemetry to cache."
             );
+        } else if (eligibleToCache(lastTelemetry)) {
+            // remove old last request telemetry data from cache
+            mLastRequestTelemetryCache.clearAll();
+            // save new last request telemetry data to cache
+            mLastRequestTelemetryCache.saveRequestTelemetryToCache(lastTelemetry);
         }
+    }
+
+    private boolean eligibleToCache(RequestTelemetry lastTelemetry) {
+        return !TextUtils.isEmpty(lastTelemetry.getSchemaVersion()) &&
+                !TextUtils.isEmpty(lastTelemetry.getCommonTelemetry().get(Schema.Key.API_ID));
     }
 
     String getCurrentTelemetryHeaderString() {

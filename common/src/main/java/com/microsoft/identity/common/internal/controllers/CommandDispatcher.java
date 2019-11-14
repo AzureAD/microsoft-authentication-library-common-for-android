@@ -101,9 +101,15 @@ public class CommandDispatcher {
                 }
 
                 //Return the result via the callback
-                returnCommandResult(command, commandResult, handler, correlationId);
+                returnCommandResult(command, commandResult, handler);
 
                 Telemetry.getInstance().flush(correlationId);
+
+                if (commandResult.getResult() instanceof BaseException) {
+                    EstsTelemetry.getInstance().flush(correlationId, (BaseException) commandResult.getResult());
+                } else {
+                    EstsTelemetry.getInstance().flush(correlationId);
+                }
             }
         });
     }
@@ -161,21 +167,18 @@ public class CommandDispatcher {
      * @param result
      * @param handler
      */
-    private static void returnCommandResult(final BaseCommand command, final CommandResult result, Handler handler, final String correlationId) {
+    private static void returnCommandResult(final BaseCommand command, final CommandResult result, Handler handler) {
         handler.post(new Runnable() {
             @Override
             public void run() {
                 switch (result.getStatus()) {
                     case ERROR:
-                        EstsTelemetry.getInstance().flush(correlationId, (BaseException) result.getResult());
                         command.getCallback().onError(result.getResult());
                         break;
                     case COMPLETED:
-                        EstsTelemetry.getInstance().flush(correlationId);
                         command.getCallback().onTaskCompleted(result.getResult());
                         break;
                     case CANCEL:
-                        EstsTelemetry.getInstance().flush(correlationId);
                         command.getCallback().onCancel();
                     default:
 
@@ -305,7 +308,6 @@ public class CommandDispatcher {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                EstsTelemetry.getInstance().flush(correlationId, finalException);
                                 command.getCallback().onError(finalException);
                             }
                         });
@@ -316,7 +318,6 @@ public class CommandDispatcher {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    EstsTelemetry.getInstance().flush(correlationId);
                                     command.getCallback().onTaskCompleted(authenticationResult);
                                 }
                             });
@@ -329,7 +330,6 @@ public class CommandDispatcher {
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        EstsTelemetry.getInstance().flush(correlationId, finalException);
                                         command.getCallback().onCancel();
                                     }
                                 });
@@ -337,7 +337,6 @@ public class CommandDispatcher {
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        EstsTelemetry.getInstance().flush(correlationId, finalException);
                                         command.getCallback().onError(finalException);
                                     }
                                 });
@@ -345,6 +344,7 @@ public class CommandDispatcher {
                         }
                     }
 
+                    EstsTelemetry.getInstance().flush(correlationId, baseException);
                     Telemetry.getInstance().flush(correlationId);
                 }
             });
