@@ -24,7 +24,8 @@ package com.microsoft.identity.common.adal.internal.util;
 
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

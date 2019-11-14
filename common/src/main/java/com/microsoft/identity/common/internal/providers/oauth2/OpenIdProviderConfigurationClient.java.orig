@@ -22,7 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+<<<<<<< HEAD
+import android.support.annotation.NonNull;
+=======
 import android.net.Uri;
+>>>>>>> release/1.0.11
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
@@ -31,9 +35,6 @@ import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackW
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
-
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
