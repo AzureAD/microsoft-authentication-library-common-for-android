@@ -25,6 +25,15 @@ package com.microsoft.identity.common.internal.platform;
 
 import android.os.Build;
 
+import androidx.annotation.RequiresApi;
+
+import com.microsoft.identity.common.internal.logging.Logger;
+
+import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +42,8 @@ import java.util.Map;
  * Helper class to add additional platform specific query parameters or headers for the request sent to sts.
  */
 public final class Device {
+
+    private static final String LOG_TAG = Device.class.getSimpleName();
 
     /**
      * Private constructor to prevent a help class from being initiated.
@@ -99,5 +110,61 @@ public final class Device {
          * String for the broker version.
          */
         public static final String BROKER_VERSION = "x-client-brkrver";
+    }
+
+    /**
+     * Gets the API level of the current runtime.
+     *
+     * @return The API level.
+     */
+    public static int getApiLevel() {
+        return Build.VERSION.SDK_INT;
+    }
+
+    /**
+     * Gets the manufacturer of the current device.
+     *
+     * @return The name of the device manufacturer.
+     */
+    public static String getManufacturer() {
+        return Build.MANUFACTURER;
+    }
+
+    /**
+     * Gets the model name/code of the current device.
+     *
+     * @return The device model name.
+     */
+    public static String getModel() {
+        return Build.MODEL;
+    }
+
+    /**
+     * Returns A KeyStore of type "AndroidKeyStore" that is private to this application.
+     *
+     * @return A reference to the AndroidKeyStore singleton.
+     */
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    public static KeyStore getAndroidKeyStore()
+            throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
+        final String ANDROID_KEYSTORE = "AndroidKeyStore";
+
+        KeyStore keyStore = null;
+
+        try {
+            keyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
+            keyStore.load(null);
+        } catch (final KeyStoreException
+                | CertificateException
+                | NoSuchAlgorithmException
+                | IOException e) {
+            Logger.error(
+                    LOG_TAG,
+                    "Failed to create/initialize KeyStore",
+                    e
+            );
+        }
+
+        return keyStore;
     }
 }
