@@ -65,5 +65,4 @@ public interface ICacheRecord {
      * @return
      */
     IdTokenRecord getV1IdToken();
-
 }
