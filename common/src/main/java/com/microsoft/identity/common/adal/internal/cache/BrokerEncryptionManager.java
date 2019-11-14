@@ -79,29 +79,25 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
             GeneralSecurityException {
         final String methodName = ":loadSecretKeyForEncryption";
 
-        // The current app runtime is the broker; load its secret key.
-        if (!sShouldEncryptWithKeyStoreKey &&
-                AuthenticationSettings.INSTANCE.getBrokerSecretKeys().containsKey(getPackageName())) {
-            if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName())) {
-                return new Pair<>(loadSecretKey(KeyType.LEGACY_AUTHENTICATOR_APP_KEY), VERSION_USER_DEFINED);
-            } else {
-                return new Pair<>(loadSecretKey(KeyType.LEGACY_COMPANY_PORTAL_KEY), VERSION_USER_DEFINED);
+        if (sShouldEncryptWithKeyStoreKey){
+            // Try loading existing keystore-encrypted key. If it doesn't exist, create a new one.
+            try {
+                SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
+                if (key != null) {
+                    return new Pair<>(key, VERSION_ANDROID_KEY_STORE);
+                }
+            } catch (final IOException | GeneralSecurityException e) {
+                // If we fail to load key, proceed and generate a new one.
+                Logger.warn(TAG + methodName, "Failed to load key with exception: " + e.toString());
             }
         }
 
-        // Try loading existing keystore-encrypted key. If it doesn't exist, create a new one.
-        try {
-            SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
-            if (key != null) {
-                return new Pair<>(key, VERSION_ANDROID_KEY_STORE);
-            }
-        } catch (final IOException | GeneralSecurityException e) {
-            // If we fail to load key, proceed and generate a new one.
-            Logger.warn(TAG + methodName, "Failed to load key with exception: " + e.toString());
+        // If the keystore-encrypted key is not yet generated nor migrated, uses legacy key.
+        if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName())) {
+            return new Pair<>(loadSecretKey(KeyType.LEGACY_AUTHENTICATOR_APP_KEY), VERSION_USER_DEFINED);
+        } else {
+            return new Pair<>(loadSecretKey(KeyType.LEGACY_COMPANY_PORTAL_KEY), VERSION_USER_DEFINED);
         }
-
-        Logger.verbose(TAG + methodName, "Keystore-encrypted key does not exist, try to generate new keys.");
-        return new Pair<>(generateKeyStoreEncryptedKey(), VERSION_ANDROID_KEY_STORE);
     }
 
     /**
