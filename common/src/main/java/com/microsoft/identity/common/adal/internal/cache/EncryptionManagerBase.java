@@ -213,6 +213,20 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
 
         Logger.verbose(TAG + methodName, "Starting encryption");
 
+        // Try to read keystore key - to verify how often this is invoked before the migration is done.
+        // TODO: remove this whole try-catch clause once the experiment is done.
+        if (mTelemetryCallback != null) {
+            try {
+                final SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
+                if (key == null) {
+                    mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
+                }
+            } catch (final Exception e) {
+                // Best effort.
+                mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
+            }
+        }
+
         // Loading key only once for performance.
         final Pair<SecretKey, String> cachedKey = getCachedEncryptionKey();
         if (cachedKey != null) {

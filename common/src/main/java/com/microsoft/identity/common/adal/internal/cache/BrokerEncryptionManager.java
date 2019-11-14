@@ -82,15 +82,6 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
         // The current app runtime is the broker; load its secret key.
         if (!sShouldEncryptWithKeyStoreKey &&
                 AuthenticationSettings.INSTANCE.getBrokerSecretKeys().containsKey(getPackageName())) {
-
-            // Try to read keystore key - so that we get telemetry data on its reliability.
-            // If anything happens, do not crash the app.
-            try {
-                loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
-            } catch (Exception e) {
-                // Best effort.
-            }
-
             if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName())) {
                 return new Pair<>(loadSecretKey(KeyType.LEGACY_AUTHENTICATOR_APP_KEY), VERSION_USER_DEFINED);
             } else {
