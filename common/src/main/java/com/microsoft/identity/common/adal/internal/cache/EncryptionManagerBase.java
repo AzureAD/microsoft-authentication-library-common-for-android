@@ -22,13 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.cache;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.preference.PreferenceManager;
-import android.security.KeyPairGeneratorSpec;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
@@ -41,42 +38,21 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.security.DigestException;
 import java.security.GeneralSecurityException;
-import java.security.Key;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.SecureRandom;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.spec.AlgorithmParameterSpec;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.security.auth.x500.X500Principal;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
@@ -85,29 +61,9 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
     private static final String TAG = "StorageHelper";
 
     /**
-     * HMac key hashing algorithm.
-     */
-    private static final String HMAC_KEY_HASH_ALGORITHM = "SHA256";
-
-    /**
-     * Cert alias persisting the keypair in AndroidKeyStore.
-     */
-    private static final String KEY_STORE_CERT_ALIAS = "AdalKey";
-
-    /**
-     * Name of the file contains the symmetric key used for encryption/decryption.
-     */
-    private static final String ADALKS = "adalks";
-
-    /**
      * Key spec algorithm.
      */
-    private static final String KEYSPEC_ALGORITHM = "AES";
-
-    /**
-     * Algorithm for key wrapping.
-     */
-    private static final String WRAP_ALGORITHM = "RSA/ECB/PKCS1Padding";
+    static final String KEYSPEC_ALGORITHM = "AES";
 
     /**
      * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
@@ -120,7 +76,11 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
 
     private static final String CURRENT_ACTIVE_BROKER = "current_active_broker";
 
-    private static final int KEY_SIZE = 256;
+
+    /**
+     * HMac key hashing algorithm.
+     */
+    private static final String HMAC_KEY_HASH_ALGORITHM = "SHA256";
 
     /**
      * IV Key length for AES-128.
@@ -149,37 +109,24 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
      */
     private static final String ENCODE_VERSION = "E1";
 
-    private static final int KEY_FILE_SIZE = 1024;
-
-    private static final String ANDROID_KEY_STORE = "AndroidKeyStore";
-
     private final Context mContext;
-    private final SecureRandom mRandom;
-    private IWpjTelemetryCallback mTelemetryCallback;
-
-    /**
-     * Public and private keys that are generated in AndroidKeyStore.
-     */
-    private KeyPair mKeyPair;
-    private String mBlobVersion;
-    private SecretKey mEncryptionKey = null;
-    private SecretKey mEncryptionHMACKey = null;
-    private SecretKey mCachedKeyStoreEncryptedKey = null;
+    protected final String mPackageName;
+    protected final KeystoreEncryptedKeyManager mKeystoreEncryptedKeyManager;
+    protected IWpjTelemetryCallback mTelemetryCallback;
+    private EncryptionKeys mEncryptionKeys;
 
     /**
      * Constructor for {@link StorageHelper}.
      *
      * @param context The {@link Context} to create {@link StorageHelper}.
      */
-    protected EncryptionManagerBase(@NonNull final Context context) {
+    protected EncryptionManagerBase(@NonNull final Context context,
+                                    @NonNull final String packageName) {
         mContext = context.getApplicationContext();
-        mRandom = new SecureRandom();
+        mPackageName = packageName;
+        mKeystoreEncryptedKeyManager = new KeystoreEncryptedKeyManager(context, mPackageName);
         mTelemetryCallback = null;
-    }
-
-    // Exposed to be overridden by mock tests.
-    protected String getPackageName() {
-        return mContext.getPackageName();
+        mEncryptionKeys = new EncryptionKeys();
     }
 
     /**
@@ -194,12 +141,38 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         }
     }
 
-    @Nullable
-    private Pair<SecretKey, String> getCachedEncryptionKey(){
-        if (mEncryptionKey != null && mBlobVersion != null){
-            return new Pair<>(mEncryptionKey, mBlobVersion);
-        }
-        return null;
+    /**
+     * Generate a new keystore-encrypted key and save to storage.
+     */
+    public synchronized SecretKey generateKeyStoreEncryptedKey()
+            throws GeneralSecurityException, IOException {
+        final String methodName = ":generateKeyStoreEncryptedKey";
+        final SecretKey key = mKeystoreEncryptedKeyManager.generateSecretKey();
+        mKeystoreEncryptedKeyManager.saveKey(key);
+        Logger.info(TAG + methodName, "New keystore-encrypted key is generated.");
+        mEncryptionKeys.clearKeys();
+        return key;
+    }
+
+    /**
+     * Saves the given keystore-encrypted to storage.
+     */
+    public synchronized void saveKeyStoreEncryptedKey(@NonNull final SecretKey secretKey)
+            throws GeneralSecurityException, IOException {
+        final String methodName = ":saveKeyStoreEncryptedKey";
+        mKeystoreEncryptedKeyManager.saveKey(secretKey);
+        Logger.info(TAG + methodName, "New keystore-encrypted key is saved.");
+        mEncryptionKeys.clearKeys();
+    }
+
+    /**
+     * Deletes existing keystore-encrypted from storage.
+     */
+    public synchronized void deleteKeyStoreEncryptedKey(){
+        final String methodName = ":deleteKeyStoreEncryptedKey";
+        mKeystoreEncryptedKeyManager.deleteKeyFile();
+        Logger.info(TAG + methodName, "Existing keystore-encrypted key is deleted.");
+        mEncryptionKeys.clearKeys();
     }
 
     @Override
@@ -228,37 +201,30 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         }
 
         // Loading key only once for performance.
-        final Pair<SecretKey, String> cachedKey = getCachedEncryptionKey();
-        if (cachedKey != null) {
-            mEncryptionKey = cachedKey.first;
-            mBlobVersion = cachedKey.second;
-        } else {
+        if (mEncryptionKeys.isEmpty()) {
             final Pair<SecretKey, String> encryptionKeyAndBlobKeyPair = loadSecretKeyForEncryption();
-            mEncryptionKey = encryptionKeyAndBlobKeyPair.first;
-            mBlobVersion = encryptionKeyAndBlobKeyPair.second;
+            mEncryptionKeys.setKeys(encryptionKeyAndBlobKeyPair.first, encryptionKeyAndBlobKeyPair.second);
         }
 
-        mEncryptionHMACKey = getHMacKey(mEncryptionKey);
-
-        Logger.verbose(TAG + methodName, "Encrypt version:" + mBlobVersion);
-        final byte[] blobVersion = mBlobVersion.getBytes(AuthenticationConstants.ENCODING_UTF8);
+        Logger.verbose(TAG + methodName, "Encrypt version:" + mEncryptionKeys.getBlobVersion());
+        final byte[] blobVersion = mEncryptionKeys.getBlobVersion().getBytes(AuthenticationConstants.ENCODING_UTF8);
         final byte[] bytes = clearText.getBytes(AuthenticationConstants.ENCODING_UTF8);
 
         // IV: Initialization vector that is needed to start CBC
         final byte[] iv = new byte[DATA_KEY_LENGTH];
-        mRandom.nextBytes(iv);
+        new SecureRandom().nextBytes(iv);
         final IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
         // Set to encrypt mode
         final Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         final Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-        cipher.init(Cipher.ENCRYPT_MODE, mEncryptionKey, ivSpec);
+        cipher.init(Cipher.ENCRYPT_MODE, mEncryptionKeys.getEncryptionKey(), ivSpec);
 
         final byte[] encrypted = cipher.doFinal(bytes);
 
         // Mac output to sign encryptedData+IV. Keyversion is not included
         // in the digest. It defines what to use for Mac Key.
-        mac.init(mEncryptionHMACKey);
+        mac.init(mEncryptionKeys.getHMACEncryptionKey());
         mac.update(blobVersion);
         mac.update(encrypted);
         mac.update(iv);
@@ -311,8 +277,7 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
             }
         }
 
-        final String packageName = getPackageName();
-        final List<KeyType> keysForDecryptionType = getKeysForDecryptionType(encryptedBlob, packageName);
+        final List<KeyType> keysForDecryptionType = getKeysForDecryptionType(encryptedBlob);
 
         final byte[] bytes = getByteArrayFromEncryptedBlob(encryptedBlob);
         for (final KeyType keyType : keysForDecryptionType) {
@@ -347,11 +312,10 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
                 CURRENT_ACTIVE_BROKER,
                 ""
         );
-        final String activeBroker = mContext.getPackageName();
 
-        if (!previousActiveBroker.equalsIgnoreCase(activeBroker)) {
+        if (!previousActiveBroker.equalsIgnoreCase(mPackageName)) {
             final String message = "Decryption failed with key: " + keyType.name()
-                    + " Active broker: " + activeBroker
+                    + " Active broker: " + mPackageName
                     + " Exception: " + exception.toString();
 
             Logger.info(TAG + methodName, message);
@@ -363,7 +327,7 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
                         message);
             }
 
-            sharedPreferences.edit().putString(CURRENT_ACTIVE_BROKER, activeBroker).apply();
+            sharedPreferences.edit().putString(CURRENT_ACTIVE_BROKER, mPackageName).apply();
         }
     }
 
@@ -417,8 +381,7 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
      * Get all the key type that could be potential candidates for decryption.
      **/
     @NonNull
-    public List<KeyType> getKeysForDecryptionType(@NonNull final String encryptedBlob,
-                                                  @NonNull final String packageName) throws IOException {
+    public List<KeyType> getKeysForDecryptionType(@NonNull final String encryptedBlob) throws IOException {
         List<KeyType> keyTypeList = new ArrayList<>();
 
         final EncryptionType encryptionType = getEncryptionType(encryptedBlob);
@@ -426,10 +389,10 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         if (encryptionType == EncryptionType.USER_DEFINED) {
             if (AuthenticationSettings.INSTANCE.getSecretKeyData() != null) {
                 keyTypeList.add(KeyType.ADAL_USER_DEFINED_KEY);
-            } else if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+            } else if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(mPackageName)) {
                 keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
                 keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
-            } else if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+            } else if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(mPackageName)) {
                 keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
                 keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
             }
@@ -510,176 +473,8 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         }
     }
 
-    /**
-     * Encrypt the given unencrypted symmetric key with Keystore key and save to storage.
-     */
-    public void saveKeyStoreEncryptedKey(@NonNull SecretKey unencryptedKey) throws GeneralSecurityException, IOException {
-        if (mKeyPair == null) {
-            mKeyPair = generateKeyPairFromAndroidKeyStore();
-        }
-
-        final byte[] keyWrapped = wrap(unencryptedKey);
-        writeKeyData(keyWrapped);
-
-        // Clear cached data.
-        mEncryptionKey = null;
-        mBlobVersion = null;
-    }
-
-    /**
-     * Generate a new keystore-encrypted key and save to storage.
-     */
-    public synchronized SecretKey generateKeyStoreEncryptedKey() throws GeneralSecurityException, IOException {
-        final String methodName = ":generateKeyStoreEncryptedKey";
-        mCachedKeyStoreEncryptedKey = generateSecretKey();
-        saveKeyStoreEncryptedKey(mCachedKeyStoreEncryptedKey);
-
-        logEvent(methodName,
-                AuthenticationConstants.TelemetryEvents.KEY_CREATED,
-                false,
-                "New key is generated.");
-
-        return mCachedKeyStoreEncryptedKey;
-    }
-
-    /**
-     * Load the saved keystore-encrypted key. Will only do read operation.
-     *
-     * @return SecretKey. Null if there isn't any.
-     * @throws GeneralSecurityException
-     * @throws IOException
-     */
-    @Nullable
-    protected synchronized SecretKey loadKeyStoreEncryptedKey()
-            throws GeneralSecurityException, IOException {
-        final String methodName = ":loadKeyStoreEncryptedKey";
-        if (mCachedKeyStoreEncryptedKey != null) {
-            return mCachedKeyStoreEncryptedKey;
-        }
-
-        try {
-            mCachedKeyStoreEncryptedKey = getUnwrappedSecretKey();
-        } catch (final GeneralSecurityException | IOException e) {
-            // Reset KeyPair info so that new request will generate correct KeyPairs.
-            // All tokens with previous SecretKey are not possible to decrypt.
-            Logger.error(TAG + methodName, ErrorStrings.ANDROIDKEYSTORE_FAILED, e);
-            mKeyPair = null;
-            mCachedKeyStoreEncryptedKey = null;
-            deleteKeyFile();
-            resetKeyPairFromAndroidKeyStore();
-            throw e;
-        }
-
-        return mCachedKeyStoreEncryptedKey;
-    }
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private synchronized KeyPair generateKeyPairFromAndroidKeyStore()
-            throws GeneralSecurityException, IOException {
-        final String methodName = ":generateKeyPairFromAndroidKeyStore";
-
-        try {
-            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_START);
-
-            final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
-            keyStore.load(null);
-
-            Logger.verbose(TAG + methodName, "Generate KeyPair from AndroidKeyStore");
-            final Calendar start = Calendar.getInstance();
-            final Calendar end = Calendar.getInstance();
-            final int certValidYears = 100;
-            end.add(Calendar.YEAR, certValidYears);
-
-            // self signed cert stored in AndroidKeyStore to asym. encrypt key
-            // to a file
-            final KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA",
-                    ANDROID_KEY_STORE);
-            generator.initialize(getKeyPairGeneratorSpec(mContext, start.getTime(), end.getTime()));
-
-            final KeyPair keyPair = generator.generateKeyPair();
-            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, "");
-            return keyPair;
-        } catch (final GeneralSecurityException | IOException e) {
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, e.toString(), e);
-            throw e;
-        } catch (final IllegalStateException e) {
-            // There is an issue with AndroidKeyStore when attempting to generate keypair
-            // if user doesn't have pin/passphrase setup for their lock screen.
-            // Issue 177459 : AndroidKeyStore KeyPairGenerator fails to generate
-            // KeyPair after toggling lock type, even without setting the encryptionRequired
-            // flag on the KeyPairGeneratorSpec.
-            // https://code.google.com/p/android/issues/detail?id=177459
-            // The thrown exception in this case is:
-            // java.lang.IllegalStateException: could not generate key in keystore
-            // To avoid app crashing, re-throw as checked exception
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, e.toString(), e);
-            throw new KeyStoreException(e);
-        }
-    }
-
-    /**
-     * Read KeyPair from AndroidKeyStore.
-     *
-     * @return KeyPair. Null if there isn't any.
-     */
-    @Nullable
-    private synchronized KeyPair readKeyPair()
-            throws GeneralSecurityException, IOException {
-        final String methodName = ":readKeyPair";
-        Logger.verbose(TAG + methodName, "Reading Key entry");
-
-        try {
-            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_START);
-
-            final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
-            keyStore.load(null);
-
-            final Certificate cert = keyStore.getCertificate(KEY_STORE_CERT_ALIAS);
-            final Key privateKey = keyStore.getKey(KEY_STORE_CERT_ALIAS, null);
-
-            if (cert == null || privateKey == null) {
-                logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_END, "KeyStore is empty.");
-                Logger.verbose(TAG + methodName, "Key entry doesn't exist.");
-                return null;
-            }
-
-            final KeyPair keyPair = new KeyPair(cert.getPublicKey(), (PrivateKey) privateKey);
-            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_END, "KeyStore KeyPair is loaded.");
-            return keyPair;
-        } catch (final GeneralSecurityException | IOException e) {
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_END, e.toString(), e);
-            throw e;
-        } catch (final RuntimeException e) {
-            // There is an issue in android keystore that resets keystore
-            // Issue 61989:  AndroidKeyStore deleted after changing screen lock type
-            // https://code.google.com/p/android/issues/detail?id=61989
-            // in this case getEntry throws
-            // java.lang.RuntimeException: error:0D07207B:asn1 encoding routines:ASN1_get_object:header too long
-            // handle it as regular KeyStoreException
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_END, e.toString(), e);
-            throw new KeyStoreException(e);
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private AlgorithmParameterSpec getKeyPairGeneratorSpec(final Context context, final Date start, final Date end) {
-        final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s", KEY_STORE_CERT_ALIAS,
-                getPackageName());
-        return new KeyPairGeneratorSpec.Builder(context)
-                .setAlias(KEY_STORE_CERT_ALIAS)
-                .setSubject(new X500Principal(certInfo))
-                .setSerialNumber(BigInteger.ONE)
-                .setStartDate(start)
-                .setEndDate(end)
-                .build();
-    }
-
-    protected static SecretKey getSecretKey(final byte[] rawBytes) {
-        if (rawBytes == null) {
-            throw new IllegalArgumentException("rawBytes");
-        }
-
-        return new SecretKeySpec(rawBytes, KEYSPEC_ALGORITHM);
+    private char getEncodeVersionLengthPrefix() {
+        return (char) ('a' + ENCODE_VERSION.length());
     }
 
     /**
@@ -689,19 +484,15 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
      * @return SecretKey
      * @throws NoSuchAlgorithmException
      */
-    private SecretKey getHMacKey(final SecretKey key) throws NoSuchAlgorithmException {
+    public static SecretKey getHMacKey(final SecretKey key) throws NoSuchAlgorithmException {
         // Some keys may not produce byte[] with getEncoded
         final byte[] encodedKey = key.getEncoded();
         if (encodedKey != null) {
             final MessageDigest digester = MessageDigest.getInstance(HMAC_KEY_HASH_ALGORITHM);
-            return new SecretKeySpec(digester.digest(encodedKey), KEYSPEC_ALGORITHM);
+            return new SecretKeySpec(digester.digest(encodedKey), EncryptionManagerBase.KEYSPEC_ALGORITHM);
         }
 
         return key;
-    }
-
-    private char getEncodeVersionLengthPrefix() {
-        return (char) ('a' + ENCODE_VERSION.length());
     }
 
     private void assertHMac(final byte[] digest, final int start, final int end, final byte[] calculated)
@@ -719,187 +510,6 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
 
         if (result != 0) {
             throw new DigestException();
-        }
-    }
-
-    /**
-     * generate secretKey to store after wrapping with KeyStore.
-     *
-     * @return SecretKey.
-     * @throws NoSuchAlgorithmException
-     */
-    protected SecretKey generateSecretKey() throws NoSuchAlgorithmException {
-        final KeyGenerator keygen = KeyGenerator.getInstance(KEYSPEC_ALGORITHM);
-        keygen.init(KEY_SIZE, mRandom);
-        return keygen.generateKey();
-    }
-
-    @Nullable
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private synchronized SecretKey getUnwrappedSecretKey()
-            throws GeneralSecurityException, IOException {
-        final String methodName = ":getUnwrappedSecretKey";
-        Logger.verbose(TAG + methodName, "Reading SecretKey");
-
-        final SecretKey unwrappedSecretKey;
-        final byte[] wrappedSecretKey = readKeyData();
-        if (wrappedSecretKey == null) {
-            Logger.verbose(TAG + methodName, "Key data is null");
-            return null;
-        }
-
-        // androidKeyStore can store app specific self signed cert.
-        // Asymmetric cryptography is used to protect the session key
-        // used for Encryption and HMac
-        mKeyPair = readKeyPair();
-        if (mKeyPair == null) {
-            return null;
-        }
-
-        unwrappedSecretKey = unwrap(wrappedSecretKey);
-        Logger.verbose(TAG + methodName, "Finished reading SecretKey");
-        return unwrappedSecretKey;
-    }
-
-    public void deleteKeyFile() {
-        final String methodName = ":deleteKeyFile";
-
-        final File keyFile = new File(mContext.getDir(getPackageName(),
-                Context.MODE_PRIVATE), ADALKS);
-        if (keyFile.exists()) {
-            Logger.verbose(TAG + methodName, "Delete KeyFile");
-            if (!keyFile.delete()) {
-                Logger.verbose(TAG + methodName, "Delete KeyFile failed");
-            }
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    protected synchronized void resetKeyPairFromAndroidKeyStore() throws KeyStoreException,
-            NoSuchAlgorithmException, CertificateException, IOException {
-        final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
-        keyStore.load(null);
-        keyStore.deleteEntry(KEY_STORE_CERT_ALIAS);
-    }
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    @SuppressLint("GetInstance")
-    private byte[] wrap(final SecretKey key) throws GeneralSecurityException {
-        final String methodName = ":wrap";
-
-        Logger.verbose(TAG + methodName, "Wrap secret key.");
-        final Cipher wrapCipher = Cipher.getInstance(WRAP_ALGORITHM);
-        wrapCipher.init(Cipher.WRAP_MODE, mKeyPair.getPublic());
-        return wrapCipher.wrap(key);
-    }
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    @SuppressLint("GetInstance")
-    private SecretKey unwrap(final byte[] keyBlob) throws GeneralSecurityException {
-        final Cipher wrapCipher = Cipher.getInstance(WRAP_ALGORITHM);
-        wrapCipher.init(Cipher.UNWRAP_MODE, mKeyPair.getPrivate());
-        try {
-            return (SecretKey) wrapCipher.unwrap(keyBlob, KEYSPEC_ALGORITHM, Cipher.SECRET_KEY);
-        } catch (final IllegalArgumentException exception) {
-            // There is issue with Android KeyStore when lock screen type is changed which could
-            // potentially wipe out keystore.
-            // Here are the two top exceptions that could be thrown due to the above issue:
-            // 1) Caused by: java.security.InvalidKeyException: javax.crypto.BadPaddingException:
-            //    error:0407106B:rsa routines:RSA_padding_check_PKCS1_type_2:block type is not 02
-            // 2) Caused by: java.lang.IllegalArgumentException: key.length == 0
-            // Issue 61989: AndroidKeyStore deleted after changing screen lock type
-            // https://code.google.com/p/android/issues/detail?id=61989
-            // To avoid app crashing from 2), re-throw it as checked exception
-            throw new KeyStoreException(exception);
-        }
-    }
-
-    private void writeKeyData(final byte[] data) throws IOException {
-        final String methodName = ":writeKeyData";
-
-        Logger.verbose(TAG + methodName, "Writing key data to a file");
-        final File keyFile = new File(mContext.getDir(getPackageName(), Context.MODE_PRIVATE),
-                ADALKS);
-        final OutputStream out = new FileOutputStream(keyFile);
-        try {
-            out.write(data);
-        } finally {
-            out.close();
-        }
-    }
-
-    @Nullable
-    private byte[] readKeyData() throws IOException {
-        final String methodName = ":readKeyData";
-
-        final File keyFile = new File(mContext.getDir(getPackageName(), Context.MODE_PRIVATE),
-                ADALKS);
-        if (!keyFile.exists()) {
-            return null;
-        }
-
-        Logger.verbose(TAG + methodName, "Reading key data from a file");
-        final InputStream in = new FileInputStream(keyFile);
-        try {
-            final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            final byte[] buffer = new byte[KEY_FILE_SIZE];
-            int count;
-            while ((count = in.read(buffer)) != -1) {
-                bytes.write(buffer, 0, count);
-            }
-
-            return bytes.toByteArray();
-        } finally {
-            in.close();
-        }
-    }
-
-    public String serializeSecretKey(@NonNull final SecretKey key) {
-        return Base64.encodeToString(key.getEncoded(), Base64.DEFAULT);
-    }
-
-    public SecretKey deserializeSecretKey(@NonNull final String serializedKey) {
-        return getSecretKey(Base64.decode(serializedKey, Base64.DEFAULT));
-    }
-
-    /**
-     * Since Common isn't wired to telemetry yet at the point of implementation (July 18, 2019)
-     * We use these functions to pass telemetry events to the calling ad-accounts.
-     */
-    private void logEvent(@NonNull final String methodName,
-                          @NonNull final String operationName,
-                          @NonNull final boolean isFailed,
-                          @NonNull final String reason) {
-        Logger.verbose(TAG + methodName, operationName + ": " + reason);
-        if (mTelemetryCallback != null) {
-            mTelemetryCallback.logEvent(mContext, operationName, isFailed, reason);
-        }
-    }
-
-    private void logFlowStart(@NonNull final String methodName,
-                              @NonNull final String operationName) {
-        Logger.verbose(TAG + methodName, operationName + " started.");
-        if (mTelemetryCallback != null) {
-            mTelemetryCallback.logEvent(mContext, operationName, false, "");
-        }
-    }
-
-    private void logFlowSuccess(@NonNull final String methodName,
-                                @NonNull final String operationName,
-                                @NonNull final String reason) {
-        Logger.verbose(TAG + methodName, operationName + " successfully finished: " + reason);
-        if (mTelemetryCallback != null) {
-            mTelemetryCallback.logEvent(mContext, operationName, false, reason);
-        }
-    }
-
-    private void logFlowError(@NonNull final String methodName,
-                              @NonNull final String operationName,
-                              @NonNull final String reason,
-                              @Nullable Exception e) {
-        Logger.error(TAG + methodName, operationName + " failed: " + reason, e);
-        if (mTelemetryCallback != null) {
-            mTelemetryCallback.logEvent(mContext, operationName, true, reason);
         }
     }
 }

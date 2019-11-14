@@ -51,14 +51,15 @@ public class MsalEncryptionManager extends EncryptionManagerBase {
 
     public static synchronized MsalEncryptionManager getInstance(@NonNull Context context) {
         if (sInstance == null) {
-            sInstance = new MsalEncryptionManager(context);
+            sInstance = new MsalEncryptionManager(context, context.getPackageName());
         }
 
         return sInstance;
     }
 
-    protected MsalEncryptionManager(@NonNull Context context) {
-        super(context);
+    protected MsalEncryptionManager(@NonNull Context context,
+                                    @NonNull String packageName) {
+        super(context, packageName);
     }
 
     /**
@@ -102,10 +103,10 @@ public class MsalEncryptionManager extends EncryptionManagerBase {
 
         switch (keyType) {
             case ADAL_USER_DEFINED_KEY:
-                return getSecretKey(AuthenticationSettings.INSTANCE.getSecretKeyData());
+                return KeystoreEncryptedKeyManager.getSecretKey(AuthenticationSettings.INSTANCE.getSecretKeyData());
 
             case KEYSTORE_ENCRYPTED_KEY:
-                return loadKeyStoreEncryptedKey();
+                return mKeystoreEncryptedKeyManager.loadKey();
 
             default:
                 Logger.verbose(TAG + methodName, "Unknown KeyType. This code should never be reached.");

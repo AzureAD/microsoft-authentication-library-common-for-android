@@ -30,6 +30,7 @@ import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -59,14 +60,15 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
 
     public static synchronized BrokerEncryptionManager getInstance(@NonNull Context context) {
         if (sInstance == null) {
-            sInstance = new BrokerEncryptionManager(context);
+            sInstance = new BrokerEncryptionManager(context, context.getPackageName());
         }
 
         return sInstance;
     }
 
-    protected BrokerEncryptionManager(@NonNull Context context) {
-        super(context);
+    protected BrokerEncryptionManager(@NonNull Context context,
+                                      @NonNull String packageName) {
+        super(context, packageName);
     }
 
     /**
@@ -93,7 +95,7 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
         }
 
         // If the keystore-encrypted key is not yet generated nor migrated, uses legacy key.
-        if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName())) {
+        if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(mPackageName)) {
             return new Pair<>(loadSecretKey(KeyType.LEGACY_AUTHENTICATOR_APP_KEY), VERSION_USER_DEFINED);
         } else {
             return new Pair<>(loadSecretKey(KeyType.LEGACY_COMPANY_PORTAL_KEY), VERSION_USER_DEFINED);
@@ -111,13 +113,13 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
 
         switch (keyType) {
             case LEGACY_AUTHENTICATOR_APP_KEY:
-                return getSecretKey(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(AZURE_AUTHENTICATOR_APP_PACKAGE_NAME));
+                return KeystoreEncryptedKeyManager.getSecretKey(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(AZURE_AUTHENTICATOR_APP_PACKAGE_NAME));
 
             case LEGACY_COMPANY_PORTAL_KEY:
-                return getSecretKey(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(COMPANY_PORTAL_APP_PACKAGE_NAME));
+                return KeystoreEncryptedKeyManager.getSecretKey(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(COMPANY_PORTAL_APP_PACKAGE_NAME));
 
             case KEYSTORE_ENCRYPTED_KEY:
-                return loadKeyStoreEncryptedKey();
+                return mKeystoreEncryptedKeyManager.loadKey();
 
             default:
                 Logger.verbose(TAG + methodName, "Unknown KeyType. This code should never be reached.");
