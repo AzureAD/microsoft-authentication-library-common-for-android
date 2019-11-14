@@ -28,7 +28,6 @@ import android.preference.PreferenceManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.util.Pair;
 
 import android.util.Base64;
 
@@ -58,7 +57,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
 abstract class EncryptionManagerBase implements IEncryptionManager {
-    private static final String TAG = "StorageHelper";
+    private static final String TAG = EncryptionManagerBase.class.getSimpleName();
 
     /**
      * Key spec algorithm.
@@ -111,9 +110,10 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
 
     private final Context mContext;
     protected final String mPackageName;
-    protected final KeystoreEncryptedKeyManager mKeystoreEncryptedKeyManager;
     protected IWpjTelemetryCallback mTelemetryCallback;
-    private EncryptionKeys mEncryptionKeys;
+    private final KeystoreEncryptedKeyManager mKeystoreEncryptedKeyManager;
+    private EncryptionKeys mCachedEncryptionKeys;
+    private SecretKey mCachedKeyStoreEncryptedKey;
 
     /**
      * Constructor for {@link StorageHelper}.
@@ -126,6 +126,7 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         mPackageName = packageName;
         mKeystoreEncryptedKeyManager = new KeystoreEncryptedKeyManager(context, mPackageName);
         mTelemetryCallback = null;
+        mCachedKeyStoreEncryptedKey = null;
     }
 
     /**
@@ -138,40 +139,6 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         if (mTelemetryCallback == null && telemetryCallback != null) {
             mTelemetryCallback = telemetryCallback;
         }
-    }
-
-    /**
-     * Generate a new keystore-encrypted key and save to storage.
-     */
-    public synchronized SecretKey generateKeyStoreEncryptedKey()
-            throws GeneralSecurityException, IOException {
-        final String methodName = ":generateKeyStoreEncryptedKey";
-        final SecretKey key = mKeystoreEncryptedKeyManager.generateSecretKey();
-        mKeystoreEncryptedKeyManager.saveKey(key);
-        Logger.info(TAG + methodName, "New keystore-encrypted key is generated.");
-        mEncryptionKeys = null;
-        return key;
-    }
-
-    /**
-     * Saves the given keystore-encrypted to storage.
-     */
-    public synchronized void saveKeyStoreEncryptedKey(@NonNull final SecretKey secretKey)
-            throws GeneralSecurityException, IOException {
-        final String methodName = ":saveKeyStoreEncryptedKey";
-        mKeystoreEncryptedKeyManager.saveKey(secretKey);
-        Logger.info(TAG + methodName, "New keystore-encrypted key is saved.");
-        mEncryptionKeys = null;
-    }
-
-    /**
-     * Deletes existing keystore-encrypted from storage.
-     */
-    public synchronized void deleteKeyStoreEncryptedKey(){
-        final String methodName = ":deleteKeyStoreEncryptedKey";
-        mKeystoreEncryptedKeyManager.deleteKeyFile();
-        Logger.info(TAG + methodName, "Existing keystore-encrypted key is deleted.");
-        mEncryptionKeys = null;
     }
 
     @Override
@@ -200,12 +167,12 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         }
 
         // Loading key only once for performance.
-        if (mEncryptionKeys == null) {
-            mEncryptionKeys = loadSecretKeyForEncryption();
+        if (mCachedEncryptionKeys == null) {
+            mCachedEncryptionKeys = loadSecretKeyForEncryption();
         }
 
-        Logger.verbose(TAG + methodName, "Encrypt version:" + mEncryptionKeys.getBlobVersion());
-        final byte[] blobVersion = mEncryptionKeys.getBlobVersion().getBytes(AuthenticationConstants.ENCODING_UTF8);
+        Logger.verbose(TAG + methodName, "Encrypt version:" + mCachedEncryptionKeys.getBlobVersion());
+        final byte[] blobVersion = mCachedEncryptionKeys.getBlobVersion().getBytes(AuthenticationConstants.ENCODING_UTF8);
         final byte[] bytes = clearText.getBytes(AuthenticationConstants.ENCODING_UTF8);
 
         // IV: Initialization vector that is needed to start CBC
@@ -216,13 +183,13 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         // Set to encrypt mode
         final Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         final Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-        cipher.init(Cipher.ENCRYPT_MODE, mEncryptionKeys.getEncryptionKey(), ivSpec);
+        cipher.init(Cipher.ENCRYPT_MODE, mCachedEncryptionKeys.getEncryptionKey(), ivSpec);
 
         final byte[] encrypted = cipher.doFinal(bytes);
 
         // Mac output to sign encryptedData+IV. Keyversion is not included
         // in the digest. It defines what to use for Mac Key.
-        mac.init(mEncryptionKeys.getHMACEncryptionKey());
+        mac.init(mCachedEncryptionKeys.getHMACEncryptionKey());
         mac.update(blobVersion);
         mac.update(encrypted);
         mac.update(iv);
@@ -509,5 +476,52 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         if (result != 0) {
             throw new DigestException();
         }
+    }
+
+    /**
+     * Generate a new keystore-encrypted key and save to storage.
+     */
+    public synchronized SecretKey generateKeyStoreEncryptedKey()
+            throws GeneralSecurityException, IOException {
+        final String methodName = ":generateKeyStoreEncryptedKey";
+        final SecretKey key = mKeystoreEncryptedKeyManager.generateSecretKey();
+        mKeystoreEncryptedKeyManager.saveKey(key);
+        Logger.info(TAG + methodName, "New keystore-encrypted key is generated.");
+        mCachedEncryptionKeys = null;
+        mCachedKeyStoreEncryptedKey = null;
+        return key;
+    }
+
+    /**
+     * Saves the given keystore-encrypted to storage.
+     */
+    public synchronized void saveKeyStoreEncryptedKey(@NonNull final SecretKey secretKey)
+            throws GeneralSecurityException, IOException {
+        final String methodName = ":saveKeyStoreEncryptedKey";
+        mKeystoreEncryptedKeyManager.saveKey(secretKey);
+        Logger.info(TAG + methodName, "New keystore-encrypted key is saved.");
+        mCachedEncryptionKeys = null;
+        mCachedKeyStoreEncryptedKey = null;
+    }
+
+    /**
+     * Deletes existing keystore-encrypted from storage.
+     */
+    public synchronized void deleteKeyStoreEncryptedKey(){
+        final String methodName = ":deleteKeyStoreEncryptedKey";
+        mKeystoreEncryptedKeyManager.deleteKeyFile();
+        Logger.info(TAG + methodName, "Existing keystore-encrypted key is deleted.");
+        mCachedEncryptionKeys = null;
+        mCachedKeyStoreEncryptedKey = null;
+    }
+
+    /**
+     * Gets the keystore-encrypted key from storage.
+     */
+    protected SecretKey getKeyStoreEncryptedKey() throws GeneralSecurityException, IOException {
+        if (mCachedKeyStoreEncryptedKey == null) {
+            mCachedKeyStoreEncryptedKey = mKeystoreEncryptedKeyManager.loadKey();
+        }
+        return mCachedKeyStoreEncryptedKey;
     }
 }

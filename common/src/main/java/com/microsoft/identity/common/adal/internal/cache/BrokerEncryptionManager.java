@@ -73,8 +73,8 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
 
     /**
      * Loads key for Broker.
-     * If the legacy key is set and is enabled, use legacy key.
-     * Otherwise, it will return a keystore-encrypted key.
+     * If new key is enabled and exists, use new key.
+     * Otherwise, use legacy key.
      * */
     @Override
     public synchronized EncryptionKeys loadSecretKeyForEncryption() throws IOException,
@@ -119,7 +119,7 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
                 return KeystoreEncryptedKeyManager.getSecretKey(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(COMPANY_PORTAL_APP_PACKAGE_NAME));
 
             case KEYSTORE_ENCRYPTED_KEY:
-                return mKeystoreEncryptedKeyManager.loadKey();
+                return getKeyStoreEncryptedKey();
 
             default:
                 Logger.verbose(TAG + methodName, "Unknown KeyType. This code should never be reached.");

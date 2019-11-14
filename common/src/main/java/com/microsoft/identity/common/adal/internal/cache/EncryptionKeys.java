@@ -49,7 +49,7 @@ class EncryptionKeys {
 
     @Nullable
     public SecretKey getHMACEncryptionKey() {
-        return mEncryptionKey;
+        return mHMACEncryptionKey;
     }
 
     @Nullable

@@ -72,7 +72,6 @@ public class MsalEncryptionManager extends EncryptionManagerBase {
             GeneralSecurityException {
         final String methodName = ":loadSecretKeyForEncryption";
 
-
         // Try to get user defined key (ADAL/MSAL).
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() != null) {
             return new EncryptionKeys(loadSecretKey(IEncryptionManager.KeyType.ADAL_USER_DEFINED_KEY), VERSION_USER_DEFINED);
@@ -107,7 +106,7 @@ public class MsalEncryptionManager extends EncryptionManagerBase {
                 return KeystoreEncryptedKeyManager.getSecretKey(AuthenticationSettings.INSTANCE.getSecretKeyData());
 
             case KEYSTORE_ENCRYPTED_KEY:
-                return mKeystoreEncryptedKeyManager.loadKey();
+                return getKeyStoreEncryptedKey();
 
             default:
                 Logger.verbose(TAG + methodName, "Unknown KeyType. This code should never be reached.");
