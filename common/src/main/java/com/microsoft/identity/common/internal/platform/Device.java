@@ -163,6 +163,8 @@ public final class Device {
                     "Failed to create/initialize KeyStore",
                     e
             );
+
+            throw e;
         }
 
         return keyStore;
