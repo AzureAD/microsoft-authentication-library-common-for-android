@@ -301,6 +301,9 @@ public class EstsTelemetry {
         }
     }
 
+    // if we don't have api id then we won't save telemetry to cache
+    // this can happen for commands like the GetDeviceModeCommand
+    // that are generated via a method for which we don't want telemetry
     private boolean eligibleToCache(RequestTelemetry lastTelemetry) {
         return !TextUtils.isEmpty(lastTelemetry.getSchemaVersion()) &&
                 !TextUtils.isEmpty(lastTelemetry.getCommonTelemetry().get(Schema.Key.API_ID));
