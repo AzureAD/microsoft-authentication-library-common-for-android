@@ -218,7 +218,7 @@ public class EstsTelemetry {
      * Removes the telemetry associated to the correlation id from the telemetry map,
      * and saves it to the cache (SharedPreferences) as the last request telemetry.
      */
-    public void flush() {
+    void flush() {
         String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
         flush(correlationId);
     }
@@ -233,18 +233,6 @@ public class EstsTelemetry {
     public void flush(final String correlationId) {
         final String errorCode = null; // there was no error
         flush(correlationId, errorCode);
-    }
-
-    /**
-     * Flush the telemetry data for the current request to the {@link android.content.SharedPreferences} using the {@link SharedPreferencesLastRequestTelemetryCache}.
-     * Removes the telemetry associated to the correlation id from the telemetry map,
-     * and saves it to the cache (SharedPreferences) as the last request telemetry.
-     *
-     * @param baseException exception that may have occurred during the request
-     */
-    public void flush(final BaseException baseException) {
-        String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
-        flush(correlationId, baseException);
     }
 
     /**
