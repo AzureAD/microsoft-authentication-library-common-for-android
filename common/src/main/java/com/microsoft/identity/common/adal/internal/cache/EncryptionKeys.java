@@ -26,8 +26,6 @@ package com.microsoft.identity.common.adal.internal.cache;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-
 import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.SecretKey;
@@ -37,23 +35,11 @@ class EncryptionKeys {
     private String mBlobVersion = null;
     private SecretKey mHMACEncryptionKey = null;
 
-    public void setKeys(@NonNull final SecretKey encryptionKey,
-                        @NonNull final String blobVersion) throws NoSuchAlgorithmException {
+    public EncryptionKeys(@NonNull final SecretKey encryptionKey,
+                          @NonNull final String blobVersion) throws NoSuchAlgorithmException {
         mEncryptionKey = encryptionKey;
         mHMACEncryptionKey = EncryptionManagerBase.getHMacKey(mEncryptionKey);
         mBlobVersion = blobVersion;
-    }
-
-    public void clearKeys() {
-        mEncryptionKey = null;
-        mBlobVersion = null;
-        mHMACEncryptionKey = null;
-    }
-
-    public boolean isEmpty() {
-        return mEncryptionKey == null ||
-                mHMACEncryptionKey == null ||
-                StringExtensions.isNullOrBlank(mBlobVersion);
     }
 
     @Nullable

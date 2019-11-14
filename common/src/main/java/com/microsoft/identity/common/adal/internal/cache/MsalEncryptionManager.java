@@ -68,20 +68,21 @@ public class MsalEncryptionManager extends EncryptionManagerBase {
      * Otherwise, it will return a keystore-encrypted key.
      * */
     @Override
-    public synchronized Pair<SecretKey, String> loadSecretKeyForEncryption() throws IOException,
+    public synchronized EncryptionKeys loadSecretKeyForEncryption() throws IOException,
             GeneralSecurityException {
         final String methodName = ":loadSecretKeyForEncryption";
 
+
         // Try to get user defined key (ADAL/MSAL).
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() != null) {
-            return new Pair<>(loadSecretKey(IEncryptionManager.KeyType.ADAL_USER_DEFINED_KEY), VERSION_USER_DEFINED);
+            return new EncryptionKeys(loadSecretKey(IEncryptionManager.KeyType.ADAL_USER_DEFINED_KEY), VERSION_USER_DEFINED);
         }
 
         // Try loading existing keystore-encrypted key. If it doesn't exist, create a new one.
         try {
             SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
             if (key != null) {
-                return new Pair<>(key, VERSION_ANDROID_KEY_STORE);
+                return new EncryptionKeys(key, VERSION_ANDROID_KEY_STORE);
             }
         } catch (final IOException | GeneralSecurityException e) {
             // If we fail to load key, proceed and generate a new one.
@@ -89,7 +90,7 @@ public class MsalEncryptionManager extends EncryptionManagerBase {
         }
 
         Logger.verbose(TAG + methodName, "Keystore-encrypted key does not exist, try to generate new keys.");
-        return new Pair<>(generateKeyStoreEncryptedKey(), VERSION_ANDROID_KEY_STORE);
+        return new EncryptionKeys(generateKeyStoreEncryptedKey(), VERSION_ANDROID_KEY_STORE);
     }
 
     /**

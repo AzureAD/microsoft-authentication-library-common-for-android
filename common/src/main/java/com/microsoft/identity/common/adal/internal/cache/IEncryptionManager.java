@@ -80,7 +80,7 @@ public interface IEncryptionManager {
      * @throws GeneralSecurityException throws if general security error happens.
      * @throws IOException              throws if I/O error happens.
      */
-    Pair loadSecretKeyForEncryption() throws IOException, GeneralSecurityException;
+    EncryptionKeys loadSecretKeyForEncryption() throws IOException, GeneralSecurityException;
 
     /**
      * Given the key type, load a secret key.

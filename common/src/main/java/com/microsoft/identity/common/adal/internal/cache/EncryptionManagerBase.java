@@ -126,7 +126,6 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         mPackageName = packageName;
         mKeystoreEncryptedKeyManager = new KeystoreEncryptedKeyManager(context, mPackageName);
         mTelemetryCallback = null;
-        mEncryptionKeys = new EncryptionKeys();
     }
 
     /**
@@ -150,7 +149,7 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         final SecretKey key = mKeystoreEncryptedKeyManager.generateSecretKey();
         mKeystoreEncryptedKeyManager.saveKey(key);
         Logger.info(TAG + methodName, "New keystore-encrypted key is generated.");
-        mEncryptionKeys.clearKeys();
+        mEncryptionKeys = null;
         return key;
     }
 
@@ -162,7 +161,7 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         final String methodName = ":saveKeyStoreEncryptedKey";
         mKeystoreEncryptedKeyManager.saveKey(secretKey);
         Logger.info(TAG + methodName, "New keystore-encrypted key is saved.");
-        mEncryptionKeys.clearKeys();
+        mEncryptionKeys = null;
     }
 
     /**
@@ -172,7 +171,7 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         final String methodName = ":deleteKeyStoreEncryptedKey";
         mKeystoreEncryptedKeyManager.deleteKeyFile();
         Logger.info(TAG + methodName, "Existing keystore-encrypted key is deleted.");
-        mEncryptionKeys.clearKeys();
+        mEncryptionKeys = null;
     }
 
     @Override
@@ -201,9 +200,8 @@ abstract class EncryptionManagerBase implements IEncryptionManager {
         }
 
         // Loading key only once for performance.
-        if (mEncryptionKeys.isEmpty()) {
-            final Pair<SecretKey, String> encryptionKeyAndBlobKeyPair = loadSecretKeyForEncryption();
-            mEncryptionKeys.setKeys(encryptionKeyAndBlobKeyPair.first, encryptionKeyAndBlobKeyPair.second);
+        if (mEncryptionKeys == null) {
+            mEncryptionKeys = loadSecretKeyForEncryption();
         }
 
         Logger.verbose(TAG + methodName, "Encrypt version:" + mEncryptionKeys.getBlobVersion());

@@ -77,7 +77,7 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
      * Otherwise, it will return a keystore-encrypted key.
      * */
     @Override
-    public synchronized Pair<SecretKey, String> loadSecretKeyForEncryption() throws IOException,
+    public synchronized EncryptionKeys loadSecretKeyForEncryption() throws IOException,
             GeneralSecurityException {
         final String methodName = ":loadSecretKeyForEncryption";
 
@@ -86,7 +86,7 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
             try {
                 SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
                 if (key != null) {
-                    return new Pair<>(key, VERSION_ANDROID_KEY_STORE);
+                    return new EncryptionKeys(key, VERSION_ANDROID_KEY_STORE);
                 }
             } catch (final IOException | GeneralSecurityException e) {
                 // If we fail to load key, proceed and generate a new one.
@@ -96,9 +96,9 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
 
         // If the keystore-encrypted key is not yet generated nor migrated, uses legacy key.
         if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(mPackageName)) {
-            return new Pair<>(loadSecretKey(KeyType.LEGACY_AUTHENTICATOR_APP_KEY), VERSION_USER_DEFINED);
+            return new EncryptionKeys(loadSecretKey(KeyType.LEGACY_AUTHENTICATOR_APP_KEY), VERSION_USER_DEFINED);
         } else {
-            return new Pair<>(loadSecretKey(KeyType.LEGACY_COMPANY_PORTAL_KEY), VERSION_USER_DEFINED);
+            return new EncryptionKeys(loadSecretKey(KeyType.LEGACY_COMPANY_PORTAL_KEY), VERSION_USER_DEFINED);
         }
     }
 
