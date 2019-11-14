@@ -22,16 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import android.support.annotation.NonNull;
+import android.net.Uri;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
-import com.microsoft.identity.common.adal.internal.net.IWebRequestHandler;
-import com.microsoft.identity.common.adal.internal.net.WebRequestHandler;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.net.HttpRequest;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -59,10 +58,24 @@ public class OpenIdProviderConfigurationClient {
 
     private final String mIssuer;
     private final Gson mGson = new Gson();
-    private final IWebRequestHandler mWebRequestHandler = new WebRequestHandler();
 
     public OpenIdProviderConfigurationClient(@NonNull final String issuer) {
-        mIssuer = sanitize(issuer);
+        mIssuer = Uri.parse(sanitize(issuer)).toString();
+    }
+
+    public OpenIdProviderConfigurationClient(@NonNull final String authority,
+                                             @NonNull final String path) {
+        this(authority, path, "");
+    }
+
+    public OpenIdProviderConfigurationClient(@NonNull final String authority,
+                                             @NonNull final String path, @NonNull final String endpointVersion) {
+        mIssuer = new Uri.Builder()
+                .scheme("https")
+                .authority(authority)
+                .appendPath(path)
+                .appendPath(endpointVersion)
+                .build().toString();
     }
 
     private String sanitize(@NonNull final String issuer) {
@@ -123,10 +136,7 @@ public class OpenIdProviderConfigurationClient {
                     "Using request URL: " + configUrl
             );
 
-            final HttpWebResponse providerConfigResponse = mWebRequestHandler.sendGet(
-                    configUrl,
-                    new HashMap<String, String>()
-            );
+            final HttpResponse providerConfigResponse = HttpRequest.sendGet(configUrl, new HashMap<String, String>());
 
             final int statusCode = providerConfigResponse.getStatusCode();
 

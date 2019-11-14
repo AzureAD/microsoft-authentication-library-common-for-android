@@ -42,9 +42,9 @@ public class WebViewUtil {
     /**
      * Must be invoked before WebView or CookieManager is invoked in the process.
      * See https://developer.android.com/about/versions/pie/android-9.0-changes-28#web-data-dirs for more info.
-     * */
+     */
     @SuppressLint("NewApi")
-    public static void setDataDirectorySuffix(@NonNull final Context context){
+    public static void setDataDirectorySuffix(@NonNull final Context context) {
         final String methodName = ":setDataDirectorySuffix";
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -60,7 +60,7 @@ public class WebViewUtil {
 
     /**
      * Sets whether WebView should send and accept cookies.
-     * */
+     */
     public static void setAcceptCookie(final boolean acceptCookie, final Context context) {
         final CookieManager cookieManager = getCookieManager(context);
         cookieManager.setAcceptCookie(acceptCookie);
@@ -69,10 +69,10 @@ public class WebViewUtil {
     /**
      * Clear all cookies from embedded webview.
      * This is a blocking call and so should not be called on UI thread.
-     * */
-    public static void removeCookiesFromWebView(final Context context){
+     */
+    public static void removeCookiesFromWebView(final Context context) {
         final CookieManager cookieManager = getCookieManager(context);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             cookieManager.removeAllCookies(null);
             cookieManager.flush();
         } else {
@@ -85,10 +85,10 @@ public class WebViewUtil {
     /**
      * Clear session cookies from embedded webview.
      * This is a blocking call and so should not be called on UI thread.
-     * */
-    public static void removeSessionCookiesFromWebView(final Context context){
+     */
+    public static void removeSessionCookiesFromWebView(final Context context) {
         final CookieManager cookieManager = getCookieManager(context);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             cookieManager.removeAllCookies(null);
             cookieManager.flush();
         } else {

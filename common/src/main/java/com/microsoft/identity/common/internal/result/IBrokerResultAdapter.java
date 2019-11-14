@@ -56,6 +56,6 @@ public interface IBrokerResultAdapter {
      * @param resultBundle
      * @return
      */
-    BaseException baseExceptionFromBundle(Bundle resultBundle);
+    BaseException getBaseExceptionFromBundle(Bundle resultBundle);
 
 }

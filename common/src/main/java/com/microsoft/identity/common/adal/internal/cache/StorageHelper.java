@@ -287,6 +287,20 @@ public class StorageHelper implements IStorageHelper {
             return encryptedBlob;
         }
 
+        // Try to read keystore key - to verify how often this is invoked before the migration is done.
+        // TODO: remove this whole try-catch clause once the experiment is done.
+        if (mTelemetryCallback != null) {
+            try {
+                final SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
+                if (key == null) {
+                    mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_DECRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
+                }
+            } catch (final Exception e) {
+                // Best effort.
+                mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_DECRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
+            }
+        }
+
         final String packageName = getPackageName();
         final List<KeyType> keysForDecryptionType = getKeysForDecryptionType(encryptedBlob, packageName);
 
@@ -501,12 +515,18 @@ public class StorageHelper implements IStorageHelper {
         if (!sShouldEncryptWithKeyStoreKey &&
                 AuthenticationSettings.INSTANCE.getBrokerSecretKeys().containsKey(getPackageName())) {
 
-            // Try to read keystore key - so that we get telemetry data on its reliability.
-            // If anything happens, do not crash the app.
-            try {
-                loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
-            } catch (Exception e) {
-                // Best effort.
+            // Try to read keystore key - to verify how often this is invoked before the migration is done.
+            // TODO: remove this whole try-catch clause once the experiment is done.
+            if (mTelemetryCallback != null) {
+                try {
+                    final SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
+                    if (key == null) {
+                        mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
+                    }
+                } catch (final Exception e) {
+                    // Best effort.
+                    mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
+                }
             }
 
             setBlobVersion(VERSION_USER_DEFINED);
@@ -820,7 +840,7 @@ public class StorageHelper implements IStorageHelper {
         return unwrappedSecretKey;
     }
 
-    protected void deleteKeyFile() {
+    public void deleteKeyFile() {
         final String methodName = ":deleteKeyFile";
 
         final File keyFile = new File(mContext.getDir(getPackageName(),

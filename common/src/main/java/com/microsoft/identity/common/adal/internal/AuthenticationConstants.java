@@ -1135,6 +1135,12 @@ public final class AuthenticationConstants {
         public static final String BROKER_KEYSTORE_SYMMETRIC_KEY = "broker_keystore_symmetric_key";
 
         /**
+         * String indicating a broker flow that Authenticator should route to.
+         * See BrokerAccountManagerOperation for more info.
+         */
+        public static final String BROKER_ACCOUNT_MANAGER_OPERATION_KEY = "com.microsoft.broker_accountmanager_operation_key";
+
+        /**
          * Bundle identifiers for x-ms-clitelem info.
          */
         public static final class CliTelemInfo {
@@ -1185,6 +1191,29 @@ public final class AuthenticationConstants {
          * Custom scope used to get PRT
          */
         public static final String AZA_SCOPE = "aza";
+    }
+
+    /**
+     * Represents Broker operations that should be invoked by Authenticator.java (MSAL-Broker AccountManager flow).
+     * See MicrosoftAuthServiceOperation for more info.
+     */
+    public static final class BrokerAccountManagerOperation {
+
+        public static final String HELLO = "HELLO";
+
+        public static final String GET_ACCOUNTS = "GET_ACCOUNTS";
+
+        public static final String ACQUIRE_TOKEN_SILENT = "ACQUIRE_TOKEN_SILENT";
+
+        public static final String GET_INTENT_FOR_INTERACTIVE_REQUEST = "GET_INTENT_FOR_INTERACTIVE_REQUEST";
+
+        public static final String REMOVE_ACCOUNT = "REMOVE_ACCOUNT";
+
+        public static final String GET_DEVICE_MODE = "GET_DEVICE_MODE";
+
+        public static final String GET_CURRENT_ACCOUNT = "GET_CURRENT_ACCOUNT";
+
+        public static final String REMOVE_ACCOUNT_FROM_SHARED_DEVICE = "REMOVE_ACCOUNT_FROM_SHARED_DEVICE";
     }
 
     /**

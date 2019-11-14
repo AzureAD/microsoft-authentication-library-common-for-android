@@ -48,7 +48,11 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
                             TAG + methodName,
                             "Type: AAD"
                     );
-                    return context.deserialize(authorityObject, AzureActiveDirectoryAuthority.class);
+                    AzureActiveDirectoryAuthority aadAuthority = context.deserialize(authorityObject, AzureActiveDirectoryAuthority.class);
+                    if (aadAuthority != null && aadAuthority.mAudience != null) {
+                        aadAuthority.mAudience.setCloudUrl(aadAuthority.mAuthorityUrl);
+                    }
+                    return aadAuthority;
                 case "B2C":
                     Logger.verbose(
                             TAG + methodName,

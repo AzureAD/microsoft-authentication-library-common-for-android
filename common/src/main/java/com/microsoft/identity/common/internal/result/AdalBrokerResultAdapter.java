@@ -154,7 +154,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     @Override
-    public BaseException baseExceptionFromBundle(Bundle resultBundle) {
+    public BaseException getBaseExceptionFromBundle(Bundle resultBundle) {
         throw new UnsupportedOperationException();
     }
 
