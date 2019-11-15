@@ -178,8 +178,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         OpenIdConnectPromptParameter.NONE
         );
 
-        if(brokerRequest.getAuthorizationAgent() != null &&
-                brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())){
+        if(brokerRequest.getAuthorizationAgent() != null
+                && brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())
+                && isCallingPackageIntuneCobo(callingActivity.getPackageName())){ // TODO : Remove this whenever we enable System Browser support in Broker for apps.
             parameters.setAuthorizationAgent(AuthorizationAgent.BROWSER);
             parameters.setBrowserSafeList(getBrowserSafeListForBroker());
         }else {
@@ -408,5 +409,17 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         browserDescriptors.add(chromeWithoutCustomTabs);
 
         return browserDescriptors;
+    }
+
+    /**
+     * Helper method to validate in Broker that the calling package in Microsoft Intune
+     * to allow System Webview Support.
+     *
+     */
+    private boolean isCallingPackageIntuneCobo(@NonNull final String packageName){
+        final String methodName = ":isCallingPackageIntuneCobo";
+        final String intuneCoboPackageName = "com.microsoft.intune";
+        Logger.info(TAG + methodName, "Calling package name : " + packageName);
+        return intuneCoboPackageName.equalsIgnoreCase(packageName);
     }
 }
