@@ -78,8 +78,7 @@ public class EncryptionManagerTests extends AndroidSecretKeyEnabledHelper {
         // Everything is on clean slate.
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         MsalEncryptionManager manager = new MsalEncryptionManager(context);
-        manager.deleteKeyFile();
-        manager.resetKeyPairFromAndroidKeyStore();
+        manager.deleteKeyStoreEncryptedKey();
 
         AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
     }
@@ -292,10 +291,10 @@ public class EncryptionManagerTests extends AndroidSecretKeyEnabledHelper {
             keyFile.delete();
         }
 
-        SecretKey key = storageHelper.loadSecretKeyForEncryption().first;
+        SecretKey key = storageHelper.loadSecretKeyForEncryption().getEncryptionKey();
         assertNotNull("Key is not null", key);
 
-        SecretKey key2 = storageHelper.loadSecretKeyForEncryption().first;
+        SecretKey key2 = storageHelper.loadSecretKeyForEncryption().getEncryptionKey();
         Log.d(TAG, "Key1:" + key.toString());
         Log.d(TAG, "Key1:" + key2.toString());
         assertTrue("Key info is same", key.toString().equals(key2.toString()));
@@ -322,22 +321,11 @@ public class EncryptionManagerTests extends AndroidSecretKeyEnabledHelper {
 
         setMockBrokerSecretKeys();
 
-        class LegacyEncryptionManagerMock extends BrokerEncryptionManager {
-            protected LegacyEncryptionManagerMock(@NonNull Context context) {
-                super(context);
-            }
-
-            @Override
-            protected String getPackageName() {
-                return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
-            }
-        }
-
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final LegacyEncryptionManagerMock legacyEncryptionManagerMock = new LegacyEncryptionManagerMock(context);
+        final BrokerEncryptionManager legacyEncryptionManagerMock = new BrokerEncryptionManager(context, AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
 
         final String authAppKey = Base64.encodeToString(new SecretKeySpec(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME), "AES").getEncoded(), Base64.DEFAULT);
-        final String encryptionKey = Base64.encodeToString(legacyEncryptionManagerMock.loadSecretKeyForEncryption().first.getEncoded(), Base64.DEFAULT);
+        final String encryptionKey = Base64.encodeToString(legacyEncryptionManagerMock.loadSecretKeyForEncryption().getEncryptionKey().getEncoded(), Base64.DEFAULT);
         assertTrue("AuthApp key is used for encryption.", authAppKey.equals(encryptionKey));
 
         String expectedDecrypted = "SomeValue1234";
@@ -355,22 +343,11 @@ public class EncryptionManagerTests extends AndroidSecretKeyEnabledHelper {
 
         setMockBrokerSecretKeys();
 
-        class LegacyEncryptionManagerMock extends BrokerEncryptionManager {
-            protected LegacyEncryptionManagerMock(@NonNull Context context) {
-                super(context);
-            }
-
-            @Override
-            protected String getPackageName() {
-                return AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
-            }
-        }
-
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final LegacyEncryptionManagerMock legacyEncryptionManagerMock = new LegacyEncryptionManagerMock(context);
+        final BrokerEncryptionManager legacyEncryptionManagerMock = new BrokerEncryptionManager(context, AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME);
 
         final String authAppKey = Base64.encodeToString(new SecretKeySpec(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME), "AES").getEncoded(), Base64.DEFAULT);
-        final String encryptionKey = Base64.encodeToString(legacyEncryptionManagerMock.loadSecretKeyForEncryption().first.getEncoded(), Base64.DEFAULT);
+        final String encryptionKey = Base64.encodeToString(legacyEncryptionManagerMock.loadSecretKeyForEncryption().getEncryptionKey().getEncoded(), Base64.DEFAULT);
         assertTrue("CP key is used for encryption.", authAppKey.equals(encryptionKey));
 
         String expectedDecrypted = "SomeValue1234";
@@ -391,27 +368,16 @@ public class EncryptionManagerTests extends AndroidSecretKeyEnabledHelper {
         final SecretKey secretKey = new SecretKeySpec(tempkey.getEncoded(), "AES");
         AuthenticationSettings.INSTANCE.setSecretKey(secretKey.getEncoded());
 
-        class EncryptionManagerMock extends MsalEncryptionManager {
-            protected EncryptionManagerMock(@NonNull Context context) {
-                super(context);
-            }
-
-            @Override
-            protected String getPackageName() {
-                // Simulate the case where CP is doing Local ADAL auth.
-                return AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
-            }
-        }
-
+        // // Simulate the case where CP is doing Local ADAL auth.
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final EncryptionManagerMock encryptionManagerMock = new EncryptionManagerMock(context);
+        final MsalEncryptionManager encryptionManagerMock = new MsalEncryptionManager(context, AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME);
 
         String unencryptedValue = "SomeValue1234";
         String encryptedValue = encryptionManagerMock.encrypt(unencryptedValue);
 
         assertTrue("Encrypted with user defined key", encryptionManagerMock.getEncryptionType(encryptedValue) == IEncryptionManager.EncryptionType.USER_DEFINED);
 
-        List<IEncryptionManager.KeyType> keyTypeList = encryptionManagerMock.getKeysForDecryptionType(encryptedValue, AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME);
+        List<IEncryptionManager.KeyType> keyTypeList = encryptionManagerMock.getKeysForDecryptionType(encryptedValue);
 
         assertTrue("Expected 1 keyType", keyTypeList.size() == 1);
         assertTrue("The first key should be user defined key", keyTypeList.get(0) == IEncryptionManager.KeyType.ADAL_USER_DEFINED_KEY);
@@ -432,7 +398,7 @@ public class EncryptionManagerTests extends AndroidSecretKeyEnabledHelper {
 
         assertTrue("Encrypted with keystore key", msalEncryptionManager.getEncryptionType(encryptedValue) == IEncryptionManager.EncryptionType.ANDROID_KEY_STORE);
 
-        List<IEncryptionManager.KeyType> keyTypeList = msalEncryptionManager.getKeysForDecryptionType(encryptedValue, "MOCK_ADAL_APP");
+        List<IEncryptionManager.KeyType> keyTypeList = msalEncryptionManager.getKeysForDecryptionType(encryptedValue);
 
         assertTrue("Expected 1 keyType", keyTypeList.size() == 1);
         assertTrue("The first key should be keystore encrypted key", keyTypeList.get(0) == IEncryptionManager.KeyType.KEYSTORE_ENCRYPTED_KEY);
@@ -444,15 +410,12 @@ public class EncryptionManagerTests extends AndroidSecretKeyEnabledHelper {
 
     @Test
     public void testSecretKeySerialization() throws UnsupportedEncodingException {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final MsalEncryptionManager msalEncryptionManager = new MsalEncryptionManager(context);
-
         final String keyString = "ABCDEFGH";
         final SecretKey key = new SecretKeySpec(Base64.decode(keyString.getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT), "AES");
         final SecretKey anotherKey = new SecretKeySpec(Base64.decode("RANDOM".getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT), "AES");
 
-        final String serializedKey = msalEncryptionManager.serializeSecretKey(key);
-        final SecretKey deserializedKey = msalEncryptionManager.deserializeSecretKey(serializedKey);
+        final String serializedKey = KeystoreEncryptedKeyManager.serializeSecretKey(key);
+        final SecretKey deserializedKey = KeystoreEncryptedKeyManager.deserializeSecretKey(serializedKey);
 
         assertTrue("keys are matching.", deserializedKey.equals(key));
         assertFalse("keys should not be matching.", deserializedKey.equals(anotherKey));
