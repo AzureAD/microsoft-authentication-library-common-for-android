@@ -51,10 +51,14 @@ public class MsalEncryptionManager extends EncryptionManagerBase {
 
     public static synchronized MsalEncryptionManager getInstance(@NonNull Context context) {
         if (sInstance == null) {
-            sInstance = new MsalEncryptionManager(context, context.getPackageName());
+            sInstance = new MsalEncryptionManager(context);
         }
 
         return sInstance;
+    }
+
+    protected MsalEncryptionManager(@NonNull Context context) {
+        super(context, context.getPackageName());
     }
 
     protected MsalEncryptionManager(@NonNull Context context,

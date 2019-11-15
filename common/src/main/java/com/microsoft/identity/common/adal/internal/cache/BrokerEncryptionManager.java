@@ -60,10 +60,14 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
 
     public static synchronized BrokerEncryptionManager getInstance(@NonNull Context context) {
         if (sInstance == null) {
-            sInstance = new BrokerEncryptionManager(context, context.getPackageName());
+            sInstance = new BrokerEncryptionManager(context);
         }
 
         return sInstance;
+    }
+
+    protected BrokerEncryptionManager(@NonNull Context context) {
+        super(context, context.getPackageName());
     }
 
     protected BrokerEncryptionManager(@NonNull Context context,
