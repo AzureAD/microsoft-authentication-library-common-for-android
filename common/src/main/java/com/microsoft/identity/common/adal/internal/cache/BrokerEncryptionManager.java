@@ -70,6 +70,7 @@ public class BrokerEncryptionManager extends EncryptionManagerBase {
         super(context, context.getPackageName());
     }
 
+    // For test cases.
     protected BrokerEncryptionManager(@NonNull Context context,
                                       @NonNull String packageName) {
         super(context, packageName);

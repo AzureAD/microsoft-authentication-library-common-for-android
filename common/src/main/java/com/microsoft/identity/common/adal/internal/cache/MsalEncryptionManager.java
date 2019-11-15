@@ -61,6 +61,7 @@ public class MsalEncryptionManager extends EncryptionManagerBase {
         super(context, context.getPackageName());
     }
 
+    // For test cases.
     protected MsalEncryptionManager(@NonNull Context context,
                                     @NonNull String packageName) {
         super(context, packageName);
