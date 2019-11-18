@@ -167,7 +167,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         parameters.setClaimsRequest(brokerRequest.getClaims());
 
         parameters.setOpenIdConnectPromptParameter(
-                OpenIdConnectPromptParameter.valueOf(brokerRequest.getPrompt())
+                brokerRequest.getPrompt() != null ?
+                        OpenIdConnectPromptParameter.valueOf(brokerRequest.getPrompt()) :
+                        OpenIdConnectPromptParameter.NONE
         );
 
         parameters.setAuthorizationAgent(AuthorizationAgent.WEBVIEW);
