@@ -414,6 +414,12 @@ public class DevicePopManagerImpl implements IDevicePopManager {
         keyPairGenerator.initialize(spec);
     }
 
+    /**
+     * Gets the current time as a {@link Date}.
+     *
+     * @param calendar The {@link Calendar} implementation to use.
+     * @return The current time.
+     */
     private static Date getNow(@NonNull final Calendar calendar) {
         return calendar.getTime();
     }

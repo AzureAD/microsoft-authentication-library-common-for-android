@@ -29,7 +29,7 @@ import androidx.annotation.NonNull;
  */
 public abstract class TokenAuthenticationScheme
         extends AbstractAuthenticationScheme
-        implements IAuthenticationSchemeInternal {
+        implements ITokenAuthenticationSchemeInternal {
 
     /**
      * The access token to use in the request.

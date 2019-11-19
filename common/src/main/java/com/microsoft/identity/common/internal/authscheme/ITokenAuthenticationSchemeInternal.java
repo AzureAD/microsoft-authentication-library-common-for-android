@@ -22,7 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
-public interface IAuthenticationSchemeInternal {
+/**
+ * Internal representation of properties necessary for token-based auth schemes.
+ */
+public interface ITokenAuthenticationSchemeInternal {
 
     /**
      * Sets the access token.
