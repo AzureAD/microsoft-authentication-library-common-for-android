@@ -40,6 +40,8 @@ public class MockSuccessAuthorizationResult extends AuthorizationResult {
 
     public MockSuccessAuthorizationResult() {
         try {
+            // get cloud instance host name from the authority url provided by lab info
+            // and set in the mock authorization response so that we can test multiple cloud support
             final URL authorityURL = new URL(CurrentLabConfig.configInfo.getLabInfo().getAuthority());
             final HashMap<String, String> authorizationParams = new HashMap<>();
             authorizationParams.put(MicrosoftAuthorizationResponse.CLOUD_INSTANCE_HOST_NAME, authorityURL.getHost());
