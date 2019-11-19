@@ -343,7 +343,12 @@ public class DevicePopManagerImpl implements IDevicePopManager {
             try {
                 kp = generateNewKeyPair(ctx, true);
             } catch (final StrongBoxUnavailableException e) {
-                // TODO log an error/warning
+                Logger.error(
+                        TAG,
+                        "StrongBox unsupported - skipping hardware flags.",
+                        e
+                );
+
                 kp = generateNewKeyPair(ctx, false);
             }
 
