@@ -24,10 +24,14 @@ package com.microsoft.identity.common.internal.authscheme;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.internal.logging.Logger;
+
 /**
  * Factory class for turning public scheme types into internal representations.
  */
 public class AuthenticatonSchemeFactory {
+
+    private static final String TAG = AuthenticatonSchemeFactory.class.getSimpleName();
 
     /**
      * Gets the internal scheme equivalent for the provided public api scheme.
@@ -38,10 +42,19 @@ public class AuthenticatonSchemeFactory {
     public static AbstractAuthenticationScheme createScheme(@NonNull final INameable nameable) {
         switch (nameable.getName()) {
             case BearerAuthenticationSchemeInternal.SCHEME_BEARER:
+                Logger.verbose(
+                        TAG,
+                        "Constructing Bearer Authentication Scheme."
+                );
+
                 return new BearerAuthenticationSchemeInternal();
 
             case PopAuthenticationSchemeInternal.SCHEME_POP:
                 if (nameable instanceof IPoPAuthenticationSchemeParams) {
+                    Logger.verbose(
+                            TAG,
+                            "Constructing PoP Authentication Scheme."
+                    );
                     final IPoPAuthenticationSchemeParams params = (IPoPAuthenticationSchemeParams) nameable;
                     return new PopAuthenticationSchemeInternal(params);
                 } else {
