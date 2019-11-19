@@ -24,8 +24,17 @@ package com.microsoft.identity.common.internal.authscheme;
 
 import androidx.annotation.NonNull;
 
+/**
+ * Factory class for turning public scheme types into internal representations.
+ */
 public class AuthenticatonSchemeFactory {
 
+    /**
+     * Gets the internal scheme equivalent for the provided public api scheme.
+     *
+     * @param nameable The nameable public scheme representation.
+     * @return The internal scheme representation.
+     */
     public static AbstractAuthenticationScheme createScheme(@NonNull final INameable nameable) {
         switch (nameable.getName()) {
             case BearerAuthenticationSchemeInternal.SCHEME_BEARER:
