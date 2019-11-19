@@ -57,7 +57,7 @@ public interface IDevicePopManager {
      *
      * @return The req_cnf value.
      */
-    boolean getRequestConfirmation();
+    String getRequestConfirmation() throws ClientException;
 
     /**
      * Async API to generate the req_cnf used for auth code redemptions.

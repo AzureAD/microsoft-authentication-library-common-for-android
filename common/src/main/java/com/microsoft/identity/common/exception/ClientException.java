@@ -163,6 +163,32 @@ public class ClientException extends BaseException {
     public static final String INVALID_ALG = "keystore_initialization_failed";
 
     /**
+     * Emitted when the target KeyStore has not been initialized (loaded).
+     */
+    public static final String KEYSTORE_NOT_INITIALIZED = "keystore_not_initialized";
+
+    /**
+     * Emitted when the Protection Params provided to the KeyStore are invalid or insufficient.
+     */
+    public static final String INVALID_PROTECTION_PARAMS = "prot_params_invalid";
+
+    /**
+     * Emitted when the target certificate's thumbprint cannot be computed due to lack of support for
+     * SHA-256.
+     */
+    public static final String THUMBPRINT_COMPUTATION_FAILURE = "failed_to_compute_thumbprint_with_sha256";
+
+    /**
+     * Emitted when the Android subsystem emits errors thrown while constructing new JSON objects.
+     */
+    public static final String JSON_CONSTRUCTION_FAILED = "json_construction_failed";
+
+    /**
+     * The current thread of execution was interrupted.
+     */
+    public static final String INTERRUPTED_OPERATION = "operation_interrupted";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String

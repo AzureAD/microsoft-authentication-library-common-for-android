@@ -29,6 +29,7 @@ import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.StrongBoxUnavailableException;
+import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -37,8 +38,16 @@ import androidx.annotation.RequiresApi;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.impl.RSAKeyUtils;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.util.Base64URL;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.security.InvalidAlgorithmParameterException;
@@ -48,19 +57,32 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.CertificateException;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.security.auth.x500.X500Principal;
 
 import static com.microsoft.identity.common.exception.ClientException.BAD_KEY_SIZE;
+import static com.microsoft.identity.common.exception.ClientException.INTERRUPTED_OPERATION;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG;
+import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
+import static com.microsoft.identity.common.exception.ClientException.JSON_CONSTRUCTION_FAILED;
+import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PROVIDER;
+import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
+import static com.microsoft.identity.common.internal.net.ObjectMapper.ENCODING_SCHEME;
 
 public class DevicePopManagerImpl implements IDevicePopManager {
 
@@ -124,10 +146,11 @@ public class DevicePopManagerImpl implements IDevicePopManager {
         static final String RSA = "RSA";
     }
 
-    public DevicePopManagerImpl(@NonNull final Context context,
-                                @NonNull final KeyStore keyStore) {
+    public DevicePopManagerImpl(@NonNull final Context context)
+            throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
         mContext = context;
-        mKeyStore = keyStore;
+        mKeyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
+        mKeyStore.load(null);
     }
 
     @Override
@@ -204,14 +227,88 @@ public class DevicePopManagerImpl implements IDevicePopManager {
     }
 
     @Override
-    public boolean getRequestConfirmation() {
-        // TODO
-        return false;
+    public String getRequestConfirmation() throws ClientException {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final String[] result = new String[1];
+        final ClientException[] errorResult = new ClientException[1];
+
+        getRequestConfirmation(new TaskCompletedCallbackWithError<String, ClientException>() {
+            @Override
+            public void onTaskCompleted(@NonNull final String reqCnf) {
+                result[0] = reqCnf;
+                latch.countDown();
+            }
+
+            @Override
+            public void onError(@NonNull final ClientException error) {
+                errorResult[0] = error;
+                latch.countDown();
+            }
+        });
+
+        // Wait for the async op to complete...
+        try {
+            latch.await();
+
+            if (null != result[0]) {
+                return result[0];
+            } else {
+                throw errorResult[0];
+            }
+        } catch (final InterruptedException e) {
+            throw new ClientException(
+                    INTERRUPTED_OPERATION,
+                    e.getMessage(),
+                    e
+            );
+        }
     }
 
     @Override
     public void getRequestConfirmation(@NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
-        // TODO
+        sThreadExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                // Vars for error handling...
+                final Exception exception;
+                final String errCode;
+
+                try {
+                    final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+                    final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
+                    final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
+                    final String base64UrlEncodedJwkJsonStr = getReqCnfForRsaKey(rsaKey);
+
+                    callback.onTaskCompleted(base64UrlEncodedJwkJsonStr);
+
+                    // We're done.
+                    return;
+                } catch (final KeyStoreException e) {
+                    exception = e;
+                    errCode = KEYSTORE_NOT_INITIALIZED;
+                } catch (final NoSuchAlgorithmException e) {
+                    exception = e;
+                    errCode = NO_SUCH_ALGORITHM;
+                } catch (final UnrecoverableEntryException e) {
+                    exception = e;
+                    errCode = INVALID_PROTECTION_PARAMS;
+                } catch (final JOSEException e) {
+                    exception = e;
+                    errCode = THUMBPRINT_COMPUTATION_FAILURE;
+                } catch (final JSONException e) {
+                    exception = e;
+                    errCode = JSON_CONSTRUCTION_FAILED;
+                }
+
+                final ClientException clientException = new ClientException(
+                        errCode,
+                        exception.getMessage(),
+                        exception
+                );
+
+                callback.onError(clientException);
+            }
+        });
     }
 
     @Override
@@ -422,6 +519,72 @@ public class DevicePopManagerImpl implements IDevicePopManager {
      */
     private static Date getNow(@NonNull final Calendar calendar) {
         return calendar.getTime();
+    }
+
+    /**
+     * For the supplied {@link KeyStore.Entry}, get a corresponding {@link KeyPair} instance.
+     *
+     * @param entry The Keystore.Entry to use.
+     * @return The resulting KeyPair.
+     */
+    private static KeyPair getKeyPairForEntry(@NonNull final KeyStore.Entry entry) {
+        final PrivateKey privateKey = ((KeyStore.PrivateKeyEntry) entry).getPrivateKey();
+        final PublicKey publicKey = ((KeyStore.PrivateKeyEntry) entry).getCertificate().getPublicKey();
+        return new KeyPair(publicKey, privateKey);
+    }
+
+    /**
+     * Gets the corresponding {@link RSAKey} for the supplied {@link KeyPair}.
+     *
+     * @param keyPair The KeyPair to use.
+     * @return The resulting RSAKey.
+     */
+    private static RSAKey getRsaKeyForKeyPair(@NonNull final KeyPair keyPair) {
+        return new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
+                .privateKey(keyPair.getPrivate())
+                .keyUse(null)
+                .keyID(UUID.randomUUID().toString())
+                .build();
+    }
+
+    /**
+     * Gets the base64url encoded public jwk for the supplied RSAKey.
+     *
+     * @param rsaKey The input key material.
+     * @return The base64url encoded jwk.
+     */
+    private static String getReqCnfForRsaKey(@NonNull final RSAKey rsaKey)
+            throws JOSEException, JSONException {
+        final Base64URL thumbprint = rsaKey.computeThumbprint();
+        final String thumbprintStr = thumbprint.toString();
+        final String thumbprintMinifiedJson =
+                new JSONObject()
+                        .put("kid", thumbprintStr)
+                        .toString();
+
+        return base64UrlEncode(thumbprintMinifiedJson);
+    }
+
+    /**
+     * Encodes a String with Base64Url and no padding.
+     *
+     * @param input String to be encoded.
+     * @return Encoded result from input.
+     */
+    private static String base64UrlEncode(@NonNull final String input) {
+        String result = null;
+
+        try {
+            byte[] encodeBytes = input.getBytes(ENCODING_SCHEME);
+            result = Base64.encodeToString(
+                    encodeBytes,
+                    Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE
+            );
+        } catch (final UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
     //endregion
 }
