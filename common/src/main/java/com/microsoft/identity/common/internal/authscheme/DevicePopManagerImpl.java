@@ -349,6 +349,7 @@ public class DevicePopManagerImpl implements IDevicePopManager {
                         e
                 );
 
+                // Retry, but don't request StrongBox
                 kp = generateNewKeyPair(ctx, false);
             }
 
