@@ -28,6 +28,9 @@ import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackW
 import java.net.URL;
 import java.security.KeyPair;
 
+/**
+ * Internal convenience class interface for PoP related functions.
+ */
 public interface IDevicePopManager {
 
     /**
