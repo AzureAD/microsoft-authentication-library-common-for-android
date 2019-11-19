@@ -22,9 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
+import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
+import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 import com.microsoft.identity.internal.test.labapi.api.UserApi;
 import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
+import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
 
 import java.util.List;
@@ -88,6 +91,16 @@ public class LabUserHelper {
         credential.password = getPasswordForUser(configInfo.getUserInfo());
 
         return credential;
+    }
+
+    public static void resetPassword(final String upn) {
+        ResetApi resetApi = new ResetApi();
+
+        try {
+            resetApi.putResetInfo(upn, "Password");
+        } catch (ApiException e) {
+            throw new RuntimeException("Error resetting lab user password", e);
+        }
     }
 
 }
