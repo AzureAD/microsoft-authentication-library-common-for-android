@@ -22,41 +22,24 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
-import androidx.annotation.NonNull;
+import java.net.URL;
 
 /**
- * Abstract base class for AuthenticationSchemes.
+ * Interface representation of properties required to perform PoP protected token functions.
  */
-public abstract class AuthenticationScheme {
+public interface IPoPAuthenticationSchemeParams extends INonced {
 
     /**
-     * The name of this scheme.
-     */
-    private final String mName;
-
-    /**
-     * Constructs a new AuthenticationScheme.
+     * Gets the HTTP method.
      *
-     * @param name The name of this scheme.
+     * @return The HTTP method to get.
      */
-    AuthenticationScheme(@NonNull final String name) {
-        mName = name;
-    }
+    String getHttpMethod();
 
     /**
-     * Gets the name of this AuthenticationScheme.
+     * Gets the URL.
      *
-     * @return The name to get.
+     * @return The URL to get.
      */
-    public final String getName() {
-        return mName;
-    }
-
-    /**
-     * Gets the value used in the Authorization header.
-     *
-     * @return The Authorization header value.
-     * @see <a href="https://tools.ietf.org/html/rfc7235#section-4.2">RFC-7235/§4.2</a>
-     */
-    abstract String getAuthorizationRequestHeader();
+    URL getUrl();
 }

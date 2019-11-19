@@ -22,31 +22,16 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
-import androidx.annotation.NonNull;
-
 /**
- * Abstract representation of any Authentication Scheme which may be token based.
+ * Interface representation of a nameable entity.
  */
-public abstract class TokenAuthenticationScheme
-        extends AbstractAuthenticationScheme
-        implements IAuthenticationSchemeInternal {
+public interface INameable {
 
     /**
-     * The access token to use in the request.
+     * Gets the name.
+     *
+     * @return The name to get.
      */
-    private String mAccessToken;
+    String getName();
 
-    TokenAuthenticationScheme(@NonNull final String name) {
-        super(name);
-    }
-
-    @Override
-    public final void setAccessToken(@NonNull final String accessToken) {
-        mAccessToken = accessToken;
-    }
-
-    @Override
-    public final String getAccessToken() {
-        return mAccessToken;
-    }
 }

@@ -22,31 +22,27 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
-import androidx.annotation.NonNull;
-
-/**
- * Abstract representation of any Authentication Scheme which may be token based.
- */
-public abstract class TokenAuthenticationScheme
-        extends AbstractAuthenticationScheme
-        implements IAuthenticationSchemeInternal {
+public interface IAuthenticationSchemeInternal {
 
     /**
-     * The access token to use in the request.
+     * Sets the access token.
+     *
+     * @param accessToken The access token to set.
      */
-    private String mAccessToken;
+    void setAccessToken(String accessToken);
 
-    TokenAuthenticationScheme(@NonNull final String name) {
-        super(name);
-    }
+    /**
+     * Gets the access token.
+     *
+     * @return The access token to get.
+     */
+    String getAccessToken();
 
-    @Override
-    public final void setAccessToken(@NonNull final String accessToken) {
-        mAccessToken = accessToken;
-    }
-
-    @Override
-    public final String getAccessToken() {
-        return mAccessToken;
-    }
+    /**
+     * Gets the value used in the Authorization header.
+     *
+     * @return The Authorization header value.
+     * @see <a href="https://tools.ietf.org/html/rfc7235#section-4.2">RFC-7235/§4.2</a>
+     */
+    String getAuthorizationRequestHeader();
 }

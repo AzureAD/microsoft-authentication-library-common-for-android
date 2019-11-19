@@ -22,31 +22,15 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
-import androidx.annotation.NonNull;
-
 /**
- * Abstract representation of any Authentication Scheme which may be token based.
+ * Interface representation of an entity which can carry a nonce value.
  */
-public abstract class TokenAuthenticationScheme
-        extends AbstractAuthenticationScheme
-        implements IAuthenticationSchemeInternal {
+public interface INonced {
 
     /**
-     * The access token to use in the request.
+     * Gets the nonce.
+     *
+     * @return The nonce to get.
      */
-    private String mAccessToken;
-
-    TokenAuthenticationScheme(@NonNull final String name) {
-        super(name);
-    }
-
-    @Override
-    public final void setAccessToken(@NonNull final String accessToken) {
-        mAccessToken = accessToken;
-    }
-
-    @Override
-    public final String getAccessToken() {
-        return mAccessToken;
-    }
+    String getNonce();
 }

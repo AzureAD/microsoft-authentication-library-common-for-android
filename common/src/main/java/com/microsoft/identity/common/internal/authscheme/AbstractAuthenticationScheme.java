@@ -25,28 +25,30 @@ package com.microsoft.identity.common.internal.authscheme;
 import androidx.annotation.NonNull;
 
 /**
- * Abstract representation of any Authentication Scheme which may be token based.
+ * Abstract base class for AuthenticationSchemes.
  */
-public abstract class TokenAuthenticationScheme
-        extends AbstractAuthenticationScheme
-        implements IAuthenticationSchemeInternal {
+public abstract class AbstractAuthenticationScheme implements INameable {
 
     /**
-     * The access token to use in the request.
+     * The name of this scheme.
      */
-    private String mAccessToken;
+    private final String mName;
 
-    TokenAuthenticationScheme(@NonNull final String name) {
-        super(name);
+    /**
+     * Constructs a new AbstractAuthenticationScheme.
+     *
+     * @param name The name of this scheme.
+     */
+    public AbstractAuthenticationScheme(@NonNull final String name) {
+        mName = name;
     }
 
-    @Override
-    public final void setAccessToken(@NonNull final String accessToken) {
-        mAccessToken = accessToken;
-    }
-
-    @Override
-    public final String getAccessToken() {
-        return mAccessToken;
+    /**
+     * Gets the name of this AbstractAuthenticationScheme.
+     *
+     * @return The name to get.
+     */
+    public final String getName() {
+        return mName;
     }
 }

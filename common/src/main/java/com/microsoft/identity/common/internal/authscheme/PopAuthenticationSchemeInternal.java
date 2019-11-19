@@ -26,38 +26,71 @@ import androidx.annotation.NonNull;
 
 import java.net.URL;
 
-public class PopAuthenticationSchemeInternal extends TokenAuthenticationScheme {
+/**
+ * Internal representation of PoP Authentication Scheme.
+ */
+public class PopAuthenticationSchemeInternal
+        extends TokenAuthenticationScheme
+        implements IPoPAuthenticationSchemeParams {
 
-    private static final String SCHEME_POP = "PoP";
+    /**
+     * The name of this auth scheme as supplied in the Authorization header value.
+     */
+    public static final String SCHEME_POP = "PoP";
 
-    private String mHttpMethod;
-    private URL mUrl;
-    private String mNonce;
+    /**
+     * User supplied params.
+     */
+    private final IPoPAuthenticationSchemeParams mParams;
+
+    /**
+     * Delegate object for handling PoP-related crypto/HSM functions.
+     */
     private IDevicePopManager mPopManager;
 
-    protected PopAuthenticationSchemeInternal(@NonNull final String method,
-                                              @NonNull final URL url,
-                                              @NonNull final String nonce) {
+    /**
+     * Constructs a new PopAuthenticationSchemeInternal.
+     *
+     * @param params The params from which to derive this object.
+     */
+    PopAuthenticationSchemeInternal(@NonNull final IPoPAuthenticationSchemeParams params) {
         super(SCHEME_POP);
-        mHttpMethod = method;
-        mUrl = url;
-        mNonce = nonce;
+        mParams = params;
     }
 
-    final void setDevicePopManager(@NonNull final IDevicePopManager popManager) {
+    /**
+     * Sets the DevicePopManager delegate instance
+     *
+     * @param popManager The delegate to set.
+     */
+    void setDevicePopManager(@NonNull final IDevicePopManager popManager) {
         mPopManager = popManager;
     }
 
     @Override
-    String getAuthorizationRequestHeader() {
+    public String getAuthorizationRequestHeader() {
         return getName()
                 + " "
                 + mPopManager.getAuthorizationHeaderValue(
-                mHttpMethod,
-                mUrl,
+                getHttpMethod(),
+                getUrl(),
                 getAccessToken(),
-                mNonce
+                getNonce()
         );
     }
 
+    @Override
+    public String getHttpMethod() {
+        return mParams.getHttpMethod();
+    }
+
+    @Override
+    public URL getUrl() {
+        return mParams.getUrl();
+    }
+
+    @Override
+    public String getNonce() {
+        return mParams.getNonce();
+    }
 }

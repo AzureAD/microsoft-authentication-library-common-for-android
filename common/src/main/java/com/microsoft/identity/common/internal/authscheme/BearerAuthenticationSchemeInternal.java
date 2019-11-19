@@ -23,23 +23,23 @@
 package com.microsoft.identity.common.internal.authscheme;
 
 /**
- * The Bearer AuthenticationScheme.
- *
- * @see <a href="https://tools.ietf.org/html/rfc6750">RFC-6750</a>
+ * Internal representation of a Bearer Auth Scheme.
  */
-public class BearerAuthenticationSchemeInternal extends TokenAuthenticationScheme {
+public class BearerAuthenticationSchemeInternal
+        extends TokenAuthenticationScheme
+        implements IAuthenticationSchemeInternal {
 
-    private static final String SCHEME_BEARER = "Bearer";
+    public static final String SCHEME_BEARER = "Bearer";
 
     /**
      * Constructs a new BearerAuthenticationSchemeInternal.
      */
-    public BearerAuthenticationSchemeInternal() {
+    BearerAuthenticationSchemeInternal() {
         super(SCHEME_BEARER);
     }
 
-    String getAuthorizationRequestHeader() {
+    @Override
+    public String getAuthorizationRequestHeader() {
         return getName() + " " + getAccessToken();
     }
-
 }
