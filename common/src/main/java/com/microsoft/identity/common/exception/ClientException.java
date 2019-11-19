@@ -79,7 +79,7 @@ public class ClientException extends BaseException {
     public static final String UNSUPPORTED_ENCODING = "unsupported_encoding";
 
     /**
-     * The algorithm used to generate pkce challenge is not supported.
+     * The designated crypto alg is not supported.
      */
     public static final String NO_SUCH_ALGORITHM = "no_such_algorithm";
 
@@ -142,6 +142,12 @@ public class ClientException extends BaseException {
      * Duplicate command.  The same command is already be processed.
      */
     public static final String DUPLICATE_COMMAND = "duplicate_command";
+
+    public static final String BAD_KEY_SIZE = "keystore_produced_invalid_cert";
+
+    public static final String NO_SUCH_PROVIDER = "androidkeystore_unavailable";
+
+    public static final String INVALID_ALG = "keystore_initialization_failed";
 
     /**
      * Constructor of ClientException.

@@ -57,6 +57,11 @@ import java.util.concurrent.Executors;
 
 import javax.security.auth.x500.X500Principal;
 
+import static com.microsoft.identity.common.exception.ClientException.BAD_KEY_SIZE;
+import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG;
+import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PROVIDER;
+
 public class DevicePopManagerImpl implements IDevicePopManager {
 
     private static final String TAG = DevicePopManagerImpl.class.getSimpleName();
@@ -147,13 +152,35 @@ public class DevicePopManagerImpl implements IDevicePopManager {
         sThreadExecutor.submit(new Runnable() {
             @Override
             public void run() {
+                final Exception exception;
+                final String errCode;
+
                 try {
                     final KeyPair keyPair = generateNewRsaKeyPair(mContext, RSA_KEY_SIZE);
                     callback.onTaskCompleted(keyPair);
-                } catch (final Exception e) {
-                    // TODO create various exception "buckets" for granularity
-                    callback.onError(null);
+
+                    return;
+                } catch (final UnsupportedOperationException e) {
+                    exception = e;
+                    errCode = BAD_KEY_SIZE;
+                } catch (final NoSuchAlgorithmException e) {
+                    exception = e;
+                    errCode = NO_SUCH_ALGORITHM;
+                } catch (final NoSuchProviderException e) {
+                    exception = e;
+                    errCode = NO_SUCH_PROVIDER;
+                } catch (final InvalidAlgorithmParameterException e) {
+                    exception = e;
+                    errCode = INVALID_ALG;
                 }
+
+                callback.onError(
+                        new ClientException(
+                                errCode,
+                                exception.getMessage(),
+                                exception
+                        )
+                );
             }
         });
     }
@@ -236,6 +263,9 @@ public class DevicePopManagerImpl implements IDevicePopManager {
                 return kp;
             }
         }
+
+        // Clean up... we generated a cert, but it cannot be used.
+        clearAsymmetricKey();
 
         throw new UnsupportedOperationException(
                 "Failed to generate valid KeyPair. Attempted " + MAX_RETRIES + " times."
