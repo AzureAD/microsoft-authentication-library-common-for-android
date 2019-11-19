@@ -68,9 +68,11 @@ public class LabUserHelper {
         return pickedConfig;
     }
 
-    public static String getUpnForTest(LabUserQuery query) {
+    public static String loadUserForTest(LabUserQuery query) {
         final ConfigInfo configInfo = getConfigInfo(query);
-        return configInfo.getUserInfo().getUpn();
+        final String upn = configInfo.getUserInfo().getUpn();
+        CurrentLabConfig.labUserPassword = LabSecretHelper.getPasswordForLab(configInfo.getLabInfo().getLabName());
+        return upn;
     }
 
     public static String getPasswordForUser(final String username) {

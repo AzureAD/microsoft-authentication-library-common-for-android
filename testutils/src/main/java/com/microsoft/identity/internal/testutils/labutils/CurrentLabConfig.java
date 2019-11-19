@@ -30,4 +30,6 @@ public class CurrentLabConfig {
     // can get the labname from the object to get the password
     public static ConfigInfo configInfo;
 
+    public static String labUserPassword;
+
 }

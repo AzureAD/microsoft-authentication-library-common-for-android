@@ -103,7 +103,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
     }
 
     String getPasswordForUser(String username) {
-        return LabSecretHelper.getPasswordForLab(CurrentLabConfig.configInfo.getLabInfo().getLabName());
+        return CurrentLabConfig.labUserPassword;
     }
 
     @Override
