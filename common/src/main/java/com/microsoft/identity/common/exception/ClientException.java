@@ -143,10 +143,23 @@ public class ClientException extends BaseException {
      */
     public static final String DUPLICATE_COMMAND = "duplicate_command";
 
+    /**
+     * Emitted when the KeyStore generates a certificate that does not match the designated key size.
+     * Due to a bug in some versions of Android, keySizes may not be exactly as specified
+     * To generate a 2048-bit key, two primes of length 1024 are multiplied -- this product
+     * may be 2047 in length in some cases which causes Nimbus to crash. To avoid this,
+     * check the keysize prior to returning the generated KeyPair.
+     */
     public static final String BAD_KEY_SIZE = "keystore_produced_invalid_cert";
 
+    /**
+     * Emitted when the requested crypto provider is unavailable in the device environment.
+     */
     public static final String NO_SUCH_PROVIDER = "androidkeystore_unavailable";
 
+    /**
+     * Emitted when the KeyStore fails to initialize due to unsupported arguments.
+     */
     public static final String INVALID_ALG = "keystore_initialization_failed";
 
     /**
