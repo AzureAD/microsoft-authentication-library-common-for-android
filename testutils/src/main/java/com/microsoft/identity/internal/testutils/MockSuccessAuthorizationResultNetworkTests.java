@@ -36,9 +36,9 @@ import java.util.Map;
 /**
  * A class to provide a Fake Authorization Result object to be used in ROPC flow
  */
-public class MockSuccessAuthorizationResult extends AuthorizationResult {
+public class MockSuccessAuthorizationResultNetworkTests extends AuthorizationResult {
 
-    public MockSuccessAuthorizationResult() {
+    public MockSuccessAuthorizationResultNetworkTests() {
         try {
             // get cloud instance host name from the authority url provided by lab info
             // and set in the mock authorization response so that we can test multiple cloud support

@@ -35,9 +35,8 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.internal.testutils.MicrosoftStsRopcTokenRequest;
-import com.microsoft.identity.internal.testutils.MockSuccessAuthorizationResult;
+import com.microsoft.identity.internal.testutils.MockSuccessAuthorizationResultNetworkTests;
 import com.microsoft.identity.internal.testutils.labutils.CurrentLabConfig;
-import com.microsoft.identity.internal.testutils.labutils.LabSecretHelper;
 
 import java.util.concurrent.Future;
 
@@ -69,7 +68,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
     public Future<AuthorizationResult> requestAuthorization(
             final MicrosoftStsAuthorizationRequest request,
             final AuthorizationStrategy authorizationStrategy) {
-        final MockSuccessAuthorizationResult authorizationResult = new MockSuccessAuthorizationResult();
+        final MockSuccessAuthorizationResultNetworkTests authorizationResult = new MockSuccessAuthorizationResultNetworkTests();
         final ResultFuture<AuthorizationResult> future = new ResultFuture<>();
         future.setResult(authorizationResult);
         return future;
