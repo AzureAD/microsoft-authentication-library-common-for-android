@@ -78,5 +78,5 @@ public interface IDevicePopManager {
                                        URL requestUrl,
                                        String accessToken,
                                        String nonce
-    );
+    ) throws ClientException;
 }

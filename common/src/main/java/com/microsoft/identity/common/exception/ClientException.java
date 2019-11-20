@@ -189,6 +189,11 @@ public class ClientException extends BaseException {
     public static final String INTERRUPTED_OPERATION = "operation_interrupted";
 
     /**
+     * Emitted when an error is encountered during signing.
+     */
+    public static final String JWT_SIGNING_FAILURE = "failed_to_sign_jwt";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String

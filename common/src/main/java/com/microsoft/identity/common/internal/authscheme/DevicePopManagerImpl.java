@@ -39,9 +39,14 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.crypto.impl.RSAKeyUtils;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -78,6 +83,7 @@ import static com.microsoft.identity.common.exception.ClientException.INTERRUPTE
 import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
 import static com.microsoft.identity.common.exception.ClientException.JSON_CONSTRUCTION_FAILED;
+import static com.microsoft.identity.common.exception.ClientException.JWT_SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PROVIDER;
@@ -137,6 +143,48 @@ public class DevicePopManagerImpl implements IDevicePopManager {
          * The Common Name of the certificate.
          */
         static final String COMMON_NAME = "CN=device-pop";
+    }
+
+    /**
+     * Properties embedded in the SignedHttpRequest.
+     * Roughly conforms to: https://tools.ietf.org/html/draft-ietf-oauth-signed-http-request-03
+     */
+    private static final class SignedHttpRequestJwtClaims {
+
+        /**
+         * The access_token.
+         */
+        private static final String ACCESS_TOKEN = "at";
+
+        /**
+         * The timestamp.
+         */
+        private static final String TIMESTAMP = "ts";
+
+        /**
+         * The HTTP method.
+         */
+        private static final String HTTP_METHOD = "m";
+
+        /**
+         * The host part of the resource server URL.
+         */
+        private static final String HTTP_HOST = "u";
+
+        /**
+         * The path part of the resource server URL.
+         */
+        private static final String HTTP_PATH = "p";
+
+        /**
+         * The JWK signed into this JWT.
+         */
+        private static final String CNF = "cnf";
+
+        /**
+         * A random value used for replay protection.
+         */
+        private static final String NONCE = "nonce";
     }
 
     /**
@@ -315,9 +363,54 @@ public class DevicePopManagerImpl implements IDevicePopManager {
     public String getAuthorizationHeaderValue(@NonNull final String httpMethod,
                                               @NonNull final URL requestUrl,
                                               @NonNull final String accessToken,
-                                              @Nullable final String nonce) {
-        // TODO
-        return null;
+                                              @Nullable final String nonce) throws ClientException {
+        final Exception exception;
+        final String errCode;
+
+        try {
+            final JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder();
+            claimsBuilder.claim(SignedHttpRequestJwtClaims.ACCESS_TOKEN, accessToken);
+            claimsBuilder.claim(SignedHttpRequestJwtClaims.TIMESTAMP, System.currentTimeMillis() / 1000L);
+            claimsBuilder.claim(SignedHttpRequestJwtClaims.HTTP_METHOD, httpMethod);
+            claimsBuilder.claim(SignedHttpRequestJwtClaims.HTTP_HOST, requestUrl.getHost());
+            claimsBuilder.claim(SignedHttpRequestJwtClaims.HTTP_PATH, requestUrl.getPath());
+            claimsBuilder.claim(SignedHttpRequestJwtClaims.CNF, getDevicePopJwkMinifiedJson());
+            claimsBuilder.claim(SignedHttpRequestJwtClaims.NONCE, nonce);
+
+            final JWTClaimsSet claimsSet = claimsBuilder.build();
+
+            final KeyStore.Entry entry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+            final PrivateKey privateKey = ((KeyStore.PrivateKeyEntry) entry).getPrivateKey();
+            final RSASSASigner signer = new RSASSASigner(privateKey);
+
+            final SignedJWT signedJWT = new SignedJWT(
+                    new JWSHeader.Builder(JWSAlgorithm.RS256)
+                            .build(),
+                    claimsSet
+            );
+
+            signedJWT.sign(signer);
+
+            return signedJWT.serialize();
+        } catch (final NoSuchAlgorithmException e) {
+            exception = e;
+            errCode = NO_SUCH_ALGORITHM;
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        } catch (final JOSEException e) {
+            exception = e;
+            errCode = JWT_SIGNING_FAILURE;
+        } catch (final UnrecoverableEntryException e) {
+            exception = e;
+            errCode = INVALID_PROTECTION_PARAMS;
+        }
+
+        throw new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
     }
 
     //region Internal Functions
@@ -591,6 +684,24 @@ public class DevicePopManagerImpl implements IDevicePopManager {
         }
 
         return result;
+    }
+
+    /**
+     * Gets the public portion of the provided RSAKey as a minified JWK.
+     *
+     * @param rsaKey The input key material.
+     * @return The minified JWK.
+     */
+    private static String getPublicJwkJsonMinified(@NonNull final RSAKey rsaKey) {
+        return rsaKey.toPublicJWK().toJSONObject().toJSONString();
+    }
+
+    private String getDevicePopJwkMinifiedJson()
+            throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
+        final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+        final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
+        final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
+        return getPublicJwkJsonMinified(rsaKey);
     }
     //endregion
 }
