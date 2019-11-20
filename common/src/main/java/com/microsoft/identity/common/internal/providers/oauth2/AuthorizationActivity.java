@@ -450,6 +450,7 @@ public final class AuthorizationActivity extends Activity {
             return uri.getScheme().equalsIgnoreCase(REDIRECT_PREFIX) &&
                     uri.getHost().equalsIgnoreCase(DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME);
         } catch (URISyntaxException e) {
+            Logger.error(TAG, "Uri construction failed", e);
             return false;
         }
 

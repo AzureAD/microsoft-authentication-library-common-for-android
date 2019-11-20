@@ -23,7 +23,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectProm
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
-import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -180,7 +179,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         if(brokerRequest.getAuthorizationAgent() != null
                 && brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())
-                && isCallingPackageIntuneCobo(callingActivity.getPackageName())){ // TODO : Remove this whenever we enable System Browser support in Broker for apps.
+                && isCallingPackageIntune(callingActivity.getPackageName())){ // TODO : Remove this whenever we enable System Browser support in Broker for apps.
+            Logger.info(TAG , "Setting Authorization Agent to Browser for Intune app");
             parameters.setAuthorizationAgent(AuthorizationAgent.BROWSER);
             parameters.setBrowserSafeList(getBrowserSafeListForBroker());
         }else {
@@ -416,10 +416,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * to allow System Webview Support.
      *
      */
-    private boolean isCallingPackageIntuneCobo(@NonNull final String packageName){
-        final String methodName = ":isCallingPackageIntuneCobo";
-        final String intuneCoboPackageName = "com.microsoft.intune";
+    private boolean isCallingPackageIntune(@NonNull final String packageName){
+        final String methodName = ":isCallingPackageIntune";
+        final String intunePackageName = "com.microsoft.intune";
         Logger.info(TAG + methodName, "Calling package name : " + packageName);
-        return intuneCoboPackageName.equalsIgnoreCase(packageName);
+        return intunePackageName.equalsIgnoreCase(packageName);
     }
 }
