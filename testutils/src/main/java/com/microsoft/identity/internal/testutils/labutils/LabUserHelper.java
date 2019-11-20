@@ -28,6 +28,7 @@ import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 import com.microsoft.identity.internal.test.labapi.api.UserApi;
 import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
+import com.microsoft.identity.internal.test.labapi.model.LabInfo;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
 
 import java.util.List;
@@ -80,8 +81,8 @@ public class LabUserHelper {
         return LabSecretHelper.getPasswordForLab(configInfo.getUserInfo().getLabName());
     }
 
-    public static String getPasswordForUser(final UserInfo userInfo) {
-        return LabSecretHelper.getPasswordForLab(userInfo.getLabName());
+    public static String getPasswordForUser(final LabInfo labInfo) {
+        return LabSecretHelper.getPasswordForLab(labInfo.getLabName());
     }
 
     public static Credential getCredentials(LabUserQuery query) {
@@ -90,7 +91,7 @@ public class LabUserHelper {
 
         configInfo = getConfigInfo(query);
         credential.userName = configInfo.getUserInfo().getUpn();
-        credential.password = getPasswordForUser(configInfo.getUserInfo());
+        credential.password = getPasswordForUser(configInfo.getLabInfo());
 
         return credential;
     }
