@@ -245,13 +245,19 @@ public class DevicePopManagerImpl implements IDevicePopManager {
                     errCode = INVALID_ALG;
                 }
 
-                callback.onError(
-                        new ClientException(
-                                errCode,
-                                exception.getMessage(),
-                                exception
-                        )
+                final ClientException clientException = new ClientException(
+                        errCode,
+                        exception.getMessage(),
+                        exception
                 );
+
+                Logger.error(
+                        TAG,
+                        clientException.getMessage(),
+                        clientException
+                );
+
+                callback.onError(clientException);
             }
         });
     }
@@ -276,6 +282,10 @@ public class DevicePopManagerImpl implements IDevicePopManager {
 
     @Override
     public String getRequestConfirmation() throws ClientException {
+        // The sync API is a wrapper around the async API
+        // This likely shouldn't be called on the UI thread to avoid ANR
+        // Device perf may vary, however -- some devices this may be OK.
+        // YMMV
         final CountDownLatch latch = new CountDownLatch(1);
         final String[] result = new String[1];
         final ClientException[] errorResult = new ClientException[1];
@@ -304,6 +314,12 @@ public class DevicePopManagerImpl implements IDevicePopManager {
                 throw errorResult[0];
             }
         } catch (final InterruptedException e) {
+            Logger.error(
+                    TAG,
+                    "Interrupted while waiting on callback.",
+                    e
+            );
+
             throw new ClientException(
                     INTERRUPTED_OPERATION,
                     e.getMessage(),
@@ -352,6 +368,12 @@ public class DevicePopManagerImpl implements IDevicePopManager {
                         errCode,
                         exception.getMessage(),
                         exception
+                );
+
+                Logger.error(
+                        TAG,
+                        clientException.getMessage(),
+                        clientException
                 );
 
                 callback.onError(clientException);
@@ -406,11 +428,19 @@ public class DevicePopManagerImpl implements IDevicePopManager {
             errCode = INVALID_PROTECTION_PARAMS;
         }
 
-        throw new ClientException(
+        final ClientException clientException = new ClientException(
                 errCode,
                 exception.getMessage(),
                 exception
         );
+
+        Logger.error(
+                TAG,
+                clientException.getMessage(),
+                clientException
+        );
+
+        throw clientException;
     }
 
     //region Internal Functions
@@ -565,6 +595,10 @@ public class DevicePopManagerImpl implements IDevicePopManager {
                 .setDigests(KeyProperties.DIGEST_SHA256);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
+            Logger.verbose(
+                    TAG,
+                    "Attempting to apply StrongBox isolation."
+            );
             builder = applyHardwareIsolation(builder);
         }
 
