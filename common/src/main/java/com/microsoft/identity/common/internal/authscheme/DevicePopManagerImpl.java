@@ -105,11 +105,6 @@ public class DevicePopManagerImpl implements IDevicePopManager {
     private static final int RSA_KEY_SIZE = 2048;
 
     /**
-     * Lint suppression constant.
-     */
-    private static final String NEW_API = "NewApi";
-
-    /**
      * The current application Context.
      */
     private final Context mContext;
@@ -428,7 +423,7 @@ public class DevicePopManagerImpl implements IDevicePopManager {
      * @return The newly generated RSA KeyPair.
      * @throws UnsupportedOperationException
      */
-    @SuppressLint(NEW_API)
+    @SuppressLint("NewApi")
     private KeyPair generateNewRsaKeyPair(@NonNull final Context ctx,
                                           final int minKeySize)
             throws UnsupportedOperationException, InvalidAlgorithmParameterException,
@@ -583,7 +578,7 @@ public class DevicePopManagerImpl implements IDevicePopManager {
      * @param builder The builder.
      * @return A reference to the supplied builder instance.
      */
-    @SuppressLint(NEW_API)
+    @SuppressLint("NewApi")
     @RequiresApi(Build.VERSION_CODES.P)
     @NonNull
     private static KeyGenParameterSpec.Builder applyHardwareIsolation(
@@ -591,7 +586,7 @@ public class DevicePopManagerImpl implements IDevicePopManager {
         return builder.setIsStrongBoxBacked(true);
     }
 
-    @SuppressLint(NEW_API)
+    @SuppressLint("NewApi")
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private static void initializePre23(@NonNull final Context ctx,
                                         @NonNull final KeyPairGenerator keyPairGenerator,
