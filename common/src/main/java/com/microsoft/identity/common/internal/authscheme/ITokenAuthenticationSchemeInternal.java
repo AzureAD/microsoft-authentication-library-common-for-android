@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
+import com.microsoft.identity.common.exception.ClientException;
+
 /**
  * Internal representation of properties necessary for token-based auth schemes.
  */
@@ -47,5 +49,5 @@ public interface ITokenAuthenticationSchemeInternal {
      * @return The Authorization header value.
      * @see <a href="https://tools.ietf.org/html/rfc7235#section-4.2">RFC-7235/§4.2</a>
      */
-    String getAuthorizationRequestHeader();
+    String getAuthorizationRequestHeader() throws ClientException;
 }

@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.authscheme;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.exception.ClientException;
+
 import java.net.URL;
 
 /**
@@ -68,7 +70,7 @@ public class PopAuthenticationSchemeInternal
     }
 
     @Override
-    public String getAuthorizationRequestHeader() {
+    public String getAuthorizationRequestHeader() throws ClientException {
         return getName()
                 + " "
                 + mPopManager.getAuthorizationHeaderValue(
