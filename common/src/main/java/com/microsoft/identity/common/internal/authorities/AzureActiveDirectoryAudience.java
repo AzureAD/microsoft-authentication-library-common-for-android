@@ -88,7 +88,7 @@ public abstract class AzureActiveDirectoryAudience {
         }
 
         final OpenIdProviderConfiguration providerConfiguration =
-                loadOpenIdProviderConfigurationMetadata(mCloudUrl);
+                loadOpenIdProviderConfigurationMetadata(getCloudUrl());
 
         final String issuer = providerConfiguration.getIssuer();
         final Uri issuerUri = Uri.parse(issuer);
