@@ -32,11 +32,13 @@ import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -466,6 +468,18 @@ public abstract class BaseController {
         }
 
         return targetAccount;
+    }
+
+    protected boolean isRequestAuthorityRealmSameAsATRealm(@NonNull final Authority requestAuthority,
+                                                           @NonNull final AccessTokenRecord accessTokenRecord)
+            throws ServiceException, ClientException {
+        if(requestAuthority instanceof AzureActiveDirectoryAuthority){
+            final String tenantId = ((AzureActiveDirectoryAuthority) requestAuthority)
+                    .getAudience()
+                    .getTenantUuidForAlias();
+            return tenantId.equalsIgnoreCase(accessTokenRecord.getRealm());
+        }
+        return true;
     }
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
