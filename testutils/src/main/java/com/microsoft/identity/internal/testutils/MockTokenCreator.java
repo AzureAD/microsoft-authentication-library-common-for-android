@@ -48,15 +48,15 @@ public class MockTokenCreator {
     private static final String VERSION_CLAIM = "ver";
 
     private static final String AUDIENCE = "audience-for-testing";
-    private static final String TENANT_ID = "d552813a-f8a6-48cd-9117-b1b38df093b0";
+    private static final String TENANT_ID = "61137f02-8854-4e46-8813-664098dc9f91";
     private static final String OBJECT_ID = "99a1340e-0f35-4ac1-94ac-0837718f0b1f";
     private static final String PREFERRED_USERNAME = "test@test.onmicrosoft.com";
-    private static final String ISSUER = "https://login.onmicrosoftonline.com/test/v2.0";
+    private static final String ISSUER =  "https://test.authority/61137f02-8854-4e46-8813-664098dc9f91/v2.0";
     private static final String SUBJECT = "TestSubject";
     private static final String VERSION = "2.0";
     private static final String NAME = "test";
     private static final String UID = "99a1340e-0f35-4ac1-94ac-0837718f0b1f";
-    private static final String UTID = "d552813a-f8a6-48cd-9117-b1b38df093b0";
+    private static final String UTID = "61137f02-8854-4e46-8813-664098dc9f91";
     private static final String ENCODING_UTF8 = "UTF-8";
 
     private static String createMockToken(final String issuer,
