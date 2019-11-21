@@ -22,9 +22,21 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
+import android.net.Uri;
+
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
+import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationClient;
+import com.microsoft.identity.common.internal.util.StringUtil;
+
+import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 public abstract class AzureActiveDirectoryAudience {
 
@@ -53,6 +65,75 @@ public abstract class AzureActiveDirectoryAudience {
 
     public String getTenantId() {
         return mTenantId;
+    }
+
+
+    /**
+     *
+     * Must be called on a worker thread.
+     *
+     * Method which queries the {@link OpenIdProviderConfiguration}
+     * to get tenant UUID for the authority with tenant alias.
+     *
+     * @return : tenant UUID
+     * @throws ServiceException
+     * @throws ClientException
+     */
+    @WorkerThread
+    public String getTenantUuidForAlias()
+            throws ServiceException, ClientException {
+        // if the tenant id is already a UUID, return
+        if (StringUtil.isUuid(mTenantId)) {
+            return mTenantId;
+        }
+
+        final OpenIdProviderConfiguration providerConfiguration =
+                loadOpenIdProviderConfigurationMetadata(getCloudUrl());
+
+        final String issuer = providerConfiguration.getIssuer();
+        final Uri issuerUri = Uri.parse(issuer);
+        final List<String> paths = issuerUri.getPathSegments();
+
+        if (paths.isEmpty()) {
+            final String errMsg = "OpenId Metadata did not contain a path to the tenant";
+
+            com.microsoft.identity.common.internal.logging.Logger.error(
+                    TAG,
+                    errMsg,
+                    null
+            );
+
+            throw new ClientException(errMsg);
+        }
+        final String tenantUUID = paths.get(0);
+
+        if (!StringUtil.isUuid(tenantUUID)) {
+            final String errMsg = "OpenId Metadata did not contain UUID in the path ";
+            Logger.error(
+                    TAG,
+                    errMsg,
+                    null
+            );
+
+            throw new ClientException(errMsg);
+        }
+        return tenantUUID;
+
+    }
+
+    private static OpenIdProviderConfiguration  loadOpenIdProviderConfigurationMetadata(
+            @NonNull final String requestAuthority) throws ServiceException {
+        final String methodName = ":loadOpenIdProviderConfigurationMetadata";
+
+        com.microsoft.identity.common.internal.logging.Logger.info(
+                TAG + methodName,
+                "Loading OpenId Provider Metadata..."
+        );
+
+        final OpenIdProviderConfigurationClient client =
+                new OpenIdProviderConfigurationClient(requestAuthority);
+
+        return client.loadOpenIdProviderConfiguration();
     }
 
     public void setTenantId(String tenantId) {
