@@ -70,10 +70,10 @@ public abstract class AzureActiveDirectoryAudience {
 
     /**
      *
-     * Must me called on a worker thread.
+     * Must be called on a worker thread.
      *
      * Method which queries the {@link OpenIdProviderConfiguration}
-     * to get tenant UUID for the authority with tenant alias
+     * to get tenant UUID for the authority with tenant alias.
      *
      * @return : tenant UUID
      * @throws ServiceException
@@ -83,7 +83,7 @@ public abstract class AzureActiveDirectoryAudience {
     public String getTenantUuidForAlias()
             throws ServiceException, ClientException {
         // if the tenant id is already a UUID, return
-        if(StringUtil.isUuid(mTenantId)){
+        if (StringUtil.isUuid(mTenantId)) {
             return mTenantId;
         }
 
@@ -105,8 +105,20 @@ public abstract class AzureActiveDirectoryAudience {
 
             throw new ClientException(errMsg);
         }
+        final String tenantUUID = paths.get(0);
 
-        return paths.get(0);
+        if (!StringUtil.isUuid(tenantUUID)) {
+            final String errMsg = "OpenId Metadata did not contain UUID in the path ";
+            Logger.error(
+                    TAG,
+                    errMsg,
+                    null
+            );
+
+            throw new ClientException(errMsg);
+        }
+        return tenantUUID;
+
     }
 
     private static OpenIdProviderConfiguration  loadOpenIdProviderConfigurationMetadata(

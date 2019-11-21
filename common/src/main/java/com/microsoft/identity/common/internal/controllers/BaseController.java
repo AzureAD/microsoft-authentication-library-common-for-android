@@ -470,6 +470,12 @@ public abstract class BaseController {
         return targetAccount;
     }
 
+    /**
+     * Helper method which returns false if the tenant id of the authority
+     * doesn't match with the tenant of the Access token for AADAuthority.
+     *
+     * Returns true otherwise.
+     */
     protected boolean isRequestAuthorityRealmSameAsATRealm(@NonNull final Authority requestAuthority,
                                                            @NonNull final AccessTokenRecord accessTokenRecord)
             throws ServiceException, ClientException {
