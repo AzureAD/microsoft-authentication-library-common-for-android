@@ -29,9 +29,9 @@ import com.microsoft.identity.common.internal.logging.Logger;
 /**
  * Factory class for turning public scheme types into internal representations.
  */
-public class AuthenticatonSchemeFactory {
+public class AuthenticationSchemeFactory {
 
-    private static final String TAG = AuthenticatonSchemeFactory.class.getSimpleName();
+    private static final String TAG = AuthenticationSchemeFactory.class.getSimpleName();
 
     /**
      * Gets the internal scheme equivalent for the provided public api scheme.
