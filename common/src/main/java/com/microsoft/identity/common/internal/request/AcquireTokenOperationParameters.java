@@ -28,6 +28,7 @@ import androidx.annotation.Nullable;
 import android.util.Pair;
 
 import com.google.gson.annotations.Expose;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
@@ -38,14 +39,30 @@ import java.util.List;
 public class AcquireTokenOperationParameters extends OperationParameters {
 
     private transient Activity mActivity;
+    private transient HashMap<String, String> mRequestHeaders;
+
+    private AbstractAuthenticationScheme mAuthenticationScheme;
     private String mLoginHint;
+
     @Expose()
     private List<Pair<String, String>> mExtraQueryStringParameters;
+
     @Expose()
     private List<String> mExtraScopesToConsent;
+
     @Expose()
     private OpenIdConnectPromptParameter mOpenIdConnectPromptParameter;
-    private transient HashMap<String, String> mRequestHeaders;
+
+    @Expose()
+    private AuthorizationAgent mAuthorizationAgent;
+
+    public AbstractAuthenticationScheme getAuthenticationScheme() {
+        return mAuthenticationScheme;
+    }
+
+    public void setAuthenticationScheme(@NonNull final AbstractAuthenticationScheme scheme) {
+        mAuthenticationScheme = scheme;
+    }
 
     public AuthorizationAgent getAuthorizationAgent() {
         return mAuthorizationAgent;
@@ -54,9 +71,6 @@ public class AcquireTokenOperationParameters extends OperationParameters {
     public void setAuthorizationAgent(@Nullable final AuthorizationAgent authorizationAgent) {
         mAuthorizationAgent = authorizationAgent;
     }
-
-    @Expose()
-    private AuthorizationAgent mAuthorizationAgent;
 
     public Activity getActivity() {
         return mActivity;
