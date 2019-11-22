@@ -38,6 +38,9 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
+import static com.microsoft.identity.common.internal.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
+import static com.microsoft.identity.common.internal.authorities.AnyPersonalAccount.ANY_PERSONAL_ACCOUNT_TENANT_ID;
+
 public abstract class AzureActiveDirectoryAudience {
 
     private static final String TAG = AzureActiveDirectoryAudience.class.getSimpleName();
@@ -80,7 +83,7 @@ public abstract class AzureActiveDirectoryAudience {
      * @throws ClientException
      */
     @WorkerThread
-    public String getTenantUuidForAlias()
+    public String getTenantUuidForAlias(@NonNull final String authority)
             throws ServiceException, ClientException {
         // if the tenant id is already a UUID, return
         if (StringUtil.isUuid(mTenantId)) {
@@ -88,7 +91,7 @@ public abstract class AzureActiveDirectoryAudience {
         }
 
         final OpenIdProviderConfiguration providerConfiguration =
-                loadOpenIdProviderConfigurationMetadata(getCloudUrl());
+                loadOpenIdProviderConfigurationMetadata(authority);
 
         final String issuer = providerConfiguration.getIssuer();
         final Uri issuerUri = Uri.parse(issuer);
@@ -119,6 +122,18 @@ public abstract class AzureActiveDirectoryAudience {
         }
         return tenantUUID;
 
+    }
+
+    /**
+     * Util method which returns true if the tenant alias is "common" ,
+     * "organizations" or "consumers" indicating that it's the user's home tenant
+     * @param tenantId
+     * @return
+     */
+    public static boolean isHomeTenantAlias(@NonNull final String tenantId) {
+        return tenantId.equalsIgnoreCase(ALL_ACCOUNTS_TENANT_ID)
+                || tenantId.equalsIgnoreCase(ANY_PERSONAL_ACCOUNT_TENANT_ID)
+                || tenantId.equalsIgnoreCase(ORGANIZATIONS);
     }
 
     private static OpenIdProviderConfiguration  loadOpenIdProviderConfigurationMetadata(
