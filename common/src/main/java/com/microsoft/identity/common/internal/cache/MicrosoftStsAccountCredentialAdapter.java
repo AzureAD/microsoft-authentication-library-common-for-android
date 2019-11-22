@@ -97,12 +97,7 @@ public class MicrosoftStsAccountCredentialAdapter
             // Optional fields
             accessToken.setExtendedExpiresOn(getExtendedExpiresOn(response));
 
-            if (!StringUtil.isEmpty(response.getAuthority())) {
-                accessToken.setAuthority(response.getAuthority());
-            } else {
-                accessToken.setAuthority(request.getAuthority().toString());
-            }
-
+            accessToken.setAuthority(strategy.getAuthorityFromTokenEndpoint());
             accessToken.setAccessTokenType(response.getTokenType());
 
             return accessToken;
