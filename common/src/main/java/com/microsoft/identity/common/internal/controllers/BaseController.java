@@ -73,6 +73,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 public abstract class BaseController {
 
@@ -480,10 +481,24 @@ public abstract class BaseController {
                                                            @NonNull final AccessTokenRecord accessTokenRecord)
             throws ServiceException, ClientException {
         if(requestAuthority instanceof AzureActiveDirectoryAuthority){
-            final String tenantId = ((AzureActiveDirectoryAuthority) requestAuthority)
-                    .getAudience()
-                    .getTenantUuidForAlias();
-            return tenantId.equalsIgnoreCase(accessTokenRecord.getRealm());
+
+            String tenantId = ((AzureActiveDirectoryAuthority) requestAuthority).getAudience().getTenantId();
+
+            if(AzureActiveDirectoryAudience.isHomeTenantAlias(tenantId)) {
+                // if realm on AT and home account's tenant id do not match, we have a token for guest and
+                // requested authority here is for home, so return false we need to refresh the token
+                final String utidFromHomeAccountId = accessTokenRecord
+                        .getHomeAccountId()
+                        .split(Pattern.quote("."))[1];
+
+                return utidFromHomeAccountId.equalsIgnoreCase(accessTokenRecord.getRealm());
+
+            }else {
+                tenantId = ((AzureActiveDirectoryAuthority) requestAuthority)
+                        .getAudience()
+                        .getTenantUuidForAlias(requestAuthority.getAuthorityURL().toString());
+                return tenantId.equalsIgnoreCase(accessTokenRecord.getRealm());
+            }
         }
         return true;
     }
