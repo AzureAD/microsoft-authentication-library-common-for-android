@@ -55,7 +55,9 @@ public class AuthenticationSchemeFactory {
                             TAG,
                             "Constructing PoP Authentication Scheme."
                     );
+
                     final IPoPAuthenticationSchemeParams params = (IPoPAuthenticationSchemeParams) nameable;
+
                     return new PopAuthenticationSchemeInternal(params);
                 } else {
                     throw new IllegalStateException("Unrecognized parameter type.");

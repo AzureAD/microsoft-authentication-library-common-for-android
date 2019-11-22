@@ -41,7 +41,6 @@ public class AcquireTokenOperationParameters extends OperationParameters {
     private transient Activity mActivity;
     private transient HashMap<String, String> mRequestHeaders;
 
-    private AbstractAuthenticationScheme mAuthenticationScheme;
     private String mLoginHint;
 
     @Expose()
@@ -55,14 +54,6 @@ public class AcquireTokenOperationParameters extends OperationParameters {
 
     @Expose()
     private AuthorizationAgent mAuthorizationAgent;
-
-    public AbstractAuthenticationScheme getAuthenticationScheme() {
-        return mAuthenticationScheme;
-    }
-
-    public void setAuthenticationScheme(@NonNull final AbstractAuthenticationScheme scheme) {
-        mAuthenticationScheme = scheme;
-    }
 
     public AuthorizationAgent getAuthorizationAgent() {
         return mAuthorizationAgent;

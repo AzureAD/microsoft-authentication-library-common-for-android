@@ -51,4 +51,11 @@ public abstract class AbstractAuthenticationScheme implements INameable {
     public final String getName() {
         return mName;
     }
+
+    @Override
+    public String toString() {
+        return "AbstractAuthenticationScheme{" +
+                "mName='" + mName + '\'' +
+                '}';
+    }
 }
