@@ -176,12 +176,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         OpenIdConnectPromptParameter.valueOf(brokerRequest.getPrompt()) :
                         OpenIdConnectPromptParameter.NONE
         );
-
+        Logger.info(TAG, "Authorization agent passed in by MSAL: " + brokerRequest.getAuthorizationAgent());
         if(brokerRequest.getAuthorizationAgent() != null
                 && brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())
                 && isCallingPackageIntune(callingActivity.getPackageName())){ // TODO : Remove this whenever we enable System Browser support in Broker for apps.
             Logger.info(TAG , "Setting Authorization Agent to Browser for Intune app");
             parameters.setAuthorizationAgent(AuthorizationAgent.BROWSER);
+            parameters.setBrokerBrowserSupportEnabled(true);
             parameters.setBrowserSafeList(getBrowserSafeListForBroker());
         }else {
             parameters.setAuthorizationAgent(AuthorizationAgent.WEBVIEW);
