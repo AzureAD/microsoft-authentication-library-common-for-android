@@ -290,11 +290,13 @@ public class OperationParameters {
      */
     public void validate() throws ArgumentException {
         final String methodName = ":validate";
+
         Logger.verbose(
                 TAG + methodName,
                 "Validating operation params..."
         );
-        Boolean validScopeArgument = false;
+
+        boolean validScopeArgument = false;
 
         if (mScopes != null) {
             mScopes.removeAll(Arrays.asList("", null));
@@ -319,5 +321,23 @@ public class OperationParameters {
             }
         }
 
+        // AuthenticationScheme is present...
+        if (null == mAuthenticationScheme) {
+            if (this instanceof AcquireTokenSilentOperationParameters) {
+                throw new ArgumentException(
+                        ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
+                        ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
+                        "authentication scheme is undefined"
+                );
+            }
+
+            if (this instanceof AcquireTokenOperationParameters) {
+                throw new ArgumentException(
+                        ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+                        ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
+                        "authentication scheme is undefined"
+                );
+            }
+        }
     }
 }
