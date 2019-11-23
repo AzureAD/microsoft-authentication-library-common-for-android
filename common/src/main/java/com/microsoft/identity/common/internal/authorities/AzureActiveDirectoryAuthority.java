@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.authorities;
 
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -32,6 +34,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -166,9 +169,10 @@ public class AzureActiveDirectoryAuthority extends Authority {
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy() {
+    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyOptions options) {
         MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
-        return new MicrosoftStsOAuth2Strategy(config);
+        // TODO Add OAuth2StrategyOptions param to strategy ctor, pass thru to superclass...
+        return new MicrosoftStsOAuth2Strategy(config, options);
     }
 
     public AzureActiveDirectoryAudience getAudience() {

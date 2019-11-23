@@ -20,40 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.authorities;
+package com.microsoft.identity.common.internal.providers.oauth2;
 
-import android.net.Uri;
+import androidx.annotation.NonNull;
 
-import androidx.annotation.Nullable;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
+/**
+ * Abstract class for defining options relative to the construction of an {@link OAuth2Strategy}.
+ */
+public class OAuth2StrategyOptions {
 
-import java.net.MalformedURLException;
-import java.net.URL;
+    private AbstractAuthenticationScheme mAuthenticationScheme;
 
-public class ActiveDirectoryFederationServicesAuthority extends Authority {
-
-    ActiveDirectoryFederationServicesAuthority(String authorityUrl) {
-        this.mAuthorityUrl = authorityUrl;
+    public AbstractAuthenticationScheme getAuthenticationScheme() {
+        return mAuthenticationScheme;
     }
 
-    @Override
-    public Uri getAuthorityUri() {
-        return Uri.parse(mAuthorityUrl);
+    public void setAuthenticationScheme(@NonNull final AbstractAuthenticationScheme authScheme) {
+        mAuthenticationScheme = authScheme;
     }
 
-    @Override
-    public URL getAuthorityURL() {
-        try {
-            return new URL(this.getAuthorityUri().toString());
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("Authority URL is not a URL.", e);
-        }
-    }
-
-    @Override
-    public OAuth2Strategy createOAuth2Strategy(@Nullable OAuth2StrategyOptions options) {
-        throw new UnsupportedOperationException();
-    }
 }
