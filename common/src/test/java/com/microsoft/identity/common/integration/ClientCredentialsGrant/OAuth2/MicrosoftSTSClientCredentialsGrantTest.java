@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.integration.ClientCredentialsGrant.OAuth2;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
 import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfiguration;
@@ -31,6 +32,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
@@ -79,7 +81,12 @@ public class MicrosoftSTSClientCredentialsGrantTest {
         tr.setScope(SCOPE);
         tr.setGrantType(GRANT_TYPE);
 
-        OAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(new MicrosoftStsOAuth2Configuration());
+        OAuth2StrategyOptions options = new OAuth2StrategyOptions();
+        options.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
+        OAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(
+                new MicrosoftStsOAuth2Configuration(),
+                options
+        );
 
         try {
             final TokenResult tokenResult = strategy.requestToken(tr);

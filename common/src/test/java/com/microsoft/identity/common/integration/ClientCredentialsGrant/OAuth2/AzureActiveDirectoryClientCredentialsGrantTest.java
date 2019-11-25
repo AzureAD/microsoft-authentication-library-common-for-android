@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.integration.ClientCredentialsGrant.OAuth2;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
 import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfiguration;
@@ -31,6 +32,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 import org.junit.Test;
@@ -78,7 +80,12 @@ public class AzureActiveDirectoryClientCredentialsGrantTest {
         tr.setResourceId(RESOURCE);
         tr.setGrantType(GRANT_TYPE);
 
-        OAuth2Strategy strategy = new AzureActiveDirectoryOAuth2Strategy(new AzureActiveDirectoryOAuth2Configuration());
+        OAuth2StrategyOptions options = new OAuth2StrategyOptions();
+        options.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
+        OAuth2Strategy strategy = new AzureActiveDirectoryOAuth2Strategy(
+                new AzureActiveDirectoryOAuth2Configuration(),
+                options
+        );
 
         try {
             TokenResult tokenResult = strategy.requestToken(tr);
