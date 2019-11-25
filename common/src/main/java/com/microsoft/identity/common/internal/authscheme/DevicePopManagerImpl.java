@@ -220,46 +220,57 @@ public class DevicePopManagerImpl implements IDevicePopManager {
 
     @Override
     public void generateAsymmetricKey(@NonNull final TaskCompletedCallbackWithError<KeyPair, ClientException> callback) {
-        sThreadExecutor.submit(new Runnable() {
-            @Override
-            public void run() {
-                final Exception exception;
-                final String errCode;
-
-                try {
-                    final KeyPair keyPair = generateNewRsaKeyPair(mContext, RSA_KEY_SIZE);
-                    callback.onTaskCompleted(keyPair);
-
-                    return;
-                } catch (final UnsupportedOperationException e) {
-                    exception = e;
-                    errCode = BAD_KEY_SIZE;
-                } catch (final NoSuchAlgorithmException e) {
-                    exception = e;
-                    errCode = NO_SUCH_ALGORITHM;
-                } catch (final NoSuchProviderException e) {
-                    exception = e;
-                    errCode = NO_SUCH_PROVIDER;
-                } catch (final InvalidAlgorithmParameterException e) {
-                    exception = e;
-                    errCode = INVALID_ALG;
+        sThreadExecutor.submit(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        final KeyPair keyPair;
+                        try {
+                            keyPair = generateAsymmetricKey();
+                            callback.onTaskCompleted(keyPair);
+                        } catch (final ClientException e) {
+                            callback.onError(e);
+                        }
+                    }
                 }
+        );
+    }
 
-                final ClientException clientException = new ClientException(
-                        errCode,
-                        exception.getMessage(),
-                        exception
-                );
+    @Override
+    public KeyPair generateAsymmetricKey() throws ClientException {
+        final Exception exception;
+        final String errCode;
 
-                Logger.error(
-                        TAG,
-                        clientException.getMessage(),
-                        clientException
-                );
+        try {
+            final KeyPair keyPair = generateNewRsaKeyPair(mContext, RSA_KEY_SIZE);
+            return keyPair;
+        } catch (final UnsupportedOperationException e) {
+            exception = e;
+            errCode = BAD_KEY_SIZE;
+        } catch (final NoSuchAlgorithmException e) {
+            exception = e;
+            errCode = NO_SUCH_ALGORITHM;
+        } catch (final NoSuchProviderException e) {
+            exception = e;
+            errCode = NO_SUCH_PROVIDER;
+        } catch (final InvalidAlgorithmParameterException e) {
+            exception = e;
+            errCode = INVALID_ALG;
+        }
 
-                callback.onError(clientException);
-            }
-        });
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG,
+                clientException.getMessage(),
+                clientException
+        );
+
+        throw clientException;
     }
 
     @Override

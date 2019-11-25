@@ -48,6 +48,13 @@ public interface IDevicePopManager {
     void generateAsymmetricKey(TaskCompletedCallbackWithError<KeyPair, ClientException> callback);
 
     /**
+     * Generates asymmetric keys used by pop.
+     *
+     * @return The generate RSA KeyPair.
+     */
+    KeyPair generateAsymmetricKey() throws ClientException;
+
+    /**
      * Clears keys, if present.
      */
     boolean clearAsymmetricKey();

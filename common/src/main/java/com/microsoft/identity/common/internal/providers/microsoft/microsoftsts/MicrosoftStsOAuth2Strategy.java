@@ -32,6 +32,8 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.authscheme.DevicePopManagerImpl;
+import com.microsoft.identity.common.internal.authscheme.IDevicePopManager;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -68,6 +70,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -75,6 +80,7 @@ import java.util.UUID;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField.X_MS_CLITELEM;
+import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 import static com.microsoft.identity.common.internal.controllers.BaseController.logResult;
 
 public class MicrosoftStsOAuth2Strategy
@@ -94,6 +100,7 @@ public class MicrosoftStsOAuth2Strategy
                 AuthorizationResult> {
 
     private static final String TAG = MicrosoftStsOAuth2Strategy.class.getSimpleName();
+    private IDevicePopManager mDevicePopManager;
 
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
@@ -104,6 +111,12 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
                                       @NonNull final OAuth2StrategyOptions options) {
         super(config, options);
+        // TODO figure this out!
+        try {
+            mDevicePopManager = new DevicePopManagerImpl(options.getContext());
+        } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
+            // TODO How can this be handled better?
+        }
     }
 
     @Override
@@ -334,9 +347,35 @@ public class MicrosoftStsOAuth2Strategy
         tokenRequest.setRedirectUri(request.getRedirectUri());
         tokenRequest.setClientId(request.getClientId());
         tokenRequest.setScope(request.getTokenScope());
-
         tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
+        setTokenRequestCorrelationId(tokenRequest);
 
+        try {
+            if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
+                // Add a token_type
+                tokenRequest.setTokenType(TokenRequest.TokenType.POP);
+
+                // Generate keys if they don't already exist...
+                if (!mDevicePopManager.asymmetricKeyExists()) {
+
+                    mDevicePopManager.generateAsymmetricKey();
+
+                }
+
+                // Set the req_cnf
+                final String reqCnf = mDevicePopManager.getRequestConfirmation();
+
+                tokenRequest.setRequestConfirmation(reqCnf);
+            }
+        } catch (final ClientException e) {
+            // TODO how should this be handled?
+            e.printStackTrace();
+        }
+
+        return tokenRequest;
+    }
+
+    private void setTokenRequestCorrelationId(@NonNull final MicrosoftStsTokenRequest tokenRequest) {
         try {
             tokenRequest.setCorrelationId(
                     UUID.fromString(
@@ -353,8 +392,6 @@ public class MicrosoftStsOAuth2Strategy
                     ex
             );
         }
-
-        return tokenRequest;
     }
 
     @Override

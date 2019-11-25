@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
@@ -31,7 +33,16 @@ import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationS
  */
 public class OAuth2StrategyOptions {
 
+    private transient Context mContext;
     private AbstractAuthenticationScheme mAuthenticationScheme;
+
+    public Context getContext() {
+        return mContext;
+    }
+
+    public void setContext(@NonNull final Context context) {
+        mContext = context;
+    }
 
     public AbstractAuthenticationScheme getAuthenticationScheme() {
         return mAuthenticationScheme;
