@@ -22,7 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
 
 public class MicrosoftSts
         extends IdentityProvider<MicrosoftStsOAuth2Strategy, MicrosoftStsOAuth2Configuration> {
@@ -35,7 +37,9 @@ public class MicrosoftSts
      */
     @Override
     public MicrosoftStsOAuth2Strategy createOAuth2Strategy(MicrosoftStsOAuth2Configuration config) {
-        return new MicrosoftStsOAuth2Strategy(config);
+        final OAuth2StrategyOptions strategyOptions = new OAuth2StrategyOptions();
+        strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
+        return new MicrosoftStsOAuth2Strategy(config, strategyOptions);
     }
 
 }

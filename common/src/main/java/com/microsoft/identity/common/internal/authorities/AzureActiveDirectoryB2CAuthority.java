@@ -73,6 +73,6 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
     @Override
     public OAuth2Strategy createOAuth2Strategy(@Nullable final OAuth2StrategyOptions options) {
         MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
-        return new MicrosoftStsOAuth2Strategy(config);
+        return new MicrosoftStsOAuth2Strategy(config, options);
     }
 }

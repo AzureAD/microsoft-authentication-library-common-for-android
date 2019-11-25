@@ -22,8 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
 
 /**
  * Azure Active Directory B2C is effectively it's own OpenID Provider.  This class is responsible
@@ -34,7 +36,9 @@ public class AzureActiveDirectoryB2C
 
     @Override
     public AzureActiveDirectoryB2COAuth2Strategy createOAuth2Strategy(OAuth2Configuration config) {
-        return new AzureActiveDirectoryB2COAuth2Strategy(config);
+        final OAuth2StrategyOptions strategyOptions = new OAuth2StrategyOptions();
+        strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
+        return new AzureActiveDirectoryB2COAuth2Strategy(config, strategyOptions);
     }
 
 }

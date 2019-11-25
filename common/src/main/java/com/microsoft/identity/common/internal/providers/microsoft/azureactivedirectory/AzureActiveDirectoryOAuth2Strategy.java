@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import android.net.Uri;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
@@ -36,6 +37,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
@@ -65,6 +67,7 @@ public class AzureActiveDirectoryOAuth2Strategy
         AzureActiveDirectoryAuthorizationRequest.Builder,
         AuthorizationStrategy,
         AzureActiveDirectoryOAuth2Configuration,
+        OAuth2StrategyOptions,
         AzureActiveDirectoryAuthorizationResponse,
         AzureActiveDirectoryRefreshToken,
         AzureActiveDirectoryTokenRequest,
@@ -79,8 +82,9 @@ public class AzureActiveDirectoryOAuth2Strategy
      *
      * @param config Azure Active Directory OAuth2 configuration
      */
-    public AzureActiveDirectoryOAuth2Strategy(final AzureActiveDirectoryOAuth2Configuration config) {
-        super(config);
+    public AzureActiveDirectoryOAuth2Strategy(final AzureActiveDirectoryOAuth2Configuration config,
+                                              final OAuth2StrategyOptions options) {
+        super(config, options);
         Logger.verbose(TAG, "Init: " + TAG);
         if (null != config.getAuthorityUrl()) {
             setTokenEndpoint(config.getAuthorityUrl().toString() + "/oauth2/token");

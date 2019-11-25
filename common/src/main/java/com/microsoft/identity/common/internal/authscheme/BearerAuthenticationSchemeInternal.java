@@ -34,7 +34,7 @@ public class BearerAuthenticationSchemeInternal
     /**
      * Constructs a new BearerAuthenticationSchemeInternal.
      */
-    BearerAuthenticationSchemeInternal() {
+    public BearerAuthenticationSchemeInternal() {
         super(SCHEME_BEARER);
     }
 

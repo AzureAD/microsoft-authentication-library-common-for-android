@@ -33,6 +33,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
@@ -52,8 +53,8 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
      *
      * @param config OAuth2Configuration
      */
-    public AzureActiveDirectoryB2COAuth2Strategy(OAuth2Configuration config) {
-        super(config);
+    public AzureActiveDirectoryB2COAuth2Strategy(OAuth2Configuration config, OAuth2StrategyOptions options) {
+        super(config, options);
     }
 
     @Override

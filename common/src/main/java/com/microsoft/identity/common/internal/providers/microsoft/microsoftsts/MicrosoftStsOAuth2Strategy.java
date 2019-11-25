@@ -51,6 +51,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
@@ -84,6 +85,7 @@ public class MicrosoftStsOAuth2Strategy
                 MicrosoftStsAuthorizationRequest.Builder,
                 AuthorizationStrategy,
                 MicrosoftStsOAuth2Configuration,
+                OAuth2StrategyOptions,
                 MicrosoftStsAuthorizationResponse,
                 MicrosoftStsRefreshToken,
                 MicrosoftStsTokenRequest,
@@ -96,11 +98,12 @@ public class MicrosoftStsOAuth2Strategy
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
      *
-     * @param config MicrosoftStsOAuth2Configuration
+     * @param config  MicrosoftStsOAuth2Configuration
+     * @param options OAuth2StrategyOptions
      */
-    public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config) {
-        super(config);
-        setTokenEndpoint(config.getTokenEndpoint().toString());
+    public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
+                                      @NonNull final OAuth2StrategyOptions options) {
+        super(config, options);
     }
 
     @Override

@@ -57,6 +57,7 @@ public abstract class OAuth2Strategy
                 GenericAuthorizationRequestBuilder extends AuthorizationRequest.Builder,
                 GenericAuthorizationStrategy extends AuthorizationStrategy,
                 GenericOAuth2Configuration extends OAuth2Configuration,
+                GenericOAuth2StrategyOptions extends OAuth2StrategyOptions,
                 GenericAuthorizationResponse extends AuthorizationResponse,
                 GenericRefreshToken extends RefreshToken,
                 GenericTokenRequest extends TokenRequest,
@@ -69,6 +70,7 @@ public abstract class OAuth2Strategy
     protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
     protected final GenericOAuth2Configuration mConfig;
+    protected final GenericOAuth2StrategyOptions mStrategyOptions;
     protected String mTokenEndpoint;
     protected String mAuthorizationEndpoint;
     private Uri mIssuer;
@@ -78,8 +80,10 @@ public abstract class OAuth2Strategy
      *
      * @param config generic OAuth2 configuration
      */
-    public OAuth2Strategy(GenericOAuth2Configuration config) {
+    public OAuth2Strategy(GenericOAuth2Configuration config,
+                          GenericOAuth2StrategyOptions strategyOptions) {
         mConfig = config;
+        mStrategyOptions = strategyOptions;
     }
 
     /**
