@@ -40,6 +40,15 @@ public interface IDevicePopManager {
     boolean asymmetricKeyExists();
 
     /**
+     * Tests for existence of keys AND that they match the match the supplied thumbprint.
+     *
+     * @param thumbprint The thumbprint to match.
+     * @return True if keys exist and they match the supplied thumbprint. False if keys do not match
+     * or if keys cannot be loaded due to KeyStore errors.
+     */
+    boolean asymmetricKeyExists(String thumbprint);
+
+    /**
      * Gets the thumbprint of the current KeyPair.
      *
      * @return The thumbprint.

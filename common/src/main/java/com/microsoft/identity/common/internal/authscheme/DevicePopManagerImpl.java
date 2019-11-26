@@ -218,6 +218,23 @@ public class DevicePopManagerImpl implements IDevicePopManager {
     }
 
     @Override
+    public boolean asymmetricKeyExists(@NonNull final String thumbprint) {
+        if (asymmetricKeyExists()) { // Test if keys exist at all...
+            try {
+                return getAsymmetricKeyThumbprint().equals(thumbprint);
+            } catch (final ClientException e) {
+                Logger.error(
+                        TAG,
+                        "Error while comparing thumbprints.",
+                        e
+                );
+            }
+        }
+
+        return false;
+    }
+
+    @Override
     public String getAsymmetricKeyThumbprint() throws ClientException {
         final Exception exception;
         final String errCode;
