@@ -367,7 +367,13 @@ public class MicrosoftStsOAuth2Strategy
 
                 // Generate keys if they don't already exist...
                 if (!mDevicePopManager.asymmetricKeyExists()) {
-                    mDevicePopManager.generateAsymmetricKey();
+                    final String thumbprint = mDevicePopManager.generateAsymmetricKey();
+
+                    Logger.verbosePII(
+                            TAG,
+                            "Generated new PoP asymmetric key with thumbprint: "
+                                    + thumbprint
+                    );
                 }
 
                 // Set the req_cnf

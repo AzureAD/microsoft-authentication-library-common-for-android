@@ -218,15 +218,44 @@ public class DevicePopManagerImpl implements IDevicePopManager {
     }
 
     @Override
-    public void generateAsymmetricKey(@NonNull final TaskCompletedCallbackWithError<KeyPair, ClientException> callback) {
+    public String getAsymmetricKeyThumbprint() throws ClientException {
+        final Exception exception;
+        final String errCode;
+
+        try {
+            final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+            final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
+            final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
+            return getThumbprintForRsaKey(rsaKey);
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        } catch (final NoSuchAlgorithmException e) {
+            exception = e;
+            errCode = NO_SUCH_ALGORITHM;
+        } catch (final UnrecoverableEntryException e) {
+            exception = e;
+            errCode = INVALID_PROTECTION_PARAMS;
+        } catch (final JOSEException e) {
+            exception = e;
+            errCode = THUMBPRINT_COMPUTATION_FAILURE;
+        }
+
+        throw new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+    }
+
+    @Override
+    public void generateAsymmetricKey(@NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
         sThreadExecutor.submit(
                 new Runnable() {
                     @Override
                     public void run() {
-                        final KeyPair keyPair;
                         try {
-                            keyPair = generateAsymmetricKey();
-                            callback.onTaskCompleted(keyPair);
+                            callback.onTaskCompleted(generateAsymmetricKey());
                         } catch (final ClientException e) {
                             callback.onError(e);
                         }
@@ -236,13 +265,14 @@ public class DevicePopManagerImpl implements IDevicePopManager {
     }
 
     @Override
-    public KeyPair generateAsymmetricKey() throws ClientException {
+    public String generateAsymmetricKey() throws ClientException {
         final Exception exception;
         final String errCode;
 
         try {
             final KeyPair keyPair = generateNewRsaKeyPair(mContext, RSA_KEY_SIZE);
-            return keyPair;
+            final RSAKey rsaKey = getRsaKeyForKeyPair(keyPair);
+            return getThumbprintForRsaKey(rsaKey);
         } catch (final UnsupportedOperationException e) {
             exception = e;
             errCode = BAD_KEY_SIZE;
@@ -255,6 +285,9 @@ public class DevicePopManagerImpl implements IDevicePopManager {
         } catch (final InvalidAlgorithmParameterException e) {
             exception = e;
             errCode = INVALID_ALG;
+        } catch (final JOSEException e) {
+            exception = e;
+            errCode = THUMBPRINT_COMPUTATION_FAILURE;
         }
 
         final ClientException clientException = new ClientException(
@@ -700,14 +733,18 @@ public class DevicePopManagerImpl implements IDevicePopManager {
      */
     private static String getReqCnfForRsaKey(@NonNull final RSAKey rsaKey)
             throws JOSEException, JSONException {
-        final Base64URL thumbprint = rsaKey.computeThumbprint();
-        final String thumbprintStr = thumbprint.toString();
+        final String thumbprintStr = getThumbprintForRsaKey(rsaKey);
         final String thumbprintMinifiedJson =
                 new JSONObject()
                         .put("kid", thumbprintStr)
                         .toString();
 
         return base64UrlEncode(thumbprintMinifiedJson);
+    }
+
+    private static String getThumbprintForRsaKey(@NonNull RSAKey rsaKey) throws JOSEException {
+        final Base64URL thumbprint = rsaKey.computeThumbprint();
+        return thumbprint.toString();
     }
 
     /**

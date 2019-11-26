@@ -26,7 +26,6 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 
 import java.net.URL;
-import java.security.KeyPair;
 
 /**
  * Internal convenience class interface for PoP related functions.
@@ -41,18 +40,25 @@ public interface IDevicePopManager {
     boolean asymmetricKeyExists();
 
     /**
-     * Generates asymmetric keys used by pop.
+     * Gets the thumbprint of the current KeyPair.
      *
-     * @param callback Async callback.
+     * @return The thumbprint.
      */
-    void generateAsymmetricKey(TaskCompletedCallbackWithError<KeyPair, ClientException> callback);
+    String getAsymmetricKeyThumbprint() throws ClientException;
 
     /**
      * Generates asymmetric keys used by pop.
      *
-     * @return The generate RSA KeyPair.
+     * @param callback Async callback with thumbprint/exception info.
      */
-    KeyPair generateAsymmetricKey() throws ClientException;
+    void generateAsymmetricKey(TaskCompletedCallbackWithError<String, ClientException> callback);
+
+    /**
+     * Generates asymmetric keys used by pop.
+     *
+     * @return The generated RSA KeyPair's thumbprint.
+     */
+    String generateAsymmetricKey() throws ClientException;
 
     /**
      * Clears keys, if present.
