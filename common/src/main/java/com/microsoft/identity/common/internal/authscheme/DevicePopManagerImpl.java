@@ -71,7 +71,6 @@ import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -690,7 +689,6 @@ public class DevicePopManagerImpl implements IDevicePopManager {
         return new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
                 .privateKey(keyPair.getPrivate())
                 .keyUse(null)
-                .keyID(UUID.randomUUID().toString())
                 .build();
     }
 
