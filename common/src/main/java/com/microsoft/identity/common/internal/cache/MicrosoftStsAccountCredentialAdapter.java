@@ -182,13 +182,7 @@ public class MicrosoftStsAccountCredentialAdapter
             );
             idToken.setClientId(request.getClientId());
             idToken.setSecret(response.getIdToken());
-
-            // Optional fields
-            if (!StringUtil.isEmpty(response.getAuthority())) {
-                idToken.setAuthority(response.getAuthority());
-            } else { // Working around a bug - sov cloud seems to have broken response authority...
-                idToken.setAuthority(request.getAuthority().toString());
-            }
+            idToken.setAuthority(strategy.getAuthorityFromTokenEndpoint());
 
             return idToken;
         } catch (ServiceException e) {
