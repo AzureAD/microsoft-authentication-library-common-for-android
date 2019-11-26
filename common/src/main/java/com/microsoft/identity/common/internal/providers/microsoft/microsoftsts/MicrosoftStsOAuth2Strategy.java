@@ -357,9 +357,7 @@ public class MicrosoftStsOAuth2Strategy
 
                 // Generate keys if they don't already exist...
                 if (!mDevicePopManager.asymmetricKeyExists()) {
-
                     mDevicePopManager.generateAsymmetricKey();
-
                 }
 
                 // Set the req_cnf
