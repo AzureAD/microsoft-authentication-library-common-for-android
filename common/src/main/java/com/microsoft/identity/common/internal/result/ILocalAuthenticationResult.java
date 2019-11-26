@@ -26,6 +26,7 @@ package com.microsoft.identity.common.internal.result;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
@@ -120,10 +121,13 @@ public interface ILocalAuthenticationResult {
 
     /**
      * Information to uniquely identify the family that the client application belongs to.
-     *
      */
     @Nullable
     String getFamilyId();
 
     List<ICacheRecord> getCacheRecordWithTenantProfileData();
+
+    // TODO javadoc
+    @NonNull
+    AbstractAuthenticationScheme getAuthenticationScheme();
 }

@@ -23,9 +23,9 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
@@ -228,7 +228,8 @@ public abstract class BaseController {
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
                     savedRecord,
                     savedRecords,
-                    SdkType.MSAL
+                    SdkType.MSAL,
+                    parameters.getAuthenticationScheme()
             );
 
             // Set the client telemetry...
@@ -469,7 +470,7 @@ public abstract class BaseController {
     }
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
-                final String tenantId = SchemaUtil.getTenantId(
+        final String tenantId = SchemaUtil.getTenantId(
                 microsoftTokenResponse.getClientInfo(),
                 microsoftTokenResponse.getIdToken()
         );

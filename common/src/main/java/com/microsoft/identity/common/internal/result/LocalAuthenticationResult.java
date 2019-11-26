@@ -22,10 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
@@ -52,20 +54,9 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private String mSpeRing;
     private String mRefreshTokenAge;
     private List<ICacheRecord> mCompleteResultFromCache;
+    private AbstractAuthenticationScheme mAuthenticationScheme;
 
     private static final String TAG = LocalAuthenticationResult.class.getName();
-
-    public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
-                                     @Nullable String refreshToken,
-                                     @Nullable String rawIdToken,
-                                     @Nullable String familyId,
-                                     @NonNull IAccountRecord accountRecord) {
-        mAccessTokenRecord = accessTokenRecord;
-        mRefreshToken = refreshToken;
-        mRawIdToken = rawIdToken;
-        mFamilyId = familyId;
-        mAccountRecord = accountRecord;
-    }
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
                                      @NonNull final List<ICacheRecord> completeResultFromCache,
@@ -74,7 +65,16 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
         mCompleteResultFromCache = completeResultFromCache;
     }
 
-    public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord, @NonNull SdkType sdkType) {
+    public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
+                                     @NonNull final List<ICacheRecord> completeResultFromCache,
+                                     @NonNull final SdkType sdkType,
+                                     @NonNull final AbstractAuthenticationScheme authenticationScheme) {
+        this(lastAuthorized, sdkType);
+        mCompleteResultFromCache = completeResultFromCache;
+        mAuthenticationScheme = authenticationScheme;
+    }
+
+    private LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord, @NonNull SdkType sdkType) {
         mAccessTokenRecord = cacheRecord.getAccessToken();
         mAccountRecord = cacheRecord.getAccount();
 
@@ -193,6 +193,12 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     @Override
     public List<ICacheRecord> getCacheRecordWithTenantProfileData() {
         return mCompleteResultFromCache;
+    }
+
+    @NonNull
+    @Override
+    public AbstractAuthenticationScheme getAuthenticationScheme() {
+        return mAuthenticationScheme;
     }
 
     /**

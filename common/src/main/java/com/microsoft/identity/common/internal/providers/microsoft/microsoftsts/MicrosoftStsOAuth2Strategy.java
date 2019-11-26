@@ -34,6 +34,7 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.DevicePopManagerImpl;
 import com.microsoft.identity.common.internal.authscheme.IDevicePopManager;
+import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -114,6 +115,15 @@ public class MicrosoftStsOAuth2Strategy
         // TODO figure this out!
         try {
             mDevicePopManager = new DevicePopManagerImpl(options.getContext());
+
+            if (options.getAuthenticationScheme() instanceof PopAuthenticationSchemeInternal) {
+                // TODO This shouldn't live here.
+                final PopAuthenticationSchemeInternal popScheme = (PopAuthenticationSchemeInternal)
+                        options.getAuthenticationScheme();
+
+                popScheme.setDevicePopManager(mDevicePopManager);
+            }
+
         } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
             // TODO How can this be handled better?
         }

@@ -65,7 +65,7 @@ public class PopAuthenticationSchemeInternal
      *
      * @param popManager The delegate to set.
      */
-    void setDevicePopManager(@NonNull final IDevicePopManager popManager) {
+    public void setDevicePopManager(@NonNull final IDevicePopManager popManager) {
         mPopManager = popManager;
     }
 

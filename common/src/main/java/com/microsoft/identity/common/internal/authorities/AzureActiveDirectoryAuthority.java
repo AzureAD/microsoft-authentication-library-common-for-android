@@ -171,7 +171,6 @@ public class AzureActiveDirectoryAuthority extends Authority {
     @Override
     public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyOptions options) {
         MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
-        // TODO Add OAuth2StrategyOptions param to strategy ctor, pass thru to superclass...
         return new MicrosoftStsOAuth2Strategy(config, options);
     }
 
