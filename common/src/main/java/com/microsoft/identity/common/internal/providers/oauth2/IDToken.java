@@ -187,11 +187,6 @@ public class IDToken {
      */
     public static final String UPDATED_AT = "updated_at";
 
-    /**
-     * The authority that issued the token
-     */
-    public static final String ISSUER = "iss";
-
 
     private Map<String, ?> mTokenClaims = null;
     private final String mRawIdToken;
