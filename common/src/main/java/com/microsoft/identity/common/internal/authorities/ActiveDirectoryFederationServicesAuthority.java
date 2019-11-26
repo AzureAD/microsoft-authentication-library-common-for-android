@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.authorities;
 
 import android.net.Uri;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
@@ -53,7 +53,7 @@ public class ActiveDirectoryFederationServicesAuthority extends Authority {
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy(@Nullable OAuth2StrategyOptions options) {
+    public OAuth2Strategy createOAuth2Strategy(@NonNull OAuth2StrategyOptions options) {
         throw new UnsupportedOperationException();
     }
 }
