@@ -734,6 +734,14 @@ public class DevicePopManagerImpl implements IDevicePopManager {
         return result;
     }
 
+    /**
+     * Returns the cnf claim used in SHRs; format is JSON.
+     *
+     * @return The cnf claim value.
+     * @throws UnrecoverableEntryException If the queried key cannot be found.
+     * @throws NoSuchAlgorithmException    If the KeyStore is unable to use the designated alg.
+     * @throws KeyStoreException           If the KeyStore experiences an error during read.
+     */
     private net.minidev.json.JSONObject getDevicePopJwkMinifiedJson()
             throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
         final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
