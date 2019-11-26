@@ -158,7 +158,7 @@ public abstract class OAuth2Strategy
         mTokenEndpoint = tokenEndpoint;
     }
 
-    public final String getAuthorityFromTokenEndpoint() {
+    public String getAuthorityFromTokenEndpoint() {
         return mTokenEndpoint.toLowerCase().replace("oauth2/v2.0/token", "");
     }
 
