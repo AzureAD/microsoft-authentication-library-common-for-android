@@ -32,7 +32,7 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
     private final static String TAG = AcquireTokenSilentOperationParameters.class.getSimpleName();
 
-    private RefreshTokenRecord mRefreshToken;
+    private transient RefreshTokenRecord mRefreshToken;
 
 
     public RefreshTokenRecord getRefreshToken() {
