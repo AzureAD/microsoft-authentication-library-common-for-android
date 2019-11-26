@@ -30,7 +30,7 @@ import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
 public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
-    private RefreshTokenRecord mRefreshToken;
+    private transient RefreshTokenRecord mRefreshToken;
     @Expose()
     private boolean mForceRefresh;
 
