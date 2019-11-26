@@ -734,16 +734,13 @@ public class DevicePopManagerImpl implements IDevicePopManager {
         return result;
     }
 
-    private static net.minidev.json.JSONObject getPublicJwkJson(@NonNull final RSAKey key) {
-        return key.toPublicJWK().toJSONObject();
-    }
-
     private net.minidev.json.JSONObject getDevicePopJwkMinifiedJson()
             throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
         final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
         final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
         final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
-        return getPublicJwkJson(rsaKey);
+        final RSAKey publicRsaKey = rsaKey.toPublicJWK();
+        return publicRsaKey.toJSONObject();
     }
     //endregion
 }
