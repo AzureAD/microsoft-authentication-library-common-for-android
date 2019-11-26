@@ -127,7 +127,11 @@ public interface ILocalAuthenticationResult {
 
     List<ICacheRecord> getCacheRecordWithTenantProfileData();
 
-    // TODO javadoc
+    /**
+     * Gets the authentication scheme used to acquire tokens returned in this result.
+     *
+     * @return The authentication scheme used to acquire this result.
+     */
     @NonNull
     AbstractAuthenticationScheme getAuthenticationScheme();
 }
