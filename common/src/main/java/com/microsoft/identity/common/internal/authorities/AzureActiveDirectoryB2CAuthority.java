@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.authorities;
 
 import android.net.Uri;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
@@ -71,7 +71,7 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy(@Nullable final OAuth2StrategyOptions options) {
+    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyOptions options) {
         MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
         return new MicrosoftStsOAuth2Strategy(config, options);
     }
