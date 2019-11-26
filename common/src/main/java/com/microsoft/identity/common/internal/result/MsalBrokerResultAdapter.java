@@ -23,14 +23,14 @@
 package com.microsoft.identity.common.internal.result;
 
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
+import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -46,12 +46,10 @@ import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
-import com.microsoft.identity.common.internal.util.ICacheRecordGsonAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import org.json.JSONException;
 
-import java.lang.reflect.Type;
 import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
@@ -147,7 +145,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     @Override
     public ILocalAuthenticationResult authenticationResultFromBundle(@NonNull final Bundle resultBundle) {
-        final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
+
+        final BrokerResult brokerResult = JsonExtensions.getBrokerResultFromJsonString(
+                resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2)
+        );
 
         if (brokerResult == null) {
             Logger.error(TAG, "Broker Result not returned from Broker, ", null);
@@ -167,59 +168,17 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     }
 
-    public static BrokerResult brokerResultFromBundle(@NonNull final Bundle resultBundle) {
-        return new GsonBuilder()
-                .registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter())
-                .create()
-                .fromJson(
-                        resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2),
-                        BrokerResult.class
-                );
-    }
-
-    public static boolean getHelloResultFromBundle(final Bundle bundle) throws ClientException {
-        final String methodName = ":getHelloResultFromBundle";
-        if (bundle == null) {
-            Logger.warn(TAG + methodName, "The hello result bundle is null.");
-            return false;
-        }
-
-        if (!StringUtil.isEmpty(bundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY))) {
-            final String negotiatedBrokerProtocolVersion = bundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY);
-            Logger.info(TAG + methodName,
-                    "Able to establish the connect, " +
-                            "the broker protocol version in common is ["
-                            + negotiatedBrokerProtocolVersion + "]");
-            return true;
-        }
-
-        if (!StringUtil.isEmpty(bundle.getString(AuthenticationConstants.OAuth2.ERROR))
-                && !StringUtil.isEmpty(bundle.getString(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION))) {
-            final String errorCode = bundle.getString(AuthenticationConstants.OAuth2.ERROR);
-            final String errorMessage = bundle.getString(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION);
-            throw new ClientException(errorCode, errorMessage);
-        }
-
-        if (bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2) != null
-                && bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2) instanceof BrokerResult) {
-            // for the back compatibility purpose to version 3.0.4 and 3.0.6.
-            final BrokerResult brokerResult = (BrokerResult) bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2);
-            throw new ClientException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
-        }
-
-        return false;
-    }
-
     @Override
-    public BaseException baseExceptionFromBundle(@NonNull final Bundle resultBundle) {
+    public BaseException getBaseExceptionFromBundle(@NonNull final Bundle resultBundle) {
         Logger.info(TAG, "Constructing exception from result bundle");
 
-        final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
+        final BrokerResult brokerResult = JsonExtensions.getBrokerResultFromJsonString(
+                resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2)
+        );
 
         if (brokerResult == null) {
             Logger.error(TAG, "Broker Result not returned from Broker, ", null);
             return new BaseException(ErrorStrings.UNKNOWN_ERROR, "Broker Result not returned from Broker");
-
         }
 
         BaseException baseException;
@@ -347,79 +306,102 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     }
 
-    /**
-     * Get a bundle from an Account Mode string.
-     *
-     * @param isSharedDevice true if this device is registered as shared. False otherwise.
-     * @return Bundle
-     */
+    public boolean getHelloFromResultBundle(final Bundle bundle) throws ClientException {
+        final String methodName = ":getHelloFromResultBundle";
+        if (bundle == null) {
+            Logger.warn(TAG + methodName, "The hello result bundle is null.");
+            return false;
+        }
+
+        if (!StringUtil.isEmpty(bundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY))) {
+            final String negotiatedBrokerProtocolVersion = bundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY);
+            Logger.info(TAG + methodName,
+                    "Able to establish the connect, " +
+                            "the broker protocol version in common is ["
+                            + negotiatedBrokerProtocolVersion + "]");
+            return true;
+        }
+
+        if (!StringUtil.isEmpty(bundle.getString(AuthenticationConstants.OAuth2.ERROR))
+                && !StringUtil.isEmpty(bundle.getString(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION))) {
+            final String errorCode = bundle.getString(AuthenticationConstants.OAuth2.ERROR);
+            final String errorMessage = bundle.getString(AuthenticationConstants.OAuth2.ERROR_DESCRIPTION);
+            throw new ClientException(errorCode, errorMessage);
+        }
+
+        if (bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2) != null
+                && bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2) instanceof BrokerResult) {
+            // for the back compatibility purpose to version 3.0.4 and 3.0.6.
+            final BrokerResult brokerResult = (BrokerResult) bundle.get(AuthenticationConstants.Broker.BROKER_RESULT_V2);
+            throw new ClientException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
+        }
+
+        return false;
+    }
+
+    public AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
+        final MsalBrokerResultAdapter resultAdapter = new MsalBrokerResultAdapter();
+        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
+            final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
+            acquireTokenResult.setLocalAuthenticationResult(
+                    resultAdapter.authenticationResultFromBundle(resultBundle)
+            );
+
+            return acquireTokenResult;
+        }
+
+        throw resultAdapter.getBaseExceptionFromBundle(resultBundle);
+    }
+
+    public static Bundle bundleFromAccounts(@NonNull final List<ICacheRecord> cacheRecords) {
+        final Bundle resultBundle = new Bundle();
+
+        if (cacheRecords != null) {
+            resultBundle.putString(BROKER_ACCOUNTS, JsonExtensions.getJsonStringFromICacheRecordList(cacheRecords));
+        }
+
+        return resultBundle;
+    }
+
+    public List<ICacheRecord> getAccountsFromResultBundle(@NonNull final Bundle bundle) throws BaseException {
+        final String accountJson = bundle.getString(BROKER_ACCOUNTS);
+
+        if (accountJson == null) {
+            throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(bundle);
+        }
+
+        return JsonExtensions.getICacheRecordListFromJsonString(accountJson);
+    }
+
+    public void verifyRemoveAccountResultFromBundle(@NonNull final Bundle bundle) throws BaseException {
+        if (bundle == null) {
+            // Backward compatibility. We treated null = success.
+            return;
+        }
+
+        final BrokerResult brokerResult = JsonExtensions.getBrokerResultFromJsonString(
+                bundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2)
+        );
+
+        if (brokerResult != null && brokerResult.isSuccess()) {
+            return;
+        }
+
+        Logger.warn(TAG, "Failed to remove account.");
+        throw getBaseExceptionFromBundle(bundle);
+    }
+
     public Bundle bundleFromDeviceMode(@NonNull final boolean isSharedDevice) {
         final Bundle resultBundle = new Bundle();
         resultBundle.putBoolean(BROKER_DEVICE_MODE, isSharedDevice);
         return resultBundle;
     }
 
-    /**
-     * Get Device mode from bundle.
-     *
-     * @param bundle Bundle
-     * @return Account mode.
-     */
-    public static boolean deviceModeFromBundle(@NonNull final Bundle bundle) {
+    public boolean getDeviceModeFromResultBundle(@NonNull final Bundle bundle) throws BaseException {
+        if (!bundle.containsKey(BROKER_DEVICE_MODE)){
+            throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(bundle);
+        }
+
         return bundle.getBoolean(BROKER_DEVICE_MODE);
-    }
-
-    /**
-     * Get a bundle from account(s)'s List<ICacheRecord>.
-     *
-     * @param cacheRecords account(s)'s List<ICacheRecord>.
-     * @return Bundle
-     */
-    public static Bundle bundleFromAccounts(@NonNull final List<ICacheRecord> cacheRecords) {
-        final Bundle resultBundle = new Bundle();
-
-        if (cacheRecords != null) {
-            resultBundle.putString(BROKER_ACCOUNTS, getJsonStringFromICacheRecordList(cacheRecords));
-        }
-
-        return resultBundle;
-    }
-
-    public static String getJsonStringFromICacheRecordList(List<ICacheRecord> cacheRecords) {
-        final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
-        }.getType();
-        return new Gson().toJson(cacheRecords, listOfCacheRecords);
-    }
-
-    /**
-     * Get current account's ICacheRecord from bundle.
-     *
-     * @param bundle Bundle
-     * @return List<ICacheRecord> of the current account. This could be null.
-     */
-    public static List<ICacheRecord> accountsFromBundle(@NonNull final Bundle bundle) throws BaseException {
-        final String accountJson = bundle.getString(BROKER_ACCOUNTS);
-
-        if (accountJson == null) {
-            throw new MsalBrokerResultAdapter().baseExceptionFromBundle(bundle);
-        }
-
-        return getICacheRecordListFromJsonString(accountJson);
-    }
-
-    public static void verifyRemoveAccountResultFromBundle(@NonNull final Bundle bundle) throws BaseException {
-        if (bundle != null) {
-            Logger.warn(TAG, "Failed to sign out from shared device.");
-            throw new MsalBrokerResultAdapter().baseExceptionFromBundle(bundle);
-        }
-    }
-
-    public static List<ICacheRecord> getICacheRecordListFromJsonString(String accountJson) {
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(ICacheRecord.class, new ICacheRecordGsonAdapter());
-
-        final Type listOfCacheRecords = new TypeToken<List<ICacheRecord>>() {
-        }.getType();
-        return builder.create().fromJson(accountJson, listOfCacheRecords);
     }
 }

@@ -31,6 +31,8 @@ import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -266,5 +268,17 @@ public final class StringExtensions {
         }
 
         return builtUri.build().toString();
+    }
+
+    /**
+     * Remove query parameter from URL.
+     */
+    public static String removeQueryParameterFromUrl(final String url) throws URISyntaxException {
+        final URI uri = new URI(url);
+        return new URI(uri.getScheme(),
+                uri.getAuthority(),
+                uri.getPath(),
+                null,
+                uri.getFragment()).toString();
     }
 }

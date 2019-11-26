@@ -1,26 +1,25 @@
-//  Copyright (c) Microsoft Corporation.
-//  All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
 //
-//  This code is licensed under the MIT License.
+// This code is licensed under the MIT License.
 //
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files(the "Software"), to deal
-//  in the Software without restriction, including without limitation the rights
-//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
-//  copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions :
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
 //
-//  The above copyright notice and this permission notice shall be included in
-//  all copies or substantial portions of the Software.
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
 //
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-//  THE SOFTWARE.
-
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
 import com.microsoft.identity.common.exception.ClientException;
@@ -35,8 +34,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.internal.test.keyvault.Configuration;
-import com.microsoft.identity.internal.test.keyvault.api.SecretsApi;
-import com.microsoft.identity.internal.test.keyvault.model.SecretBundle;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -45,15 +42,10 @@ import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
-/**
- * This class contains helper methods to obtain passwords from KeyVault using the {@link SecretsApi}
- */
-public class Secrets {
-
+public class LabAuthenticationHelper {
     private static String mAccessToken = null;
-    public static String API_VERSION = "2016-10-01";
     private final static String CLIENT_ID = "4bc6e96f-bd23-408f-8ecb-a7a7145463f9";
-    private final static String SCOPE = "https://vault.azure.net/.default";
+    private final static String SCOPE = "https://user.msidlab.com/.default";
     private final static String GRANT_TYPE = "client_credentials";
     private final static String CERTIFICATE_ALIAS = "AutomationRunner";
     private final static String KEYSTORE_TYPE = "Windows-MY";
@@ -72,7 +64,7 @@ public class Secrets {
     }
 
     /**
-     * Yep.  Hardcoding this method to retrieve access token for reading key vault
+     * Yep.  Hardcoding this method to retrieve access token for MSIDLABS
      */
     private static void requestAccessTokenForAutomation() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException, InterruptedException {
 
@@ -98,7 +90,7 @@ public class Secrets {
         try {
             TokenResult tokenResult = strategy.requestToken(tr);
             if (tokenResult.getSuccess()) {
-                Secrets.mAccessToken = tokenResult.getTokenResponse().getAccessToken();
+                mAccessToken = tokenResult.getTokenResponse().getAccessToken();
             } else {
                 throw new RuntimeException(tokenResult.getErrorResponse().getErrorDescription());
             }
@@ -108,23 +100,28 @@ public class Secrets {
 
     }
 
-
-    public static Credential GetCredential(String upn, String secretName) throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException, InterruptedException {
-
-        Configuration.getDefaultApiClient().setBasePath("https://msidlabs.vault.azure.net");
-        Configuration.getDefaultApiClient().setAccessToken(Secrets.getAccessToken());
-
-        SecretsApi secretsApi = new SecretsApi();
-        Credential credential = new Credential();
-        credential.userName = upn;
-
-        try {
-            SecretBundle secretBundle = secretsApi.getSecret(secretName, "", Secrets.API_VERSION);
-            credential.password = secretBundle.getValue();
-        } catch (com.microsoft.identity.internal.test.keyvault.ApiException ex) {
-            throw new RuntimeException("exception accessing secret", ex);
-        }
-
-        return credential;
+    static void setupApiClientWithAccessToken(final String accessToken) {
+        Configuration.getDefaultApiClient().setAccessToken(accessToken);
     }
+
+    static void setupApiClientWithAccessToken() {
+        try {
+            setupApiClientWithAccessToken(LabAuthenticationHelper.getAccessToken());
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (UnrecoverableKeyException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (NoSuchProviderException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
