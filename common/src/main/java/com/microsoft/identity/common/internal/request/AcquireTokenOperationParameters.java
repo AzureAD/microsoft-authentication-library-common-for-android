@@ -23,12 +23,12 @@
 package com.microsoft.identity.common.internal.request;
 
 import android.app.Activity;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.google.gson.annotations.Expose;
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
@@ -41,6 +41,7 @@ public class AcquireTokenOperationParameters extends OperationParameters {
     private transient Activity mActivity;
     private transient HashMap<String, String> mRequestHeaders;
 
+    private boolean mBrokerBrowserSupportEnabled;
     private String mLoginHint;
 
     @Expose()
@@ -115,8 +116,17 @@ public class AcquireTokenOperationParameters extends OperationParameters {
         this.mBrowserSafeList = browserSafeList;
     }
 
+    public boolean isBrokerBrowserSupportEnabled() {
+        return mBrokerBrowserSupportEnabled;
+    }
+
+    public void setBrokerBrowserSupportEnabled(boolean brokerBrowserSupportEnabled) {
+        this.mBrokerBrowserSupportEnabled = brokerBrowserSupportEnabled;
+    }
+
     /**
      * Get the list of browsers which are safe to launch for auth flow.
+     *
      * @return list of browser descriptors
      */
     public List<BrowserDescriptor> getBrowserSafeList() {

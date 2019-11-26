@@ -20,14 +20,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils.labutils;
+package com.microsoft.identity.internal.testutils;
 
-import com.microsoft.identity.internal.test.labapi.model.UserInfo;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 
-public class CurrentLabUser {
+import java.util.HashMap;
 
-    // allows to get the lab user currently being used for the test
-    // can get the labname from the object to get the password
-    public static UserInfo userInfo;
+public class MockSuccessAuthorizationResultMockedTests extends AuthorizationResult {
 
+    public MockSuccessAuthorizationResultMockedTests() {
+        MicrosoftStsAuthorizationResponse response = new MicrosoftStsAuthorizationResponse("", "", new HashMap<String, String>());
+        this.setAuthorizationResponse(response);
+        // assume that we have auth code and auth request was successful
+        this.setAuthorizationStatus(AuthorizationStatus.SUCCESS);
+    }
 }
