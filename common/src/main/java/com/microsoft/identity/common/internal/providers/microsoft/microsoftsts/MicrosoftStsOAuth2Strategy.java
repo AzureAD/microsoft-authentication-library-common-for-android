@@ -101,6 +101,7 @@ public class MicrosoftStsOAuth2Strategy
                 AuthorizationResult> {
 
     private static final String TAG = MicrosoftStsOAuth2Strategy.class.getSimpleName();
+    private OAuth2StrategyOptions mStrategyOptions;
     private IDevicePopManager mDevicePopManager;
 
     /**
@@ -114,6 +115,7 @@ public class MicrosoftStsOAuth2Strategy
         super(config, options);
         // TODO figure this out!
         try {
+            mStrategyOptions = options;
             mDevicePopManager = new DevicePopManagerImpl(options.getContext());
 
             if (options.getAuthenticationScheme() instanceof PopAuthenticationSchemeInternal) {
@@ -418,7 +420,22 @@ public class MicrosoftStsOAuth2Strategy
 
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
-        // TODO add support for PoP!
+
+        try {
+            if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
+                request.setTokenType(TokenRequest.TokenType.POP);
+
+                if (!mDevicePopManager.asymmetricKeyExists()) {
+                    mDevicePopManager.generateAsymmetricKey();
+                }
+
+                request.setRequestConfirmation(mDevicePopManager.getRequestConfirmation());
+            }
+        } catch (final ClientException e) {
+            // TODO how should this be handled?
+            e.printStackTrace();
+        }
+
         return request;
     }
 
