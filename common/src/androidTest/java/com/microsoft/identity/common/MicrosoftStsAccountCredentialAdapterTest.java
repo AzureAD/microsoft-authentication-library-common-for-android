@@ -149,6 +149,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockStrategy.createAccount(any(MicrosoftStsTokenResponse.class))).thenReturn(mockAccount);
         when(mockStrategy.getIssuerCacheIdentifier(mockRequest)).thenReturn(MOCK_ENVIRONMENT);
         when(mockStrategy.getIssuerCacheIdentifierFromTokenEndpoint()).thenReturn(MOCK_ENVIRONMENT);
+        when(mockStrategy.getAuthorityFromTokenEndpoint()).thenReturn(MOCK_AUTHORITY);
         when(mockRequest.getAuthority()).thenReturn(new URL(MOCK_AUTHORITY));
         when(mockResponse.getIdToken()).thenReturn(MOCK_ID_TOKEN_WITH_CLAIMS);
         when(mockResponse.getClientInfo()).thenReturn(MOCK_CLIENT_INFO);
