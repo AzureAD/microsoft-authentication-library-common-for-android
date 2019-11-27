@@ -418,6 +418,7 @@ public class MicrosoftStsOAuth2Strategy
 
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
+        // TODO add support for PoP!
         return request;
     }
 
