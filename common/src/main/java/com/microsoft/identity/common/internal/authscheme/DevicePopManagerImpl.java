@@ -800,7 +800,11 @@ public class DevicePopManagerImpl implements IDevicePopManager {
         final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
         final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
         final RSAKey publicRsaKey = rsaKey.toPublicJWK();
-        return publicRsaKey.toJSONObject();
+        final net.minidev.json.JSONObject jwkContents = publicRsaKey.toJSONObject();
+        final net.minidev.json.JSONObject wrappedJwk = new net.minidev.json.JSONObject();
+        wrappedJwk.appendField("jwk", jwkContents);
+
+        return wrappedJwk;
     }
     //endregion
 }
