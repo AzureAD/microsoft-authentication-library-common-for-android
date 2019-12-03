@@ -33,9 +33,12 @@ dependencies {
     implementation project(':common')
     implementation project(':keyvault')
     implementation project(':labapi')
+    implementation "org.mockito:mockito-android:$rootProject.ext.mockitoAndroidVersion"
+    implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     testImplementation 'junit:junit:4.12'
     testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     androidTestImplementation 'androidx.test:runner:1.2.0'

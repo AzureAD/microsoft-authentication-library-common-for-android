@@ -20,20 +20,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils.labutils;
+package com.microsoft.identity.internal.testutils.shadows;
 
-import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.internal.testutils.strategies.MockTestStrategy;
 
-public class CurrentLabConfig {
+import org.robolectric.annotation.Implements;
 
-    // allows to get the lab user currently being used for the test
-    // can get the labname from the object to get the password
-    public static ConfigInfo configInfo;
+@Implements(MockTestStrategy.class)
+public class ShadowStrategyResultUnsuccessful {
 
-    public static String labUserPassword;
-
-    public static String getAuthority() {
-        return configInfo.getLabInfo().getAuthority();
+    public TokenResult getTokenResult() {
+        TokenResult tokenResult = new TokenResult((TokenResponse) null);
+        return tokenResult;
     }
 
 }

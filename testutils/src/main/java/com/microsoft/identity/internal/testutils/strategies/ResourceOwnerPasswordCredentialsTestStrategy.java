@@ -35,7 +35,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.internal.testutils.MicrosoftStsRopcTokenRequest;
-import com.microsoft.identity.internal.testutils.MockSuccessAuthorizationResultNetworkTests;
+import com.microsoft.identity.internal.testutils.mocks.MockSuccessAuthorizationResultNetworkTests;
 import com.microsoft.identity.internal.testutils.labutils.CurrentLabConfig;
 
 import java.util.concurrent.Future;

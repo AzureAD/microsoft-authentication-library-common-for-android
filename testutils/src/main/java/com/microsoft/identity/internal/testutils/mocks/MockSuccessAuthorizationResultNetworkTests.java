@@ -20,7 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
+package com.microsoft.identity.internal.testutils.mocks;
 
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
@@ -37,6 +37,11 @@ import java.util.Map;
  * A class to provide a Fake Authorization Result object to be used in ROPC flow
  */
 public class MockSuccessAuthorizationResultNetworkTests extends AuthorizationResult {
+
+    @Override
+    public boolean getSuccess() {
+        return true;
+    }
 
     public MockSuccessAuthorizationResultNetworkTests() {
         try {

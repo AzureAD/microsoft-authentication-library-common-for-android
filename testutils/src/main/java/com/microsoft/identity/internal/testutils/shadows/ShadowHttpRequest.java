@@ -20,20 +20,25 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils.labutils;
+package com.microsoft.identity.internal.testutils.shadows;
 
-import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
+import com.microsoft.identity.common.internal.net.HttpRequest;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 
-public class CurrentLabConfig {
+import org.robolectric.annotation.Implements;
 
-    // allows to get the lab user currently being used for the test
-    // can get the labname from the object to get the password
-    public static ConfigInfo configInfo;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Map;
 
-    public static String labUserPassword;
+@Implements(HttpRequest.class)
+public class ShadowHttpRequest {
 
-    public static String getAuthority() {
-        return configInfo.getLabInfo().getAuthority();
+    // mocking this to avoid accidentally sending malformed requests to the server
+    public static HttpResponse sendPost(final URL requestUrl, final Map<String, String> requestHeaders,
+                                        final byte[] requestContent, final String requestContentType)
+            throws IOException {
+
+        throw new IOException("Sending requests to server has been disabled for mocked unit tests");
     }
-
 }

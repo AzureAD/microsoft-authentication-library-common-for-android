@@ -20,20 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils.labutils;
+package com.microsoft.identity.internal.testutils.shadows;
 
-import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
+import androidx.annotation.NonNull;
 
-public class CurrentLabConfig {
+import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 
-    // allows to get the lab user currently being used for the test
-    // can get the labname from the object to get the password
-    public static ConfigInfo configInfo;
+import org.robolectric.annotation.Implements;
 
-    public static String labUserPassword;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 
-    public static String getAuthority() {
-        return configInfo.getLabInfo().getAuthority();
+import javax.crypto.SecretKey;
+
+@Implements(StorageHelper.class)
+public class ShadowStorageHelper {
+
+    /**
+     * Fake saving key to key store as Android Key Store is not available in Robolectric
+     */
+    public void saveKeyStoreEncryptedKey(@NonNull SecretKey unencryptedKey) throws GeneralSecurityException, IOException {
+        return;
     }
 
 }
