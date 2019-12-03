@@ -38,8 +38,7 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
     private static final Object sLock = new Object();
 
-    private RefreshTokenRecord mRefreshToken;
-
+    private transient RefreshTokenRecord mRefreshToken;
 
     public RefreshTokenRecord getRefreshToken() {
         return mRefreshToken;
