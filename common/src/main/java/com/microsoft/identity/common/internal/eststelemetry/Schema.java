@@ -38,6 +38,11 @@ public class Schema {
     public static final String CURRENT_REQUEST_HEADER_NAME = "x-client-current-telemetry";
     public static final String LAST_REQUEST_HEADER_NAME = "x-client-last-telemetry";
 
+    public static final class Separator {
+        public static final String COMMA = ",";
+        public static final String PIPE = "|";
+    }
+
     public static final class Key {
         public static final String API_ID = TelemetryEventStrings.Key.API_ID;
         public static final String FORCE_REFRESH = TelemetryEventStrings.Key.IS_FORCE_REFRESH;
@@ -78,7 +83,7 @@ public class Schema {
             Key.AT_STATUS,
             Key.RT_STATUS,
             Key.FRT_STATUS,
-            Key.MRRT_STATUS
+            Key.MRRT_STATUS,
     };
 
     /**
@@ -98,7 +103,12 @@ public class Schema {
      * Failure do so will break the schema.
      */
     private static final String[] lastRequestPlatformFields = new String[]{
-
+            Key.ACCOUNT_STATUS,
+            Key.ID_TOKEN_STATUS,
+            Key.AT_STATUS,
+            Key.RT_STATUS,
+            Key.FRT_STATUS,
+            Key.MRRT_STATUS,
     };
 
     private static boolean isCurrentCommonField(final String key) {
@@ -117,19 +127,19 @@ public class Schema {
         return Arrays.asList(lastRequestPlatformFields).contains(key);
     }
 
-    private static String[] getCurrentRequestCommonFields() {
+    static String[] getCurrentRequestCommonFields() {
         return currentRequestCommonFields;
     }
 
-    private static String[] getCurrentRequestPlatformFields() {
+    static String[] getCurrentRequestPlatformFields() {
         return currentRequestPlatformFields;
     }
 
-    private static String[] getLastRequestCommonFields() {
+    static String[] getLastRequestCommonFields() {
         return lastRequestCommonFields;
     }
 
-    private static String[] getLastRequestPlatformFields() {
+    static String[] getLastRequestPlatformFields() {
         return lastRequestPlatformFields;
     }
 
@@ -168,7 +178,7 @@ public class Schema {
         return val ? Value.TRUE : Value.FALSE;
     }
 
-    static String getSchemaCompliantString(final String s) {
+    static String getSchemaCompliantStringFromString(final String s) {
         if (StringUtil.isEmpty(s)) {
             return Value.EMPTY;
         } else if (s.equals(TelemetryEventStrings.Value.TRUE)) {
@@ -177,6 +187,16 @@ public class Schema {
             return Value.FALSE;
         } else {
             return s;
+        }
+    }
+
+    static String getSchemaCompliantString(final Object o) {
+        if (o instanceof String) {
+            return getSchemaCompliantStringFromString((String) o);
+        } else if (o instanceof Boolean) {
+            return getSchemaCompliantStringFromBoolean((boolean) o);
+        } else {
+            return Value.EMPTY;
         }
     }
 }

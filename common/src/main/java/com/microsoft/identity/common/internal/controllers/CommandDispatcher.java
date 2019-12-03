@@ -40,6 +40,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
+import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -74,7 +75,7 @@ public class CommandDispatcher {
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
+                final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId(), command);
                 EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                 CommandResult commandResult = null;
@@ -105,11 +106,7 @@ public class CommandDispatcher {
 
                 Telemetry.getInstance().flush(correlationId);
 
-                if (commandResult.getResult() instanceof BaseException) {
-                    EstsTelemetry.getInstance().flush(correlationId, (BaseException) commandResult.getResult());
-                } else {
-                    EstsTelemetry.getInstance().flush(correlationId);
-                }
+                EstsTelemetry.getInstance().flush(correlationId, commandResult);
             }
         });
     }
@@ -268,7 +265,8 @@ public class CommandDispatcher {
                 @Override
                 public void run() {
                     final String correlationId = initializeDiagnosticContext(
-                            command.getParameters().getCorrelationId()
+                            command.getParameters().getCorrelationId(),
+                            command
                     );
                     EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
@@ -311,16 +309,19 @@ public class CommandDispatcher {
                                 command.getCallback().onError(finalException);
                             }
                         });
+                        EstsTelemetry.getInstance().flush(correlationId, finalException);
                     } else {
                         if (null != result && result.getSucceeded()) {
                             //Post Success
                             final ILocalAuthenticationResult authenticationResult = result.getLocalAuthenticationResult();
+                            final AcquireTokenResult finalResult = result;
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
                                     command.getCallback().onTaskCompleted(authenticationResult);
                                 }
                             });
+                            EstsTelemetry.getInstance().flush(correlationId, finalResult);
                         } else {
                             //Get MsalException from Authorization and/or Token Error Response
                             baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
@@ -341,10 +342,10 @@ public class CommandDispatcher {
                                     }
                                 });
                             }
+                            EstsTelemetry.getInstance().flush(correlationId, finalException);
                         }
                     }
 
-                    EstsTelemetry.getInstance().flush(correlationId, baseException);
                     Telemetry.getInstance().flush(correlationId);
                 }
             });
@@ -470,16 +471,27 @@ public class CommandDispatcher {
         }
     }
 
-    public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId) {
+    public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId,
+                                                     @Nullable final BaseCommand command) {
         final String methodName = ":initializeDiagnosticContext";
 
         final String correlationId = TextUtils.isEmpty(requestCorrelationId) ?
                 UUID.randomUUID().toString() :
                 requestCorrelationId;
 
+        final String upn = getUpnFromCommand(command);
+        final String commandType = command.getClass().getSimpleName();
+
         final com.microsoft.identity.common.internal.logging.RequestContext rc =
                 new com.microsoft.identity.common.internal.logging.RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
+
+        if (!TextUtils.isEmpty(upn)) {
+            rc.put(DiagnosticContext.UPN, upn);
+        }
+
+        rc.put(DiagnosticContext.COMMAND_TYPE, commandType);
+
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
                 TAG + methodName,
@@ -493,4 +505,15 @@ public class CommandDispatcher {
         return sCommandResultCache.getSize();
     }
 
+    @Nullable
+    private static String getUpnFromCommand(@NonNull final BaseCommand command) {
+        OperationParameters parameters = command.getParameters();
+        if (parameters instanceof AcquireTokenOperationParameters) {
+            return ((AcquireTokenOperationParameters) parameters).getLoginHint();
+        } else if (parameters.getAccount() != null) {
+            return parameters.getAccount().getUsername();
+        } else {
+            return null;
+        }
+    }
 }

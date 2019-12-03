@@ -26,6 +26,8 @@ public final class DiagnosticContext {
 
     public static final String CORRELATION_ID = "correlation_id";
     private static final String THREAD_ID = "thread_id";
+    public static final String UPN = "upn";
+    public static final String COMMAND_TYPE = "command_type";
 
     private DiagnosticContext() {
     }

@@ -25,35 +25,28 @@ package com.microsoft.identity.common.internal.eststelemetry;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class RequestTelemetry {
+public abstract class RequestTelemetry implements IRequestTelemetry {
 
     private final static String TAG = RequestTelemetry.class.getSimpleName();
 
-    private boolean mIsCurrentRequest;
-    private String mSchemaVersion;
-    private ConcurrentMap<String, String> mCommonTelemetry;
-    private ConcurrentMap<String, String> mPlatformTelemetry;
+    @SerializedName(Schema.SCHEMA_VERSION_KEY)
+    String mSchemaVersion;
 
-    RequestTelemetry(@NonNull final boolean isCurrentRequest) {
-        this(Schema.CURRENT_SCHEMA_VERSION, isCurrentRequest);
-    }
+    @SerializedName("platform_telemetry")
+    ConcurrentMap<String, String> mPlatformTelemetry;
 
-    RequestTelemetry(@NonNull final String schemaVersion, @NonNull final boolean isCurrentRequest) {
-        mIsCurrentRequest = isCurrentRequest;
+    RequestTelemetry(@NonNull final String schemaVersion) {
         mSchemaVersion = schemaVersion;
-        mCommonTelemetry = new ConcurrentHashMap<>();
         mPlatformTelemetry = new ConcurrentHashMap<>();
-    }
-
-    private void putInCommonTelemetry(final String key, final String value) {
-        mCommonTelemetry.putIfAbsent(key, value);
     }
 
     private void putInPlatformTelemetry(final String key, final String value) {
@@ -61,7 +54,6 @@ public class RequestTelemetry {
     }
 
     void clearTelemetry() {
-        mCommonTelemetry.clear();
         mPlatformTelemetry.clear();
     }
 
@@ -71,11 +63,13 @@ public class RequestTelemetry {
         }
 
         final String methodName = ":putTelemetry";
-        final String schemaCompliantValueString = Schema.getSchemaCompliantString(value);
+        final String schemaCompliantValueString = Schema.getSchemaCompliantStringFromString(value);
 
-        if (Schema.isCommonField(key, mIsCurrentRequest)) {
+        final boolean isCurrentRequest = this instanceof CurrentRequestTelemetry;
+
+        if (Schema.isCommonField(key, isCurrentRequest)) {
             putInCommonTelemetry(key, schemaCompliantValueString);
-        } else if (Schema.isPlatformField(key, mIsCurrentRequest)) {
+        } else if (Schema.isPlatformField(key, isCurrentRequest)) {
             putInPlatformTelemetry(key, schemaCompliantValueString);
         } else {
             Logger.verbose(
@@ -90,42 +84,20 @@ public class RequestTelemetry {
         return mSchemaVersion;
     }
 
-    Map<String, String> getCommonTelemetry() {
-        return mCommonTelemetry;
-    }
-
     Map<String, String> getPlatformTelemetry() {
         return mPlatformTelemetry;
     }
 
-    @Nullable
-    String getCompleteTelemetryHeaderString() {
-        final String methodName = ":getCompleteTelemetryHeaderString";
+    String getPlatformTelemetryHeaderString() {
+        final String[] platformFields;
 
-        if (StringUtil.isEmpty(mSchemaVersion)) {
-            Logger.verbose(
-                    TAG + methodName,
-                    "SCHEMA_VERSION is null or empty. " +
-                            "Telemetry Header String cannot be formed."
-            );
-
-            return null;
+        if (this instanceof CurrentRequestTelemetry) {
+            platformFields = Schema.getCurrentRequestPlatformFields();
+        } else {
+            platformFields = Schema.getLastRequestPlatformFields();
         }
 
-        final String schemaVersionString = Schema.getSchemaCompliantString(mSchemaVersion);
-        final String commonSchemaString = getCommonTelemetryHeaderString();
-        final String platformSchemaString = getPlatformTelemetryHeaderString();
-        return schemaVersionString + "|" + commonSchemaString + "|" + platformSchemaString;
-    }
-
-    private String getCommonTelemetryHeaderString() {
-        final String[] commonFields = Schema.getCommonFields(mIsCurrentRequest);
-        return getTelemetryHeaderStringFromFields(commonFields, mCommonTelemetry);
-    }
-
-    private String getPlatformTelemetryHeaderString() {
-        final String[] platformFields = Schema.getPlatformFields(mIsCurrentRequest);
-        return getTelemetryHeaderStringFromFields(platformFields, mPlatformTelemetry);
+        return getHeaderStringForFields(platformFields, mPlatformTelemetry);
     }
 
     /**
@@ -139,7 +111,7 @@ public class RequestTelemetry {
      * @return a telemetry header string composed from provided telemetry fields and values
      */
     @NonNull
-    private String getTelemetryHeaderStringFromFields(@Nullable final String[] fields, @Nullable final Map<String, String> telemetry) {
+    String getHeaderStringForFields(@Nullable final String[] fields, @Nullable final Map<String, String> telemetry) {
         if (fields == null || telemetry == null) {
             return "";
         }
@@ -149,7 +121,7 @@ public class RequestTelemetry {
         for (int i = 0; i < fields.length; i++) {
             final String key = fields[i];
             final String value = telemetry.get(key);
-            final String compliantValueString = Schema.getSchemaCompliantString(value);
+            final String compliantValueString = Schema.getSchemaCompliantStringFromString(value);
             sb.append(compliantValueString);
             if (i != fields.length - 1) {
                 sb.append(',');
@@ -157,5 +129,53 @@ public class RequestTelemetry {
         }
 
         return sb.toString();
+    }
+
+    String getHeaderStringForFields(Collection fields) {
+        if (fields == null) {
+            return "";
+        }
+
+        return getHeaderStringForFields(fields.toArray());
+    }
+
+    private String getHeaderStringForFields(Object[] fields) {
+        if (fields == null) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < fields.length; i++) {
+            final String val = Schema.getSchemaCompliantString(fields[i].toString());
+            sb.append(val);
+            if (i != fields.length - 1) {
+                sb.append(',');
+            }
+        }
+
+        return sb.toString();
+    }
+
+    @Override
+    public String getCompleteHeaderString() {
+        final String methodName = ":getCompleteHeaderString";
+        if (StringUtil.isEmpty(mSchemaVersion)) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "SCHEMA_VERSION is null or empty. " +
+                            "Telemetry Header String cannot be formed."
+            );
+
+            return null;
+        }
+
+        return mSchemaVersion + "|" + this.getHeaderStringForFields() + "|" + getPlatformTelemetryHeaderString();
+    }
+
+    void putInCommonTelemetry(final String key, final String value) {
+        if (this instanceof CurrentRequestTelemetry) {
+            ((CurrentRequestTelemetry) this).putInCommonTelemetry(key, value);
+        }
     }
 }

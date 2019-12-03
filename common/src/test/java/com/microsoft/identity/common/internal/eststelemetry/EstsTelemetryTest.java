@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.eststelemetry;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
+import com.microsoft.identity.common.internal.controllers.TokenCommand;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 
 import org.junit.After;
@@ -43,7 +44,7 @@ public class EstsTelemetryTest {
     @Before
     public void setup() {
         EstsTelemetry.getInstance().setupLastRequestTelemetryCache(ApplicationProvider.getApplicationContext());
-        CommandDispatcher.initializeDiagnosticContext(null);
+        //CommandDispatcher.initializeDiagnosticContext(null, null);
     }
 
     @After

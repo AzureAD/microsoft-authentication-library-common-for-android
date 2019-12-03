@@ -28,6 +28,14 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 public class TelemetryUtils {
 
+    static String upnFromAcquireTokenResult(final AcquireTokenResult acquireTokenResult) {
+        if (acquireTokenResult == null || acquireTokenResult.getLocalAuthenticationResult() == null) {
+            return null;
+        } else {
+            return acquireTokenResult.getLocalAuthenticationResult().getAccountRecord().getUsername();
+        }
+    }
+
     static String errorFromAcquireTokenResult(final AcquireTokenResult acquireTokenResult) {
         if (acquireTokenResult == null) {
             return "unknown_error";

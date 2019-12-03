@@ -332,7 +332,7 @@ public class MicrosoftStsOAuth2Strategy
         tokenRequest.setClientId(request.getClientId());
         tokenRequest.setScope(request.getTokenScope());
 
-        tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
+        //tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
 
         try {
             tokenRequest.setCorrelationId(
