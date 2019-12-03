@@ -52,7 +52,7 @@ import com.microsoft.identity.internal.test.labapi.auth.OAuth;
 
 public class ApiClient {
 
-    private String basePath = "https://msidlab.com";
+    private String basePath = "https://preview.msidlab.com";
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
     private String tempFolderPath = null;
@@ -89,6 +89,9 @@ public class ApiClient {
 
         // Setup authentications (key: authentication name, value: authentication).
         authentications = new HashMap<String, Authentication>();
+
+        authentications.put("Access Token", new OAuth());
+
         // Prevent the authentications from being modified.
         authentications = Collections.unmodifiableMap(authentications);
     }

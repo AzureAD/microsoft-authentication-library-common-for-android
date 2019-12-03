@@ -33,7 +33,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
-import com.microsoft.identity.internal.test.keyvault.Configuration;
+import com.microsoft.identity.internal.test.labapi.Configuration;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -45,7 +45,7 @@ import java.security.cert.CertificateException;
 public class LabAuthenticationHelper {
     private static String mAccessToken = null;
     private final static String CLIENT_ID = "4bc6e96f-bd23-408f-8ecb-a7a7145463f9";
-    private final static String SCOPE = "https://user.msidlab.com/.default";
+    private final static String SCOPE = "https://preview.msidlab.com/.default";
     private final static String GRANT_TYPE = "client_credentials";
     private final static String CERTIFICATE_ALIAS = "AutomationRunner";
     private final static String KEYSTORE_TYPE = "Windows-MY";
