@@ -24,11 +24,11 @@ package com.microsoft.identity.common;
 
 import android.content.Context;
 
-import androidx.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.internal.encryption.MsalEncryptionManager;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
@@ -85,12 +85,12 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        final Context testContext = InstrumentationRegistry.getTargetContext();
+        final Context testContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         mDelegate = new CacheKeyValueDelegate();
         mSharedPreferencesFileManager = new SharedPreferencesFileManager(
                 testContext,
                 sAccountCredentialSharedPreferences,
-                new StorageHelper(testContext) // Use encrypted storage for tests...
+                new MsalEncryptionManager(testContext) // Use encrypted storage for tests...
         );
         mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
                 mDelegate,

@@ -93,28 +93,6 @@ public class AndroidTestHelper {
     public void tearDown() throws Exception {
         HttpUrlConnectionFactory.setMockedHttpUrlConnection(null);
     }
-
-    public void assertThrowsException(final Class<? extends Exception> expected, String hasMessage,
-                                      final ThrowableRunnable testCode) {
-        try {
-            testCode.run();
-            Assert.fail("This is expecting an exception, but it was not thrown.");
-        } catch (final Throwable result) {
-            if (!expected.isInstance(result)) {
-                Assert.fail("Exception was not correct");
-            }
-
-            if (hasMessage != null && !hasMessage.isEmpty()) {
-                assertTrue("Message has the text " + result.getMessage(),
-                        (result.getMessage().toLowerCase(Locale.US)
-                                .contains(hasMessage.toLowerCase(Locale.US))));
-            }
-        }
-    }
-
-    public interface ThrowableRunnable {
-        void run() throws Exception;
-    }
 }
 
 

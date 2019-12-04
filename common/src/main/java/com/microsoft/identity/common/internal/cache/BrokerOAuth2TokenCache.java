@@ -28,8 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.internal.encryption.BrokerEncryptionManager;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -1357,13 +1356,12 @@ public class BrokerOAuth2TokenCache
             return mDelegate.getTokenCache(context, bindingProcessUid);
         }
 
-        final IStorageHelper storageHelper = new StorageHelper(context);
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
                 new SharedPreferencesFileManager(
                         context,
                         SharedPreferencesAccountCredentialCache
                                 .getBrokerUidSequesteredFilename(bindingProcessUid),
-                        storageHelper
+                        new BrokerEncryptionManager(context)
                 );
 
         return getTokenCache(context, sharedPreferencesFileManager, false);
@@ -1375,12 +1373,11 @@ public class BrokerOAuth2TokenCache
                 TAG + methodName,
                 "Initializing foci cache"
         );
-        final IStorageHelper storageHelper = new StorageHelper(context);
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
                 new SharedPreferencesFileManager(
                         context,
                         BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        storageHelper
+                        new BrokerEncryptionManager(context)
                 );
 
         return getTokenCache(context, sharedPreferencesFileManager, true);

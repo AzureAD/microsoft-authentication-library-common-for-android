@@ -20,14 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.adal.internal.cache;
+package com.microsoft.identity.common.internal.encryption;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.List;
 
 import javax.crypto.SecretKey;
 
-public interface IStorageHelper {
+public interface IEncryptionManager {
+    /**
+     * Encryption type of a given blob.
+     */
+    enum EncryptionType {
+        USER_DEFINED,
+        ANDROID_KEY_STORE,
+        UNENCRYPTED
+    }
+
     /**
      * Encrypt text with current key based on API level.
      *
@@ -52,9 +65,24 @@ public interface IStorageHelper {
      * Get Secret Key based on API level to use in encryption. Decryption key
      * depends on version# since user can migrate to new Android.OS
      *
-     * @return SecretKey Get Secret Key based on API level to use in encryption.
+     * @return EncryptionKey Get Secret Key based on API level to use in encryption.
      * @throws GeneralSecurityException throws if general security error happens.
      * @throws IOException              throws if I/O error happens.
      */
-    SecretKey loadSecretKeyForEncryption() throws IOException, GeneralSecurityException;
+    @NonNull
+    EncryptionKey loadKeyForEncryption() throws IOException, GeneralSecurityException;
+
+    /**
+     * Get a list of KeyType associated with the given encryption type.
+     */
+    @NonNull
+    List<KeyType> getKeyTypesForDecryption(@NonNull final EncryptionType encryptionType) throws IOException, GeneralSecurityException;
+
+    /**
+     * Given the key type, load a secret key.
+     *
+     * @return SecretKey. Null if there isn't any.
+     */
+    @Nullable
+    SecretKey loadSecretKey(@NonNull final KeyType keyType) throws IOException, GeneralSecurityException;
 }

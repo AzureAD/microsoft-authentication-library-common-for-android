@@ -25,11 +25,13 @@ package com.microsoft.identity.common.internal.cache;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import android.text.TextUtils;
 
-import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
+import com.microsoft.identity.common.internal.encryption.IEncryptionManager;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -47,7 +49,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
     private final String mSharedPreferencesFileName;
     private final SharedPreferences mSharedPreferences;
-    private final IStorageHelper mStorageHelper;
+    private final IEncryptionManager mEncryptionManager;
 
     /**
      * Constructs an instance of SharedPreferencesFileManager.
@@ -63,7 +65,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
-        mStorageHelper = null;
+        mEncryptionManager = null;
     }
 
     /**
@@ -81,46 +83,46 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         Logger.verbose(TAG, "Init with operating mode: " + TAG);
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, operatingMode);
-        mStorageHelper = null;
+        mEncryptionManager = null;
     }
 
     /**
      * Constructs an instance of SharedPreferencesFileManager.
      * The default operating mode is {@link Context#MODE_PRIVATE}
      *
-     * @param context       Interface to global information about an application environment.
-     * @param name          The desired {@link android.content.SharedPreferences} file. It will be created
-     *                      if it does not exist.
-     * @param storageHelper The {@link IStorageHelper} to handle encryption/decryption of values.
+     * @param context           Interface to global information about an application environment.
+     * @param name              The desired {@link android.content.SharedPreferences} file. It will be created
+     *                          if it does not exist.
+     * @param encryptionManager The {@link IEncryptionManager} to handle encryption/decryption of values.
      */
     public SharedPreferencesFileManager(
             final Context context,
             final String name,
-            final IStorageHelper storageHelper) {
+            final IEncryptionManager encryptionManager) {
         Logger.verbose(TAG, "Init with storage helper:  " + TAG);
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
-        mStorageHelper = storageHelper;
+        mEncryptionManager = encryptionManager;
     }
 
     /**
      * Constructs an instance of SharedPreferencesFileManager.
      *
-     * @param context       Interface to global information about an application enviroment.
-     * @param name          The desired {@link SharedPreferences} file. It will be created
-     *                      if it does not exist.
-     * @param operatingMode Operating mode {@link Context#getSharedPreferences(String, int)}.
-     * @param storageHelper The {@link IStorageHelper} to handle encryption/decryption of values.
+     * @param context           Interface to global information about an application enviroment.
+     * @param name              The desired {@link SharedPreferences} file. It will be created
+     *                          if it does not exist.
+     * @param operatingMode     Operating mode {@link Context#getSharedPreferences(String, int)}.
+     * @param encryptionManager The {@link IEncryptionManager} to handle encryption/decryption of values.
      */
     public SharedPreferencesFileManager(
             final Context context,
             final String name,
             final int operatingMode,
-            final IStorageHelper storageHelper) {
+            final IEncryptionManager encryptionManager) {
         Logger.verbose(TAG, "Init with operating mode and storage helper " + TAG);
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, operatingMode);
-        mStorageHelper = storageHelper;
+        mEncryptionManager = encryptionManager;
     }
 
     // Suppressing because cache integrity is a greater concern than perf
@@ -131,7 +133,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final String value) {
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
 
-        if (null == mStorageHelper) {
+        if (null == mEncryptionManager) {
             editor.putString(key, value);
         } else {
             final String encryptedValue = encrypt(value);
@@ -146,7 +148,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     public final String getString(final String key) {
         String restoredValue = mSharedPreferences.getString(key, null);
 
-        if (null != mStorageHelper && !StringExtensions.isNullOrBlank(restoredValue)) {
+        if (null != mEncryptionManager && !StringExtensions.isNullOrBlank(restoredValue)) {
             restoredValue = decrypt(restoredValue);
 
             if (StringExtensions.isNullOrBlank(restoredValue)) {
@@ -176,7 +178,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     public final Map<String, String> getAll() {
         final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
 
-        if (null != mStorageHelper) {
+        if (null != mEncryptionManager) {
             final Iterator<Map.Entry<String, String>> iterator = entries.entrySet().iterator();
 
             while (iterator.hasNext()) {
@@ -248,8 +250,8 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         String result;
         try {
             result = encrypt
-                    ? mStorageHelper.encrypt(inputText)
-                    : mStorageHelper.decrypt(inputText);
+                    ? mEncryptionManager.encrypt(inputText)
+                    : mEncryptionManager.decrypt(inputText);
         } catch (GeneralSecurityException | IOException e) {
             Logger.error(
                     TAG + ":" + methodName,
