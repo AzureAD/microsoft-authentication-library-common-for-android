@@ -37,7 +37,6 @@ import com.microsoft.identity.common.internal.controllers.TokenCommand;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
-import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -63,6 +62,10 @@ public class EstsTelemetry {
 
     private EstsTelemetry() {
         mTelemetryMap = new ConcurrentHashMap<>();
+    }
+
+    private boolean isDisabled() {
+        return mLastRequestTelemetryCache == null;
     }
 
     /**
@@ -123,7 +126,7 @@ public class EstsTelemetry {
     private void emit(final String correlationId, final String key, final String value) {
         // ests telemetry will be disabled if cache is not initialized
         // this should never happen in the case of MSAL
-        if (!mTelemetryCacheInitialized) {
+        if (isDisabled()) {
             return;
         }
 
@@ -161,8 +164,7 @@ public class EstsTelemetry {
             return null;
         }
 
-        return (LastRequestTelemetry) mLastRequestTelemetryCache.getRequestTelemetryFromCache(
-                DiagnosticContext.getRequestContext().get(DiagnosticContext.UPN));
+        return (LastRequestTelemetry) mLastRequestTelemetryCache.getRequestTelemetryFromCache();
     }
 
 
@@ -221,30 +223,24 @@ public class EstsTelemetry {
 
     void flush() {
         final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
-        flush(correlationId, null, null);
+        flush(correlationId, (String) null);
     }
 
     public void flush(final String correlationId) {
-        flush(correlationId, null, null);
+        flush(correlationId, (String) null);
     }
 
     public void flush(final String correlationId, final BaseException baseException) {
-        flush(correlationId, baseException == null ? null : baseException.getErrorCode(), null);
+        flush(correlationId, baseException == null ? null : baseException.getErrorCode());
     }
 
     public void flush(final String correlationId, final AcquireTokenResult acquireTokenResult) {
         final String errorCode = TelemetryUtils.errorFromAcquireTokenResult(acquireTokenResult);
-        String upn = TelemetryUtils.upnFromAcquireTokenResult(acquireTokenResult);
-        flush(correlationId, errorCode, upn);
+        flush(correlationId, errorCode);
     }
 
 
     public void flush(final String correlationId, @NonNull final CommandResult commandResult) {
-        String upn = null;
-        if (commandResult instanceof ILocalAuthenticationResult) {
-            upn = ((ILocalAuthenticationResult) commandResult).getAccountRecord().getUsername();
-        }
-
         String errorCode = null;
 
         final Object result = commandResult.getResult();
@@ -253,27 +249,16 @@ public class EstsTelemetry {
             errorCode = ((BaseException) result).getErrorCode();
         }
 
-        flush(correlationId, errorCode, upn);
+        flush(correlationId, errorCode);
     }
 
 
-    private void flush(final String correlationId, @Nullable final String errorCode, @Nullable final String username) {
+    private void flush(final String correlationId, @Nullable final String errorCode) {
         final String methodName = ":flush";
 
         if (mTelemetryMap == null || correlationId == null) {
             return;
         }
-
-        final String upn = username == null
-                ? DiagnosticContext.getRequestContext().get(DiagnosticContext.UPN)
-                : username;
-
-        if (upn == null) {
-            // we can't save to cache since we can't associate to an account
-            mTelemetryMap.remove(correlationId);
-            return;
-        }
-
 
         CurrentRequestTelemetry currentTelemetry = mTelemetryMap.get(correlationId);
         if (currentTelemetry == null) {
@@ -319,9 +304,9 @@ public class EstsTelemetry {
             );
         } else if (eligibleToCache(lastRequestTelemetry)) {
             // remove old last request telemetry data from cache
-            mLastRequestTelemetryCache.clearRequestTelemetry(upn);
+            mLastRequestTelemetryCache.clearRequestTelemetry();
             // save new last request telemetry data to cache
-            mLastRequestTelemetryCache.saveRequestTelemetryToCache(lastRequestTelemetry, upn);
+            mLastRequestTelemetryCache.saveRequestTelemetryToCache(lastRequestTelemetry);
         }
     }
 
@@ -366,6 +351,11 @@ public class EstsTelemetry {
         final String methodName = ":getTelemetryHeaders";
         final Map<String, String> headerMap = new HashMap<>();
 
+        if (isDisabled()) {
+            // return empty header map if ests telemetry is disabled
+            return headerMap;
+        }
+
         final String currentHeader = getCurrentTelemetryHeaderString();
         final String lastHeader = getLastTelemetryHeaderString();
 
@@ -387,7 +377,7 @@ public class EstsTelemetry {
             );
         }
 
-        history.add(new HashMap<String, String>(){{
+        history.add(new HashMap<String, String>() {{
             put(Schema.CURRENT_REQUEST_HEADER_NAME, currentHeader);
             put(Schema.LAST_REQUEST_HEADER_NAME, lastHeader);
         }}); // for debugging purposes only
@@ -412,10 +402,11 @@ public class EstsTelemetry {
     public String craftHistory() {
         StringBuilder sb = new StringBuilder();
 
+        sb.append("\n");
+
         for (Map<String, String> map : history) {
-            for (String val :  map.values()) {
-                sb.append("curr: " + val + " --- " + "last: " + val + "\n");
-            }
+            sb.append("curr: " + map.get(Schema.CURRENT_REQUEST_HEADER_NAME) + " --- " + "last: " +
+                    map.get(Schema.LAST_REQUEST_HEADER_NAME) + "\n");
         }
 
         return sb.toString();

@@ -178,7 +178,6 @@ public class AzureActiveDirectory
                 .build();
 
         Map<String, String> headers = new HashMap<>();
-        headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
         HttpResponse response = HttpRequest.sendGet(
                 new URL(instanceDiscoveryRequestUri.toString()),

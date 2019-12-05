@@ -479,16 +479,11 @@ public class CommandDispatcher {
                 UUID.randomUUID().toString() :
                 requestCorrelationId;
 
-        final String upn = getUpnFromCommand(command);
         final String commandType = command.getClass().getSimpleName();
 
         final com.microsoft.identity.common.internal.logging.RequestContext rc =
                 new com.microsoft.identity.common.internal.logging.RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
-
-        if (!TextUtils.isEmpty(upn)) {
-            rc.put(DiagnosticContext.UPN, upn);
-        }
 
         rc.put(DiagnosticContext.COMMAND_TYPE, commandType);
 

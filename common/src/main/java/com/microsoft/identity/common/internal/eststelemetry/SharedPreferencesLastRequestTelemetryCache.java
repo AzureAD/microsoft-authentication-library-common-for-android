@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
-import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -35,7 +33,6 @@ import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.util.Locale;
-import java.util.Map;
 
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static com.microsoft.identity.common.internal.eststelemetry.SharedPreferencesLastRequestTelemetryCache.CacheKeyReplacements.ENVIRONMENT;
@@ -43,6 +40,8 @@ import static com.microsoft.identity.common.internal.eststelemetry.SharedPrefere
 import static com.microsoft.identity.common.internal.eststelemetry.SharedPreferencesLastRequestTelemetryCache.CacheKeyReplacements.REALM;
 
 public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelemetryCache {
+
+    private final static String CACHE_KEY = "last_telemetry";
 
     private final static String TAG = SharedPreferencesLastRequestTelemetryCache.class.getSimpleName();
 
@@ -70,34 +69,27 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
 
     @Override
     @Nullable
-    public synchronized RequestTelemetry getRequestTelemetryFromCache(@NonNull final String upn) {
+    public synchronized RequestTelemetry getRequestTelemetryFromCache() {
         final String methodName = ":getRequestTelemetryFromCache";
 
-        final String cacheKey = upn;
-        final String cacheValue = mSharedPreferencesFileManager.getString(cacheKey);
+        final String cacheValue = mSharedPreferencesFileManager.getString(CACHE_KEY);
 
         LastRequestTelemetry lastRequestTelemetry = mGson.fromJson(cacheValue, LastRequestTelemetry.class);
 
         if (lastRequestTelemetry == null) {
             Logger.warn(TAG + methodName,
                     "Last Request Telemetry deserialization failed");
-
-            Logger.warnPII(TAG + methodName,
-                    "Last Request Telemetry deserialization failed for account: " + upn);
         }
 
         return lastRequestTelemetry;
     }
 
     @Override
-    public synchronized void saveRequestTelemetryToCache(@NonNull final RequestTelemetry requestTelemetry,
-                                                         @NonNull final String upn) {
+    public synchronized void saveRequestTelemetryToCache(@NonNull final RequestTelemetry requestTelemetry) {
         Logger.verbose(TAG, "Saving Request Telemetry to cache...");
 
-        final String cacheKey = upn;
         final String cacheValue = generateCacheValue(requestTelemetry);
-
-        mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
+        mSharedPreferencesFileManager.putString(CACHE_KEY, cacheValue);
     }
 
 //    private synchronized void saveTelemetryDataToCache(@NonNull final Map<String, String> data) {
@@ -111,10 +103,9 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
 //    }
 
     @Override
-    public synchronized void clearRequestTelemetry(final String upn) {
+    public synchronized void clearRequestTelemetry() {
         Logger.info(TAG, "Removing telemetry for account from cache...");
-        final String cacheKey = upn;
-        mSharedPreferencesFileManager.remove(cacheKey);
+        mSharedPreferencesFileManager.remove(CACHE_KEY);
     }
 
     private String generateCacheValue(final RequestTelemetry requestTelemetry) {

@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
-import com.microsoft.identity.common.internal.dto.IAccountRecord;
-
 /**
  * This is a "cache of one" i.e. there will always be only one RequestTelemetry object saved
  * saved in the cache at any given time
@@ -35,20 +33,20 @@ public interface IRequestTelemetryCache {
      *
      * @param requestTelemetry
      */
-    void saveRequestTelemetryToCache(final RequestTelemetry requestTelemetry, final String upn);
+    void saveRequestTelemetryToCache(final RequestTelemetry requestTelemetry);
 
     /**
      * Get the telemetry from the cache
      *
      * @return a {@link RequestTelemetry} object
      */
-    RequestTelemetry getRequestTelemetryFromCache(final String upn);
+    RequestTelemetry getRequestTelemetryFromCache();
 
 
     /**
      * Clear the contents of the cache.
      */
-    void clearRequestTelemetry(final String upn);
+    void clearRequestTelemetry();
 
 
 }
