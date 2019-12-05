@@ -40,7 +40,6 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
-import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -498,17 +497,5 @@ public class CommandDispatcher {
 
     public static int getCachedResultCount() {
         return sCommandResultCache.getSize();
-    }
-
-    @Nullable
-    private static String getUpnFromCommand(@NonNull final BaseCommand command) {
-        OperationParameters parameters = command.getParameters();
-        if (parameters instanceof AcquireTokenOperationParameters) {
-            return ((AcquireTokenOperationParameters) parameters).getLoginHint();
-        } else if (parameters.getAccount() != null) {
-            return parameters.getAccount().getUsername();
-        } else {
-            return null;
-        }
     }
 }

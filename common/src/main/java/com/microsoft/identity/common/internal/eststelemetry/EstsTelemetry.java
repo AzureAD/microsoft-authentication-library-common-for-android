@@ -56,7 +56,6 @@ public class EstsTelemetry {
     private static volatile EstsTelemetry sEstsTelemetryInstance = null;
     private IRequestTelemetryCache mLastRequestTelemetryCache;
     private Map<String, CurrentRequestTelemetry> mTelemetryMap;
-    private boolean mTelemetryCacheInitialized;
 
     private Queue<Map<String, String>> history;
 
@@ -87,7 +86,6 @@ public class EstsTelemetry {
         this.mLastRequestTelemetryCache = createLastRequestTelemetryCache(context);
 
         if (this.mLastRequestTelemetryCache != null) {
-            mTelemetryCacheInitialized = true;
             com.microsoft.identity.common.internal.logging.Logger.verbose(
                     TAG,
                     "Ests Telemetry cache has been initialized properly."
@@ -399,14 +397,14 @@ public class EstsTelemetry {
         Logger.error("ESTS Telemetry", msg, null);
     }
 
-    public String craftHistory() {
-        StringBuilder sb = new StringBuilder();
+    private String craftHistory() {
+        StringBuilder sb = new StringBuilder(100);
 
-        sb.append("\n");
+        sb.append('\n');
 
         for (Map<String, String> map : history) {
             sb.append("curr: " + map.get(Schema.CURRENT_REQUEST_HEADER_NAME) + " --- " + "last: " +
-                    map.get(Schema.LAST_REQUEST_HEADER_NAME) + "\n");
+                    map.get(Schema.LAST_REQUEST_HEADER_NAME) + '\n');
         }
 
         return sb.toString();
