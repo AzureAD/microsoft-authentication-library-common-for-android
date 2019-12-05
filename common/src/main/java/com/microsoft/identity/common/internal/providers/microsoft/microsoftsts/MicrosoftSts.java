@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
@@ -36,7 +37,8 @@ public class MicrosoftSts
      * @return MicrosoftStsOAuth2Strategy
      */
     @Override
-    public MicrosoftStsOAuth2Strategy createOAuth2Strategy(MicrosoftStsOAuth2Configuration config) {
+    public MicrosoftStsOAuth2Strategy createOAuth2Strategy(MicrosoftStsOAuth2Configuration config)
+            throws ClientException {
         final OAuth2StrategyOptions strategyOptions = new OAuth2StrategyOptions();
         strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
         return new MicrosoftStsOAuth2Strategy(config, strategyOptions);

@@ -111,23 +111,32 @@ public class MicrosoftStsOAuth2Strategy
      * @param options OAuth2StrategyOptions
      */
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
-                                      @NonNull final OAuth2StrategyOptions options) {
+                                      @NonNull final OAuth2StrategyOptions options) throws ClientException {
         super(config, options);
-        // TODO figure this out!
-        try {
-            mStrategyOptions = options;
-            mDevicePopManager = new DevicePopManagerImpl(options.getContext());
+        mStrategyOptions = options;
 
-            if (options.getAuthenticationScheme() instanceof PopAuthenticationSchemeInternal) {
-                // TODO This shouldn't live here.
-                final PopAuthenticationSchemeInternal popScheme = (PopAuthenticationSchemeInternal)
-                        options.getAuthenticationScheme();
 
-                popScheme.setDevicePopManager(mDevicePopManager);
+        if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
+            try {
+                mDevicePopManager = new DevicePopManagerImpl(options.getContext());
+
+                if (options.getAuthenticationScheme() instanceof PopAuthenticationSchemeInternal) {
+                    // TODO Ideally, we wouldn't assign this here.
+                    final PopAuthenticationSchemeInternal popScheme = (PopAuthenticationSchemeInternal)
+                            options.getAuthenticationScheme();
+
+                    popScheme.setDevicePopManager(mDevicePopManager);
+                }
+            } catch (final KeyStoreException
+                    | CertificateException
+                    | NoSuchAlgorithmException
+                    | IOException e) {
+                throw new ClientException(
+                        "Failed to initialize strategy.",
+                        e.getMessage(),
+                        e
+                );
             }
-
-        } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
-            // TODO How can this be handled better?
         }
     }
 
