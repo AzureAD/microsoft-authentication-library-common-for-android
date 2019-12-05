@@ -82,7 +82,6 @@ public abstract class Authority {
      *
      * @param authorityUrl
      * @return
-     * @throws MalformedURLException
      */
     public static Authority getAuthorityFromAuthorityUrl(String authorityUrl) {
         final String methodName = ":getAuthorityFromAuthorityUrl";
