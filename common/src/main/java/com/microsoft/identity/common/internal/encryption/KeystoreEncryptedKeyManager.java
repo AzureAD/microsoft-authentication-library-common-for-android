@@ -108,23 +108,27 @@ public class KeystoreEncryptedKeyManager {
      * Generate a new secret key and save to storage.
      */
     protected SecretKey createKeyAndSave() throws GeneralSecurityException, IOException {
-        final SecretKey key = generateSecretKey();
-        saveKey(key);
-        return key;
+        synchronized (KeystoreEncryptedKeyManager.class) {
+            final SecretKey key = generateSecretKey();
+            saveKey(key);
+            return key;
+        }
     }
 
     /**
      * Encrypt the given unencrypted symmetric key with Keystore key and save to storage.
      */
-    protected synchronized void saveKey(@NonNull SecretKey unencryptedKey)
+    protected void saveKey(@NonNull SecretKey unencryptedKey)
             throws GeneralSecurityException, IOException {
-        KeyPair keyPair = readKeyPair();
-        if (keyPair == null) {
-            keyPair = generateKeyPairFromAndroidKeyStore();
-        }
+        synchronized (KeystoreEncryptedKeyManager.class) {
+            KeyPair keyPair = readKeyPair();
+            if (keyPair == null) {
+                keyPair = generateKeyPairFromAndroidKeyStore();
+            }
 
-        final byte[] keyWrapped = wrap(unencryptedKey, keyPair);
-        writeKeyData(keyWrapped);
+            final byte[] keyWrapped = wrap(unencryptedKey, keyPair);
+            writeKeyData(keyWrapped);
+        }
     }
 
     /**
@@ -135,18 +139,20 @@ public class KeystoreEncryptedKeyManager {
      * @throws IOException
      */
     @Nullable
-    protected synchronized SecretKey loadKey()
-            throws GeneralSecurityException, IOException {
+    protected SecretKey loadKey() throws GeneralSecurityException, IOException {
         final String methodName = ":loadKeyStoreEncryptedKey";
-        try {
-            return getUnwrappedSecretKey();
-        } catch (final GeneralSecurityException | IOException e) {
-            // Reset KeyPair info so that new request will generate correct KeyPairs.
-            // All tokens with previous SecretKey are not possible to decrypt.
-            Logger.error(TAG + methodName, ErrorStrings.ANDROIDKEYSTORE_FAILED, e);
-            deleteKeyFile();
-            resetKeyPairFromAndroidKeyStore();
-            throw e;
+
+        synchronized (KeystoreEncryptedKeyManager.class) {
+            try {
+                return getUnwrappedSecretKey();
+            } catch (final GeneralSecurityException | IOException e) {
+                // Reset KeyPair info so that new request will generate correct KeyPairs.
+                // All tokens with previous SecretKey are not possible to decrypt.
+                Logger.error(TAG + methodName, ErrorStrings.ANDROIDKEYSTORE_FAILED, e);
+                deleteKeyFile();
+                resetKeyPairFromAndroidKeyStore();
+                throw e;
+            }
         }
     }
 
@@ -155,11 +161,14 @@ public class KeystoreEncryptedKeyManager {
      */
     public void deleteKeyFile() {
         final String methodName = ":deleteKeyFile";
-        final File keyFile = getKeyFile();
-        if (keyFile.exists()) {
-            Logger.verbose(TAG + methodName, "Delete KeyFile");
-            if (!keyFile.delete()) {
-                Logger.verbose(TAG + methodName, "Delete KeyFile failed");
+
+        synchronized (KeystoreEncryptedKeyManager.class) {
+            final File keyFile = getKeyFile();
+            if (keyFile.exists()) {
+                Logger.verbose(TAG + methodName, "Delete KeyFile");
+                if (!keyFile.delete()) {
+                    Logger.verbose(TAG + methodName, "Delete KeyFile failed");
+                }
             }
         }
     }
