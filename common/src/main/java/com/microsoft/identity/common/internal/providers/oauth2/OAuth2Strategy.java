@@ -234,14 +234,16 @@ public abstract class OAuth2Strategy
      *
      * @return TokenRequest.
      */
-    public abstract GenericTokenRequest createTokenRequest(GenericAuthorizationRequest request, GenericAuthorizationResponse response);
+    public abstract GenericTokenRequest createTokenRequest(GenericAuthorizationRequest request,
+                                                           GenericAuthorizationResponse response)
+            throws ClientException;
 
     /**
      * Abstract method for creating the refresh token request.
      *
      * @return TokenRequest.
      */
-    public abstract GenericTokenRequest createRefreshTokenRequest();
+    public abstract GenericTokenRequest createRefreshTokenRequest() throws ClientException;
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method

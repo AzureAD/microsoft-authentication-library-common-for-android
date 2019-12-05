@@ -604,7 +604,7 @@ public class TokenCacheItemMigrationAdapter {
                                                               @NonNull final String redirectUri,
                                                               @NonNull final MicrosoftStsOAuth2Strategy strategy,
                                                               @Nullable final UUID correlationId,
-                                                              @NonNull final String idTokenVersion) {
+                                                              @NonNull final String idTokenVersion) throws ClientException {
         final MicrosoftStsTokenRequest tokenRequest = strategy.createRefreshTokenRequest();
 
         // Set the request properties

@@ -350,7 +350,8 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     public MicrosoftStsTokenRequest createTokenRequest(@NonNull final MicrosoftStsAuthorizationRequest request,
-                                                       @NonNull final MicrosoftStsAuthorizationResponse response) {
+                                                       @NonNull final MicrosoftStsAuthorizationResponse response)
+            throws ClientException {
         final String methodName = ":createTokenRequest";
         Logger.verbose(
                 TAG + methodName,
@@ -371,30 +372,25 @@ public class MicrosoftStsOAuth2Strategy
         tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
         setTokenRequestCorrelationId(tokenRequest);
 
-        try {
-            if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
-                // Add a token_type
-                tokenRequest.setTokenType(TokenRequest.TokenType.POP);
+        if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
+            // Add a token_type
+            tokenRequest.setTokenType(TokenRequest.TokenType.POP);
 
-                // Generate keys if they don't already exist...
-                if (!mDevicePopManager.asymmetricKeyExists()) {
-                    final String thumbprint = mDevicePopManager.generateAsymmetricKey();
+            // Generate keys if they don't already exist...
+            if (!mDevicePopManager.asymmetricKeyExists()) {
+                final String thumbprint = mDevicePopManager.generateAsymmetricKey();
 
-                    Logger.verbosePII(
-                            TAG,
-                            "Generated new PoP asymmetric key with thumbprint: "
-                                    + thumbprint
-                    );
-                }
-
-                // Set the req_cnf
-                final String reqCnf = mDevicePopManager.getRequestConfirmation();
-
-                tokenRequest.setRequestConfirmation(reqCnf);
+                Logger.verbosePII(
+                        TAG,
+                        "Generated new PoP asymmetric key with thumbprint: "
+                                + thumbprint
+                );
             }
-        } catch (final ClientException e) {
-            // TODO how should this be handled?
-            e.printStackTrace();
+
+            // Set the req_cnf
+            final String reqCnf = mDevicePopManager.getRequestConfirmation();
+
+            tokenRequest.setRequestConfirmation(reqCnf);
         }
 
         return tokenRequest;
@@ -420,7 +416,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsTokenRequest createRefreshTokenRequest() {
+    public MicrosoftStsTokenRequest createRefreshTokenRequest() throws ClientException {
         final String methodName = ":createRefreshTokenRequest";
         Logger.verbose(
                 TAG + methodName,
@@ -430,19 +426,14 @@ public class MicrosoftStsOAuth2Strategy
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
 
-        try {
-            if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
-                request.setTokenType(TokenRequest.TokenType.POP);
+        if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
+            request.setTokenType(TokenRequest.TokenType.POP);
 
-                if (!mDevicePopManager.asymmetricKeyExists()) {
-                    mDevicePopManager.generateAsymmetricKey();
-                }
-
-                request.setRequestConfirmation(mDevicePopManager.getRequestConfirmation());
+            if (!mDevicePopManager.asymmetricKeyExists()) {
+                mDevicePopManager.generateAsymmetricKey();
             }
-        } catch (final ClientException e) {
-            // TODO how should this be handled?
-            e.printStackTrace();
+
+            request.setRequestConfirmation(mDevicePopManager.getRequestConfirmation());
         }
 
         return request;
