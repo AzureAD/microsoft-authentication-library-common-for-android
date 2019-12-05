@@ -101,7 +101,6 @@ public class MicrosoftStsOAuth2Strategy
                 AuthorizationResult> {
 
     private static final String TAG = MicrosoftStsOAuth2Strategy.class.getSimpleName();
-    private OAuth2StrategyOptions mStrategyOptions;
     private IDevicePopManager mDevicePopManager;
 
     /**
@@ -113,7 +112,6 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
                                       @NonNull final OAuth2StrategyOptions options) throws ClientException {
         super(config, options);
-        mStrategyOptions = options;
 
 
         if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
