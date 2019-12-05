@@ -60,6 +60,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
+import com.microsoft.identity.common.internal.request.BrokerAcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -360,6 +361,13 @@ public abstract class BaseController {
         //NOTE: this should be moved to the strategy; however requires a larger refactor
         if (parameters.getSdkType() == SdkType.ADAL) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setIdTokenVersion("1");
+        }
+
+        // Set Broker version to Token Request if it's a brokered request.
+        if(parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
+            ((MicrosoftTokenRequest) refreshTokenRequest).setBrokerVersion(
+                    ((BrokerAcquireTokenSilentOperationParameters) parameters).getBrokerVersion()
+            );
         }
 
         if (!StringExtensions.isNullOrBlank(refreshTokenRequest.getScope())) {
