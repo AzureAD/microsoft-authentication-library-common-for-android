@@ -62,7 +62,12 @@ public enum CredentialType {
     /**
      * Certificate.
      */
-    Certificate;
+    Certificate,
+
+    /**
+     * AccessToken_With_AuthScheme.
+     */
+    AccessToken_With_AuthScheme;
 
     public static final CredentialType[] ID_TOKEN_TYPES = new CredentialType[]{IdToken, V1IdToken};
 
