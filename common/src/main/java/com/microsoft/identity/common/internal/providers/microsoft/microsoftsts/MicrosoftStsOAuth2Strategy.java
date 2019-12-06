@@ -637,4 +637,38 @@ public class MicrosoftStsOAuth2Strategy
         return tokenEndpoint;
     }
 
+    /**
+     * Gets the at/pop device credential's thumbprint.
+     *
+     * @return The at/pop device credential thumbprint.
+     */
+    public String getDeviceAtPopThumbprint() {
+        String atPoPKid = null;
+
+        if (null != mDevicePopManager) {
+            if (mDevicePopManager.asymmetricKeyExists()) {
+                try {
+                    atPoPKid = mDevicePopManager.getAsymmetricKeyThumbprint();
+                } catch (final ClientException e) {
+                    Logger.error(
+                            TAG,
+                            "Key exists. But failed to load thumbprint.",
+                            e
+                    );
+
+                    throw new RuntimeException(e);
+                }
+            } else {
+                // something has gone seriously wrong.
+                throw new RuntimeException("Symmetric keys do not exist.");
+            }
+        } else {
+            Logger.warn(
+                    TAG,
+                    "DevicePopManager does not exist."
+            );
+        }
+
+        return atPoPKid;
+    }
 }
