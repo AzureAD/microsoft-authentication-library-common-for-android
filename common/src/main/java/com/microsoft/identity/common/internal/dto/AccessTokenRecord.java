@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.dto;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.annotations.SerializedName;
 
 import java.util.Calendar;
@@ -31,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.ACCESS_TOKEN_TYPE;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.AUTHORITY;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.EXTENDED_EXPIRES_ON;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.KID;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REALM;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TARGET;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
@@ -62,7 +65,18 @@ public class AccessTokenRecord extends Credential {
          * String of target.
          */
         public static final String TARGET = "target";
+
+        /**
+         * String of kid. A thumbprint to an RSA keypair.
+         */
+        public static final String KID = "kid";
     }
+
+    /**
+     * A key id associating this credential to a public/private keypair.
+     */
+    @SerializedName(KID)
+    private String mKid;
 
     /**
      * The access token type provides the client with the information required to successfully
@@ -106,6 +120,25 @@ public class AccessTokenRecord extends Credential {
      */
     @SerializedName(EXPIRES_ON)
     private String mExpiresOn;
+
+    /**
+     * Gets the kid.
+     *
+     * @return The kid to get.
+     */
+    @Nullable
+    public String getKid() {
+        return mKid;
+    }
+
+    /**
+     * Sets the kid.
+     *
+     * @param kid The kid to set.
+     */
+    public void setKid(@Nullable final String kid) {
+        mKid = kid;
+    }
 
     /**
      * Gets the realm.
