@@ -266,10 +266,10 @@ public abstract class OAuth2Strategy
      *
      * @param response Http response.
      */
-    protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response);
+    protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response) throws ClientException;
 
     // TODO
 //    protected abstract void validateAuthorizationResponse(GenericAuthorizationResponse response);
 
-//    protected abstract void validateTokenResponse(GenericTokenResponse response);
+    protected abstract void validateTokenResponse(GenericTokenResponse response) throws ClientException;
 }

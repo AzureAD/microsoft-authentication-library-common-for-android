@@ -194,6 +194,13 @@ public class ClientException extends BaseException {
     public static final String JWT_SIGNING_FAILURE = "failed_to_sign_jwt";
 
     /**
+     * Emitted if the STS returns an unexpected/incorrect token_type.
+     * <p>
+     * Example: Client requets a PoP token, but a Bearer token is returned.
+     */
+    public static final String AUTH_SCHEME_MISMATCH = "auth_scheme_mismatch";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String

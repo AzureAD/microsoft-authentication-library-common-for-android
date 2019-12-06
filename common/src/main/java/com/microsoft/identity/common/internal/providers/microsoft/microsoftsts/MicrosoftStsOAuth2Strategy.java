@@ -506,7 +506,8 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     @NonNull
-    protected TokenResult getTokenResultFromHttpResponse(@NonNull final HttpResponse response) {
+    protected TokenResult getTokenResultFromHttpResponse(@NonNull final HttpResponse response)
+            throws ClientException {
         final String methodName = ":getTokenResultFromHttpResponse";
 
         Logger.verbose(
@@ -537,6 +538,9 @@ public class MicrosoftStsOAuth2Strategy
                     response.getBody(),
                     MicrosoftStsTokenResponse.class
             );
+
+            // Validate the response.
+            validateTokenResponse(tokenResponse);
         }
 
         final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
@@ -567,6 +571,29 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return result;
+    }
+
+    @Override
+    protected void validateTokenResponse(@NonNull final MicrosoftStsTokenResponse response)
+            throws ClientException {
+        validateAuthScheme(response);
+    }
+
+    private void validateAuthScheme(@NonNull final MicrosoftStsTokenResponse response)
+            throws ClientException {
+        final String expectedAuthScheme = mStrategyOptions
+                .getAuthenticationScheme()
+                .getName();
+        final String responseAuthScheme = response.getTokenType();
+
+        if (!expectedAuthScheme.equalsIgnoreCase(responseAuthScheme)) {
+            throw new ClientException(
+                    ClientException.AUTH_SCHEME_MISMATCH,
+                    "Expected: [" + expectedAuthScheme + "]"
+                            + "\n"
+                            + "Actual: [" + responseAuthScheme + "]"
+            );
+        }
     }
 
     private String buildCloudSpecificTokenEndpoint(

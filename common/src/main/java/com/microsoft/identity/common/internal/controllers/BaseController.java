@@ -172,7 +172,7 @@ public abstract class BaseController {
 
     protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
                                                            @NonNull final OperationParameters parameters) {
-        AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
+        final AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
         initializeAuthorizationRequestBuilder(builder, parameters);
         return builder.build();
     }
@@ -185,10 +185,10 @@ public abstract class BaseController {
         final String methodName = ":performTokenRequest";
         HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAppContext());
 
-        TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
+        final TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
 
-        TokenResult tokenResult = strategy.requestToken(tokenRequest);
+        final TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
         logResult(TAG, tokenResult);
 
@@ -364,7 +364,7 @@ public abstract class BaseController {
         }
 
         // Set Broker version to Token Request if it's a brokered request.
-        if(parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
+        if (parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setBrokerVersion(
                     ((BrokerAcquireTokenSilentOperationParameters) parameters).getBrokerVersion()
             );
@@ -483,17 +483,17 @@ public abstract class BaseController {
     /**
      * Helper method which returns false if the tenant id of the authority
      * doesn't match with the tenant of the Access token for AADAuthority.
-     *
+     * <p>
      * Returns true otherwise.
      */
     protected boolean isRequestAuthorityRealmSameAsATRealm(@NonNull final Authority requestAuthority,
                                                            @NonNull final AccessTokenRecord accessTokenRecord)
             throws ServiceException, ClientException {
-        if(requestAuthority instanceof AzureActiveDirectoryAuthority){
+        if (requestAuthority instanceof AzureActiveDirectoryAuthority) {
 
             String tenantId = ((AzureActiveDirectoryAuthority) requestAuthority).getAudience().getTenantId();
 
-            if(AzureActiveDirectoryAudience.isHomeTenantAlias(tenantId)) {
+            if (AzureActiveDirectoryAudience.isHomeTenantAlias(tenantId)) {
                 // if realm on AT and home account's tenant id do not match, we have a token for guest and
                 // requested authority here is for home, so return false we need to refresh the token
                 final String utidFromHomeAccountId = accessTokenRecord
@@ -502,7 +502,7 @@ public abstract class BaseController {
 
                 return utidFromHomeAccountId.equalsIgnoreCase(accessTokenRecord.getRealm());
 
-            }else {
+            } else {
                 tenantId = ((AzureActiveDirectoryAuthority) requestAuthority)
                         .getAudience()
                         .getTenantUuidForAlias(requestAuthority.getAuthorityURL().toString());

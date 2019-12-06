@@ -250,4 +250,9 @@ public class AzureActiveDirectoryOAuth2Strategy
         return result;
     }
 
+    @Override
+    protected void validateTokenResponse(AzureActiveDirectoryTokenResponse response) {
+        // TODO
+    }
+
 }
