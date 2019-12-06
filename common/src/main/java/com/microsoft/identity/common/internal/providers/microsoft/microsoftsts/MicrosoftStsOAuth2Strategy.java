@@ -113,7 +113,6 @@ public class MicrosoftStsOAuth2Strategy
                                       @NonNull final OAuth2StrategyOptions options) throws ClientException {
         super(config, options);
 
-
         if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
             try {
                 mDevicePopManager = new DevicePopManagerImpl(options.getContext());
