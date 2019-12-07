@@ -13,6 +13,10 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+
     buildTypes {
         debug {
             testCoverageEnabled false
