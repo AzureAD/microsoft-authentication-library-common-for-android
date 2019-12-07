@@ -40,7 +40,6 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
     private RefreshTokenRecord mRefreshToken;
 
-
     public RefreshTokenRecord getRefreshToken() {
         return mRefreshToken;
     }
