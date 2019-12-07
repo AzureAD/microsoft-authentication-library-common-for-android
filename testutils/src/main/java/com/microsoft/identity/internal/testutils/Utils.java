@@ -34,7 +34,6 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 
 import org.mockito.Mockito;
-import org.robolectric.RuntimeEnvironment;
 
 import java.util.HashSet;
 import java.util.Locale;
@@ -43,7 +42,7 @@ import java.util.Set;
 
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 
-public class RoboTestUtils {
+public class Utils {
 
     private static String getCacheKeyForAccessToken(Map<String, ?> cacheValues) {
         for (Map.Entry<String, ?> cacheValue : cacheValues.entrySet()) {
@@ -124,27 +123,6 @@ public class RoboTestUtils {
             editor.remove(keyToRemove);
             editor.commit();
         }
-    }
-
-    public static void flushScheduler() {
-        // wait until all runnable(s) have finished executing
-        while (!RuntimeEnvironment.getMasterScheduler().advanceToLastPostedRunnable()) ;
-    }
-
-    public static void flushSchedulerWithDelay(@NonNull final long sleepTime) {
-        try {
-            // just wait a little for runnable(s) to enter the queue
-            Thread.sleep(sleepTime);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // if there are no runnable(s) after the delay, then we can just return
-        if (RuntimeEnvironment.getMasterScheduler().size() == 0) {
-            return;
-        }
-
-        flushScheduler();
     }
 
     public static Activity getMockActivity(final Context context) {

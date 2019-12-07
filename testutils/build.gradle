@@ -13,10 +13,6 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    lintOptions {
-        disable 'InvalidPackage'
-    }
-
     buildTypes {
         debug {
             testCoverageEnabled false
@@ -42,7 +38,6 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation 'androidx.appcompat:appcompat:1.0.2'
-    implementation "org.robolectric:robolectric:3.8"
     testImplementation 'junit:junit:4.12'
     testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     androidTestImplementation 'androidx.test:runner:1.2.0'
