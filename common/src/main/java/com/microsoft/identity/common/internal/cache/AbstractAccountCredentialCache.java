@@ -123,6 +123,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                                                                 @Nullable String clientId,
                                                                 @Nullable String realm,
                                                                 @Nullable String target,
+                                                                @Nullable String authScheme,
                                                                 @NonNull List<Credential> allCredentials) {
         final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
@@ -130,6 +131,9 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final boolean mustMatchOnTarget = !StringExtensions.isNullOrBlank(target);
         final boolean mustMatchOnClientId = !StringExtensions.isNullOrBlank(clientId);
         final boolean mustMatchOnCredentialType = null != credentialType;
+        final boolean mustMatchOnAuthScheme = mustMatchOnCredentialType
+                && !StringExtensions.isNullOrBlank(authScheme)
+                && credentialType == CredentialType.AccessToken_With_AuthScheme;
 
         Logger.verbose(
                 TAG,
@@ -142,6 +146,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                         + "Credential lookup filtered by clientId? [" + mustMatchOnClientId + "]"
                         + NEW_LINE
                         + "Credential lookup filtered by credential type? [" + mustMatchOnCredentialType + "]"
+                        + NEW_LINE
+                        + "Credential lookup filtered by auth scheme? [" + mustMatchOnAuthScheme + "]"
         );
 
         final List<Credential> matchingCredentials = new ArrayList<>();
@@ -185,6 +191,11 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 } else {
                     Logger.warn(TAG, "Query specified target-match, but no target to match.");
                 }
+            }
+
+            if (mustMatchOnAuthScheme && credential instanceof AccessTokenRecord) {
+                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
+                matches = matches && authScheme.equalsIgnoreCase(accessToken.getAccessTokenType());
             }
 
             if (matches) {

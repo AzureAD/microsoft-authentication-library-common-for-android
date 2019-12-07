@@ -32,6 +32,7 @@ import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -61,6 +62,7 @@ import java.util.Set;
 
 import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
+import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 import static com.microsoft.identity.common.internal.dto.CredentialType.ID_TOKEN_TYPES;
 
@@ -495,7 +497,8 @@ public class MsalOAuth2TokenCache
     @Override
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
-                             @NonNull final AccountRecord account) {
+                             @NonNull final AccountRecord account,
+                             @NonNull final AbstractAuthenticationScheme authScheme) {
         Telemetry.emit(new CacheStartEvent());
 
         final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
@@ -506,10 +509,11 @@ public class MsalOAuth2TokenCache
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
                 account.getEnvironment(),
-                CredentialType.AccessToken,
+                getAccessTokenCredentialTypeForAuthenticationScheme(authScheme),
                 clientId,
                 account.getRealm(),
-                target
+                target,
+                authScheme.getName()
         );
 
         // Load the RefreshTokens
@@ -523,7 +527,8 @@ public class MsalOAuth2TokenCache
                         : account.getRealm(),
                 isMultiResourceCapable
                         ? null // wildcard (*)
-                        : target
+                        : target,
+                null // not applicable
         );
 
         // Load the IdTokens
@@ -533,7 +538,8 @@ public class MsalOAuth2TokenCache
                 CredentialType.IdToken,
                 clientId,
                 account.getRealm(),
-                null // wildcard (*)
+                null, // wildcard (*),
+                null // not applicable
         );
 
         // Load the v1 IdTokens
@@ -543,7 +549,8 @@ public class MsalOAuth2TokenCache
                 CredentialType.V1IdToken,
                 clientId,
                 account.getRealm(),
-                null // wildcard (*)
+                null, // wildcard (*)
+                null // not applicable
         );
 
         final CacheRecord result = new CacheRecord();
@@ -560,11 +567,12 @@ public class MsalOAuth2TokenCache
     @Override
     public List<ICacheRecord> loadWithAggregatedAccountData(@NonNull final String clientId,
                                                             @Nullable final String target,
-                                                            @NonNull final AccountRecord account) {
+                                                            @NonNull final AccountRecord account,
+                                                            @NonNull final AbstractAuthenticationScheme authScheme) {
         synchronized (this) {
             final List<ICacheRecord> result = new ArrayList<>();
 
-            final ICacheRecord primaryCacheRecord = load(clientId, target, account);
+            final ICacheRecord primaryCacheRecord = load(clientId, target, account, authScheme);
 
             // Set this result as the 0th entry in the result...
             result.add(primaryCacheRecord);
@@ -598,7 +606,8 @@ public class MsalOAuth2TokenCache
                 CredentialType.IdToken,
                 clientId, // If null, behaves as wildcard
                 accountRecord.getRealm(),
-                null // wildcard (*)
+                null, // wildcard (*),
+                null // not applicable
         );
 
         idTokens.addAll(
@@ -608,7 +617,8 @@ public class MsalOAuth2TokenCache
                         CredentialType.V1IdToken,
                         clientId,
                         accountRecord.getRealm(),
-                        null // wildcard (*)
+                        null, // wildcard (*)
+                        null // not applicable
                 )
         );
 
@@ -873,7 +883,8 @@ public class MsalOAuth2TokenCache
                         CredentialType.IdToken,
                         clientId,
                         null, // realm
-                        null // target
+                        null, // target,
+                        null // not applicable
                 );
 
         // And also grab any V1IdTokens....
@@ -884,7 +895,8 @@ public class MsalOAuth2TokenCache
                         CredentialType.V1IdToken,
                         clientId,
                         null, // realm
-                        null // target
+                        null, // target
+                        null // not applicable
                 )
         );
 
@@ -971,6 +983,15 @@ public class MsalOAuth2TokenCache
         );
 
         return Collections.unmodifiableList(result);
+    }
+
+    private CredentialType getAccessTokenCredentialTypeForAuthenticationScheme(
+            @NonNull final AbstractAuthenticationScheme authScheme) {
+        if (SCHEME_BEARER.equalsIgnoreCase(authScheme.getName())) {
+            return CredentialType.AccessToken;
+        } else {
+            return CredentialType.AccessToken_With_AuthScheme;
+        }
     }
 
     /**
@@ -1204,7 +1225,8 @@ public class MsalOAuth2TokenCache
                         realmAgnostic
                                 ? null // wildcard (*) realm
                                 : targetAccount.getRealm(),
-                        null // wildcard (*) target
+                        null, // wildcard (*) target,
+                        null // TODO do we need to consider adding a scheme param?
                 );
 
         for (final Credential credentialToRemove : credentialsToRemove) {
@@ -1297,10 +1319,11 @@ public class MsalOAuth2TokenCache
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 referenceToken.getHomeAccountId(),
                 referenceToken.getEnvironment(),
-                CredentialType.AccessToken,
+                CredentialType.fromString(referenceToken.getCredentialType()),
                 referenceToken.getClientId(),
                 referenceToken.getRealm(),
-                null // Wildcard - delete anything that matches...
+                null, // Wildcard - delete anything that matches...,
+                referenceToken.getAccessTokenType()
         );
 
         Logger.verbose(

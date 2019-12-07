@@ -305,7 +305,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final CredentialType credentialType,
             @Nullable final String clientId,
             @Nullable final String realm,
-            @Nullable final String target) {
+            @Nullable final String target,
+            @Nullable final String authScheme) { // TODO add this filter criteria...
         Logger.verbose(TAG, "getCredentialsFilteredBy()");
 
         final List<Credential> allCredentials = getCredentials();
@@ -317,6 +318,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 clientId,
                 realm,
                 target,
+                authScheme,
                 allCredentials
         );
 
