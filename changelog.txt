@@ -1,3 +1,8 @@
+Version 1.0.9-hf1
+------------
+- Hot fix release
+- Logging fixes.
+
 Version 1.0.9
 ------------
 - Disable command caching.
