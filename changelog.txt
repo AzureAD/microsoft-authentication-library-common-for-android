@@ -9,6 +9,11 @@ Version 1.0.11
 - Fixed multiple cloud support in MSAL with Broker.
 - Enabled MSAL-Broker communication via AccountManager.
 
+Version 1.0.9-hf1
+------------
+- Hot fix release
+- Logging fixes.
+
 Version 1.0.9
 ------------
 - Disable command caching.
