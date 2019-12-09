@@ -26,6 +26,12 @@ android {
         }
     }
 
+    testOptions {
+        unitTests.all {
+            exclude 'com/microsoft/identity/internal/testutils/lab/'
+        }
+    }
+
 }
 
 dependencies {
