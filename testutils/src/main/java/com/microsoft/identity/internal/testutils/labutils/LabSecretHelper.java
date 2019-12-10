@@ -28,7 +28,7 @@ import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 public class LabSecretHelper {
 
     public static String getPasswordForLab(final String labName) {
-        LabAuthenticationHelper.setupApiClientWithAccessToken();
+        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         LabUserSecretApi labUserSecretApi = new LabUserSecretApi();
         SecretResponse secretResponse;
 
