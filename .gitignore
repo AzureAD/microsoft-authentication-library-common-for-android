@@ -2,6 +2,9 @@
 *.apk
 *.ap_
 
+# Visual Studio Code project file
+.project
+
 # Files for the ART/Dalvik VM
 *.dex
 
