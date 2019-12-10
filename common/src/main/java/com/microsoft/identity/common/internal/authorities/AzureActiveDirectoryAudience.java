@@ -35,8 +35,8 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.List;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
+import android.support.annotation.NonNull;
+import android.support.annotation.WorkerThread;
 
 import static com.microsoft.identity.common.internal.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 import static com.microsoft.identity.common.internal.authorities.AnyPersonalAccount.ANY_PERSONAL_ACCOUNT_TENANT_ID;
