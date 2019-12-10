@@ -97,12 +97,7 @@ public class MicrosoftStsAccountCredentialAdapter
             // Optional fields
             accessToken.setExtendedExpiresOn(getExtendedExpiresOn(response));
 
-            if (!StringUtil.isEmpty(response.getAuthority())) {
-                accessToken.setAuthority(response.getAuthority());
-            } else {
-                accessToken.setAuthority(request.getAuthority().toString());
-            }
-
+            accessToken.setAuthority(strategy.getAuthorityFromTokenEndpoint());
             accessToken.setAccessTokenType(response.getTokenType());
 
             return accessToken;
@@ -187,13 +182,7 @@ public class MicrosoftStsAccountCredentialAdapter
             );
             idToken.setClientId(request.getClientId());
             idToken.setSecret(response.getIdToken());
-
-            // Optional fields
-            if (!StringUtil.isEmpty(response.getAuthority())) {
-                idToken.setAuthority(response.getAuthority());
-            } else { // Working around a bug - sov cloud seems to have broken response authority...
-                idToken.setAuthority(request.getAuthority().toString());
-            }
+            idToken.setAuthority(strategy.getAuthorityFromTokenEndpoint());
 
             return idToken;
         } catch (ServiceException e) {

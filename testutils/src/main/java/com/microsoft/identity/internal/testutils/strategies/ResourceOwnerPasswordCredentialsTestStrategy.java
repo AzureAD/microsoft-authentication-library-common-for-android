@@ -24,10 +24,6 @@ package com.microsoft.identity.internal.testutils.strategies;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.DiagnosticContext;
-import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
@@ -36,16 +32,12 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.internal.testutils.MicrosoftStsRopcTokenRequest;
-import com.microsoft.identity.internal.testutils.MockSuccessAuthorizationResult;
-import com.microsoft.identity.internal.testutils.labutils.CurrentLabUser;
-import com.microsoft.identity.internal.testutils.labutils.LabSecretHelper;
+import com.microsoft.identity.internal.testutils.MockSuccessAuthorizationResultNetworkTests;
+import com.microsoft.identity.internal.testutils.labutils.CurrentLabConfig;
 
-import java.io.IOException;
-import java.util.UUID;
 import java.util.concurrent.Future;
 
 public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOAuth2Strategy {
@@ -76,38 +68,10 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
     public Future<AuthorizationResult> requestAuthorization(
             final MicrosoftStsAuthorizationRequest request,
             final AuthorizationStrategy authorizationStrategy) {
-        final MockSuccessAuthorizationResult authorizationResult = new MockSuccessAuthorizationResult();
+        final MockSuccessAuthorizationResultNetworkTests authorizationResult = new MockSuccessAuthorizationResultNetworkTests();
         final ResultFuture<AuthorizationResult> future = new ResultFuture<>();
         future.setResult(authorizationResult);
         return future;
-    }
-
-    /**
-     * @param request microsoft sts token request.
-     * @return TokenResult
-     * @throws IOException thrown when failed or interrupted I/O operations occur.
-     */
-    @Override
-    public TokenResult requestToken(final MicrosoftStsTokenRequest request) throws IOException, ClientException {
-        final String methodName = ":requestToken";
-
-        Logger.verbose(
-                TAG + methodName,
-                "Requesting token..."
-        );
-
-        final String grantType = request.getGrantType();
-
-        // check for the grant type and change to password if it is AUTH CODE
-        // otherwise it is REFRESH_TOKEN, and lets proceed to make a Refresh Token Request
-        if (grantType == null || grantType.equals(TokenRequest.GrantTypes.AUTHORIZATION_CODE)) {
-            request.setGrantType(TokenRequest.GrantTypes.PASSWORD);
-        }
-
-        validateTokenRequest(request);
-
-        final HttpResponse response = performTokenRequest(request);
-        return getTokenResultFromHttpResponse(response);
     }
 
     @Override
@@ -122,13 +86,11 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
     }
 
     private void validateTokenRequestForPasswordGrant(MicrosoftStsTokenRequest request) {
-        MicrosoftStsRopcTokenRequest ropcRequest;
-
         if (!(request instanceof MicrosoftStsRopcTokenRequest)) {
-            throw new IllegalArgumentException("Did you make sure to pass a MicrosoftStsRopcTokenRequest");
+            throw new IllegalArgumentException("Did you make sure to pass a MicrosoftStsRopcTokenRequest?");
         }
 
-        ropcRequest = (MicrosoftStsRopcTokenRequest) request;
+        MicrosoftStsRopcTokenRequest ropcRequest = (MicrosoftStsRopcTokenRequest) request;
 
         if (StringUtil.isEmpty(ropcRequest.getUsername())) {
             throw new IllegalArgumentException(USERNAME_EMPTY_OR_NULL);
@@ -140,45 +102,26 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
     }
 
     String getPasswordForUser(String username) {
-        final String password = LabSecretHelper.getPasswordForLab(CurrentLabUser.userInfo.getLabName());
-        return password;
+        return CurrentLabConfig.labUserPassword;
     }
 
     @Override
     public MicrosoftStsTokenRequest createTokenRequest(@NonNull final MicrosoftStsAuthorizationRequest request,
                                                        @NonNull final MicrosoftStsAuthorizationResponse response) {
-        final String methodName = ":createTokenRequest";
-        Logger.verbose(
-                TAG + methodName,
-                "Creating TokenRequest..."
-        );
+        MicrosoftStsTokenRequest tokenRequest = super.createTokenRequest(request, response);
+
+        final MicrosoftStsRopcTokenRequest ropcTokenRequest = new MicrosoftStsRopcTokenRequest();
+        ropcTokenRequest.setClientId(tokenRequest.getClientId());
+        ropcTokenRequest.setScope(tokenRequest.getScope());
 
         final String username = request.getLoginHint();
         final String password = getPasswordForUser(username);
 
-        final MicrosoftStsRopcTokenRequest tokenRequest = new MicrosoftStsRopcTokenRequest();
-        tokenRequest.setUsername(username);
-        tokenRequest.setPassword(password);
-        tokenRequest.setClientId(request.getClientId());
-        tokenRequest.setScope(request.getScope());
+        ropcTokenRequest.setUsername(username);
+        ropcTokenRequest.setPassword(password);
 
-        try {
-            tokenRequest.setCorrelationId(
-                    UUID.fromString(
-                            DiagnosticContext
-                                    .getRequestContext()
-                                    .get(DiagnosticContext.CORRELATION_ID)
-                    )
-            );
-        } catch (IllegalArgumentException ex) {
-            //We're not setting the correlation id if we can't parse it from the diagnostic context
-            Logger.error(
-                    "MicrosoftSTSOAuth2Strategy",
-                    "Correlation id on diagnostic context is not a UUID.",
-                    ex
-            );
-        }
+        ropcTokenRequest.setGrantType(TokenRequest.GrantTypes.PASSWORD);
 
-        return tokenRequest;
+        return ropcTokenRequest;
     }
 }

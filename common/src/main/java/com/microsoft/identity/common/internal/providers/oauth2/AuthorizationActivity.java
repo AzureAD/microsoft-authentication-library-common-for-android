@@ -32,10 +32,14 @@ import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INSTALL_URL_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REDIRECT_PREFIX;
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR;
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_DESCRIPTION;
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_SUBCODE;
@@ -61,6 +65,7 @@ public final class AuthorizationActivity extends Activity {
 
     @VisibleForTesting
     static final String KEY_REQUEST_HEADERS = "requestHeaders";
+
 
     public static final String CANCEL_INTERACTIVE_REQUEST_ACTION = "cancel_interactive_request_action";
 
@@ -315,6 +320,7 @@ public final class AuthorizationActivity extends Activity {
     }
 
     private void sendResult(int resultCode, final Intent resultIntent) {
+        Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + resultCode);
         CommandDispatcher.completeInteractive(
                 AuthorizationStrategy.BROWSER_FLOW,
                 resultCode,
@@ -327,9 +333,21 @@ public final class AuthorizationActivity extends Activity {
         Logger.info(TAG, null, "Received redirect from customTab/browser.");
         final String url = getIntent().getExtras().getString(AuthorizationStrategy.CUSTOM_TAB_REDIRECT);
         final Intent resultIntent = createResultIntent(url);
-        final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
-        if (parameters.containsKey(INSTALL_URL_KEY)) {
-            final String appLink = parameters.get(INSTALL_URL_KEY);
+        final Map<String, String> urlQueryParameters = StringExtensions.getUrlParameters(url);
+        final String userName = urlQueryParameters.get(AuthenticationConstants.Broker.INSTALL_UPN_KEY);
+
+        if (isDeviceRegisterRedirect(url) && !TextUtils.isEmpty(userName)) {
+            Logger.info(TAG, " Device needs to be registered, sending BROWSER_CODE_DEVICE_REGISTER");
+            Logger.infoPII(TAG , "Device Registration triggered for user: " + userName);
+            resultIntent.putExtra(AuthenticationConstants.Broker.INSTALL_UPN_KEY, userName);
+            sendResult(
+                    AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER,
+                    resultIntent
+            );
+            return;
+        }
+        if (urlQueryParameters.containsKey(INSTALL_URL_KEY)) {
+            final String appLink = urlQueryParameters.get(INSTALL_URL_KEY);
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(appLink));
             startActivity(browserIntent);
             Logger.info(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
@@ -422,6 +440,18 @@ public final class AuthorizationActivity extends Activity {
         mWebView.getSettings().setBuiltInZoomControls(true);
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
+    }
+
+    private boolean isDeviceRegisterRedirect(@NonNull final String redirectUrl){
+        try {
+            URI uri = new URI(redirectUrl);
+            return uri.getScheme().equalsIgnoreCase(REDIRECT_PREFIX) &&
+                    uri.getHost().equalsIgnoreCase(DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME);
+        } catch (URISyntaxException e) {
+            Logger.error(TAG, "Uri construction failed", e);
+            return false;
+        }
+
     }
 
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {

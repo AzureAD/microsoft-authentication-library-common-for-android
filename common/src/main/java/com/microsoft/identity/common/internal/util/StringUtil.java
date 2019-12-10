@@ -30,6 +30,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * String utilities.
@@ -173,4 +174,19 @@ public final class StringUtil {
 
         return count;
     }
+
+    /**
+     * Util method to check if a string is a UUID or not
+     * @param inputString : inputString
+     * @return true if the inputString is a UUID else false;
+     */
+    public static boolean isUuid(@NonNull final String inputString) {
+        try {
+            UUID.fromString(inputString);
+            return true;
+        } catch (final IllegalArgumentException e) {
+            return false;
+        }
+    }
+
 }

@@ -46,6 +46,7 @@ public class AcquireTokenOperationParameters extends OperationParameters {
     @Expose()
     private OpenIdConnectPromptParameter mOpenIdConnectPromptParameter;
     private transient HashMap<String, String> mRequestHeaders;
+    private boolean mBrokerBrowserSupportEnabled;
 
     public AuthorizationAgent getAuthorizationAgent() {
         return mAuthorizationAgent;
@@ -108,6 +109,14 @@ public class AcquireTokenOperationParameters extends OperationParameters {
 
     public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
         this.mBrowserSafeList = browserSafeList;
+    }
+
+    public boolean isBrokerBrowserSupportEnabled() {
+        return mBrokerBrowserSupportEnabled;
+    }
+
+    public void setBrokerBrowserSupportEnabled(boolean brokerBrowserSupportEnabled) {
+        this.mBrokerBrowserSupportEnabled = brokerBrowserSupportEnabled;
     }
 
     /**

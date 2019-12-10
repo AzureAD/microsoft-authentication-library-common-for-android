@@ -30,6 +30,7 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
+import com.microsoft.identity.common.internal.request.BrokerAcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
@@ -52,6 +53,7 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
                 parameters.getAuthorizationAgent(),
                 parameters.getActivity().getApplicationContext()
         );
+        boolean isBrokerRequest = (parameters instanceof BrokerAcquireTokenOperationParameters);
 
         if (validatedAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
             Logger.info(TAG, "Use webView for authorization.");
@@ -68,14 +70,19 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
                     return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(parameters.getActivity()));
                 }
             }
-
             Logger.info(TAG, "Use browser for authorization.");
-            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(parameters.getActivity());
+            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
+                    parameters.getActivity(),
+                    isBrokerRequest
+            );
             browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
             return (GenericAuthorizationStrategy) browserAuthorizationStrategy;
         } else {
             Logger.info(TAG, "Use browser for authorization.");
-            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(parameters.getActivity());
+            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
+                    parameters.getActivity(),
+                    isBrokerRequest
+            );
             browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
             return (GenericAuthorizationStrategy) browserAuthorizationStrategy;
         }
