@@ -1407,9 +1407,9 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
         assertTrue(mSharedPreferencesAccountCredentialCache.getCredentials().isEmpty());
     }
 
-    @Test(expected = RuntimeException.class) // TODO Should this *really* throw a RuntimeException
-    public void testThrowsExceptionForMalformedCredentialCacheKey() {
-        mSharedPreferencesAccountCredentialCache.getCredential("Malformed cache key");
+    @Test
+    public void testMalformedCredentialCacheKeyReturnsNull() {
+        assertNull(mSharedPreferencesAccountCredentialCache.getCredential("Malformed cache key"));
     }
 
     @Test
