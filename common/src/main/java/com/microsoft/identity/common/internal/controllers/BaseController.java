@@ -32,11 +32,13 @@ import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -58,6 +60,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
+import com.microsoft.identity.common.internal.request.BrokerAcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -71,6 +74,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 public abstract class BaseController {
 
@@ -183,7 +187,6 @@ public abstract class BaseController {
 
         TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
-        tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
 
         TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
@@ -349,7 +352,6 @@ public abstract class BaseController {
         refreshTokenRequest.setClientId(parameters.getClientId());
         refreshTokenRequest.setScope(TextUtils.join(" ", parameters.getScopes()));
         refreshTokenRequest.setRefreshToken(parameters.getRefreshToken().getSecret());
-        refreshTokenRequest.setRedirectUri(parameters.getRedirectUri());
 
         if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
@@ -358,6 +360,13 @@ public abstract class BaseController {
         //NOTE: this should be moved to the strategy; however requires a larger refactor
         if (parameters.getSdkType() == SdkType.ADAL) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setIdTokenVersion("1");
+        }
+
+        // Set Broker version to Token Request if it's a brokered request.
+        if(parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
+            ((MicrosoftTokenRequest) refreshTokenRequest).setBrokerVersion(
+                    ((BrokerAcquireTokenSilentOperationParameters) parameters).getBrokerVersion()
+            );
         }
 
         if (!StringExtensions.isNullOrBlank(refreshTokenRequest.getScope())) {
@@ -468,6 +477,38 @@ public abstract class BaseController {
         }
 
         return targetAccount;
+    }
+
+    /**
+     * Helper method which returns false if the tenant id of the authority
+     * doesn't match with the tenant of the Access token for AADAuthority.
+     *
+     * Returns true otherwise.
+     */
+    protected boolean isRequestAuthorityRealmSameAsATRealm(@NonNull final Authority requestAuthority,
+                                                           @NonNull final AccessTokenRecord accessTokenRecord)
+            throws ServiceException, ClientException {
+        if(requestAuthority instanceof AzureActiveDirectoryAuthority){
+
+            String tenantId = ((AzureActiveDirectoryAuthority) requestAuthority).getAudience().getTenantId();
+
+            if(AzureActiveDirectoryAudience.isHomeTenantAlias(tenantId)) {
+                // if realm on AT and home account's tenant id do not match, we have a token for guest and
+                // requested authority here is for home, so return false we need to refresh the token
+                final String utidFromHomeAccountId = accessTokenRecord
+                        .getHomeAccountId()
+                        .split(Pattern.quote("."))[1];
+
+                return utidFromHomeAccountId.equalsIgnoreCase(accessTokenRecord.getRealm());
+
+            }else {
+                tenantId = ((AzureActiveDirectoryAuthority) requestAuthority)
+                        .getAudience()
+                        .getTenantUuidForAlias(requestAuthority.getAuthorityURL().toString());
+                return tenantId.equalsIgnoreCase(accessTokenRecord.getRealm());
+            }
+        }
+        return true;
     }
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {

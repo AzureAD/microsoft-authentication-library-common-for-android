@@ -20,49 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.internal.testutils.labutils;
 
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.IdTokenRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 
-/**
- * Result container for Account and Credential - usually the result of a save or load operation.
- */
-public interface ICacheRecord {
+public class CurrentLabConfig {
 
-    /**
-     * Gets the {@link AccountRecord}.
-     *
-     * @return The Account to get.
-     */
-    AccountRecord getAccount();
+    // allows to get the lab user currently being used for the test
+    // can get the labname from the object to get the password
+    public static ConfigInfo configInfo;
 
-    /**
-     * Gets the {@link AccessTokenRecord}.
-     *
-     * @return The AccessToken to get.
-     */
-    AccessTokenRecord getAccessToken();
+    public static String labUserPassword;
 
-    /**
-     * Gets the {@link RefreshTokenRecord}.
-     *
-     * @return The RefreshToken to get.
-     */
-    RefreshTokenRecord getRefreshToken();
-
-    /**
-     * Gets the {@link IdTokenRecord}.
-     *
-     * @return The IdToken to get.
-     */
-    IdTokenRecord getIdToken();
-
-    /**
-     * Gets the {@link IdTokenRecord} in v1 format.
-     * @return
-     */
-    IdTokenRecord getV1IdToken();
 }

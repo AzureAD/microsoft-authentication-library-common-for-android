@@ -22,18 +22,23 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.request;
 
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 
-import androidx.annotation.Nullable;
+import java.io.IOException;
 
 public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
     private final static String TAG = AcquireTokenSilentOperationParameters.class.getSimpleName();
 
-    private transient RefreshTokenRecord mRefreshToken;
+    private static final Object sLock = new Object();
 
+    private transient RefreshTokenRecord mRefreshToken;
 
     public RefreshTokenRecord getRefreshToken() {
         return mRefreshToken;
@@ -49,8 +54,42 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
         if (mAccount == null) {
             Logger.warn(TAG, "The account set on silent operation parameters is NULL.");
+        } else if (!authorityMatchesAccountEnvironment()) {
+            throw new ArgumentException(
+                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
+                    ArgumentException.AUTHORITY_ARGUMENT_NAME,
+                    "Authority passed to silent parameters does not match with the cloud associated to the account."
+            );
         }
+    }
 
+    private boolean authorityMatchesAccountEnvironment() {
+        final String methodName = ":authorityMatchesAccountEnvironment";
+        try {
+            if (!AzureActiveDirectory.isInitialized()) {
+                performCloudDiscovery();
+            }
+            final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName(mAccount.getEnvironment());
+            return cloud != null && cloud.getPreferredNetworkHostName().equals(getAuthority().getAuthorityURL().getAuthority());
+        } catch (IOException e) {
+            Logger.error(
+                    TAG + methodName,
+                    "Unable to perform cloud discovery",
+                    e);
+            return false;
+        }
+    }
+
+    private static void performCloudDiscovery() throws IOException {
+        final String methodName = ":performCloudDiscovery";
+        Logger.verbose(
+                TAG + methodName,
+                "Performing cloud discovery..."
+        );
+        synchronized (sLock) {
+            AzureActiveDirectory.performCloudDiscovery();
+        }
     }
 
 }
+

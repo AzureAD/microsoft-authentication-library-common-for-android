@@ -52,6 +52,8 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
 
     private List<Pair<String, String>> mExtraQueryStringParameters;
 
+    private String mBrokerVersion;
+
     // Device state might not be propagated to MSODS yet, so we might want to wait before re-acquiring PRT.
     private int mSleepTimeBeforePrtAcquisition;
 
@@ -127,6 +129,13 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
         mSleepTimeBeforePrtAcquisition = sleepTimeBeforePrtAcquisition;
     }
 
+    public String getBrokerVersion() {
+        return mBrokerVersion;
+    }
+
+    public void setBrokerVersion(String brokerVersion) {
+        this.mBrokerVersion = brokerVersion;
+    }
 
     public BrokerAcquireTokenSilentOperationParameters(){
 

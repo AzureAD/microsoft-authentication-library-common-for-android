@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -98,7 +100,9 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
         for (Map.Entry<String, String> entry : data.entrySet()) {
             final String cacheKey = entry.getKey();
             final String cacheValue = entry.getValue();
-            mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
+            if (!TextUtils.isEmpty(cacheKey) && !TextUtils.isEmpty(cacheValue)) {
+                mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
+            }
         }
     }
 
