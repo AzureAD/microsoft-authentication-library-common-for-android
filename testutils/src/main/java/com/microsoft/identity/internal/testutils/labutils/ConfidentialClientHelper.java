@@ -55,20 +55,8 @@ abstract class ConfidentialClientHelper {
     void setupApiClientWithAccessToken() {
         try {
             setupApiClientWithAccessToken(this.getAccessToken());
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (UnrecoverableKeyException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to get access token for automation:" + e.getMessage());
         }
     }
 
