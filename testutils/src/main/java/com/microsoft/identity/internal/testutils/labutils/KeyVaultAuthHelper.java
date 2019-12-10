@@ -24,12 +24,9 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
     private final static String KEYSTORE_PROVIDER = "SunMSCAPI";
     private final static String MSSTS_CLIENT_ASSERTION_AUDIENCE = "https://login.microsoftonline.com/microsoft.com/oauth2/v2.0/token";
 
-    private String mAccessToken;
-
     private static KeyVaultAuthHelper sKeyVaultAuthHelper;
 
     private KeyVaultAuthHelper() {
-        mAccessToken = null;
     }
 
     public static ConfidentialClientHelper getInstance() {
@@ -37,15 +34,6 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
             sKeyVaultAuthHelper = new KeyVaultAuthHelper();
         }
         return sKeyVaultAuthHelper;
-    }
-
-    @Override
-    public String getAccessToken() throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException, InterruptedException, CertificateException {
-        if (mAccessToken == null) {
-            mAccessToken = requestAccessTokenForAutomation();
-        }
-
-        return mAccessToken;
     }
 
     @Override

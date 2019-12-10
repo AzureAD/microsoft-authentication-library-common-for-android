@@ -52,6 +52,8 @@ import com.microsoft.identity.internal.test.labapi.auth.OAuth;
 
 public class ApiClient {
 
+    private final String AUTH_TYPE = "Access Token";
+
     private String basePath = "https://msidlab.com";
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
@@ -945,6 +947,7 @@ public class ApiClient {
      * @throws ApiException If fail to serialize the request body object
      */
     public Call buildCall(String path, String method, List<Pair> queryParams, List<Pair> collectionQueryParams, Object body, Map<String, String> headerParams, Map<String, Object> formParams, String[] authNames, ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+        authNames[0] = AUTH_TYPE;
         Request request = buildRequest(path, method, queryParams, collectionQueryParams, body, headerParams, formParams, authNames, progressRequestListener);
 
         return httpClient.newCall(request);

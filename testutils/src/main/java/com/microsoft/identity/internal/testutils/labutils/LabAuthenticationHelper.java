@@ -29,27 +29,18 @@ import com.microsoft.identity.internal.test.keyvault.api.SecretsApi;
 import com.microsoft.identity.internal.test.keyvault.model.SecretBundle;
 import com.microsoft.identity.internal.test.labapi.Configuration;
 
-import java.io.IOException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-
 class LabAuthenticationHelper extends ConfidentialClientHelper {
     private final static String SECRET_NAME_LAB_APP_ID = "LabVaultAppID";
     private final static String SECRET_NAME_LAB_APP_SECRET = "LabVaultAppSecret";
     private final static String KEY_VAULT_API_VERSION = "2016-10-01";
     private final static String SCOPE = "https://msidlab.com/.default";
 
-    private String mAccessToken;
     private String mAppId;
     private String mAppSecret;
 
     private static LabAuthenticationHelper sLabAuthHelper;
 
     private LabAuthenticationHelper() {
-        mAccessToken = null;
         mAppId = null;
         mAppSecret = null;
     }
@@ -60,15 +51,6 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
         }
 
         return sLabAuthHelper;
-    }
-
-    @Override
-    public String getAccessToken() throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException, InterruptedException, CertificateException {
-        if (mAccessToken == null) {
-            mAccessToken = requestAccessTokenForAutomation();
-        }
-
-        return mAccessToken;
     }
 
     @Override
@@ -91,7 +73,7 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
 
     private String getAppId() {
         if (mAppId == null) {
-            mAppId = getLabSecret(SECRET_NAME_LAB_APP_ID);
+            mAppId = getSecretFromKeyVault(SECRET_NAME_LAB_APP_ID);
         }
 
         return mAppId;
@@ -99,13 +81,13 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
 
     private String getAppSecret() {
         if (mAppSecret == null) {
-            mAppSecret = getLabSecret(SECRET_NAME_LAB_APP_SECRET);
+            mAppSecret = getSecretFromKeyVault(SECRET_NAME_LAB_APP_SECRET);
         }
 
         return mAppSecret;
     }
 
-    private String getLabSecret(final String secretName) {
+    private String getSecretFromKeyVault(final String secretName) {
         KeyVaultAuthHelper.getInstance().setupApiClientWithAccessToken();
         SecretsApi secretsApi = new SecretsApi();
         SecretBundle secretBundle;

@@ -104,7 +104,7 @@ public class EnablePolicyApi {
             });
         }
 
-        String[] localVarAuthNames = new String[] { "Access Token" };
+        String[] localVarAuthNames = new String[1];
         return apiClient.buildCall(localVarPath, "PUT", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
     }
 
