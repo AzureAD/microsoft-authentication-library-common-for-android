@@ -27,20 +27,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 
 import org.mockito.Mockito;
 
-import java.util.HashSet;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 
 public class TestUtils {
 
@@ -55,49 +49,8 @@ public class TestUtils {
         return null;
     }
 
-
-    /**
-     * Inspects the supplied cache key to determine the target CredentialType.
-     *
-     * @param cacheKey The cache key to inspect.
-     * @return The CredentialType or null if a proper type cannot be resolved.
-     */
-    @Nullable
-    private static CredentialType getCredentialTypeForCredentialCacheKey(@NonNull final String cacheKey) {
-        if (StringExtensions.isNullOrBlank(cacheKey)) {
-            throw new IllegalArgumentException("Param [cacheKey] cannot be null.");
-        }
-
-        final Set<String> credentialTypesLowerCase = new HashSet<>();
-
-        for (final String credentialTypeStr : CredentialType.valueSet()) {
-            credentialTypesLowerCase.add(credentialTypeStr.toLowerCase(Locale.US));
-        }
-
-        CredentialType type = null;
-        for (final String credentialTypeStr : credentialTypesLowerCase) {
-            if (cacheKey.contains(CACHE_VALUE_SEPARATOR + credentialTypeStr + CACHE_VALUE_SEPARATOR)) {
-                if (credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken.name())) {
-                    type = CredentialType.AccessToken;
-                    break;
-                } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.RefreshToken.name())) {
-                    type = CredentialType.RefreshToken;
-                    break;
-                } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.IdToken.name())) {
-                    type = CredentialType.IdToken;
-                    break;
-                } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.V1IdToken.name())) {
-                    type = CredentialType.V1IdToken;
-                    break;
-                }
-            }
-        }
-
-        return type;
-    }
-
     private static boolean isAccessToken(@NonNull final String cacheKey) {
-        return getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.AccessToken;
+        return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.AccessToken;
     }
 
     public static SharedPreferences getSharedPreferences(final String sharedPrefName) {
