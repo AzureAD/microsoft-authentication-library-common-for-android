@@ -35,7 +35,7 @@ import java.util.List;
 
 public class LabUserHelper {
     public static ConfigInfo getConfigInfo(LabUserQuery query) {
-        LabAuthenticationHelper.setupApiClientWithAccessToken();
+        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         ConfigApi api = new ConfigApi();
         List<ConfigInfo> configInfos;
 
@@ -53,7 +53,7 @@ public class LabUserHelper {
     }
 
     public static ConfigInfo getConfigInfoFromUpn(final String upn) {
-        LabAuthenticationHelper.setupApiClientWithAccessToken();
+        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         ConfigApi api = new ConfigApi();
         List<ConfigInfo> configInfos;
 
