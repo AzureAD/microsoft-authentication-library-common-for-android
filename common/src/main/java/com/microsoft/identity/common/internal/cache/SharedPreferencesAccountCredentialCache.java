@@ -146,6 +146,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     }
 
     @Override
+    @Nullable
     public synchronized Credential getCredential(@NonNull final String cacheKey) {
         // TODO add support for more Credential types...
         Logger.verbose(TAG, "getCredential()");

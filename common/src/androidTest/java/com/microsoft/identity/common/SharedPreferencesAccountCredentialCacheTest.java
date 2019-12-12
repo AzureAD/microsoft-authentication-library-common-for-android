@@ -1408,7 +1408,7 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
     }
 
     @Test
-    public void testThrowsExceptionForMalformedCredentialCacheKey() {
+    public void testMalformedCredentialCacheKeyReturnsNull() {
         assertNull(mSharedPreferencesAccountCredentialCache.getCredential("Malformed cache key"));
     }
 
