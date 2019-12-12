@@ -32,7 +32,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.internal.authscheme.DevicePopManagerImpl;
+import com.microsoft.identity.common.internal.authscheme.DevicePopManager;
 import com.microsoft.identity.common.internal.authscheme.IDevicePopManager;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
@@ -116,7 +116,7 @@ public class MicrosoftStsOAuth2Strategy
 
         if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
             try {
-                mDevicePopManager = new DevicePopManagerImpl(options.getContext());
+                mDevicePopManager = new DevicePopManager(options.getContext());
 
                 if (options.getAuthenticationScheme() instanceof PopAuthenticationSchemeInternal) {
                     // TODO Ideally, we wouldn't assign this here.

@@ -89,9 +89,9 @@ import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PR
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.internal.net.ObjectMapper.ENCODING_SCHEME;
 
-public class DevicePopManagerImpl implements IDevicePopManager {
+public class DevicePopManager implements IDevicePopManager {
 
-    private static final String TAG = DevicePopManagerImpl.class.getSimpleName();
+    private static final String TAG = DevicePopManager.class.getSimpleName();
 
     /**
      * The PoP alias in the designated KeyStore.
@@ -193,7 +193,7 @@ public class DevicePopManagerImpl implements IDevicePopManager {
         static final String RSA = "RSA";
     }
 
-    public DevicePopManagerImpl(@NonNull final Context context)
+    public DevicePopManager(@NonNull final Context context)
             throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
         mContext = context;
         mKeyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
