@@ -42,7 +42,7 @@ import java.util.Set;
 
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 
-public class Utils {
+public class TestUtils {
 
     private static String getCacheKeyForAccessToken(Map<String, ?> cacheValues) {
         for (Map.Entry<String, ?> cacheValue : cacheValues.entrySet()) {
@@ -97,25 +97,23 @@ public class Utils {
     }
 
     private static boolean isAccessToken(@NonNull final String cacheKey) {
-        boolean isAccessToken = CredentialType.AccessToken == getCredentialTypeForCredentialCacheKey(cacheKey);
-        return isAccessToken;
+        return getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.AccessToken;
     }
 
-    private static SharedPreferences getSharedPreferences(final String cacheName) {
+    public static SharedPreferences getSharedPreferences(final String sharedPrefName) {
         final Context context = ApplicationProvider.getApplicationContext();
-        SharedPreferences sharedPreferences = context.getSharedPreferences(cacheName, Context.MODE_PRIVATE);
-        return sharedPreferences;
+        return context.getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE);
     }
 
-    public static void clearCache(final String cacheName) {
-        SharedPreferences sharedPreferences = getSharedPreferences(cacheName);
+    public static void clearCache(final String sharedPrefName) {
+        SharedPreferences sharedPreferences = getSharedPreferences(sharedPrefName);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
         editor.commit();
     }
 
-    public static void removeAccessTokenFromCache(final String cacheName) {
-        SharedPreferences sharedPreferences = getSharedPreferences(cacheName);
+    public static void removeAccessTokenFromCache(final String sharedPrefName) {
+        SharedPreferences sharedPreferences = getSharedPreferences(sharedPrefName);
         final Map<String, ?> cacheValues = sharedPreferences.getAll();
         final String keyToRemove = getCacheKeyForAccessToken(cacheValues);
         if (keyToRemove != null) {
