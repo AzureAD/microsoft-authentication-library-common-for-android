@@ -8,6 +8,9 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
@@ -21,8 +24,8 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
-import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
+import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -33,9 +36,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
@@ -177,14 +177,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         OpenIdConnectPromptParameter.NONE
         );
         Logger.info(TAG, "Authorization agent passed in by MSAL: " + brokerRequest.getAuthorizationAgent());
-        if(brokerRequest.getAuthorizationAgent() != null
+        if (brokerRequest.getAuthorizationAgent() != null
                 && brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())
-                && isCallingPackageIntune(parameters.getCallerPackageName())){ // TODO : Remove this whenever we enable System Browser support in Broker for apps.
-            Logger.info(TAG , "Setting Authorization Agent to Browser for Intune app");
+                && isCallingPackageIntune(parameters.getCallerPackageName())) { // TODO : Remove this whenever we enable System Browser support in Broker for apps.
+            Logger.info(TAG, "Setting Authorization Agent to Browser for Intune app");
             parameters.setAuthorizationAgent(AuthorizationAgent.BROWSER);
             parameters.setBrokerBrowserSupportEnabled(true);
             parameters.setBrowserSafeList(getBrowserSafeListForBroker());
-        }else {
+        } else {
             parameters.setAuthorizationAgent(AuthorizationAgent.WEBVIEW);
         }
 
@@ -386,28 +386,20 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * List of System Browsers which can be used from broker, currently only Chrome is supported.
      * This information here is populated from the default browser safelist in MSAL.
+     *
      * @return
      */
-    public static List<BrowserDescriptor> getBrowserSafeListForBroker(){
-        List<BrowserDescriptor>  browserDescriptors = new ArrayList<>();
+    public static List<BrowserDescriptor> getBrowserSafeListForBroker() {
+        List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
         final HashSet<String> signatureHashes = new HashSet();
         signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
-        final BrowserDescriptor chromeWithCustomTabs = new BrowserDescriptor(
+        final BrowserDescriptor chrome = new BrowserDescriptor(
                 "com.android.chrome",
                 signatureHashes,
-                true,
-                "45",
-                null
-        );
-        final BrowserDescriptor chromeWithoutCustomTabs = new BrowserDescriptor(
-                "com.android.chrome",
-                signatureHashes,
-                false,
                 null,
                 null
         );
-        browserDescriptors.add(chromeWithCustomTabs);
-        browserDescriptors.add(chromeWithoutCustomTabs);
+        browserDescriptors.add(chrome);
 
         return browserDescriptors;
     }
@@ -415,9 +407,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Helper method to validate in Broker that the calling package in Microsoft Intune
      * to allow System Webview Support.
-     *
      */
-    private boolean isCallingPackageIntune(@NonNull final String packageName){
+    private boolean isCallingPackageIntune(@NonNull final String packageName) {
         final String methodName = ":isCallingPackageIntune";
         final String intunePackageName = "com.microsoft.intune";
         Logger.info(TAG + methodName, "Calling package name : " + packageName);
