@@ -112,6 +112,7 @@ public class MicrosoftStsOAuth2Strategy
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
                                       @NonNull final OAuth2StrategyOptions options) throws ClientException {
         super(config, options);
+        setTokenEndpoint(config.getTokenEndpoint().toString());
 
         if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
             try {
