@@ -32,4 +32,8 @@ public class CurrentLabConfig {
 
     public static String labUserPassword;
 
+    public static String getAuthority() {
+        return configInfo.getLabInfo().getAuthority();
+    }
+
 }

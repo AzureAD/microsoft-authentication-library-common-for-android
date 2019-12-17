@@ -406,7 +406,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
      * @return The CredentialType or null if a proper type cannot be resolved.
      */
     @Nullable
-    private CredentialType getCredentialTypeForCredentialCacheKey(@NonNull final String cacheKey) {
+    public static CredentialType getCredentialTypeForCredentialCacheKey(@NonNull final String cacheKey) {
         if (StringExtensions.isNullOrBlank(cacheKey)) {
             throw new IllegalArgumentException("Param [cacheKey] cannot be null.");
         }

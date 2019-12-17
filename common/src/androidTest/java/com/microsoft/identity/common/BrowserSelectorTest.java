@@ -42,16 +42,16 @@ import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.eq;
@@ -111,8 +111,8 @@ public class BrowserSelectorTest {
         when(mContext.getPackageManager().resolveActivity(BROWSER_INTENT, 0))
                 .thenReturn(CHROME.mResolveInfo);
         List<Browser> allBrowsers = BrowserSelector.getAllBrowsers(mContext);
-        assert(allBrowsers.get(0).getPackageName().equals(CHROME.mPackageName));
-        assert(allBrowsers.get(1).getPackageName().equals(FIREFOX.mPackageName));
+        assert (allBrowsers.get(0).getPackageName().equals(CHROME.mPackageName));
+        assert (allBrowsers.get(1).getPackageName().equals(FIREFOX.mPackageName));
     }
 
     @Test
@@ -125,7 +125,7 @@ public class BrowserSelectorTest {
             BrowserSelector.select(mContext, browserSafelist);
         } catch (final ClientException exception) {
             assertNotNull(exception);
-            assert(exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
+            assert (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
         }
     }
 
@@ -139,7 +139,6 @@ public class BrowserSelectorTest {
                 new BrowserDescriptor(
                         "com.android.chrome",
                         "ChromeSignature",
-                        true,
                         "51",
                         null)
         );
@@ -148,7 +147,7 @@ public class BrowserSelectorTest {
             BrowserSelector.select(mContext, browserSafelist);
         } catch (final ClientException exception) {
             assertNotNull(exception);
-            assert(exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
+            assert (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
         }
     }
 
@@ -278,7 +277,7 @@ public class BrowserSelectorTest {
                 ri.filter.addDataScheme(scheme);
             }
 
-            for (String authority: mAuthorities) {
+            for (String authority : mAuthorities) {
                 ri.filter.addDataAuthority(authority, null);
             }
 
