@@ -188,7 +188,7 @@ public class BrokerOAuth2TokenCache
                 TAG + methodName,
                 "Saving to FOCI cache? ["
                         + isFoci
-                        + "}"
+                        + "]"
         );
 
         if (isFoci) {
@@ -289,7 +289,7 @@ public class BrokerOAuth2TokenCache
                 TAG + methodName,
                 "Saving to FOCI cache? ["
                         + isFoci
-                        + "}"
+                        + "]"
         );
 
         OAuth2TokenCache targetCache;
@@ -344,6 +344,13 @@ public class BrokerOAuth2TokenCache
             final boolean isFoci = !StringExtensions.isNullOrBlank(response.getFamilyId());
 
             OAuth2TokenCache targetCache;
+
+            Logger.info(
+                    TAG + methodName,
+                    "Saving to FOCI cache? ["
+                            + isFoci
+                            + "]"
+            );
 
             if (isFoci) {
                 targetCache = mFociCache;
@@ -480,6 +487,13 @@ public class BrokerOAuth2TokenCache
 
         final boolean shouldUseFociCache = null == targetCache || isKnownFoci;
 
+        Logger.info(
+                TAG + methodName,
+                "Loading from FOCI cache? ["
+                        + shouldUseFociCache
+                        + "]"
+        );
+
         ICacheRecord resultRecord;
 
         if (shouldUseFociCache) {
@@ -567,6 +581,13 @@ public class BrokerOAuth2TokenCache
             final boolean appIsUnknownUseFociAsFallback = null == targetCache;
 
             final List<ICacheRecord> resultRecords;
+
+            Logger.info(
+                    TAG + methodName,
+                    "Loading from FOCI cache? ["
+                            + (isKnownFoci || appIsUnknownUseFociAsFallback)
+                            + "]"
+            );
 
             if (appIsUnknownUseFociAsFallback) {
                 // We do not have a cache for this app or it is not yet known to be a member of the family
@@ -801,6 +822,13 @@ public class BrokerOAuth2TokenCache
                     mCallingProcessUid
             );
 
+            Logger.info(
+                    TAG + methodName,
+                    "Loading from FOCI cache? ["
+                            + (targetCache == null)
+                            + "]"
+            );
+
             if (null != targetCache) {
                 return targetCache.getAccountByLocalAccountId(
                         environment,
@@ -840,11 +868,19 @@ public class BrokerOAuth2TokenCache
             @Nullable final String environment,
             @NonNull final String clientId,
             @NonNull final String localAccountId) {
+        final String methodName = ":getAccountWithAggregatedAccountDataByLocalAccountId";
         if (null != environment) {
             OAuth2TokenCache targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
                     mCallingProcessUid
+            );
+
+            Logger.info(
+                    TAG + methodName,
+                    "Loading from FOCI cache? ["
+                            + (targetCache == null)
+                            + "]"
             );
 
             if (null != targetCache) {
