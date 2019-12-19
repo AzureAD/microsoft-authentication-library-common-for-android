@@ -25,30 +25,41 @@ package com.microsoft.identity.internal.testutils.labutils;
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
 import com.microsoft.identity.internal.test.labapi.api.ResetApi;
-import com.microsoft.identity.internal.test.labapi.api.UserApi;
 import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
-import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 import com.microsoft.identity.internal.test.labapi.model.LabInfo;
-import com.microsoft.identity.internal.test.labapi.model.UserInfo;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class LabUserHelper {
-    public static ConfigInfo getConfigInfo(LabUserQuery query) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
-        ConfigApi api = new ConfigApi();
-        List<ConfigInfo> configInfos;
 
-        try {
-            configInfos = api.getConfig(query.userType, query.mfa, query.protectionPolicy, query.homeDomain, query.homeUpn, query.b2cProvider, query.federationProvider, query.azureEnvironment, query.signInAudience);
-        } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
-            throw new RuntimeException("Error retrieving lab user", ex);
+    private static final Map<LabUserQuery, LabConfig> sLabConfigCache = new HashMap<>();
+
+    public static ConfigInfo getConfigInfo(LabUserQuery query) {
+        LabConfig labConfig;
+        labConfig = sLabConfigCache.get(query);
+
+        if (labConfig == null) {
+            LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+            ConfigApi api = new ConfigApi();
+            List<ConfigInfo> configInfos;
+
+            try {
+                configInfos = api.getConfig(query.userType, query.mfa, query.protectionPolicy, query.homeDomain, query.homeUpn, query.b2cProvider, query.federationProvider, query.azureEnvironment, query.signInAudience);
+            } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
+                throw new RuntimeException("Error retrieving lab user", ex);
+            }
+
+            final ConfigInfo pickedConfig = configInfos.get(0);
+
+            labConfig = new LabConfig(pickedConfig);
+            sLabConfigCache.put(query, labConfig);
         }
 
-        final ConfigInfo pickedConfig = configInfos.get(0);
-        CurrentLabConfig.configInfo = pickedConfig;
+        LabConfig.setCurrentLabConfig(labConfig);
 
-        return pickedConfig;
+        return labConfig.getConfigInfo();
 
     }
 
@@ -64,16 +75,28 @@ public class LabUserHelper {
         }
 
         final ConfigInfo pickedConfig = configInfos.get(0);
-        CurrentLabConfig.configInfo = pickedConfig;
+
+        LabConfig labConfig = new LabConfig(pickedConfig);
+
+        LabConfig.setCurrentLabConfig(labConfig);
 
         return pickedConfig;
     }
 
     public static String loadUserForTest(LabUserQuery query) {
-        final ConfigInfo configInfo = getConfigInfo(query);
-        final String upn = configInfo.getUserInfo().getUpn();
-        CurrentLabConfig.labUserPassword = LabSecretHelper.getPasswordForLab(configInfo.getLabInfo().getLabName());
-        return upn;
+        LabConfig labConfig;
+        labConfig = sLabConfigCache.get(query);
+
+        if (labConfig == null) {
+            final ConfigInfo configInfo = getConfigInfo(query);
+            final String password = LabSecretHelper.getPasswordForLab(configInfo.getLabInfo().getLabName());
+            labConfig = new LabConfig(configInfo, password);
+            sLabConfigCache.put(query, labConfig);
+        }
+
+        LabConfig.setCurrentLabConfig(labConfig);
+
+        return labConfig.getConfigInfo().getUserInfo().getUpn();
     }
 
     public static String getPasswordForUser(final String username) {
@@ -86,13 +109,22 @@ public class LabUserHelper {
     }
 
     public static Credential getCredentials(LabUserQuery query) {
-        ConfigInfo configInfo;
+        LabConfig labConfig;
+        labConfig = sLabConfigCache.get(query);
         Credential credential = new Credential();
+        ConfigInfo configInfo = null;
 
-        configInfo = getConfigInfo(query);
+        if (labConfig == null) {
+            String password;
+            configInfo = getConfigInfo(query);
+            password = getPasswordForUser(configInfo.getLabInfo());
+            labConfig = new LabConfig(configInfo, password);
+            sLabConfigCache.put(query, labConfig);
+        }
+
+        LabConfig.setCurrentLabConfig(labConfig);
         credential.userName = configInfo.getUserInfo().getUpn();
-        credential.password = getPasswordForUser(configInfo.getLabInfo());
-
+        credential.password = labConfig.getLabUserPassword();
         return credential;
     }
 
