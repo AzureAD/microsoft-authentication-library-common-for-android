@@ -46,7 +46,17 @@ public class LabUserHelper {
             List<ConfigInfo> configInfos;
 
             try {
-                configInfos = api.getConfig(query.userType, query.mfa, query.protectionPolicy, query.homeDomain, query.homeUpn, query.b2cProvider, query.federationProvider, query.azureEnvironment, query.signInAudience);
+                configInfos = api.getConfig(
+                        query.userType,
+                        query.mfa,
+                        query.protectionPolicy,
+                        query.homeDomain,
+                        query.homeUpn,
+                        query.b2cProvider,
+                        query.federationProvider,
+                        query.azureEnvironment,
+                        query.signInAudience,
+                        query.guestHomedIn);
             } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
                 throw new RuntimeException("Error retrieving lab user", ex);
             }
