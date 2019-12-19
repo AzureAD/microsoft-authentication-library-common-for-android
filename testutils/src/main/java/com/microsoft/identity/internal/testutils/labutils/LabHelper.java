@@ -22,10 +22,28 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
+import com.microsoft.identity.internal.test.labapi.ApiException;
+import com.microsoft.identity.internal.test.labapi.api.LabApi;
 import com.microsoft.identity.internal.test.labapi.api.LabUserSecretApi;
+import com.microsoft.identity.internal.test.labapi.model.LabInfo;
 import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 
-public class LabSecretHelper {
+public class LabHelper {
+
+    // this can be used to get tenant id for a guest tenant
+    public static String getLabTenantId(final String labName) {
+        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        LabApi labApi = new LabApi();
+        LabInfo labInfo;
+        try {
+            // return the first object
+            labInfo = labApi.getLabName(labName).get(0);
+        } catch (ApiException ex) {
+            throw new RuntimeException("Error retrieving lab info", ex);
+        }
+
+        return labInfo.getTenantId();
+    }
 
     public static String getPasswordForLab(final String labName) {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
