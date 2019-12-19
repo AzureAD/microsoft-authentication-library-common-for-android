@@ -185,6 +185,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
                 uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
             }
         }
+        uriBuilder.appendQueryParameter("dc", "china-bjb1-test");
 
         return uriBuilder.build();
     }

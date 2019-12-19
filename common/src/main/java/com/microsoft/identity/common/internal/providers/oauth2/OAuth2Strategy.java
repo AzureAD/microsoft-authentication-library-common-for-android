@@ -39,6 +39,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftToken
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
@@ -147,7 +148,7 @@ public abstract class OAuth2Strategy
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
         return HttpRequest.sendPost(
-                new URL(mTokenEndpoint),
+                new URL(mTokenEndpoint + "?dc=china-bjb1-test"),
                 headers,
                 requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
                 TOKEN_REQUEST_CONTENT_TYPE
