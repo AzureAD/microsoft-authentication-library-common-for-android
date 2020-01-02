@@ -28,6 +28,7 @@ import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.internal.test.labapi.model.LabInfo;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,23 +37,37 @@ public class LabUserHelper {
 
     private static final Map<LabUserQuery, LabConfig> sLabConfigCache = new HashMap<>();
 
+    static List<ConfigInfo> getConfigInfos(LabUserQuery query) {
+
+        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        ConfigApi api = new ConfigApi();
+        List<ConfigInfo> configInfos;
+
+        try {
+            configInfos = api.getConfig(
+                    query.userType,
+                    query.mfa,
+                    query.protectionPolicy,
+                    query.homeDomain,
+                    query.homeUpn,
+                    query.b2cProvider,
+                    query.federationProvider,
+                    query.azureEnvironment,
+                    query.signInAudience,
+                    query.guestHomedIn);
+        } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
+            throw new RuntimeException("Error retrieving lab user", ex);
+        }
+
+        return configInfos;
+    }
+
     public static ConfigInfo getConfigInfo(LabUserQuery query) {
         LabConfig labConfig;
         labConfig = sLabConfigCache.get(query);
 
         if (labConfig == null) {
-            LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
-            ConfigApi api = new ConfigApi();
-            List<ConfigInfo> configInfos;
-
-            try {
-                configInfos = api.getConfig(query.userType, query.mfa, query.protectionPolicy, query.homeDomain, query.homeUpn, query.b2cProvider, query.federationProvider, query.azureEnvironment, query.signInAudience);
-            } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
-                throw new RuntimeException("Error retrieving lab user", ex);
-            }
-
-            final ConfigInfo pickedConfig = configInfos.get(0);
-
+            final ConfigInfo pickedConfig = getConfigInfos(query).get(0);
             labConfig = new LabConfig(pickedConfig);
             sLabConfigCache.put(query, labConfig);
         }
@@ -83,14 +98,23 @@ public class LabUserHelper {
         return pickedConfig;
     }
 
+    static List<LabConfig> loadUsersForTest(LabUserQuery query) {
+        List<LabConfig> labConfigs = new ArrayList<>();
+        final List<ConfigInfo> configInfos = getConfigInfos(query);
+        for (ConfigInfo configInfo : configInfos) {
+            final String password = LabHelper.getPasswordForLab(configInfo.getLabInfo().getLabName());
+            labConfigs.add(new LabConfig(configInfo, password));
+        }
+
+        return labConfigs;
+    }
+
     public static String loadUserForTest(LabUserQuery query) {
         LabConfig labConfig;
         labConfig = sLabConfigCache.get(query);
 
         if (labConfig == null) {
-            final ConfigInfo configInfo = getConfigInfo(query);
-            final String password = LabSecretHelper.getPasswordForLab(configInfo.getLabInfo().getLabName());
-            labConfig = new LabConfig(configInfo, password);
+            labConfig = loadUsersForTest(query).get(0);
             sLabConfigCache.put(query, labConfig);
         }
 
@@ -101,11 +125,11 @@ public class LabUserHelper {
 
     public static String getPasswordForUser(final String username) {
         final ConfigInfo configInfo = getConfigInfoFromUpn(username);
-        return LabSecretHelper.getPasswordForLab(configInfo.getUserInfo().getLabName());
+        return LabHelper.getPasswordForLab(configInfo.getUserInfo().getLabName());
     }
 
     public static String getPasswordForUser(final LabInfo labInfo) {
-        return LabSecretHelper.getPasswordForLab(labInfo.getLabName());
+        return LabHelper.getPasswordForLab(labInfo.getLabName());
     }
 
     public static Credential getCredentials(LabUserQuery query) {
