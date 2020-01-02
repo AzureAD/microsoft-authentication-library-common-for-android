@@ -677,6 +677,8 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     public boolean validateCachedResult(@NonNull final ICacheRecord cacheRecord) {
+        super.validateCachedResult(cacheRecord);
+
         if (authSchemeIsPoP(mStrategyOptions)) {
             return cachedAtKidMatchesKeystoreKid(cacheRecord.getAccessToken().getKid());
         }
