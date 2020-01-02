@@ -64,6 +64,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.BEARER_AUTHENTICATION_SCHEME;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CLIENT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.ENVIRONMENT;
@@ -540,7 +541,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord cacheRecord = mBrokerOAuth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                mDefaultAppUidTestBundle.mGeneratedAccount
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
         );
 
         assertNotNull(cacheRecord);
@@ -563,7 +565,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord cacheRecord = mBrokerOAuth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                mDefaultAppUidTestBundle.mGeneratedAccount
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
         );
 
         assertTrue(
@@ -586,7 +589,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord cacheRecord = mBrokerOAuth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                mDefaultFociTestBundle.mGeneratedAccount
+                mDefaultFociTestBundle.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
         );
 
         assertTrue(
@@ -929,7 +933,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
                 mDefaultAppUidTestBundle.mGeneratedIdToken.getClientId(),
                 mDefaultAppUidTestBundle.mGeneratedAccessToken.getTarget(),
-                mDefaultAppUidTestBundle.mGeneratedAccount
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
         );
 
         assertNotNull(retrievedResult);
@@ -987,7 +992,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
                 mDefaultAppUidTestBundle.mGeneratedIdToken.getClientId(),
                 mDefaultAppUidTestBundle.mGeneratedAccessToken.getTarget(),
-                mDefaultAppUidTestBundle.mGeneratedAccount
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
         );
 
         assertNotNull(retrievedResult);
