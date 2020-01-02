@@ -8,6 +8,9 @@
 # Java class files
 *.class
 
+# VSCode project file.
+.project
+
 # Generated files
 bin/
 gen/

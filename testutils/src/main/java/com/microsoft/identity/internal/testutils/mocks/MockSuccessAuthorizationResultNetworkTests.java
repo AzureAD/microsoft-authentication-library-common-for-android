@@ -20,29 +20,33 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
+package com.microsoft.identity.internal.testutils.mocks;
 
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
-import com.microsoft.identity.internal.testutils.labutils.CurrentLabConfig;
+import com.microsoft.identity.internal.testutils.labutils.LabConfig;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * A class to provide a Fake Authorization Result object to be used in ROPC flow
  */
 public class MockSuccessAuthorizationResultNetworkTests extends AuthorizationResult {
 
+    @Override
+    public boolean getSuccess() {
+        return true;
+    }
+
     public MockSuccessAuthorizationResultNetworkTests() {
         try {
             // get cloud instance host name from the authority url provided by lab info
             // and set in the mock authorization response so that we can test multiple cloud support
-            final URL authorityURL = new URL(CurrentLabConfig.configInfo.getLabInfo().getAuthority());
+            final URL authorityURL = new URL(LabConfig.getCurrentLabConfig().getAuthority());
             final HashMap<String, String> authorizationParams = new HashMap<>();
             authorizationParams.put(MicrosoftAuthorizationResponse.CLOUD_INSTANCE_HOST_NAME, authorityURL.getHost());
             MicrosoftStsAuthorizationResponse response = new MicrosoftStsAuthorizationResponse("", "", authorizationParams);

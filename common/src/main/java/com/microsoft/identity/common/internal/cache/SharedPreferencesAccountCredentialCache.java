@@ -146,12 +146,15 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     }
 
     @Override
+    @Nullable
     public synchronized Credential getCredential(@NonNull final String cacheKey) {
         // TODO add support for more Credential types...
         Logger.verbose(TAG, "getCredential()");
         Logger.verbosePII(TAG, "Using cache key: [" + cacheKey + "]");
+
         final CredentialType type = getCredentialTypeForCredentialCacheKey(cacheKey);
-        final Class<? extends Credential> clazz;
+        Class<? extends Credential> clazz = null;
+
         if (CredentialType.AccessToken == type) {
             clazz = AccessTokenRecord.class;
         } else if (CredentialType.RefreshToken == type) {
@@ -159,14 +162,20 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         } else if (CredentialType.IdToken == type || CredentialType.V1IdToken == type) {
             clazz = IdTokenRecord.class;
         } else {
-            // TODO Log a warning, throw an Exception?
-            throw new RuntimeException("Credential type could not be resolved.");
+            Logger.warn(
+                    TAG,
+                    "Unrecognized credential type."
+            );
         }
 
-        Credential credential = mCacheValueDelegate.fromCacheValue(
-                mSharedPreferencesFileManager.getString(cacheKey),
-                clazz
-        );
+        Credential credential = null;
+
+        if (null != clazz) {
+            credential = mCacheValueDelegate.fromCacheValue(
+                    mSharedPreferencesFileManager.getString(cacheKey),
+                    clazz
+            );
+        }
 
         if (null == credential) {
             // We could not deserialize the target Credential...
@@ -395,7 +404,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
      * @return The CredentialType or null if a proper type cannot be resolved.
      */
     @Nullable
-    private CredentialType getCredentialTypeForCredentialCacheKey(@NonNull final String cacheKey) {
+    public static CredentialType getCredentialTypeForCredentialCacheKey(@NonNull final String cacheKey) {
         if (StringExtensions.isNullOrBlank(cacheKey)) {
             throw new IllegalArgumentException("Param [cacheKey] cannot be null.");
         }

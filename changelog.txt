@@ -1,3 +1,19 @@
+Version 1.0.13
+------------
+- Resolving PoP backcompat issue.
+- Fixed issue #859 in MSAL
+
+Version 1.0.12
+------------
+- Refactored and improved ests telemetry flush call and telemetry caching logic.
+- Fixed ests telemetry memory leak.
+- Added null check for optional parameter prompt.
+- Added telemetry event in StorageHelper.
+- Fixed cloud url returning wrong url if authority specified in configuration.
+- Fixed issue #709 and #718
+- Fixed multiple cloud support in MSAL with Broker.
+- Enabled MSAL-Broker communication via AccountManager.
+
 Version 1.0.9-hf1
 ------------
 - Hot fix release

@@ -13,6 +13,10 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+
     buildTypes {
         debug {
             testCoverageEnabled false
@@ -26,6 +30,12 @@ android {
         }
     }
 
+    testOptions {
+        unitTests.all {
+            exclude 'com/microsoft/identity/internal/testutils/lab/'
+        }
+    }
+
 }
 
 dependencies {
@@ -33,6 +43,8 @@ dependencies {
     implementation project(':common')
     implementation project(':keyvault')
     implementation project(':labapi')
+    implementation "org.mockito:mockito-android:$rootProject.ext.mockitoAndroidVersion"
+    implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation 'androidx.appcompat:appcompat:1.0.2'

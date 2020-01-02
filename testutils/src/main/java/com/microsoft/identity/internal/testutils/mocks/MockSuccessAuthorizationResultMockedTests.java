@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
+package com.microsoft.identity.internal.testutils.mocks;
 
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
@@ -29,6 +29,11 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStat
 import java.util.HashMap;
 
 public class MockSuccessAuthorizationResultMockedTests extends AuthorizationResult {
+
+    @Override
+    public boolean getSuccess() {
+        return true;
+    }
 
     public MockSuccessAuthorizationResultMockedTests() {
         MicrosoftStsAuthorizationResponse response = new MicrosoftStsAuthorizationResponse("", "", new HashMap<String, String>());
