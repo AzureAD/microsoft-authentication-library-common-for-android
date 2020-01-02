@@ -25,8 +25,11 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -272,4 +275,17 @@ public abstract class OAuth2Strategy
 //    protected abstract void validateAuthorizationResponse(GenericAuthorizationResponse response);
 
     protected abstract void validateTokenResponse(GenericTokenResponse response) throws ClientException;
+
+    /**
+     * Validate the result yielded from the cache prior to returning it to the caller.
+     *
+     * @param cacheRecord The {@link ICacheRecord} to validate.
+     * @return True if the CacheRecord checks out. False otherwise.
+     */
+    public boolean validateCachedResult(@NonNull final ICacheRecord cacheRecord) {
+        // TODO Perform validations on the CacheRecord prior to returning result...
+
+        // TODO Ideally, we would check the expiry, completeness of record, etc here...
+        return true;
+    }
 }

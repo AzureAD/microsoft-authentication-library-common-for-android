@@ -35,6 +35,7 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.DevicePopManager;
 import com.microsoft.identity.common.internal.authscheme.IDevicePopManager;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -643,6 +644,7 @@ public class MicrosoftStsOAuth2Strategy
      *
      * @return The at/pop device credential thumbprint.
      */
+    @Nullable
     public String getDeviceAtPopThumbprint() {
         String atPoPKid = null;
 
@@ -671,5 +673,31 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return atPoPKid;
+    }
+
+    @Override
+    public boolean validateCachedResult(@NonNull final ICacheRecord cacheRecord) {
+        if (authSchemeIsPoP(mStrategyOptions)) {
+            return cachedAtKidMatchesKeystoreKid(cacheRecord.getAccessToken().getKid());
+        }
+
+        return true;
+    }
+
+    private boolean cachedAtKidMatchesKeystoreKid(@Nullable final String atKid) {
+        final String deviceKid = getDeviceAtPopThumbprint();
+
+        // If the value known to the strategy is null, something's wrong. Discard the current token
+        // and generate keys anew. Once those keys are generated we will use the cache RT to acquire
+        // a new PoP/AT.
+        if (StringExtensions.isNullOrBlank(deviceKid)) {
+            return false;
+        }
+
+        return deviceKid.equals(atKid);
+    }
+
+    private static boolean authSchemeIsPoP(@NonNull final OAuth2StrategyOptions strategyOptions) {
+        return SCHEME_POP.equals(strategyOptions.getAuthenticationScheme().getName());
     }
 }
