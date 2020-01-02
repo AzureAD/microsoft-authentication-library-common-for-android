@@ -59,6 +59,9 @@ public class UserInfo {
   @SerializedName("b2cProvider")
   private String b2cProvider = null;
 
+  @SerializedName("guestHomedIn")
+  private String guestHomedIn = null;
+
   @SerializedName("labName")
   private String labName = null;
 
@@ -264,6 +267,24 @@ public class UserInfo {
 
   public void setB2cProvider(String b2cProvider) {
     this.b2cProvider = b2cProvider;
+  }
+
+  public UserInfo guestHomedIn(String guestHomedIn) {
+    this.guestHomedIn = guestHomedIn;
+    return this;
+  }
+
+  /**
+   * Get guestHomedIn
+   * @return guestHomedIn
+   **/
+  @ApiModelProperty(value = "")
+  public String getGuestHomedIn() {
+    return guestHomedIn;
+  }
+
+  public void setGuestHomedIn(String guestHomedIn) {
+    this.guestHomedIn = guestHomedIn;
   }
 
   public UserInfo labName(String labName) {
