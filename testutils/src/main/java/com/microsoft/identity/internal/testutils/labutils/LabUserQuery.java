@@ -32,6 +32,7 @@ public class LabUserQuery {
     public String federationProvider;
     public String azureEnvironment;
     public String signInAudience;
+    public String guestHomedIn;
 
     @Override
     public boolean equals(Object obj) {
@@ -51,7 +52,8 @@ public class LabUserQuery {
                 computeEquals(query.b2cProvider, this.b2cProvider) &&
                 computeEquals(query.federationProvider, this.federationProvider) &&
                 computeEquals(query.azureEnvironment, this.azureEnvironment) &&
-                computeEquals(query.signInAudience, this.signInAudience);
+                computeEquals(query.signInAudience, this.signInAudience) &&
+                computeEquals(query.guestHomedIn, this.guestHomedIn);
     }
 
     @Override
@@ -64,7 +66,8 @@ public class LabUserQuery {
                 computeHashCode(b2cProvider, 13) +
                 computeHashCode(federationProvider, 17) +
                 computeHashCode(azureEnvironment, 19) +
-                computeHashCode(signInAudience, 23);
+                computeHashCode(signInAudience, 23) +
+                computeHashCode(guestHomedIn, 29);
 
     }
 
