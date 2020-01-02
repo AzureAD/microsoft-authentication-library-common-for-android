@@ -3,7 +3,9 @@ package com.microsoft.identity.internal.testutils.labutils;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.AccountsInOneOrganization;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
@@ -46,9 +48,10 @@ abstract class ConfidentialClientHelper {
         tokenRequest.setGrantType(GRANT_TYPE);
         AccountsInOneOrganization aadAudience = new AccountsInOneOrganization(TENANT_ID);
         AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(aadAudience);
-        OAuth2Strategy strategy = authority.createOAuth2Strategy();
-
         try {
+            final OAuth2StrategyOptions strategyOptions = new OAuth2StrategyOptions();
+            strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
+            OAuth2Strategy strategy = authority.createOAuth2Strategy(strategyOptions);
             TokenResult tokenResult = strategy.requestToken(tokenRequest);
             if (tokenResult.getSuccess()) {
                 accessToken = tokenResult.getTokenResponse().getAccessToken();

@@ -22,10 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.authorities;
 
+import androidx.annotation.NonNull;
+
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
 import com.microsoft.identity.internal.testutils.strategies.MockTestStrategy;
 
 public class MockAuthority extends AzureActiveDirectoryAuthority {
@@ -35,9 +39,13 @@ public class MockAuthority extends AzureActiveDirectoryAuthority {
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy() {
+    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyOptions options) {
         MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
-        return new MockTestStrategy(config);
+        try {
+            return new MockTestStrategy(config);
+        } catch (ClientException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

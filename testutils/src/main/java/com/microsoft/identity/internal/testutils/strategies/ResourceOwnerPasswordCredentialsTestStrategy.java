@@ -24,6 +24,8 @@ package com.microsoft.identity.internal.testutils.strategies;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
@@ -31,6 +33,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -51,8 +54,12 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
      *
      * @param config Microsoft Sts OAuth2 configuration
      */
-    public ResourceOwnerPasswordCredentialsTestStrategy(MicrosoftStsOAuth2Configuration config) {
-        super(config);
+    public ResourceOwnerPasswordCredentialsTestStrategy(MicrosoftStsOAuth2Configuration config) throws ClientException {
+        super(config, new OAuth2StrategyOptions() {{
+            setAuthenticationScheme(
+                    new BearerAuthenticationSchemeInternal()
+            );
+        }});
     }
 
     /**
@@ -105,7 +112,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
 
     @Override
     public MicrosoftStsTokenRequest createTokenRequest(@NonNull final MicrosoftStsAuthorizationRequest request,
-                                                       @NonNull final MicrosoftStsAuthorizationResponse response) {
+                                                       @NonNull final MicrosoftStsAuthorizationResponse response) throws ClientException {
         MicrosoftStsTokenRequest tokenRequest = super.createTokenRequest(request, response);
 
         final MicrosoftStsRopcTokenRequest ropcTokenRequest = new MicrosoftStsRopcTokenRequest();
