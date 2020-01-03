@@ -77,7 +77,7 @@ public final class StringUtil {
         return stringBuilder.toString();
     }
 
-    public static String join(char delimiter, List<String> toJoin) {
+    public static String join(final char delimiter, @NonNull final List<String> toJoin) {
         StringBuilder builder = new StringBuilder();
 
         char tempDelimiter = Character.MIN_VALUE;
@@ -86,6 +86,7 @@ public final class StringUtil {
             if (tempDelimiter != Character.MIN_VALUE) {
                 builder.append(tempDelimiter);
             }
+
             tempDelimiter = delimiter;
             builder.append(s);
         }
@@ -130,7 +131,8 @@ public final class StringUtil {
      * 1 if thisVersion is larger than thatVersion,
      * 0 if thisVersion is equal to thatVersion.
      */
-    public static int compareSemanticVersion(final String thisVersion, final String thatVersion) {
+    public static int compareSemanticVersion(@NonNull final String thisVersion,
+                                             @Nullable final String thatVersion) {
         if (thatVersion == null) {
             return 1;
         }
@@ -163,7 +165,7 @@ public final class StringUtil {
      * @param subString
      * @return int
      */
-    public static int countMatches(@NonNull String str, @Nullable String subString) {
+    public static int countMatches(@NonNull final String str, @Nullable final String subString) {
         int count = 0;
 
         if (StringUtil.isEmpty(str) || StringUtil.isEmpty(subString)) {
