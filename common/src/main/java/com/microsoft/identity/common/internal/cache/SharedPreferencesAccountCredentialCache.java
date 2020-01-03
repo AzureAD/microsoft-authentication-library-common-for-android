@@ -254,7 +254,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 allAccounts
         );
 
-        Logger.info(TAG, "Found [" + matchingAccounts.size() + "] matching Accounts...");
+        Logger.verbose(TAG, "Found [" + matchingAccounts.size() + "] matching Accounts...");
 
         return matchingAccounts;
     }
@@ -321,7 +321,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 allCredentials
         );
 
-        Logger.info(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
+        Logger.verbose(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
 
         return matchingCredentials;
     }
@@ -449,14 +449,14 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     private boolean isAccount(@NonNull final String cacheKey) {
         Logger.verbosePII(TAG, "Evaluating cache key: [" + cacheKey + "]");
         boolean isAccount = null == getCredentialTypeForCredentialCacheKey(cacheKey);
-        Logger.info(TAG, "isAccount? [" + isAccount + "]");
+        Logger.verbose(TAG, "isAccount? [" + isAccount + "]");
         return isAccount;
     }
 
     private boolean isCredential(@NonNull String cacheKey) {
         Logger.verbosePII(TAG, "Evaluating cache key: [" + cacheKey + "]");
         boolean isCredential = null != getCredentialTypeForCredentialCacheKey(cacheKey);
-        Logger.info(TAG, "isCredential? [" + isCredential + "]");
+        Logger.verbose(TAG, "isCredential? [" + isCredential + "]");
         return isCredential;
     }
 
