@@ -27,6 +27,7 @@ import android.content.Context;
 import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyInfo;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.StrongBoxUnavailableException;
 import android.util.Base64;
@@ -56,6 +57,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.security.InvalidAlgorithmParameterException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -546,6 +548,8 @@ public class DevicePopManager implements IDevicePopManager {
 
             // If the key material is hidden (HSM or otherwise) the length is -1
             if (length >= minKeySize || length < 0) {
+                logSecureHardwareState(kp);
+
                 return kp;
             }
         }
@@ -556,6 +560,28 @@ public class DevicePopManager implements IDevicePopManager {
         throw new UnsupportedOperationException(
                 "Failed to generate valid KeyPair. Attempted " + MAX_RETRIES + " times."
         );
+    }
+
+    private void logSecureHardwareState(@NonNull final KeyPair kp) {
+        String msg;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                final PrivateKey privateKey = kp.getPrivate();
+                final KeyFactory factory = KeyFactory.getInstance(
+                        privateKey.getAlgorithm(), ANDROID_KEYSTORE
+                );
+                final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
+                final boolean isInsideSecureHardware = info.isInsideSecureHardware();
+                msg = "SecretKey is secure hardware backed? " + isInsideSecureHardware;
+            } catch (final Exception e) {
+                msg = "Failed to query secure hardware state.";
+            }
+        } else {
+            msg = "Cannot query secure hardware state (API unavailable <23)";
+        }
+
+        Logger.info(TAG, msg);
     }
 
     /**
