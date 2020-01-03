@@ -38,6 +38,7 @@ import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationFragment;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -261,7 +262,7 @@ public class CommandDispatcher {
         synchronized (sLock) {
             // Send a broadcast to cancel if any active auth request is present.
             command.getParameters().getAppContext().sendBroadcast(
-                    new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
+                    new Intent(AuthorizationFragment.CANCEL_INTERACTIVE_REQUEST_ACTION)
             );
 
             sInteractiveExecutor.execute(new Runnable() {

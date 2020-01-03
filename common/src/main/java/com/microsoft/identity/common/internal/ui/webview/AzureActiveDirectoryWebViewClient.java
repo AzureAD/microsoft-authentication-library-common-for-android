@@ -79,7 +79,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final IAuthorizationCompletionCallback callback,
                                              @NonNull final String redirectUrl) {
         super(activity, callback);
-        getActivity().setContentView(R.layout.common_activity_authentication);
         mRedirectUrl = redirectUrl;
     }
 
