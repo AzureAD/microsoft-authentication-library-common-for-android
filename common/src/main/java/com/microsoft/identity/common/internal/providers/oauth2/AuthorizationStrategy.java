@@ -22,11 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
 
 /**
@@ -50,6 +58,46 @@ public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2
 
     public static final String REQUEST_CODE = "com.microsoft.identity.client.request.code";
 
+    private WeakReference<Context> mReferencedApplicationContext;
+    private WeakReference<Activity> mReferencedActivity;
+    private WeakReference<Fragment> mReferencedFragment;
+
+    /**
+     * Constructor of AuthorizationStrategy.
+     */
+    public AuthorizationStrategy(@NonNull Context applicationContext,
+                                 @NonNull Activity activity,
+                                 @Nullable Fragment fragment) {
+        mReferencedApplicationContext = new WeakReference<>(applicationContext);
+        mReferencedActivity = new WeakReference<>(activity);
+        mReferencedFragment = new WeakReference<>(fragment);
+    }
+
+    protected Context getApplicationContext() {
+        return mReferencedApplicationContext.get();
+    }
+
+    /**
+     * If fragment is provided, add AuthorizationFragment on top of that fragment.
+     * Otherwise, launch AuthorizationActivity.
+     */
+    protected void launchIntent(@NonNull Intent intent) {
+        final Fragment fragment = mReferencedFragment.get();
+
+        if (fragment != null) {
+            final AuthorizationFragment authFragment = new AuthorizationFragment();
+            authFragment.setInstanceState(intent.getExtras());
+
+            fragment.getFragmentManager()
+                    .beginTransaction()
+                    .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                    .add(fragment.getId(),authFragment, AuthorizationFragment.class.getName())
+                    .commit();
+            return;
+        }
+
+        mReferencedActivity.get().startActivity(intent);
+    }
 
     /**
      * Perform the authorization request.
