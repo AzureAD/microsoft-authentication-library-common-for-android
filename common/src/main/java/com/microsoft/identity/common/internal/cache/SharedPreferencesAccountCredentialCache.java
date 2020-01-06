@@ -449,14 +449,14 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     private boolean isAccount(@NonNull final String cacheKey) {
         Logger.verbosePII(TAG, "Evaluating cache key: [" + cacheKey + "]");
         boolean isAccount = null == getCredentialTypeForCredentialCacheKey(cacheKey);
-        Logger.info(TAG, "isAccount? [" + isAccount + "]");
+        Logger.verbose(TAG, "isAccount? [" + isAccount + "]");
         return isAccount;
     }
 
     private boolean isCredential(@NonNull String cacheKey) {
         Logger.verbosePII(TAG, "Evaluating cache key: [" + cacheKey + "]");
         boolean isCredential = null != getCredentialTypeForCredentialCacheKey(cacheKey);
-        Logger.info(TAG, "isCredential? [" + isCredential + "]");
+        Logger.verbose(TAG, "isCredential? [" + isCredential + "]");
         return isCredential;
     }
 
