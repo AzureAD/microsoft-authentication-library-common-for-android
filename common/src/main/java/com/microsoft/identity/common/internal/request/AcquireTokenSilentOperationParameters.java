@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.request;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.exception.ArgumentException;
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryB2CAuthority;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -54,13 +55,19 @@ public class AcquireTokenSilentOperationParameters extends OperationParameters {
 
         if (mAccount == null) {
             Logger.warn(TAG, "The account set on silent operation parameters is NULL.");
-        } else if (!authorityMatchesAccountEnvironment()) {
+            // if the authority is B2C, then we do not need check if matches with the account enviroment
+            // as B2C only exists in one cloud and can use custom domains
+        } else if (!isAuthorityB2C() && !authorityMatchesAccountEnvironment()) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                     ArgumentException.AUTHORITY_ARGUMENT_NAME,
                     "Authority passed to silent parameters does not match with the cloud associated to the account."
             );
         }
+    }
+
+    private boolean isAuthorityB2C() {
+        return getAuthority() instanceof AzureActiveDirectoryB2CAuthority;
     }
 
     private boolean authorityMatchesAccountEnvironment() {
