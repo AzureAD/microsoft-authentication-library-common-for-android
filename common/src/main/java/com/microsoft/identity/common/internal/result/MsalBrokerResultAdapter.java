@@ -68,6 +68,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final AccessTokenRecord accessTokenRecord = authenticationResult.getAccessTokenRecord();
 
         final BrokerResult brokerResult = new BrokerResult.Builder()
+                .authenticationScheme(authenticationResult.getAuthenticationScheme())
                 .tenantProfileRecords(authenticationResult.getCacheRecordWithTenantProfileData())
                 .accessToken(authenticationResult.getAccessToken())
                 .idToken(authenticationResult.getIdToken())

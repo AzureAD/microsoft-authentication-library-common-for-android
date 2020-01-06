@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 
 import java.io.Serializable;
@@ -37,6 +38,7 @@ import java.util.List;
 public class BrokerResult implements Serializable {
 
     private class SerializedNames {
+        static final String AUTHENTICATION_SCHEME = "authentication_scheme";
         static final String TENANT_PROFILE_CACHE_RECORDS = "tenant_profile_cache_records";
         static final String ACCESS_TOKEN = "access_token";
         static final String ID_TOKEN = "id_token";
@@ -299,6 +301,10 @@ public class BrokerResult implements Serializable {
     @SerializedName(SerializedNames.TENANT_PROFILE_CACHE_RECORDS)
     private final List<ICacheRecord> mTenantProfileData;
 
+    @Nullable
+    @SerializedName(SerializedNames.AUTHENTICATION_SCHEME)
+    private final AbstractAuthenticationScheme mAuthenticationScheme;
+
 
     private BrokerResult(@NonNull final Builder builder) {
         mAccessToken = builder.mAccessToken;
@@ -322,6 +328,7 @@ public class BrokerResult implements Serializable {
         mRefreshTokenAge = builder.mRefreshTokenAge;
         mSuccess = builder.mSuccess;
         mTenantProfileData = builder.mTenantProfileData;
+        mAuthenticationScheme = builder.mAuthenticationScheme;
 
         mErrorCode = builder.mErrorCode;
         mErrorMessage = builder.mErrorMessage;
@@ -454,6 +461,10 @@ public class BrokerResult implements Serializable {
         return mAccessToken;
     }
 
+    public AbstractAuthenticationScheme getAuthenticationScheme() {
+        return mAuthenticationScheme;
+    }
+
     public static class Builder {
 
         private String mAccessToken;
@@ -519,6 +530,8 @@ public class BrokerResult implements Serializable {
         private String mCliTelemSubErrorCode;
 
         private List<ICacheRecord> mTenantProfileData;
+
+        private AbstractAuthenticationScheme mAuthenticationScheme;
 
         public Builder accessToken(@Nullable final String accessToken) {
             this.mAccessToken = accessToken;
@@ -676,6 +689,11 @@ public class BrokerResult implements Serializable {
 
         public Builder tenantProfileRecords(List<ICacheRecord> cacheRecordWithTenantProfileData) {
             this.mTenantProfileData = cacheRecordWithTenantProfileData;
+            return this;
+        }
+
+        public Builder authenticationScheme(AbstractAuthenticationScheme scheme) {
+            this.mAuthenticationScheme = scheme;
             return this;
         }
     }
