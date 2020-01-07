@@ -32,6 +32,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.DevicePopManager;
 import com.microsoft.identity.common.internal.authscheme.IDevicePopManager;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
@@ -679,7 +680,7 @@ public class MicrosoftStsOAuth2Strategy
     public boolean validateCachedResult(@NonNull final ICacheRecord cacheRecord) {
         super.validateCachedResult(cacheRecord);
 
-        if (authSchemeIsPoP(mStrategyOptions)) {
+        if (authSchemeIsPoP(mStrategyOptions.getAuthenticationScheme())) {
             return cachedAtKidMatchesKeystoreKid(cacheRecord.getAccessToken().getKid());
         }
 
@@ -699,7 +700,7 @@ public class MicrosoftStsOAuth2Strategy
         return deviceKid.equals(atKid);
     }
 
-    private static boolean authSchemeIsPoP(@NonNull final OAuth2StrategyOptions strategyOptions) {
-        return SCHEME_POP.equals(strategyOptions.getAuthenticationScheme().getName());
+    public static boolean authSchemeIsPoP(@NonNull final AbstractAuthenticationScheme scheme) {
+        return SCHEME_POP.equals(scheme.getName());
     }
 }
