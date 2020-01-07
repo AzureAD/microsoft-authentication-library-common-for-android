@@ -354,7 +354,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         throw resultAdapter.getBaseExceptionFromBundle(resultBundle);
     }
 
-    public static Bundle bundleFromAccounts(@NonNull final List<ICacheRecord> cacheRecords) {
+    public Bundle bundleFromAccounts(@NonNull final List<ICacheRecord> cacheRecords) {
         final Bundle resultBundle = new Bundle();
 
         if (cacheRecords != null) {

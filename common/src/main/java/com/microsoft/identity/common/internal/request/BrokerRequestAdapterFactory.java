@@ -26,15 +26,20 @@ package com.microsoft.identity.common.internal.request;
 import android.os.Bundle;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.logging.Logger;
 
 public class BrokerRequestAdapterFactory {
 
+    private static final String TAG = BrokerRequestAdapterFactory.class.getName();
+
     public static IBrokerRequestAdapter getBrokerRequestAdapter(final Bundle requestBundle) {
+        final String methodName = ":getBrokerRequestAdapter";
         if (requestBundle != null &&
                 requestBundle.containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2)) {
-
+            Logger.info(TAG + methodName, "Request from MSAL, returning MsalBrokerRequestAdapter");
             return new MsalBrokerRequestAdapter();
         } else {
+            Logger.info(TAG + methodName, "Request from ADAL, returning AdalBrokerRequestAdapter");
             return new AdalBrokerRequestAdapter();
         }
     }
