@@ -504,7 +504,8 @@ public class BrokerOAuth2TokenCache
             resultRecord = mFociCache.loadByFamilyId(
                     clientId,
                     target,
-                    account
+                    account,
+                    authScheme
             );
         } else {
             resultRecord = targetCache.load(
@@ -606,7 +607,8 @@ public class BrokerOAuth2TokenCache
                         mFociCache.loadByFamilyId(
                                 clientId,
                                 target,
-                                account
+                                account,
+                                authScheme
                         )
                 );
             } else if (isKnownFoci) {
@@ -614,7 +616,8 @@ public class BrokerOAuth2TokenCache
                         mFociCache.loadByFamilyIdWithAggregatedAccountData(
                                 clientId,
                                 target,
-                                account
+                                account,
+                                authScheme
                         );
             } else {
                 resultRecords = targetCache.loadWithAggregatedAccountData(
