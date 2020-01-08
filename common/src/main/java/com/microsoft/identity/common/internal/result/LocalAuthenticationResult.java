@@ -67,7 +67,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
                                      @NonNull final List<ICacheRecord> completeResultFromCache,
                                      @NonNull final SdkType sdkType,
-                                     @NonNull final String authorizationHeaderValue) {
+                                     @Nullable final String authorizationHeaderValue) {
         this(lastAuthorized, sdkType);
         mCompleteResultFromCache = completeResultFromCache;
         mAuthorizationHeaderValue = authorizationHeaderValue;
@@ -194,7 +194,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
         return mCompleteResultFromCache;
     }
 
-    @NonNull
+    @Nullable
     @Override
     public String getAuthorizationHeaderValue() {
         return mAuthorizationHeaderValue;
