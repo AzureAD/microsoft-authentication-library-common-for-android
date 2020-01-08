@@ -24,10 +24,7 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
 
-import androidx.annotation.NonNull;
-
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.UiRequiredException;
@@ -35,9 +32,9 @@ import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperatio
 import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+
+import androidx.annotation.NonNull;
 
 public class TokenCommand extends BaseCommand<AcquireTokenResult> implements TokenOperation {
 
@@ -74,7 +71,7 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
                         (AcquireTokenSilentOperationParameters) getParameters()
                 );
 
-                if (result.getSucceeded()) {
+                if (result != null && result.getSucceeded()) {
                     com.microsoft.identity.common.internal.logging.Logger.verbose(
                             TAG + methodName,
                             "Executing with controller: "
