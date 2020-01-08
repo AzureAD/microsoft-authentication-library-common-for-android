@@ -233,7 +233,7 @@ public abstract class BaseController {
                     savedRecord,
                     savedRecords,
                     SdkType.MSAL,
-                    parameters.getAuthenticationScheme()
+                    strategy.getAuthorizationHeader(tokenResult.getTokenResponse())
             );
 
             // Set the client telemetry...

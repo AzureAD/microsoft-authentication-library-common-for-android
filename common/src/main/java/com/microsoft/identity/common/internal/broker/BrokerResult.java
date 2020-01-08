@@ -26,7 +26,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 
 import java.io.Serializable;
@@ -38,7 +37,7 @@ import java.util.List;
 public class BrokerResult implements Serializable {
 
     private class SerializedNames {
-        static final String AUTHENTICATION_SCHEME = "authentication_scheme";
+        static final String AUTHORIZATION_HEADER_VALUE = "authorization_header_value";
         static final String TENANT_PROFILE_CACHE_RECORDS = "tenant_profile_cache_records";
         static final String ACCESS_TOKEN = "access_token";
         static final String ID_TOKEN = "id_token";
@@ -302,8 +301,8 @@ public class BrokerResult implements Serializable {
     private final List<ICacheRecord> mTenantProfileData;
 
     @Nullable
-    @SerializedName(SerializedNames.AUTHENTICATION_SCHEME)
-    private final AbstractAuthenticationScheme mAuthenticationScheme;
+    @SerializedName(SerializedNames.AUTHORIZATION_HEADER_VALUE)
+    private final String mAuthorizationHeaderValue;
 
 
     private BrokerResult(@NonNull final Builder builder) {
@@ -328,7 +327,7 @@ public class BrokerResult implements Serializable {
         mRefreshTokenAge = builder.mRefreshTokenAge;
         mSuccess = builder.mSuccess;
         mTenantProfileData = builder.mTenantProfileData;
-        mAuthenticationScheme = builder.mAuthenticationScheme;
+        mAuthorizationHeaderValue = builder.mAuthorizationHeaderValue;
 
         mErrorCode = builder.mErrorCode;
         mErrorMessage = builder.mErrorMessage;
@@ -461,8 +460,8 @@ public class BrokerResult implements Serializable {
         return mAccessToken;
     }
 
-    public AbstractAuthenticationScheme getAuthenticationScheme() {
-        return mAuthenticationScheme;
+    public String getAuthoizationHeaderValue() {
+        return mAuthorizationHeaderValue;
     }
 
     public static class Builder {
@@ -531,7 +530,7 @@ public class BrokerResult implements Serializable {
 
         private List<ICacheRecord> mTenantProfileData;
 
-        private AbstractAuthenticationScheme mAuthenticationScheme;
+        private String mAuthorizationHeaderValue;
 
         public Builder accessToken(@Nullable final String accessToken) {
             this.mAccessToken = accessToken;
@@ -692,8 +691,8 @@ public class BrokerResult implements Serializable {
             return this;
         }
 
-        public Builder authenticationScheme(AbstractAuthenticationScheme scheme) {
-            this.mAuthenticationScheme = scheme;
+        public Builder authorizationHeaderValue(String authorizationHeaderValue) {
+            this.mAuthorizationHeaderValue = authorizationHeaderValue;
             return this;
         }
     }

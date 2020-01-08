@@ -68,7 +68,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final AccessTokenRecord accessTokenRecord = authenticationResult.getAccessTokenRecord();
 
         final BrokerResult brokerResult = new BrokerResult.Builder()
-                .authenticationScheme(authenticationResult.getAuthenticationScheme())
+                .authorizationHeaderValue(authenticationResult.getAuthorizationHeaderValue())
                 .tenantProfileRecords(authenticationResult.getCacheRecordWithTenantProfileData())
                 .accessToken(authenticationResult.getAccessToken())
                 .idToken(authenticationResult.getIdToken())
@@ -399,7 +399,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     public boolean getDeviceModeFromResultBundle(@NonNull final Bundle bundle) throws BaseException {
-        if (!bundle.containsKey(BROKER_DEVICE_MODE)){
+        if (!bundle.containsKey(BROKER_DEVICE_MODE)) {
             throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(bundle);
         }
 

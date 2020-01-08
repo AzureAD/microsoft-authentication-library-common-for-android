@@ -26,7 +26,6 @@ package com.microsoft.identity.common.internal.result;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
@@ -128,10 +127,10 @@ public interface ILocalAuthenticationResult {
     List<ICacheRecord> getCacheRecordWithTenantProfileData();
 
     /**
-     * Gets the authentication scheme used to acquire tokens returned in this result.
+     * Gets the value to be sent in the client app's Authorization header.
      *
-     * @return The authentication scheme used to acquire this result.
+     * @return The Authorization header value.
      */
     @NonNull
-    AbstractAuthenticationScheme getAuthenticationScheme();
+    String getAuthorizationHeaderValue();
 }

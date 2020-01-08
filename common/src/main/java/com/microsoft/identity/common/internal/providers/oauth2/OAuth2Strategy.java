@@ -289,4 +289,6 @@ public abstract class OAuth2Strategy
         // TODO This looks like there's a bit of refactoring involved to account for broker cases...
         return true;
     }
+
+    public abstract String getAuthorizationHeader(TokenResponse tokenResponse);
 }

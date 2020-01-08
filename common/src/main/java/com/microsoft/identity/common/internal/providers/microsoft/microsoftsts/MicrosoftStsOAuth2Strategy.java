@@ -35,6 +35,7 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.DevicePopManager;
 import com.microsoft.identity.common.internal.authscheme.IDevicePopManager;
+import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
@@ -60,6 +61,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOpt
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
@@ -685,6 +687,24 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return true;
+    }
+
+    @Override
+    public String getAuthorizationHeader(@NonNull final TokenResponse tokenResponse) {
+        if (mStrategyOptions.getAuthenticationScheme() instanceof ITokenAuthenticationSchemeInternal) {
+            final ITokenAuthenticationSchemeInternal authScheme = (ITokenAuthenticationSchemeInternal)
+                    mStrategyOptions.getAuthenticationScheme();
+            authScheme.setAccessToken(tokenResponse.getAccessToken());
+            try {
+                return authScheme.getAuthorizationRequestHeader();
+            } catch (final ClientException e) {
+                e.printStackTrace();
+                // TODO can this be handled better?
+                throw new RuntimeException(e);
+            }
+        }
+
+        return null;
     }
 
     private boolean cachedAtKidMatchesKeystoreKid(@Nullable final String atKid) {

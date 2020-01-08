@@ -27,7 +27,6 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
@@ -54,7 +53,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private String mSpeRing;
     private String mRefreshTokenAge;
     private List<ICacheRecord> mCompleteResultFromCache;
-    private AbstractAuthenticationScheme mAuthenticationScheme;
+    private String mAuthorizationHeaderValue;
 
     private static final String TAG = LocalAuthenticationResult.class.getName();
 
@@ -68,10 +67,10 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
                                      @NonNull final List<ICacheRecord> completeResultFromCache,
                                      @NonNull final SdkType sdkType,
-                                     @NonNull final AbstractAuthenticationScheme authenticationScheme) {
+                                     @NonNull final String authorizationHeaderValue) {
         this(lastAuthorized, sdkType);
         mCompleteResultFromCache = completeResultFromCache;
-        mAuthenticationScheme = authenticationScheme;
+        mAuthorizationHeaderValue = authorizationHeaderValue;
     }
 
     private LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord, @NonNull SdkType sdkType) {
@@ -197,8 +196,8 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
 
     @NonNull
     @Override
-    public AbstractAuthenticationScheme getAuthenticationScheme() {
-        return mAuthenticationScheme;
+    public String getAuthorizationHeaderValue() {
+        return mAuthorizationHeaderValue;
     }
 
     /**

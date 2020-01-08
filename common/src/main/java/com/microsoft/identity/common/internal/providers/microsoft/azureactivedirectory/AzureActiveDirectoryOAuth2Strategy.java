@@ -255,4 +255,9 @@ public class AzureActiveDirectoryOAuth2Strategy
         // TODO
     }
 
+    @Override
+    public String getAuthorizationHeader(TokenResponse tokenResponse) {
+        return tokenResponse.getAccessToken();
+    }
+
 }

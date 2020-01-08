@@ -126,4 +126,9 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
     protected void validateTokenResponse(TokenResponse response) {
 
     }
+
+    @Override
+    public String getAuthorizationHeader(TokenResponse tokenResponse) {
+        return null;
+    }
 }
