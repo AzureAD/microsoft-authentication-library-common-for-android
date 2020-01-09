@@ -12,11 +12,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authorities.Environment;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -47,10 +49,15 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     private static final String TAG = MsalBrokerRequestAdapter.class.getName();
 
-    private static Gson sGson = new Gson();
+    private static Gson sGson;
 
     static {
-        // TODO Register Gson type adapters...
+        sGson = new GsonBuilder()
+                .registerTypeAdapter(
+                        AbstractAuthenticationScheme.class,
+                        new AuthenticationSchemeTypeAdapter()
+                )
+                .create();
     }
 
     @Override

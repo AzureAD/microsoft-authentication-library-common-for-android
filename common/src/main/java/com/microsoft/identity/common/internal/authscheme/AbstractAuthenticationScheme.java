@@ -24,14 +24,21 @@ package com.microsoft.identity.common.internal.authscheme;
 
 import androidx.annotation.NonNull;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Abstract base class for AuthenticationSchemes.
  */
 public abstract class AbstractAuthenticationScheme implements INameable {
 
+    public static class SerializedNames {
+        public static final String NAME = "name";
+    }
+
     /**
      * The name of this scheme.
      */
+    @SerializedName(SerializedNames.NAME)
     private final String mName;
 
     /**
