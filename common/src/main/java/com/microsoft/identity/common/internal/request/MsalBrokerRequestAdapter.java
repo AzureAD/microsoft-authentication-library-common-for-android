@@ -75,7 +75,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         parameters.isBrokerBrowserSupportEnabled() ?
                                 AuthorizationAgent.BROWSER.name() :
                                 AuthorizationAgent.WEBVIEW.name()
-                ).build();
+                ).authenticationScheme(parameters.getAuthenticationScheme()).build();
 
         return brokerRequest;
     }
@@ -101,6 +101,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .msalVersion(parameters.getSdkVersion())
                 .environment(AzureActiveDirectory.getEnvironment().name())
                 .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
+                .authenticationScheme(parameters.getAuthenticationScheme())
                 .build();
 
         return brokerRequest;
@@ -119,7 +120,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final BrokerRequest brokerRequest = new Gson().fromJson(
                 intent.getStringExtra(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
-                BrokerRequest.class);
+                BrokerRequest.class
+        );
 
         parameters.setActivity(callingActivity);
 
@@ -209,7 +211,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final BrokerRequest brokerRequest = new Gson().fromJson(
                 bundle.getString(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
-                BrokerRequest.class);
+                BrokerRequest.class
+        );
 
         final BrokerAcquireTokenSilentOperationParameters parameters =
                 new BrokerAcquireTokenSilentOperationParameters();
@@ -310,12 +313,16 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     public Bundle getRequestBundleForHello(@NonNull final OperationParameters parameters) {
         final Bundle requestBundle = new Bundle();
-        requestBundle.putString(AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
-                AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);
+        requestBundle.putString(
+                AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
+                AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE
+        );
 
         if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {
-            requestBundle.putString(AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
-                    parameters.getRequiredBrokerProtocolVersion());
+            requestBundle.putString(
+                    AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
+                    parameters.getRequiredBrokerProtocolVersion()
+            );
         }
 
         return requestBundle;

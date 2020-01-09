@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 
 import java.io.Serializable;
 
@@ -53,6 +54,7 @@ public class BrokerRequest implements Serializable {
         final static String ENVIRONMENT = "environment";
         final static String MULTIPLE_CLOUDS_SUPPORTED = "multiple_clouds_supported";
         final static String AUTHORIZATION_AGENT = "authorization_agent";
+        final static String AUTHENTICATION_SCHEME = "authentication_scheme";
     }
 
     /**
@@ -181,6 +183,9 @@ public class BrokerRequest implements Serializable {
     @SerializedName(SerializedNames.AUTHORIZATION_AGENT)
     private String mAuthorizationAgent;
 
+    @Nullable
+    @SerializedName(SerializedNames.AUTHENTICATION_SCHEME)
+    private AbstractAuthenticationScheme mAuthenticationScheme;
 
     private BrokerRequest(BrokerRequest.Builder builder) {
         mAuthority = builder.mAuthority;
@@ -201,8 +206,8 @@ public class BrokerRequest implements Serializable {
         mEnvironment = builder.mEnvironment;
         mMultipleCloudsSupported = builder.mMultipleCloudsSupported;
         mAuthorizationAgent = builder.mAuthorizationAgent;
+        mAuthenticationScheme = builder.mAuthenticationScheme;
     }
-
 
     public String getAuthority() {
         return mAuthority;
@@ -276,6 +281,10 @@ public class BrokerRequest implements Serializable {
         return mAuthorizationAgent;
     }
 
+    public AbstractAuthenticationScheme getAuthenticationScheme() {
+        return mAuthenticationScheme;
+    }
+
     /**
      * Builder class for Broker Request.
      */
@@ -317,6 +326,7 @@ public class BrokerRequest implements Serializable {
 
         private String mAuthorizationAgent;
 
+        private AbstractAuthenticationScheme mAuthenticationScheme;
 
         /**
          * Authority for the request
@@ -459,6 +469,10 @@ public class BrokerRequest implements Serializable {
             return this;
         }
 
+        public BrokerRequest.Builder authenticationScheme(@NonNull final AbstractAuthenticationScheme authenticationScheme) {
+            this.mAuthenticationScheme = authenticationScheme;
+            return this;
+        }
 
         /**
          * Builds and returns a BrokerRequest
