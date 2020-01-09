@@ -22,10 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
+import java.io.Serializable;
+
 /**
  * Interface representation of a nameable entity.
  */
-public interface INameable {
+public interface INameable extends Serializable {
 
     /**
      * Gets the name.

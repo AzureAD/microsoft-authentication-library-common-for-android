@@ -22,10 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
+import java.io.Serializable;
+
 /**
  * Interface representation of an entity which can carry a nonce value.
  */
-public interface INonced {
+public interface INonced extends Serializable {
 
     /**
      * Gets the nonce.
