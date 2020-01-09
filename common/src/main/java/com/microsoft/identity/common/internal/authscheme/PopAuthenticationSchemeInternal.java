@@ -48,7 +48,7 @@ public class PopAuthenticationSchemeInternal
     /**
      * Delegate object for handling PoP-related crypto/HSM functions.
      */
-    private IDevicePopManager mPopManager;
+    private transient IDevicePopManager mPopManager;
 
     /**
      * Constructs a new PopAuthenticationSchemeInternal.
