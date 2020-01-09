@@ -47,6 +47,12 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     private static final String TAG = MsalBrokerRequestAdapter.class.getName();
 
+    private static Gson sGson = new Gson();
+
+    static {
+        // TODO Register Gson type adapters...
+    }
+
     @Override
     public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final AcquireTokenOperationParameters parameters) {
 
@@ -118,7 +124,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final Intent intent = callingActivity.getIntent();
 
-        final BrokerRequest brokerRequest = new Gson().fromJson(
+        final BrokerRequest brokerRequest = sGson.fromJson(
                 intent.getStringExtra(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
                 BrokerRequest.class
         );
@@ -209,7 +215,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.info(TAG, "Constructing BrokerAcquireTokenSilentOperationParameters from result bundle");
 
-        final BrokerRequest brokerRequest = new Gson().fromJson(
+        final BrokerRequest brokerRequest = sGson.fromJson(
                 bundle.getString(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
                 BrokerRequest.class
         );
@@ -337,7 +343,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         requestBundle.putString(
                 AuthenticationConstants.Broker.BROKER_REQUEST_V2,
-                new Gson().toJson(brokerRequest, BrokerRequest.class)
+                sGson.toJson(brokerRequest, BrokerRequest.class)
         );
 
         requestBundle.putInt(
