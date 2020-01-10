@@ -151,9 +151,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                     | IOException e) {
                 // Uh-oh. We received a request with a PoPScheme but we couldn't recreate the
                 // DevicePoPManager on the broker-side...
-                // For now, return the empty scheme - perhaps the client can detect this error later?
-
-                // TODO Put some checks in to assert that this error doesn't happen later...
+                // For now, return the empty scheme and we'll retry at the controller level...
                 Logger.error(
                         TAG,
                         "Failed to create DevicePoPManager (broker)",
