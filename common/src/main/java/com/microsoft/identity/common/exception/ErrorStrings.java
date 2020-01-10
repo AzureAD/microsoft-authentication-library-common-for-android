@@ -331,9 +331,10 @@ public final class ErrorStrings {
     public static final String USER_CANCELLED = "User cancelled";
 
     /**
-     * The calling app is not supported by the broker.
+     * The broker app is too old to support the calling MSAL.
      */
-    public static final String UNSUPPORTED_BROKER_VERSION = "unsupported_broker_version";
+    public static final String UNSUPPORTED_BROKER_VERSION_ERROR_CODE = "unsupported_broker_version";
+    public static final String UNSUPPORTED_BROKER_VERSION_ERROR_MESSAGE = "Please update Intune Company Portal and/or Microsoft Authenticator to the latest version.";
 
     /**
      * Decryption failed.
