@@ -31,7 +31,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationFragment;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
@@ -76,7 +76,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         mAuthorizationRequest = authorizationRequest;
         Logger.info(TAG, "Perform the authorization request with embedded webView.");
         final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
-        final Intent authIntent = AuthorizationFragment.createStartIntent(
+        final Intent authIntent = AuthorizationActivity.createStartIntent(
                 getApplicationContext(),
                 null,
                 requestUrl.toString(),
