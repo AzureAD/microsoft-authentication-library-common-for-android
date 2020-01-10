@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.authscheme;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.exception.ClientException;
 
@@ -67,6 +68,11 @@ public class PopAuthenticationSchemeInternal
      */
     public void setDevicePopManager(@NonNull final IDevicePopManager popManager) {
         mPopManager = popManager;
+    }
+
+    @Nullable
+    public IDevicePopManager getDevicePopManager() {
+        return mPopManager;
     }
 
     @Override
