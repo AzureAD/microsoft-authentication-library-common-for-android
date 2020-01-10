@@ -32,7 +32,7 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationFragment;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
@@ -104,7 +104,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
         authIntent.setData(requestUrl);
 
-        final Intent intent = AuthorizationFragment.createStartIntent(
+        final Intent intent = AuthorizationActivity.createStartIntent(
                 getApplicationContext(),
                 authIntent,
                 requestUrl.toString(),
