@@ -19,6 +19,9 @@ import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.internal.authscheme.DevicePopManager;
+import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -32,6 +35,10 @@ import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -44,6 +51,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEFAULT_BROWSER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
+import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
@@ -120,6 +128,45 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return brokerRequest;
     }
 
+    @NonNull
+    private static AbstractAuthenticationScheme getAuthenticationScheme(@NonNull final Context context,
+                                                                        @NonNull final BrokerRequest request) {
+        final AbstractAuthenticationScheme requestScheme = request.getAuthenticationScheme();
+
+        if (null == requestScheme) {
+            // Default assumes the scheme is Bearer
+            return new BearerAuthenticationSchemeInternal();
+        } else if (SCHEME_POP.equals(requestScheme.getName())) {
+            final PopAuthenticationSchemeInternal popScheme = (PopAuthenticationSchemeInternal) requestScheme;
+
+            try {
+                popScheme.setDevicePopManager(
+                        new DevicePopManager(
+                                context
+                        )
+                );
+            } catch (final KeyStoreException
+                    | CertificateException
+                    | NoSuchAlgorithmException
+                    | IOException e) {
+                // Uh-oh. We received a request with a PoPScheme but we couldn't recreate the
+                // DevicePoPManager on the broker-side...
+                // For now, return the empty scheme - perhaps the client can detect this error later?
+
+                // TODO Put some checks in to assert that this error doesn't happen later...
+                Logger.error(
+                        TAG,
+                        "Failed to create DevicePoPManager (broker)",
+                        e
+                );
+            }
+
+            return popScheme;
+        } else {
+            return requestScheme;
+        }
+    }
+
     @Override
     public BrokerAcquireTokenOperationParameters brokerInteractiveParametersFromActivity(
             @NonNull final Activity callingActivity) {
@@ -134,6 +181,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final BrokerRequest brokerRequest = sGson.fromJson(
                 intent.getStringExtra(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
                 BrokerRequest.class
+        );
+
+        parameters.setAuthenticationScheme(
+                getAuthenticationScheme(
+                        callingActivity.getApplicationContext(),
+                        brokerRequest
+                )
         );
 
         parameters.setActivity(callingActivity);
@@ -229,6 +283,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final BrokerAcquireTokenSilentOperationParameters parameters =
                 new BrokerAcquireTokenSilentOperationParameters();
+
+        parameters.setAuthenticationScheme(
+                getAuthenticationScheme(
+                        context,
+                        brokerRequest
+                )
+        );
 
         parameters.setAppContext(context);
 
