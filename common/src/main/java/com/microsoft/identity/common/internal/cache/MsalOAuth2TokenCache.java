@@ -152,43 +152,8 @@ public class MsalOAuth2TokenCache
         );
     }
 
-    /**
-     * @param accountRecord : AccountRecord associated with the input credentials.
-     * @param credentials   : list of Credential which can include AccessTokenRecord, IdTokenRecord and RefreshTokenRecord.
-     *                      Note : Both IdTokenRecord and RefreshTokenRecord need to be non null. AccessTokenRecord can be optional.
-     * @throws ClientException : If the supplied Account or Credential are null or schema invalid.
-     */
-    public void saveCredentials(@NonNull final AccountRecord accountRecord,
-                                @NonNull final Credential... credentials) throws ClientException {
-        if (credentials == null) {
-            throw new ClientException("Credential array passed in is null");
-        }
 
-        AccessTokenRecord accessTokenRecord = null;
-        IdTokenRecord idTokenRecord = null;
-        RefreshTokenRecord refreshTokenRecord = null;
-
-        for (final Credential credential : credentials) {
-            if (credential instanceof AccessTokenRecord) {
-                accessTokenRecord = (AccessTokenRecord) credential;
-            } else if (credential instanceof IdTokenRecord) {
-                idTokenRecord = (IdTokenRecord) credential;
-            } else if (credential instanceof RefreshTokenRecord) {
-                refreshTokenRecord = (RefreshTokenRecord) credential;
-            }
-        }
-
-        validateNonNull(accountRecord, "AccountRecord");
-        validateNonNull(refreshTokenRecord, "RefreshTokenRecord");
-        validateNonNull(idTokenRecord, "IdTokenRecord");
-        validateCacheArtifacts(accountRecord, accessTokenRecord, refreshTokenRecord, idTokenRecord);
-
-        removeRefreshTokenIfNeeded(accountRecord, refreshTokenRecord);
-
-        saveCredentialsInternal(credentials);
-    }
-
-    private void validateNonNull(@Nullable final AccountCredentialBase accountCredentialBase,
+     void validateNonNull(@Nullable final AccountCredentialBase accountCredentialBase,
                                  @NonNull final String type) throws ClientException {
         final String message = type + " passed in is Null";
 
@@ -410,7 +375,7 @@ public class MsalOAuth2TokenCache
     /**
      * Helper method to remove an old refresh token if it's MRRT ot FRT.
      */
-    private void removeRefreshTokenIfNeeded(@NonNull final AccountRecord accountRecord,
+     void removeRefreshTokenIfNeeded(@NonNull final AccountRecord accountRecord,
                                             @NonNull final RefreshTokenRecord refreshTokenRecord) {
         final String methodName = ":removeRefreshTokenIfNeeded";
         final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
@@ -1278,7 +1243,7 @@ public class MsalOAuth2TokenCache
         }
     }
 
-    private void saveCredentialsInternal(final Credential... credentials) {
+    void saveCredentialsInternal(final Credential... credentials) {
         for (final Credential credential : credentials) {
 
             if (credential instanceof AccessTokenRecord) {
@@ -1302,7 +1267,7 @@ public class MsalOAuth2TokenCache
      * @param idTokenToSave      The {@link IdTokenRecord} to save.
      * @throws ClientException If any of the supplied artifacts are non schema-compliant.
      */
-    private void validateCacheArtifacts(
+     void validateCacheArtifacts(
             @NonNull final AccountRecord accountToSave,
             final AccessTokenRecord accessTokenToSave,
             @NonNull final RefreshTokenRecord refreshTokenToSave,
