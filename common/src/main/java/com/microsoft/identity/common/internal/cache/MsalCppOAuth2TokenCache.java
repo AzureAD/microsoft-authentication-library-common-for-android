@@ -74,7 +74,12 @@ public class MsalCppOAuth2TokenCache
                 GenericTokenResponse extends TokenResponse,
                 GenericAccount extends BaseAccount,
                 GenericRefreshToken extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken>
-        extends MsalOAuth2TokenCache<GenericOAuth2Strategy, GenericAuthorizationRequest, GenericTokenResponse, GenericAccount, GenericRefreshToken> {
+        extends MsalOAuth2TokenCache<
+        GenericOAuth2Strategy,
+        GenericAuthorizationRequest,
+        GenericTokenResponse,
+        GenericAccount,
+        GenericRefreshToken> {
 
 
     /**
