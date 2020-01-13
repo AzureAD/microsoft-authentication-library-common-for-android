@@ -98,8 +98,8 @@ public class MsalCppOAuth2TokenCache
      */
     public void saveCredentials(@NonNull final AccountRecord accountRecord,
                                 @NonNull final Credential... credentials) throws ClientException {
-        if (credentials == null) {
-            throw new ClientException("Credential array passed in is null");
+        if (credentials == null || credentials.length == 0) {
+            throw new ClientException("Credential array passed in is null or empty");
         }
 
         AccessTokenRecord accessTokenRecord = null;
