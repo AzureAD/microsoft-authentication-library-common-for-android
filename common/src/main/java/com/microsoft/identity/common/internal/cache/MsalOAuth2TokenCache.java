@@ -301,7 +301,6 @@ public class MsalOAuth2TokenCache
     public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
                              @NonNull final GenericAuthorizationRequest request,
                              @NonNull final GenericTokenResponse response) throws ClientException {
-        final String methodName = ":save";
         // Create the Account
         final AccountRecord accountToSave =
                 mAccountCredentialAdapter.createAccount(
