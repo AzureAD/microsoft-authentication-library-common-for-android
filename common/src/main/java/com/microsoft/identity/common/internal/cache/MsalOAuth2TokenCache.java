@@ -1464,6 +1464,15 @@ public class MsalOAuth2TokenCache
         return mAccountCredentialCache;
     }
 
+    IAccountCredentialAdapter<
+            GenericOAuth2Strategy,
+            GenericAuthorizationRequest,
+            GenericTokenResponse,
+            GenericAccount,
+            GenericRefreshToken> getAccountCredentialAdapter() {
+        return mAccountCredentialAdapter;
+    }
+
     @Override
     public void setSingleSignOnState(final GenericAccount account,
                                      final GenericRefreshToken refreshToken) throws ClientException {

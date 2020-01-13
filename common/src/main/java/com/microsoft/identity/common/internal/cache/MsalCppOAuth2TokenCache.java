@@ -84,10 +84,27 @@ public class MsalCppOAuth2TokenCache
      * @param accountCredentialCache   IAccountCredentialCache
      * @param accountCredentialAdapter IAccountCredentialAdapter
      */
-    public MsalCppOAuth2TokenCache(final Context context,
+    private MsalCppOAuth2TokenCache(final Context context,
                                    final IAccountCredentialCache accountCredentialCache,
                                    final IAccountCredentialAdapter accountCredentialAdapter) {
         super(context, accountCredentialCache, accountCredentialAdapter);
+    }
+
+    /**
+     * Factory method for creating an instance of MsalCppOAuth2TokenCache
+     * <p>
+     * NOTE: Currently this is configured for AAD v2 as the only IDP
+     *
+     * @param context The Application Context
+     * @return An instance of the MsalCppOAuth2TokenCache.
+     */
+    public static MsalCppOAuth2TokenCache create(@NonNull final Context context){
+        final MsalOAuth2TokenCache msalOAuth2TokenCache = MsalOAuth2TokenCache.create(context);
+        return new MsalCppOAuth2TokenCache(
+                context,
+                msalOAuth2TokenCache.getAccountCredentialCache(),
+                msalOAuth2TokenCache.getAccountCredentialAdapter()
+        );
     }
 
     /**
