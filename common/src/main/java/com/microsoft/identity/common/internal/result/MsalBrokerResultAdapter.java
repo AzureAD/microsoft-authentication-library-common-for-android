@@ -27,13 +27,11 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
-import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
@@ -55,6 +53,7 @@ import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
+import static com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter.sRequestAdapterGsonInstance;
 
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
@@ -96,7 +95,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final Bundle resultBundle = new Bundle();
         resultBundle.putString(
                 AuthenticationConstants.Broker.BROKER_RESULT_V2,
-                new Gson().toJson(brokerResult, BrokerResult.class)
+                sRequestAdapterGsonInstance.toJson(brokerResult, BrokerResult.class)
         );
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true);
 
@@ -124,7 +123,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                             HeaderSerializationUtil.toJson((
                                     (ServiceException) exception).getHttpResponseHeaders()
                             ))
-                    .httpResponseBody(new Gson().toJson(
+                    .httpResponseBody(sRequestAdapterGsonInstance.toJson(
                             ((ServiceException) exception).getHttpResponseBody()));
         }
 
@@ -138,7 +137,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final Bundle resultBundle = new Bundle();
         resultBundle.putString(
                 AuthenticationConstants.Broker.BROKER_RESULT_V2,
-                new Gson().toJson(builder.build(), BrokerResult.class)
+                sRequestAdapterGsonInstance.toJson(builder.build(), BrokerResult.class)
         );
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, false);
 
@@ -147,7 +146,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     @Override
     public ILocalAuthenticationResult authenticationResultFromBundle(@NonNull final Bundle resultBundle) {
-
         final BrokerResult brokerResult = JsonExtensions.getBrokerResultFromJsonString(
                 resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2)
         );
@@ -163,11 +161,11 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
                 tenantProfileCacheRecords.get(0),
                 tenantProfileCacheRecords,
-                SdkType.MSAL
+                SdkType.MSAL,
+                brokerResult.getAuthoizationHeaderValue()
         );
 
         return authenticationResult;
-
     }
 
     @Override

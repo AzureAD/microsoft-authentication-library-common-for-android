@@ -21,6 +21,7 @@ import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.authscheme.DevicePopManager;
+import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
@@ -57,13 +58,16 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     private static final String TAG = MsalBrokerRequestAdapter.class.getName();
 
-    private static Gson sGson;
+    public static Gson sRequestAdapterGsonInstance;
 
     static {
-        sGson = new GsonBuilder()
+        sRequestAdapterGsonInstance = new GsonBuilder()
                 .registerTypeAdapter(
                         AbstractAuthenticationScheme.class,
                         new AuthenticationSchemeTypeAdapter()
+                ).registerTypeAdapter(
+                        IPoPAuthenticationSchemeParams.class,
+                        new AuthenticationSchemeParamsTypeAdapter()
                 )
                 .create();
     }
@@ -176,7 +180,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final Intent intent = callingActivity.getIntent();
 
-        final BrokerRequest brokerRequest = sGson.fromJson(
+        final BrokerRequest brokerRequest = sRequestAdapterGsonInstance.fromJson(
                 intent.getStringExtra(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
                 BrokerRequest.class
         );
@@ -274,7 +278,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.info(TAG, "Constructing BrokerAcquireTokenSilentOperationParameters from result bundle");
 
-        final BrokerRequest brokerRequest = sGson.fromJson(
+        final BrokerRequest brokerRequest = sRequestAdapterGsonInstance.fromJson(
                 bundle.getString(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
                 BrokerRequest.class
         );
@@ -409,7 +413,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         requestBundle.putString(
                 AuthenticationConstants.Broker.BROKER_REQUEST_V2,
-                sGson.toJson(brokerRequest, BrokerRequest.class)
+                sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class)
         );
 
         requestBundle.putInt(

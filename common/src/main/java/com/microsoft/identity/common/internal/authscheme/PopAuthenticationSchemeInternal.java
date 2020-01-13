@@ -44,12 +44,19 @@ public class PopAuthenticationSchemeInternal
     /**
      * User supplied params.
      */
-    private final IPoPAuthenticationSchemeParams mParams;
+    private IPoPAuthenticationSchemeParams mParams;
 
     /**
      * Delegate object for handling PoP-related crypto/HSM functions.
      */
     private transient IDevicePopManager mPopManager;
+
+    /**
+     * Constructor for gson use.
+     */
+    PopAuthenticationSchemeInternal() {
+        super(SCHEME_POP);
+    }
 
     /**
      * Constructs a new PopAuthenticationSchemeInternal.
