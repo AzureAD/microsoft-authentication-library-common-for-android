@@ -28,12 +28,16 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
 import com.microsoft.identity.common.internal.authscheme.ProofOfPossessionParameters;
 
 import java.lang.reflect.Type;
 
-class AuthenticationSchemeParamsTypeAdapter implements JsonDeserializer<IPoPAuthenticationSchemeParams> {
+class AuthenticationSchemeParamsTypeAdapter implements
+        JsonDeserializer<IPoPAuthenticationSchemeParams>,
+        JsonSerializer<IPoPAuthenticationSchemeParams> {
 
     @Override
     public IPoPAuthenticationSchemeParams deserialize(@NonNull final JsonElement json,
@@ -41,5 +45,12 @@ class AuthenticationSchemeParamsTypeAdapter implements JsonDeserializer<IPoPAuth
                                                       @NonNull final JsonDeserializationContext context)
             throws JsonParseException {
         return context.deserialize(json, ProofOfPossessionParameters.class);
+    }
+
+    @Override
+    public JsonElement serialize(@NonNull final IPoPAuthenticationSchemeParams src,
+                                 @NonNull final Type typeOfSrc,
+                                 @NonNull final JsonSerializationContext context) {
+        return context.serialize(src, ProofOfPossessionParameters.class);
     }
 }

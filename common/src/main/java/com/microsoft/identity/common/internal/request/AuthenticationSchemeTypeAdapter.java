@@ -29,6 +29,8 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
@@ -40,7 +42,9 @@ import static com.microsoft.identity.common.internal.authscheme.AbstractAuthenti
 import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 
-class AuthenticationSchemeTypeAdapter implements JsonDeserializer<AbstractAuthenticationScheme> {
+class AuthenticationSchemeTypeAdapter implements
+        JsonDeserializer<AbstractAuthenticationScheme>,
+        JsonSerializer<AbstractAuthenticationScheme> {
 
     private static final String TAG = AuthenticationSchemeTypeAdapter.class.getSimpleName();
 
@@ -64,6 +68,28 @@ class AuthenticationSchemeTypeAdapter implements JsonDeserializer<AbstractAuthen
                 Logger.warn(
                         TAG,
                         "Unrecognized auth scheme. Deserializing as null."
+                );
+
+                return null;
+        }
+    }
+
+    @Override
+    public JsonElement serialize(@NonNull final AbstractAuthenticationScheme src,
+                                 @NonNull final Type typeOfSrc,
+                                 @NonNull final JsonSerializationContext context) {
+
+        switch (src.getName()) {
+            case SCHEME_BEARER:
+                return context.serialize(src, BearerAuthenticationSchemeInternal.class);
+
+            case SCHEME_POP:
+                return context.serialize(src, PopAuthenticationSchemeInternal.class);
+
+            default:
+                Logger.warn(
+                        TAG,
+                        "Unrecognized auth scheme. Serializing as null."
                 );
 
                 return null;

@@ -24,8 +24,14 @@ package com.microsoft.identity.common.internal.authscheme;
 
 import androidx.annotation.NonNull;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.net.URL;
 import java.util.UUID;
+
+import static com.microsoft.identity.common.internal.authscheme.ProofOfPossessionParameters.SerializedNames.HTTP_METHOD;
+import static com.microsoft.identity.common.internal.authscheme.ProofOfPossessionParameters.SerializedNames.NONCE;
+import static com.microsoft.identity.common.internal.authscheme.ProofOfPossessionParameters.SerializedNames.URL;
 
 /**
  * Required Params for a Proof-of-Possession protected request.
@@ -34,8 +40,19 @@ public class ProofOfPossessionParameters
         extends AuthenticationSchemeParameters
         implements IPoPAuthenticationSchemeParams {
 
+    public static final class SerializedNames {
+        public static final String HTTP_METHOD = "http_method";
+        public static final String URL = "url";
+        public static final String NONCE = "nonce";
+    }
+
+    @SerializedName(HTTP_METHOD)
     private final String mHttpMethod;
+
+    @SerializedName(URL)
     private final URL mUrl;
+
+    @SerializedName(NONCE)
     private final String mNonce;
 
     /**
@@ -45,7 +62,7 @@ public class ProofOfPossessionParameters
      * @param url    The URL of PoP token recipient (resource).
      */
     public ProofOfPossessionParameters(@NonNull final URL url,
-                                @NonNull final String method) {
+                                       @NonNull final String method) {
         super(PopAuthenticationSchemeInternal.SCHEME_POP);
         mUrl = url;
         mHttpMethod = method;

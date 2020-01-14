@@ -25,9 +25,12 @@ package com.microsoft.identity.common.internal.authscheme;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.net.URL;
+
+import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.AUTH_SCHEME_PARAMS;
 
 /**
  * Internal representation of PoP Authentication Scheme.
@@ -35,6 +38,10 @@ import java.net.URL;
 public class PopAuthenticationSchemeInternal
         extends TokenAuthenticationScheme
         implements IPoPAuthenticationSchemeParams {
+
+    public static final class SerializedNames {
+        public static final String AUTH_SCHEME_PARAMS = "auth_scheme_params";
+    }
 
     /**
      * The name of this auth scheme as supplied in the Authorization header value.
@@ -44,6 +51,7 @@ public class PopAuthenticationSchemeInternal
     /**
      * User supplied params.
      */
+    @SerializedName(AUTH_SCHEME_PARAMS)
     private IPoPAuthenticationSchemeParams mParams;
 
     /**

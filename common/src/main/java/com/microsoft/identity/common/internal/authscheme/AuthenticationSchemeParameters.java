@@ -24,10 +24,17 @@ package com.microsoft.identity.common.internal.authscheme;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.authscheme.INameable;
+import com.google.gson.annotations.SerializedName;
+
+import static com.microsoft.identity.common.internal.authscheme.AuthenticationSchemeParameters.SerializedNames.NAME;
 
 public abstract class AuthenticationSchemeParameters implements INameable {
 
+    public static final class SerializedNames {
+        public static final String NAME = "name";
+    }
+
+    @SerializedName(NAME)
     private final String mName;
 
     public AuthenticationSchemeParameters(@NonNull final String name) {
