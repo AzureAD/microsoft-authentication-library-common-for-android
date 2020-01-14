@@ -1,3 +1,11 @@
+Version 1.0.13-hf1
+- Fixed issue #882 in MSAL
+
+Version 1.0.13
+------------
+- Resolving PoP backcompat issue.
+- Fixed issue #859 in MSAL
+
 Version 1.0.12
 ------------
 - Refactored and improved ests telemetry flush call and telemetry caching logic.

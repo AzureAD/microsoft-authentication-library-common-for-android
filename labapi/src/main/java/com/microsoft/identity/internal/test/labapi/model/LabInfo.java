@@ -57,6 +57,9 @@ public class LabInfo {
   @SerializedName("authority")
   private String authority = null;
 
+  @SerializedName("adfsEndpoint")
+  private String adfsEndpoint = null;
+
   public LabInfo labName(String labName) {
     this.labName = labName;
     return this;
@@ -253,6 +256,24 @@ public class LabInfo {
 
   public void setAuthority(String authority) {
     this.authority = authority;
+  }
+
+  public LabInfo adfsEndpoint(String adfsEndpoint) {
+    this.adfsEndpoint = adfsEndpoint;
+    return this;
+  }
+
+  /**
+   * Get authority
+   * @return authority
+   **/
+  @ApiModelProperty(value = "")
+  public String getAdfsEndpoint() {
+    return adfsEndpoint;
+  }
+
+  public void setAdfsEndpoint(String adfsEndpoint) {
+    this.adfsEndpoint = adfsEndpoint;
   }
 
 

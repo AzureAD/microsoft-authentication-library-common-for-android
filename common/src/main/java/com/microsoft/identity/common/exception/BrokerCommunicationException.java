@@ -21,26 +21,19 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.internal.request;
+package com.microsoft.identity.common.exception;
 
-import android.os.Bundle;
+/**
+ * An exception that represents an error where MSAL cannot reach Broker (i.e. through Bind Service or Account Manager).
+ */
+public class BrokerCommunicationException extends BaseException {
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.logging.Logger;
-
-public class BrokerRequestAdapterFactory {
-
-    private static final String TAG = BrokerRequestAdapterFactory.class.getName();
-
-    public static IBrokerRequestAdapter getBrokerRequestAdapter(final Bundle requestBundle) {
-        final String methodName = ":getBrokerRequestAdapter";
-        if (requestBundle != null &&
-                requestBundle.containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2)) {
-            Logger.info(TAG + methodName, "Request from MSAL, returning MsalBrokerRequestAdapter");
-            return new MsalBrokerRequestAdapter();
-        } else {
-            Logger.info(TAG + methodName, "Request from ADAL, returning AdalBrokerRequestAdapter");
-            return new AdalBrokerRequestAdapter();
-        }
+    /**
+     * Initiates the {@link BrokerCommunicationException} with error code, error message and throwable.
+     *
+     * @param errorMessage The error message contained in the exception.
+     */
+    public BrokerCommunicationException(final String errorMessage) {
+        super(ErrorStrings.IO_ERROR, errorMessage);
     }
 }

@@ -33,9 +33,8 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStra
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.result.ResultFuture;
-import com.microsoft.identity.internal.testutils.MockSuccessAuthorizationResultMockedTests;
-import com.microsoft.identity.internal.testutils.MockSuccessAuthorizationResultNetworkTests;
-import com.microsoft.identity.internal.testutils.MockTokenResponse;
+import com.microsoft.identity.internal.testutils.mocks.MockSuccessAuthorizationResultMockedTests;
+import com.microsoft.identity.internal.testutils.mocks.MockTokenResponse;
 
 import java.util.ArrayList;
 import java.util.Collections;
