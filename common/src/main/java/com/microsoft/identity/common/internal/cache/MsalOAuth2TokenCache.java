@@ -24,15 +24,13 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
+import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
@@ -58,6 +56,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
@@ -151,6 +152,17 @@ public class MsalOAuth2TokenCache
         );
     }
 
+
+     void validateNonNull(@Nullable final AccountCredentialBase accountCredentialBase,
+                                 @NonNull final String type) throws ClientException {
+        final String message = type + " passed in is Null";
+
+        if (accountCredentialBase == null) {
+            Logger.warn(TAG, message);
+            throw new ClientException(message);
+        }
+    }
+
     /**
      * @param accountRecord     The {@link AccountRecord} to store.
      * @param idTokenRecord     The {@link IdTokenRecord} to store.
@@ -187,7 +199,7 @@ public class MsalOAuth2TokenCache
         );
 
         saveAccounts(accountRecord);
-        saveCredentials(idTokenRecord, accessTokenRecord);
+        saveCredentialsInternal(idTokenRecord, accessTokenRecord);
 
         final CacheRecord result = new CacheRecord();
         result.setAccount(accountRecord);
@@ -254,7 +266,6 @@ public class MsalOAuth2TokenCache
     public ICacheRecord save(@NonNull final GenericOAuth2Strategy oAuth2Strategy,
                              @NonNull final GenericAuthorizationRequest request,
                              @NonNull final GenericTokenResponse response) throws ClientException {
-        final String methodName = ":save";
         // Create the Account
         final AccountRecord accountToSave =
                 mAccountCredentialAdapter.createAccount(
@@ -295,51 +306,12 @@ public class MsalOAuth2TokenCache
                 idTokenToSave
         );
 
-        final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
-                refreshTokenToSave.getFamilyId()
-        );
-
-        Logger.info(
-                TAG + methodName,
-                "isFamilyRefreshToken? [" + isFamilyRefreshToken + "]"
-        );
-
-        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
-                accountToSave.getAuthorityType()
-        );
-
-        Logger.info(
-                TAG + methodName,
-                "isMultiResourceCapable? [" + isMultiResourceCapable + "]"
-        );
-
-        if (isFamilyRefreshToken || isMultiResourceCapable) {
-            final String environment = accountToSave.getEnvironment();
-            final String clientId = refreshTokenToSave.getClientId();
-
-            final int refreshTokensRemoved = removeRefreshTokensForAccount(
-                    accountToSave,
-                    isFamilyRefreshToken,
-                    environment,
-                    clientId
-            );
-
-            Logger.info(
-                    TAG + methodName,
-                    "Refresh tokens removed: [" + refreshTokensRemoved + "]"
-            );
-
-            if (refreshTokensRemoved > 1) {
-                Logger.warn(
-                        TAG + methodName,
-                        "Multiple refresh tokens found for Account."
-                );
-            }
-        }
+        // remove old refresh token if it's MRRT or FRT
+        removeRefreshTokenIfNeeded(accountToSave, refreshTokenToSave);
 
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
-        saveCredentials(accessTokenToSave, refreshTokenToSave, idTokenToSave);
+        saveCredentialsInternal(accessTokenToSave, refreshTokenToSave, idTokenToSave);
 
         final CacheRecord result = new CacheRecord();
         result.setAccount(accountToSave);
@@ -398,6 +370,55 @@ public class MsalOAuth2TokenCache
         }
 
         return associatedRecord;
+    }
+
+    /**
+     * Helper method to remove an old refresh token if it's MRRT ot FRT.
+     */
+     void removeRefreshTokenIfNeeded(@NonNull final AccountRecord accountRecord,
+                                            @NonNull final RefreshTokenRecord refreshTokenRecord) {
+        final String methodName = ":removeRefreshTokenIfNeeded";
+        final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
+                refreshTokenRecord.getFamilyId()
+        );
+
+        Logger.info(
+                TAG + methodName,
+                "isFamilyRefreshToken? [" + isFamilyRefreshToken + "]"
+        );
+
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+                accountRecord.getAuthorityType()
+        );
+
+        Logger.info(
+                TAG + methodName,
+                "isMultiResourceCapable? [" + isMultiResourceCapable + "]"
+        );
+
+        if (isFamilyRefreshToken || isMultiResourceCapable) {
+            final String environment = accountRecord.getEnvironment();
+            final String clientId = refreshTokenRecord.getClientId();
+
+            final int refreshTokensRemoved = removeRefreshTokensForAccount(
+                    accountRecord,
+                    isFamilyRefreshToken,
+                    environment,
+                    clientId
+            );
+
+            Logger.info(
+                    TAG + methodName,
+                    "Refresh tokens removed: [" + refreshTokensRemoved + "]"
+            );
+
+            if (refreshTokensRemoved > 1) {
+                Logger.warn(
+                        TAG + methodName,
+                        "Multiple refresh tokens found for Account."
+                );
+            }
+        }
     }
 
     private int removeRefreshTokensForAccount(@NonNull final AccountRecord accountToSave,
@@ -478,7 +499,7 @@ public class MsalOAuth2TokenCache
         } else {
             // Save the inputs
             saveAccounts(accountToSave);
-            saveCredentials(idTokenToSave);
+            saveCredentialsInternal(idTokenToSave);
 
             // Set them as the result outputs
             result.setAccount(accountToSave);
@@ -1222,7 +1243,7 @@ public class MsalOAuth2TokenCache
         }
     }
 
-    private void saveCredentials(final Credential... credentials) {
+    void saveCredentialsInternal(final Credential... credentials) {
         for (final Credential credential : credentials) {
 
             if (credential instanceof AccessTokenRecord) {
@@ -1232,6 +1253,8 @@ public class MsalOAuth2TokenCache
             mAccountCredentialCache.saveCredential(credential);
         }
     }
+
+
 
     /**
      * Validates that the supplied artifacts are schema-compliant and OK to write to the cache.
@@ -1244,7 +1267,7 @@ public class MsalOAuth2TokenCache
      * @param idTokenToSave      The {@link IdTokenRecord} to save.
      * @throws ClientException If any of the supplied artifacts are non schema-compliant.
      */
-    private void validateCacheArtifacts(
+     void validateCacheArtifacts(
             @NonNull final AccountRecord accountToSave,
             final AccessTokenRecord accessTokenToSave,
             @NonNull final RefreshTokenRecord refreshTokenToSave,
@@ -1441,6 +1464,15 @@ public class MsalOAuth2TokenCache
         return mAccountCredentialCache;
     }
 
+    IAccountCredentialAdapter<
+            GenericOAuth2Strategy,
+            GenericAuthorizationRequest,
+            GenericTokenResponse,
+            GenericAccount,
+            GenericRefreshToken> getAccountCredentialAdapter() {
+        return mAccountCredentialAdapter;
+    }
+
     @Override
     public void setSingleSignOnState(final GenericAccount account,
                                      final GenericRefreshToken refreshToken) throws ClientException {
@@ -1487,7 +1519,7 @@ public class MsalOAuth2TokenCache
         }
 
         saveAccounts(accountDto);
-        saveCredentials(idToken, rt);
+        saveCredentialsInternal(idToken, rt);
     }
 
     @Override
