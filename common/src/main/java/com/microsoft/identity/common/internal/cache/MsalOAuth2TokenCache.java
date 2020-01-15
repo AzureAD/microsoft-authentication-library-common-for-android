@@ -1460,7 +1460,7 @@ public class MsalOAuth2TokenCache
         return isSchemaCompliant(idToken.getClass(), params);
     }
 
-    IAccountCredentialCache getAccountCredentialCache() {
+    protected IAccountCredentialCache getAccountCredentialCache() {
         return mAccountCredentialCache;
     }
 

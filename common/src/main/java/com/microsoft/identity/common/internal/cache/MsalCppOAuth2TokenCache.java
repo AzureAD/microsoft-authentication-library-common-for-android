@@ -118,8 +118,8 @@ public class MsalCppOAuth2TokenCache
      *                      Note : Both IdTokenRecord and RefreshTokenRecord need to be non null. AccessTokenRecord can be optional.
      * @throws ClientException : If the supplied Account or Credential are null or schema invalid.
      */
-    public void saveCredentials(@NonNull final AccountRecord accountRecord,
-                                @NonNull final Credential... credentials) throws ClientException {
+    public synchronized void saveCredentials(@NonNull final AccountRecord accountRecord,
+                                             @NonNull final Credential... credentials) throws ClientException {
         if (credentials == null || credentials.length == 0) {
             throw new ClientException("Credential array passed in is null or empty");
         }
