@@ -28,6 +28,9 @@ import com.google.gson.annotations.SerializedName;
 
 import static com.microsoft.identity.common.internal.authscheme.AuthenticationSchemeParameters.SerializedNames.NAME;
 
+/**
+ * Base class for Authentication Scheme params.
+ */
 public abstract class AuthenticationSchemeParameters implements INameable {
 
     public static final class SerializedNames {
