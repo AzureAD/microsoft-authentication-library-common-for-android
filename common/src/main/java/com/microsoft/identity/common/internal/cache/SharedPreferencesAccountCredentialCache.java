@@ -307,7 +307,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String clientId,
             @Nullable final String realm,
             @Nullable final String target,
-            @Nullable final String authScheme) { // TODO add this filter criteria...
+            @Nullable final String authScheme) {
         Logger.verbose(TAG, "getCredentialsFilteredBy()");
 
         final List<Credential> allCredentials = getCredentials();
@@ -424,6 +424,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             if (cacheKey.contains(CACHE_VALUE_SEPARATOR + credentialTypeStr + CACHE_VALUE_SEPARATOR)) {
                 Logger.verbose(TAG, "Cache key is a Credential type...");
 
+                // We treat AccessToken & AccessToken_With_Authscheme as the same type
+                // because they use the same class for serialization/deserialization
                 if (credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken.name())
                         || credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken_With_AuthScheme.name())) {
                     type = CredentialType.AccessToken;
