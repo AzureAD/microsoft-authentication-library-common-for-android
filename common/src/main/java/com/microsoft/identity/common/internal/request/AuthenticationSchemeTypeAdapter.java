@@ -42,6 +42,9 @@ import static com.microsoft.identity.common.internal.authscheme.AbstractAuthenti
 import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 
+/**
+ * Gson de/serialization utility class for auth schemes.
+ */
 class AuthenticationSchemeTypeAdapter implements
         JsonDeserializer<AbstractAuthenticationScheme>,
         JsonSerializer<AbstractAuthenticationScheme> {
