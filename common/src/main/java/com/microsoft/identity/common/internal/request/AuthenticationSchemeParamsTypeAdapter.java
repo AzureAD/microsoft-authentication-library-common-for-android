@@ -35,6 +35,9 @@ import com.microsoft.identity.common.internal.authscheme.ProofOfPossessionParame
 
 import java.lang.reflect.Type;
 
+/**
+ * Gson type adapter for de/serializing auth scheme params (pop).
+ */
 class AuthenticationSchemeParamsTypeAdapter implements
         JsonDeserializer<IPoPAuthenticationSchemeParams>,
         JsonSerializer<IPoPAuthenticationSchemeParams> {
