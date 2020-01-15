@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
+/**
+ * Parameters for the Bearer auth scheme.
+ */
 public class BearerSchemeParameters extends AuthenticationSchemeParameters {
 
     public BearerSchemeParameters() {
