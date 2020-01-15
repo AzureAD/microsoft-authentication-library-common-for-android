@@ -63,16 +63,16 @@ public class AzureActiveDirectoryClientCredentialsGrantTest {
     @Test
     public void test_ClientCredentials() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
 
-        CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
+        final CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
                 .clientCertificateMetadata(new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
                 .keyStoreConfiguration(new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null))
                 .build();
 
-        String audience = AAD_CLIENT_ASSERTION_AUDIENCE;
+        final String audience = AAD_CLIENT_ASSERTION_AUDIENCE;
 
-        MicrosoftClientAssertion assertion = new MicrosoftClientAssertion(audience, credential);
+        final MicrosoftClientAssertion assertion = new MicrosoftClientAssertion(audience, credential);
 
-        AzureActiveDirectoryTokenRequest tr = new AzureActiveDirectoryTokenRequest();
+        final AzureActiveDirectoryTokenRequest tr = new AzureActiveDirectoryTokenRequest();
 
         tr.setClientAssertionType(assertion.getClientAssertionType());
         tr.setClientAssertion(assertion.getClientAssertion());
@@ -80,18 +80,18 @@ public class AzureActiveDirectoryClientCredentialsGrantTest {
         tr.setResourceId(RESOURCE);
         tr.setGrantType(GRANT_TYPE);
 
-        OAuth2StrategyOptions options = new OAuth2StrategyOptions();
+        final OAuth2StrategyOptions options = new OAuth2StrategyOptions();
         options.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
-        OAuth2Strategy strategy = new AzureActiveDirectoryOAuth2Strategy(
+        final OAuth2Strategy strategy = new AzureActiveDirectoryOAuth2Strategy(
                 new AzureActiveDirectoryOAuth2Configuration(),
                 options
         );
 
         try {
-            TokenResult tokenResult = strategy.requestToken(tr);
+            final TokenResult tokenResult = strategy.requestToken(tr);
 
             assertEquals(true, tokenResult.getSuccess());
-        } catch (ClientException exception) {
+        } catch (final ClientException exception) {
             fail("Unexpected exception.");
         }
     }
