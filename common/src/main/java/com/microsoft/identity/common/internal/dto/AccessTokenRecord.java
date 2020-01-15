@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.dto;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.authscheme.IDevicePopManager;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -74,6 +75,8 @@ public class AccessTokenRecord extends Credential {
 
     /**
      * A key id associating this credential to a public/private keypair.
+     * <p>
+     * Refer to {@link IDevicePopManager#getAsymmetricKeyThumbprint()}.
      */
     @SerializedName(KID)
     private String mKid;
@@ -123,6 +126,8 @@ public class AccessTokenRecord extends Credential {
 
     /**
      * Gets the kid.
+     * <p>
+     * Refer to {@link IDevicePopManager#getAsymmetricKeyThumbprint()}.
      *
      * @return The kid to get.
      */
@@ -133,6 +138,8 @@ public class AccessTokenRecord extends Credential {
 
     /**
      * Sets the kid.
+     * <p>
+     * Refer to {@link IDevicePopManager#getAsymmetricKeyThumbprint()}.
      *
      * @param kid The kid to set.
      */
