@@ -33,18 +33,18 @@ import com.microsoft.identity.internal.testutils.strategies.ResourceOwnerPasswor
 
 public class B2CTestAuthority extends AzureActiveDirectoryB2CAuthority {
 
-    public B2CTestAuthority(String authorityUrl) {
+    public B2CTestAuthority(final String authorityUrl) {
         super(authorityUrl);
     }
 
     @Override
     public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyOptions options) {
-        MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
+        final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
 
         // return a custom ropc test strategy to perform ropc flow for test automation
         try {
             return new ResourceOwnerPasswordCredentialsTestStrategy(config);
-        } catch (ClientException e) {
+        } catch (final ClientException e) {
             throw new RuntimeException(e);
         }
     }
