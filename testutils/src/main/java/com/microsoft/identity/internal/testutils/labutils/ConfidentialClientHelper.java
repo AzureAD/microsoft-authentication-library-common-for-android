@@ -1,3 +1,25 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
 import com.microsoft.identity.common.exception.ClientException;
@@ -25,11 +47,16 @@ abstract class ConfidentialClientHelper {
 
     private String mAccessToken;
 
-    abstract TokenRequest createTokenRequest() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException;
+    abstract TokenRequest createTokenRequest()
+            throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException,
+            KeyStoreException, NoSuchProviderException, IOException;
 
     abstract void setupApiClientWithAccessToken(String accessToken);
 
-    private String getAccessToken() throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException, InterruptedException, CertificateException {
+    private String getAccessToken()
+            throws UnrecoverableKeyException, NoSuchAlgorithmException,
+            KeyStoreException, NoSuchProviderException, IOException,
+            CertificateException {
         if (mAccessToken == null) {
             mAccessToken = requestAccessTokenForAutomation();
         }
@@ -40,25 +67,30 @@ abstract class ConfidentialClientHelper {
     /**
      * Yep.  Hardcoding this method to retrieve access token for MSIDLABS
      */
-    private String requestAccessTokenForAutomation() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException, InterruptedException {
+    private String requestAccessTokenForAutomation()
+            throws CertificateException, UnrecoverableKeyException,
+            NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException,
+            IOException {
         String accessToken = null;
 
-        TokenRequest tokenRequest = this.createTokenRequest();
-
+        final TokenRequest tokenRequest = this.createTokenRequest();
         tokenRequest.setGrantType(GRANT_TYPE);
-        AccountsInOneOrganization aadAudience = new AccountsInOneOrganization(TENANT_ID);
-        AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(aadAudience);
+
+        final AccountsInOneOrganization aadAudience = new AccountsInOneOrganization(TENANT_ID);
+        final AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(aadAudience);
+
         try {
             final OAuth2StrategyOptions strategyOptions = new OAuth2StrategyOptions();
             strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
             OAuth2Strategy strategy = authority.createOAuth2Strategy(strategyOptions);
             TokenResult tokenResult = strategy.requestToken(tokenRequest);
+
             if (tokenResult.getSuccess()) {
                 accessToken = tokenResult.getTokenResponse().getAccessToken();
             } else {
                 throw new RuntimeException(tokenResult.getErrorResponse().getErrorDescription());
             }
-        } catch (ClientException e) {
+        } catch (final ClientException e) {
             e.printStackTrace();
         }
 
@@ -68,7 +100,7 @@ abstract class ConfidentialClientHelper {
     void setupApiClientWithAccessToken() {
         try {
             setupApiClientWithAccessToken(this.getAccessToken());
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new RuntimeException("Unable to get access token for automation:" + e.getMessage());
         }
     }
