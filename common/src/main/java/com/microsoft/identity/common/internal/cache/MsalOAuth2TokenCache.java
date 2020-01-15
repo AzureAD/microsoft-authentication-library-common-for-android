@@ -1101,6 +1101,14 @@ public class MsalOAuth2TokenCache
                 isRealmAgnostic
         );
 
+        final int atsWithAuthSchemeRemoved = removeCredentialsOfTypeForAccount(
+                environment,
+                clientId,
+                CredentialType.AccessToken_With_AuthScheme,
+                targetAccount,
+                isRealmAgnostic
+        );
+
         final int rtsRemoved = removeCredentialsOfTypeForAccount(
                 environment,
                 clientId,
@@ -1149,6 +1157,7 @@ public class MsalOAuth2TokenCache
 
         final String[][] logInfo = new String[][]{
                 {"Access tokens", String.valueOf(atsRemoved)},
+                {"Access tokens (with authscheme)", String.valueOf(atsWithAuthSchemeRemoved)},
                 {"Refresh tokens", String.valueOf(rtsRemoved)},
                 {"Id tokens (v1)", String.valueOf(v1IdsRemoved)},
                 {"Id tokens (v2)", String.valueOf(idsRemoved)},
@@ -1226,7 +1235,7 @@ public class MsalOAuth2TokenCache
                                 ? null // wildcard (*) realm
                                 : targetAccount.getRealm(),
                         null, // wildcard (*) target,
-                        null // TODO do we need to consider adding a scheme param?
+                        null
                 );
 
         for (final Credential credentialToRemove : credentialsToRemove) {
