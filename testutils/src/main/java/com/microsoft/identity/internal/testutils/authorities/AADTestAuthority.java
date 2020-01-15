@@ -42,17 +42,17 @@ public class AADTestAuthority extends AzureActiveDirectoryAuthority {
         super(new AnyOrganizationalAccount());
     }
 
-    public AADTestAuthority(AzureActiveDirectoryAudience signInAudience) {
+    public AADTestAuthority(final AzureActiveDirectoryAudience signInAudience) {
         super(signInAudience);
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy(@Nullable OAuth2StrategyOptions options) {
+    public OAuth2Strategy createOAuth2Strategy(@Nullable final OAuth2StrategyOptions options) {
         final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
         // return a custom ropc test strategy to perform ropc flow for test automation
         try {
             return new ResourceOwnerPasswordCredentialsTestStrategy(config);
-        } catch (ClientException e) {
+        } catch (final ClientException e) {
             throw new RuntimeException(e);
         }
     }
