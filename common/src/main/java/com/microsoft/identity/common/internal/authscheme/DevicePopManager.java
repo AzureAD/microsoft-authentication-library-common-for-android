@@ -91,6 +91,9 @@ import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PR
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.internal.net.ObjectMapper.ENCODING_SCHEME;
 
+/**
+ * Concrete class providing convenience functions around AndroidKeystore to support PoP.
+ */
 public class DevicePopManager implements IDevicePopManager {
 
     private static final String TAG = DevicePopManager.class.getSimpleName();
