@@ -286,7 +286,8 @@ public abstract class OAuth2Strategy
         // TODO Perform validations on the CacheRecord prior to returning result...
 
         // TODO Ideally, we would check the expiry, completeness of record, etc here...
-        // TODO This looks like there's a bit of refactoring involved to account for broker cases...
+        // TODO This requires refactoring the controllers to relocate logic to here.
+        // TODO Broker looks to need a bit extra refactoring as its less integrated with the strategy model
         return true;
     }
 
