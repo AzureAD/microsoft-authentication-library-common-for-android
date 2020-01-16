@@ -404,7 +404,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
      * @return The CredentialType or null if a proper type cannot be resolved.
      */
     @Nullable
-    private CredentialType getCredentialTypeForCredentialCacheKey(@NonNull final String cacheKey) {
+    public static CredentialType getCredentialTypeForCredentialCacheKey(@NonNull final String cacheKey) {
         if (StringExtensions.isNullOrBlank(cacheKey)) {
             throw new IllegalArgumentException("Param [cacheKey] cannot be null.");
         }
@@ -449,14 +449,14 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     private boolean isAccount(@NonNull final String cacheKey) {
         Logger.verbosePII(TAG, "Evaluating cache key: [" + cacheKey + "]");
         boolean isAccount = null == getCredentialTypeForCredentialCacheKey(cacheKey);
-        Logger.info(TAG, "isAccount? [" + isAccount + "]");
+        Logger.verbose(TAG, "isAccount? [" + isAccount + "]");
         return isAccount;
     }
 
     private boolean isCredential(@NonNull String cacheKey) {
         Logger.verbosePII(TAG, "Evaluating cache key: [" + cacheKey + "]");
         boolean isCredential = null != getCredentialTypeForCredentialCacheKey(cacheKey);
-        Logger.info(TAG, "isCredential? [" + isCredential + "]");
+        Logger.verbose(TAG, "isCredential? [" + isCredential + "]");
         return isCredential;
     }
 

@@ -32,4 +32,56 @@ public class LabUserQuery {
     public String federationProvider;
     public String azureEnvironment;
     public String signInAudience;
+    public String guestHomedIn;
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+
+        if (obj == null || obj.getClass() != this.getClass()) {
+            return false;
+        }
+
+        LabUserQuery query = (LabUserQuery) obj;
+
+        return computeEquals(query.userType, this.userType) &&
+                computeEquals(query.mfa, this.mfa) &&
+                computeEquals(query.protectionPolicy, this.protectionPolicy) &&
+                computeEquals(query.homeDomain, this.homeDomain) &&
+                computeEquals(query.homeUpn, this.homeUpn) &&
+                computeEquals(query.b2cProvider, this.b2cProvider) &&
+                computeEquals(query.federationProvider, this.federationProvider) &&
+                computeEquals(query.azureEnvironment, this.azureEnvironment) &&
+                computeEquals(query.signInAudience, this.signInAudience) &&
+                computeEquals(query.guestHomedIn, this.guestHomedIn);
+    }
+
+    @Override
+    public int hashCode() {
+        return computeHashCode(userType, 2) +
+                computeHashCode(mfa, 3) +
+                computeHashCode(protectionPolicy, 5) +
+                computeHashCode(homeDomain, 7) +
+                computeHashCode(homeUpn, 11) +
+                computeHashCode(b2cProvider, 13) +
+                computeHashCode(federationProvider, 17) +
+                computeHashCode(azureEnvironment, 19) +
+                computeHashCode(signInAudience, 23) +
+                computeHashCode(guestHomedIn, 29);
+
+    }
+
+    private boolean computeEquals(String a, String b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        return a.equals(b);
+    }
+
+    private int computeHashCode(String s, int n) {
+        if (s == null) {
+            return 0;
+        }
+
+        return n * s.hashCode();
+    }
 }

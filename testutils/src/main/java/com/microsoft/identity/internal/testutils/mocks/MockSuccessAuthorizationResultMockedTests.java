@@ -20,24 +20,25 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils.labutils;
+package com.microsoft.identity.internal.testutils.mocks;
 
-import com.microsoft.identity.internal.test.labapi.api.LabUserSecretApi;
-import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 
-public class LabSecretHelper {
+import java.util.HashMap;
 
-    public static String getPasswordForLab(final String labName) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
-        LabUserSecretApi labUserSecretApi = new LabUserSecretApi();
-        SecretResponse secretResponse;
+public class MockSuccessAuthorizationResultMockedTests extends AuthorizationResult {
 
-        try {
-            secretResponse = labUserSecretApi.getLabUserSecret(labName);
-        } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
-            throw new RuntimeException("Error retrieving lab password", ex);
-        }
+    @Override
+    public boolean getSuccess() {
+        return true;
+    }
 
-        return secretResponse.getValue();
+    public MockSuccessAuthorizationResultMockedTests() {
+        MicrosoftStsAuthorizationResponse response = new MicrosoftStsAuthorizationResponse("", "", new HashMap<String, String>());
+        this.setAuthorizationResponse(response);
+        // assume that we have auth code and auth request was successful
+        this.setAuthorizationStatus(AuthorizationStatus.SUCCESS);
     }
 }
