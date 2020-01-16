@@ -1,10 +1,17 @@
+Version 1.0.14
+------------
+- Logging improvements.
+- Fixed issue #770.
+- Added Fragment support in WebView flow.
+
 Version 1.0.13-hf1
-- Fixed issue #882 in MSAL
+------------
+- Fixed issue #882 in MSAL.
 
 Version 1.0.13
 ------------
 - Resolving PoP backcompat issue.
-- Fixed issue #859 in MSAL
+- Fixed issue #859 in MSAL.
 
 Version 1.0.12
 ------------
@@ -13,13 +20,13 @@ Version 1.0.12
 - Added null check for optional parameter prompt.
 - Added telemetry event in StorageHelper.
 - Fixed cloud url returning wrong url if authority specified in configuration.
-- Fixed issue #709 and #718
+- Fixed issue #709 and #718.
 - Fixed multiple cloud support in MSAL with Broker.
 - Enabled MSAL-Broker communication via AccountManager.
 
 Version 1.0.9-hf1
 ------------
-- Hot fix release
+- Hot fix release.
 - Logging fixes.
 
 Version 1.0.9
