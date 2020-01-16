@@ -186,6 +186,11 @@ public abstract class BaseController {
         HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAppContext());
 
         TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
+
+        if (tokenRequest instanceof MicrosoftTokenRequest) {
+            ((MicrosoftTokenRequest) tokenRequest).setClaims(parameters.getClaimsRequestJson());
+        }
+
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
 
         TokenResult tokenResult = strategy.requestToken(tokenRequest);
