@@ -382,7 +382,7 @@ public class AuthorizationFragment extends Fragment {
 
     private void sendResult(int resultCode, final Intent resultIntent) {
         Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + resultCode);
-        CommandDispatcher.completeInteractive(
+        InteractiveAuthResultBroadcaster.broadcast(
                 AuthorizationStrategy.BROWSER_FLOW,
                 resultCode,
                 resultIntent

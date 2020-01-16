@@ -52,6 +52,10 @@ public class AzureActiveDirectoryAuthorizationResultFactory extends Authorizatio
 
     @Override
     public AzureActiveDirectoryAuthorizationResult createAuthorizationResult(final int resultCode, final Intent data, final AzureActiveDirectoryAuthorizationRequest request) {
+        // TODO: This code is for V1, and is never used.
+        //       If we need to turn this on, make sure to verify this with MicrosoftStsAuthorizationResultFactory(v2),
+        //       as that one has the latest change.
+
         if (data == null || data.getExtras() == null) {
             return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,

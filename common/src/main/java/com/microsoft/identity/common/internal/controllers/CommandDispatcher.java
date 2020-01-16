@@ -37,8 +37,9 @@ import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationFragment;
+import com.microsoft.identity.common.internal.providers.oauth2.InteractiveAuthResultBroadcaster;
+import com.microsoft.identity.common.internal.providers.oauth2.IInteractiveAuthResultCallback;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -280,6 +281,15 @@ public class CommandDispatcher {
                     AcquireTokenResult result = null;
                     BaseException baseException = null;
 
+                    final IInteractiveAuthResultCallback resultCallback = new IInteractiveAuthResultCallback() {
+                        @Override
+                        public void onGetResult(int requestCode, int resultCode, Intent resultIntent) {
+                            completeInteractive(requestCode, resultCode, resultIntent);
+                        }
+                    };
+
+                    InteractiveAuthResultBroadcaster.register(resultCallback);
+
                     try {
                         sCommand = command;
 
@@ -462,7 +472,7 @@ public class CommandDispatcher {
         );
     }
 
-    public static void completeInteractive(int requestCode, int resultCode, final Intent data) {
+    private static void completeInteractive(int requestCode, int resultCode, final Intent data) {
         final String methodName = ":completeInteractive";
         if (sCommand != null) {
             sCommand.notify(requestCode, resultCode, data);
