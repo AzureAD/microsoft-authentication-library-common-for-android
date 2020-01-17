@@ -59,6 +59,7 @@ public class MsalCppOAuth2TokenCache
         GenericRefreshToken> {
 
     private static final String TAG = MsalCppOAuth2TokenCache.class.getName();
+
     /**
      * Constructor of MsalOAuth2TokenCache.
      *
@@ -80,7 +81,7 @@ public class MsalCppOAuth2TokenCache
      * @param context The Application Context
      * @return An instance of the MsalCppOAuth2TokenCache.
      */
-    public static MsalCppOAuth2TokenCache create(@NonNull final Context context){
+    public static MsalCppOAuth2TokenCache create(@NonNull final Context context) {
         final MsalOAuth2TokenCache msalOAuth2TokenCache = MsalOAuth2TokenCache.create(context);
         return new MsalCppOAuth2TokenCache(
                 context,
@@ -127,9 +128,10 @@ public class MsalCppOAuth2TokenCache
 
     /**
      * API to save {@link AccountRecord}
+     *
      * @param accountRecord : accountRecord to be saved.
      */
-    public synchronized void saveAccountRecord(@NonNull AccountRecord accountRecord){
+    public synchronized void saveAccountRecord(@NonNull AccountRecord accountRecord) {
         getAccountCredentialCache().saveAccount(accountRecord);
 
     }
@@ -138,28 +140,55 @@ public class MsalCppOAuth2TokenCache
      * API to clear all cache.
      * Note: This method is intended to be only used for testing purposes.
      */
-    public synchronized void clearCache(){
+    public synchronized void clearCache() {
         getAccountCredentialCache().clearAll();
     }
 
+    /**
+     * Method to remove Account matched with homeAccountId, environment and realm
+     *
+     * @param homeAccountId : HomeAccountId of the Account
+     * @param environment   : Environment of the Account
+     * @param realm         : Realm of the Account
+     * @return {@link AccountDeletionRecord}
+     */
     public synchronized AccountDeletionRecord removeAccount(@NonNull final String homeAccountId,
-                                            @NonNull final String environment,
-                                            @NonNull final String realm){
-       List<Credential> credentials = getAccountCredentialCache()
-               .getCredentialsFilteredBy(homeAccountId,environment, CredentialType.RefreshToken, null, realm, null );
-       String clientId = null;
-       if(credentials !=null && !credentials.isEmpty()){
-           clientId = credentials.get(0).getClientId();
-           return removeAccount(environment, clientId, homeAccountId, realm);
-       }
-       return new AccountDeletionRecord(null);
+                                                            @NonNull final String environment,
+                                                            @NonNull final String realm) {
+        final List<Credential> credentials = getAccountCredentialCache().getCredentialsFilteredBy(
+                homeAccountId,
+                environment,
+                CredentialType.RefreshToken,
+                null, realm,
+                null
+        );
+
+        if (credentials != null && !credentials.isEmpty()) {
+            final String clientId = credentials.get(0).getClientId();
+            return removeAccount(environment, clientId, homeAccountId, realm);
+        }
+        return new AccountDeletionRecord(null);
 
     }
 
-    public List<AccountRecord> getAllAccounts(){
+    /**
+     * Method to get all the Accounts in the cache.
+     *
+     * @return {@link List<AccountRecord>}
+     */
+    public List<AccountRecord> getAllAccounts() {
         return getAccountCredentialCache().getAccounts();
     }
 
+    /**
+     * Method to get Account matched with homeAccountId, environment and realm
+     *
+     * @param homeAccountId : HomeAccountId of the Account
+     * @param environment   : Environment of the Account
+     * @param realm         : Realm of the Account
+     * @return {@link AccountRecord}
+     * @throws ClientException : throws ClientException if input validation fails
+     */
     @Nullable
     public AccountRecord getAccount(@NonNull String homeAccountId,
                                     @NonNull String environment,
@@ -173,10 +202,10 @@ public class MsalCppOAuth2TokenCache
         final List<AccountRecord> accountRecords = getAccountCredentialCache()
                 .getAccountsFilteredBy(homeAccountId, environment, realm);
 
-        if(accountRecords == null || accountRecords.isEmpty()){
+        if (accountRecords == null || accountRecords.isEmpty()) {
             Logger.info(TAG + methodName,
                     "No account found for the passing in "
-                            + "homeAccountId: "  + homeAccountId
+                            + "homeAccountId: " + homeAccountId
                             + " environment: " + environment
                             + " realm: " + realm
             );
