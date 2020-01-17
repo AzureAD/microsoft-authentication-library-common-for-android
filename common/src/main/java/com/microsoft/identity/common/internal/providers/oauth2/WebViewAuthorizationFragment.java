@@ -28,6 +28,9 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentParameters.KEY_AUTH_REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentParameters.KEY_REQUEST_HEADERS;
 
+/**
+ * Authorization fragment with embedded webview.
+ * */
 public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private static final String TAG = WebViewAuthorizationFragment.class.getSimpleName();

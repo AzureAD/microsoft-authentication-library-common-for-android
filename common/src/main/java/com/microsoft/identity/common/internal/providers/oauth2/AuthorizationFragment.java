@@ -52,7 +52,7 @@ import static com.microsoft.identity.common.internal.providers.oauth2.Authorizat
 /**
  * This base classes
  *  - handles how AuthorizationFragments communicates with the outside world.
- *  - handles lifecycle operations.
+ *  - handles basic lifecycle operations.
  * */
 public abstract class AuthorizationFragment extends Fragment {
 

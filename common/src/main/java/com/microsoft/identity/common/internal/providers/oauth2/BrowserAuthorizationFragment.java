@@ -31,6 +31,9 @@ import static com.microsoft.identity.common.internal.providers.oauth2.Authorizat
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_DESCRIPTION;
 import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_SUBCODE;
 
+/**
+ * Authorization fragment with customTabs or browsers.
+ * */
 public class BrowserAuthorizationFragment extends AuthorizationFragment {
 
     private static final String TAG = BrowserAuthorizationFragment.class.getSimpleName();
