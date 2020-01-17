@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
-import androidx.annotation.VisibleForTesting;
-
 import com.microsoft.identity.common.BuildConfig;
 
 /**
