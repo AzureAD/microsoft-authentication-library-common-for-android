@@ -862,7 +862,7 @@ public class MsalOAuth2TokenCache
     @Override
     public List<AccountRecord> getAccounts(@Nullable final String environment,
                                            @NonNull final String clientId) {
-        final String methodName = ":getAllAccounts";
+        final String methodName = ":getAccounts";
 
         Logger.verbosePII(
                 TAG + methodName,
