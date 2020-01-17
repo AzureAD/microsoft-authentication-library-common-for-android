@@ -30,7 +30,9 @@ import com.microsoft.identity.common.exception.ClientException;
 
 import java.net.URL;
 
-import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.AUTH_SCHEME_PARAMS;
+import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.HTTP_METHOD;
+import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.NONCE;
+import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.URL;
 
 /**
  * Internal representation of PoP Authentication Scheme.
@@ -40,7 +42,9 @@ public class PopAuthenticationSchemeInternal
         implements IPoPAuthenticationSchemeParams {
 
     public static final class SerializedNames {
-        public static final String AUTH_SCHEME_PARAMS = "auth_scheme_params";
+        public static final String HTTP_METHOD = "http_method";
+        public static final String URL = "url";
+        public static final String NONCE = "nonce";
     }
 
     /**
@@ -48,11 +52,14 @@ public class PopAuthenticationSchemeInternal
      */
     public static final String SCHEME_POP = "PoP";
 
-    /**
-     * User supplied params.
-     */
-    @SerializedName(AUTH_SCHEME_PARAMS)
-    private IPoPAuthenticationSchemeParams mParams;
+    @SerializedName(HTTP_METHOD)
+    private String mHttpMethod;
+
+    @SerializedName(URL)
+    private URL mUrl;
+
+    @SerializedName(NONCE)
+    private String mNonce;
 
     /**
      * Delegate object for handling PoP-related crypto/HSM functions.
@@ -66,14 +73,13 @@ public class PopAuthenticationSchemeInternal
         super(SCHEME_POP);
     }
 
-    /**
-     * Constructs a new PopAuthenticationSchemeInternal.
-     *
-     * @param params The params from which to derive this object.
-     */
-    PopAuthenticationSchemeInternal(@NonNull final IPoPAuthenticationSchemeParams params) {
+    PopAuthenticationSchemeInternal(@NonNull final String httpMethod,
+                                    @NonNull final URL url,
+                                    @NonNull final String nonce) {
         super(SCHEME_POP);
-        mParams = params;
+        mHttpMethod = httpMethod;
+        mUrl = url;
+        mNonce = nonce;
     }
 
     /**
@@ -104,16 +110,16 @@ public class PopAuthenticationSchemeInternal
 
     @Override
     public String getHttpMethod() {
-        return mParams.getHttpMethod();
+        return mHttpMethod;
     }
 
     @Override
     public URL getUrl() {
-        return mParams.getUrl();
+        return mUrl;
     }
 
     @Override
     public String getNonce() {
-        return mParams.getNonce();
+        return mNonce;
     }
 }

@@ -21,7 +21,6 @@ import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.authscheme.DevicePopManager;
-import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
@@ -65,11 +64,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .registerTypeAdapter(
                         AbstractAuthenticationScheme.class,
                         new AuthenticationSchemeTypeAdapter()
-                ).registerTypeAdapter(
-                        IPoPAuthenticationSchemeParams.class,
-                        new AuthenticationSchemeParamsTypeAdapter()
-                )
-                .create();
+                ).create();
     }
 
     @Override

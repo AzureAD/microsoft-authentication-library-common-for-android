@@ -58,7 +58,11 @@ public class AuthenticationSchemeFactory {
 
                     final IPoPAuthenticationSchemeParams params = (IPoPAuthenticationSchemeParams) nameable;
 
-                    return new PopAuthenticationSchemeInternal(params);
+                    return new PopAuthenticationSchemeInternal(
+                            params.getHttpMethod(),
+                            params.getUrl(),
+                            params.getNonce()
+                    );
                 } else {
                     throw new IllegalStateException("Unrecognized parameter type.");
                 }
