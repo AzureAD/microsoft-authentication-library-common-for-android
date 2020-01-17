@@ -25,45 +25,22 @@ package com.microsoft.identity.common.internal.cache;
 import android.content.Context;
 
 import com.microsoft.identity.common.BaseAccount;
-import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
-import com.microsoft.identity.common.internal.telemetry.events.CacheStartEvent;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
-import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
-import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
-import static com.microsoft.identity.common.internal.dto.CredentialType.ID_TOKEN_TYPES;
 
 /**
  * Sub class of {@link MsalCppOAuth2TokenCache} to add specific public api's required for MSAL CPP library.
@@ -81,7 +58,7 @@ public class MsalCppOAuth2TokenCache
         GenericAccount,
         GenericRefreshToken> {
 
-
+    private static final String TAG = MsalCppOAuth2TokenCache.class.getName();
     /**
      * Constructor of MsalOAuth2TokenCache.
      *
@@ -90,8 +67,8 @@ public class MsalCppOAuth2TokenCache
      * @param accountCredentialAdapter IAccountCredentialAdapter
      */
     private MsalCppOAuth2TokenCache(final Context context,
-                                   final IAccountCredentialCache accountCredentialCache,
-                                   final IAccountCredentialAdapter accountCredentialAdapter) {
+                                    final IAccountCredentialCache accountCredentialCache,
+                                    final IAccountCredentialAdapter accountCredentialAdapter) {
         super(context, accountCredentialCache, accountCredentialAdapter);
     }
 
@@ -146,6 +123,67 @@ public class MsalCppOAuth2TokenCache
         removeRefreshTokenIfNeeded(accountRecord, refreshTokenRecord);
 
         saveCredentialsInternal(credentials);
+    }
+
+    /**
+     * API to save {@link AccountRecord}
+     * @param accountRecord : accountRecord to be saved.
+     */
+    public synchronized void saveAccountRecord(@NonNull AccountRecord accountRecord){
+        getAccountCredentialCache().saveAccount(accountRecord);
+
+    }
+
+    /**
+     * API to clear all cache.
+     * Note: This method is intended to be only used for testing purposes.
+     */
+    public synchronized void clearCache(){
+        getAccountCredentialCache().clearAll();
+    }
+
+    public synchronized AccountDeletionRecord removeAccount(@NonNull final String homeAccountId,
+                                            @NonNull final String environment,
+                                            @NonNull final String realm){
+       List<Credential> credentials = getAccountCredentialCache()
+               .getCredentialsFilteredBy(homeAccountId,environment, CredentialType.RefreshToken, null, realm, null );
+       String clientId = null;
+       if(credentials !=null && !credentials.isEmpty()){
+           clientId = credentials.get(0).getClientId();
+           return removeAccount(environment, clientId, homeAccountId, realm);
+       }
+       return new AccountDeletionRecord(null);
+
+    }
+
+    public List<AccountRecord> getAllAccounts(){
+        return getAccountCredentialCache().getAccounts();
+    }
+
+    @Nullable
+    public AccountRecord getAccount(@NonNull String homeAccountId,
+                                    @NonNull String environment,
+                                    @NonNull String realm) throws ClientException {
+        final String methodName = ":getAccount";
+
+        validateNonNull(homeAccountId, "homeAccountId");
+        validateNonNull(environment, "environment");
+        validateNonNull(realm, "realm");
+
+        final List<AccountRecord> accountRecords = getAccountCredentialCache()
+                .getAccountsFilteredBy(homeAccountId, environment, realm);
+
+        if(accountRecords == null || accountRecords.isEmpty()){
+            Logger.info(TAG + methodName,
+                    "No account found for the passing in "
+                            + "homeAccountId: "  + homeAccountId
+                            + " environment: " + environment
+                            + " realm: " + realm
+            );
+            return null;
+        }
+        return accountRecords.get(0);
+
     }
 
 }
