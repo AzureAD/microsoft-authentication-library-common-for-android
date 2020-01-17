@@ -123,10 +123,10 @@ public class CertificateOperation {
   }
 
    /**
-   * ErrorStatus of the certificate operation.
+   * Status of the certificate operation.
    * @return status
   **/
-  @ApiModelProperty(value = "ErrorStatus of the certificate operation.")
+  @ApiModelProperty(value = "Status of the certificate operation.")
   public String getStatus() {
     return status;
   }
