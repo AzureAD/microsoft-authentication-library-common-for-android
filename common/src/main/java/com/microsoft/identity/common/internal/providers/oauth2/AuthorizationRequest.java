@@ -258,6 +258,10 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         return mState;
     }
 
+    public String getClaims() {
+        return mClaims;
+    }
+
     //CHECKSTYLE:OFF
     @Override
     public String toString() {
