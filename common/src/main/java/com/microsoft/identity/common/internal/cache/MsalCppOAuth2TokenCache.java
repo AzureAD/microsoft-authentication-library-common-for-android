@@ -153,8 +153,10 @@ public class MsalCppOAuth2TokenCache
      * @return {@link AccountDeletionRecord}
      */
     public synchronized AccountDeletionRecord removeAccount(@NonNull final String homeAccountId,
-                                                            @NonNull final String environment,
-                                                            @NonNull final String realm) {
+                                                            @Nullable final String environment,
+                                                            @NonNull final String realm) throws ClientException {
+        validateNonNull(homeAccountId, "homeAccountId");
+        validateNonNull(realm, "realm");
         final List<Credential> credentials = getAccountCredentialCache().getCredentialsFilteredBy(
                 homeAccountId,
                 environment,
