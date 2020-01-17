@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.microsoft.identity.common.BuildConfig;
 
 /**
@@ -1219,6 +1221,19 @@ public final class AuthenticationConstants {
         public static final String GET_CURRENT_ACCOUNT = "GET_CURRENT_ACCOUNT";
 
         public static final String REMOVE_ACCOUNT_FROM_SHARED_DEVICE = "REMOVE_ACCOUNT_FROM_SHARED_DEVICE";
+    }
+
+    public static final class AuthorizationIntentParameters {
+
+        public static final String KEY_AUTH_INTENT = "authIntent";
+
+        public static final String KEY_AUTH_REQUEST_URL = "authRequestUrl";
+
+        public static final String KEY_AUTH_REDIRECT_URI = "authRedirectUri";
+
+        public static final String KEY_REQUEST_HEADERS = "requestHeaders";
+
+        public static final String KEY_AUTH_AUTHORIZATION_AGENT = "authorizationAgent";
     }
 
     /**

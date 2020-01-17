@@ -44,8 +44,6 @@ import java.util.concurrent.Future;
  */
 public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
         GenericAuthorizationRequest extends AuthorizationRequest> {
-    public static final int BROWSER_FLOW = 1001;
-
     public static final String REQUEST_URL_KEY = "com.microsoft.identity.request.url.key";
 
     public static final String REQUEST_ID = "com.microsoft.identity.request.id";
@@ -85,13 +83,12 @@ public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2
         final Fragment fragment = mReferencedFragment.get();
 
         if (fragment != null) {
-            final AuthorizationFragment authFragment = new AuthorizationFragment();
-            authFragment.setInstanceState(intent.getExtras());
+            final AuthorizationFragment authFragment = AuthorizationActivity.getAuthorizationFragmentFromStartIntent(intent);
 
             fragment.getFragmentManager()
                     .beginTransaction()
                     .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                    .add(fragment.getId(),authFragment, AuthorizationFragment.class.getName())
+                    .add(fragment.getId(), authFragment, AuthorizationFragment.class.getName())
                     .commit();
             return;
         }
