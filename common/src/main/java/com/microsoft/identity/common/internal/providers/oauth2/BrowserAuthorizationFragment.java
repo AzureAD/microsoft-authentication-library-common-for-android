@@ -23,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_FINAL_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INSTALL_URL_KEY;
@@ -159,7 +160,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
             startActivity(browserIntent);
             Logger.info(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
             sendResult(AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME, resultIntent);
-        } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL))) {
+        } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AUTHORIZATION_FINAL_URL))) {
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, resultIntent);
             Telemetry.emit(new UiEndEvent().isUiComplete());
         } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE))
@@ -194,7 +195,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
             }
         } else {
             Logger.info(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
-            resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
+            resultIntent.putExtra(AUTHORIZATION_FINAL_URL, url);
         }
 
         return resultIntent;
