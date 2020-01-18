@@ -161,7 +161,8 @@ public class MsalCppOAuth2TokenCache
                 homeAccountId,
                 environment,
                 CredentialType.RefreshToken,
-                null, realm,
+                null,
+                realm,
                 null
         );
 
