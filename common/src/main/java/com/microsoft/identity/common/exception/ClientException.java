@@ -24,7 +24,7 @@ package com.microsoft.identity.common.exception;
 
 public class ClientException extends BaseException {
 
-    public static final String sName =  ServiceException.class.getName();
+    public static final String sName =  ClientException.class.getName();
 
     /**
      * Indicates that a token was not found in the internal/adal/tokensharing ssostateserializer.
