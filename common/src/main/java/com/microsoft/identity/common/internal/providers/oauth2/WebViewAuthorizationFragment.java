@@ -23,10 +23,10 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuth
 
 import java.util.HashMap;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentParameters.KEY_AUTH_INTENT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentParameters.KEY_AUTH_REDIRECT_URI;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentParameters.KEY_AUTH_REQUEST_URL;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentParameters.KEY_REQUEST_HEADERS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
 
 /**
  * Authorization fragment with embedded webview.
@@ -36,7 +36,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private static final String TAG = WebViewAuthorizationFragment.class.getSimpleName();
 
     @VisibleForTesting
-    private static final String KEY_PKEYAUTH_STATUS = "pkeyAuthStatus";
+    private static final String PKEYAUTH_STATUS = "pkeyAuthStatus";
 
     private WebView mWebView;
 
@@ -59,20 +59,20 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(KEY_AUTH_INTENT, mAuthIntent);
-        outState.putBoolean(KEY_PKEYAUTH_STATUS, mPkeyAuthStatus);
-        outState.putString(KEY_AUTH_REDIRECT_URI, mRedirectUri);
-        outState.putString(KEY_AUTH_REQUEST_URL, mAuthorizationRequestUrl);
-        outState.putSerializable(KEY_REQUEST_HEADERS, mRequestHeaders);
+        outState.putParcelable(AUTH_INTENT, mAuthIntent);
+        outState.putBoolean(PKEYAUTH_STATUS, mPkeyAuthStatus);
+        outState.putString(REDIRECT_URI, mRedirectUri);
+        outState.putString(REQUEST_URL, mAuthorizationRequestUrl);
+        outState.putSerializable(REQUEST_HEADERS, mRequestHeaders);
     }
 
     @Override
     void extractState(final Bundle state){
         super.extractState(state);
-        mAuthIntent = state.getParcelable(KEY_AUTH_INTENT);
-        mPkeyAuthStatus = state.getBoolean(KEY_PKEYAUTH_STATUS, false);
-        mAuthorizationRequestUrl = state.getString(KEY_AUTH_REQUEST_URL);
-        mRedirectUri = state.getString(KEY_AUTH_REDIRECT_URI);
+        mAuthIntent = state.getParcelable(AUTH_INTENT);
+        mPkeyAuthStatus = state.getBoolean(PKEYAUTH_STATUS, false);
+        mAuthorizationRequestUrl = state.getString(REQUEST_URL);
+        mRedirectUri = state.getString(REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
     }
 
@@ -170,7 +170,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      */
     private HashMap<String, String> getRequestHeaders(final Bundle state) {
         try {
-            return (HashMap<String, String>) state.getSerializable(KEY_REQUEST_HEADERS);
+            return (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);
         } catch (Exception e) {
             return null;
         }

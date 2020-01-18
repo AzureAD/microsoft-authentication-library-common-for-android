@@ -17,11 +17,11 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
 import java.util.HashMap;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentParameters.KEY_AUTH_AUTHORIZATION_AGENT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentParameters.KEY_AUTH_INTENT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentParameters.KEY_AUTH_REDIRECT_URI;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentParameters.KEY_AUTH_REQUEST_URL;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentParameters.KEY_REQUEST_HEADERS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
 
 public final class AuthorizationActivity extends FragmentActivity {
 
@@ -34,18 +34,18 @@ public final class AuthorizationActivity extends FragmentActivity {
                                            final HashMap<String, String> requestHeaders,
                                            final AuthorizationAgent authorizationAgent) {
         final Intent intent = new Intent(context, AuthorizationActivity.class);
-        intent.putExtra(KEY_AUTH_INTENT, authIntent);
-        intent.putExtra(KEY_AUTH_REQUEST_URL, requestUrl);
-        intent.putExtra(KEY_AUTH_REDIRECT_URI, redirectUri);
-        intent.putExtra(KEY_REQUEST_HEADERS, requestHeaders);
-        intent.putExtra(KEY_AUTH_AUTHORIZATION_AGENT, authorizationAgent);
+        intent.putExtra(AUTH_INTENT, authIntent);
+        intent.putExtra(REQUEST_URL, requestUrl);
+        intent.putExtra(REDIRECT_URI, redirectUri);
+        intent.putExtra(REQUEST_HEADERS, requestHeaders);
+        intent.putExtra(AUTHORIZATION_AGENT, authorizationAgent);
         intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         return intent;
     }
 
     public static AuthorizationFragment getAuthorizationFragmentFromStartIntent(@NonNull final Intent intent){
         AuthorizationFragment fragment;
-        final AuthorizationAgent authorizationAgent = (AuthorizationAgent)intent.getSerializableExtra(KEY_AUTH_AUTHORIZATION_AGENT);
+        final AuthorizationAgent authorizationAgent = (AuthorizationAgent)intent.getSerializableExtra(AUTHORIZATION_AGENT);
         Telemetry.emit(new UiStartEvent().putUserAgent(authorizationAgent));
 
         if (authorizationAgent == AuthorizationAgent.WEBVIEW) {

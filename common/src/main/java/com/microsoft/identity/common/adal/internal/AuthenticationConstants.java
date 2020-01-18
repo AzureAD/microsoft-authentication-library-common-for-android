@@ -1221,17 +1221,38 @@ public final class AuthenticationConstants {
         public static final String REMOVE_ACCOUNT_FROM_SHARED_DEVICE = "REMOVE_ACCOUNT_FROM_SHARED_DEVICE";
     }
 
-    public static final class AuthorizationIntentParameters {
+    public static final class AuthorizationIntentKey {
 
-        public static final String KEY_AUTH_INTENT = "authIntent";
+        public static final String AUTH_INTENT = "com.microsoft.identity.auth.intent";
 
-        public static final String KEY_AUTH_REQUEST_URL = "authRequestUrl";
+        public static final String REQUEST_URL = "com.microsoft.identity.request.url";
 
-        public static final String KEY_AUTH_REDIRECT_URI = "authRedirectUri";
+        public static final String REDIRECT_URI = "com.microsoft.identity.request.redirect.uri";
 
-        public static final String KEY_REQUEST_HEADERS = "requestHeaders";
+        public static final String REQUEST_HEADERS = "com.microsoft.identity.request.headers";
 
-        public static final String KEY_AUTH_AUTHORIZATION_AGENT = "authorizationAgent";
+        public static final String AUTHORIZATION_AGENT = "com.microsoft.identity.client.authorization.agent";
+
+        public static final String REQUEST_ID = "com.microsoft.identity.request.id";
+
+        public static final String AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
+
+        public static final String RESULT_CODE = "com.microsoft.identity.client.result.code";
+
+        public static final String REQUEST_CODE = "com.microsoft.identity.client.request.code";
+    }
+
+    public static final class AuthorizationIntentAction {
+
+        /**
+         * an intent action specifying that the current interactive action should be cancelled.
+         * */
+        public static final String CANCEL_INTERACTIVE_REQUEST = "cancel_interactive_request";
+
+        /**
+         * an intent action specifying that the intent contains authorization results.
+         * */
+        public static final String RETURN_INTERACTIVE_REQUEST_RESULT = "return_interactive_request_result";
     }
 
     /**

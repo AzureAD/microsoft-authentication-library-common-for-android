@@ -23,7 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentParameters.KEY_AUTH_INTENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INSTALL_URL_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REDIRECT_PREFIX;
@@ -39,7 +39,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     private static final String TAG = BrowserAuthorizationFragment.class.getSimpleName();
 
     @VisibleForTesting
-    private static final String KEY_BROWSER_FLOW_STARTED = "browserFlowStarted";
+    private static final String BROWSER_FLOW_STARTED = "browserFlowStarted";
 
     /**
      * Class of the Activity that hosts this fragment.
@@ -87,15 +87,15 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(KEY_AUTH_INTENT, mAuthIntent);
-        outState.putBoolean(KEY_BROWSER_FLOW_STARTED, mBrowserFlowStarted);
+        outState.putParcelable(AUTH_INTENT, mAuthIntent);
+        outState.putBoolean(BROWSER_FLOW_STARTED, mBrowserFlowStarted);
     }
 
     @Override
     void extractState(final Bundle state){
         super.extractState(state);
-        mAuthIntent = state.getParcelable(KEY_AUTH_INTENT);
-        mBrowserFlowStarted = state.getBoolean(KEY_BROWSER_FLOW_STARTED, false);
+        mAuthIntent = state.getParcelable(AUTH_INTENT);
+        mBrowserFlowStarted = state.getBoolean(BROWSER_FLOW_STARTED, false);
     }
 
     @Override
