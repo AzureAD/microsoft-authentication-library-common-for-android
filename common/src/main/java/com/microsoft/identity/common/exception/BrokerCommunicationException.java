@@ -28,6 +28,8 @@ package com.microsoft.identity.common.exception;
  */
 public class BrokerCommunicationException extends BaseException {
 
+    public static final String sName =  BrokerCommunicationException.class.getName();
+
     /**
      * Initiates the {@link BrokerCommunicationException} with error code, error message and throwable.
      *
@@ -35,5 +37,10 @@ public class BrokerCommunicationException extends BaseException {
      */
     public BrokerCommunicationException(final String errorMessage) {
         super(ErrorStrings.IO_ERROR, errorMessage);
+    }
+
+    @Override
+    public String getExceptionName(){
+        return sName;
     }
 }
