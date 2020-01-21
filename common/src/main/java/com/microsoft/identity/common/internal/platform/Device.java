@@ -139,34 +139,4 @@ public final class Device {
         return Build.MODEL;
     }
 
-    /**
-     * Returns A KeyStore of type "AndroidKeyStore" that is private to this application.
-     *
-     * @return A reference to the AndroidKeyStore singleton.
-     */
-    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public static KeyStore getAndroidKeyStore()
-            throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
-        final String ANDROID_KEYSTORE = "AndroidKeyStore";
-
-        KeyStore keyStore = null;
-
-        try {
-            keyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
-            keyStore.load(null);
-        } catch (final KeyStoreException
-                | CertificateException
-                | NoSuchAlgorithmException
-                | IOException e) {
-            Logger.error(
-                    LOG_TAG,
-                    "Failed to create/initialize KeyStore",
-                    e
-            );
-
-            throw e;
-        }
-
-        return keyStore;
-    }
 }
