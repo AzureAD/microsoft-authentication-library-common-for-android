@@ -177,16 +177,18 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         OpenIdConnectPromptParameter.NONE
         );
         Logger.info(TAG, "Authorization agent passed in by MSAL: " + brokerRequest.getAuthorizationAgent());
-        if (brokerRequest.getAuthorizationAgent() != null
-                && brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())
-                && isCallingPackageIntune(parameters.getCallerPackageName())) { // TODO : Remove this whenever we enable System Browser support in Broker for apps.
-            Logger.info(TAG, "Setting Authorization Agent to Browser for Intune app");
-            parameters.setAuthorizationAgent(AuthorizationAgent.BROWSER);
-            parameters.setBrokerBrowserSupportEnabled(true);
-            parameters.setBrowserSafeList(getBrowserSafeListForBroker());
-        } else {
-            parameters.setAuthorizationAgent(AuthorizationAgent.WEBVIEW);
-        }
+//        if (brokerRequest.getAuthorizationAgent() != null
+//                && brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())
+//                && isCallingPackageIntune(parameters.getCallerPackageName())) { // TODO : Remove this whenever we enable System Browser support in Broker for apps.
+//            Logger.info(TAG, "Setting Authorization Agent to Browser for Intune app");
+//            parameters.setAuthorizationAgent(AuthorizationAgent.BROWSER);
+//            parameters.setBrokerBrowserSupportEnabled(true);
+//            parameters.setBrowserSafeList(getBrowserSafeListForBroker());
+//        } else {
+//            parameters.setAuthorizationAgent(AuthorizationAgent.WEBVIEW);
+//        }
+
+        parameters.setAuthorizationAgent(AuthorizationAgent.BROWSER);
 
         // Set Global environment variable for instance discovery if present
         if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
