@@ -23,7 +23,6 @@
 package com.microsoft.identity.internal.testutils.strategies;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -50,7 +49,7 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
      *
      * @param config Microsoft Sts OAuth2 configuration
      */
-    public MockTestStrategy(MicrosoftStsOAuth2Configuration config) throws ClientException {
+    public MockTestStrategy(MicrosoftStsOAuth2Configuration config) {
         super(config);
     }
 

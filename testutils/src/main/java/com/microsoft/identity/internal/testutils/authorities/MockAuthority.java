@@ -24,7 +24,6 @@ package com.microsoft.identity.internal.testutils.authorities;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
@@ -41,12 +40,7 @@ public class MockAuthority extends AzureActiveDirectoryAuthority {
     @Override
     public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters options) {
         final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
-
-        try {
-            return new MockTestStrategy(config);
-        } catch (final ClientException e) {
-            throw new RuntimeException(e);
-        }
+        return new MockTestStrategy(config);
     }
 
 }

@@ -24,7 +24,6 @@ package com.microsoft.identity.internal.testutils.authorities;
 
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.AnyOrganizationalAccount;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
@@ -50,11 +49,7 @@ public class AADTestAuthority extends AzureActiveDirectoryAuthority {
     public OAuth2Strategy createOAuth2Strategy(@Nullable final OAuth2StrategyParameters options) {
         final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
         // return a custom ropc test strategy to perform ropc flow for test automation
-        try {
-            return new ResourceOwnerPasswordCredentialsTestStrategy(config);
-        } catch (final ClientException e) {
-            throw new RuntimeException(e);
-        }
+        return new ResourceOwnerPasswordCredentialsTestStrategy(config);
     }
 
 }
