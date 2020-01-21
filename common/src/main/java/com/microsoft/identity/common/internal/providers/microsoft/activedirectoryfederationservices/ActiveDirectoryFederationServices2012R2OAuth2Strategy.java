@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
@@ -100,12 +101,14 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
     }
 
     @Override
-    public TokenRequest createTokenRequest(AuthorizationRequest request, AuthorizationResponse response) {
+    public TokenRequest createTokenRequest(AuthorizationRequest request,
+                                           AuthorizationResponse response,
+                                           AbstractAuthenticationScheme scheme) {
         return null;
     }
 
     @Override
-    public TokenRequest createRefreshTokenRequest() {
+    public TokenRequest createRefreshTokenRequest(AbstractAuthenticationScheme scheme) {
         return null;
     }
 
@@ -123,12 +126,12 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
     }
 
     @Override
-    protected void validateTokenResponse(TokenResponse response) {
+    protected void validateTokenResponse(TokenRequest request, TokenResponse response) {
 
     }
 
     @Override
-    public String getAuthorizationHeader(TokenResponse tokenResponse) {
+    public String getAuthorizationHeader(AbstractAuthenticationScheme scheme, TokenResponse tokenResponse) {
         return null;
     }
 }

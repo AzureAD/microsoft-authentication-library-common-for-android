@@ -185,7 +185,11 @@ public abstract class BaseController {
         final String methodName = ":performTokenRequest";
         HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAppContext());
 
-        final TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
+        final TokenRequest tokenRequest = strategy.createTokenRequest(
+                request,
+                response,
+                parameters.getAuthenticationScheme()
+        );
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
 
         final TokenResult tokenResult = strategy.requestToken(tokenRequest);
@@ -233,7 +237,10 @@ public abstract class BaseController {
                     savedRecord,
                     savedRecords,
                     SdkType.MSAL,
-                    strategy.getAuthorizationHeader(tokenResult.getTokenResponse())
+                    strategy.getAuthorizationHeader(
+                            parameters.getAuthenticationScheme(),
+                            tokenResult.getTokenResponse()
+                    )
             );
 
             // Set the client telemetry...
@@ -349,7 +356,7 @@ public abstract class BaseController {
             throw authorityResult.getClientException();
         }
 
-        final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest();
+        final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(parameters.getAuthenticationScheme());
         refreshTokenRequest.setClientId(parameters.getClientId());
         refreshTokenRequest.setScope(TextUtils.join(" ", parameters.getScopes()));
         refreshTokenRequest.setRefreshToken(parameters.getRefreshToken().getSecret());

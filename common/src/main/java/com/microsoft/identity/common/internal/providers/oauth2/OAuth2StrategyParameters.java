@@ -26,15 +26,12 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
-
 /**
  * Abstract class for defining options relative to the construction of an {@link OAuth2Strategy}.
  */
 public class OAuth2StrategyParameters {
 
     private transient Context mContext;
-    private AbstractAuthenticationScheme mAuthenticationScheme;
 
     public Context getContext() {
         return mContext;
@@ -42,14 +39,6 @@ public class OAuth2StrategyParameters {
 
     public void setContext(@NonNull final Context context) {
         mContext = context;
-    }
-
-    public AbstractAuthenticationScheme getAuthenticationScheme() {
-        return mAuthenticationScheme;
-    }
-
-    public void setAuthenticationScheme(@NonNull final AbstractAuthenticationScheme authScheme) {
-        mAuthenticationScheme = authScheme;
     }
 
 }

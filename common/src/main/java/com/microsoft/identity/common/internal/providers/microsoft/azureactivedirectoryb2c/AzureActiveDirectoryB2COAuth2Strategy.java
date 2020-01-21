@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
@@ -98,13 +99,15 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    public TokenRequest createTokenRequest(AuthorizationRequest request, AuthorizationResponse response) {
+    public TokenRequest createTokenRequest(AuthorizationRequest request,
+                                           AuthorizationResponse response,
+                                           AbstractAuthenticationScheme authScheme) {
         return null;
     }
 
 
     @Override
-    public TokenRequest createRefreshTokenRequest() {
+    public TokenRequest createRefreshTokenRequest(AbstractAuthenticationScheme authScheme) {
         return null;
     }
 
@@ -123,12 +126,12 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    protected void validateTokenResponse(TokenResponse response) {
+    protected void validateTokenResponse(TokenRequest request, TokenResponse response) {
 
     }
 
     @Override
-    public String getAuthorizationHeader(TokenResponse tokenResponse) {
+    public String getAuthorizationHeader(AbstractAuthenticationScheme scheme, TokenResponse tokenResponse) {
         return null;
     }
 }

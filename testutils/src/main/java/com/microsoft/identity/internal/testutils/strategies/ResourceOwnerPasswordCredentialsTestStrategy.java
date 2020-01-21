@@ -25,7 +25,7 @@ package com.microsoft.identity.internal.testutils.strategies;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
@@ -55,11 +55,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
      * @param config Microsoft Sts OAuth2 configuration
      */
     public ResourceOwnerPasswordCredentialsTestStrategy(final MicrosoftStsOAuth2Configuration config) {
-        super(config, new OAuth2StrategyParameters() {{
-            setAuthenticationScheme(
-                    new BearerAuthenticationSchemeInternal()
-            );
-        }});
+        super(config, new OAuth2StrategyParameters());
     }
 
     /**
@@ -112,8 +108,13 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
 
     @Override
     public MicrosoftStsTokenRequest createTokenRequest(@NonNull final MicrosoftStsAuthorizationRequest request,
-                                                       @NonNull final MicrosoftStsAuthorizationResponse response) throws ClientException {
-        final MicrosoftStsTokenRequest tokenRequest = super.createTokenRequest(request, response);
+                                                       @NonNull final MicrosoftStsAuthorizationResponse response,
+                                                       @NonNull final AbstractAuthenticationScheme scheme) throws ClientException {
+        final MicrosoftStsTokenRequest tokenRequest = super.createTokenRequest(
+                request,
+                response,
+                scheme
+        );
 
         final MicrosoftStsRopcTokenRequest ropcTokenRequest = new MicrosoftStsRopcTokenRequest();
         ropcTokenRequest.setClientId(tokenRequest.getClientId());

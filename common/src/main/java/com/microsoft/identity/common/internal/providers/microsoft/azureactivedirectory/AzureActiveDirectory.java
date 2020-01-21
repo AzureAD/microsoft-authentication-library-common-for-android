@@ -29,7 +29,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.authorities.Environment;
-import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
@@ -75,9 +74,7 @@ public class AzureActiveDirectory
 
     @Override
     public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(AzureActiveDirectoryOAuth2Configuration config) {
-        final OAuth2StrategyParameters strategyOptions = new OAuth2StrategyParameters();
-        strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
-        return new AzureActiveDirectoryOAuth2Strategy(config, strategyOptions);
+        return new AzureActiveDirectoryOAuth2Strategy(config, new OAuth2StrategyParameters());
     }
 
     public static boolean hasCloudHost(final URL authorityUrl) {

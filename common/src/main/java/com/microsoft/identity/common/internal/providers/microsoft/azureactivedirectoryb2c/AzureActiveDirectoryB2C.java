@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
-import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
@@ -37,7 +36,6 @@ public class AzureActiveDirectoryB2C
     @Override
     public AzureActiveDirectoryB2COAuth2Strategy createOAuth2Strategy(OAuth2Configuration config) {
         final OAuth2StrategyParameters strategyOptions = new OAuth2StrategyParameters();
-        strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
         return new AzureActiveDirectoryB2COAuth2Strategy(config, strategyOptions);
     }
 

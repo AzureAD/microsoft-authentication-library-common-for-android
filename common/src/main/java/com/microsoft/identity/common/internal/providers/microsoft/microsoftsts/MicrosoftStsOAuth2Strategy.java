@@ -105,11 +105,11 @@ public class MicrosoftStsOAuth2Strategy
      * Constructor of MicrosoftStsOAuth2Strategy.
      *
      * @param config  MicrosoftStsOAuth2Configuration
-     * @param options OAuth2StrategyParameters
+     * @param parameters OAuth2StrategyParameters
      */
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
-                                      @NonNull final OAuth2StrategyParameters options) {
-        super(config, options);
+                                      @NonNull final OAuth2StrategyParameters parameters) {
+        super(config, parameters);
         setTokenEndpoint(config.getTokenEndpoint().toString());
     }
 
@@ -323,7 +323,8 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     public MicrosoftStsTokenRequest createTokenRequest(@NonNull final MicrosoftStsAuthorizationRequest request,
-                                                       @NonNull final MicrosoftStsAuthorizationResponse response)
+                                                       @NonNull final MicrosoftStsAuthorizationResponse response,
+                                                       @NonNull final AbstractAuthenticationScheme authScheme)
             throws ClientException {
         final String methodName = ":createTokenRequest";
         Logger.verbose(
@@ -346,7 +347,7 @@ public class MicrosoftStsOAuth2Strategy
         tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
         setTokenRequestCorrelationId(tokenRequest);
 
-        if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
+        if (SCHEME_POP.equals(authScheme.getName())) {
             // Add a token_type
             tokenRequest.setTokenType(TokenRequest.TokenType.POP);
 
@@ -354,7 +355,7 @@ public class MicrosoftStsOAuth2Strategy
 
             // Generate keys if they don't already exist...
             if (!devicePopManager.asymmetricKeyExists()) {
-                final String thumbprint = devicePopManager.generateAsymmetricKey(mStrategyOptions.getContext());
+                final String thumbprint = devicePopManager.generateAsymmetricKey(mStrategyParameters.getContext());
 
                 Logger.verbosePII(
                         TAG,
@@ -392,7 +393,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public MicrosoftStsTokenRequest createRefreshTokenRequest() throws ClientException {
+    public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final AbstractAuthenticationScheme authScheme) throws ClientException {
         final String methodName = ":createRefreshTokenRequest";
         Logger.verbose(
                 TAG + methodName,
@@ -402,13 +403,13 @@ public class MicrosoftStsOAuth2Strategy
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
 
-        if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
+        if (SCHEME_POP.equals(authScheme.getName())) {
             request.setTokenType(TokenRequest.TokenType.POP);
 
             final IDevicePopManager devicePopManager = Device.getDevicePoPManagerInstance();
 
             if (!devicePopManager.asymmetricKeyExists()) {
-                devicePopManager.generateAsymmetricKey(mStrategyOptions.getContext());
+                devicePopManager.generateAsymmetricKey(mStrategyParameters.getContext());
             }
 
             request.setRequestConfirmation(devicePopManager.getRequestConfirmation());
@@ -518,9 +519,6 @@ public class MicrosoftStsOAuth2Strategy
                     response.getBody(),
                     MicrosoftStsTokenResponse.class
             );
-
-            // Validate the response.
-            validateTokenResponse(tokenResponse);
         }
 
         final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
@@ -554,22 +552,22 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    protected void validateTokenResponse(@NonNull final MicrosoftStsTokenResponse response)
+    protected void validateTokenResponse(@NonNull final MicrosoftStsTokenRequest request,
+                                         @NonNull final MicrosoftStsTokenResponse response)
             throws ClientException {
-        validateAuthScheme(response);
+        validateAuthScheme(request, response);
     }
 
-    private void validateAuthScheme(@NonNull final MicrosoftStsTokenResponse response)
+    private void validateAuthScheme(@NonNull final MicrosoftStsTokenRequest request,
+                                    @NonNull final MicrosoftStsTokenResponse response)
             throws ClientException {
-        final String expectedAuthScheme = mStrategyOptions
-                .getAuthenticationScheme()
-                .getName();
+        final String requestTokenType = request.getTokenType();
         final String responseAuthScheme = response.getTokenType();
 
-        if (!expectedAuthScheme.equalsIgnoreCase(responseAuthScheme)) {
+        if (!requestTokenType.equalsIgnoreCase(responseAuthScheme)) {
             throw new ClientException(
                     ClientException.AUTH_SCHEME_MISMATCH,
-                    "Expected: [" + expectedAuthScheme + "]"
+                    "Expected: [" + requestTokenType + "]"
                             + "\n"
                             + "Actual: [" + responseAuthScheme + "]"
             );
@@ -666,10 +664,11 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public boolean validateCachedResult(@NonNull final ICacheRecord cacheRecord) {
-        super.validateCachedResult(cacheRecord);
+    public boolean validateCachedResult(@NonNull final AbstractAuthenticationScheme authScheme,
+                                        @NonNull final ICacheRecord cacheRecord) {
+        super.validateCachedResult(authScheme, cacheRecord);
 
-        if (authSchemeIsPoP(mStrategyOptions.getAuthenticationScheme())) {
+        if (authSchemeIsPoP(authScheme)) {
             return cachedAtKidMatchesKeystoreKid(cacheRecord.getAccessToken().getKid());
         }
 
@@ -677,11 +676,12 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public String getAuthorizationHeader(@NonNull final TokenResponse tokenResponse) {
-        if (mStrategyOptions.getAuthenticationScheme() instanceof ITokenAuthenticationSchemeInternal) {
-            final ITokenAuthenticationSchemeInternal authScheme = (ITokenAuthenticationSchemeInternal)
-                    mStrategyOptions.getAuthenticationScheme();
+    public String getAuthorizationHeader(@NonNull final AbstractAuthenticationScheme scheme,
+                                         @NonNull final TokenResponse tokenResponse) {
+        if (scheme instanceof ITokenAuthenticationSchemeInternal) {
+            final ITokenAuthenticationSchemeInternal authScheme = (ITokenAuthenticationSchemeInternal) scheme;
             authScheme.setAccessToken(tokenResponse.getAccessToken());
+
             try {
                 return authScheme.getAuthorizationRequestHeader();
             } catch (final ClientException e) {

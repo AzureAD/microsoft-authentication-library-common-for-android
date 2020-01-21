@@ -27,6 +27,7 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
@@ -205,12 +206,15 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public AzureActiveDirectoryTokenRequest createTokenRequest(AzureActiveDirectoryAuthorizationRequest request, AzureActiveDirectoryAuthorizationResponse response) {
+    public AzureActiveDirectoryTokenRequest createTokenRequest(
+            AzureActiveDirectoryAuthorizationRequest request,
+            AzureActiveDirectoryAuthorizationResponse response,
+            AbstractAuthenticationScheme scheme) {
         return null;
     }
 
     @Override
-    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest() {
+    public AzureActiveDirectoryTokenRequest createRefreshTokenRequest(AbstractAuthenticationScheme scheme) {
         return null;
     }
 
@@ -251,12 +255,14 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    protected void validateTokenResponse(AzureActiveDirectoryTokenResponse response) {
+    protected void validateTokenResponse(AzureActiveDirectoryTokenRequest request,
+                                         AzureActiveDirectoryTokenResponse response) {
         // TODO
     }
 
     @Override
-    public String getAuthorizationHeader(TokenResponse tokenResponse) {
+    public String getAuthorizationHeader(AbstractAuthenticationScheme scheme,
+                                         TokenResponse tokenResponse) {
         return tokenResponse.getAccessToken();
     }
 

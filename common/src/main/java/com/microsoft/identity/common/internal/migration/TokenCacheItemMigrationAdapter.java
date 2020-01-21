@@ -153,7 +153,6 @@ public class TokenCacheItemMigrationAdapter {
 
         // Create the strategy
         final OAuth2StrategyParameters strategyOptions = new OAuth2StrategyParameters();
-        strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
         final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyOptions);
 
         final String refreshToken = cacheRecord.getRefreshToken().getSecret();
@@ -288,7 +287,6 @@ public class TokenCacheItemMigrationAdapter {
 
                 // Create the strategy
                 final OAuth2StrategyParameters strategyOptions = new OAuth2StrategyParameters();
-                strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
                 final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyOptions);
 
                 final MicrosoftStsTokenRequest tokenRequest = createTokenRequest(
@@ -605,7 +603,8 @@ public class TokenCacheItemMigrationAdapter {
                                                               @NonNull final MicrosoftStsOAuth2Strategy strategy,
                                                               @Nullable final UUID correlationId,
                                                               @NonNull final String idTokenVersion) throws ClientException {
-        final MicrosoftStsTokenRequest tokenRequest = strategy.createRefreshTokenRequest();
+        final MicrosoftStsTokenRequest tokenRequest =
+                strategy.createRefreshTokenRequest(new BearerAuthenticationSchemeInternal());
 
         // Set the request properties
         tokenRequest.setClientId(clientId);

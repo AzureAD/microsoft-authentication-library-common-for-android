@@ -37,9 +37,7 @@ public class MicrosoftSts
      */
     @Override
     public MicrosoftStsOAuth2Strategy createOAuth2Strategy(MicrosoftStsOAuth2Configuration config) {
-        final OAuth2StrategyParameters strategyOptions = new OAuth2StrategyParameters();
-        strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
-        return new MicrosoftStsOAuth2Strategy(config, strategyOptions);
+        return new MicrosoftStsOAuth2Strategy(config, new OAuth2StrategyParameters());
     }
 
 }
