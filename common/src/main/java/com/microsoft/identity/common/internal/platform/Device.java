@@ -20,20 +20,10 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-
 package com.microsoft.identity.common.internal.platform;
 
 import android.os.Build;
 
-import androidx.annotation.RequiresApi;
-
-import com.microsoft.identity.common.internal.logging.Logger;
-
-import java.io.IOException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
