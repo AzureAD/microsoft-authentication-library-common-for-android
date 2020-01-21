@@ -24,6 +24,14 @@ package com.microsoft.identity.common.internal.platform;
 
 import android.os.Build;
 
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.authscheme.DevicePopManager;
+import com.microsoft.identity.common.internal.authscheme.IDevicePopManager;
+
+import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +40,8 @@ import java.util.Map;
  * Helper class to add additional platform specific query parameters or headers for the request sent to sts.
  */
 public final class Device {
+
+    private static IDevicePopManager sDevicePoPManager;
 
     /**
      * Private constructor to prevent a help class from being initiated.
@@ -128,6 +138,25 @@ public final class Device {
      */
     public static String getModel() {
         return Build.MODEL;
+    }
+
+    public static synchronized IDevicePopManager getDevicePoPManagerInstance() throws ClientException {
+        try {
+            if (null == sDevicePoPManager) {
+                sDevicePoPManager = new DevicePopManager();
+            }
+
+            return sDevicePoPManager;
+        } catch (CertificateException
+                | NoSuchAlgorithmException
+                | KeyStoreException
+                | IOException e) {
+            throw new ClientException(
+                    ClientException.KEYSTORE_NOT_INITIALIZED,
+                    "Failed to initialize DevicePoPManager = " + e.getMessage(),
+                    e
+            );
+        }
     }
 
 }
