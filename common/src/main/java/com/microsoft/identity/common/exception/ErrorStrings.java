@@ -396,16 +396,4 @@ public final class ErrorStrings {
             "shared_device_registered_device_deleted_on_server";
     public static final String SHARED_DEVICE_REGISTERED_DEVICE_DELETED_ON_SERVER_ERROR_MESSAGE =
             "This device has been unregistered. Please return the device to your administrator.";
-
-    /**
-     * The device's WPJ registration was disabled.
-     * */
-    public static final String REGISTERED_DEVICE_DISABLED_ON_SERVER_ERROR_CODE =
-            "registered_device_disabled_on_server";
-    public static final String NON_SHARED_DEVICE_REGISTERED_DEVICE_DISABLED_ON_SERVER_ERROR_MESSAGE =
-            "This device is disabled.";
-    public static final String SHARED_DEVICE_REGISTERED_DEVICE_DISABLED_ON_SERVER_ERROR_MESSAGE =
-            "This device is disabled. Please return the device to your administrator.";
-
-
 }
