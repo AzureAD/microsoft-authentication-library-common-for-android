@@ -100,7 +100,6 @@ public class MicrosoftStsOAuth2Strategy
                 AuthorizationResult> {
 
     private static final String TAG = MicrosoftStsOAuth2Strategy.class.getSimpleName();
-    private IDevicePopManager mDevicePopManager;
 
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
@@ -109,14 +108,9 @@ public class MicrosoftStsOAuth2Strategy
      * @param options OAuth2StrategyParameters
      */
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
-                                      @NonNull final OAuth2StrategyParameters options) throws ClientException {
+                                      @NonNull final OAuth2StrategyParameters options) {
         super(config, options);
         setTokenEndpoint(config.getTokenEndpoint().toString());
-
-        if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
-            // TODO This will go?
-            mDevicePopManager = Device.getDevicePoPManagerInstance();
-        }
     }
 
     @Override
@@ -356,9 +350,11 @@ public class MicrosoftStsOAuth2Strategy
             // Add a token_type
             tokenRequest.setTokenType(TokenRequest.TokenType.POP);
 
+            final IDevicePopManager devicePopManager = Device.getDevicePoPManagerInstance();
+
             // Generate keys if they don't already exist...
-            if (!mDevicePopManager.asymmetricKeyExists()) {
-                final String thumbprint = mDevicePopManager.generateAsymmetricKey(mStrategyOptions.getContext());
+            if (!devicePopManager.asymmetricKeyExists()) {
+                final String thumbprint = devicePopManager.generateAsymmetricKey(mStrategyOptions.getContext());
 
                 Logger.verbosePII(
                         TAG,
@@ -368,7 +364,7 @@ public class MicrosoftStsOAuth2Strategy
             }
 
             // Set the req_cnf
-            final String reqCnf = mDevicePopManager.getRequestConfirmation();
+            final String reqCnf = devicePopManager.getRequestConfirmation();
 
             tokenRequest.setRequestConfirmation(reqCnf);
         }
@@ -409,11 +405,13 @@ public class MicrosoftStsOAuth2Strategy
         if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
             request.setTokenType(TokenRequest.TokenType.POP);
 
-            if (!mDevicePopManager.asymmetricKeyExists()) {
-                mDevicePopManager.generateAsymmetricKey(mStrategyOptions.getContext());
+            final IDevicePopManager devicePopManager = Device.getDevicePoPManagerInstance();
+
+            if (!devicePopManager.asymmetricKeyExists()) {
+                devicePopManager.generateAsymmetricKey(mStrategyOptions.getContext());
             }
 
-            request.setRequestConfirmation(mDevicePopManager.getRequestConfirmation());
+            request.setRequestConfirmation(devicePopManager.getRequestConfirmation());
         }
 
         return request;
@@ -629,10 +627,21 @@ public class MicrosoftStsOAuth2Strategy
     public String getDeviceAtPopThumbprint() {
         String atPoPKid = null;
 
-        if (null != mDevicePopManager) {
-            if (mDevicePopManager.asymmetricKeyExists()) {
+        IDevicePopManager devicePopManager = null;
+        try {
+            devicePopManager = Device.getDevicePoPManagerInstance();
+        } catch (final ClientException e) {
+            Logger.error(
+                    TAG,
+                    e.getMessage(),
+                    e
+            );
+        }
+
+        if (null != devicePopManager) {
+            if (devicePopManager.asymmetricKeyExists()) {
                 try {
-                    atPoPKid = mDevicePopManager.getAsymmetricKeyThumbprint();
+                    atPoPKid = devicePopManager.getAsymmetricKeyThumbprint();
                 } catch (final ClientException e) {
                     Logger.error(
                             TAG,

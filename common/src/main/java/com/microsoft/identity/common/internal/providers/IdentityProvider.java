@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers;
 
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 
@@ -33,6 +32,6 @@ public abstract class IdentityProvider<T extends OAuth2Strategy, U extends OAuth
      * @param config generic OAuth2 configuration
      * @return Generic OAuth2Strategy
      */
-    public abstract T createOAuth2Strategy(U config) throws ClientException;
+    public abstract T createOAuth2Strategy(U config);
 
 }

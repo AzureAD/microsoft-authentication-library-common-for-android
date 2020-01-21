@@ -54,7 +54,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
      *
      * @param config Microsoft Sts OAuth2 configuration
      */
-    public ResourceOwnerPasswordCredentialsTestStrategy(final MicrosoftStsOAuth2Configuration config) throws ClientException {
+    public ResourceOwnerPasswordCredentialsTestStrategy(final MicrosoftStsOAuth2Configuration config) {
         super(config, new OAuth2StrategyParameters() {{
             setAuthenticationScheme(
                     new BearerAuthenticationSchemeInternal()
