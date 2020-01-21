@@ -23,11 +23,10 @@
 package com.microsoft.identity.common.internal.authscheme;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.platform.IDevicePopManager;
+import com.microsoft.identity.common.internal.platform.Device;
 
 import java.net.URL;
 
@@ -63,11 +62,6 @@ public class PopAuthenticationSchemeInternal
     private String mNonce;
 
     /**
-     * Delegate object for handling PoP-related crypto/HSM functions.
-     */
-    private transient IDevicePopManager mPopManager;
-
-    /**
      * Constructor for gson use.
      */
     PopAuthenticationSchemeInternal() {
@@ -83,30 +77,18 @@ public class PopAuthenticationSchemeInternal
         mNonce = nonce;
     }
 
-    /**
-     * Sets the DevicePopManager delegate instance
-     *
-     * @param popManager The delegate to set.
-     */
-    public void setDevicePopManager(@NonNull final IDevicePopManager popManager) {
-        mPopManager = popManager;
-    }
-
-    @Nullable
-    public IDevicePopManager getDevicePopManager() {
-        return mPopManager;
-    }
-
     @Override
     public String getAuthorizationRequestHeader() throws ClientException {
         return getName()
                 + " "
-                + mPopManager.getAuthorizationHeaderValue(
-                getHttpMethod(),
-                getUrl(),
-                getAccessToken(),
-                getNonce()
-        );
+                + Device
+                .getDevicePoPManagerInstance()
+                .getAuthorizationHeaderValue(
+                        getHttpMethod(),
+                        getUrl(),
+                        getAccessToken(),
+                        getNonce()
+                );
     }
 
     @Override

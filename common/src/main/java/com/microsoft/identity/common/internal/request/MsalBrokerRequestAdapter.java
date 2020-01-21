@@ -20,12 +20,10 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
@@ -47,7 +45,6 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEFAULT_BROWSER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
-import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
@@ -130,23 +127,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         if (null == requestScheme) {
             // Default assumes the scheme is Bearer
             return new BearerAuthenticationSchemeInternal();
-        } else if (SCHEME_POP.equals(requestScheme.getName())) {
-            final PopAuthenticationSchemeInternal popScheme = (PopAuthenticationSchemeInternal) requestScheme;
-
-            try {
-                popScheme.setDevicePopManager(Device.getDevicePoPManagerInstance());
-            } catch (final ClientException e) {
-                // Uh-oh. We received a request with a PoPScheme but we couldn't recreate the
-                // DevicePoPManager on the broker-side...
-                // For now, return the empty scheme and we'll retry at the controller level...
-                Logger.error(
-                        TAG,
-                        "Failed to create DevicePoPManager (broker)",
-                        e
-                );
-            }
-
-            return popScheme;
         } else {
             return requestScheme;
         }

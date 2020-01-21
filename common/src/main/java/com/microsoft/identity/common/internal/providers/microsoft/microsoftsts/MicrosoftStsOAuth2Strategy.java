@@ -34,7 +34,6 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
@@ -115,16 +114,8 @@ public class MicrosoftStsOAuth2Strategy
         setTokenEndpoint(config.getTokenEndpoint().toString());
 
         if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
-
+            // TODO This will go?
             mDevicePopManager = Device.getDevicePoPManagerInstance();
-
-            if (options.getAuthenticationScheme() instanceof PopAuthenticationSchemeInternal) {
-                // TODO Ideally, we wouldn't assign this here.
-                final PopAuthenticationSchemeInternal popScheme = (PopAuthenticationSchemeInternal)
-                        options.getAuthenticationScheme();
-
-                popScheme.setDevicePopManager(mDevicePopManager);
-            }
         }
     }
 
