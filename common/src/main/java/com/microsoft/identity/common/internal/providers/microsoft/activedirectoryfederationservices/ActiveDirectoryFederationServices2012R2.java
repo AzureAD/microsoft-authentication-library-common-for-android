@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.activedirecto
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 
 /**
  * The Active Directory Federation Services 2012 R2 Identity Provider Implementation.
@@ -35,7 +35,7 @@ public class ActiveDirectoryFederationServices2012R2
 
     @Override
     public ActiveDirectoryFederationServices2012R2OAuth2Strategy createOAuth2Strategy(OAuth2Configuration config) {
-        final OAuth2StrategyOptions strategyOptions = new OAuth2StrategyOptions();
+        final OAuth2StrategyParameters strategyOptions = new OAuth2StrategyParameters();
         strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
         return new ActiveDirectoryFederationServices2012R2OAuth2Strategy(config, strategyOptions);
     }

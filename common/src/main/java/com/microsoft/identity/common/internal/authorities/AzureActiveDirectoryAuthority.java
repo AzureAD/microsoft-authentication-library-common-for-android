@@ -35,7 +35,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -170,7 +170,7 @@ public class AzureActiveDirectoryAuthority extends Authority {
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyOptions options) throws ClientException {
+    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters options) throws ClientException {
         MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
         return new MicrosoftStsOAuth2Strategy(config, options);
     }

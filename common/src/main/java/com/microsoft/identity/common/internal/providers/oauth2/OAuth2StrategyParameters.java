@@ -31,7 +31,7 @@ import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationS
 /**
  * Abstract class for defining options relative to the construction of an {@link OAuth2Strategy}.
  */
-public class OAuth2StrategyOptions {
+public class OAuth2StrategyParameters {
 
     private transient Context mContext;
     private AbstractAuthenticationScheme mAuthenticationScheme;

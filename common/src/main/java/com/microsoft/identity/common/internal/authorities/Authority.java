@@ -33,7 +33,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -191,7 +191,7 @@ public abstract class Authority {
         return new AzureActiveDirectoryAuthority(audience);
     }
 
-    public abstract OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyOptions options) throws ClientException;
+    public abstract OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters options) throws ClientException;
 
     /**
      * Indicates whether the authority is known to Microsoft or not.  Microsoft can recognize authorities that exist within public clouds.  Microsoft does

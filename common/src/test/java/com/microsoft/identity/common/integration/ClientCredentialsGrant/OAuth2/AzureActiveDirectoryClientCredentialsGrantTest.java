@@ -32,7 +32,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 import org.junit.Test;
@@ -80,7 +80,7 @@ public class AzureActiveDirectoryClientCredentialsGrantTest {
         tr.setResourceId(RESOURCE);
         tr.setGrantType(GRANT_TYPE);
 
-        final OAuth2StrategyOptions options = new OAuth2StrategyOptions();
+        final OAuth2StrategyParameters options = new OAuth2StrategyParameters();
         options.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
         final OAuth2Strategy strategy = new AzureActiveDirectoryOAuth2Strategy(
                 new AzureActiveDirectoryOAuth2Configuration(),

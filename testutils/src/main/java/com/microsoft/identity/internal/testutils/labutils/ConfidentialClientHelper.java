@@ -27,7 +27,7 @@ import com.microsoft.identity.common.internal.authorities.AccountsInOneOrganizat
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
@@ -80,7 +80,7 @@ abstract class ConfidentialClientHelper {
         final AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(aadAudience);
 
         try {
-            final OAuth2StrategyOptions strategyOptions = new OAuth2StrategyOptions();
+            final OAuth2StrategyParameters strategyOptions = new OAuth2StrategyParameters();
             strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
             OAuth2Strategy strategy = authority.createOAuth2Strategy(strategyOptions);
             TokenResult tokenResult = strategy.requestToken(tokenRequest);

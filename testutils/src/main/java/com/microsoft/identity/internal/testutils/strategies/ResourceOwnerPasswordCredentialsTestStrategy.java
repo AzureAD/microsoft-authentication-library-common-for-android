@@ -33,7 +33,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -55,7 +55,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
      * @param config Microsoft Sts OAuth2 configuration
      */
     public ResourceOwnerPasswordCredentialsTestStrategy(final MicrosoftStsOAuth2Configuration config) throws ClientException {
-        super(config, new OAuth2StrategyOptions() {{
+        super(config, new OAuth2StrategyParameters() {{
             setAuthenticationScheme(
                     new BearerAuthenticationSchemeInternal()
             );

@@ -60,7 +60,7 @@ public abstract class OAuth2Strategy
                 GenericAuthorizationRequestBuilder extends AuthorizationRequest.Builder,
                 GenericAuthorizationStrategy extends AuthorizationStrategy,
                 GenericOAuth2Configuration extends OAuth2Configuration,
-                GenericOAuth2StrategyOptions extends OAuth2StrategyOptions,
+                GenericOAuth2StrategyOptions extends OAuth2StrategyParameters,
                 GenericAuthorizationResponse extends AuthorizationResponse,
                 GenericRefreshToken extends RefreshToken,
                 GenericTokenRequest extends TokenRequest,

@@ -32,7 +32,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
@@ -82,7 +82,7 @@ public class MicrosoftSTSClientCredentialsGrantTest {
         tr.setScope(SCOPE);
         tr.setGrantType(GRANT_TYPE);
 
-        final OAuth2StrategyOptions options = new OAuth2StrategyOptions();
+        final OAuth2StrategyParameters options = new OAuth2StrategyParameters();
         options.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
         final OAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(
                 new MicrosoftStsOAuth2Configuration(),

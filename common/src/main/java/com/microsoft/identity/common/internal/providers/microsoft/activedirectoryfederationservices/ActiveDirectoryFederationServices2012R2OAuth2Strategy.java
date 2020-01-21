@@ -33,7 +33,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
@@ -55,7 +55,7 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
      *
      * @param config OAuth2Configuration
      */
-    public ActiveDirectoryFederationServices2012R2OAuth2Strategy(OAuth2Configuration config, OAuth2StrategyOptions options) {
+    public ActiveDirectoryFederationServices2012R2OAuth2Strategy(OAuth2Configuration config, OAuth2StrategyParameters options) {
         super(config, options);
     }
 

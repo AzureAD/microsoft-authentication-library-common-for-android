@@ -27,7 +27,7 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -53,7 +53,7 @@ public class ActiveDirectoryFederationServicesAuthority extends Authority {
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy(@NonNull OAuth2StrategyOptions options) {
+    public OAuth2Strategy createOAuth2Strategy(@NonNull OAuth2StrategyParameters options) {
         throw new UnsupportedOperationException();
     }
 }

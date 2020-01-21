@@ -47,7 +47,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyOptions;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -152,7 +152,7 @@ public class TokenCacheItemMigrationAdapter {
         config.setAuthorityUrl(authorityUrl);
 
         // Create the strategy
-        final OAuth2StrategyOptions strategyOptions = new OAuth2StrategyOptions();
+        final OAuth2StrategyParameters strategyOptions = new OAuth2StrategyParameters();
         strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
         final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyOptions);
 
@@ -287,7 +287,7 @@ public class TokenCacheItemMigrationAdapter {
                 }
 
                 // Create the strategy
-                final OAuth2StrategyOptions strategyOptions = new OAuth2StrategyOptions();
+                final OAuth2StrategyParameters strategyOptions = new OAuth2StrategyParameters();
                 strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
                 final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyOptions);
 
