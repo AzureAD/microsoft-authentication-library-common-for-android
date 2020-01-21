@@ -128,8 +128,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     @NonNull
-    private static AbstractAuthenticationScheme getAuthenticationScheme(@NonNull final Context context,
-                                                                        @NonNull final BrokerRequest request) {
+    private static AbstractAuthenticationScheme getAuthenticationScheme(@NonNull final BrokerRequest request) {
         final AbstractAuthenticationScheme requestScheme = request.getAuthenticationScheme();
 
         if (null == requestScheme) {
@@ -176,12 +175,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 BrokerRequest.class
         );
 
-        parameters.setAuthenticationScheme(
-                getAuthenticationScheme(
-                        callingActivity.getApplicationContext(),
-                        brokerRequest
-                )
-        );
+        parameters.setAuthenticationScheme(getAuthenticationScheme(brokerRequest));
 
         parameters.setActivity(callingActivity);
 
@@ -277,12 +271,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final BrokerAcquireTokenSilentOperationParameters parameters =
                 new BrokerAcquireTokenSilentOperationParameters();
 
-        parameters.setAuthenticationScheme(
-                getAuthenticationScheme(
-                        context,
-                        brokerRequest
-                )
-        );
+        parameters.setAuthenticationScheme(getAuthenticationScheme(brokerRequest));
 
         parameters.setAppContext(context);
 

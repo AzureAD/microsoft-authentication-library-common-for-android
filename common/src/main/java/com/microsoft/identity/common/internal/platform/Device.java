@@ -33,8 +33,6 @@ import java.util.Map;
  */
 public final class Device {
 
-    private static final String LOG_TAG = Device.class.getSimpleName();
-
     /**
      * Private constructor to prevent a help class from being initiated.
      */
