@@ -139,11 +139,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             final PopAuthenticationSchemeInternal popScheme = (PopAuthenticationSchemeInternal) requestScheme;
 
             try {
-                popScheme.setDevicePopManager(
-                        new DevicePopManager(
-                                context
-                        )
-                );
+                popScheme.setDevicePopManager(new DevicePopManager());
             } catch (final KeyStoreException
                     | CertificateException
                     | NoSuchAlgorithmException

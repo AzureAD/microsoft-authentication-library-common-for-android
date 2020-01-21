@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
+import android.content.Context;
+
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 
@@ -60,14 +62,14 @@ public interface IDevicePopManager {
      *
      * @param callback Async callback with thumbprint/exception info.
      */
-    void generateAsymmetricKey(TaskCompletedCallbackWithError<String, ClientException> callback);
+    void generateAsymmetricKey(Context context, TaskCompletedCallbackWithError<String, ClientException> callback);
 
     /**
      * Generates asymmetric keys used by pop.
      *
      * @return The generated RSA KeyPair's thumbprint.
      */
-    String generateAsymmetricKey() throws ClientException;
+    String generateAsymmetricKey(Context context) throws ClientException;
 
     /**
      * Clears keys, if present.

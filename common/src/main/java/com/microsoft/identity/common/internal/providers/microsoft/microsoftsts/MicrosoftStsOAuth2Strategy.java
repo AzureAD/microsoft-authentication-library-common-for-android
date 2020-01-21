@@ -120,7 +120,7 @@ public class MicrosoftStsOAuth2Strategy
 
         if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
             try {
-                mDevicePopManager = new DevicePopManager(options.getContext());
+                mDevicePopManager = new DevicePopManager();
 
                 if (options.getAuthenticationScheme() instanceof PopAuthenticationSchemeInternal) {
                     // TODO Ideally, we wouldn't assign this here.
@@ -380,7 +380,7 @@ public class MicrosoftStsOAuth2Strategy
 
             // Generate keys if they don't already exist...
             if (!mDevicePopManager.asymmetricKeyExists()) {
-                final String thumbprint = mDevicePopManager.generateAsymmetricKey();
+                final String thumbprint = mDevicePopManager.generateAsymmetricKey(mStrategyOptions.getContext());
 
                 Logger.verbosePII(
                         TAG,
@@ -432,7 +432,7 @@ public class MicrosoftStsOAuth2Strategy
             request.setTokenType(TokenRequest.TokenType.POP);
 
             if (!mDevicePopManager.asymmetricKeyExists()) {
-                mDevicePopManager.generateAsymmetricKey();
+                mDevicePopManager.generateAsymmetricKey(mStrategyOptions.getContext());
             }
 
             request.setRequestConfirmation(mDevicePopManager.getRequestConfirmation());

@@ -109,11 +109,6 @@ public class DevicePopManager implements IDevicePopManager {
     private static final int RSA_KEY_SIZE = 2048;
 
     /**
-     * The current application Context.
-     */
-    private final Context mContext;
-
-    /**
      * The keystore backing this implementation.
      */
     private final KeyStore mKeyStore;
@@ -198,9 +193,8 @@ public class DevicePopManager implements IDevicePopManager {
         static final String RSA = "RSA";
     }
 
-    public DevicePopManager(@NonNull final Context context)
-            throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
-        mContext = context;
+    public DevicePopManager() throws KeyStoreException, CertificateException,
+            NoSuchAlgorithmException, IOException {
         mKeyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
         mKeyStore.load(null);
     }
@@ -271,13 +265,14 @@ public class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public void generateAsymmetricKey(@NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
+    public void generateAsymmetricKey(@NonNull final Context context,
+                                      @NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
         sThreadExecutor.submit(
                 new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            callback.onTaskCompleted(generateAsymmetricKey());
+                            callback.onTaskCompleted(generateAsymmetricKey(context));
                         } catch (final ClientException e) {
                             callback.onError(e);
                         }
@@ -287,12 +282,12 @@ public class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public String generateAsymmetricKey() throws ClientException {
+    public String generateAsymmetricKey(@NonNull final Context context) throws ClientException {
         final Exception exception;
         final String errCode;
 
         try {
-            final KeyPair keyPair = generateNewRsaKeyPair(mContext, RSA_KEY_SIZE);
+            final KeyPair keyPair = generateNewRsaKeyPair(context, RSA_KEY_SIZE);
             final RSAKey rsaKey = getRsaKeyForKeyPair(keyPair);
             return getThumbprintForRsaKey(rsaKey);
         } catch (final UnsupportedOperationException e) {
