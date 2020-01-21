@@ -155,11 +155,11 @@ public class MsalOAuth2TokenCache
     }
 
 
-     void validateNonNull(@Nullable final AccountCredentialBase accountCredentialBase,
+     void validateNonNull(@Nullable final Object object,
                                  @NonNull final String type) throws ClientException {
         final String message = type + " passed in is Null";
 
-        if (accountCredentialBase == null) {
+        if (object == null) {
             Logger.warn(TAG, message);
             throw new ClientException(message);
         }
