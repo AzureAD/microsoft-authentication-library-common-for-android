@@ -20,7 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.authscheme;
+package com.microsoft.identity.common.internal.platform;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -94,7 +94,7 @@ import static com.microsoft.identity.common.internal.net.ObjectMapper.ENCODING_S
 /**
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
  */
-public class DevicePopManager implements IDevicePopManager {
+class DevicePopManager implements IDevicePopManager {
 
     private static final String TAG = DevicePopManager.class.getSimpleName();
 
@@ -193,7 +193,7 @@ public class DevicePopManager implements IDevicePopManager {
         static final String RSA = "RSA";
     }
 
-    public DevicePopManager() throws KeyStoreException, CertificateException,
+    DevicePopManager() throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
         mKeyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
         mKeyStore.load(null);

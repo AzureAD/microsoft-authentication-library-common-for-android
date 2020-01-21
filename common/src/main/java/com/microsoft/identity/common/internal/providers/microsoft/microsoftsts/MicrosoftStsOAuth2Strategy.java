@@ -33,8 +33,6 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.internal.authscheme.DevicePopManager;
-import com.microsoft.identity.common.internal.authscheme.IDevicePopManager;
 import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
@@ -46,6 +44,7 @@ import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
+import com.microsoft.identity.common.internal.platform.IDevicePopManager;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
@@ -75,9 +74,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -119,25 +115,15 @@ public class MicrosoftStsOAuth2Strategy
         setTokenEndpoint(config.getTokenEndpoint().toString());
 
         if (SCHEME_POP.equals(mStrategyOptions.getAuthenticationScheme().getName())) {
-            try {
-                mDevicePopManager = new DevicePopManager();
 
-                if (options.getAuthenticationScheme() instanceof PopAuthenticationSchemeInternal) {
-                    // TODO Ideally, we wouldn't assign this here.
-                    final PopAuthenticationSchemeInternal popScheme = (PopAuthenticationSchemeInternal)
-                            options.getAuthenticationScheme();
+            mDevicePopManager = Device.getDevicePoPManagerInstance();
 
-                    popScheme.setDevicePopManager(mDevicePopManager);
-                }
-            } catch (final KeyStoreException
-                    | CertificateException
-                    | NoSuchAlgorithmException
-                    | IOException e) {
-                throw new ClientException(
-                        "Failed to initialize strategy.",
-                        e.getMessage(),
-                        e
-                );
+            if (options.getAuthenticationScheme() instanceof PopAuthenticationSchemeInternal) {
+                // TODO Ideally, we wouldn't assign this here.
+                final PopAuthenticationSchemeInternal popScheme = (PopAuthenticationSchemeInternal)
+                        options.getAuthenticationScheme();
+
+                popScheme.setDevicePopManager(mDevicePopManager);
             }
         }
     }

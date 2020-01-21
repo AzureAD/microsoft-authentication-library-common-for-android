@@ -25,8 +25,6 @@ package com.microsoft.identity.common.internal.platform;
 import android.os.Build;
 
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.authscheme.DevicePopManager;
-import com.microsoft.identity.common.internal.authscheme.IDevicePopManager;
 
 import java.io.IOException;
 import java.security.KeyStoreException;

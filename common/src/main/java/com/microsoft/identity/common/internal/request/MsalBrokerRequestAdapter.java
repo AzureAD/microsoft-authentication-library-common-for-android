@@ -20,12 +20,12 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.authscheme.DevicePopManager;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
@@ -35,10 +35,6 @@ import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
-import java.io.IOException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -138,11 +134,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             final PopAuthenticationSchemeInternal popScheme = (PopAuthenticationSchemeInternal) requestScheme;
 
             try {
-                popScheme.setDevicePopManager(new DevicePopManager());
-            } catch (final KeyStoreException
-                    | CertificateException
-                    | NoSuchAlgorithmException
-                    | IOException e) {
+                popScheme.setDevicePopManager(Device.getDevicePoPManagerInstance());
+            } catch (final ClientException e) {
                 // Uh-oh. We received a request with a PoPScheme but we couldn't recreate the
                 // DevicePoPManager on the broker-side...
                 // For now, return the empty scheme and we'll retry at the controller level...

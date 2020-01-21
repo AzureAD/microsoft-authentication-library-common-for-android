@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.dto;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.authscheme.IDevicePopManager;
+import com.microsoft.identity.common.internal.platform.IDevicePopManager;
 
 import java.util.Calendar;
 import java.util.Date;

@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.platform.IDevicePopManager;
 
 import java.net.URL;
 
