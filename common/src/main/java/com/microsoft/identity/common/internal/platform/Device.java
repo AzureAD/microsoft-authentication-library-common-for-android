@@ -46,14 +46,17 @@ public final class Device {
 
         platformParameters.put(PlatformIdParameters.PRODUCT, PlatformIdParameters.PRODUCT_NAME);
         platformParameters.put(PlatformIdParameters.VERSION, PlatformIdParameters.PRODUCT_VERSION);
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             platformParameters.put(PlatformIdParameters.CPU_PLATFORM, Build.CPU_ABI);
         } else {
             final String[] supportedABIs = Build.SUPPORTED_ABIS;
+
             if (supportedABIs != null && supportedABIs.length > 0) {
                 platformParameters.put(PlatformIdParameters.CPU_PLATFORM, supportedABIs[0]);
             }
         }
+
         platformParameters.put(PlatformIdParameters.OS, String.valueOf(Build.VERSION.SDK_INT));
         platformParameters.put(PlatformIdParameters.DEVICE_MODEL, Build.MODEL);
 
