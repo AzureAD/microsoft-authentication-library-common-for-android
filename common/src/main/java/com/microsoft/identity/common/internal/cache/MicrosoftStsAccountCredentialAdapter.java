@@ -100,7 +100,8 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setAuthority(strategy.getAuthorityFromTokenEndpoint());
             accessToken.setAccessTokenType(response.getTokenType());
 
-            if (SCHEME_POP.equals(response.getTokenType())) {
+            // Use case insensitive match - ESTS will not capitalize scheme...
+            if (SCHEME_POP.equalsIgnoreCase(response.getTokenType())) {
                 accessToken.setKid(strategy.getDeviceAtPopThumbprint());
             }
 
