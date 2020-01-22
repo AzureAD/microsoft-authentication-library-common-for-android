@@ -579,7 +579,8 @@ public class MicrosoftStsOAuth2Strategy
         final String requestTokenType = request.getTokenType();
         final String responseAuthScheme = response.getTokenType();
 
-        if (!requestTokenType.equalsIgnoreCase(responseAuthScheme)) {
+        // if the request token type is null, the response value is assumed Bearer
+        if (requestTokenType != null && !requestTokenType.equalsIgnoreCase(responseAuthScheme)) {
             throw new ClientException(
                     ClientException.AUTH_SCHEME_MISMATCH,
                     "Expected: [" + requestTokenType + "]"
