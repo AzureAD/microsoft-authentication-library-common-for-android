@@ -348,6 +348,14 @@ public class MicrosoftStsOAuth2Strategy
         setTokenRequestCorrelationId(tokenRequest);
 
         if (SCHEME_POP.equals(authScheme.getName())) {
+            if (null == mStrategyParameters.getContext()) {
+                throw new ClientException(
+                        MicrosoftStsOAuth2Strategy.class.getSimpleName()
+                                + "Cannot execute PoP request sans Context"
+                );
+            }
+
+
             // Add a token_type
             tokenRequest.setTokenType(TokenRequest.TokenType.POP);
 

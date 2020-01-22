@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Abstract class for defining options relative to the construction of an {@link OAuth2Strategy}.
@@ -33,11 +33,12 @@ public class OAuth2StrategyParameters {
 
     private transient Context mContext;
 
+    @Nullable
     public Context getContext() {
         return mContext;
     }
 
-    public void setContext(@NonNull final Context context) {
+    public void setContext(@Nullable final Context context) {
         mContext = context;
     }
 
