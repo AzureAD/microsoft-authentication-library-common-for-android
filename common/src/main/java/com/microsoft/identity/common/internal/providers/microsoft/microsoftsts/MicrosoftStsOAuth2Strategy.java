@@ -331,6 +331,7 @@ public class MicrosoftStsOAuth2Strategy
         tokenRequest.setRedirectUri(request.getRedirectUri());
         tokenRequest.setClientId(request.getClientId());
         tokenRequest.setScope(request.getTokenScope());
+        tokenRequest.setClaims(request.getClaims());
 
         tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
 
