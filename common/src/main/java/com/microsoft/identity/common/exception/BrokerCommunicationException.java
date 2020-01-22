@@ -29,11 +29,12 @@ package com.microsoft.identity.common.exception;
 public class BrokerCommunicationException extends BaseException {
 
     /**
-     * Initiates the {@link BrokerCommunicationException} with error code, error message and throwable.
+     * Initiates the {@link BrokerCommunicationException} with error message and throwable.
      *
      * @param errorMessage The error message contained in the exception.
+     * @param throwable    The {@link Throwable} contains the cause for the exception.
      */
-    public BrokerCommunicationException(final String errorMessage) {
-        super(ErrorStrings.IO_ERROR, errorMessage);
+    public BrokerCommunicationException(final String errorMessage, final Throwable throwable) {
+        super(ErrorStrings.IO_ERROR, errorMessage, throwable);
     }
 }
