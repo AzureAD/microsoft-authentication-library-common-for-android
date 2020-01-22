@@ -104,7 +104,7 @@ public class MicrosoftStsOAuth2Strategy
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
      *
-     * @param config  MicrosoftStsOAuth2Configuration
+     * @param config     MicrosoftStsOAuth2Configuration
      * @param parameters OAuth2StrategyParameters
      */
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
@@ -558,6 +558,13 @@ public class MicrosoftStsOAuth2Strategy
         validateAuthScheme(request, response);
     }
 
+    /**
+     * Validates that the auth scheme in the TokenRequest matches the auth scheme in the TokenResponse.
+     *
+     * @param request  The TokenRequest with the IdP's response.
+     * @param response The idp response.
+     * @throws ClientException
+     */
     private void validateAuthScheme(@NonNull final MicrosoftStsTokenRequest request,
                                     @NonNull final MicrosoftStsTokenResponse response)
             throws ClientException {
