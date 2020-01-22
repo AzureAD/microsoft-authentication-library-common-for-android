@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.integration.ClientCredentialsGrant.OAuth2;
 
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
 import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfiguration;
@@ -63,8 +62,7 @@ public class MicrosoftSTSClientCredentialsGrantTest {
 
     @Test
     public void test_ClientCredentials() throws CertificateException, UnrecoverableKeyException,
-            NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException,
-            ClientException {
+            NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
         final CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
                 .clientCertificateMetadata(new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
                 .keyStoreConfiguration(new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null))
@@ -83,7 +81,6 @@ public class MicrosoftSTSClientCredentialsGrantTest {
         tr.setGrantType(GRANT_TYPE);
 
         final OAuth2StrategyParameters options = new OAuth2StrategyParameters();
-        options.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
         final OAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(
                 new MicrosoftStsOAuth2Configuration(),
                 options

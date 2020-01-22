@@ -81,7 +81,6 @@ public class AzureActiveDirectoryClientCredentialsGrantTest {
         tr.setGrantType(GRANT_TYPE);
 
         final OAuth2StrategyParameters options = new OAuth2StrategyParameters();
-        options.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
         final OAuth2Strategy strategy = new AzureActiveDirectoryOAuth2Strategy(
                 new AzureActiveDirectoryOAuth2Configuration(),
                 options
