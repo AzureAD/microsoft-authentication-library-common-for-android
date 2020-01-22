@@ -24,6 +24,9 @@ package com.microsoft.identity.common.internal.authorities;
 
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
+
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ServiceException;
@@ -34,9 +37,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderCon
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
 
 import static com.microsoft.identity.common.internal.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 import static com.microsoft.identity.common.internal.authorities.AnyPersonalAccount.ANY_PERSONAL_ACCOUNT_TENANT_ID;
