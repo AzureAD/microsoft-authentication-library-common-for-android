@@ -81,7 +81,6 @@ abstract class ConfidentialClientHelper {
 
         try {
             final OAuth2StrategyParameters strategyOptions = new OAuth2StrategyParameters();
-            strategyOptions.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
             OAuth2Strategy strategy = authority.createOAuth2Strategy(strategyOptions);
             TokenResult tokenResult = strategy.requestToken(tokenRequest);
 

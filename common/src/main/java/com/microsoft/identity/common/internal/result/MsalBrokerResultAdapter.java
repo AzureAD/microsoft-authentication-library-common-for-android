@@ -38,6 +38,7 @@ import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequired
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -68,6 +69,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final AccessTokenRecord accessTokenRecord = authenticationResult.getAccessTokenRecord();
 
         final BrokerResult brokerResult = new BrokerResult.Builder()
+                .authenticationScheme(authenticationResult.getAuthenticationSchemeName())
                 .authorizationHeaderValue(authenticationResult.getAuthorizationHeaderValue())
                 .tenantProfileRecords(authenticationResult.getCacheRecordWithTenantProfileData())
                 .accessToken(authenticationResult.getAccessToken())
@@ -162,7 +164,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 tenantProfileCacheRecords.get(0),
                 tenantProfileCacheRecords,
                 SdkType.MSAL,
-                brokerResult.getAuthoizationHeaderValue()
+                null != brokerResult.getAuthenticationScheme()
+                        ? brokerResult.getAuthenticationScheme()
+                        : BearerAuthenticationSchemeInternal.SCHEME_BEARER,
+                brokerResult.getAuthorizationHeaderValue()
         );
 
         return authenticationResult;

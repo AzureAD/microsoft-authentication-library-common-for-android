@@ -237,6 +237,7 @@ public abstract class BaseController {
                     savedRecord,
                     savedRecords,
                     SdkType.MSAL,
+                    parameters.getAuthenticationScheme().getName(),
                     strategy.getAuthorizationHeader(
                             parameters.getAuthenticationScheme(),
                             tokenResult.getTokenResponse()

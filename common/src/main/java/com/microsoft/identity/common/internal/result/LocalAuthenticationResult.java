@@ -53,6 +53,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private String mSpeRing;
     private String mRefreshTokenAge;
     private List<ICacheRecord> mCompleteResultFromCache;
+    private String mAuthenticationSchemeName;
     private String mAuthorizationHeaderValue;
 
     private static final String TAG = LocalAuthenticationResult.class.getName();
@@ -60,9 +61,11 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
                                      @NonNull final List<ICacheRecord> completeResultFromCache,
                                      @NonNull final SdkType sdkType,
+                                     @NonNull final String authenticationScheme,
                                      @Nullable final String authorizationHeaderValue) {
         this(lastAuthorized, sdkType);
         mCompleteResultFromCache = completeResultFromCache;
+        mAuthenticationSchemeName = authenticationScheme;
         mAuthorizationHeaderValue = authorizationHeaderValue;
     }
 
@@ -185,6 +188,12 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     @Override
     public List<ICacheRecord> getCacheRecordWithTenantProfileData() {
         return mCompleteResultFromCache;
+    }
+
+    @NonNull
+    @Override
+    public String getAuthenticationSchemeName() {
+        return mAuthenticationSchemeName;
     }
 
     @Nullable
