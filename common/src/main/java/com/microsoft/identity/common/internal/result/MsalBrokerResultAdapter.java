@@ -198,66 +198,49 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     private BaseException getBaseExceptionFromExceptionType(@NonNull final String exceptionType,
-                                                            @NonNull final BrokerResult brokerResult){
+                                                            @NonNull final BrokerResult brokerResult) {
         BaseException baseException = null;
 
-        if(exceptionType.equalsIgnoreCase(UiRequiredException.sName)){
-            Logger.warn(TAG, "Received a UIRequired exception from Broker : "
-                    + brokerResult.getErrorCode()
-            );
+        Logger.warn(TAG, "Received a " + exceptionType + " from Broker : "
+                + brokerResult.getErrorCode()
+        );
+
+        if (exceptionType.equalsIgnoreCase(UiRequiredException.sName)) {
             baseException = new UiRequiredException(
                     brokerResult.getErrorCode(),
                     brokerResult.getErrorMessage()
             );
-        }
+        } else if (exceptionType.equalsIgnoreCase(ServiceException.sName)) {
 
-        if(exceptionType.equalsIgnoreCase(ServiceException.sName)){
-            Logger.warn(TAG, "Received a Service exception from Broker : "
-                    + brokerResult.getErrorCode()
-            );
             baseException = getServiceException(brokerResult);
-        }
 
-        if(exceptionType.equalsIgnoreCase(IntuneAppProtectionPolicyRequiredException.sName)){
-            Logger.warn(TAG,
-                    "Received a IntuneAppProtectionPolicyRequiredException exception from Broker: "
-                    + brokerResult.getErrorCode()
-            );
+        } else if (exceptionType.equalsIgnoreCase(IntuneAppProtectionPolicyRequiredException.sName)) {
+
             baseException = getIntuneProtectionRequiredException(brokerResult);
-        }
 
-        if(exceptionType.equalsIgnoreCase(UserCancelException.sName)){
-            Logger.warn(TAG, "Received a User cancelled exception from Broker : "
-                    + brokerResult.getErrorCode()
-            );
+        } else if (exceptionType.equalsIgnoreCase(UserCancelException.sName)) {
+
             baseException = new UserCancelException();
-        }
 
-        if(exceptionType.equalsIgnoreCase(ClientException.sName)){
-            Logger.warn(TAG, "Received a ClientException exception from Broker : "
-                    + brokerResult.getErrorCode()
-            );
+        } else if (exceptionType.equalsIgnoreCase(ClientException.sName)) {
+
             baseException = new ClientException(
                     brokerResult.getErrorCode(),
                     brokerResult.getErrorMessage()
             );
-        }
 
-        if(exceptionType.equalsIgnoreCase(ArgumentException.sName)){
-            Logger.warn(TAG, "Received a Argument exception from Broker : "
-                    + brokerResult.getErrorCode()
-            );
+        } else if (exceptionType.equalsIgnoreCase(ArgumentException.sName)) {
+
             baseException = new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                     brokerResult.getErrorCode(),
                     brokerResult.getErrorMessage()
             );
-        }
 
-        // Default to ClientException if null
-        if(baseException == null){
+        } else {
+            // Default to ClientException if null
             Logger.warn(TAG, " Exception type is unknown : " + exceptionType
-                    + brokerResult.getErrorCode()
+                    + brokerResult.getErrorCode() + ", defaulting to Client Exception "
             );
             baseException = new ClientException(
                     brokerResult.getErrorCode(),
@@ -288,7 +271,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         if (AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
                 AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode) ||
-                ErrorStrings.INVALID_BROKER_REFRESH_TOKEN.equalsIgnoreCase(errorCode)) {
+                ErrorStrings.INVALID_BROKER_REFRESH_TOKEN.equalsIgnoreCase(errorCode) ||
+                ErrorStrings.NO_TOKENS_FOUND.equalsIgnoreCase(errorCode)) {
 
             Logger.warn(TAG, "Received a UIRequired exception from Broker : " + errorCode);
             baseException = new UiRequiredException(
@@ -315,7 +299,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
             Logger.warn(TAG, "Received a Argument exception from Broker : " + errorCode);
             baseException = new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+                    ArgumentException.BROKER_TOKEN_REQUEST_OPERATION_NAME,
                     errorCode,
                     brokerResult.getErrorMessage()
             );
