@@ -392,8 +392,8 @@ public final class ErrorStrings {
      * The device is in the shared mode, and its registration was deleted by the admin.
      * This is an irrecoverable error, and the admin has to re-prep the device.
      * */
-    public static final String SHARED_DEVICE_REGISTERED_DEVICE_DELETED_ON_SERVER_ERROR_CODE =
-            "shared_device_registered_device_deleted_on_server";
-    public static final String SHARED_DEVICE_REGISTERED_DEVICE_DELETED_ON_SERVER_ERROR_MESSAGE =
+    public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_CODE =
+            "registered_shared_device_deleted_on_server";
+    public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_MESSAGE =
             "This device has been unregistered. Please return the device to your administrator.";
 }
