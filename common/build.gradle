@@ -83,7 +83,7 @@ dependencies {
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
 
     // Use 'api' rather than 'compile' for Android or java-library projects.
-    api "com.google.auto.value:auto-value-annotations:$rootProject.ext.autoValueVersion"
+    implementation "com.google.auto.value:auto-value-annotations:$rootProject.ext.autoValueVersion"
     annotationProcessor "com.google.auto.value:auto-value:$rootProject.ext.autoValueVersion"
 
     // Test dependencies

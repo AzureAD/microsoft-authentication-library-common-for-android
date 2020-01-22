@@ -14,15 +14,21 @@ import java.util.Set;
 @AutoValue.CopyAnnotations
 public abstract class SilentTokenCommandParameters
         extends CommandParameters
-        implements IScopesAddable<SilentTokenCommandParameters>, ITokenRequestParameters{
+        implements IScopesAddable<SilentTokenCommandParameters>, ITokenRequestParameters {
 
     public abstract Set<String> scopes();
+
     public abstract IAccountRecord account();
+
     public abstract String clientId();
+
     public abstract String redirectUri();
+
     public abstract Authority authority();
+
     @Nullable
     public abstract String claimsRequestJson();
+
     @Nullable
     public abstract Boolean forceRefresh();
 
@@ -32,7 +38,7 @@ public abstract class SilentTokenCommandParameters
 
     public abstract Builder toBuilder();
 
-    public SilentTokenCommandParameters addDefaultScopes(List<String> defaultScopes){
+    public SilentTokenCommandParameters addDefaultScopes(List<String> defaultScopes) {
         SilentTokenCommandParameters.Builder builder = this.toBuilder();
         Set<String> requestedScopes = this.scopes();
         requestedScopes.addAll(defaultScopes);
@@ -45,12 +51,19 @@ public abstract class SilentTokenCommandParameters
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setScopes(Set<String> value);
+
         public abstract Builder setAccount(IAccountRecord value);
+
         public abstract Builder setClientId(String value);
+
         public abstract Builder setRedirectUri(String value);
+
         public abstract Builder setAuthority(Authority value);
+
         public abstract Builder setClaimsRequestJson(String value);
+
         public abstract Builder setForceRefresh(Boolean value);
+
         public abstract SilentTokenCommandParameters build();
     }
 

@@ -26,24 +26,16 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
-import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.internal.request.generated.InteractiveTokenCommandContext;
 import com.microsoft.identity.common.internal.request.generated.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.internal.request.generated.SilentTokenCommandContext;
-import com.microsoft.identity.common.internal.request.generated.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
-
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 public class InteractiveTokenCommand extends BaseCommand<AcquireTokenResult,
         InteractiveTokenCommandContext,
         InteractiveTokenCommandParameters,
         CommandCallback>
-        implements AsyncCommand{
+        implements AsyncCommand {
     private static final String TAG = InteractiveTokenCommand.class.getSimpleName();
 
     public InteractiveTokenCommand(@NonNull final InteractiveTokenCommandContext commandContext,

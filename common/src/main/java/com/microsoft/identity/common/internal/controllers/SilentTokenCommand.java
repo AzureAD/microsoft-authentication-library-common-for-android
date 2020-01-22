@@ -38,7 +38,7 @@ public class SilentTokenCommand extends BaseCommand<AcquireTokenResult,
         SilentTokenCommandContext,
         SilentTokenCommandParameters,
         CommandCallback
-        >  {
+        > {
 
     private static final String TAG = SilentTokenCommand.class.getSimpleName();
 
@@ -105,7 +105,7 @@ public class SilentTokenCommand extends BaseCommand<AcquireTokenResult,
     }
 
     @Override
-    public boolean isEligibleForCaching(){
+    public boolean isEligibleForCaching() {
         return true;
     }
 

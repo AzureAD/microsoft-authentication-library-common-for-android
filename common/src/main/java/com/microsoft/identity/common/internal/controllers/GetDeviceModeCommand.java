@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.controllers;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.request.generated.GetDeviceModeCommandContext;
 import com.microsoft.identity.common.internal.request.generated.GetDeviceModeCommandParameters;
 
@@ -39,9 +38,9 @@ public class GetDeviceModeCommand extends BaseCommand<Boolean,
     private static final String TAG = GetDeviceModeCommand.class.getSimpleName();
 
     public GetDeviceModeCommand(@NonNull final GetDeviceModeCommandContext commandContext,
-                                    @NonNull final GetDeviceModeCommandParameters commandParameters,
-                                    @NonNull final BaseController controller,
-                                    @NonNull final CommandCallback callback) {
+                                @NonNull final GetDeviceModeCommandParameters commandParameters,
+                                @NonNull final BaseController controller,
+                                @NonNull final CommandCallback callback) {
         super(commandContext, commandParameters, controller, callback);
     }
 

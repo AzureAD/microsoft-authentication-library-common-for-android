@@ -42,16 +42,16 @@ public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>,
     private static final String TAG = GetCurrentAccountCommand.class.getSimpleName();
 
     public GetCurrentAccountCommand(@NonNull final GetCurrentAccountCommandContext commandContext,
-                              @NonNull final GetCurrentAccountCommandParameters commandParameters,
-                              @NonNull final BaseController controller,
-                              @NonNull final CommandCallback callback) {
+                                    @NonNull final GetCurrentAccountCommandParameters commandParameters,
+                                    @NonNull final BaseController controller,
+                                    @NonNull final CommandCallback callback) {
         super(commandContext, commandParameters, controller, callback);
     }
 
     public GetCurrentAccountCommand(@NonNull final GetCurrentAccountCommandContext commandContext,
-                              @NonNull final GetCurrentAccountCommandParameters commandParameters,
-                              @NonNull final List<BaseController> controllers,
-                              @NonNull final CommandCallback callback) {
+                                    @NonNull final GetCurrentAccountCommandParameters commandParameters,
+                                    @NonNull final List<BaseController> controllers,
+                                    @NonNull final CommandCallback callback) {
         super(commandContext, commandParameters, controllers, callback);
     }
 
@@ -69,7 +69,7 @@ public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>,
                             + controller.getClass().getSimpleName()
             );
 
-            result.addAll(controller.getCurrentAccount(this.getContext(),this.getParameters()));
+            result.addAll(controller.getCurrentAccount(this.getContext(), this.getParameters()));
         }
 
         return result;

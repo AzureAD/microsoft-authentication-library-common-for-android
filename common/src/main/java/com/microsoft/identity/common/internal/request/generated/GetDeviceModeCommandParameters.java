@@ -9,6 +9,12 @@ public abstract class GetDeviceModeCommandParameters extends CommandParameters {
 
     abstract String redirectUri();
 
+    public static GetDeviceModeCommandParameters.Builder builder() {
+        return new AutoValue_GetDeviceModeCommandParameters.Builder();
+    }
+
+    public abstract GetDeviceModeCommandParameters.Builder toBuilder();
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setClientId(String value);
