@@ -99,7 +99,10 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setExtendedExpiresOn(getExtendedExpiresOn(response));
             accessToken.setAuthority(strategy.getAuthorityFromTokenEndpoint());
             accessToken.setAccessTokenType(response.getTokenType());
-            accessToken.setKid(strategy.getDeviceAtPopThumbprint());
+
+            if (SCHEME_POP.equals(response.getTokenType())) {
+                accessToken.setKid(strategy.getDeviceAtPopThumbprint());
+            }
 
             return accessToken;
         } catch (ServiceException e) {
