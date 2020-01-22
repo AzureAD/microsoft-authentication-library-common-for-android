@@ -127,14 +127,6 @@ public interface ILocalAuthenticationResult {
     List<ICacheRecord> getCacheRecordWithTenantProfileData();
 
     /**
-     * Gets the name of the authentication scheme used to acquire this result.
-     *
-     * @return The authentication scheme name.
-     */
-    @NonNull
-    String getAuthenticationSchemeName();
-
-    /**
      * Gets the value to be sent in the client app's Authorization header.
      *
      * @return The Authorization header value.

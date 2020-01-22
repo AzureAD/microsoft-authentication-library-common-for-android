@@ -37,7 +37,6 @@ import java.util.List;
 public class BrokerResult implements Serializable {
 
     private class SerializedNames {
-        static final String AUTHENTICATION_SCHEME = "authentication_scheme";
         static final String AUTHORIZATION_HEADER_VALUE = "authorization_header_value";
         static final String TENANT_PROFILE_CACHE_RECORDS = "tenant_profile_cache_records";
         static final String ACCESS_TOKEN = "access_token";
@@ -301,10 +300,6 @@ public class BrokerResult implements Serializable {
     private final List<ICacheRecord> mTenantProfileData;
 
     @Nullable
-    @SerializedName(SerializedNames.AUTHENTICATION_SCHEME)
-    private final String mAuthenticationScheme;
-
-    @Nullable
     @SerializedName(SerializedNames.AUTHORIZATION_HEADER_VALUE)
     private final String mAuthorizationHeaderValue;
 
@@ -331,7 +326,6 @@ public class BrokerResult implements Serializable {
         mRefreshTokenAge = builder.mRefreshTokenAge;
         mSuccess = builder.mSuccess;
         mTenantProfileData = builder.mTenantProfileData;
-        mAuthenticationScheme = builder.mAuthenticationScheme;
         mAuthorizationHeaderValue = builder.mAuthorizationHeaderValue;
 
         mErrorCode = builder.mErrorCode;
@@ -465,10 +459,6 @@ public class BrokerResult implements Serializable {
         return mAccessToken;
     }
 
-    public String getAuthenticationScheme() {
-        return mAuthenticationScheme;
-    }
-
     public String getAuthorizationHeaderValue() {
         return mAuthorizationHeaderValue;
     }
@@ -538,8 +528,6 @@ public class BrokerResult implements Serializable {
         private String mCliTelemSubErrorCode;
 
         private List<ICacheRecord> mTenantProfileData;
-
-        private String mAuthenticationScheme;
 
         private String mAuthorizationHeaderValue;
 
@@ -699,11 +687,6 @@ public class BrokerResult implements Serializable {
 
         public Builder tenantProfileRecords(List<ICacheRecord> cacheRecordWithTenantProfileData) {
             this.mTenantProfileData = cacheRecordWithTenantProfileData;
-            return this;
-        }
-
-        public Builder authenticationScheme(String authenticationSchemeName) {
-            this.mAuthenticationScheme = authenticationSchemeName;
             return this;
         }
 
