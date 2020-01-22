@@ -179,7 +179,7 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
         setAuthenticationScheme(
                 null != acquireTokenOperationParameters.getAuthenticationScheme()
                         ? acquireTokenOperationParameters.getAuthenticationScheme()
-                        : new BearerAuthenticationSchemeInternal()
+                        : new BearerAuthenticationSchemeInternal() // If null, assume Bearer for back-compat
         );
     }
 
