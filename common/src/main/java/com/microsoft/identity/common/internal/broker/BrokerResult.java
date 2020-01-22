@@ -464,72 +464,40 @@ public class BrokerResult implements Serializable {
     }
 
     public static class Builder {
-
         private String mAccessToken;
-
         private String mIdToken;
-
         private String mRefreshToken;
-
         private String mHomeAccountId;
-
         private String mLocalAccountId;
-
         private String mUserName;
-
         private String mTokenType;
-
         private String mClientId;
-
         private String mFamilyId;
-
         private String mScope;
-
         private String mClientInfo;
-
         private String mAuthority;
-
         private String mEnvironment;
-
         private String mTenantId;
-
         private long mExpiresOn;
-
         private long mExtendedExpiresOn;
-
         private long mCachedAt;
-
         private String mSpeRing;
-
         private String mRefreshTokenAge;
-
         private boolean mSuccess;
-
         private String mNegotiatedBrokerProtocolVersion;
+        private List<ICacheRecord> mTenantProfileData;
+        private String mAuthorizationHeaderValue;
 
         // Exception parameters
-
         private String mErrorCode;
-
         private String mErrorMessage;
-
         private String mCorrelationId;
-
         private String mSubErrorCode;
-
         private int mHttpStatusCode;
-
         private String mHttpResponseHeaders;
-
         private String mHttpResponseBody;
-
         private String mCliTelemErrorCode;
-
         private String mCliTelemSubErrorCode;
-
-        private List<ICacheRecord> mTenantProfileData;
-
-        private String mAuthorizationHeaderValue;
 
         public Builder accessToken(@Nullable final String accessToken) {
             this.mAccessToken = accessToken;
@@ -616,12 +584,12 @@ public class BrokerResult implements Serializable {
             return this;
         }
 
-        public Builder speRing(String speRing) {
+        public Builder speRing(final String speRing) {
             this.mSpeRing = speRing;
             return this;
         }
 
-        public Builder refreshTokenAge(String refreshTokenAge) {
+        public Builder refreshTokenAge(final String refreshTokenAge) {
             this.mRefreshTokenAge = refreshTokenAge;
             return this;
         }
@@ -631,27 +599,27 @@ public class BrokerResult implements Serializable {
             return this;
         }
 
-        public Builder negotiatedBrokerProtocolVersion(String negotiatedBrokerProtocolVersion) {
+        public Builder negotiatedBrokerProtocolVersion(final String negotiatedBrokerProtocolVersion) {
             this.mNegotiatedBrokerProtocolVersion = negotiatedBrokerProtocolVersion;
             return this;
         }
 
-        public Builder errorCode(String errorCode) {
+        public Builder errorCode(final String errorCode) {
             this.mErrorCode = errorCode;
             return this;
         }
 
-        public Builder errorMessage(String errorMessage) {
+        public Builder errorMessage(final String errorMessage) {
             this.mErrorMessage = errorMessage;
             return this;
         }
 
-        public Builder correlationId(String correlationId) {
+        public Builder correlationId(final String correlationId) {
             this.mCorrelationId = correlationId;
             return this;
         }
 
-        public Builder oauthSubErrorCode(String subErrorCode) {
+        public Builder oauthSubErrorCode(final String subErrorCode) {
             this.mSubErrorCode = subErrorCode;
             return this;
         }
@@ -661,22 +629,22 @@ public class BrokerResult implements Serializable {
             return this;
         }
 
-        public Builder httpResponseHeaders(String httpResponseHeaders) {
+        public Builder httpResponseHeaders(final String httpResponseHeaders) {
             this.mHttpResponseHeaders = httpResponseHeaders;
             return this;
         }
 
-        public Builder httpResponseBody(String httpResponseBody) {
+        public Builder httpResponseBody(final String httpResponseBody) {
             this.mHttpResponseBody = httpResponseBody;
             return this;
         }
 
-        public Builder cliTelemErrorCode(String cliTelemErrorCode) {
+        public Builder cliTelemErrorCode(final String cliTelemErrorCode) {
             this.mCliTelemErrorCode = cliTelemErrorCode;
             return this;
         }
 
-        public Builder cliTelemSubErrorCode(String cliTelemSubErrorCode) {
+        public Builder cliTelemSubErrorCode(final String cliTelemSubErrorCode) {
             this.mCliTelemSubErrorCode = cliTelemSubErrorCode;
             return this;
         }
@@ -685,12 +653,12 @@ public class BrokerResult implements Serializable {
             return new BrokerResult(this);
         }
 
-        public Builder tenantProfileRecords(List<ICacheRecord> cacheRecordWithTenantProfileData) {
+        public Builder tenantProfileRecords(final List<ICacheRecord> cacheRecordWithTenantProfileData) {
             this.mTenantProfileData = cacheRecordWithTenantProfileData;
             return this;
         }
 
-        public Builder authorizationHeaderValue(String authorizationHeaderValue) {
+        public Builder authorizationHeaderValue(final String authorizationHeaderValue) {
             this.mAuthorizationHeaderValue = authorizationHeaderValue;
             return this;
         }
