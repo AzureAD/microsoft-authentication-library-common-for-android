@@ -132,7 +132,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
             if (!StringUtil.isEmpty(sCustomTabResponseUri)) {
                 completeAuthorizationInBrowserFlow(sCustomTabResponseUri);
             } else {
-                cancelAuthorization();
+                cancelAuthorization(true);
             }
         }
     }

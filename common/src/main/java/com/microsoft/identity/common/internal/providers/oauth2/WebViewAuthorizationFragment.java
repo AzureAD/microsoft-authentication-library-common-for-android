@@ -117,7 +117,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             // User should be able to click back button to cancel. Counting blank page as well.
             final int BACK_PRESSED_STEPS = -2;
             if (!mWebView.canGoBackOrForward(BACK_PRESSED_STEPS)) {
-                cancelAuthorization();
+                cancelAuthorization(true);
             } else {
                 mWebView.goBack();
             }

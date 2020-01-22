@@ -43,6 +43,7 @@ import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CANCELLED_BY_USER;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.RESULT_CODE;
 
@@ -71,10 +72,7 @@ public abstract class AuthorizationFragment extends Fragment {
     private BroadcastReceiver mCancelRequestReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Logger.info(TAG, "Received Authorization flow cancel request from SDK");
-            Telemetry.emit(new UiEndEvent().isUserCancelled());
-            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
-            finish();
+            cancelAuthorization(intent.getBooleanExtra(REQUEST_CANCELLED_BY_USER, false));
         }
     };
 
@@ -193,11 +191,18 @@ public abstract class AuthorizationFragment extends Fragment {
         mAuthResultSent = true;
     }
 
-    void cancelAuthorization() {
-        Logger.info(TAG, "Authorization flow is canceled by user");
+    void cancelAuthorization(boolean isCancelledByUser) {
         final Intent resultIntent = new Intent();
         resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
+
+        if (isCancelledByUser){
+            Logger.info(TAG, "Received Authorization flow cancelled by the user");
+            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
+        } else {
+            Logger.info(TAG, "Received Authorization flow cancel request from SDK");
+            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, resultIntent);
+        }
+
         Telemetry.emit(new UiEndEvent().isUserCancelled());
         finish();
     }
