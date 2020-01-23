@@ -35,6 +35,8 @@ import java.util.List;
 
 public class ServiceException extends BaseException {
 
+    public static final String sName =  ServiceException.class.getName();
+
     public static final String OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD =
             "failed_to_load_openid_configuration";
 
@@ -199,5 +201,10 @@ public class ServiceException extends BaseException {
                             final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
         mHttpStatusCode = httpStatusCode;
+    }
+
+    @Override
+    public String getExceptionName(){
+        return sName;
     }
 }

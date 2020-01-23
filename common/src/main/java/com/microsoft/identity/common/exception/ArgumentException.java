@@ -24,8 +24,11 @@ package com.microsoft.identity.common.exception;
 
 public class ArgumentException extends BaseException {
 
+    public static final String sName =  ArgumentException.class.getName();
+
     public final static String ACQUIRE_TOKEN_OPERATION_NAME = "acquireToken";
     public final static String ACQUIRE_TOKEN_SILENT_OPERATION_NAME = "acquireTokenSilent";
+    public final static String BROKER_TOKEN_REQUEST_OPERATION_NAME = "brokerTokenRequest";
 
     public final static String SCOPE_ARGUMENT_NAME = "scopes";
     public final static String IACCOUNT_ARGUMENT_NAME = "account";
@@ -57,6 +60,11 @@ public class ArgumentException extends BaseException {
 
     public String getArgumentName() {
         return mArgumentName;
+    }
+
+    @Override
+    public String getExceptionName(){
+        return sName;
     }
 
 }
