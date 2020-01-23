@@ -44,18 +44,6 @@ import java.util.concurrent.Future;
  */
 public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
         GenericAuthorizationRequest extends AuthorizationRequest> {
-    public static final String REQUEST_URL_KEY = "com.microsoft.identity.request.url.key";
-
-    public static final String REQUEST_ID = "com.microsoft.identity.request.id";
-
-    public static final String CUSTOM_TAB_REDIRECT = "com.microsoft.identity.customtab.redirect";
-
-    public static final String AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
-
-    public static final String RESULT_CODE = "com.microsoft.identity.client.result.code";
-
-    public static final String REQUEST_CODE = "com.microsoft.identity.client.request.code";
-
     private WeakReference<Context> mReferencedApplicationContext;
     private WeakReference<Activity> mReferencedActivity;
     private WeakReference<Fragment> mReferencedFragment;

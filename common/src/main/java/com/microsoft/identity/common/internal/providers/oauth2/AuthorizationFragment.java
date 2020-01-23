@@ -33,21 +33,19 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
-import java.util.Map;
-
-import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR;
-import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_DESCRIPTION;
-import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_SUBCODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CANCELLED_BY_USER;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.RESULT_CODE;
 
 /**
  * This base classes
@@ -55,8 +53,6 @@ import static com.microsoft.identity.common.internal.providers.oauth2.Authorizat
  *  - handles basic lifecycle operations.
  * */
 public abstract class AuthorizationFragment extends Fragment {
-
-    public static final String CANCEL_INTERACTIVE_REQUEST_ACTION = "cancel_interactive_request_action";
 
     private static final String TAG = AuthorizationFragment.class.getSimpleName();
 
@@ -76,10 +72,7 @@ public abstract class AuthorizationFragment extends Fragment {
     private BroadcastReceiver mCancelRequestReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Logger.info(TAG, "Received Authorization flow cancel request from SDK");
-            Telemetry.emit(new UiEndEvent().isUserCancelled());
-            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
-            finish();
+            cancelAuthorization(intent.getBooleanExtra(REQUEST_CANCELLED_BY_USER, false));
         }
     };
 
@@ -95,7 +88,7 @@ public abstract class AuthorizationFragment extends Fragment {
         // Register Broadcast receiver to cancel the auth request
         // if another incoming request is launched by the app
         getActivity().getApplicationContext().registerReceiver(mCancelRequestReceiver,
-                new IntentFilter(CANCEL_INTERACTIVE_REQUEST_ACTION));
+                new IntentFilter(CANCEL_INTERACTIVE_REQUEST));
 
         if (savedInstanceState == null) {
             Logger.verbose(TAG + methodName, "Extract state from the intent bundle.");
@@ -189,20 +182,27 @@ public abstract class AuthorizationFragment extends Fragment {
 
     void sendResult(int resultCode, final Intent resultIntent) {
         Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + resultCode);
-        CommandDispatcher.completeInteractive(
-                AuthenticationConstants.UIRequest.BROWSER_FLOW,
-                resultCode,
-                resultIntent
-        );
 
+        resultIntent.setAction(RETURN_INTERACTIVE_REQUEST_RESULT);
+        resultIntent.putExtra(REQUEST_CODE, AuthenticationConstants.UIRequest.BROWSER_FLOW);
+        resultIntent.putExtra(RESULT_CODE, resultCode);
+
+        LocalBroadcastManager.getInstance(getContext()).sendBroadcast(resultIntent);
         mAuthResultSent = true;
     }
 
-    void cancelAuthorization() {
-        Logger.info(TAG, "Authorization flow is canceled by user");
+    void cancelAuthorization(boolean isCancelledByUser) {
         final Intent resultIntent = new Intent();
         resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
+
+        if (isCancelledByUser){
+            Logger.info(TAG, "Received Authorization flow cancelled by the user");
+            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
+        } else {
+            Logger.info(TAG, "Received Authorization flow cancel request from SDK");
+            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, resultIntent);
+        }
+
         Telemetry.emit(new UiEndEvent().isUserCancelled());
         finish();
     }

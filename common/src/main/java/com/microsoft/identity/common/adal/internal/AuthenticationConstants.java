@@ -1240,6 +1240,8 @@ public final class AuthenticationConstants {
         public static final String RESULT_CODE = "com.microsoft.identity.client.result.code";
 
         public static final String REQUEST_CODE = "com.microsoft.identity.client.request.code";
+
+        public static final String REQUEST_CANCELLED_BY_USER = "com.microsoft.identity.client.request.cancelled.by.user";
     }
 
     public static final class AuthorizationIntentAction {
