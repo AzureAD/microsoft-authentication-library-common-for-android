@@ -42,7 +42,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private Intent mAuthIntent;
 
-    private boolean mPkeyAuthStatus = false; //NOPMD //TODO Will finish the implementation in Phase 1 (broker is ready).
+    private boolean mPkeyAuthStatus = false;
 
     private String mAuthorizationRequestUrl;
 
