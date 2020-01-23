@@ -31,10 +31,11 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.HashMap;
+
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_FINAL_URL;
 
 /**
  * Sub class of {@link AuthorizationResultFactory}.
@@ -45,11 +46,6 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
 
     private static final String TAG = MicrosoftStsAuthorizationResultFactory.class.getSimpleName();
     protected static final String ERROR_SUBCODE = "error_subcode";
-
-    /**
-     * Constant key to get authorization request final url from intent.
-     */
-    public static final String MSSTS_AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
 
     @Override
     public MicrosoftStsAuthorizationResult createAuthorizationResult(final int resultCode,
@@ -84,7 +80,7 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE:
-                final String url = data.getStringExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL);
+                final String url = data.getStringExtra(AUTHORIZATION_FINAL_URL);
                 result = parseUrlAndCreateAuthorizationResponse(url, request.getState());
                 break;
 
