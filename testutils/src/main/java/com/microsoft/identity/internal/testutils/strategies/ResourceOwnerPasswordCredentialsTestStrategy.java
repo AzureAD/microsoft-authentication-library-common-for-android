@@ -35,14 +35,12 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.internal.testutils.MicrosoftStsRopcTokenRequest;
-import com.microsoft.identity.internal.testutils.MockSuccessAuthorizationResultNetworkTests;
-import com.microsoft.identity.internal.testutils.labutils.CurrentLabConfig;
+import com.microsoft.identity.internal.testutils.labutils.LabConfig;
+import com.microsoft.identity.internal.testutils.mocks.MockSuccessAuthorizationResultNetworkTests;
 
 import java.util.concurrent.Future;
 
 public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOAuth2Strategy {
-
-    private static final String TAG = ResourceOwnerPasswordCredentialsTestStrategy.class.getSimpleName();
 
     public static final String USERNAME_EMPTY_OR_NULL = "username_empty_or_null";
     public static final String PASSWORD_EMPTY_OR_NULL = "password_empty_or_null";
@@ -102,7 +100,7 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
     }
 
     String getPasswordForUser(String username) {
-        return CurrentLabConfig.labUserPassword;
+        return LabConfig.getCurrentLabConfig().getLabUserPassword();
     }
 
     @Override

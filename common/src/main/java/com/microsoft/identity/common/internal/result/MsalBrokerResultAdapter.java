@@ -177,7 +177,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         );
 
         if (brokerResult == null) {
-            Logger.error(TAG, "Broker Result not returned from Broker, ", null);
+            Logger.error(TAG, "Broker Result not returned from Broker", null);
             return new BaseException(ErrorStrings.UNKNOWN_ERROR, "Broker Result not returned from Broker");
         }
 
@@ -306,11 +306,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     }
 
-    public boolean getHelloFromResultBundle(final Bundle bundle) throws ClientException {
-        final String methodName = ":getHelloFromResultBundle";
+    public void verifyHelloFromResultBundle(final Bundle bundle) throws ClientException {
+        final String methodName = ":verifyHelloFromResultBundle";
+
+        // This means that the Broker doesn't support hello().
         if (bundle == null) {
             Logger.warn(TAG + methodName, "The hello result bundle is null.");
-            return false;
+            throw new ClientException(ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE,
+                    ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_MESSAGE);
         }
 
         if (!StringUtil.isEmpty(bundle.getString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY))) {
@@ -319,7 +322,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     "Able to establish the connect, " +
                             "the broker protocol version in common is ["
                             + negotiatedBrokerProtocolVersion + "]");
-            return true;
+            return;
         }
 
         if (!StringUtil.isEmpty(bundle.getString(AuthenticationConstants.OAuth2.ERROR))
@@ -336,7 +339,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             throw new ClientException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
         }
 
-        return false;
+        // This means that the Broker doesn't support hello().
+        Logger.warn(TAG + methodName, "The result bundle is not in a recognizable format.");
+        throw new ClientException(ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE,
+                ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_MESSAGE);
     }
 
     public AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
@@ -353,7 +359,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         throw resultAdapter.getBaseExceptionFromBundle(resultBundle);
     }
 
-    public static Bundle bundleFromAccounts(@NonNull final List<ICacheRecord> cacheRecords) {
+    public Bundle bundleFromAccounts(@NonNull final List<ICacheRecord> cacheRecords) {
         final Bundle resultBundle = new Bundle();
 
         if (cacheRecords != null) {

@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.ui;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
@@ -30,6 +31,7 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
+import com.microsoft.identity.common.internal.request.BrokerAcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
@@ -50,12 +52,17 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
         //Valid if available browser installed. Will fallback to embedded webView if no browser available.
         final AuthorizationAgent validatedAuthorizationAgent = validAuthorizationAgent(
                 parameters.getAuthorizationAgent(),
-                parameters.getActivity().getApplicationContext()
+                parameters.getAppContext()
         );
+        boolean isBrokerRequest = (parameters instanceof BrokerAcquireTokenOperationParameters);
 
         if (validatedAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
             Logger.info(TAG, "Use webView for authorization.");
-            return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(parameters.getActivity()));
+            return (GenericAuthorizationStrategy) (
+                    new EmbeddedWebViewAuthorizationStrategy(
+                            parameters.getAppContext(),
+                            parameters.getActivity(),
+                            parameters.getFragment()));
         } else if (validatedAuthorizationAgent == AuthorizationAgent.DEFAULT) {
             // When the authorization agent is set to DEFAULT,
             // Use device browser auth flow as default.
@@ -65,17 +72,30 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
             } catch (final ClientException exception) {
                 Logger.info(TAG, "No supported browser available found. Fallback to the webView authorization agent.");
                 if (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND)) {
-                    return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(parameters.getActivity()));
+                    return (GenericAuthorizationStrategy) (
+                            new EmbeddedWebViewAuthorizationStrategy(
+                                    parameters.getAppContext(),
+                                    parameters.getActivity(),
+                                    parameters.getFragment()));
                 }
             }
-
             Logger.info(TAG, "Use browser for authorization.");
-            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(parameters.getActivity());
+            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
+                    parameters.getAppContext(),
+                    parameters.getActivity(),
+                    parameters.getFragment(),
+                    isBrokerRequest
+            );
             browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
             return (GenericAuthorizationStrategy) browserAuthorizationStrategy;
         } else {
             Logger.info(TAG, "Use browser for authorization.");
-            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(parameters.getActivity());
+            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
+                    parameters.getAppContext(),
+                    parameters.getActivity(),
+                    parameters.getFragment(),
+                    isBrokerRequest
+            );
             browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
             return (GenericAuthorizationStrategy) browserAuthorizationStrategy;
         }
