@@ -56,6 +56,7 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
                 parameters.authorizationAgent(),
                 context.androidApplicationContext()
         );
+        boolean isBrokerRequest = (parameters instanceof BrokerAcquireTokenOperationParameters);
 
         if (validatedAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
             Logger.info(TAG, "Use webView for authorization.");
@@ -72,7 +73,6 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
                     return (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy(context.androidActivity()));
                 }
             }
-
             Logger.info(TAG, "Use browser for authorization.");
             final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(context.androidActivity());
             browserAuthorizationStrategy.setBrowserSafeList(context.browserSafeList());

@@ -27,9 +27,13 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
@@ -44,6 +48,10 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
+import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
+import com.microsoft.identity.common.internal.request.BrokerAcquireTokenSilentOperationParameters;
+import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.request.generated.CommandParameters;
 import com.microsoft.identity.common.internal.request.generated.GetCurrentAccountCommandContext;
@@ -65,6 +73,9 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * BaseController is overridden in MSAL and in the Broker.  Controllers are based on the MVC pattern and are responsible
@@ -261,6 +272,38 @@ public abstract class BaseController<
     protected abstract AccountRecord getCachedAccountRecord(
             SilentTokenCommandContext context,
             GenericSilentTokenCommandParameters parameters) throws ClientException;
+
+    /**
+     * Helper method which returns false if the tenant id of the authority
+     * doesn't match with the tenant of the Access token for AADAuthority.
+     *
+     * Returns true otherwise.
+     */
+    protected boolean isRequestAuthorityRealmSameAsATRealm(@NonNull final Authority requestAuthority,
+                                                           @NonNull final AccessTokenRecord accessTokenRecord)
+            throws ServiceException, ClientException {
+        if(requestAuthority instanceof AzureActiveDirectoryAuthority){
+
+            String tenantId = ((AzureActiveDirectoryAuthority) requestAuthority).getAudience().getTenantId();
+
+            if(AzureActiveDirectoryAudience.isHomeTenantAlias(tenantId)) {
+                // if realm on AT and home account's tenant id do not match, we have a token for guest and
+                // requested authority here is for home, so return false we need to refresh the token
+                final String utidFromHomeAccountId = accessTokenRecord
+                        .getHomeAccountId()
+                        .split(Pattern.quote("."))[1];
+
+                return utidFromHomeAccountId.equalsIgnoreCase(accessTokenRecord.getRealm());
+
+            }else {
+                tenantId = ((AzureActiveDirectoryAuthority) requestAuthority)
+                        .getAudience()
+                        .getTenantUuidForAlias(requestAuthority.getAuthorityURL().toString());
+                return tenantId.equalsIgnoreCase(accessTokenRecord.getRealm());
+            }
+        }
+        return true;
+    }
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
         final String tenantId = SchemaUtil.getTenantId(

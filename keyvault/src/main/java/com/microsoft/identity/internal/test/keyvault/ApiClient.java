@@ -52,7 +52,7 @@ import com.microsoft.identity.internal.test.keyvault.auth.OAuth;
 
 public class ApiClient {
 
-    private String basePath = "https://localhost";
+    private String basePath = "https://msidlabs.vault.azure.net";
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
     private String tempFolderPath = null;

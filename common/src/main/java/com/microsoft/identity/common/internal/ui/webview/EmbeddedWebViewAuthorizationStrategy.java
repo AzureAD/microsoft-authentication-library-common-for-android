@@ -23,9 +23,12 @@
 package com.microsoft.identity.common.internal.ui.webview;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
@@ -37,7 +40,6 @@ import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
 import java.io.UnsupportedEncodingException;
-import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
 
 /**
@@ -47,7 +49,6 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
 
     private static final String TAG = EmbeddedWebViewAuthorizationStrategy.class.getSimpleName();
-    private WeakReference<Activity> mReferencedActivity;
     private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
@@ -57,8 +58,10 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      *
      * @param activity The app activity which invoke the interactive auth request.
      */
-    public EmbeddedWebViewAuthorizationStrategy(@NonNull Activity activity) {
-        mReferencedActivity = new WeakReference<>(activity);
+    public EmbeddedWebViewAuthorizationStrategy(@NonNull Context applicationContext,
+                                                @NonNull Activity activity,
+                                                @Nullable Fragment fragment) {
+        super(applicationContext, activity, fragment);
     }
 
     /**
@@ -74,13 +77,14 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         Logger.info(TAG, "Perform the authorization request with embedded webView.");
         final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
         final Intent authIntent = AuthorizationActivity.createStartIntent(
-                mReferencedActivity.get().getApplicationContext(),
+                getApplicationContext(),
                 null,
                 requestUrl.toString(),
                 mAuthorizationRequest.getRedirectUri(),
                 mAuthorizationRequest.getRequestHeaders(),
                 AuthorizationAgent.WEBVIEW);
-        mReferencedActivity.get().startActivity(authIntent);
+
+        launchIntent(authIntent);
         return mAuthorizationResultFuture;
     }
 

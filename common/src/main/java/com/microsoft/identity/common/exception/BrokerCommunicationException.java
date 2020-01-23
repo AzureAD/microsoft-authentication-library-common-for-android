@@ -20,18 +20,20 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
 
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
+package com.microsoft.identity.common.exception;
 
 /**
- * A class to provide a Fake Authorization Result object to be used in ROPC flow
+ * An exception that represents an error where MSAL cannot reach Broker (i.e. through Bind Service or Account Manager).
  */
-public class MockSuccessAuthorizationResult extends AuthorizationResult {
+public class BrokerCommunicationException extends BaseException {
 
-    public MockSuccessAuthorizationResult() {
-        // assume that we have auth code and auth request was successful
-        this.setAuthorizationStatus(AuthorizationStatus.SUCCESS);
+    /**
+     * Initiates the {@link BrokerCommunicationException} with error code, error message and throwable.
+     *
+     * @param errorMessage The error message contained in the exception.
+     */
+    public BrokerCommunicationException(final String errorMessage) {
+        super(ErrorStrings.IO_ERROR, errorMessage);
     }
 }

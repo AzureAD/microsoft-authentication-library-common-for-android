@@ -27,6 +27,9 @@ import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import android.util.Pair;
 
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
@@ -39,6 +42,7 @@ import java.util.List;
 public class AcquireTokenOperationParameters extends OperationParameters {
 
     private transient Activity mActivity;
+    private transient Fragment mFragment;
     private String mLoginHint;
     @Expose()
     private List<Pair<String, String>> mExtraQueryStringParameters;
@@ -47,6 +51,7 @@ public class AcquireTokenOperationParameters extends OperationParameters {
     @Expose()
     private OpenIdConnectPromptParameter mOpenIdConnectPromptParameter;
     private transient HashMap<String, String> mRequestHeaders;
+    private boolean mBrokerBrowserSupportEnabled;
 
     public AuthorizationAgent getAuthorizationAgent() {
         return mAuthorizationAgent;
@@ -63,8 +68,16 @@ public class AcquireTokenOperationParameters extends OperationParameters {
         return mActivity;
     }
 
-    public void setActivity(@NonNull final Activity mActivity) {
-        this.mActivity = mActivity;
+    public void setActivity(@NonNull final Activity activity) {
+        this.mActivity = activity;
+    }
+
+    public Fragment getFragment() {
+        return mFragment;
+    }
+
+    public void setFragment(@NonNull final Fragment fragment) {
+        this.mFragment = fragment;
     }
 
     public List<Pair<String, String>> getExtraQueryStringParameters() {
@@ -109,6 +122,14 @@ public class AcquireTokenOperationParameters extends OperationParameters {
 
     public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
         this.mBrowserSafeList = browserSafeList;
+    }
+
+    public boolean isBrokerBrowserSupportEnabled() {
+        return mBrokerBrowserSupportEnabled;
+    }
+
+    public void setBrokerBrowserSupportEnabled(boolean brokerBrowserSupportEnabled) {
+        this.mBrokerBrowserSupportEnabled = brokerBrowserSupportEnabled;
     }
 
     /**

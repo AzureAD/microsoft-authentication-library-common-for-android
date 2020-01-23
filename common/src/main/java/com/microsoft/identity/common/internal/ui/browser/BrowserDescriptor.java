@@ -39,9 +39,6 @@ public class BrowserDescriptor implements Serializable {
     @SerializedName("browser_signature_hashes")
     private Set<String> mSignatureHashes;
 
-    @SerializedName("browser_use_customTab")
-    private boolean mUseCustomTab;
-
     @SerializedName("browser_version_lower_bound")
     private String mVersionLowerBound;
 
@@ -51,12 +48,10 @@ public class BrowserDescriptor implements Serializable {
     public BrowserDescriptor(
             @NonNull final String packageName,
             @NonNull final Set<String> signatureHashes,
-            final boolean useCustomTab,
             @Nullable final String versionLowerBound,
             @Nullable final String versionUpperBound) {
         mPackageName = packageName;
         mSignatureHashes = signatureHashes;
-        mUseCustomTab = useCustomTab;
         mVersionLowerBound = versionLowerBound;
         mVersionUpperBound = versionUpperBound;
     }
@@ -64,12 +59,10 @@ public class BrowserDescriptor implements Serializable {
     public BrowserDescriptor(
             @NonNull final String packageName,
             @NonNull final String signatureHash,
-            final boolean useCustomTab,
             @Nullable final String versionLowerBound,
             @Nullable final String versionUpperBound) {
         mPackageName = packageName;
         mSignatureHashes = Collections.singleton(signatureHash);
-        mUseCustomTab = useCustomTab;
         mVersionLowerBound = versionLowerBound;
         mVersionUpperBound = versionUpperBound;
     }
@@ -80,10 +73,6 @@ public class BrowserDescriptor implements Serializable {
         }
 
         if (!mSignatureHashes.equals(browser.getSignatureHashes())) {
-            return false;
-        }
-
-        if (mUseCustomTab != browser.isCustomTabsServiceSupported()) {
             return false;
         }
 

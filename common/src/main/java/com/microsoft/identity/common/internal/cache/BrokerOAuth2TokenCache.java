@@ -188,7 +188,7 @@ public class BrokerOAuth2TokenCache
                 TAG + methodName,
                 "Saving to FOCI cache? ["
                         + isFoci
-                        + "}"
+                        + "]"
         );
 
         if (isFoci) {
@@ -241,29 +241,31 @@ public class BrokerOAuth2TokenCache
             @NonNull final IdTokenRecord idTokenRecord,
             @NonNull final AccessTokenRecord accessTokenRecord,
             @Nullable final String familyId) throws ClientException {
-        final ICacheRecord cacheRecord = save(
-                accountRecord,
-                idTokenRecord,
-                accessTokenRecord,
-                familyId
-        );
+        synchronized (this) {
+            final ICacheRecord cacheRecord = save(
+                    accountRecord,
+                    idTokenRecord,
+                    accessTokenRecord,
+                    familyId
+            );
 
-        final String clientId = cacheRecord.getAccessToken().getClientId();
-        final String target = cacheRecord.getAccessToken().getTarget();
-        final String environment = cacheRecord.getAccessToken().getEnvironment();
+            final String clientId = cacheRecord.getAccessToken().getClientId();
+            final String target = cacheRecord.getAccessToken().getTarget();
+            final String environment = cacheRecord.getAccessToken().getEnvironment();
 
-        // Now get the cache we just saved to....
-        final MsalOAuth2TokenCache cache = getTokenCacheForClient(
-                clientId,
-                environment,
-                mCallingProcessUid
-        );
+            // Now get the cache we just saved to....
+            final MsalOAuth2TokenCache cache = getTokenCacheForClient(
+                    clientId,
+                    environment,
+                    mCallingProcessUid
+            );
 
-        return (List<ICacheRecord>) cache.loadWithAggregatedAccountData(
-                clientId,
-                target,
-                cacheRecord.getAccount()
-        );
+            return (List<ICacheRecord>) cache.loadWithAggregatedAccountData(
+                    clientId,
+                    target,
+                    cacheRecord.getAccount()
+            );
+        }
     }
 
     @Override
@@ -287,7 +289,7 @@ public class BrokerOAuth2TokenCache
                 TAG + methodName,
                 "Saving to FOCI cache? ["
                         + isFoci
-                        + "}"
+                        + "]"
         );
 
         OAuth2TokenCache targetCache;
@@ -336,50 +338,59 @@ public class BrokerOAuth2TokenCache
             @NonNull final GenericOAuth2Strategy oAuth2Strategy,
             @NonNull final GenericAuthorizationRequest request,
             @NonNull final GenericTokenResponse response) throws ClientException {
-        final String methodName = ":saveAndLoadAggregatedAccountData";
+        synchronized (this) {
+            final String methodName = ":saveAndLoadAggregatedAccountData";
 
-        final boolean isFoci = !StringExtensions.isNullOrBlank(response.getFamilyId());
+            final boolean isFoci = !StringExtensions.isNullOrBlank(response.getFamilyId());
 
-        OAuth2TokenCache targetCache;
+            OAuth2TokenCache targetCache;
 
-        if (isFoci) {
-            targetCache = mFociCache;
-        } else {
-            targetCache = getTokenCacheForClient(
-                    request.getClientId(),
-                    oAuth2Strategy.getIssuerCacheIdentifier(request),
+            Logger.info(
+                    TAG + methodName,
+                    "Saving to FOCI cache? ["
+                            + isFoci
+                            + "]"
+            );
+
+            if (isFoci) {
+                targetCache = mFociCache;
+            } else {
+                targetCache = getTokenCacheForClient(
+                        request.getClientId(),
+                        oAuth2Strategy.getIssuerCacheIdentifier(request),
+                        mCallingProcessUid
+                );
+
+                if (null == targetCache) {
+                    Logger.warn(
+                            TAG + methodName,
+                            "Existing cache not found. A new one will be created."
+                    );
+                    targetCache = initializeProcessUidCache(
+                            getContext(),
+                            mCallingProcessUid
+                    );
+                }
+            }
+
+            final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
+                    oAuth2Strategy,
+                    request,
+                    response
+            );
+
+            // The 0th element contains the record we *just* saved. Other records are corollary data.
+            final ICacheRecord justSavedRecord = result.get(0);
+
+            updateApplicationMetadataCache(
+                    justSavedRecord.getRefreshToken().getClientId(),
+                    justSavedRecord.getRefreshToken().getEnvironment(),
+                    justSavedRecord.getRefreshToken().getFamilyId(),
                     mCallingProcessUid
             );
 
-            if (null == targetCache) {
-                Logger.warn(
-                        TAG + methodName,
-                        "Existing cache not found. A new one will be created."
-                );
-                targetCache = initializeProcessUidCache(
-                        getContext(),
-                        mCallingProcessUid
-                );
-            }
+            return result;
         }
-
-        final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
-                oAuth2Strategy,
-                request,
-                response
-        );
-
-        // The 0th element contains the record we *just* saved. Other records are corollary data.
-        final ICacheRecord justSavedRecord = result.get(0);
-
-        updateApplicationMetadataCache(
-                justSavedRecord.getRefreshToken().getClientId(),
-                justSavedRecord.getRefreshToken().getEnvironment(),
-                justSavedRecord.getRefreshToken().getFamilyId(),
-                mCallingProcessUid
-        );
-
-        return result;
     }
 
     private void updateApplicationMetadataCache(@NonNull final String clientId,
@@ -476,6 +487,13 @@ public class BrokerOAuth2TokenCache
 
         final boolean shouldUseFociCache = null == targetCache || isKnownFoci;
 
+        Logger.info(
+                TAG + methodName,
+                "Loading from FOCI cache? ["
+                        + shouldUseFociCache
+                        + "]"
+        );
+
         ICacheRecord resultRecord;
 
         if (shouldUseFociCache) {
@@ -534,75 +552,84 @@ public class BrokerOAuth2TokenCache
     public List<ICacheRecord> loadWithAggregatedAccountData(@NonNull final String clientId,
                                                             @Nullable final String target,
                                                             @NonNull final AccountRecord account) {
-        final String methodName = ":loadWithAggregatedAccountData";
+        synchronized (this) {
+            final String methodName = ":loadWithAggregatedAccountData";
 
-        final BrokerApplicationMetadata appMetadata = mApplicationMetadataCache.getMetadata(
-                clientId,
-                account.getEnvironment(),
-                mCallingProcessUid
-        );
+            final BrokerApplicationMetadata appMetadata = mApplicationMetadataCache.getMetadata(
+                    clientId,
+                    account.getEnvironment(),
+                    mCallingProcessUid
+            );
 
-        boolean isKnownFoci = false;
+            boolean isKnownFoci = false;
 
-        if (null != appMetadata) {
-            isKnownFoci = null != appMetadata.getFoci();
+            if (null != appMetadata) {
+                isKnownFoci = null != appMetadata.getFoci();
+
+                Logger.info(
+                        TAG + methodName,
+                        "App is known foci? " + isKnownFoci
+                );
+            }
+
+            final OAuth2TokenCache targetCache = getTokenCacheForClient(
+                    clientId,
+                    account.getEnvironment(),
+                    mCallingProcessUid
+            );
+
+            final boolean appIsUnknownUseFociAsFallback = null == targetCache;
+
+            final List<ICacheRecord> resultRecords;
 
             Logger.info(
                     TAG + methodName,
-                    "App is known foci? " + isKnownFoci
+                    "Loading from FOCI cache? ["
+                            + (isKnownFoci || appIsUnknownUseFociAsFallback)
+                            + "]"
             );
+
+            if (appIsUnknownUseFociAsFallback) {
+                // We do not have a cache for this app or it is not yet known to be a member of the family
+                // use the foci cache....
+
+                // Load a sparse-record (if available) containing only the desired account and a
+                // refresh token if available...
+                resultRecords = new ArrayList<>();
+                resultRecords.add(
+                        mFociCache.loadByFamilyId(
+                                clientId,
+                                target,
+                                account
+                        )
+                );
+            } else if (isKnownFoci) {
+                resultRecords =
+                        mFociCache.loadByFamilyIdWithAggregatedAccountData(
+                                clientId,
+                                target,
+                                account
+                        );
+            } else {
+                resultRecords = targetCache.loadWithAggregatedAccountData(
+                        clientId,
+                        target,
+                        account
+                );
+            }
+
+            final boolean resultFound = !resultRecords.isEmpty()
+                    && null != resultRecords.get(0).getRefreshToken();
+
+            Logger.verbose(
+                    TAG + methodName,
+                    "Result found? ["
+                            + resultFound
+                            + "]"
+            );
+
+            return resultRecords;
         }
-
-        final OAuth2TokenCache targetCache = getTokenCacheForClient(
-                clientId,
-                account.getEnvironment(),
-                mCallingProcessUid
-        );
-
-        final boolean appIsUnknownUseFociAsFallback = null == targetCache;
-
-        final List<ICacheRecord> resultRecords;
-
-        if (appIsUnknownUseFociAsFallback) {
-            // We do not have a cache for this app or it is not yet known to be a member of the family
-            // use the foci cache....
-
-            // Load a sparse-record (if available) containing only the desired account and a
-            // refresh token if available...
-            resultRecords = new ArrayList<>();
-            resultRecords.add(
-                    mFociCache.loadByFamilyId(
-                            clientId,
-                            target,
-                            account
-                    )
-            );
-        } else if (isKnownFoci) {
-            resultRecords =
-                    mFociCache.loadByFamilyIdWithAggregatedAccountData(
-                            clientId,
-                            target,
-                            account
-                    );
-        } else {
-            resultRecords = targetCache.loadWithAggregatedAccountData(
-                    clientId,
-                    target,
-                    account
-            );
-        }
-
-        final boolean resultFound = !resultRecords.isEmpty()
-                && null != resultRecords.get(0).getRefreshToken();
-
-        Logger.verbose(
-                TAG + methodName,
-                "Result found? ["
-                        + resultFound
-                        + "]"
-        );
-
-        return resultRecords;
     }
 
     @Override
@@ -795,6 +822,13 @@ public class BrokerOAuth2TokenCache
                     mCallingProcessUid
             );
 
+            Logger.info(
+                    TAG + methodName,
+                    "Loading from FOCI cache? ["
+                            + (targetCache == null)
+                            + "]"
+            );
+
             if (null != targetCache) {
                 return targetCache.getAccountByLocalAccountId(
                         environment,
@@ -834,11 +868,19 @@ public class BrokerOAuth2TokenCache
             @Nullable final String environment,
             @NonNull final String clientId,
             @NonNull final String localAccountId) {
+        final String methodName = ":getAccountWithAggregatedAccountDataByLocalAccountId";
         if (null != environment) {
             OAuth2TokenCache targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
                     mCallingProcessUid
+            );
+
+            Logger.info(
+                    TAG + methodName,
+                    "Loading from FOCI cache? ["
+                            + (targetCache == null)
+                            + "]"
             );
 
             if (null != targetCache) {

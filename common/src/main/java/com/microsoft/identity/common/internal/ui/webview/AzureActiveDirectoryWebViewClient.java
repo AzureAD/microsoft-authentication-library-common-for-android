@@ -52,6 +52,7 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyA
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -78,7 +79,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final IAuthorizationCompletionCallback callback,
                                              @NonNull final String redirectUrl) {
         super(activity, callback);
-        getActivity().setContentView(R.layout.common_activity_authentication);
         mRedirectUrl = redirectUrl;
     }
 
@@ -323,7 +323,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
 
         if (!url.toLowerCase(Locale.US).startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
-            Logger.error(TAG, "The webView was redirected to an unsafe URL.", null);
+            String redactedUrl = "redacted";
+            try {
+                redactedUrl = StringExtensions.removeQueryParameterFromUrl(url);
+            } catch (final URISyntaxException e) {
+                // Best effort.
+            }
+
+            Logger.error(TAG, "The webView was redirected to an unsafe URL: " + redactedUrl, null);
             returnError(ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED, "The webView was redirected to an unsafe URL.");
             view.stopLoading();
             return true;

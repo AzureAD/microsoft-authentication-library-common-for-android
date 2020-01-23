@@ -92,4 +92,10 @@ public class LabConstants {
         public static final String AZURE_AD_MULTIPLE_ORGS = "azureadmultipleorgs";
         public static final String AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT = "azureadandpersonalmicrosoftaccount";
     }
+
+    public static final class GuestHomedIn {
+        public static final String NONE = "none";
+        public static final String ON_PREM = "onprem";
+        public static final String HOST_AZURE_AD = "hostazuread";
+    }
 }

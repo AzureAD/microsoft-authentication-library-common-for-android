@@ -25,16 +25,22 @@ package com.microsoft.identity.internal.testutils.strategies;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
-import com.microsoft.identity.internal.testutils.MockTokenResponse;
+import com.microsoft.identity.common.internal.result.ResultFuture;
+import com.microsoft.identity.internal.testutils.mocks.MockSuccessAuthorizationResultMockedTests;
+import com.microsoft.identity.internal.testutils.mocks.MockTokenResponse;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Future;
 
 public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrategy {
 
@@ -45,6 +51,23 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
      */
     public MockTestStrategy(MicrosoftStsOAuth2Configuration config) {
         super(config);
+    }
+
+    /**
+     * Template method for executing an OAuth2 authorization request.
+     *
+     * @param request               microsoft sts authorization request.
+     * @param authorizationStrategy authorization strategy.
+     * @return GenericAuthorizationResponse
+     */
+    @Override
+    public Future<AuthorizationResult> requestAuthorization(
+            final MicrosoftStsAuthorizationRequest request,
+            final AuthorizationStrategy authorizationStrategy) {
+        final MockSuccessAuthorizationResultMockedTests authorizationResult = new MockSuccessAuthorizationResultMockedTests();
+        final ResultFuture<AuthorizationResult> future = new ResultFuture<>();
+        future.setResult(authorizationResult);
+        return future;
     }
 
     @Override
@@ -62,13 +85,6 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
     protected HttpResponse performTokenRequest(final MicrosoftStsTokenRequest tokenRequest) {
         final TokenResult tokenResult = getTokenResult();
         final TokenResponse tokenResponse = tokenResult.getTokenResponse();
-        /*
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        */
         final HttpResponse httpResponse = makeHttpResponseFromResponseObject(tokenResponse);
         return httpResponse;
     }
