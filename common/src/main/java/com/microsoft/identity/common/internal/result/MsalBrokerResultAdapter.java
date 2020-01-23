@@ -232,7 +232,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         } else if (exceptionType.equalsIgnoreCase(ArgumentException.sName)) {
 
             baseException = new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+                    ArgumentException.BROKER_TOKEN_REQUEST_OPERATION_NAME,
                     brokerResult.getErrorCode(),
                     brokerResult.getErrorMessage()
             );
