@@ -22,7 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
@@ -30,6 +33,7 @@ import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
@@ -37,7 +41,6 @@ import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationFragment;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -48,6 +51,10 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.RESULT_CODE;
 
 public class CommandDispatcher {
 
@@ -259,9 +266,11 @@ public class CommandDispatcher {
                 "Beginning interactive request"
         );
         synchronized (sLock) {
+            final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(command.getParameters().getAppContext());
+
             // Send a broadcast to cancel if any active auth request is present.
-            command.getParameters().getAppContext().sendBroadcast(
-                    new Intent(AuthorizationFragment.CANCEL_INTERACTIVE_REQUEST_ACTION)
+            localBroadcastManager.sendBroadcast(
+                    new Intent(CANCEL_INTERACTIVE_REQUEST)
             );
 
             sInteractiveExecutor.execute(new Runnable() {
@@ -276,10 +285,21 @@ public class CommandDispatcher {
                         logInteractiveRequestParameters(methodName, (AcquireTokenOperationParameters) command.getParameters());
                     }
 
+                    final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
+                        @Override
+                        public void onReceive(Context context, Intent intent) {
+                            completeInteractive(intent);
+                        }
+                    };
+
                     AcquireTokenResult result = null;
                     BaseException baseException = null;
 
                     try {
+                        localBroadcastManager.registerReceiver(
+                                resultReceiver,
+                                new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
+
                         sCommand = command;
 
                         //Try executing request
@@ -298,6 +318,7 @@ public class CommandDispatcher {
                         }
                     } finally {
                         sCommand = null;
+                        localBroadcastManager.unregisterReceiver(resultReceiver);
                     }
 
                     Handler handler = new Handler(Looper.getMainLooper());
@@ -461,10 +482,14 @@ public class CommandDispatcher {
         );
     }
 
-    public static void completeInteractive(int requestCode, int resultCode, final Intent data) {
+    private static void completeInteractive(final Intent resultIntent) {
         final String methodName = ":completeInteractive";
+
+        int requestCode = resultIntent.getIntExtra(REQUEST_CODE, 0);
+        int resultCode = resultIntent.getIntExtra(RESULT_CODE, 0);
+
         if (sCommand != null) {
-            sCommand.notify(requestCode, resultCode, data);
+            sCommand.notify(requestCode, resultCode, resultIntent);
         } else {
             Logger.warn(TAG + methodName, "sCommand is null, No interactive call in progress to complete.");
         }
