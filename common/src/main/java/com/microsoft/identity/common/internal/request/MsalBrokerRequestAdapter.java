@@ -81,7 +81,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .environment(AzureActiveDirectory.getEnvironment().name())
                 .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
                 .authorizationAgent(
-                        parameters.isBrokerBrowserSupportEnabled() ?
+                        parameters.brokerBrowserSupportEnabled() ?
                                 AuthorizationAgent.BROWSER.name() :
                                 AuthorizationAgent.WEBVIEW.name()
                 ).build();
@@ -111,7 +111,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .applicationVersion(context.applicationVersion())
                 .msalVersion(context.sdkVersion())
                 .environment(AzureActiveDirectory.getEnvironment().name())
-                .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
+                .multipleCloudsSupported(false) // not relevant to silent calls
                 .build();
 
         return brokerRequest;
@@ -310,7 +310,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * Create the request bundle for IMicrosoftAuthService.hello().
      * @param context IContext
      * @return request bundle
-     */
+     *
      * Helper method to get redirect uri from parameters, calculates from package signature if not available.
      */
     private String getRedirectUri(@NonNull OperationParameters parameters) {
@@ -336,12 +336,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForAcquireTokenSilent(final AcquireTokenSilentOperationParameters parameters) {
+    public Bundle getRequestBundleForAcquireTokenSilent(
+            @NonNull final SilentTokenCommandContext commandContext,
+            @NonNull final SilentTokenCommandParameters commandParameters) {
         final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
 
         final Bundle requestBundle = new Bundle();
         final BrokerRequest brokerRequest = msalBrokerRequestAdapter.
-                brokerRequestFromSilentOperationParameters(parameters);
+                brokerRequestFromSilentOperationParameters(commandContext, commandParameters);
 
         requestBundle.putString(
                 AuthenticationConstants.Broker.BROKER_REQUEST_V2,
@@ -350,7 +352,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         requestBundle.putInt(
                 AuthenticationConstants.Broker.CALLER_INFO_UID,
-                parameters.getAppContext().getApplicationInfo().uid
+                commandContext.androidApplicationContext().getApplicationInfo().uid
         );
 
         return requestBundle;
@@ -389,9 +391,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
-    private boolean getMultipleCloudsSupported(@NonNull final OperationParameters parameters) {
-        if (parameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
-            final AzureActiveDirectoryAuthority authority = (AzureActiveDirectoryAuthority) parameters.getAuthority();
+    private boolean getMultipleCloudsSupported(@NonNull final InteractiveTokenCommandParameters parameters) {
+        if (parameters.authority() instanceof AzureActiveDirectoryAuthority) {
+            final AzureActiveDirectoryAuthority authority = (AzureActiveDirectoryAuthority) parameters.authority();
             return authority.getMultipleCloudsSupported();
         } else {
             return false;

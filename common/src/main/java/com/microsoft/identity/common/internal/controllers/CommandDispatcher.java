@@ -48,7 +48,7 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
 
 public class CommandDispatcher {
 
@@ -265,7 +265,7 @@ public class CommandDispatcher {
         synchronized (sLock) {
             // Send a broadcast to cancel if any active auth request is present.
             command.getContext().androidApplicationContext().sendBroadcast(
-                    new Intent(AuthorizationActivity.CANCEL_INTERACTIVE_REQUEST_ACTION)
+                    new Intent(CANCEL_INTERACTIVE_REQUEST)
             );
 
             sInteractiveExecutor.execute(new Runnable() {

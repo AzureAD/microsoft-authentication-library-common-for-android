@@ -54,6 +54,8 @@ public abstract class InteractiveTokenCommandParameters
 
     public abstract AuthorizationAgent authorizationAgent();
 
+    public abstract boolean brokerBrowserSupportEnabled();
+
     public static InteractiveTokenCommandParameters.Builder builder() {
         return new AutoValue_InteractiveTokenCommandParameters.Builder();
     }
@@ -97,6 +99,8 @@ public abstract class InteractiveTokenCommandParameters
         public abstract Builder setAuthorizationAgent(AuthorizationAgent value);
 
         public abstract Builder setAccountRecord(IAccountRecord value);
+
+        public abstract Builder setBrokerBrowserSupportEnabled(boolean value);
 
         public abstract InteractiveTokenCommandParameters build();
     }
