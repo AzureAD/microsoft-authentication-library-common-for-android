@@ -29,7 +29,6 @@ import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
-import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,8 +40,6 @@ import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
-import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -269,7 +266,7 @@ public class CommandDispatcher {
                 "Beginning interactive request"
         );
         synchronized (sLock) {
-            final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(command.getParameters().getAppContext());
+            final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(command.getContext().androidApplicationContext());
 
             // Send a broadcast to cancel if any active auth request is present.
             localBroadcastManager.sendBroadcast(
@@ -486,7 +483,7 @@ public class CommandDispatcher {
                 TAG + methodName,
                 "Force refresh? [" + parameters.getForceRefresh() + "]"
         );
-    }
+    }*/
 
     private static void completeInteractive(final Intent resultIntent) {
         final String methodName = ":completeInteractive";
