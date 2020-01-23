@@ -28,6 +28,8 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
 public class BaseException extends Exception {
 
+    public static final String sName =  BaseException.class.getName();
+
     @Nullable
     private String mSpeRing;
 
@@ -145,5 +147,9 @@ public class BaseException extends Exception {
 
     public void setCorrelationId(@Nullable final String correlationId){
         mCorrelationId = correlationId;
+    }
+
+    public String getExceptionName(){
+        return sName;
     }
 }

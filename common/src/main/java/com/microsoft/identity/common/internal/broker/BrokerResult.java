@@ -70,6 +70,11 @@ public class BrokerResult implements Serializable {
         static final String BROKER_ERROR_MESSAGE = "broker_error_message";
 
         /**
+         * The Exception type thrown by the broker.
+         */
+        static final String BROKER_EXCEPTION_TYPE = "broker_exception_type";
+
+        /**
          * The OAuth2 suberror.
          */
         static final String OAUTH_SUB_ERROR = "oauth_sub_error";
@@ -299,6 +304,10 @@ public class BrokerResult implements Serializable {
     @SerializedName(SerializedNames.TENANT_PROFILE_CACHE_RECORDS)
     private final List<ICacheRecord> mTenantProfileData;
 
+    @Nullable
+    @SerializedName(SerializedNames.BROKER_EXCEPTION_TYPE)
+    private final String mExceptionType;
+
 
     private BrokerResult(@NonNull final Builder builder) {
         mAccessToken = builder.mAccessToken;
@@ -332,6 +341,11 @@ public class BrokerResult implements Serializable {
         mHttpResponseHeaders = builder.mHttpResponseHeaders;
         mCliTelemErrorCode = builder.mCliTelemErrorCode;
         mCliTelemSubErrorCode = builder.mCliTelemSubErrorCode;
+        mExceptionType = builder.mExceptionType;
+    }
+
+    public String getExceptionType() {
+        return mExceptionType;
     }
 
     public List<ICacheRecord> getTenantProfileData() {
@@ -520,6 +534,8 @@ public class BrokerResult implements Serializable {
 
         private List<ICacheRecord> mTenantProfileData;
 
+        private String mExceptionType;
+
         public Builder accessToken(@Nullable final String accessToken) {
             this.mAccessToken = accessToken;
             return this;
@@ -676,6 +692,11 @@ public class BrokerResult implements Serializable {
 
         public Builder tenantProfileRecords(List<ICacheRecord> cacheRecordWithTenantProfileData) {
             this.mTenantProfileData = cacheRecordWithTenantProfileData;
+            return this;
+        }
+
+        public Builder exceptionType(String exceptionType){
+            this.mExceptionType = exceptionType;
             return this;
         }
     }
