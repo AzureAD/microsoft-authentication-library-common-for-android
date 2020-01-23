@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
@@ -135,7 +136,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
 
     @Override
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
-        if (requestCode == BROWSER_FLOW) {
+        if (requestCode == AuthenticationConstants.UIRequest.BROWSER_FLOW) {
             dispose();
             final AuthorizationResult result = mOAuth2Strategy
                     .getAuthorizationResultFactory().createAuthorizationResult(
