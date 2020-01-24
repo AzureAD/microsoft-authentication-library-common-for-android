@@ -172,7 +172,7 @@ public class ClientException extends BaseException {
     /**
      * Emitted when the Protection Params provided to the KeyStore are invalid or insufficient.
      */
-    public static final String INVALID_PROTECTION_PARAMS = "prot_params_invalid";
+    public static final String INVALID_PROTECTION_PARAMS = "protection_params_invalid";
 
     /**
      * Emitted when the target certificate's thumbprint cannot be computed due to lack of support for
