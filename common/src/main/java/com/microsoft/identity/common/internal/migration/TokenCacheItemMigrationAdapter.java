@@ -152,8 +152,8 @@ public class TokenCacheItemMigrationAdapter {
         config.setAuthorityUrl(authorityUrl);
 
         // Create the strategy
-        final OAuth2StrategyParameters strategyOptions = new OAuth2StrategyParameters();
-        final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyOptions);
+        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+        final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
         final String refreshToken = cacheRecord.getRefreshToken().getSecret();
         final String scopes = cacheRecord.getRefreshToken().getTarget();
@@ -286,8 +286,8 @@ public class TokenCacheItemMigrationAdapter {
                 }
 
                 // Create the strategy
-                final OAuth2StrategyParameters strategyOptions = new OAuth2StrategyParameters();
-                final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyOptions);
+                final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+                final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
                 final MicrosoftStsTokenRequest tokenRequest = createTokenRequest(
                         clientId,

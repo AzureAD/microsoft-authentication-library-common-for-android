@@ -38,7 +38,7 @@ public class MockAuthority extends AzureActiveDirectoryAuthority {
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters options) {
+    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) {
         final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
         return new MockTestStrategy(config);
     }

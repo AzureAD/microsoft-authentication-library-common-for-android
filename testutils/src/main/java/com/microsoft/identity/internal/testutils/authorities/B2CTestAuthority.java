@@ -37,7 +37,7 @@ public class B2CTestAuthority extends AzureActiveDirectoryB2CAuthority {
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters options) {
+    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) {
         final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
 
         // return a custom ropc test strategy to perform ropc flow for test automation

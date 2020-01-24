@@ -191,7 +191,7 @@ public abstract class Authority {
         return new AzureActiveDirectoryAuthority(audience);
     }
 
-    public abstract OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters options) throws ClientException;
+    public abstract OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) throws ClientException;
 
     /**
      * Indicates whether the authority is known to Microsoft or not.  Microsoft can recognize authorities that exist within public clouds.  Microsoft does

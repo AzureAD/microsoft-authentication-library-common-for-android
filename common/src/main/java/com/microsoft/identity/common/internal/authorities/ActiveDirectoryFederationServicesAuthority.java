@@ -53,7 +53,7 @@ public class ActiveDirectoryFederationServicesAuthority extends Authority {
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy(@NonNull OAuth2StrategyParameters options) {
+    public OAuth2Strategy createOAuth2Strategy(@NonNull OAuth2StrategyParameters parameters) {
         throw new UnsupportedOperationException();
     }
 }
