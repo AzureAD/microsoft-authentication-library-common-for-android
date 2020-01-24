@@ -612,7 +612,7 @@ class DevicePopManager implements IDevicePopManager {
                                                                final boolean useStrongbox)
             throws InvalidAlgorithmParameterException, NoSuchProviderException, NoSuchAlgorithmException {
         // Create the KeyPairGenerator
-        final KeyPairGenerator keyPairGenerator = getKeyPairGenerator(
+        final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
                 KeyPairGeneratorAlgorithms.RSA,
                 ANDROID_KEYSTORE
         );
@@ -621,23 +621,6 @@ class DevicePopManager implements IDevicePopManager {
         initialize(ctx, keyPairGenerator, keySize, useStrongbox);
 
         return keyPairGenerator;
-    }
-
-    /**
-     * For the provided algorithm and keystore type, return a KeyPairGenerator.
-     *
-     * @param alg      The algorithm suite that must be supported by this generator.
-     * @param provider The String name of the provider to use.
-     * @return The new KeyPairGenerator object.
-     * @throws NoSuchProviderException  If the specified Provider is not registered in the security
-     *                                  provider list.
-     * @throws NoSuchAlgorithmException If a KeyPairGeneratorSpi implementation for the specified
-     *                                  algorithm is not available for the specified Provider.
-     */
-    private static KeyPairGenerator getKeyPairGenerator(@NonNull final String alg,
-                                                        @NonNull final String provider)
-            throws NoSuchProviderException, NoSuchAlgorithmException {
-        return KeyPairGenerator.getInstance(alg, provider);
     }
 
     /**
