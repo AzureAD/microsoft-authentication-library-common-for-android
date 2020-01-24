@@ -794,7 +794,7 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     /**
-     * Returns the cnf claim used in SHRs; format is JSON.
+     * Returns the cnf claim used in SHRs (Signed HTTP Requests); format is JSON.
      *
      * @return The cnf claim value.
      * @throws UnrecoverableEntryException If the queried key cannot be found.
