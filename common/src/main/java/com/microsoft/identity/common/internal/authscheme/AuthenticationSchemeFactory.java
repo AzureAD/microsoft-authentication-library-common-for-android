@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
-import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -39,7 +39,12 @@ public class AuthenticationSchemeFactory {
      * @param nameable The nameable public scheme representation.
      * @return The internal scheme representation.
      */
-    public static AbstractAuthenticationScheme createScheme(@NonNull final INameable nameable) {
+    public static AbstractAuthenticationScheme createScheme(@Nullable final INameable nameable) {
+        if (null == nameable) {
+            // If null, choose Bearer for backcompat
+            return new BearerAuthenticationSchemeInternal();
+        }
+
         switch (nameable.getName()) {
             case BearerAuthenticationSchemeInternal.SCHEME_BEARER:
                 Logger.verbose(
