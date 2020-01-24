@@ -683,7 +683,7 @@ public class MicrosoftStsOAuth2Strategy
         super.validateCachedResult(authScheme, cacheRecord);
 
         if (authSchemeIsPoP(authScheme)) {
-            return cachedAtKidMatchesKeystoreKid(cacheRecord.getAccessToken().getKid());
+            return cachedAccessTokenKidMatchesKeystoreKid(cacheRecord.getAccessToken().getKid());
         }
 
         return true;
@@ -708,7 +708,7 @@ public class MicrosoftStsOAuth2Strategy
         return null;
     }
 
-    private boolean cachedAtKidMatchesKeystoreKid(@Nullable final String atKid) {
+    private boolean cachedAccessTokenKidMatchesKeystoreKid(@Nullable final String atKid) {
         final String deviceKid = getDeviceAtPopThumbprint();
 
         // If the value known to the strategy is null, something's wrong. Discard the current token
