@@ -508,13 +508,13 @@ class DevicePopManager implements IDevicePopManager {
     /**
      * Generates a new RSA KeyPair of the specified lenth.
      *
-     * @param ctx        The current application Context.
+     * @param context    The current application Context.
      * @param minKeySize The minimum keysize to use.
      * @return The newly generated RSA KeyPair.
      * @throws UnsupportedOperationException
      */
     @SuppressLint("NewApi")
-    private KeyPair generateNewRsaKeyPair(@NonNull final Context ctx,
+    private KeyPair generateNewRsaKeyPair(@NonNull final Context context,
                                           final int minKeySize)
             throws UnsupportedOperationException, InvalidAlgorithmParameterException,
             NoSuchAlgorithmException, NoSuchProviderException {
@@ -524,7 +524,7 @@ class DevicePopManager implements IDevicePopManager {
             KeyPair kp;
 
             try {
-                kp = generateNewKeyPair(ctx, true);
+                kp = generateNewKeyPair(context, true);
             } catch (final StrongBoxUnavailableException e) {
                 Logger.error(
                         TAG,
@@ -533,7 +533,7 @@ class DevicePopManager implements IDevicePopManager {
                 );
 
                 // Retry, but don't request StrongBox
-                kp = generateNewKeyPair(ctx, false);
+                kp = generateNewKeyPair(context, false);
             }
 
             // Due to a bug in some versions of Android, keySizes may not be exactly as specified
@@ -585,7 +585,7 @@ class DevicePopManager implements IDevicePopManager {
     /**
      * Generates a new {@link KeyPair}.
      *
-     * @param ctx          The application Context.
+     * @param context      The application Context.
      * @param useStrongbox True if StrongBox should be used, false otherwise.
      * @return The newly generated KeyPair.
      * @throws InvalidAlgorithmParameterException If the designated crypto algorithm is not
@@ -595,11 +595,11 @@ class DevicePopManager implements IDevicePopManager {
      * @throws StrongBoxUnavailableException      If StrongBox is unavailable.
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private KeyPair generateNewKeyPair(@NonNull final Context ctx, final boolean useStrongbox)
+    private KeyPair generateNewKeyPair(@NonNull final Context context, final boolean useStrongbox)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException, StrongBoxUnavailableException {
         final KeyPairGenerator kpg = getInitializedRsaKeyPairGenerator(
-                ctx,
+                context,
                 RSA_KEY_SIZE,
                 useStrongbox
         );
@@ -607,7 +607,7 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private KeyPairGenerator getInitializedRsaKeyPairGenerator(@NonNull final Context ctx,
+    private KeyPairGenerator getInitializedRsaKeyPairGenerator(@NonNull final Context context,
                                                                final int keySize,
                                                                final boolean useStrongbox)
             throws InvalidAlgorithmParameterException, NoSuchProviderException, NoSuchAlgorithmException {
@@ -618,7 +618,7 @@ class DevicePopManager implements IDevicePopManager {
         );
 
         // Initialize it!
-        initialize(ctx, keyPairGenerator, keySize, useStrongbox);
+        initialize(context, keyPairGenerator, keySize, useStrongbox);
 
         return keyPairGenerator;
     }
@@ -626,7 +626,7 @@ class DevicePopManager implements IDevicePopManager {
     /**
      * Initialize the provided {@link KeyPairGenerator}.
      *
-     * @param ctx              The current application Context.
+     * @param context          The current application Context.
      * @param keyPairGenerator The KeyPairGenerator to initialize.
      * @param keySize          The RSA keysize.
      * @param useStrongbox     True if StrongBox should be used, false otherwise. Please note that
@@ -634,12 +634,12 @@ class DevicePopManager implements IDevicePopManager {
      * @throws InvalidAlgorithmParameterException
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private static void initialize(@NonNull final Context ctx,
+    private static void initialize(@NonNull final Context context,
                                    @NonNull final KeyPairGenerator keyPairGenerator,
                                    final int keySize,
                                    final boolean useStrongbox) throws InvalidAlgorithmParameterException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            initializePre23(ctx, keyPairGenerator, keySize);
+            initializePre23(context, keyPairGenerator, keySize);
         } else {
             initialize23(keyPairGenerator, keySize, useStrongbox);
         }
@@ -689,7 +689,7 @@ class DevicePopManager implements IDevicePopManager {
 
     @SuppressLint("NewApi")
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private static void initializePre23(@NonNull final Context ctx,
+    private static void initializePre23(@NonNull final Context context,
                                         @NonNull final KeyPairGenerator keyPairGenerator,
                                         final int keySize) throws InvalidAlgorithmParameterException {
         final Calendar calendar = Calendar.getInstance();
@@ -697,7 +697,7 @@ class DevicePopManager implements IDevicePopManager {
         calendar.add(Calendar.YEAR, CertificateProperties.CERTIFICATE_VALIDITY_YEARS);
         final Date end = calendar.getTime();
 
-        final KeyPairGeneratorSpec.Builder specBuilder = new KeyPairGeneratorSpec.Builder(ctx)
+        final KeyPairGeneratorSpec.Builder specBuilder = new KeyPairGeneratorSpec.Builder(context)
                 .setAlias(KEYSTORE_ENTRY_ALIAS)
                 .setStartDate(start)
                 .setEndDate(end)
