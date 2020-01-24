@@ -558,7 +558,7 @@ public class BrokerOAuth2TokenCache
     public List<ICacheRecord> loadWithAggregatedAccountData(@NonNull final String clientId,
                                                             @Nullable final String target,
                                                             @NonNull final AccountRecord account,
-                                                            @NonNull final AbstractAuthenticationScheme authScheme) { // TODO implement!
+                                                            @NonNull final AbstractAuthenticationScheme authScheme) {
         synchronized (this) {
             final String methodName = ":loadWithAggregatedAccountData";
 
