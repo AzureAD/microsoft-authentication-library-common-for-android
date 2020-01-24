@@ -27,7 +27,7 @@ import android.content.Context;
 import androidx.annotation.Nullable;
 
 /**
- * Abstract class for defining options relative to the construction of an {@link OAuth2Strategy}.
+ * Base class for defining options relative to the construction of an {@link OAuth2Strategy}.
  */
 public class OAuth2StrategyParameters {
 
