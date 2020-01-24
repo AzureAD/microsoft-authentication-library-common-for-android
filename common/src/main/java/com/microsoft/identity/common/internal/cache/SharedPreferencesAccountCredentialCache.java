@@ -155,17 +155,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         final CredentialType type = getCredentialTypeForCredentialCacheKey(cacheKey);
         Class<? extends Credential> clazz = null;
 
-        if (CredentialType.AccessToken == type) {
-            clazz = AccessTokenRecord.class;
-        } else if (CredentialType.RefreshToken == type) {
-            clazz = RefreshTokenRecord.class;
-        } else if (CredentialType.IdToken == type || CredentialType.V1IdToken == type) {
-            clazz = IdTokenRecord.class;
-        } else {
-            Logger.warn(
-                    TAG,
-                    "Unrecognized credential type."
-            );
+        if (null != type) {
+            clazz = getTargetClassForCredentialType(cacheKey, type);
         }
 
         Credential credential = null;
@@ -424,11 +415,11 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             if (cacheKey.contains(CACHE_VALUE_SEPARATOR + credentialTypeStr + CACHE_VALUE_SEPARATOR)) {
                 Logger.verbose(TAG, "Cache key is a Credential type...");
 
-                // We treat AccessToken & AccessToken_With_Authscheme as the same type
-                // because they use the same class for serialization/deserialization
-                if (credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken.name())
-                        || credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken_With_AuthScheme.name())) {
+                if (credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken.name())) {
                     type = CredentialType.AccessToken;
+                    break;
+                } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken_With_AuthScheme.name())) {
+                    type = CredentialType.AccessToken_With_AuthScheme;
                     break;
                 } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.RefreshToken.name())) {
                     type = CredentialType.RefreshToken;

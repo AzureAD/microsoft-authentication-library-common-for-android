@@ -51,6 +51,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
         switch (targetType) {
             case AccessToken:
+            case AccessToken_With_AuthScheme:
                 credentialClass = AccessTokenRecord.class;
                 break;
             case RefreshToken:
