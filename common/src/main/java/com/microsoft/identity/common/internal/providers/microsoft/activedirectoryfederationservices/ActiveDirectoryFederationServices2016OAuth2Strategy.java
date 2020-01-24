@@ -130,7 +130,7 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
     }
 
     @Override
-    public String getAuthorizationHeader(AbstractAuthenticationScheme scheme, TokenResponse tokenResponse) {
+    public String getAuthorizationHeader(AbstractAuthenticationScheme scheme, String accessToken) {
         return null;
     }
 }

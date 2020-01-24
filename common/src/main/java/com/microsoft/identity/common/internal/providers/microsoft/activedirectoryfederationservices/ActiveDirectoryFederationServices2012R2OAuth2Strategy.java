@@ -131,7 +131,7 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
     }
 
     @Override
-    public String getAuthorizationHeader(AbstractAuthenticationScheme scheme, TokenResponse tokenResponse) {
+    public String getAuthorizationHeader(AbstractAuthenticationScheme scheme, String accessToken) {
         return null;
     }
 }

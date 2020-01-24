@@ -59,7 +59,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyPar
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
@@ -692,10 +691,10 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     public String getAuthorizationHeader(@NonNull final AbstractAuthenticationScheme scheme,
-                                         @NonNull final TokenResponse tokenResponse) {
+                                         @NonNull final String accessToken) {
         if (scheme instanceof ITokenAuthenticationSchemeInternal) {
             final ITokenAuthenticationSchemeInternal authScheme = (ITokenAuthenticationSchemeInternal) scheme;
-            authScheme.setAccessToken(tokenResponse.getAccessToken());
+            authScheme.setAccessToken(accessToken);
 
             try {
                 return authScheme.getAuthorizationRequestHeader();

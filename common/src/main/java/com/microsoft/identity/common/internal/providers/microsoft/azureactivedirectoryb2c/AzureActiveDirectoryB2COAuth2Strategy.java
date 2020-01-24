@@ -131,7 +131,7 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    public String getAuthorizationHeader(AbstractAuthenticationScheme scheme, TokenResponse tokenResponse) {
+    public String getAuthorizationHeader(AbstractAuthenticationScheme scheme, String accessToken) {
         return null;
     }
 }

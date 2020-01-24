@@ -239,7 +239,7 @@ public abstract class BaseController {
                     SdkType.MSAL,
                     strategy.getAuthorizationHeader(
                             parameters.getAuthenticationScheme(),
-                            tokenResult.getTokenResponse()
+                            tokenResult.getTokenResponse().getAccessToken()
                     )
             );
 

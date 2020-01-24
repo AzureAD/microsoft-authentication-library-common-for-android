@@ -302,5 +302,5 @@ public abstract class OAuth2Strategy
         return true;
     }
 
-    public abstract String getAuthorizationHeader(AbstractAuthenticationScheme scheme, TokenResponse tokenResponse);
+    public abstract String getAuthorizationHeader(AbstractAuthenticationScheme scheme, String accessToken);
 }
