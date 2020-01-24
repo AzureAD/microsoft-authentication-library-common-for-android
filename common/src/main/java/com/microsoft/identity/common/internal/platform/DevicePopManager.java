@@ -79,6 +79,7 @@ import java.util.concurrent.Executors;
 
 import javax.security.auth.x500.X500Principal;
 
+import static com.microsoft.identity.common.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
 import static com.microsoft.identity.common.exception.ClientException.BAD_KEY_SIZE;
 import static com.microsoft.identity.common.exception.ClientException.INTERRUPTED_OPERATION;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG;
@@ -87,7 +88,6 @@ import static com.microsoft.identity.common.exception.ClientException.JSON_CONST
 import static com.microsoft.identity.common.exception.ClientException.JWT_SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.internal.net.ObjectMapper.ENCODING_SCHEME;
 
@@ -538,8 +538,8 @@ class DevicePopManager implements IDevicePopManager {
 
             // Due to a bug in some versions of Android, keySizes may not be exactly as specified
             // To generate a 2048-bit key, two primes of length 1024 are multiplied -- this product
-            // may be 2047 in length in some cases which causes Nimbus to crash. To avoid this,
-            // check the keysize prior to returning the generated KeyPair.
+            // may be 2047 in length in some cases which causes Nimbus to throw an IllegalArgumentException.
+            // To avoid this, check the keysize prior to returning the generated KeyPair.
 
             // Since this seems to be nondeterministic in nature, attempt this a maximum of 4 times.
             final int length = RSAKeyUtils.keyBitLength(kp.getPrivate());
