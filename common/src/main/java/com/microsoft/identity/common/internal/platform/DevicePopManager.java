@@ -87,7 +87,7 @@ import static com.microsoft.identity.common.exception.ClientException.JSON_CONST
 import static com.microsoft.identity.common.exception.ClientException.JWT_SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PROVIDER;
+import static com.microsoft.identity.common.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.internal.net.ObjectMapper.ENCODING_SCHEME;
 
@@ -298,7 +298,7 @@ class DevicePopManager implements IDevicePopManager {
             errCode = NO_SUCH_ALGORITHM;
         } catch (final NoSuchProviderException e) {
             exception = e;
-            errCode = NO_SUCH_PROVIDER;
+            errCode = ANDROID_KEYSTORE_UNAVAILABLE;
         } catch (final InvalidAlgorithmParameterException e) {
             exception = e;
             errCode = INVALID_ALG;

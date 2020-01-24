@@ -157,7 +157,7 @@ public class ClientException extends BaseException {
     /**
      * Emitted when the requested crypto provider is unavailable in the device environment.
      */
-    public static final String NO_SUCH_PROVIDER = "androidkeystore_unavailable";
+    public static final String ANDROID_KEYSTORE_UNAVAILABLE = "android_keystore_unavailable";
 
     /**
      * Emitted when the KeyStore fails to initialize due to unsupported arguments.
