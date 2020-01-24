@@ -25,6 +25,8 @@ package com.microsoft.identity.common.exception;
 
 public class IntuneAppProtectionPolicyRequiredException extends ServiceException {
 
+    public static final String sName = IntuneAppProtectionPolicyRequiredException.class.getName();
+
     private String mAccountUpn;
     private String mAccountUserId;
     private String mTenantId;
@@ -72,5 +74,10 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
 
     public void setAuthorityUrl(String authorityUrl) {
         mAuthorityUrl = authorityUrl;
+    }
+
+    @Override
+    public String getExceptionName(){
+        return sName;
     }
 }

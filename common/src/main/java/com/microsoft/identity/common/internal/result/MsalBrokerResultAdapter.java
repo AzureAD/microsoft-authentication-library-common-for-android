@@ -110,6 +110,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .success(false)
                 .errorCode(exception.getErrorCode())
                 .errorMessage(exception.getMessage())
+                .exceptionType(exception.getExceptionName())
                 .correlationId(exception.getCorrelationId())
                 .cliTelemErrorCode(exception.getCliTelemErrorCode())
                 .cliTelemSubErrorCode(exception.getCliTelemSubErrorCode())
@@ -181,12 +182,96 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             return new BaseException(ErrorStrings.UNKNOWN_ERROR, "Broker Result not returned from Broker");
         }
 
-        BaseException baseException;
+        final String exceptionType = brokerResult.getExceptionType();
 
+        if(!TextUtils.isEmpty(exceptionType)){
+            return getBaseExceptionFromExceptionType(exceptionType, brokerResult);
+        }else {
+            // This code is here for legacy purposes where old versions of broker (3.1.8 or below)
+            // wouldn't return exception type in the result.
+            Logger.info(TAG, "Exception type is not returned from the broker, " +
+                    "using error codes to transform to the right exception");
+            return getBaseExceptionFromErrorCodes(brokerResult);
+        }
+
+    }
+
+    private BaseException getBaseExceptionFromExceptionType(@NonNull final String exceptionType,
+                                                            @NonNull final BrokerResult brokerResult) {
+        BaseException baseException = null;
+
+        Logger.warn(TAG, "Received a " + exceptionType + " from Broker : "
+                + brokerResult.getErrorCode()
+        );
+
+        if (exceptionType.equalsIgnoreCase(UiRequiredException.sName)) {
+            baseException = new UiRequiredException(
+                    brokerResult.getErrorCode(),
+                    brokerResult.getErrorMessage()
+            );
+        } else if (exceptionType.equalsIgnoreCase(ServiceException.sName)) {
+
+            baseException = getServiceException(brokerResult);
+
+        } else if (exceptionType.equalsIgnoreCase(IntuneAppProtectionPolicyRequiredException.sName)) {
+
+            baseException = getIntuneProtectionRequiredException(brokerResult);
+
+        } else if (exceptionType.equalsIgnoreCase(UserCancelException.sName)) {
+
+            baseException = new UserCancelException();
+
+        } else if (exceptionType.equalsIgnoreCase(ClientException.sName)) {
+
+            baseException = new ClientException(
+                    brokerResult.getErrorCode(),
+                    brokerResult.getErrorMessage()
+            );
+
+        } else if (exceptionType.equalsIgnoreCase(ArgumentException.sName)) {
+
+            baseException = new ArgumentException(
+                    ArgumentException.BROKER_TOKEN_REQUEST_OPERATION_NAME,
+                    brokerResult.getErrorCode(),
+                    brokerResult.getErrorMessage()
+            );
+
+        } else {
+            // Default to ClientException if null
+            Logger.warn(TAG, " Exception type is unknown : " + exceptionType
+                    + brokerResult.getErrorCode() + ", defaulting to Client Exception "
+            );
+            baseException = new ClientException(
+                    brokerResult.getErrorCode(),
+                    brokerResult.getErrorMessage()
+            );
+        }
+
+        baseException.setCliTelemErrorCode(brokerResult.getCliTelemErrorCode());
+        baseException.setCliTelemSubErrorCode(brokerResult.getCliTelemSubErrorCode());
+        baseException.setCorrelationId(brokerResult.getCorrelationId());
+        baseException.setSpeRing(brokerResult.getSpeRing());
+        baseException.setRefreshTokenAge(brokerResult.getRefreshTokenAge());
+
+        return baseException;
+    }
+
+
+    /**
+     * Method to get the right base exception based on error codes.
+     * Note : In newer versions of Broker, exception type will be sent and is used to determine the right exception.
+     *
+     * This method is to support legacy broker versions (3.1.8 or below)
+     * @return BaseException
+     */
+    private BaseException getBaseExceptionFromErrorCodes(@NonNull final BrokerResult brokerResult){
         final String errorCode = brokerResult.getErrorCode();
+        final BaseException baseException;
 
         if (AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
-                AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode)) {
+                AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode) ||
+                ErrorStrings.INVALID_BROKER_REFRESH_TOKEN.equalsIgnoreCase(errorCode) ||
+                ErrorStrings.NO_TOKENS_FOUND.equalsIgnoreCase(errorCode)) {
 
             Logger.warn(TAG, "Received a UIRequired exception from Broker : " + errorCode);
             baseException = new UiRequiredException(
@@ -213,7 +298,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
             Logger.warn(TAG, "Received a Argument exception from Broker : " + errorCode);
             baseException = new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+                    ArgumentException.BROKER_TOKEN_REQUEST_OPERATION_NAME,
                     errorCode,
                     brokerResult.getErrorMessage()
             );
