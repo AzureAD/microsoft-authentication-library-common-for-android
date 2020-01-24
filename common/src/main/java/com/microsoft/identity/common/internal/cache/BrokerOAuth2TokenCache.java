@@ -458,7 +458,7 @@ public class BrokerOAuth2TokenCache
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
                              @NonNull final AccountRecord account,
-                             @NonNull final AbstractAuthenticationScheme authScheme) { // TODO implement!
+                             @NonNull final AbstractAuthenticationScheme authScheme) {
         final String methodName = ":load";
 
         Logger.verbose(
