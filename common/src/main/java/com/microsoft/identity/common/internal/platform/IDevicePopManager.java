@@ -91,16 +91,16 @@ public interface IDevicePopManager {
     void getRequestConfirmation(TaskCompletedCallbackWithError<String, ClientException> callback);
 
     /**
-     * Api to create the Authorization header value.
+     * Api to create the signed PoP access token.
      *
      * @param httpMethod  The HTTP method that will be used with this outbound request.
      * @param requestUrl  The recipient URL of the outbound request.
      * @param accessToken The access_token from which to derive the signed JWT.
-     * @return The fully-formed authorization header value, minus any scheme prefix.
+     * @return The signed PoP access token.
      */
-    String getAuthorizationHeaderValue(String httpMethod,
-                                       URL requestUrl,
-                                       String accessToken,
-                                       String nonce
+    String mintSignedAccessToken(String httpMethod,
+                                 URL requestUrl,
+                                 String accessToken,
+                                 String nonce
     ) throws ClientException;
 }

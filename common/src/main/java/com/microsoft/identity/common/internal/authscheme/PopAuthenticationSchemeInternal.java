@@ -83,7 +83,7 @@ public class PopAuthenticationSchemeInternal
                 + " "
                 + Device
                 .getDevicePoPManagerInstance()
-                .getAuthorizationHeaderValue(
+                .mintSignedAccessToken(
                         getHttpMethod(),
                         getUrl(),
                         getAccessToken(),

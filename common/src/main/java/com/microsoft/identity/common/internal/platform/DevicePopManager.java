@@ -442,10 +442,10 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public String getAuthorizationHeaderValue(@NonNull final String httpMethod,
-                                              @NonNull final URL requestUrl,
-                                              @NonNull final String accessToken,
-                                              @Nullable final String nonce) throws ClientException {
+    public String mintSignedAccessToken(@NonNull final String httpMethod,
+                                        @NonNull final URL requestUrl,
+                                        @NonNull final String accessToken,
+                                        @Nullable final String nonce) throws ClientException {
         final Exception exception;
         final String errCode;
 
