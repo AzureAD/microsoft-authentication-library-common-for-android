@@ -80,8 +80,8 @@ abstract class ConfidentialClientHelper {
         final AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(aadAudience);
 
         try {
-            final OAuth2StrategyParameters strategyOptions = new OAuth2StrategyParameters();
-            OAuth2Strategy strategy = authority.createOAuth2Strategy(strategyOptions);
+            final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+            OAuth2Strategy strategy = authority.createOAuth2Strategy(strategyParameters);
             TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
             if (tokenResult.getSuccess()) {
