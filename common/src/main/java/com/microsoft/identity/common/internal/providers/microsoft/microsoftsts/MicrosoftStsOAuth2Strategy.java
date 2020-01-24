@@ -372,9 +372,8 @@ public class MicrosoftStsOAuth2Strategy
                 );
             }
 
-            // Set the req_cnf
             final String reqCnf = devicePopManager.getRequestConfirmation();
-
+            // Set the req_cnf
             tokenRequest.setRequestConfirmation(reqCnf);
         }
 
