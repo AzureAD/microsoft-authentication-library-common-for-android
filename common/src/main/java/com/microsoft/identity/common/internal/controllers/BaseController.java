@@ -36,6 +36,8 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -234,13 +236,9 @@ public abstract class BaseController {
 
             // Create a new AuthenticationResult to hold the saved record
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
-                    savedRecord,
+                    finalizeCacheRecordForResult(savedRecord, parameters.getAuthenticationScheme()),
                     savedRecords,
-                    SdkType.MSAL,
-                    strategy.getAuthorizationHeader(
-                            parameters.getAuthenticationScheme(),
-                            tokenResult.getTokenResponse().getAccessToken()
-                    )
+                    SdkType.MSAL
             );
 
             // Set the client telemetry...
@@ -527,4 +525,31 @@ public abstract class BaseController {
         return AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(tenantId);
     }
 
+    public ICacheRecord finalizeCacheRecordForResult(@NonNull final ICacheRecord cacheRecord,
+                                                     @NonNull final AbstractAuthenticationScheme scheme) {
+        // TODO check if AT is PoP, if it is, set the secret to be the signed value...
+        // TODO Where should this method even GO?
+        // The strategy delegates to the scheme to sign....
+        // The scheme prepends the scheme name with a space....
+        // This function needs to update the contents of the access token if its a pop token...
+        // This method may work better on the strategy...
+
+        if (scheme instanceof ITokenAuthenticationSchemeInternal) {
+            final ITokenAuthenticationSchemeInternal tokenAuthScheme = (ITokenAuthenticationSchemeInternal) scheme;
+            tokenAuthScheme.setAccessToken(cacheRecord.getAccessToken().getSecret());
+            // TODO refactor this out!
+            try {
+                cacheRecord
+                        .getAccessToken()
+                        .setSecret(
+                                tokenAuthScheme
+                                        .getAuthorizationRequestHeader()
+                                        .split(" ")[1]
+                        );
+            } catch (ClientException e) {
+                e.printStackTrace();
+            }
+        }
+        return cacheRecord;
+    }
 }

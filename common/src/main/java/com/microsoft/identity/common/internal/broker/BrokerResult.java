@@ -37,7 +37,6 @@ import java.util.List;
 public class BrokerResult implements Serializable {
 
     private class SerializedNames {
-        static final String AUTHORIZATION_HEADER_VALUE = "authorization_header_value";
         static final String TENANT_PROFILE_CACHE_RECORDS = "tenant_profile_cache_records";
         static final String ACCESS_TOKEN = "access_token";
         static final String ID_TOKEN = "id_token";
@@ -305,10 +304,6 @@ public class BrokerResult implements Serializable {
     private final List<ICacheRecord> mTenantProfileData;
 
     @Nullable
-    @SerializedName(SerializedNames.AUTHORIZATION_HEADER_VALUE)
-    private final String mAuthorizationHeaderValue;
-
-    @Nullable
     @SerializedName(SerializedNames.BROKER_EXCEPTION_TYPE)
     private final String mExceptionType;
 
@@ -334,7 +329,6 @@ public class BrokerResult implements Serializable {
         mRefreshTokenAge = builder.mRefreshTokenAge;
         mSuccess = builder.mSuccess;
         mTenantProfileData = builder.mTenantProfileData;
-        mAuthorizationHeaderValue = builder.mAuthorizationHeaderValue;
 
         mErrorCode = builder.mErrorCode;
         mErrorMessage = builder.mErrorMessage;
@@ -472,10 +466,6 @@ public class BrokerResult implements Serializable {
         return mAccessToken;
     }
 
-    public String getAuthorizationHeaderValue() {
-        return mAuthorizationHeaderValue;
-    }
-
     public static class Builder {
         private String mAccessToken;
         private String mIdToken;
@@ -499,7 +489,6 @@ public class BrokerResult implements Serializable {
         private boolean mSuccess;
         private String mNegotiatedBrokerProtocolVersion;
         private List<ICacheRecord> mTenantProfileData;
-        private String mAuthorizationHeaderValue;
 
         // Exception parameters
         private String mErrorCode;
@@ -669,11 +658,6 @@ public class BrokerResult implements Serializable {
 
         public Builder tenantProfileRecords(final List<ICacheRecord> cacheRecordWithTenantProfileData) {
             this.mTenantProfileData = cacheRecordWithTenantProfileData;
-            return this;
-        }
-
-        public Builder authorizationHeaderValue(final String authorizationHeaderValue) {
-            this.mAuthorizationHeaderValue = authorizationHeaderValue;
             return this;
         }
 

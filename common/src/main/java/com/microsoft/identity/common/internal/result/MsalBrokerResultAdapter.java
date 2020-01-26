@@ -68,7 +68,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final AccessTokenRecord accessTokenRecord = authenticationResult.getAccessTokenRecord();
 
         final BrokerResult brokerResult = new BrokerResult.Builder()
-                .authorizationHeaderValue(authenticationResult.getAuthorizationHeaderValue())
                 .tenantProfileRecords(authenticationResult.getCacheRecordWithTenantProfileData())
                 .accessToken(authenticationResult.getAccessToken())
                 .idToken(authenticationResult.getIdToken())
@@ -160,10 +159,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         final List<ICacheRecord> tenantProfileCacheRecords = brokerResult.getTenantProfileData();
         final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
-                tenantProfileCacheRecords.get(0),
+                tenantProfileCacheRecords.get(0), // TODO We don't resign this, right?
                 tenantProfileCacheRecords,
-                SdkType.MSAL,
-                brokerResult.getAuthorizationHeaderValue()
+                SdkType.MSAL
         );
 
         return authenticationResult;
@@ -184,9 +182,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         final String exceptionType = brokerResult.getExceptionType();
 
-        if(!TextUtils.isEmpty(exceptionType)){
+        if (!TextUtils.isEmpty(exceptionType)) {
             return getBaseExceptionFromExceptionType(exceptionType, brokerResult);
-        }else {
+        } else {
             // This code is here for legacy purposes where old versions of broker (3.1.8 or below)
             // wouldn't return exception type in the result.
             Logger.info(TAG, "Exception type is not returned from the broker, " +
@@ -260,11 +258,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     /**
      * Method to get the right base exception based on error codes.
      * Note : In newer versions of Broker, exception type will be sent and is used to determine the right exception.
-     *
+     * <p>
      * This method is to support legacy broker versions (3.1.8 or below)
+     *
      * @return BaseException
      */
-    private BaseException getBaseExceptionFromErrorCodes(@NonNull final BrokerResult brokerResult){
+    private BaseException getBaseExceptionFromErrorCodes(@NonNull final BrokerResult brokerResult) {
         final String errorCode = brokerResult.getErrorCode();
         final BaseException baseException;
 

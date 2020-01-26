@@ -125,12 +125,4 @@ public interface ILocalAuthenticationResult {
     String getFamilyId();
 
     List<ICacheRecord> getCacheRecordWithTenantProfileData();
-
-    /**
-     * Gets the value to be sent in the client app's Authorization header.
-     *
-     * @return The Authorization header value.
-     */
-    @NonNull
-    String getAuthorizationHeaderValue();
 }

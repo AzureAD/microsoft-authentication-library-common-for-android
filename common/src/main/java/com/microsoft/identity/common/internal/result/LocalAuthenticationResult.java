@@ -53,17 +53,14 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private String mSpeRing;
     private String mRefreshTokenAge;
     private List<ICacheRecord> mCompleteResultFromCache;
-    private String mAuthorizationHeaderValue;
 
     private static final String TAG = LocalAuthenticationResult.class.getName();
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
                                      @NonNull final List<ICacheRecord> completeResultFromCache,
-                                     @NonNull final SdkType sdkType,
-                                     @Nullable final String authorizationHeaderValue) {
+                                     @NonNull final SdkType sdkType) {
         this(lastAuthorized, sdkType);
         mCompleteResultFromCache = completeResultFromCache;
-        mAuthorizationHeaderValue = authorizationHeaderValue;
     }
 
     private LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord, @NonNull SdkType sdkType) {
@@ -88,11 +85,13 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
             mRawIdToken = cacheRecord.getV1IdToken().getSecret();
         }
 
-        Logger.info(TAG, "Constructing LocalAuthentication result" +
-                ", AccessTokenRecord null: " + (mAccessTokenRecord == null) +
-                ", AccountRecord null: " + (mAccountRecord == null) +
-                ", RefreshTokenRecord null or empty: " + TextUtils.isEmpty(mRefreshToken) +
-                ", IdTokenRecord null: " + (idTokenRecord == null)
+        Logger.info(
+                TAG,
+                "Constructing LocalAuthentication result"
+                        + ", AccessTokenRecord null: " + (mAccessTokenRecord == null)
+                        + ", AccountRecord null: " + (mAccountRecord == null)
+                        + ", RefreshTokenRecord null or empty: " + TextUtils.isEmpty(mRefreshToken)
+                        + ", IdTokenRecord null: " + (idTokenRecord == null)
         );
 
     }
@@ -185,12 +184,6 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     @Override
     public List<ICacheRecord> getCacheRecordWithTenantProfileData() {
         return mCompleteResultFromCache;
-    }
-
-    @Nullable
-    @Override
-    public String getAuthorizationHeaderValue() {
-        return mAuthorizationHeaderValue;
     }
 
     /**
