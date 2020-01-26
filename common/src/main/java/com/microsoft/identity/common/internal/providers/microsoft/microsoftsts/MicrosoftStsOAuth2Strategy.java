@@ -689,25 +689,6 @@ public class MicrosoftStsOAuth2Strategy
         return true;
     }
 
-    @Override
-    public String getAuthorizationHeader(@NonNull final AbstractAuthenticationScheme scheme,
-                                         @NonNull final String accessToken) {
-        if (scheme instanceof ITokenAuthenticationSchemeInternal) {
-            final ITokenAuthenticationSchemeInternal authScheme = (ITokenAuthenticationSchemeInternal) scheme;
-            authScheme.setAccessToken(accessToken);
-
-            try {
-                return authScheme.getAuthorizationRequestHeader();
-            } catch (final ClientException e) {
-                e.printStackTrace();
-                // TODO can this be handled better?
-                throw new RuntimeException(e);
-            }
-        }
-
-        return null;
-    }
-
     private boolean cachedAccessTokenKidMatchesKeystoreKid(@Nullable final String atKid) {
         final String deviceKid = getDeviceAtPopThumbprint();
 

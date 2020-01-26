@@ -78,10 +78,8 @@ public class PopAuthenticationSchemeInternal
     }
 
     @Override
-    public String getAuthorizationRequestHeader() throws ClientException {
-        return getName()
-                + " "
-                + Device
+    public String getAccessTokenForAuthorizationHeader() throws ClientException {
+        return Device
                 .getDevicePoPManagerInstance()
                 .mintSignedAccessToken(
                         getHttpMethod(),
@@ -89,6 +87,13 @@ public class PopAuthenticationSchemeInternal
                         getAccessToken(),
                         getNonce()
                 );
+    }
+
+    @Override
+    public String getAuthorizationRequestHeader() throws ClientException {
+        return getName()
+                + SCHEME_DELIMITER
+                + getAccessTokenForAuthorizationHeader();
     }
 
     @Override

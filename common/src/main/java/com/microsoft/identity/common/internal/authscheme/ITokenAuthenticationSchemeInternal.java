@@ -44,6 +44,17 @@ public interface ITokenAuthenticationSchemeInternal {
     String getAccessToken();
 
     /**
+     * Returns the access token as it appears in the Authorization header. Includes any signing
+     * or post-processing which may associated with the auth scheme.
+     * <p>
+     * For PoP requests, this method yields the signed JWT w/ req_cnf claim. For Bearer, the raw token
+     * is returne.
+     *
+     * @return The access token as it appears in the finalized Authorization header.
+     */
+    String getAccessTokenForAuthorizationHeader() throws ClientException;
+
+    /**
      * Gets the value used in the Authorization header.
      *
      * @return The Authorization header value.

@@ -39,6 +39,11 @@ public class BearerAuthenticationSchemeInternal
     }
 
     @Override
+    public String getAccessTokenForAuthorizationHeader() {
+        return getAccessToken();
+    }
+
+    @Override
     public String getAuthorizationRequestHeader() {
         return getName() + " " + getAccessToken();
     }

@@ -260,10 +260,4 @@ public class AzureActiveDirectoryOAuth2Strategy
         // TODO
     }
 
-    @Override
-    public String getAuthorizationHeader(AbstractAuthenticationScheme scheme,
-                                         String accessToken) {
-        return scheme.getName() + " " + accessToken;
-    }
-
 }

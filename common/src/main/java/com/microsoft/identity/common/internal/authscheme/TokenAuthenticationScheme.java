@@ -31,6 +31,8 @@ public abstract class TokenAuthenticationScheme
         extends AbstractAuthenticationScheme
         implements ITokenAuthenticationSchemeInternal {
 
+    public static final String SCHEME_DELIMITER = " ";
+
     /**
      * The access token to use in the request.
      */

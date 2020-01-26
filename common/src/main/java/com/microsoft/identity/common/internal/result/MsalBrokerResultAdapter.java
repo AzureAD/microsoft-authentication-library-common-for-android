@@ -159,7 +159,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         final List<ICacheRecord> tenantProfileCacheRecords = brokerResult.getTenantProfileData();
         final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
-                tenantProfileCacheRecords.get(0), // TODO We don't resign this, right?
+                tenantProfileCacheRecords.get(0),
                 tenantProfileCacheRecords,
                 SdkType.MSAL
         );

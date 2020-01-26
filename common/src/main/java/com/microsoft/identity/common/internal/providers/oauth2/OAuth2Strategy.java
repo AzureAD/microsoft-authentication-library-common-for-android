@@ -301,6 +301,4 @@ public abstract class OAuth2Strategy
         // TODO Broker looks to need a bit extra refactoring as its less integrated with the strategy model
         return true;
     }
-
-    public abstract String getAuthorizationHeader(AbstractAuthenticationScheme scheme, String accessToken);
 }
