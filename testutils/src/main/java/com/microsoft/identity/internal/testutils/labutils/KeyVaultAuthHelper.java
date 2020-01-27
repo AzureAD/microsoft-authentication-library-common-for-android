@@ -54,7 +54,7 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
         }
     }
 
-    public TokenRequest createTokenRequestWithClientSecret() {
+    private TokenRequest createTokenRequestWithClientSecret() {
         TokenRequest tr = new MicrosoftStsTokenRequest();
 
         tr.setClientSecret(com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET);
@@ -63,7 +63,7 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
         return tr;
     }
 
-    public TokenRequest createTokenRequestWithClientAssertion() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
+    private TokenRequest createTokenRequestWithClientAssertion() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
         CertificateCredential certificateCredential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
                 .clientCertificateMetadata(new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
                 .keyStoreConfiguration(new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null))
