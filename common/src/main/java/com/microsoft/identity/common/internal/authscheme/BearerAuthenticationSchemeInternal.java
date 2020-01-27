@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
+import androidx.annotation.NonNull;
+
 /**
  * Internal representation of a Bearer Auth Scheme.
  */
@@ -39,12 +41,7 @@ public class BearerAuthenticationSchemeInternal
     }
 
     @Override
-    public String getAccessTokenForAuthorizationHeader() {
-        return getAccessToken();
-    }
-
-    @Override
-    public String getAuthorizationRequestHeader() {
-        return getName() + " " + getAccessToken();
+    public String getAccessTokenForScheme(@NonNull final String accessToken) {
+        return accessToken;
     }
 }

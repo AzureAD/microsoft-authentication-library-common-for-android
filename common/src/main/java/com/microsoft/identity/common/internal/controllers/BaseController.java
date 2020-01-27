@@ -529,10 +529,14 @@ public abstract class BaseController {
                                                      @NonNull final AbstractAuthenticationScheme scheme) throws ClientException {
         if (scheme instanceof ITokenAuthenticationSchemeInternal) {
             final ITokenAuthenticationSchemeInternal tokenAuthScheme = (ITokenAuthenticationSchemeInternal) scheme;
-            tokenAuthScheme.setAccessToken(cacheRecord.getAccessToken().getSecret());
             cacheRecord
                     .getAccessToken()
-                    .setSecret(tokenAuthScheme.getAccessTokenForAuthorizationHeader());
+                    .setSecret(
+                            tokenAuthScheme
+                                    .getAccessTokenForScheme(
+                                            cacheRecord.getAccessToken().getSecret()
+                                    )
+                    );
         }
 
         return cacheRecord;

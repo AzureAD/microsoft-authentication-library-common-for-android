@@ -33,22 +33,7 @@ public abstract class TokenAuthenticationScheme
 
     public static final String SCHEME_DELIMITER = " ";
 
-    /**
-     * The access token to use in the request.
-     */
-    private String mAccessToken;
-
     TokenAuthenticationScheme(@NonNull final String name) {
         super(name);
-    }
-
-    @Override
-    public final void setAccessToken(@NonNull final String accessToken) {
-        mAccessToken = accessToken;
-    }
-
-    @Override
-    public final String getAccessToken() {
-        return mAccessToken;
     }
 }

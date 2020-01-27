@@ -30,20 +30,6 @@ import com.microsoft.identity.common.exception.ClientException;
 public interface ITokenAuthenticationSchemeInternal {
 
     /**
-     * Sets the access token.
-     *
-     * @param accessToken The access token to set.
-     */
-    void setAccessToken(String accessToken);
-
-    /**
-     * Gets the access token.
-     *
-     * @return The access token to get.
-     */
-    String getAccessToken();
-
-    /**
      * Returns the access token as it appears in the Authorization header. Includes any signing
      * or post-processing which may associated with the auth scheme.
      * <p>
@@ -52,13 +38,5 @@ public interface ITokenAuthenticationSchemeInternal {
      *
      * @return The access token as it appears in the finalized Authorization header.
      */
-    String getAccessTokenForAuthorizationHeader() throws ClientException;
-
-    /**
-     * Gets the value used in the Authorization header.
-     *
-     * @return The Authorization header value.
-     * @see <a href="https://tools.ietf.org/html/rfc7235#section-4.2">RFC-7235/§4.2</a>
-     */
-    String getAuthorizationRequestHeader() throws ClientException;
+    String getAccessTokenForScheme(String accessToken) throws ClientException;
 }
