@@ -25,18 +25,11 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    def labClientSecret = "" // will be blank unless specified by developer
-
-    if (project.hasProperty("labSecret")) {
-        labClientSecret = labSecret
-    }
-
     buildTypes {
         debug {
             buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"N1jdcbbnKDr0LaFZlqdhXgm2luE=\"")
             buildConfigField("String", "COMPANY_PORTAL_APP_SIGNATURE", "\"1wIqXSqBj7w+h11ZifsnqwgyKrY=\"")
             buildConfigField("String", "COMPANY_PORTAL_APP_PACKAGE_NAME", "\"com.microsoft.identity.testuserapp\"")
-            buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
         }
         release {
             buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"ho040S3ffZkmxqtQrSwpTVOn9r0=\"")
