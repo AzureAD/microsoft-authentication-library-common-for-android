@@ -2,7 +2,6 @@ package com.microsoft.identity.internal.testutils.labutils;
 
 import android.text.TextUtils;
 
-import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
 import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfiguration;
