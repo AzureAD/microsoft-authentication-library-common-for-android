@@ -1,5 +1,8 @@
 package com.microsoft.identity.internal.testutils.labutils;
 
+import android.text.TextUtils;
+
+import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
 import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfiguration;
@@ -43,6 +46,24 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
 
     @Override
     public TokenRequest createTokenRequest() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
+        final String labClientSecret = BuildConfig.LAB_CLIENT_SECRET;
+        if (TextUtils.isEmpty(labClientSecret)) {
+            return createTokenRequestWithClientAssertion();
+        } else {
+            return createTokenRequestWithClientSecret();
+        }
+    }
+
+    public TokenRequest createTokenRequestWithClientSecret() {
+        TokenRequest tr = new MicrosoftStsTokenRequest();
+
+        tr.setClientSecret(BuildConfig.LAB_CLIENT_SECRET);
+        tr.setClientId(CLIENT_ID);
+        tr.setScope(SCOPE);
+        return tr;
+    }
+
+    public TokenRequest createTokenRequestWithClientAssertion() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
         CertificateCredential certificateCredential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
                 .clientCertificateMetadata(new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
                 .keyStoreConfiguration(new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null))
