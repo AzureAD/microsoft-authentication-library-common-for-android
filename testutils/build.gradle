@@ -4,6 +4,11 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
 
+    def labClientSecret = "" // will be blank unless specified by developer
+
+    if (project.hasProperty("labSecret")) {
+        labClientSecret = labSecret
+    }
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
@@ -11,12 +16,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    def labClientSecret = "" // will be blank unless specified by developer
-
-    if (project.hasProperty("labSecret")) {
-        labClientSecret = labSecret
+        buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
     }
 
     lintOptions {
@@ -27,7 +27,6 @@ android {
         debug {
             testCoverageEnabled false
             debuggable true
-            buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
         }
         release {
             testCoverageEnabled false
