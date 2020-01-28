@@ -73,6 +73,7 @@ import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -81,6 +82,14 @@ import java.util.regex.Pattern;
 public abstract class BaseController {
 
     private static final String TAG = BaseController.class.getSimpleName();
+
+    public static final Set<String> DEFAULT_SCOPES = new HashSet<>();
+
+    static {
+        DEFAULT_SCOPES.add(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE);
+        DEFAULT_SCOPES.add(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE);
+        DEFAULT_SCOPES.add(AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE);
+    }
 
     public abstract AcquireTokenResult acquireToken(final AcquireTokenOperationParameters request)
             throws Exception;
@@ -421,9 +430,7 @@ public abstract class BaseController {
 
     protected void addDefaultScopes(@NonNull final OperationParameters operationParameters) {
         final Set<String> requestScopes = operationParameters.getScopes();
-        requestScopes.add(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE);
-        requestScopes.add(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE);
-        requestScopes.add(AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE);
+        requestScopes.addAll(DEFAULT_SCOPES);
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
         operationParameters.setScopes(requestScopes);

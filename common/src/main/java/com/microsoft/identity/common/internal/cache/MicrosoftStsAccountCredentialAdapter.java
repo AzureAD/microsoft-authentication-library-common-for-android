@@ -135,7 +135,7 @@ public class MicrosoftStsAccountCredentialAdapter
 
             // Optional
             refreshToken.setFamilyId(response.getFamilyId());
-            refreshToken.setTarget(request.getScope());
+            refreshToken.setTarget(response.getScope());
 
             // TODO are these needed? Expected?
             refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
