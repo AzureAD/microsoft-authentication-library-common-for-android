@@ -28,8 +28,9 @@ import android.os.Build;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
-import androidx.annotation.NonNull;
 import android.webkit.ClientCertRequest;
+
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 

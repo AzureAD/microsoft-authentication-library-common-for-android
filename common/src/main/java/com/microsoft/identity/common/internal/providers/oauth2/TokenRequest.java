@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -69,6 +71,39 @@ public class TokenRequest {
 
     @SerializedName("refresh_token")
     private String mRefreshToken;
+
+    @Expose()
+    @SerializedName("token_type")
+    private String mTokenType;
+
+    @SerializedName("req_cnf")
+    private String mRequestConfirmation;
+
+    public String getRequestConfirmation() {
+        return mRequestConfirmation;
+    }
+
+    public void setRequestConfirmation(@Nullable final String requestConfirmation) {
+        mRequestConfirmation = requestConfirmation;
+    }
+
+    /**
+     * Gets the token_type.
+     *
+     * @return The token_type to get.
+     */
+    public String getTokenType() {
+        return mTokenType;
+    }
+
+    /**
+     * Sets the token_type.
+     *
+     * @param tokenType The token_type to set.
+     */
+    public void setTokenType(@Nullable final String tokenType) {
+        mTokenType = tokenType;
+    }
 
     /**
      * @return mCode of the token request.
@@ -201,9 +236,13 @@ public class TokenRequest {
     }
 
     public static class GrantTypes {
-        public final static String AUTHORIZATION_CODE = "authorization_code";
-        public final static String REFRESH_TOKEN = "refresh_token";
-        public final static String PASSWORD = "password";
+        public static final String AUTHORIZATION_CODE = "authorization_code";
+        public static final String REFRESH_TOKEN = "refresh_token";
+        public static final String PASSWORD = "password";
+    }
+
+    public static class TokenType {
+        public static final String POP = "pop";
     }
 
 }

@@ -120,7 +120,6 @@ public interface ILocalAuthenticationResult {
 
     /**
      * Information to uniquely identify the family that the client application belongs to.
-     *
      */
     @Nullable
     String getFamilyId();

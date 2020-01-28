@@ -139,9 +139,11 @@ public final class HttpRequest {
         final HttpResponse response = httpRequest.send();
 
         final HttpEndEvent httpEndEvent = new HttpEndEvent();
+
         if (response != null) {
             httpEndEvent.putStatusCode(response.getStatusCode());
         }
+
         Telemetry.emit(httpEndEvent);
 
         return response;

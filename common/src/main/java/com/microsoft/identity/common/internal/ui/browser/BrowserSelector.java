@@ -29,6 +29,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;

@@ -23,6 +23,7 @@
 package com.microsoft.identity.internal.testutils.strategies;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
@@ -45,7 +46,7 @@ public class MockDelayedResponseStrategy extends ResourceOwnerPasswordCredential
      *
      * @param config Microsoft Sts OAuth2 configuration
      */
-    public MockDelayedResponseStrategy(MicrosoftStsOAuth2Configuration config) {
+    public MockDelayedResponseStrategy(MicrosoftStsOAuth2Configuration config) throws ClientException {
         super(config);
     }
 

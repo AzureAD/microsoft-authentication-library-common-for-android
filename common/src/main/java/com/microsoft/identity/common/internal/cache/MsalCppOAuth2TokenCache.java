@@ -24,6 +24,9 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -39,8 +42,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.List;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 
 /**
  * Sub class of {@link MsalCppOAuth2TokenCache} to add specific public api's required for MSAL CPP library.
@@ -163,7 +165,8 @@ public class MsalCppOAuth2TokenCache
                 CredentialType.RefreshToken,
                 null,
                 realm,
-                null
+                null,
+                SCHEME_BEARER
         );
 
         if (credentials != null && !credentials.isEmpty()) {

@@ -38,6 +38,7 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.AUTH_SCHEME;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.CLIENT_ID;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.CREDENTIAL_TYPE;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.ENVIRONMENT;
@@ -86,6 +88,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         static final String CREDENTIAL_TYPE = "<credential_type>";
         static final String CLIENT_ID = "<client_id>";
         static final String TARGET = "<target>";
+        static final String AUTH_SCHEME = "<auth_scheme>";
     }
 
     private static String sanitizeNull(final String input) {
@@ -165,6 +168,12 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, sanitizeNull(accessToken.getRealm()));
             cacheKey = cacheKey.replace(TARGET, sanitizeNull(accessToken.getTarget()));
+
+            if (TokenRequest.TokenType.POP.equalsIgnoreCase(accessToken.getAccessTokenType())) {
+                cacheKey += CACHE_VALUE_SEPARATOR + AUTH_SCHEME;
+                cacheKey = cacheKey.replace(AUTH_SCHEME, sanitizeNull(accessToken.getAccessTokenType()));
+            }
+
         } else if (credential instanceof RefreshTokenRecord) {
             final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, "");

@@ -40,9 +40,10 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.concurrent.TimeUnit;
+
+import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 
 public class MicrosoftStsAccountCredentialAdapter
         implements IAccountCredentialAdapter
@@ -75,7 +76,7 @@ public class MicrosoftStsAccountCredentialAdapter
 
             final AccessTokenRecord accessToken = new AccessTokenRecord();
             // Required fields
-            accessToken.setCredentialType(CredentialType.AccessToken.name());
+            accessToken.setCredentialType(getCredentialType(response.getTokenType()));
             accessToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             accessToken.setRealm(getRealm(strategy, response));
 
@@ -96,15 +97,30 @@ public class MicrosoftStsAccountCredentialAdapter
 
             // Optional fields
             accessToken.setExtendedExpiresOn(getExtendedExpiresOn(response));
-
             accessToken.setAuthority(strategy.getAuthorityFromTokenEndpoint());
             accessToken.setAccessTokenType(response.getTokenType());
+
+            // Use case insensitive match - ESTS will not capitalize scheme...
+            if (SCHEME_POP.equalsIgnoreCase(response.getTokenType())) {
+                accessToken.setKid(strategy.getDeviceAtPopThumbprint());
+            }
 
             return accessToken;
         } catch (ServiceException e) {
             // TODO handle this properly
             throw new RuntimeException(e);
         }
+    }
+
+    private String getCredentialType(@NonNull final String tokenType) {
+        // Assume default behavior; that token is of 'Bearer' auth scheme.
+        String type = CredentialType.AccessToken.name();
+
+        if (SCHEME_POP.equalsIgnoreCase(tokenType)) {
+            return CredentialType.AccessToken_With_AuthScheme.name();
+        }
+
+        return type;
     }
 
     /**
