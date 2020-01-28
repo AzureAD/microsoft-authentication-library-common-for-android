@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.cache;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -90,7 +89,7 @@ public class MicrosoftStsAccountCredentialAdapter
             to avoid cache misses.
             ===============================================================
              */
-            accessToken.setTarget(getTarget(response.getScope()));
+            accessToken.setTarget(response.getScope());
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
             accessToken.setExpiresOn(String.valueOf(expiresOn));
             accessToken.setSecret(response.getAccessToken());
@@ -121,26 +120,6 @@ public class MicrosoftStsAccountCredentialAdapter
         }
 
         return type;
-    }
-
-    /**
-     * Returns the correct target based on whether the default scopes were returned or not
-     *
-     * @param responseScope The response scope to parse.
-     * @return The target containing default scopes.
-     */
-    private String getTarget(@NonNull final String responseScope) {
-        if (responseScope.contains(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE)) {
-            if (responseScope.contains(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE)) {
-                return responseScope;
-            } else {
-                return responseScope + " " + AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE;
-            }
-        } else {
-            return responseScope + " " + AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE
-                    + " " + AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE
-                    + " " + AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE;
-        }
     }
 
     @Override
