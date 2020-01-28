@@ -82,13 +82,6 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
 
             accessToken.setClientId(request.getClientId());
-            /*
-            ===============================================================
-            NOTE: When requesting tokens for resources other than MS Graph or AAD Graph the default scopes
-            openid, profile and offline_access are not returned.  They need to be written into the cache anyway
-            to avoid cache misses.
-            ===============================================================
-             */
             accessToken.setTarget(response.getScope());
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
             accessToken.setExpiresOn(String.valueOf(expiresOn));
