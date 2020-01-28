@@ -22,11 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.authorities;
 
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.internal.authorities.AnyOrganizationalAccount;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.internal.testutils.strategies.ResourceOwnerPasswordCredentialsTestStrategy;
 
 public class AADTestAuthority extends AzureActiveDirectoryAuthority {
@@ -38,12 +41,12 @@ public class AADTestAuthority extends AzureActiveDirectoryAuthority {
         super(new AnyOrganizationalAccount());
     }
 
-    public AADTestAuthority(AzureActiveDirectoryAudience signInAudience) {
+    public AADTestAuthority(final AzureActiveDirectoryAudience signInAudience) {
         super(signInAudience);
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy() {
+    public OAuth2Strategy createOAuth2Strategy(@Nullable final OAuth2StrategyParameters parameters) {
         final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
         // return a custom ropc test strategy to perform ropc flow for test automation
         return new ResourceOwnerPasswordCredentialsTestStrategy(config);

@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.content.Context;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -106,7 +107,8 @@ public abstract class OAuth2TokenCache
     public abstract ICacheRecord load(
             final String clientId,
             final String target,
-            final AccountRecord account
+            final AccountRecord account,
+            final AbstractAuthenticationScheme authScheme
     );
 
     /**
@@ -122,7 +124,8 @@ public abstract class OAuth2TokenCache
     public abstract List<ICacheRecord> loadWithAggregatedAccountData(
             final String clientId,
             final String target,
-            final AccountRecord account
+            final AccountRecord account,
+            final AbstractAuthenticationScheme authenticationScheme
     );
 
     /**

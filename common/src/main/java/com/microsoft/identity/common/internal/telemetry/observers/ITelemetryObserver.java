@@ -22,9 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.observers;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * The interface function for apps to override if they want to get the Telemetry.
  */

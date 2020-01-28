@@ -32,6 +32,7 @@ import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -240,7 +241,8 @@ public class BrokerOAuth2TokenCache
             @NonNull final AccountRecord accountRecord,
             @NonNull final IdTokenRecord idTokenRecord,
             @NonNull final AccessTokenRecord accessTokenRecord,
-            @Nullable final String familyId) throws ClientException {
+            @Nullable final String familyId,
+            @NonNull final AbstractAuthenticationScheme authScheme) throws ClientException {
         synchronized (this) {
             final ICacheRecord cacheRecord = save(
                     accountRecord,
@@ -263,7 +265,8 @@ public class BrokerOAuth2TokenCache
             return (List<ICacheRecord>) cache.loadWithAggregatedAccountData(
                     clientId,
                     target,
-                    cacheRecord.getAccount()
+                    cacheRecord.getAccount(),
+                    authScheme
             );
         }
     }
@@ -454,7 +457,8 @@ public class BrokerOAuth2TokenCache
     @Override
     public ICacheRecord load(@NonNull final String clientId,
                              @Nullable final String target,
-                             @NonNull final AccountRecord account) {
+                             @NonNull final AccountRecord account,
+                             @NonNull final AbstractAuthenticationScheme authScheme) {
         final String methodName = ":load";
 
         Logger.verbose(
@@ -500,13 +504,15 @@ public class BrokerOAuth2TokenCache
             resultRecord = mFociCache.loadByFamilyId(
                     clientId,
                     target,
-                    account
+                    account,
+                    authScheme
             );
         } else {
             resultRecord = targetCache.load(
                     clientId,
                     target,
-                    account
+                    account,
+                    authScheme
             );
         }
 
@@ -551,7 +557,8 @@ public class BrokerOAuth2TokenCache
     @Override
     public List<ICacheRecord> loadWithAggregatedAccountData(@NonNull final String clientId,
                                                             @Nullable final String target,
-                                                            @NonNull final AccountRecord account) {
+                                                            @NonNull final AccountRecord account,
+                                                            @NonNull final AbstractAuthenticationScheme authScheme) {
         synchronized (this) {
             final String methodName = ":loadWithAggregatedAccountData";
 
@@ -600,7 +607,8 @@ public class BrokerOAuth2TokenCache
                         mFociCache.loadByFamilyId(
                                 clientId,
                                 target,
-                                account
+                                account,
+                                authScheme
                         )
                 );
             } else if (isKnownFoci) {
@@ -608,13 +616,15 @@ public class BrokerOAuth2TokenCache
                         mFociCache.loadByFamilyIdWithAggregatedAccountData(
                                 clientId,
                                 target,
-                                account
+                                account,
+                                authScheme
                         );
             } else {
                 resultRecords = targetCache.loadWithAggregatedAccountData(
                         clientId,
                         target,
-                        account
+                        account,
+                        authScheme
                 );
             }
 
@@ -1243,7 +1253,8 @@ public class BrokerOAuth2TokenCache
                                         CredentialType.RefreshToken,
                                         clientId,
                                         null, // wildcard (*)
-                                        null // wildcard (*)
+                                        null, // wildcard (*)
+                                        null // Not applicable
                                 );
 
                 // Load the V1IdToken (v1 if adal used)
@@ -1256,7 +1267,8 @@ public class BrokerOAuth2TokenCache
                                         CredentialType.V1IdToken,
                                         clientId,
                                         realm,
-                                        null
+                                        null,
+                                        null // Not applicable
                                 );
 
                 // Load the IdToken
@@ -1269,7 +1281,8 @@ public class BrokerOAuth2TokenCache
                                         CredentialType.IdToken,
                                         clientId,
                                         realm,
-                                        null
+                                        null,
+                                        null // not applicable
                                 );
 
                 // Construct the ICacheRecord

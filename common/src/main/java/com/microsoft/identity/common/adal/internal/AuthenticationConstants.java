@@ -623,7 +623,7 @@ public final class AuthenticationConstants {
         /**
          * The maximum broker protocol version that common supports.
          */
-        public static final String BROKER_PROTOCOL_VERSION_CODE = "3.0";
+        public static final String BROKER_PROTOCOL_VERSION_CODE = "4.0";
 
         /**
          * The key of maximum broker protocol version that client advertised.

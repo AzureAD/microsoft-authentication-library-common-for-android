@@ -26,6 +26,8 @@ import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MicrosoftFamilyOAuth2TokenCache;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -58,6 +60,8 @@ import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
 public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTest {
+
+    private static final AbstractAuthenticationScheme BEARER_SCHEME = new BearerAuthenticationSchemeInternal();
 
     private MicrosoftFamilyOAuth2TokenCache<
             MicrosoftStsOAuth2Strategy,
@@ -146,7 +150,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         final ICacheRecord familyCacheRecord = mOauth2TokenCache.loadByFamilyId(
                 null,
                 TARGET,
-                frtTestBundle.mGeneratedAccount
+                frtTestBundle.mGeneratedAccount,
+                BEARER_SCHEME
         );
 
         assertNotNull(familyCacheRecord);
@@ -158,7 +163,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         final ICacheRecord familyCacheRecordWithClientId = mOauth2TokenCache.loadByFamilyId(
                 CLIENT_ID,
                 TARGET,
-                frtTestBundle.mGeneratedAccount
+                frtTestBundle.mGeneratedAccount,
+                BEARER_SCHEME
         );
 
         assertNotNull(familyCacheRecordWithClientId);
@@ -171,7 +177,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 mOauth2TokenCache.loadByFamilyId(
                         CLIENT_ID,
                         TARGET,
-                        frtTestBundle.mGeneratedAccount
+                        frtTestBundle.mGeneratedAccount,
+                        BEARER_SCHEME
                 );
 
         assertNotNull(familyCacheRecordWithClientIdButNonMatchingTarget);
@@ -184,7 +191,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 mOauth2TokenCache.loadByFamilyId(
                         "12345",
                         TARGET,
-                        frtTestBundle.mGeneratedAccount
+                        frtTestBundle.mGeneratedAccount,
+                        BEARER_SCHEME
                 );
 
         assertNotNull(wrongClientIdResult);
@@ -319,7 +327,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         final ICacheRecord cacheRecord = mOauth2TokenCache.loadByFamilyId(
                 CLIENT_ID,
                 TARGET,
-                frtTestBundle2.mGeneratedAccount
+                frtTestBundle2.mGeneratedAccount,
+                BEARER_SCHEME
         );
 
         assertNotNull(cacheRecord);
@@ -335,7 +344,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         final ICacheRecord cacheRecord2 = mOauth2TokenCache.loadByFamilyId(
                 CLIENT_ID + "2",
                 TARGET,
-                frtTestBundle2.mGeneratedAccount
+                frtTestBundle2.mGeneratedAccount,
+                BEARER_SCHEME
         );
 
         assertNotNull(cacheRecord2);
@@ -360,7 +370,8 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         final ICacheRecord cacheRecord3 = mOauth2TokenCache.loadByFamilyId(
                 CLIENT_ID + "2",
                 TARGET,
-                randomAcct
+                randomAcct,
+                BEARER_SCHEME
         );
 
         assertNotNull(cacheRecord3);

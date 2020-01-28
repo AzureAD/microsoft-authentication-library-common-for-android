@@ -65,6 +65,7 @@ import java.util.UUID;
 
 import static com.microsoft.identity.common.MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.AUTHORITY_TYPE;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.BEARER_AUTHENTICATION_SCHEME;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CLIENT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.ENVIRONMENT;
@@ -586,7 +587,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord cacheRecord = mOauth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                account
+                account,
+                BEARER_AUTHENTICATION_SCHEME
         );
 
         assertNotNull(cacheRecord);
@@ -1075,7 +1077,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                defaultTestBundleV2.mGeneratedAccount
+                defaultTestBundleV2.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
         );
 
         assertEquals(result, secondaryLoad);
@@ -1093,7 +1096,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                defaultTestBundleV1.mGeneratedAccount
+                defaultTestBundleV1.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
         );
 
         assertEquals(result, secondaryLoad);
@@ -1112,7 +1116,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mOauth2TokenCache.loadWithAggregatedAccountData(
                         CLIENT_ID,
                         TARGET,
-                        defaultTestBundleV2.mGeneratedAccount
+                        defaultTestBundleV2.mGeneratedAccount,
+                        BEARER_AUTHENTICATION_SCHEME
                 );
 
         assertEquals(1, secondaryLoad.size());
@@ -1138,7 +1143,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mOauth2TokenCache.loadWithAggregatedAccountData(
                         CLIENT_ID,
                         TARGET,
-                        defaultTestBundleV1.mGeneratedAccount
+                        defaultTestBundleV1.mGeneratedAccount,
+                        BEARER_AUTHENTICATION_SCHEME
                 );
 
         assertEquals(1, secondaryLoad.size());
@@ -1165,7 +1171,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                defaultTestBundleV2.mGeneratedAccount
+                defaultTestBundleV2.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
         );
 
         assertEquals(defaultTestBundleV2.mGeneratedAccount, secondaryLoad.getAccount());
@@ -1188,7 +1195,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                defaultTestBundleV2.mGeneratedAccount
+                defaultTestBundleV2.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
         );
 
         assertEquals(defaultTestBundleV2.mGeneratedAccount, secondaryLoad.getAccount());
@@ -1211,7 +1219,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                defaultTestBundleV2.mGeneratedAccount
+                defaultTestBundleV2.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
         );
 
         assertEquals(defaultTestBundleV2.mGeneratedAccount, secondaryLoad.getAccount());
@@ -1230,7 +1239,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
                 CLIENT_ID,
                 TARGET,
-                defaultTestBundleV2.mGeneratedAccount
+                defaultTestBundleV2.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
         );
 
         assertEquals(defaultTestBundleV1.mGeneratedAccount, secondaryLoad.getAccount());

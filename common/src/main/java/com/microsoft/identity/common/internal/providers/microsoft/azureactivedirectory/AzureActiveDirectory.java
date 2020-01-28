@@ -35,6 +35,7 @@ import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 
 import org.json.JSONException;
 
@@ -73,7 +74,7 @@ public class AzureActiveDirectory
 
     @Override
     public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(AzureActiveDirectoryOAuth2Configuration config) {
-        return new AzureActiveDirectoryOAuth2Strategy(config);
+        return new AzureActiveDirectoryOAuth2Strategy(config, new OAuth2StrategyParameters());
     }
 
     public static boolean hasCloudHost(final URL authorityUrl) {

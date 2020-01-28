@@ -23,9 +23,9 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
@@ -36,6 +36,8 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -172,7 +174,7 @@ public abstract class BaseController {
 
     protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
                                                            @NonNull final OperationParameters parameters) {
-        AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
+        final AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
         initializeAuthorizationRequestBuilder(builder, parameters);
         return builder.build();
     }
@@ -185,10 +187,14 @@ public abstract class BaseController {
         final String methodName = ":performTokenRequest";
         HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAppContext());
 
-        TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
+        final TokenRequest tokenRequest = strategy.createTokenRequest(
+                request,
+                response,
+                parameters.getAuthenticationScheme()
+        );
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
 
-        TokenResult tokenResult = strategy.requestToken(tokenRequest);
+        final TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
         logResult(TAG, tokenResult);
 
@@ -230,7 +236,7 @@ public abstract class BaseController {
 
             // Create a new AuthenticationResult to hold the saved record
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
-                    savedRecord,
+                    finalizeCacheRecordForResult(savedRecord, parameters.getAuthenticationScheme()),
                     savedRecords,
                     SdkType.MSAL
             );
@@ -348,7 +354,7 @@ public abstract class BaseController {
             throw authorityResult.getClientException();
         }
 
-        final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest();
+        final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(parameters.getAuthenticationScheme());
         refreshTokenRequest.setClientId(parameters.getClientId());
         refreshTokenRequest.setScope(TextUtils.join(" ", parameters.getScopes()));
         refreshTokenRequest.setRefreshToken(parameters.getRefreshToken().getSecret());
@@ -363,7 +369,7 @@ public abstract class BaseController {
         }
 
         // Set Broker version to Token Request if it's a brokered request.
-        if(parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
+        if (parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setBrokerVersion(
                     ((BrokerAcquireTokenSilentOperationParameters) parameters).getBrokerVersion()
             );
@@ -482,17 +488,17 @@ public abstract class BaseController {
     /**
      * Helper method which returns false if the tenant id of the authority
      * doesn't match with the tenant of the Access token for AADAuthority.
-     *
+     * <p>
      * Returns true otherwise.
      */
     protected boolean isRequestAuthorityRealmSameAsATRealm(@NonNull final Authority requestAuthority,
                                                            @NonNull final AccessTokenRecord accessTokenRecord)
             throws ServiceException, ClientException {
-        if(requestAuthority instanceof AzureActiveDirectoryAuthority){
+        if (requestAuthority instanceof AzureActiveDirectoryAuthority) {
 
             String tenantId = ((AzureActiveDirectoryAuthority) requestAuthority).getAudience().getTenantId();
 
-            if(AzureActiveDirectoryAudience.isHomeTenantAlias(tenantId)) {
+            if (AzureActiveDirectoryAudience.isHomeTenantAlias(tenantId)) {
                 // if realm on AT and home account's tenant id do not match, we have a token for guest and
                 // requested authority here is for home, so return false we need to refresh the token
                 final String utidFromHomeAccountId = accessTokenRecord
@@ -501,7 +507,7 @@ public abstract class BaseController {
 
                 return utidFromHomeAccountId.equalsIgnoreCase(accessTokenRecord.getRealm());
 
-            }else {
+            } else {
                 tenantId = ((AzureActiveDirectoryAuthority) requestAuthority)
                         .getAudience()
                         .getTenantUuidForAlias(requestAuthority.getAuthorityURL().toString());
@@ -512,11 +518,27 @@ public abstract class BaseController {
     }
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
-                final String tenantId = SchemaUtil.getTenantId(
+        final String tenantId = SchemaUtil.getTenantId(
                 microsoftTokenResponse.getClientInfo(),
                 microsoftTokenResponse.getIdToken()
         );
         return AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(tenantId);
     }
 
+    public ICacheRecord finalizeCacheRecordForResult(@NonNull final ICacheRecord cacheRecord,
+                                                     @NonNull final AbstractAuthenticationScheme scheme) throws ClientException {
+        if (scheme instanceof ITokenAuthenticationSchemeInternal) {
+            final ITokenAuthenticationSchemeInternal tokenAuthScheme = (ITokenAuthenticationSchemeInternal) scheme;
+            cacheRecord
+                    .getAccessToken()
+                    .setSecret(
+                            tokenAuthScheme
+                                    .getAccessTokenForScheme(
+                                            cacheRecord.getAccessToken().getSecret()
+                                    )
+                    );
+        }
+
+        return cacheRecord;
+    }
 }

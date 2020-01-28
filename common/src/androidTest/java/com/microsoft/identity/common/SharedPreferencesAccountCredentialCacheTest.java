@@ -29,6 +29,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
@@ -55,6 +56,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(AndroidJUnit4.class)
 public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
 
+    static final BearerAuthenticationSchemeInternal BEARER_AUTHENTICATION_SCHEME = new BearerAuthenticationSchemeInternal();
     static final String HOME_ACCOUNT_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
     static final String ENVIRONMENT = "login.microsoftonline.com";
     static final String CLIENT_ID = "0287f963-2d72-4363-9e3a-5705c5b0f031";
@@ -672,7 +674,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 CredentialType.RefreshToken,
                 CLIENT_ID,
                 REALM,
-                TARGET
+                TARGET,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
         assertEquals(2, credentials.size());
     }
@@ -708,7 +711,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 null,
                 CLIENT_ID,
                 null,
-                TARGET
+                TARGET,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
 
         assertEquals(
@@ -748,7 +752,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 null,
                 null,
                 REALM,
-                TARGET
+                TARGET,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
 
         assertEquals(
@@ -788,7 +793,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 CredentialType.RefreshToken,
                 CLIENT_ID,
                 REALM,
-                TARGET
+                TARGET,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
         assertEquals(1, credentials.size());
         final Credential retrievedCredential = credentials.get(0);
@@ -833,7 +839,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 CredentialType.RefreshToken,
                 CLIENT_ID,
                 REALM,
-                searchTarget
+                searchTarget,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
         assertEquals(1, credentials.size());
         final Credential retrievedCredential = credentials.get(0);
@@ -883,7 +890,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 CredentialType.RefreshToken,
                 CLIENT_ID,
                 REALM,
-                searchTarget
+                searchTarget,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
         assertEquals(1, credentials.size());
         final Credential retrievedCredential = credentials.get(0);
@@ -935,7 +943,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 CredentialType.RefreshToken,
                 CLIENT_ID,
                 REALM,
-                searchTarget
+                searchTarget,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
         assertEquals(1, credentials.size());
         final Credential retrievedCredential = credentials.get(0);
@@ -977,7 +986,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 CredentialType.RefreshToken,
                 CLIENT_ID,
                 REALM,
-                TARGET
+                TARGET,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
         assertEquals(1, credentials.size());
     }
@@ -1025,7 +1035,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 CredentialType.AccessToken,
                 CLIENT_ID,
                 null,
-                TARGET
+                TARGET,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
         assertEquals(2, credentials.size());
     }
@@ -1073,7 +1084,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 CredentialType.AccessToken,
                 CLIENT_ID,
                 null,
-                null
+                null,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
         assertEquals(2, credentials.size());
     }
@@ -1121,7 +1133,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 CredentialType.AccessToken,
                 CLIENT_ID,
                 REALM,
-                null
+                null,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
         assertEquals(2, credentials.size());
     }
@@ -1169,7 +1182,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 CredentialType.AccessToken,
                 CLIENT_ID,
                 null,
-                TARGET
+                TARGET,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
         assertEquals(2, credentials.size());
     }
@@ -1217,7 +1231,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 CredentialType.AccessToken,
                 CLIENT_ID,
                 null,
-                null
+                null,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
         assertEquals(2, credentials.size());
     }
@@ -1265,7 +1280,8 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 CredentialType.AccessToken,
                 CLIENT_ID,
                 REALM,
-                null
+                null,
+                BEARER_AUTHENTICATION_SCHEME.getName()
         );
         assertEquals(2, credentials.size());
     }

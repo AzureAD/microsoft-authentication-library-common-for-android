@@ -24,7 +24,6 @@
 package com.microsoft.identity.common.internal.broker;
 
 import com.microsoft.aad.adal.IBrokerAccountService;
-import com.microsoft.identity.client.IMicrosoftAuthService;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;

@@ -27,7 +27,6 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
-import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
@@ -54,6 +53,7 @@ import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
+import static com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter.sRequestAdapterGsonInstance;
 
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
@@ -94,7 +94,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final Bundle resultBundle = new Bundle();
         resultBundle.putString(
                 AuthenticationConstants.Broker.BROKER_RESULT_V2,
-                new Gson().toJson(brokerResult, BrokerResult.class)
+                sRequestAdapterGsonInstance.toJson(brokerResult, BrokerResult.class)
         );
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true);
 
@@ -123,7 +123,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                             HeaderSerializationUtil.toJson((
                                     (ServiceException) exception).getHttpResponseHeaders()
                             ))
-                    .httpResponseBody(new Gson().toJson(
+                    .httpResponseBody(sRequestAdapterGsonInstance.toJson(
                             ((ServiceException) exception).getHttpResponseBody()));
         }
 
@@ -137,7 +137,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final Bundle resultBundle = new Bundle();
         resultBundle.putString(
                 AuthenticationConstants.Broker.BROKER_RESULT_V2,
-                new Gson().toJson(builder.build(), BrokerResult.class)
+                sRequestAdapterGsonInstance.toJson(builder.build(), BrokerResult.class)
         );
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, false);
 
@@ -146,7 +146,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     @Override
     public ILocalAuthenticationResult authenticationResultFromBundle(@NonNull final Bundle resultBundle) {
-
         final BrokerResult brokerResult = JsonExtensions.getBrokerResultFromJsonString(
                 resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2)
         );
@@ -166,7 +165,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         );
 
         return authenticationResult;
-
     }
 
     @Override
@@ -184,9 +182,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         final String exceptionType = brokerResult.getExceptionType();
 
-        if(!TextUtils.isEmpty(exceptionType)){
+        if (!TextUtils.isEmpty(exceptionType)) {
             return getBaseExceptionFromExceptionType(exceptionType, brokerResult);
-        }else {
+        } else {
             // This code is here for legacy purposes where old versions of broker (3.1.8 or below)
             // wouldn't return exception type in the result.
             Logger.info(TAG, "Exception type is not returned from the broker, " +
@@ -260,11 +258,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     /**
      * Method to get the right base exception based on error codes.
      * Note : In newer versions of Broker, exception type will be sent and is used to determine the right exception.
-     *
+     * <p>
      * This method is to support legacy broker versions (3.1.8 or below)
+     *
      * @return BaseException
      */
-    private BaseException getBaseExceptionFromErrorCodes(@NonNull final BrokerResult brokerResult){
+    private BaseException getBaseExceptionFromErrorCodes(@NonNull final BrokerResult brokerResult) {
         final String errorCode = brokerResult.getErrorCode();
         final BaseException baseException;
 
@@ -489,7 +488,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     public boolean getDeviceModeFromResultBundle(@NonNull final Bundle bundle) throws BaseException {
-        if (!bundle.containsKey(BROKER_DEVICE_MODE)){
+        if (!bundle.containsKey(BROKER_DEVICE_MODE)) {
             throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(bundle);
         }
 

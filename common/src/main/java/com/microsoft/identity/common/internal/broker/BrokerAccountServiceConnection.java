@@ -27,7 +27,6 @@ import android.content.ComponentName;
 import android.os.IBinder;
 
 import com.microsoft.aad.adal.IBrokerAccountService;
-import com.microsoft.identity.client.IMicrosoftAuthService;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 public class BrokerAccountServiceConnection implements android.content.ServiceConnection {

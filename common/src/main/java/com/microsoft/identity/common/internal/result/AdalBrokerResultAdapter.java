@@ -25,8 +25,9 @@ package com.microsoft.identity.common.internal.result;
 import android.accounts.AccountManager;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.ADALError;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
