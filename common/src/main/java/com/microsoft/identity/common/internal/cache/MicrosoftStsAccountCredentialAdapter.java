@@ -78,9 +78,7 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setCredentialType(getCredentialType(response.getTokenType()));
             accessToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             accessToken.setRealm(getRealm(strategy, response));
-
             accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
-
             accessToken.setClientId(request.getClientId());
             accessToken.setTarget(response.getScope());
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
@@ -128,7 +126,6 @@ public class MicrosoftStsAccountCredentialAdapter
             // Required
             refreshToken.setCredentialType(CredentialType.RefreshToken.name());
             refreshToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
-
             refreshToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             refreshToken.setClientId(request.getClientId());
             refreshToken.setSecret(response.getRefreshToken());
@@ -158,10 +155,7 @@ public class MicrosoftStsAccountCredentialAdapter
             final IdTokenRecord idToken = new IdTokenRecord();
             // Required fields
             idToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
-
             idToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
-
-
             idToken.setRealm(getRealm(strategy, response));
             idToken.setCredentialType(
                     SchemaUtil.getCredentialTypeFromVersion(
