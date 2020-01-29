@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ServiceException;
@@ -40,9 +42,13 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
+import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
 
 public class MicrosoftStsAccountCredentialAdapter
         implements IAccountCredentialAdapter
@@ -80,7 +86,12 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setRealm(getRealm(strategy, response));
             accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
             accessToken.setClientId(request.getClientId());
-            accessToken.setTarget(response.getScope());
+            accessToken.setTarget(
+                    getTarget(
+                            request.getScope(),
+                            response.getScope()
+                    )
+            );
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
             accessToken.setExpiresOn(String.valueOf(expiresOn));
             accessToken.setSecret(response.getAccessToken());
@@ -113,6 +124,35 @@ public class MicrosoftStsAccountCredentialAdapter
         return type;
     }
 
+    /**
+     * Returns the correct target based on whether the default scopes were returned or not
+     *
+     * @param responseScope The response scope to parse.
+     * @return The target containing default scopes.
+     */
+    private String getTarget(@NonNull final String requestScope,
+                             @NonNull final String responseScope) {
+        String scopesToCache = "";
+
+        if (TextUtils.isEmpty(responseScope)) {
+            // The response scopes were empty -- per https://tools.ietf.org/html/rfc6749#section-3.3
+            // we are going to fall back to a the request scopes minus any default scopes....
+            final String[] requestScopes = requestScope.split("\\s+");
+            final Set<String> requestScopeSet = new HashSet<>(Arrays.asList(requestScopes));
+            requestScopeSet.removeAll(DEFAULT_SCOPES);
+
+            for (final String scope : requestScopeSet) {
+                scopesToCache += scope + " ";
+            }
+
+            scopesToCache = scopesToCache.trim();
+        } else {
+            scopesToCache = responseScope;
+        }
+
+        return scopesToCache;
+    }
+
     @Override
     public RefreshTokenRecord createRefreshToken(
             final MicrosoftStsOAuth2Strategy strategy,
@@ -132,7 +172,12 @@ public class MicrosoftStsAccountCredentialAdapter
 
             // Optional
             refreshToken.setFamilyId(response.getFamilyId());
-            refreshToken.setTarget(response.getScope());
+            refreshToken.setTarget(
+                    getTarget(
+                            request.getScope(),
+                            response.getScope()
+                    )
+            );
 
             // TODO are these needed? Expected?
             refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
