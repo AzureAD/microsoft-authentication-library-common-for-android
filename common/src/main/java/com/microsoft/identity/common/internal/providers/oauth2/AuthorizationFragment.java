@@ -36,6 +36,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -57,6 +58,7 @@ import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
+import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -120,6 +122,8 @@ public class AuthorizationFragment extends Fragment {
     private boolean mBrowserFlowStarted = false;
 
     private WebView mWebView;
+
+    private ProgressBar mProgressBar;
 
     private Intent mAuthIntent;
 
@@ -262,12 +266,20 @@ public class AuthorizationFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
+        mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
         Telemetry.emit(new UiStartEvent().putUserAgent(mAuthorizationAgent));
         if (mAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
             AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
                     getActivity(),
-                    new AuthorizationCompletionCallback(), mRedirectUri);
+                    new AuthorizationCompletionCallback(),
+                    new OnPageLoadedCallback() {
+                        @Override
+                        public void onPageLoaded() {
+                            mProgressBar.setVisibility(View.INVISIBLE);
+                        }
+                    },
+                    mRedirectUri);
             setUpWebView(view, webViewClient);
         }
 
@@ -306,6 +318,11 @@ public class AuthorizationFragment extends Fragment {
                     Logger.info(TAG + methodName, "Launching embedded WebView for acquiring auth code.");
                     Logger.infoPII(TAG + methodName, "The start url is " + mAuthorizationRequestUrl);
                     mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
+
+                    // The first page load could take time, and we do not want to just show a blank page.
+                    // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
+                    // After that, progress bar will be displayed by MSA/AAD.
+                    mProgressBar.setVisibility(View.VISIBLE);
                 }
             });
         }
