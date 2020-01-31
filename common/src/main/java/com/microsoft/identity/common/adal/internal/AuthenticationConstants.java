@@ -1231,6 +1231,8 @@ public final class AuthenticationConstants {
 
         public static final String REQUEST_HEADERS = "com.microsoft.identity.request.headers";
 
+        public static final String JAVASCRIPT_INJECTION_STRING = "com.microsoft.identity.javascript.injection.string";
+
         public static final String AUTHORIZATION_AGENT = "com.microsoft.identity.client.authorization.agent";
 
         public static final String REQUEST_ID = "com.microsoft.identity.request.id";
