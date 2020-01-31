@@ -27,7 +27,7 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuth
 import java.util.HashMap;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.JAVASCRIPT_INJECTION_STRING;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
@@ -56,8 +56,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private HashMap<String, String> mRequestHeaders;
 
-    // For test cases only
-    private String mJavascriptInjectionString;
+    // For MSAL CPP test cases only
+    private String mPostPageLoadedUrl;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -73,7 +73,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putString(REDIRECT_URI, mRedirectUri);
         outState.putString(REQUEST_URL, mAuthorizationRequestUrl);
         outState.putSerializable(REQUEST_HEADERS, mRequestHeaders);
-        outState.putSerializable(JAVASCRIPT_INJECTION_STRING, mJavascriptInjectionString);
+        outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedUrl);
     }
 
     @Override
@@ -84,7 +84,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAuthorizationRequestUrl = state.getString(REQUEST_URL);
         mRedirectUri = state.getString(REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
-        mJavascriptInjectionString = state.getString(JAVASCRIPT_INJECTION_STRING);
+        mPostPageLoadedUrl = state.getString(POST_PAGE_LOADED_URL);
     }
 
     @Nullable
@@ -101,9 +101,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     public void onPageLoaded() {
                         mProgressBar.setVisibility(View.INVISIBLE);
 
-                        // Inject javascript string from test suites.
-                        if (!StringExtensions.isNullOrBlank(mJavascriptInjectionString)) {
-                            mWebView.loadUrl(mJavascriptInjectionString);
+                        // Inject string from test suites.
+                        if (!StringExtensions.isNullOrBlank(mPostPageLoadedUrl)) {
+                            mWebView.loadUrl(mPostPageLoadedUrl);
                         }
                     }
                 },
