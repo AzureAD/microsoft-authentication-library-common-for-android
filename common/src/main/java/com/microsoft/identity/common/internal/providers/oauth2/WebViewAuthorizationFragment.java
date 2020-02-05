@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,14 +17,17 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
+import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 
 import java.util.HashMap;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
@@ -40,6 +44,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private WebView mWebView;
 
+    private ProgressBar mProgressBar;
+
     private Intent mAuthIntent;
 
     private boolean mPkeyAuthStatus = false;
@@ -49,6 +55,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private String mRedirectUri;
 
     private HashMap<String, String> mRequestHeaders;
+
+    // For MSAL CPP test cases only
+    private String mPostPageLoadedUrl;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -64,6 +73,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putString(REDIRECT_URI, mRedirectUri);
         outState.putString(REQUEST_URL, mAuthorizationRequestUrl);
         outState.putSerializable(REQUEST_HEADERS, mRequestHeaders);
+        outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedUrl);
     }
 
     @Override
@@ -74,26 +84,32 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAuthorizationRequestUrl = state.getString(REQUEST_URL);
         mRedirectUri = state.getString(REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
+        mPostPageLoadedUrl = state.getString(POST_PAGE_LOADED_URL);
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
-
-        AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
-                getActivity(),
-                new AuthorizationCompletionCallback(), mRedirectUri);
-        setUpWebView(view, webViewClient);
-
-        return view;
-    }
-
-    @Override
-    public void onStart() {
         final String methodName = "#onCreateView";
-        super.onStart();
+        final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
+        mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
+        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
+                getActivity(),
+                new AuthorizationCompletionCallback(),
+                new OnPageLoadedCallback() {
+                    @Override
+                    public void onPageLoaded() {
+                        mProgressBar.setVisibility(View.INVISIBLE);
+
+                        // Inject string from test suites.
+                        if (!StringExtensions.isNullOrBlank(mPostPageLoadedUrl)) {
+                            mWebView.loadUrl(mPostPageLoadedUrl);
+                        }
+                    }
+                },
+                mRedirectUri);
+        setUpWebView(view, webViewClient);
         mWebView.post(new Runnable() {
             @Override
             public void run() {
@@ -102,8 +118,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.info(TAG + methodName, "Launching embedded WebView for acquiring auth code.");
                 Logger.infoPII(TAG + methodName, "The start url is " + mAuthorizationRequestUrl);
                 mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
+
+                // The first page load could take time, and we do not want to just show a blank page.
+                // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
+                // After that, progress bar will be displayed by MSA/AAD.
+                mProgressBar.setVisibility(View.VISIBLE);
             }
         });
+        return view;
     }
 
     /**

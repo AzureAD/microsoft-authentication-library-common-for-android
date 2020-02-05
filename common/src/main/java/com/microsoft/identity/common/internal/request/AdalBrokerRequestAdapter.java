@@ -38,6 +38,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -81,6 +82,8 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 new BrokerAcquireTokenOperationParameters();
 
         final Intent intent = callingActivity.getIntent();
+
+        parameters.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
 
         parameters.setActivity(callingActivity);
 
@@ -201,6 +204,8 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         );
         final BrokerAcquireTokenSilentOperationParameters parameters =
                 new BrokerAcquireTokenSilentOperationParameters();
+
+        parameters.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
 
         parameters.setAppContext(context);
 
