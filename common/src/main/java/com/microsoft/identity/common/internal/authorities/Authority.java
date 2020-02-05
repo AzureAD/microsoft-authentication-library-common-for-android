@@ -23,9 +23,10 @@
 package com.microsoft.identity.common.internal.authorities;
 
 import android.net.Uri;
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.text.TextUtils;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
@@ -45,6 +46,7 @@ public abstract class Authority {
 
     private static final String ADFS_PATH_SEGMENT = "adfs";
     private static final String B2C_PATH_SEGMENT = "tfp";
+    public static final String B2C = "B2C";
 
     protected boolean mKnownToMicrosoft = false;
     protected boolean mKnownToDeveloper = false;
@@ -105,7 +107,7 @@ public abstract class Authority {
             final Authority configuredAuthority = getEquivalentConfiguredAuthority(authorityUrl);
             final String authorityTypeStr = configuredAuthority.mAuthorityTypeString;
 
-            if ("B2C".equalsIgnoreCase(authorityTypeStr)) {
+            if (B2C.equalsIgnoreCase(authorityTypeStr)) {
                 authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
             } else {
                 authority = createAadAuthority(authorityUri, pathSegments);
