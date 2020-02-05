@@ -90,6 +90,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        final String methodName = "#onCreateView";
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
@@ -109,7 +110,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 },
                 mRedirectUri);
         setUpWebView(view, webViewClient);
-        final String methodName = "#onCreateView";
         mWebView.post(new Runnable() {
             @Override
             public void run() {
