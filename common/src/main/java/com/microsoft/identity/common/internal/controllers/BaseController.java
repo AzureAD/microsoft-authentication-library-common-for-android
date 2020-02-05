@@ -23,9 +23,9 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
@@ -75,6 +75,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
+
+import static com.microsoft.identity.common.internal.authorities.Authority.B2C;
 
 public abstract class BaseController {
 
@@ -363,7 +365,7 @@ public abstract class BaseController {
         }
 
         // Set Broker version to Token Request if it's a brokered request.
-        if(parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
+        if (parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setBrokerVersion(
                     ((BrokerAcquireTokenSilentOperationParameters) parameters).getBrokerVersion()
             );
@@ -439,18 +441,41 @@ public abstract class BaseController {
             );
         }
 
+        final boolean isB2CAuthority = B2C.equalsIgnoreCase(
+                parameters
+                        .getAuthority()
+                        .getAuthorityTypeString()
+        );
+
         final String clientId = parameters.getClientId();
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String localAccountId = parameters.getAccount().getLocalAccountId();
 
-        final AccountRecord targetAccount =
-                parameters
-                        .getTokenCache()
-                        .getAccountByLocalAccountId(
-                                null,
-                                clientId,
-                                localAccountId
-                        );
+        final AccountRecord targetAccount;
+
+        if (isB2CAuthority) {
+            // Due to differences in the B2C service API relative to AAD, all IAccounts returned by
+            // the B2C-STS have the same local_account_id irrespective of the policy used to load it.
+            //
+            // Because the home_account_id is unique to policy and there is no concept of
+            // multi-realm accounts relative to B2C, we'll conditionally use the home_account_id
+            // in these cases
+            targetAccount = parameters
+                    .getTokenCache()
+                    .getAccountByHomeAccountId(
+                            null,
+                            clientId,
+                            homeAccountId
+                    );
+        } else {
+            targetAccount = parameters
+                    .getTokenCache()
+                    .getAccountByLocalAccountId(
+                            null,
+                            clientId,
+                            localAccountId
+                    );
+        }
 
         if (null == targetAccount) {
             Logger.info(
@@ -482,17 +507,17 @@ public abstract class BaseController {
     /**
      * Helper method which returns false if the tenant id of the authority
      * doesn't match with the tenant of the Access token for AADAuthority.
-     *
+     * <p>
      * Returns true otherwise.
      */
     protected boolean isRequestAuthorityRealmSameAsATRealm(@NonNull final Authority requestAuthority,
                                                            @NonNull final AccessTokenRecord accessTokenRecord)
             throws ServiceException, ClientException {
-        if(requestAuthority instanceof AzureActiveDirectoryAuthority){
+        if (requestAuthority instanceof AzureActiveDirectoryAuthority) {
 
             String tenantId = ((AzureActiveDirectoryAuthority) requestAuthority).getAudience().getTenantId();
 
-            if(AzureActiveDirectoryAudience.isHomeTenantAlias(tenantId)) {
+            if (AzureActiveDirectoryAudience.isHomeTenantAlias(tenantId)) {
                 // if realm on AT and home account's tenant id do not match, we have a token for guest and
                 // requested authority here is for home, so return false we need to refresh the token
                 final String utidFromHomeAccountId = accessTokenRecord
@@ -501,7 +526,7 @@ public abstract class BaseController {
 
                 return utidFromHomeAccountId.equalsIgnoreCase(accessTokenRecord.getRealm());
 
-            }else {
+            } else {
                 tenantId = ((AzureActiveDirectoryAuthority) requestAuthority)
                         .getAudience()
                         .getTenantUuidForAlias(requestAuthority.getAuthorityURL().toString());
@@ -512,7 +537,7 @@ public abstract class BaseController {
     }
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
-                final String tenantId = SchemaUtil.getTenantId(
+        final String tenantId = SchemaUtil.getTenantId(
                 microsoftTokenResponse.getClientInfo(),
                 microsoftTokenResponse.getIdToken()
         );

@@ -1375,6 +1375,64 @@ public class BrokerOAuth2TokenCache
         return mApplicationMetadataCache.getAllClientIds();
     }
 
+    @Override
+    public AccountRecord getAccountByHomeAccountId(@Nullable final String environment,
+                                                   @NonNull final String clientId,
+                                                   @NonNull final String homeAccountId) {
+        final String methodName = "getAccountByHomeAccountId";
+
+        Logger.verbose(
+                TAG + methodName,
+                "Loading account by home account id."
+        );
+
+        if (null != environment) {
+            OAuth2TokenCache targetCache = getTokenCacheForClient(
+                    clientId,
+                    environment,
+                    mCallingProcessUid
+            );
+
+            Logger.info(
+                    TAG + methodName,
+                    "Loading from FOCI cache? ["
+                            + (targetCache == null)
+                            + "]"
+            );
+
+            if (null != targetCache) {
+                return targetCache.getAccountByHomeAccountId(
+                        environment,
+                        clientId,
+                        homeAccountId
+                );
+            } else {
+                return mFociCache.getAccountByHomeAccountId(
+                        environment,
+                        clientId,
+                        homeAccountId
+                );
+            }
+        } else {
+            AccountRecord result = null;
+
+            final List<OAuth2TokenCache> cachesToInspect = getTokenCachesForClientId(clientId);
+            final Iterator<OAuth2TokenCache> cacheIterator = cachesToInspect.iterator();
+
+            while (null == result && cacheIterator.hasNext()) {
+                result = cacheIterator
+                        .next()
+                        .getAccountByHomeAccountId(
+                                environment,
+                                clientId,
+                                homeAccountId
+                        );
+            }
+
+            return result;
+        }
+    }
+
     private MsalOAuth2TokenCache initializeProcessUidCache(@NonNull final Context context,
                                                            final int bindingProcessUid) {
         final String methodName = ":initializeProcessUidCache";
