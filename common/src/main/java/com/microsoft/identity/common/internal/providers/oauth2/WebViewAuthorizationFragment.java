@@ -185,11 +185,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 return false;
             }
         });
-
-        mWebView.getSettings().setLoadWithOverviewMode(true);
-        mWebView.getSettings().setDomStorageEnabled(true);
-        mWebView.getSettings().setUseWideViewPort(true);
-        mWebView.getSettings().setBuiltInZoomControls(true);
+        WebViewUtil.WebViewSettings webViewSettings = WebViewUtil.webViewSettings;
+        mWebView.getSettings().setLoadWithOverviewMode(webViewSettings.loadWithOverviewMode());
+        mWebView.getSettings().setDomStorageEnabled(webViewSettings.isDomStorageEnabled());
+        mWebView.getSettings().setUseWideViewPort(webViewSettings.useWideViewPort());
+        mWebView.getSettings().setBuiltInZoomControls(webViewSettings.zoomControlsEnabled());
+        mWebView.getSettings().setSupportZoom(webViewSettings.isZoomEnabled());
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
     }

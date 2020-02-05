@@ -39,6 +39,11 @@ import static com.microsoft.identity.common.internal.ui.webview.ProcessUtil.Auth
 public class WebViewUtil {
     private static final String TAG = WebViewUtil.class.getSimpleName();
 
+    /*
+     * Custom UI WebViewSettings
+     */
+    public static WebViewSettings webViewSettings = new WebViewSettings();
+
     /**
      * Must be invoked before WebView or CookieManager is invoked in the process.
      * See https://developer.android.com/about/versions/pie/android-9.0-changes-28#web-data-dirs for more info.
@@ -101,5 +106,64 @@ public class WebViewUtil {
     private static CookieManager getCookieManager(final Context context) {
         setDataDirectorySuffix(context);
         return CookieManager.getInstance();
+    }
+
+    /**
+     * Stores Non-Breaking Settings for UI WebView Customization
+     */
+    public static class WebViewSettings  {
+        private boolean zoomControlsEnabled = true;
+        private boolean loadWithOverviewMode = true;
+        private boolean domStorageEnabled = true;
+        private boolean useWideViewPort = true;
+        private boolean zoomEnabled = true;
+
+        private WebViewSettings() {
+        }
+
+        public WebViewSettings setUseWideViewPort(boolean useWideViewPort) {
+            this.useWideViewPort = useWideViewPort;
+            return this;
+        }
+
+        public WebViewSettings setLoadWithOverviewMode(boolean loadWithOverviewMode) {
+            this.loadWithOverviewMode = loadWithOverviewMode;
+            return this;
+        }
+
+        public WebViewSettings setZoomControlsEnabled(boolean zoomControlsEnabled) {
+            this.zoomControlsEnabled = zoomControlsEnabled;
+            return this;
+        }
+
+        public WebViewSettings setDomStorageEnabled(boolean domStorageEnabled) {
+            this.domStorageEnabled = domStorageEnabled;
+            return this;
+        }
+
+        public WebViewSettings setZoomEnabled(boolean zoomEnabled) {
+            this.zoomEnabled = zoomEnabled;
+            return this;
+        }
+
+        public boolean useWideViewPort() {
+            return useWideViewPort;
+        }
+
+        public boolean zoomControlsEnabled() {
+            return zoomControlsEnabled;
+        }
+
+        public boolean loadWithOverviewMode() {
+            return loadWithOverviewMode;
+        }
+
+        public boolean isDomStorageEnabled() {
+            return domStorageEnabled;
+        }
+
+        public boolean isZoomEnabled() {
+            return zoomEnabled;
+        }
     }
 }
