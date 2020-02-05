@@ -321,24 +321,5 @@ public class OperationParameters {
                         "scope is empty or null");
             }
         }
-
-        // AuthenticationScheme is present...
-        if (null == mAuthenticationScheme) {
-            if (this instanceof AcquireTokenSilentOperationParameters) {
-                throw new ArgumentException(
-                        ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                        ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
-                        "authentication scheme is undefined"
-                );
-            }
-
-            if (this instanceof AcquireTokenOperationParameters) {
-                throw new ArgumentException(
-                        ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
-                        ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
-                        "authentication scheme is undefined"
-                );
-            }
-        }
     }
 }
