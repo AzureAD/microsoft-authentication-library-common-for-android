@@ -31,6 +31,7 @@ import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
@@ -88,7 +89,7 @@ public class OperationParameters {
     private String mCorrelationId;
 
     @Expose
-    private AbstractAuthenticationScheme mAuthenticationScheme;
+    private AbstractAuthenticationScheme mAuthenticationScheme = new BearerAuthenticationSchemeInternal();
 
     public String getRequiredBrokerProtocolVersion() {
         return mRequiredBrokerProtocolVersion;
