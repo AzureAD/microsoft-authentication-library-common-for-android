@@ -447,15 +447,14 @@ public abstract class BaseController {
 
         final String clientId = parameters.getClientId();
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
-        final String localAccountId = parameters.getAccount().getLocalAccountId();
 
         final AccountRecord targetAccount =
                 parameters
                         .getTokenCache()
-                        .getAccountByLocalAccountId(
+                        .getAccountByHomeAccountId(
                                 null,
                                 clientId,
-                                localAccountId
+                                homeAccountId
                         );
 
         if (null == targetAccount) {

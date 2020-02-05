@@ -872,6 +872,13 @@ public class BrokerOAuth2TokenCache
         }
     }
 
+    @Nullable
+    @Override
+    public AccountRecord getAccountByHomeAccountId(@Nullable String environment, @NonNull String clientId, @NonNull String homeAccountId) {
+        throw new UnsupportedOperationException("BrokerOAuth2TokenCache Unimplemented!");
+    }
+
+
     @Override
     @Nullable
     public ICacheRecord getAccountWithAggregatedAccountDataByLocalAccountId(

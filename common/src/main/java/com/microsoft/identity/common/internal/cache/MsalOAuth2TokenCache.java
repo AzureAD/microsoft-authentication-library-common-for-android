@@ -775,6 +775,30 @@ public class MsalOAuth2TokenCache
         return null;
     }
 
+    @Override
+    @Nullable
+    public AccountRecord getAccountByHomeAccountId(@Nullable final String environment,
+                                                   @NonNull final String clientId,
+                                                   @NonNull final String homeAccountId) {
+        final String methodName = ":getAccountByHomeAccountId";
+
+        final List<AccountRecord> accounts = getAccounts(environment, clientId);
+
+        Logger.verbosePII(
+                TAG + methodName,
+                "homeAccountId: [" + homeAccountId + "]"
+        );
+
+        for (final AccountRecord account : accounts) {
+            if (homeAccountId.equals(account.getHomeAccountId())) {
+                return account;
+            }
+        }
+
+        return null;
+    }
+
+
     /**
      * MSAL-only API for querying AccountRecords by username (upn/preferred_username).
      *

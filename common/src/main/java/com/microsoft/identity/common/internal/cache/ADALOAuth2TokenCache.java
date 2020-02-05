@@ -27,6 +27,9 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.microsoft.identity.common.BaseAccount;
@@ -242,6 +245,15 @@ public class ADALOAuth2TokenCache
     public AccountRecord getAccountByLocalAccountId(final String environment,
                                                     final String clientId,
                                                     final String localAccountId) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+
+    @Nullable
+    @Override
+    public AccountRecord getAccountByHomeAccountId(@Nullable String environment, @NonNull String clientId, @NonNull String homeAccountId) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
