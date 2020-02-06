@@ -107,6 +107,8 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                                 final String failingUrl) {
         super.onReceivedError(view, errorCode, description, failingUrl);
 
+        view.stopLoading();
+
         // Create result intent when webView received an error.
         final Intent resultIntent = new Intent();
         resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE,
