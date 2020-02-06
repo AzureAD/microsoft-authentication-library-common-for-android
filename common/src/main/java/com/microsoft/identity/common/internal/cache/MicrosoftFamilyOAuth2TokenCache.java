@@ -144,7 +144,7 @@ public class MicrosoftFamilyOAuth2TokenCache
                             && accountRecord.getEnvironment().equals(atRecord.getEnvironment())
                             && accountRecord.getHomeAccountId().equals(atRecord.getHomeAccountId())
                             && accountRecord.getRealm().equals(atRecord.getRealm())
-                            && targetsIntersect(target, atRecord.getTarget())) {
+                            && targetsIntersect(target, atRecord.getTarget(), true)) {
                         atRecordToReturn = atRecord;
                         break;
                     }
