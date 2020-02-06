@@ -1227,6 +1227,29 @@ public class MsalOAuth2TokenCache
         return result;
     }
 
+    @Nullable
+    @Override
+    public AccountRecord getAccountByHomeAccountId(@Nullable final String environment,
+                                                   @NonNull final String clientId,
+                                                   @NonNull final String homeAccountId) {
+        final String methodName = ":getAccountByHomeAccountId";
+
+        final List<AccountRecord> accounts = getAccounts(environment, clientId);
+
+        Logger.verbosePII(
+                TAG + methodName,
+                "homeAccountId: [" + homeAccountId + "]"
+        );
+
+        for (final AccountRecord account : accounts) {
+            if (homeAccountId.equals(account.getHomeAccountId())) {
+                return account;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Removes Credentials of the supplied type for the supplied Account.
      *
