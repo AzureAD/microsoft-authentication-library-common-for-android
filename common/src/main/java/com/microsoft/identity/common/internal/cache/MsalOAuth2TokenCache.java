@@ -64,6 +64,7 @@ import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SC
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
+import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
 import static com.microsoft.identity.common.internal.dto.CredentialType.ID_TOKEN_TYPES;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
@@ -154,8 +155,8 @@ public class MsalOAuth2TokenCache
     }
 
 
-     void validateNonNull(@Nullable final Object object,
-                                 @NonNull final String type) throws ClientException {
+    void validateNonNull(@Nullable final Object object,
+                         @NonNull final String type) throws ClientException {
         final String message = type + " passed in is Null";
 
         if (object == null) {
@@ -376,8 +377,8 @@ public class MsalOAuth2TokenCache
     /**
      * Helper method to remove an old refresh token if it's MRRT ot FRT.
      */
-     void removeRefreshTokenIfNeeded(@NonNull final AccountRecord accountRecord,
-                                            @NonNull final RefreshTokenRecord refreshTokenRecord) {
+    void removeRefreshTokenIfNeeded(@NonNull final AccountRecord accountRecord,
+                                    @NonNull final RefreshTokenRecord refreshTokenRecord) {
         final String methodName = ":removeRefreshTokenIfNeeded";
         final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
                 refreshTokenRecord.getFamilyId()
@@ -1308,7 +1309,6 @@ public class MsalOAuth2TokenCache
     }
 
 
-
     /**
      * Validates that the supplied artifacts are schema-compliant and OK to write to the cache.
      *
@@ -1320,7 +1320,7 @@ public class MsalOAuth2TokenCache
      * @param idTokenToSave      The {@link IdTokenRecord} to save.
      * @throws ClientException If any of the supplied artifacts are non schema-compliant.
      */
-     void validateCacheArtifacts(
+    void validateCacheArtifacts(
             @NonNull final AccountRecord accountToSave,
             final AccessTokenRecord accessTokenToSave,
             @NonNull final RefreshTokenRecord refreshTokenToSave,
@@ -1376,7 +1376,7 @@ public class MsalOAuth2TokenCache
                 CredentialType.fromString(referenceToken.getCredentialType()),
                 referenceToken.getClientId(),
                 referenceToken.getRealm(),
-                null, // Wildcard - delete anything that matches...,
+                null, // Wildcard (*)
                 referenceToken.getAccessTokenType()
         );
 
@@ -1386,19 +1386,29 @@ public class MsalOAuth2TokenCache
         );
 
         for (final Credential accessToken : accessTokens) {
-            if (scopesIntersect(referenceToken, (AccessTokenRecord) accessToken)) {
-                Logger.infoPII(TAG + ":" + methodName, "Removing credential: " + accessToken);
+            if (scopesIntersect(referenceToken, (AccessTokenRecord) accessToken, true)) {
+                Logger.infoPII(
+                        TAG + ":" + methodName,
+                        "Removing credential: " + accessToken
+                );
                 mAccountCredentialCache.removeCredential(accessToken);
             }
         }
     }
 
     private boolean scopesIntersect(final AccessTokenRecord token1,
-                                    final AccessTokenRecord token2) {
+                                    final AccessTokenRecord token2,
+                                    boolean omitDefaultScopes) {
         final String methodName = "scopesIntersect";
 
         final Set<String> token1Scopes = scopesAsSet(token1);
         final Set<String> token2Scopes = scopesAsSet(token2);
+
+        if (omitDefaultScopes) {
+            // Remove the default scopes (if present), do not consider them in lookup criteria
+            token1Scopes.removeAll(DEFAULT_SCOPES);
+            token2Scopes.removeAll(DEFAULT_SCOPES);
+        }
 
         boolean result = false;
         for (final String scope : token2Scopes) {
