@@ -24,9 +24,6 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
@@ -279,9 +276,4 @@ public abstract class OAuth2TokenCache
     protected final Context getContext() {
         return mContext;
     }
-
-    public abstract AccountRecord getAccountByHomeAccountId(@Nullable final String environment,
-                                                            @NonNull final String clientId,
-                                                            @NonNull final String homeAccountId
-    );
 }

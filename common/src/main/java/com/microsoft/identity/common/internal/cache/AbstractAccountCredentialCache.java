@@ -39,8 +39,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
-
 public abstract class AbstractAccountCredentialCache implements IAccountCredentialCache {
 
     private static final String TAG = AbstractAccountCredentialCache.class.getSimpleName();
@@ -187,10 +185,10 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             if (mustMatchOnTarget) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    matches = matches && targetsIntersect(target, accessToken.getTarget(), true);
+                    matches = matches && targetsIntersect(target, accessToken.getTarget());
                 } else if (credential instanceof RefreshTokenRecord) {
                     final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
-                    matches = matches && targetsIntersect(target, refreshToken.getTarget(), true);
+                    matches = matches && targetsIntersect(target, refreshToken.getTarget());
                 } else {
                     Logger.warn(TAG, "Query specified target-match, but no target to match.");
                 }
@@ -212,16 +210,13 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
     /**
      * Examines the intersections of the provided targets (scopes).
      *
-     * @param targetToMatch     The target value[s] our cache-query is looking for.
-     * @param credentialTarget  The target against which our sought value will be compared.
-     * @param omitDefaultScopes True if MSAL's default scopes should be considered in this lookup.
-     *                          False otherwise.
+     * @param targetToMatch    The target value[s] our cache-query is looking for.
+     * @param credentialTarget The target against which our sought value will be compared.
      * @return True, if the credentialTarget contains all of the targets (scopes) declared by
      * targetToMatch. False otherwise.
      */
     static boolean targetsIntersect(@NonNull final String targetToMatch,
-                                    @NonNull final String credentialTarget,
-                                    boolean omitDefaultScopes) {
+                                    @NonNull final String credentialTarget) {
         // The credentialTarget must contain all of the scopes in the targetToMatch
         // It may contain more, but it must contain minimally those
         // Matching is case-insensitive
@@ -240,11 +235,6 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
         for (final String target : credentialTargetArray) {
             credentialTargetSet.add(target.toLowerCase());
-        }
-
-        if (omitDefaultScopes) {
-            soughtTargetSet.removeAll(DEFAULT_SCOPES);
-            credentialTargetSet.removeAll(DEFAULT_SCOPES);
         }
 
         return credentialTargetSet.containsAll(soughtTargetSet);

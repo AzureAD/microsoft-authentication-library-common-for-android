@@ -148,7 +148,7 @@ public class MicrosoftFamilyOAuth2TokenCache
                             && accountRecord.getEnvironment().equals(atRecord.getEnvironment())
                             && accountRecord.getHomeAccountId().equals(atRecord.getHomeAccountId())
                             && accountRecord.getRealm().equals(atRecord.getRealm())
-                            && targetsIntersect(target, atRecord.getTarget(), true)) {
+                            && targetsIntersect(target, atRecord.getTarget())) {
                         if (CredentialType.AccessToken.name().equalsIgnoreCase(atRecord.getCredentialType())
                                 && BearerAuthenticationSchemeInternal.SCHEME_BEARER.equalsIgnoreCase(authenticationScheme.getName())) {
                             atRecordToReturn = atRecord;

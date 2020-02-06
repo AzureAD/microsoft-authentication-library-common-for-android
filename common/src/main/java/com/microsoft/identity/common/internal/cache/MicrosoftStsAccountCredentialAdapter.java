@@ -22,10 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -42,13 +41,9 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
-import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
 
 public class MicrosoftStsAccountCredentialAdapter
         implements IAccountCredentialAdapter
@@ -84,14 +79,18 @@ public class MicrosoftStsAccountCredentialAdapter
             accessToken.setCredentialType(getCredentialType(response.getTokenType()));
             accessToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             accessToken.setRealm(getRealm(strategy, response));
+
             accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
+
             accessToken.setClientId(request.getClientId());
-            accessToken.setTarget(
-                    getTarget(
-                            request.getScope(),
-                            response.getScope()
-                    )
-            );
+            /*
+            ===============================================================
+            NOTE: When requesting tokens for resources other than MS Graph or AAD Graph the default scopes
+            openid, profile and offline_access are not returned.  They need to be written into the cache anyway
+            to avoid cache misses.
+            ===============================================================
+             */
+            accessToken.setTarget(getTarget(response.getScope()));
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
             accessToken.setExpiresOn(String.valueOf(expiresOn));
             accessToken.setSecret(response.getAccessToken());
@@ -130,27 +129,18 @@ public class MicrosoftStsAccountCredentialAdapter
      * @param responseScope The response scope to parse.
      * @return The target containing default scopes.
      */
-    private String getTarget(@NonNull final String requestScope,
-                             @NonNull final String responseScope) {
-        String scopesToCache = "";
-
-        if (TextUtils.isEmpty(responseScope)) {
-            // The response scopes were empty -- per https://tools.ietf.org/html/rfc6749#section-3.3
-            // we are going to fall back to a the request scopes minus any default scopes....
-            final String[] requestScopes = requestScope.split("\\s+");
-            final Set<String> requestScopeSet = new HashSet<>(Arrays.asList(requestScopes));
-            requestScopeSet.removeAll(DEFAULT_SCOPES);
-
-            for (final String scope : requestScopeSet) {
-                scopesToCache += scope + " ";
+    private String getTarget(@NonNull final String responseScope) {
+        if (responseScope.contains(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE)) {
+            if (responseScope.contains(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE)) {
+                return responseScope;
+            } else {
+                return responseScope + " " + AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE;
             }
-
-            scopesToCache = scopesToCache.trim();
         } else {
-            scopesToCache = responseScope;
+            return responseScope + " " + AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE
+                    + " " + AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE
+                    + " " + AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE;
         }
-
-        return scopesToCache;
     }
 
     @Override
@@ -166,18 +156,14 @@ public class MicrosoftStsAccountCredentialAdapter
             // Required
             refreshToken.setCredentialType(CredentialType.RefreshToken.name());
             refreshToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
+
             refreshToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             refreshToken.setClientId(request.getClientId());
             refreshToken.setSecret(response.getRefreshToken());
 
             // Optional
             refreshToken.setFamilyId(response.getFamilyId());
-            refreshToken.setTarget(
-                    getTarget(
-                            request.getScope(),
-                            response.getScope()
-                    )
-            );
+            refreshToken.setTarget(request.getScope());
 
             // TODO are these needed? Expected?
             refreshToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
@@ -200,7 +186,10 @@ public class MicrosoftStsAccountCredentialAdapter
             final IdTokenRecord idToken = new IdTokenRecord();
             // Required fields
             idToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
+
             idToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());
+
+
             idToken.setRealm(getRealm(strategy, response));
             idToken.setCredentialType(
                     SchemaUtil.getCredentialTypeFromVersion(

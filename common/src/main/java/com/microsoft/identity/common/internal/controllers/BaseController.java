@@ -73,25 +73,14 @@ import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import static com.microsoft.identity.common.internal.authorities.Authority.B2C;
-
 public abstract class BaseController {
 
     private static final String TAG = BaseController.class.getSimpleName();
-
-    public static final Set<String> DEFAULT_SCOPES = new HashSet<>();
-
-    static {
-        DEFAULT_SCOPES.add(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE);
-        DEFAULT_SCOPES.add(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE);
-        DEFAULT_SCOPES.add(AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE);
-    }
 
     public abstract AcquireTokenResult acquireToken(final AcquireTokenOperationParameters request)
             throws Exception;
@@ -432,7 +421,9 @@ public abstract class BaseController {
 
     protected void addDefaultScopes(@NonNull final OperationParameters operationParameters) {
         final Set<String> requestScopes = operationParameters.getScopes();
-        requestScopes.addAll(DEFAULT_SCOPES);
+        requestScopes.add(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE);
+        requestScopes.add(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE);
+        requestScopes.add(AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE);
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
         operationParameters.setScopes(requestScopes);
@@ -454,41 +445,18 @@ public abstract class BaseController {
             );
         }
 
-        final boolean isB2CAuthority = B2C.equalsIgnoreCase(
-                parameters
-                        .getAuthority()
-                        .getAuthorityTypeString()
-        );
-
         final String clientId = parameters.getClientId();
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String localAccountId = parameters.getAccount().getLocalAccountId();
 
-        final AccountRecord targetAccount;
-
-        if (isB2CAuthority) {
-            // Due to differences in the B2C service API relative to AAD, all IAccounts returned by
-            // the B2C-STS have the same local_account_id irrespective of the policy used to load it.
-            //
-            // Because the home_account_id is unique to policy and there is no concept of
-            // multi-realm accounts relative to B2C, we'll conditionally use the home_account_id
-            // in these cases
-            targetAccount = parameters
-                    .getTokenCache()
-                    .getAccountByHomeAccountId(
-                            null,
-                            clientId,
-                            homeAccountId
-                    );
-        } else {
-            targetAccount = parameters
-                    .getTokenCache()
-                    .getAccountByLocalAccountId(
-                            null,
-                            clientId,
-                            localAccountId
-                    );
-        }
+        final AccountRecord targetAccount =
+                parameters
+                        .getTokenCache()
+                        .getAccountByLocalAccountId(
+                                null,
+                                clientId,
+                                localAccountId
+                        );
 
         if (null == targetAccount) {
             Logger.info(
