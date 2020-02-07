@@ -99,6 +99,14 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     @SerializedName("claims")
     private String mClaims;
 
+    @Expose()
+    @SerializedName("web_view_zoom_controls_enabled")
+    private boolean webViewZoomControlsEnabled;
+
+    @Expose()
+    @SerializedName("web_view_zoom_enabled")
+    private boolean webViewZoomEnabled;
+
     /**
      * Header of the request.
      */
@@ -118,6 +126,8 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mExtraQueryParams = builder.mExtraQueryParams;
         mClaims = builder.mClaims;
         mRequestHeaders = builder.mRequestHeaders;
+        webViewZoomEnabled = builder.webViewZoomEnabled;
+        webViewZoomControlsEnabled = builder.webViewZoomControlsEnabled;
     }
 
     public static final class ResponseType {
@@ -132,6 +142,8 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         private String mScope;
         private String mClaims;
         private HashMap<String, String> mRequestHeaders;
+        private boolean webViewZoomControlsEnabled;
+        private boolean webViewZoomEnabled;
 
         /**
          * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
@@ -205,6 +217,16 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return self();
         }
 
+        public Builder<B> setWebViewZoomEnabled(boolean webViewZoomEnabled) {
+            this.webViewZoomEnabled = webViewZoomEnabled;
+            return self();
+        }
+
+        public Builder<B> setWebViewZoomControlsEnabled(boolean webViewZoomControlsEnabled) {
+            this.webViewZoomControlsEnabled = webViewZoomControlsEnabled;
+            return self();
+        }
+
         public abstract B self();
 
         public abstract AuthorizationRequest build();
@@ -258,6 +280,14 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         return mState;
     }
 
+    public boolean isWebViewZoomEnabled() {
+        return webViewZoomEnabled;
+    }
+
+    public boolean isWebViewZoomControlsEnabled() {
+        return webViewZoomControlsEnabled;
+    }
+    
     //CHECKSTYLE:OFF
     @Override
     public String toString() {

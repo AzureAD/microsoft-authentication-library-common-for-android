@@ -23,13 +23,17 @@ public final class AuthorizationActivity extends FragmentActivity {
                                            final String requestUrl,
                                            final String redirectUri,
                                            final HashMap<String, String> requestHeaders,
-                                           final AuthorizationAgent authorizationAgent) {
+                                           final AuthorizationAgent authorizationAgent,
+                                           final boolean webViewZoomEnabled,
+                                           final boolean webViewZoomControlsEnabled) {
         final Intent intent = new Intent(context, AuthorizationActivity.class);
         intent.putExtra(AuthorizationFragment.KEY_AUTH_INTENT, authIntent);
         intent.putExtra(AuthorizationFragment.KEY_AUTH_REQUEST_URL, requestUrl);
         intent.putExtra(AuthorizationFragment.KEY_AUTH_REDIRECT_URI, redirectUri);
         intent.putExtra(AuthorizationFragment.KEY_REQUEST_HEADERS, requestHeaders);
         intent.putExtra(AuthorizationFragment.KEY_AUTH_AUTHORIZATION_AGENT, authorizationAgent);
+        intent.putExtra(AuthorizationFragment.WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
+        intent.putExtra(AuthorizationFragment.WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
         intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         return intent;
     }
