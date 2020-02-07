@@ -143,6 +143,14 @@ public class AcquireTokenOperationParameters extends OperationParameters {
         this.mBrokerBrowserSupportEnabled = brokerBrowserSupportEnabled;
     }
 
+    public void setWebViewZoomControlsEnabled(boolean webViewZoomControlsEnabled) {
+        this.webViewZoomControlsEnabled = webViewZoomControlsEnabled;
+    }
+
+    public void setWebViewZoomEnabled(boolean webViewZoomEnabled) {
+        this.webViewZoomEnabled = webViewZoomEnabled;
+    }
+
     public boolean isWebViewZoomEnabled() {
         return webViewZoomEnabled;
     }
