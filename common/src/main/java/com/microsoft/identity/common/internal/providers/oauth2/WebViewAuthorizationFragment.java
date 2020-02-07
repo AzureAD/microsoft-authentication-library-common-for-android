@@ -31,6 +31,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
 /**
  * Authorization fragment with embedded webview.
@@ -59,6 +61,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     // For MSAL CPP test cases only
     private String mPostPageLoadedUrl;
 
+    private boolean webViewZoomControlsEnabled;
+
+    private boolean webViewZoomEnabled;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,10 +80,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putString(REQUEST_URL, mAuthorizationRequestUrl);
         outState.putSerializable(REQUEST_HEADERS, mRequestHeaders);
         outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedUrl);
+        outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedUrl);
+        outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
+        outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
     }
 
     @Override
-    void extractState(final Bundle state){
+    void extractState(final Bundle state) {
         super.extractState(state);
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mPkeyAuthStatus = state.getBoolean(PKEYAUTH_STATUS, false);
@@ -85,6 +94,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mRedirectUri = state.getString(REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
         mPostPageLoadedUrl = state.getString(POST_PAGE_LOADED_URL);
+        webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
+        webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
     }
 
     @Nullable
@@ -182,7 +193,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setLoadWithOverviewMode(true);
         mWebView.getSettings().setDomStorageEnabled(true);
         mWebView.getSettings().setUseWideViewPort(true);
-        mWebView.getSettings().setBuiltInZoomControls(true);
+        mWebView.getSettings().setBuiltInZoomControls(webViewZoomControlsEnabled);
+        mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
     }

@@ -167,6 +167,10 @@ public abstract class BaseController {
                     parameters.getClaimsRequestJson()
             ).setRequestHeaders(
                     acquireTokenOperationParameters.getRequestHeaders()
+            ).setWebViewZoomEnabled(
+                    acquireTokenOperationParameters.isWebViewZoomEnabled()
+            ).setWebViewZoomControlsEnabled(
+                    acquireTokenOperationParameters.isWebViewZoomControlsEnabled()
             );
 
             // We don't want to show the SELECT_ACCOUNT page if login_hint is set.
