@@ -233,8 +233,8 @@ public class AuthorizationFragment extends Fragment {
         mRedirectUri = state.getString(KEY_AUTH_REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
         mAuthorizationAgent = (AuthorizationAgent) state.getSerializable(KEY_AUTH_AUTHORIZATION_AGENT);
-        webViewZoomEnabled = state.getBoolean(AuthorizationActivity.WEB_VIEW_ZOOM_ENABLED, true);
-        webViewZoomControlsEnabled = state.getBoolean(AuthorizationActivity.WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
+        webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
+        webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
     }
 
     /**
