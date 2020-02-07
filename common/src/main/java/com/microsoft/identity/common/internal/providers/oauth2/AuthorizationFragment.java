@@ -97,11 +97,15 @@ public class AuthorizationFragment extends Fragment {
     @VisibleForTesting
     static final String KEY_REQUEST_HEADERS = "requestHeaders";
 
+    static final String WEB_VIEW_ZOOM_CONTROLS_ENABLED = "com.microsoft.identity.web.view.zoom.controls.enabled";
+
+    static final String WEB_VIEW_ZOOM_ENABLED = "com.microsoft.identity.web.view.zoom.enabled";
+
     public static final String CANCEL_INTERACTIVE_REQUEST_ACTION = "cancel_interactive_request_action";
 
     private static final String TAG = AuthorizationFragment.class.getSimpleName();
 
-    /** 
+    /**
      * The bundle containing values for initializing this fragment.
      */
     private Bundle mInstanceState;
@@ -114,7 +118,7 @@ public class AuthorizationFragment extends Fragment {
 
     /**
      * Response URI of the browser flow.
-     * As we might not have any control over the calling Activity, 
+     * As we might not have any control over the calling Activity,
      * we can't rely on the content of the launching intent to provide us this value.
      */
     private static String sCustomTabResponseUri;
@@ -138,6 +142,10 @@ public class AuthorizationFragment extends Fragment {
     private AuthorizationAgent mAuthorizationAgent;
 
     private boolean mAuthResultSent = false;
+
+    private boolean webViewZoomControlsEnabled;
+
+    private boolean webViewZoomEnabled;
 
     private BroadcastReceiver mCancelRequestReceiver = new BroadcastReceiver() {
         @Override
@@ -225,6 +233,8 @@ public class AuthorizationFragment extends Fragment {
         mRedirectUri = state.getString(KEY_AUTH_REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
         mAuthorizationAgent = (AuthorizationAgent) state.getSerializable(KEY_AUTH_AUTHORIZATION_AGENT);
+        webViewZoomEnabled = state.getBoolean(AuthorizationActivity.WEB_VIEW_ZOOM_ENABLED, true);
+        webViewZoomControlsEnabled = state.getBoolean(AuthorizationActivity.WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
     }
 
     /**
@@ -458,6 +468,8 @@ public class AuthorizationFragment extends Fragment {
         outState.putSerializable(KEY_AUTH_AUTHORIZATION_AGENT, mAuthorizationAgent);
         outState.putString(KEY_AUTH_REDIRECT_URI, mRedirectUri);
         outState.putString(KEY_AUTH_REQUEST_URL, mAuthorizationRequestUrl);
+        outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
+        outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
     }
 
     /**
@@ -513,7 +525,8 @@ public class AuthorizationFragment extends Fragment {
         mWebView.getSettings().setLoadWithOverviewMode(true);
         mWebView.getSettings().setDomStorageEnabled(true);
         mWebView.getSettings().setUseWideViewPort(true);
-        mWebView.getSettings().setBuiltInZoomControls(true);
+        mWebView.getSettings().setBuiltInZoomControls(webViewZoomControlsEnabled);
+        mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
     }
