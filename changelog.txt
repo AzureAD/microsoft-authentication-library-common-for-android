@@ -1,6 +1,14 @@
 Version 1.0.15
 ------------
-- TODO
+- Fix for msal#915
+    * Incorrect id_token returned for B2C app with multiple policies
+- Fix for msal#916
+    * WebView calls loadUrl multiple times over lifecycle
+- Fix for msal#921
+    * WebView displays error when connectivity lost
+- Fix for msal#924
+    * AT caching logic change for scope intersection
+- Enhancement: WebView zoom controls are now configurable
 
 Version 1.0.14-hf1
 ------------
