@@ -22,6 +22,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
 public final class AuthorizationActivity extends FragmentActivity {
 
@@ -32,13 +34,17 @@ public final class AuthorizationActivity extends FragmentActivity {
                                            final String requestUrl,
                                            final String redirectUri,
                                            final HashMap<String, String> requestHeaders,
-                                           final AuthorizationAgent authorizationAgent) {
+                                           final AuthorizationAgent authorizationAgent,
+                                           final boolean webViewZoomEnabled,
+                                           final boolean webViewZoomControlsEnabled) {
         final Intent intent = new Intent(context, AuthorizationActivity.class);
         intent.putExtra(AUTH_INTENT, authIntent);
         intent.putExtra(REQUEST_URL, requestUrl);
         intent.putExtra(REDIRECT_URI, redirectUri);
         intent.putExtra(REQUEST_HEADERS, requestHeaders);
         intent.putExtra(AUTHORIZATION_AGENT, authorizationAgent);
+        intent.putExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
+        intent.putExtra(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
         intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         return intent;
     }
