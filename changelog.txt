@@ -6,7 +6,7 @@ Version 1.0.15
     * WebView calls loadUrl multiple times over lifecycle
 - Fix for msal#921
     * WebView displays error when connectivity lost
-- Fix for msal#924
+- Fix for msal#904
     * AT caching logic change for scope intersection
 - Enhancement: WebView zoom controls are now configurable
 
