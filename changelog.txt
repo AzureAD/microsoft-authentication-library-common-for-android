@@ -1,3 +1,19 @@
+Version 2.0.0
+------------
+- Adds support fot AT/PoP
+
+Version 1.0.15
+------------
+- Fix for msal#915
+    * Incorrect id_token returned for B2C app with multiple policies
+- Fix for msal#916
+    * WebView calls loadUrl multiple times over lifecycle
+- Fix for msal#921
+    * WebView displays error when connectivity lost
+- Fix for msal#904
+    * AT caching logic change for scope intersection
+- MSAL Enhancement: WebView zoom controls are now configurable
+
 Version 1.0.14
 ------------
 - Logging improvements.
