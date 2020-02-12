@@ -148,7 +148,7 @@ public abstract class OAuth2Strategy
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
         return HttpRequest.sendPost(
-                new URL(mTokenEndpoint + "?dc=china-bjb1-test"),
+                new URL(mTokenEndpoint + "?dc=WST-TEST1"),
                 headers,
                 requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
                 TOKEN_REQUEST_CONTENT_TYPE
