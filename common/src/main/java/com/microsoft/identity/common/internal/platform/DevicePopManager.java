@@ -30,6 +30,7 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyInfo;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.StrongBoxUnavailableException;
+import android.text.TextUtils;
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
@@ -457,7 +458,10 @@ class DevicePopManager implements IDevicePopManager {
             claimsBuilder.claim(SignedHttpRequestJwtClaims.HTTP_HOST, requestUrl.getHost());
             claimsBuilder.claim(SignedHttpRequestJwtClaims.HTTP_PATH, requestUrl.getPath());
             claimsBuilder.claim(SignedHttpRequestJwtClaims.CNF, getDevicePopJwkMinifiedJson());
-            claimsBuilder.claim(SignedHttpRequestJwtClaims.NONCE, nonce);
+
+            if (!TextUtils.isEmpty(nonce)) {
+                claimsBuilder.claim(SignedHttpRequestJwtClaims.NONCE, nonce);
+            }
 
             final JWTClaimsSet claimsSet = claimsBuilder.build();
 
