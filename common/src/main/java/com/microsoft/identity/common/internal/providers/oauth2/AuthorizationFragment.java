@@ -87,7 +87,7 @@ public abstract class AuthorizationFragment extends Fragment {
 
         // Register Broadcast receiver to cancel the auth request
         // if another incoming request is launched by the app
-        getActivity().getApplicationContext().registerReceiver(mCancelRequestReceiver,
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(mCancelRequestReceiver,
                 new IntentFilter(CANCEL_INTERACTIVE_REQUEST));
 
         if (savedInstanceState == null) {
@@ -168,7 +168,7 @@ public abstract class AuthorizationFragment extends Fragment {
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
         }
 
-        getActivity().getApplicationContext().unregisterReceiver(mCancelRequestReceiver);
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mCancelRequestReceiver);
         super.onDestroy();
     }
 
