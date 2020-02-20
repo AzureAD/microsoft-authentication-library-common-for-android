@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.authscheme;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
@@ -70,7 +71,7 @@ public class PopAuthenticationSchemeInternal
 
     PopAuthenticationSchemeInternal(@NonNull final String httpMethod,
                                     @NonNull final URL url,
-                                    @NonNull final String nonce) {
+                                    @Nullable final String nonce) {
         super(SCHEME_POP);
         mHttpMethod = httpMethod;
         mUrl = url;
@@ -100,6 +101,7 @@ public class PopAuthenticationSchemeInternal
     }
 
     @Override
+    @Nullable
     public String getNonce() {
         return mNonce;
     }

@@ -96,6 +96,7 @@ public interface IDevicePopManager {
      * @param httpMethod  The HTTP method that will be used with this outbound request.
      * @param requestUrl  The recipient URL of the outbound request.
      * @param accessToken The access_token from which to derive the signed JWT.
+     * @param nonce       Arbitrary value used for replay protection by middleware.
      * @return The signed PoP access token.
      */
     String mintSignedAccessToken(String httpMethod,
