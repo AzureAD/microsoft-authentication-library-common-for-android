@@ -1,6 +1,8 @@
-Version 2.0.0
+Version 2.0.1
 ------------
-- Adds support fot AT/PoP
+- Adds support for AT/PoP
+- Fix for common#823
+    * CANCEL_INTERACTIVE_REQUEST broadcast not working.
 
 Version 1.0.15
 ------------
