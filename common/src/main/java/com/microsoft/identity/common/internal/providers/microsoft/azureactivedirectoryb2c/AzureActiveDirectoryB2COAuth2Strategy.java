@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
@@ -33,6 +34,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
@@ -52,8 +54,8 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
      *
      * @param config OAuth2Configuration
      */
-    public AzureActiveDirectoryB2COAuth2Strategy(OAuth2Configuration config) {
-        super(config);
+    public AzureActiveDirectoryB2COAuth2Strategy(OAuth2Configuration config, OAuth2StrategyParameters options) {
+        super(config, options);
     }
 
     @Override
@@ -97,13 +99,15 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     }
 
     @Override
-    public TokenRequest createTokenRequest(AuthorizationRequest request, AuthorizationResponse response) {
+    public TokenRequest createTokenRequest(AuthorizationRequest request,
+                                           AuthorizationResponse response,
+                                           AbstractAuthenticationScheme authScheme) {
         return null;
     }
 
 
     @Override
-    public TokenRequest createRefreshTokenRequest() {
+    public TokenRequest createRefreshTokenRequest(AbstractAuthenticationScheme authScheme) {
         return null;
     }
 
@@ -119,5 +123,10 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     @Override
     protected TokenResult getTokenResultFromHttpResponse(HttpResponse response) {
         return null;
+    }
+
+    @Override
+    protected void validateTokenResponse(TokenRequest request, TokenResponse response) {
+
     }
 }

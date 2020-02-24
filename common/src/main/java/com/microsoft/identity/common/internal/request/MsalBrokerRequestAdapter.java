@@ -1,3 +1,25 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.common.internal.request;
 
 import android.accounts.Account;
@@ -12,11 +34,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authorities.Environment;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -47,6 +72,16 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     private static final String TAG = MsalBrokerRequestAdapter.class.getName();
 
+    public static Gson sRequestAdapterGsonInstance;
+
+    static {
+        sRequestAdapterGsonInstance = new GsonBuilder()
+                .registerTypeAdapter(
+                        AbstractAuthenticationScheme.class,
+                        new AuthenticationSchemeTypeAdapter()
+                ).create();
+    }
+
     @Override
     public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final AcquireTokenOperationParameters parameters) {
 
@@ -75,7 +110,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         parameters.isBrokerBrowserSupportEnabled() ?
                                 AuthorizationAgent.BROWSER.name() :
                                 AuthorizationAgent.WEBVIEW.name()
-                ).build();
+                ).authenticationScheme(parameters.getAuthenticationScheme()).build();
 
         return brokerRequest;
     }
@@ -101,9 +136,22 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .msalVersion(parameters.getSdkVersion())
                 .environment(AzureActiveDirectory.getEnvironment().name())
                 .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
+                .authenticationScheme(parameters.getAuthenticationScheme())
                 .build();
 
         return brokerRequest;
+    }
+
+    @NonNull
+    private static AbstractAuthenticationScheme getAuthenticationScheme(@NonNull final BrokerRequest request) {
+        final AbstractAuthenticationScheme requestScheme = request.getAuthenticationScheme();
+
+        if (null == requestScheme) {
+            // Default assumes the scheme is Bearer
+            return new BearerAuthenticationSchemeInternal();
+        } else {
+            return requestScheme;
+        }
     }
 
     @Override
@@ -117,9 +165,12 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final Intent intent = callingActivity.getIntent();
 
-        final BrokerRequest brokerRequest = new Gson().fromJson(
+        final BrokerRequest brokerRequest = sRequestAdapterGsonInstance.fromJson(
                 intent.getStringExtra(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
-                BrokerRequest.class);
+                BrokerRequest.class
+        );
+
+        parameters.setAuthenticationScheme(getAuthenticationScheme(brokerRequest));
 
         parameters.setActivity(callingActivity);
 
@@ -207,12 +258,15 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.info(TAG, "Constructing BrokerAcquireTokenSilentOperationParameters from result bundle");
 
-        final BrokerRequest brokerRequest = new Gson().fromJson(
+        final BrokerRequest brokerRequest = sRequestAdapterGsonInstance.fromJson(
                 bundle.getString(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
-                BrokerRequest.class);
+                BrokerRequest.class
+        );
 
         final BrokerAcquireTokenSilentOperationParameters parameters =
                 new BrokerAcquireTokenSilentOperationParameters();
+
+        parameters.setAuthenticationScheme(getAuthenticationScheme(brokerRequest));
 
         parameters.setAppContext(context);
 
@@ -310,12 +364,16 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     public Bundle getRequestBundleForHello(@NonNull final OperationParameters parameters) {
         final Bundle requestBundle = new Bundle();
-        requestBundle.putString(AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
-                AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);
+        requestBundle.putString(
+                AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
+                AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE
+        );
 
         if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {
-            requestBundle.putString(AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
-                    parameters.getRequiredBrokerProtocolVersion());
+            requestBundle.putString(
+                    AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
+                    parameters.getRequiredBrokerProtocolVersion()
+            );
         }
 
         return requestBundle;
@@ -330,7 +388,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         requestBundle.putString(
                 AuthenticationConstants.Broker.BROKER_REQUEST_V2,
-                new Gson().toJson(brokerRequest, BrokerRequest.class)
+                sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class)
         );
 
         requestBundle.putInt(

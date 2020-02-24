@@ -23,12 +23,14 @@
 package com.microsoft.identity.common.internal.request;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
@@ -49,29 +51,44 @@ public class OperationParameters {
 
     @Expose()
     private Set<String> mScopes;
+
     protected IAccountRecord mAccount;
+
     @Expose()
     private String clientId;
+
     @Expose()
     private String redirectUri;
+
     @Expose()
     private Authority mAuthority;
+
     @Expose()
     private String mClaimsRequestJson;
+
     @Expose()
     private SdkType mSdkType = SdkType.MSAL; // default value where we get a v2 id token;
+
     @Expose()
     private String mSdkVersion;
+
     @Expose()
     private String mApplicationName;
+
     @Expose()
     private String mApplicationVersion;
+
     @Expose()
     private String mRequiredBrokerProtocolVersion; //Move the required broker protocol var into parent class, as the interactive call also needs Bound Service.
+
     @Expose()
     private boolean mForceRefresh;
+
     @Expose
     private String mCorrelationId;
+
+    @Expose
+    private AbstractAuthenticationScheme mAuthenticationScheme;
 
     public String getRequiredBrokerProtocolVersion() {
         return mRequiredBrokerProtocolVersion;
@@ -201,19 +218,26 @@ public class OperationParameters {
         this.mCorrelationId = correlationId;
     }
 
+    public AbstractAuthenticationScheme getAuthenticationScheme() {
+        return mAuthenticationScheme;
+    }
+
+    public void setAuthenticationScheme(@NonNull final AbstractAuthenticationScheme scheme) {
+        mAuthenticationScheme = scheme;
+    }
+
     public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
         this.mBrowserSafeList = browserSafeList;
     }
 
     /**
      * Get the list of browsers which are safe to launch for auth flow.
+     *
      * @return list of browser descriptors
      */
     public List<BrowserDescriptor> getBrowserSafeList() {
         return mBrowserSafeList;
     }
-
-
 
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
@@ -223,7 +247,7 @@ public class OperationParameters {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OperationParameters)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
         OperationParameters that = (OperationParameters) o;
 
@@ -231,12 +255,14 @@ public class OperationParameters {
         if (mScopes != null ? !mScopes.equals(that.mScopes) : that.mScopes != null) return false;
         if (mAccount != null ? !mAccount.equals(that.mAccount) : that.mAccount != null)
             return false;
-        if (!getClientId().equals(that.getClientId())) return false;
-        if (getRedirectUri() != null ? !getRedirectUri().equals(that.getRedirectUri()) : that.getRedirectUri() != null)
+        if (!clientId.equals(that.clientId)) return false;
+        if (redirectUri != null ? !redirectUri.equals(that.redirectUri) : that.redirectUri != null)
             return false;
         if (mAuthority != null ? !mAuthority.equals(that.mAuthority) : that.mAuthority != null)
             return false;
-        return mClaimsRequestJson != null ? mClaimsRequestJson.equals(that.mClaimsRequestJson) : that.mClaimsRequestJson == null;
+        if (mClaimsRequestJson != null ? !mClaimsRequestJson.equals(that.mClaimsRequestJson) : that.mClaimsRequestJson != null)
+            return false;
+        return mAuthenticationScheme != null ? mAuthenticationScheme.equals(that.mAuthenticationScheme) : that.mAuthenticationScheme == null;
     }
     //CHECKSTYLE:ON
 
@@ -249,26 +275,28 @@ public class OperationParameters {
     public int hashCode() {
         int result = mScopes != null ? mScopes.hashCode() : 0;
         result = 31 * result + (mAccount != null ? mAccount.hashCode() : 0);
-        result = 31 * result + getClientId().hashCode();
-        result = 31 * result + (getRedirectUri() != null ? getRedirectUri().hashCode() : 0);
+        result = 31 * result + clientId.hashCode();
+        result = 31 * result + (redirectUri != null ? redirectUri.hashCode() : 0);
         result = 31 * result + (mAuthority != null ? mAuthority.hashCode() : 0);
         result = 31 * result + (mClaimsRequestJson != null ? mClaimsRequestJson.hashCode() : 0);
         result = 31 * result + (mForceRefresh ? 1 : 0);
+        result = 31 * result + (mAuthenticationScheme != null ? mAuthenticationScheme.hashCode() : 0);
         return result;
     }
     //CHECKSTYLE:ON
-
 
     /**
      * Since this is about validating MSAL Parameters and not an authorization request or token request.  I've placed this here.
      */
     public void validate() throws ArgumentException {
         final String methodName = ":validate";
+
         Logger.verbose(
                 TAG + methodName,
                 "Validating operation params..."
         );
-        Boolean validScopeArgument = false;
+
+        boolean validScopeArgument = false;
 
         if (mScopes != null) {
             mScopes.removeAll(Arrays.asList("", null));
@@ -293,5 +321,23 @@ public class OperationParameters {
             }
         }
 
+        // AuthenticationScheme is present...
+        if (null == mAuthenticationScheme) {
+            if (this instanceof AcquireTokenSilentOperationParameters) {
+                throw new ArgumentException(
+                        ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
+                        ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
+                        "authentication scheme is undefined"
+                );
+            }
+
+            if (this instanceof AcquireTokenOperationParameters) {
+                throw new ArgumentException(
+                        ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
+                        ArgumentException.AUTHENTICATION_SCHEME_ARGUMENT_NAME,
+                        "authentication scheme is undefined"
+                );
+            }
+        }
     }
 }

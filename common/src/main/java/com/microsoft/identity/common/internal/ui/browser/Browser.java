@@ -24,8 +24,9 @@ package com.microsoft.identity.common.internal.ui.browser;
 
 import android.content.pm.PackageInfo;
 import android.content.pm.Signature;
-import androidx.annotation.NonNull;
 import android.util.Base64;
+
+import androidx.annotation.NonNull;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

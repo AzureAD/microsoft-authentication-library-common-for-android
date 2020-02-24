@@ -26,10 +26,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
@@ -110,7 +112,9 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
                 requestUrl.toString(),
                 mAuthorizationRequest.getRedirectUri(),
                 mAuthorizationRequest.getRequestHeaders(),
-                AuthorizationAgent.BROWSER);
+                AuthorizationAgent.BROWSER,
+                true,
+                true);
         // singleTask launchMode is required for the authorization redirect is from an external browser
         // in the browser authorization flow
         // For broker request we need to clear all activities in the task and bring Authorization Activity to the
@@ -135,7 +139,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
 
     @Override
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
-        if (requestCode == BROWSER_FLOW) {
+        if (requestCode == AuthenticationConstants.UIRequest.BROWSER_FLOW) {
             dispose();
             final AuthorizationResult result = mOAuth2Strategy
                     .getAuthorizationResultFactory().createAuthorizationResult(

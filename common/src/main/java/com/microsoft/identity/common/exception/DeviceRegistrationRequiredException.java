@@ -28,6 +28,7 @@ package com.microsoft.identity.common.exception;
  */
 final public class DeviceRegistrationRequiredException extends BaseException {
 
+    public static final String sName =  DeviceRegistrationRequiredException.class.getName();
 
     // The username for which device needs registration
     private String mUsername;
@@ -44,5 +45,10 @@ final public class DeviceRegistrationRequiredException extends BaseException {
 
     public void setUsername(String username) {
         this.mUsername = username;
+    }
+
+    @Override
+    public String getExceptionName(){
+        return sName;
     }
 }

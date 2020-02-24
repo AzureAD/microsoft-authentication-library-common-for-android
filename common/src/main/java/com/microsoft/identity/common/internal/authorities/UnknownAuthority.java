@@ -24,11 +24,15 @@ package com.microsoft.identity.common.internal.authorities;
 
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 
 import java.net.URL;
 
 public class UnknownAuthority extends Authority {
+
     @Override
     public Uri getAuthorityUri() {
         throw new UnsupportedOperationException();
@@ -40,7 +44,8 @@ public class UnknownAuthority extends Authority {
     }
 
     @Override
-    public OAuth2Strategy createOAuth2Strategy() {
+    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) {
         throw new UnsupportedOperationException();
     }
+
 }

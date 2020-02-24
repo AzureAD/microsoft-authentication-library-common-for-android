@@ -20,20 +20,28 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.internal.authscheme;
 
-package com.microsoft.identity.common.exception;
+import androidx.annotation.NonNull;
 
 /**
- * An exception that represents an error where MSAL cannot reach Broker (i.e. through Bind Service or Account Manager).
+ * Internal representation of a Bearer Auth Scheme.
  */
-public class BrokerCommunicationException extends BaseException {
+public class BearerAuthenticationSchemeInternal
+        extends TokenAuthenticationScheme
+        implements ITokenAuthenticationSchemeInternal {
+
+    public static final String SCHEME_BEARER = "Bearer";
 
     /**
-     * Initiates the {@link BrokerCommunicationException} with error code, error message and throwable.
-     *
-     * @param errorMessage The error message contained in the exception.
+     * Constructs a new BearerAuthenticationSchemeInternal.
      */
-    public BrokerCommunicationException(final String errorMessage) {
-        super(ErrorStrings.IO_ERROR, errorMessage);
+    public BearerAuthenticationSchemeInternal() {
+        super(SCHEME_BEARER);
+    }
+
+    @Override
+    public String getAccessTokenForScheme(@NonNull final String accessToken) {
+        return accessToken;
     }
 }

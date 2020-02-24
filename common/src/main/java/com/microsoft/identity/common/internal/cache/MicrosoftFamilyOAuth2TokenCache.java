@@ -28,6 +28,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -80,7 +83,8 @@ public class MicrosoftFamilyOAuth2TokenCache
      */
     public ICacheRecord loadByFamilyId(@Nullable final String clientId,
                                        @Nullable final String target,
-                                       @NonNull final AccountRecord accountRecord) {
+                                       @NonNull final AccountRecord accountRecord,
+                                       @Nullable final AbstractAuthenticationScheme authenticationScheme) {
         final String methodName = ":loadByFamilyId";
 
         final String familyId = "1";
@@ -135,7 +139,7 @@ public class MicrosoftFamilyOAuth2TokenCache
             }
         }
 
-        if (null != target) {
+        if (null != target && null != authenticationScheme) {
             for (final Credential credential : allCredentials) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord atRecord = (AccessTokenRecord) credential;
@@ -144,9 +148,16 @@ public class MicrosoftFamilyOAuth2TokenCache
                             && accountRecord.getEnvironment().equals(atRecord.getEnvironment())
                             && accountRecord.getHomeAccountId().equals(atRecord.getHomeAccountId())
                             && accountRecord.getRealm().equals(atRecord.getRealm())
-                            && targetsIntersect(target, atRecord.getTarget())) {
-                        atRecordToReturn = atRecord;
-                        break;
+                            && targetsIntersect(target, atRecord.getTarget(), true)) {
+                        if (CredentialType.AccessToken.name().equalsIgnoreCase(atRecord.getCredentialType())
+                                && BearerAuthenticationSchemeInternal.SCHEME_BEARER.equalsIgnoreCase(authenticationScheme.getName())) {
+                            atRecordToReturn = atRecord;
+                            break;
+                        } else if (CredentialType.AccessToken_With_AuthScheme.name().equalsIgnoreCase(atRecord.getCredentialType())
+                                && PopAuthenticationSchemeInternal.SCHEME_POP.equalsIgnoreCase(authenticationScheme.getName())) {
+                            atRecordToReturn = atRecord;
+                            break;
+                        }
                     }
                 }
             }
@@ -171,7 +182,8 @@ public class MicrosoftFamilyOAuth2TokenCache
     public List<ICacheRecord> loadByFamilyIdWithAggregatedAccountData(
             @NonNull final String clientId,
             @Nullable final String target,
-            @NonNull final AccountRecord account) {
+            @NonNull final AccountRecord account,
+            @Nullable final AbstractAuthenticationScheme authenticationScheme) {
         final String methodName = ":loadByFamilyIdWithAggregatedAccountData";
 
         final List<ICacheRecord> result = new ArrayList<>();
@@ -181,7 +193,8 @@ public class MicrosoftFamilyOAuth2TokenCache
                 loadByFamilyId(
                         clientId,
                         target,
-                        account
+                        account,
+                        authenticationScheme
                 )
         );
 

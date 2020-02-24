@@ -22,14 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.util;
 
-import android.os.Bundle;
-
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.util.ICacheRecordGsonAdapter;

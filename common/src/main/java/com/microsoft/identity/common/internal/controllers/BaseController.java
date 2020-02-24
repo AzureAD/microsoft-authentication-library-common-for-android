@@ -23,9 +23,9 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
@@ -36,6 +36,8 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -71,14 +73,25 @@ import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import static com.microsoft.identity.common.internal.authorities.Authority.B2C;
+
 public abstract class BaseController {
 
     private static final String TAG = BaseController.class.getSimpleName();
+
+    public static final Set<String> DEFAULT_SCOPES = new HashSet<>();
+
+    static {
+        DEFAULT_SCOPES.add(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE);
+        DEFAULT_SCOPES.add(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE);
+        DEFAULT_SCOPES.add(AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE);
+    }
 
     public abstract AcquireTokenResult acquireToken(final AcquireTokenOperationParameters request)
             throws Exception;
@@ -154,6 +167,10 @@ public abstract class BaseController {
                     parameters.getClaimsRequestJson()
             ).setRequestHeaders(
                     acquireTokenOperationParameters.getRequestHeaders()
+            ).setWebViewZoomEnabled(
+                    acquireTokenOperationParameters.isWebViewZoomEnabled()
+            ).setWebViewZoomControlsEnabled(
+                    acquireTokenOperationParameters.isWebViewZoomControlsEnabled()
             );
 
             // We don't want to show the SELECT_ACCOUNT page if login_hint is set.
@@ -172,7 +189,7 @@ public abstract class BaseController {
 
     protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
                                                            @NonNull final OperationParameters parameters) {
-        AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
+        final AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
         initializeAuthorizationRequestBuilder(builder, parameters);
         return builder.build();
     }
@@ -185,10 +202,14 @@ public abstract class BaseController {
         final String methodName = ":performTokenRequest";
         HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAppContext());
 
-        TokenRequest tokenRequest = strategy.createTokenRequest(request, response);
+        final TokenRequest tokenRequest = strategy.createTokenRequest(
+                request,
+                response,
+                parameters.getAuthenticationScheme()
+        );
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
 
-        TokenResult tokenResult = strategy.requestToken(tokenRequest);
+        final TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
         logResult(TAG, tokenResult);
 
@@ -230,7 +251,7 @@ public abstract class BaseController {
 
             // Create a new AuthenticationResult to hold the saved record
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
-                    savedRecord,
+                    finalizeCacheRecordForResult(savedRecord, parameters.getAuthenticationScheme()),
                     savedRecords,
                     SdkType.MSAL
             );
@@ -348,7 +369,7 @@ public abstract class BaseController {
             throw authorityResult.getClientException();
         }
 
-        final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest();
+        final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(parameters.getAuthenticationScheme());
         refreshTokenRequest.setClientId(parameters.getClientId());
         refreshTokenRequest.setScope(TextUtils.join(" ", parameters.getScopes()));
         refreshTokenRequest.setRefreshToken(parameters.getRefreshToken().getSecret());
@@ -363,7 +384,7 @@ public abstract class BaseController {
         }
 
         // Set Broker version to Token Request if it's a brokered request.
-        if(parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
+        if (parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setBrokerVersion(
                     ((BrokerAcquireTokenSilentOperationParameters) parameters).getBrokerVersion()
             );
@@ -415,9 +436,7 @@ public abstract class BaseController {
 
     protected void addDefaultScopes(@NonNull final OperationParameters operationParameters) {
         final Set<String> requestScopes = operationParameters.getScopes();
-        requestScopes.add(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE);
-        requestScopes.add(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE);
-        requestScopes.add(AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE);
+        requestScopes.addAll(DEFAULT_SCOPES);
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
         operationParameters.setScopes(requestScopes);
@@ -439,18 +458,41 @@ public abstract class BaseController {
             );
         }
 
+        final boolean isB2CAuthority = B2C.equalsIgnoreCase(
+                parameters
+                        .getAuthority()
+                        .getAuthorityTypeString()
+        );
+
         final String clientId = parameters.getClientId();
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String localAccountId = parameters.getAccount().getLocalAccountId();
 
-        final AccountRecord targetAccount =
-                parameters
-                        .getTokenCache()
-                        .getAccountByLocalAccountId(
-                                null,
-                                clientId,
-                                localAccountId
-                        );
+        final AccountRecord targetAccount;
+
+        if (isB2CAuthority) {
+            // Due to differences in the B2C service API relative to AAD, all IAccounts returned by
+            // the B2C-STS have the same local_account_id irrespective of the policy used to load it.
+            //
+            // Because the home_account_id is unique to policy and there is no concept of
+            // multi-realm accounts relative to B2C, we'll conditionally use the home_account_id
+            // in these cases
+            targetAccount = parameters
+                    .getTokenCache()
+                    .getAccountByHomeAccountId(
+                            null,
+                            clientId,
+                            homeAccountId
+                    );
+        } else {
+            targetAccount = parameters
+                    .getTokenCache()
+                    .getAccountByLocalAccountId(
+                            null,
+                            clientId,
+                            localAccountId
+                    );
+        }
 
         if (null == targetAccount) {
             Logger.info(
@@ -482,17 +524,17 @@ public abstract class BaseController {
     /**
      * Helper method which returns false if the tenant id of the authority
      * doesn't match with the tenant of the Access token for AADAuthority.
-     *
+     * <p>
      * Returns true otherwise.
      */
     protected boolean isRequestAuthorityRealmSameAsATRealm(@NonNull final Authority requestAuthority,
                                                            @NonNull final AccessTokenRecord accessTokenRecord)
             throws ServiceException, ClientException {
-        if(requestAuthority instanceof AzureActiveDirectoryAuthority){
+        if (requestAuthority instanceof AzureActiveDirectoryAuthority) {
 
             String tenantId = ((AzureActiveDirectoryAuthority) requestAuthority).getAudience().getTenantId();
 
-            if(AzureActiveDirectoryAudience.isHomeTenantAlias(tenantId)) {
+            if (AzureActiveDirectoryAudience.isHomeTenantAlias(tenantId)) {
                 // if realm on AT and home account's tenant id do not match, we have a token for guest and
                 // requested authority here is for home, so return false we need to refresh the token
                 final String utidFromHomeAccountId = accessTokenRecord
@@ -501,7 +543,7 @@ public abstract class BaseController {
 
                 return utidFromHomeAccountId.equalsIgnoreCase(accessTokenRecord.getRealm());
 
-            }else {
+            } else {
                 tenantId = ((AzureActiveDirectoryAuthority) requestAuthority)
                         .getAudience()
                         .getTenantUuidForAlias(requestAuthority.getAuthorityURL().toString());
@@ -512,11 +554,27 @@ public abstract class BaseController {
     }
 
     protected boolean isMsaAccount(final MicrosoftTokenResponse microsoftTokenResponse) {
-                final String tenantId = SchemaUtil.getTenantId(
+        final String tenantId = SchemaUtil.getTenantId(
                 microsoftTokenResponse.getClientInfo(),
                 microsoftTokenResponse.getIdToken()
         );
         return AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(tenantId);
     }
 
+    public ICacheRecord finalizeCacheRecordForResult(@NonNull final ICacheRecord cacheRecord,
+                                                     @NonNull final AbstractAuthenticationScheme scheme) throws ClientException {
+        if (scheme instanceof ITokenAuthenticationSchemeInternal) {
+            final ITokenAuthenticationSchemeInternal tokenAuthScheme = (ITokenAuthenticationSchemeInternal) scheme;
+            cacheRecord
+                    .getAccessToken()
+                    .setSecret(
+                            tokenAuthScheme
+                                    .getAccessTokenForScheme(
+                                            cacheRecord.getAccessToken().getSecret()
+                                    )
+                    );
+        }
+
+        return cacheRecord;
+    }
 }

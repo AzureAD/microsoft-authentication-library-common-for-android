@@ -22,11 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -75,7 +77,7 @@ public final class StringUtil {
         return stringBuilder.toString();
     }
 
-    public static String join(char delimiter, List<String> toJoin) {
+    public static String join(final char delimiter, @NonNull final List<String> toJoin) {
         StringBuilder builder = new StringBuilder();
 
         char tempDelimiter = Character.MIN_VALUE;
@@ -84,6 +86,7 @@ public final class StringUtil {
             if (tempDelimiter != Character.MIN_VALUE) {
                 builder.append(tempDelimiter);
             }
+
             tempDelimiter = delimiter;
             builder.append(s);
         }
@@ -125,28 +128,29 @@ public final class StringUtil {
      * @param thisVersion
      * @param thatVersion
      * @return int -1 if thisVersion is smaller than thatVersion,
-     *         1 if thisVersion is larger than thatVersion,
-     *         0 if thisVersion is equal to thatVersion.
+     * 1 if thisVersion is larger than thatVersion,
+     * 0 if thisVersion is equal to thatVersion.
      */
-    public static int compareSemanticVersion(final String thisVersion, final String thatVersion) {
-        if(thatVersion == null) {
+    public static int compareSemanticVersion(@NonNull final String thisVersion,
+                                             @Nullable final String thatVersion) {
+        if (thatVersion == null) {
             return 1;
         }
 
         final String[] thisParts = thisVersion.split("\\.");
         final String[] thatParts = thatVersion.split("\\.");
-        final int length = Math.max(thisParts.length, thatParts.length);
-        for(int i = 0; i < length; i++) {
-            int thisPart = i < thisParts.length ?
-                    Integer.parseInt(thisParts[i]) : 0;
-            int thatPart = i < thatParts.length ?
-                    Integer.parseInt(thatParts[i]) : 0;
 
-            if(thisPart < thatPart) {
+        final int length = Math.max(thisParts.length, thatParts.length);
+
+        for (int i = 0; i < length; i++) {
+            int thisPart = i < thisParts.length ? Integer.parseInt(thisParts[i]) : 0;
+            int thatPart = i < thatParts.length ? Integer.parseInt(thatParts[i]) : 0;
+
+            if (thisPart < thatPart) {
                 return -1;
             }
 
-            if(thisPart > thatPart) {
+            if (thisPart > thatPart) {
                 return 1;
             }
         }
@@ -161,13 +165,15 @@ public final class StringUtil {
      * @param subString
      * @return int
      */
-    public static int countMatches(@NonNull String str, @Nullable String subString) {
+    public static int countMatches(@NonNull final String str, @Nullable final String subString) {
         int count = 0;
+
         if (StringUtil.isEmpty(str) || StringUtil.isEmpty(subString)) {
             return count;
         }
-        for(int i = 0; i <= (str.length() - subString.length()); i++) {
-            if(str.substring(i, i + subString.length()).equalsIgnoreCase(subString)) {
+
+        for (int i = 0; i <= (str.length() - subString.length()); i++) {
+            if (str.substring(i, i + subString.length()).equalsIgnoreCase(subString)) {
                 count++;
             }
         }
@@ -177,6 +183,7 @@ public final class StringUtil {
 
     /**
      * Util method to check if a string is a UUID or not
+     *
      * @param inputString : inputString
      * @return true if the inputString is a UUID else false;
      */

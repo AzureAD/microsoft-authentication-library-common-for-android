@@ -26,8 +26,12 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
@@ -43,6 +47,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -58,9 +63,6 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import static com.microsoft.identity.common.internal.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
@@ -150,7 +152,8 @@ public class TokenCacheItemMigrationAdapter {
         config.setAuthorityUrl(authorityUrl);
 
         // Create the strategy
-        final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config);
+        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+        final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
         final String refreshToken = cacheRecord.getRefreshToken().getSecret();
         final String scopes = cacheRecord.getRefreshToken().getTarget();
@@ -185,7 +188,7 @@ public class TokenCacheItemMigrationAdapter {
                         + correlationId
                         + "]");
 
-        if(tokenResult.getSuccess()){
+        if (tokenResult.getSuccess()) {
             // Save the token record in tha cache so that we have an entry in BrokerApplicationMetadata for this client id.
             final MicrosoftStsAuthorizationRequest authorizationRequest = createAuthRequest(
                     strategy,
@@ -283,7 +286,8 @@ public class TokenCacheItemMigrationAdapter {
                 }
 
                 // Create the strategy
-                final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config);
+                final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+                final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
                 final MicrosoftStsTokenRequest tokenRequest = createTokenRequest(
                         clientId,
@@ -598,8 +602,9 @@ public class TokenCacheItemMigrationAdapter {
                                                               @NonNull final String redirectUri,
                                                               @NonNull final MicrosoftStsOAuth2Strategy strategy,
                                                               @Nullable final UUID correlationId,
-                                                              @NonNull final String idTokenVersion) {
-        final MicrosoftStsTokenRequest tokenRequest = strategy.createRefreshTokenRequest();
+                                                              @NonNull final String idTokenVersion) throws ClientException {
+        final MicrosoftStsTokenRequest tokenRequest =
+                strategy.createRefreshTokenRequest(new BearerAuthenticationSchemeInternal());
 
         // Set the request properties
         tokenRequest.setClientId(clientId);
@@ -617,7 +622,7 @@ public class TokenCacheItemMigrationAdapter {
                                                                      @NonNull final String clientId,
                                                                      @NonNull final String redirectUri,
                                                                      @NonNull final String scope,
-                                                                     @Nullable final UUID correlationId){
+                                                                     @Nullable final UUID correlationId) {
         final MicrosoftStsAuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(
                 cacheRecord.getAccount()
         );

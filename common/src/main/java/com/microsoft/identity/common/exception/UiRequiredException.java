@@ -29,12 +29,19 @@ package com.microsoft.identity.common.exception;
 
 public final class UiRequiredException extends ServiceException {
 
+    public static final String sName = UiRequiredException.class.getName();
+
     public UiRequiredException(final String errorCode, final String errorMessage) {
         super(errorCode, errorMessage, null);
     }
 
     public UiRequiredException(final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
+    }
+
+    @Override
+    public String getExceptionName(){
+        return sName;
     }
 
 }

@@ -30,21 +30,20 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.webkit.ClientCertRequest;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
-import com.microsoft.identity.common.R;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
@@ -57,6 +56,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_FINAL_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SUB_ERROR_UI_CANCEL;
 
 /**
@@ -76,9 +76,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final String mRedirectUrl;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
-                                             @NonNull final IAuthorizationCompletionCallback callback,
+                                             @NonNull final IAuthorizationCompletionCallback completionCallback,
+                                             @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl) {
-        super(activity, callback);
+        super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
     }
 
@@ -199,7 +200,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         } else {
             Logger.info(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
             Intent resultIntent = new Intent();
-            resultIntent.putExtra(AuthorizationStrategy.AUTHORIZATION_FINAL_URL, url);
+            resultIntent.putExtra(AUTHORIZATION_FINAL_URL, url);
             //TODO log request info
             getCompletionCallback().onChallengeResponseReceived(
                     AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE,

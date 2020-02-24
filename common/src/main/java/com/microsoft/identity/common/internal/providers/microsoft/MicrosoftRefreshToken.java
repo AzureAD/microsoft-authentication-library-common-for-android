@@ -22,9 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.text.TextUtils;
 
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;

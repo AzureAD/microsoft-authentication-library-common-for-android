@@ -27,12 +27,13 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
-import androidx.annotation.NonNull;
 import android.view.View;
 import android.webkit.HttpAuthHandler;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -48,6 +49,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
 
     private final IAuthorizationCompletionCallback mCompletionCallback;
+    private final OnPageLoadedCallback mPageLoadedCallback;
     private final Activity mActivity;
 
     /**
@@ -68,13 +70,16 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * Constructor for the OAuth2 basic web view client.
      *
      * @param activity app Context
-     * @param callback Challenge completion callback
+     * @param completionCallback Challenge completion callback
+     * @param pageLoadedCallback callback to be triggered on page load. For UI purposes.
      */
     OAuth2WebViewClient(@NonNull final Activity activity,
-                        @NonNull final IAuthorizationCompletionCallback callback) {
+                        @NonNull final IAuthorizationCompletionCallback completionCallback,
+                        @NonNull final OnPageLoadedCallback pageLoadedCallback) {
         //the validation of redirect url and authorization request should be in upper level before launching the webview.
         mActivity = activity;
-        mCompletionCallback = callback;
+        mCompletionCallback = completionCallback;
+        mPageLoadedCallback = pageLoadedCallback;
     }
 
     @Override
@@ -101,6 +106,8 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                                 final String description,
                                 final String failingUrl) {
         super.onReceivedError(view, errorCode, description, failingUrl);
+
+        view.stopLoading();
 
         // Create result intent when webView received an error.
         final Intent resultIntent = new Intent();
@@ -142,6 +149,8 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     public void onPageFinished(final WebView view,
                                final String url) {
         super.onPageFinished(view, url);
+        mPageLoadedCallback.onPageLoaded();
+
         // Once web view is fully loaded,set to visible
         view.setVisibility(View.VISIBLE);
     }

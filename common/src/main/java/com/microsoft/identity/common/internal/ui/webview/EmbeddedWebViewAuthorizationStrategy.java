@@ -26,10 +26,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -82,7 +84,9 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                 requestUrl.toString(),
                 mAuthorizationRequest.getRedirectUri(),
                 mAuthorizationRequest.getRequestHeaders(),
-                AuthorizationAgent.WEBVIEW);
+                AuthorizationAgent.WEBVIEW,
+                mAuthorizationRequest.isWebViewZoomEnabled(),
+                mAuthorizationRequest.isWebViewZoomControlsEnabled());
 
         launchIntent(authIntent);
         return mAuthorizationResultFuture;
@@ -90,7 +94,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
 
     @Override
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
-        if (requestCode == BROWSER_FLOW) {
+        if (requestCode == AuthenticationConstants.UIRequest.BROWSER_FLOW) {
             if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
                 final AuthorizationResult result = mOAuth2Strategy
                         .getAuthorizationResultFactory()

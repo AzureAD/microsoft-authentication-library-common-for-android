@@ -32,6 +32,9 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -40,6 +43,7 @@ import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
+import com.microsoft.identity.common.internal.platform.IDevicePopManager;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
@@ -51,6 +55,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
@@ -74,6 +79,7 @@ import java.util.UUID;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField.X_MS_CLITELEM;
+import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 import static com.microsoft.identity.common.internal.controllers.BaseController.logResult;
 
 public class MicrosoftStsOAuth2Strategy
@@ -84,6 +90,7 @@ public class MicrosoftStsOAuth2Strategy
                 MicrosoftStsAuthorizationRequest.Builder,
                 AuthorizationStrategy,
                 MicrosoftStsOAuth2Configuration,
+                OAuth2StrategyParameters,
                 MicrosoftStsAuthorizationResponse,
                 MicrosoftStsRefreshToken,
                 MicrosoftStsTokenRequest,
@@ -96,10 +103,12 @@ public class MicrosoftStsOAuth2Strategy
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
      *
-     * @param config MicrosoftStsOAuth2Configuration
+     * @param config     MicrosoftStsOAuth2Configuration
+     * @param parameters OAuth2StrategyParameters
      */
-    public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config) {
-        super(config);
+    public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
+                                      @NonNull final OAuth2StrategyParameters parameters) {
+        super(config, parameters);
         setTokenEndpoint(config.getTokenEndpoint().toString());
     }
 
@@ -313,7 +322,9 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     public MicrosoftStsTokenRequest createTokenRequest(@NonNull final MicrosoftStsAuthorizationRequest request,
-                                                       @NonNull final MicrosoftStsAuthorizationResponse response) {
+                                                       @NonNull final MicrosoftStsAuthorizationResponse response,
+                                                       @NonNull final AbstractAuthenticationScheme authScheme)
+            throws ClientException {
         final String methodName = ":createTokenRequest";
         Logger.verbose(
                 TAG + methodName,
@@ -331,9 +342,44 @@ public class MicrosoftStsOAuth2Strategy
         tokenRequest.setRedirectUri(request.getRedirectUri());
         tokenRequest.setClientId(request.getClientId());
         tokenRequest.setScope(request.getTokenScope());
-
+        tokenRequest.setClaims(request.getClaims());
         tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
+        setTokenRequestCorrelationId(tokenRequest);
 
+        if (SCHEME_POP.equals(authScheme.getName())) {
+            if (null == mStrategyParameters.getContext()) {
+                throw new ClientException(
+                        MicrosoftStsOAuth2Strategy.class.getSimpleName()
+                                + "Cannot execute PoP request sans Context"
+                );
+            }
+
+
+            // Add a token_type
+            tokenRequest.setTokenType(TokenRequest.TokenType.POP);
+
+            final IDevicePopManager devicePopManager = Device.getDevicePoPManagerInstance();
+
+            // Generate keys if they don't already exist...
+            if (!devicePopManager.asymmetricKeyExists()) {
+                final String thumbprint = devicePopManager.generateAsymmetricKey(mStrategyParameters.getContext());
+
+                Logger.verbosePII(
+                        TAG,
+                        "Generated new PoP asymmetric key with thumbprint: "
+                                + thumbprint
+                );
+            }
+
+            final String reqCnf = devicePopManager.getRequestConfirmation();
+            // Set the req_cnf
+            tokenRequest.setRequestConfirmation(reqCnf);
+        }
+
+        return tokenRequest;
+    }
+
+    private void setTokenRequestCorrelationId(@NonNull final MicrosoftStsTokenRequest tokenRequest) {
         try {
             tokenRequest.setCorrelationId(
                     UUID.fromString(
@@ -350,12 +396,10 @@ public class MicrosoftStsOAuth2Strategy
                     ex
             );
         }
-
-        return tokenRequest;
     }
 
     @Override
-    public MicrosoftStsTokenRequest createRefreshTokenRequest() {
+    public MicrosoftStsTokenRequest createRefreshTokenRequest(@NonNull final AbstractAuthenticationScheme authScheme) throws ClientException {
         final String methodName = ":createRefreshTokenRequest";
         Logger.verbose(
                 TAG + methodName,
@@ -364,6 +408,19 @@ public class MicrosoftStsOAuth2Strategy
 
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
+
+        if (SCHEME_POP.equals(authScheme.getName())) {
+            request.setTokenType(TokenRequest.TokenType.POP);
+
+            final IDevicePopManager devicePopManager = Device.getDevicePoPManagerInstance();
+
+            if (!devicePopManager.asymmetricKeyExists()) {
+                devicePopManager.generateAsymmetricKey(mStrategyParameters.getContext());
+            }
+
+            request.setRequestConfirmation(devicePopManager.getRequestConfirmation());
+        }
+
         return request;
     }
 
@@ -436,7 +493,8 @@ public class MicrosoftStsOAuth2Strategy
 
     @Override
     @NonNull
-    protected TokenResult getTokenResultFromHttpResponse(@NonNull final HttpResponse response) {
+    protected TokenResult getTokenResultFromHttpResponse(@NonNull final HttpResponse response)
+            throws ClientException {
         final String methodName = ":getTokenResultFromHttpResponse";
 
         Logger.verbose(
@@ -499,6 +557,37 @@ public class MicrosoftStsOAuth2Strategy
         return result;
     }
 
+    @Override
+    protected void validateTokenResponse(@NonNull final MicrosoftStsTokenRequest request,
+                                         @NonNull final MicrosoftStsTokenResponse response)
+            throws ClientException {
+        validateAuthScheme(request, response);
+    }
+
+    /**
+     * Validates that the auth scheme in the TokenRequest matches the auth scheme in the TokenResponse.
+     *
+     * @param request  The TokenRequest with the IdP's response.
+     * @param response The idp response.
+     * @throws ClientException
+     */
+    private void validateAuthScheme(@NonNull final MicrosoftStsTokenRequest request,
+                                    @NonNull final MicrosoftStsTokenResponse response)
+            throws ClientException {
+        final String requestTokenType = request.getTokenType();
+        final String responseAuthScheme = response.getTokenType();
+
+        // if the request token type is null, the response value is assumed Bearer
+        if (requestTokenType != null && !requestTokenType.equalsIgnoreCase(responseAuthScheme)) {
+            throw new ClientException(
+                    ClientException.AUTH_SCHEME_MISMATCH,
+                    "Expected: [" + requestTokenType + "]"
+                            + "\n"
+                            + "Actual: [" + responseAuthScheme + "]"
+            );
+        }
+    }
+
     private String buildCloudSpecificTokenEndpoint(
             @NonNull final MicrosoftStsAuthorizationResponse response) {
         if (!StringUtil.isEmpty(response.getCloudInstanceHostName())) {
@@ -541,4 +630,79 @@ public class MicrosoftStsOAuth2Strategy
         return tokenEndpoint;
     }
 
+    /**
+     * Gets the at/pop device credential's thumbprint.
+     *
+     * @return The at/pop device credential thumbprint.
+     */
+    @Nullable
+    public String getDeviceAtPopThumbprint() {
+        String atPoPKid = null;
+
+        IDevicePopManager devicePopManager = null;
+        try {
+            devicePopManager = Device.getDevicePoPManagerInstance();
+        } catch (final ClientException e) {
+            Logger.error(
+                    TAG,
+                    e.getMessage(),
+                    e
+            );
+        }
+
+        if (null != devicePopManager) {
+            if (devicePopManager.asymmetricKeyExists()) {
+                try {
+                    atPoPKid = devicePopManager.getAsymmetricKeyThumbprint();
+                } catch (final ClientException e) {
+                    Logger.error(
+                            TAG,
+                            "Key exists. But failed to load thumbprint.",
+                            e
+                    );
+
+                    throw new RuntimeException(e);
+                }
+            } else {
+                // something has gone seriously wrong.
+                throw new RuntimeException("Symmetric keys do not exist.");
+            }
+        } else {
+            Logger.warn(
+                    TAG,
+                    "DevicePopManager does not exist."
+            );
+        }
+
+        return atPoPKid;
+    }
+
+    @Override
+    public boolean validateCachedResult(@NonNull final AbstractAuthenticationScheme authScheme,
+                                        @NonNull final ICacheRecord cacheRecord) {
+        super.validateCachedResult(authScheme, cacheRecord);
+
+        if (authSchemeIsPoP(authScheme)) {
+            return cachedAccessTokenKidMatchesKeystoreKid(cacheRecord.getAccessToken().getKid());
+        }
+
+        return true;
+    }
+
+    private boolean cachedAccessTokenKidMatchesKeystoreKid(@Nullable final String atKid) {
+        final String deviceKid = getDeviceAtPopThumbprint();
+
+        // If the value known to the strategy is null, something's wrong. Discard the current token
+        // and generate keys anew. Once those keys are generated we will use the cache RT to acquire
+        // a new PoP/AT.
+        if (StringExtensions.isNullOrBlank(deviceKid)) {
+            return false;
+        }
+
+        return deviceKid.equals(atKid);
+    }
+
+    public static boolean authSchemeIsPoP(@NonNull final AbstractAuthenticationScheme scheme) {
+        return SCHEME_POP.equals(scheme.getName());
+    }
 }

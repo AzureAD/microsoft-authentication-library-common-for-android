@@ -39,6 +39,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
+
 public abstract class AbstractAccountCredentialCache implements IAccountCredentialCache {
 
     private static final String TAG = AbstractAccountCredentialCache.class.getSimpleName();
@@ -51,6 +53,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
         switch (targetType) {
             case AccessToken:
+            case AccessToken_With_AuthScheme:
                 credentialClass = AccessTokenRecord.class;
                 break;
             case RefreshToken:
@@ -123,6 +126,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                                                                 @Nullable String clientId,
                                                                 @Nullable String realm,
                                                                 @Nullable String target,
+                                                                @Nullable String authScheme,
                                                                 @NonNull List<Credential> allCredentials) {
         final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
@@ -130,6 +134,9 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final boolean mustMatchOnTarget = !StringExtensions.isNullOrBlank(target);
         final boolean mustMatchOnClientId = !StringExtensions.isNullOrBlank(clientId);
         final boolean mustMatchOnCredentialType = null != credentialType;
+        final boolean mustMatchOnAuthScheme = mustMatchOnCredentialType
+                && !StringExtensions.isNullOrBlank(authScheme)
+                && credentialType == CredentialType.AccessToken_With_AuthScheme;
 
         Logger.verbose(
                 TAG,
@@ -142,6 +149,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                         + "Credential lookup filtered by clientId? [" + mustMatchOnClientId + "]"
                         + NEW_LINE
                         + "Credential lookup filtered by credential type? [" + mustMatchOnCredentialType + "]"
+                        + NEW_LINE
+                        + "Credential lookup filtered by auth scheme? [" + mustMatchOnAuthScheme + "]"
         );
 
         final List<Credential> matchingCredentials = new ArrayList<>();
@@ -178,13 +187,18 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             if (mustMatchOnTarget) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    matches = matches && targetsIntersect(target, accessToken.getTarget());
+                    matches = matches && targetsIntersect(target, accessToken.getTarget(), true);
                 } else if (credential instanceof RefreshTokenRecord) {
                     final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
-                    matches = matches && targetsIntersect(target, refreshToken.getTarget());
+                    matches = matches && targetsIntersect(target, refreshToken.getTarget(), true);
                 } else {
                     Logger.warn(TAG, "Query specified target-match, but no target to match.");
                 }
+            }
+
+            if (mustMatchOnAuthScheme && credential instanceof AccessTokenRecord) {
+                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
+                matches = matches && authScheme.equalsIgnoreCase(accessToken.getAccessTokenType());
             }
 
             if (matches) {
@@ -198,13 +212,16 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
     /**
      * Examines the intersections of the provided targets (scopes).
      *
-     * @param targetToMatch    The target value[s] our cache-query is looking for.
-     * @param credentialTarget The target against which our sought value will be compared.
+     * @param targetToMatch     The target value[s] our cache-query is looking for.
+     * @param credentialTarget  The target against which our sought value will be compared.
+     * @param omitDefaultScopes True if MSAL's default scopes should be considered in this lookup.
+     *                          False otherwise.
      * @return True, if the credentialTarget contains all of the targets (scopes) declared by
      * targetToMatch. False otherwise.
      */
     static boolean targetsIntersect(@NonNull final String targetToMatch,
-                                    @NonNull final String credentialTarget) {
+                                    @NonNull final String credentialTarget,
+                                    boolean omitDefaultScopes) {
         // The credentialTarget must contain all of the scopes in the targetToMatch
         // It may contain more, but it must contain minimally those
         // Matching is case-insensitive
@@ -223,6 +240,11 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
         for (final String target : credentialTargetArray) {
             credentialTargetSet.add(target.toLowerCase());
+        }
+
+        if (omitDefaultScopes) {
+            soughtTargetSet.removeAll(DEFAULT_SCOPES);
+            credentialTargetSet.removeAll(DEFAULT_SCOPES);
         }
 
         return credentialTargetSet.containsAll(soughtTargetSet);

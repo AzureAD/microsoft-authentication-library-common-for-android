@@ -28,11 +28,18 @@ package com.microsoft.identity.common.exception;
  */
 final public class UserCancelException extends BaseException {
 
+    public static final String sName =  UserCancelException.class.getName();
+
     public UserCancelException() {
         super();
     }
 
     public UserCancelException(final String errorCode, final String errorMessage){
         super(errorCode, errorMessage);
+    }
+
+    @Override
+    public String getExceptionName(){
+        return sName;
     }
 }

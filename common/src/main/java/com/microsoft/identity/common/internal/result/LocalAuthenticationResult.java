@@ -22,9 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.text.TextUtils;
 
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -55,18 +56,6 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
 
     private static final String TAG = LocalAuthenticationResult.class.getName();
 
-    public LocalAuthenticationResult(@NonNull AccessTokenRecord accessTokenRecord,
-                                     @Nullable String refreshToken,
-                                     @Nullable String rawIdToken,
-                                     @Nullable String familyId,
-                                     @NonNull IAccountRecord accountRecord) {
-        mAccessTokenRecord = accessTokenRecord;
-        mRefreshToken = refreshToken;
-        mRawIdToken = rawIdToken;
-        mFamilyId = familyId;
-        mAccountRecord = accountRecord;
-    }
-
     public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
                                      @NonNull final List<ICacheRecord> completeResultFromCache,
                                      @NonNull final SdkType sdkType) {
@@ -74,7 +63,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
         mCompleteResultFromCache = completeResultFromCache;
     }
 
-    public LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord, @NonNull SdkType sdkType) {
+    private LocalAuthenticationResult(@NonNull final ICacheRecord cacheRecord, @NonNull SdkType sdkType) {
         mAccessTokenRecord = cacheRecord.getAccessToken();
         mAccountRecord = cacheRecord.getAccount();
 
@@ -96,11 +85,13 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
             mRawIdToken = cacheRecord.getV1IdToken().getSecret();
         }
 
-        Logger.info(TAG, "Constructing LocalAuthentication result" +
-                ", AccessTokenRecord null: " + (mAccessTokenRecord == null) +
-                ", AccountRecord null: " + (mAccountRecord == null) +
-                ", RefreshTokenRecord null or empty: " + TextUtils.isEmpty(mRefreshToken) +
-                ", IdTokenRecord null: " + (idTokenRecord == null)
+        Logger.info(
+                TAG,
+                "Constructing LocalAuthentication result"
+                        + ", AccessTokenRecord null: " + (mAccessTokenRecord == null)
+                        + ", AccountRecord null: " + (mAccountRecord == null)
+                        + ", RefreshTokenRecord null or empty: " + TextUtils.isEmpty(mRefreshToken)
+                        + ", IdTokenRecord null: " + (idTokenRecord == null)
         );
 
     }

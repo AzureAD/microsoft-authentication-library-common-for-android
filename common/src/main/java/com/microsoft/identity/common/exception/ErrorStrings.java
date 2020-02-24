@@ -388,4 +388,12 @@ public final class ErrorStrings {
     public static final String DECLINED_SCOPE_ERROR_CODE = "declined_scope_error";
     public static final String DECLINED_SCOPE_ERROR_MESSAGE = "Some or all requested scopes have been declined by the Server";
 
+    /**
+     * The device is in the shared mode, and its registration was deleted by the admin.
+     * This is an irrecoverable error, and the admin has to re-prep the device.
+     * */
+    public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_CODE =
+            "registered_shared_device_deleted_on_server";
+    public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_MESSAGE =
+            "This device has been unregistered. Please return the device to your administrator.";
 }
