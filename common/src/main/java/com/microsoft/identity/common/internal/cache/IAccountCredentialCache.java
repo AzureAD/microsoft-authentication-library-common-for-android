@@ -108,7 +108,8 @@ public interface IAccountCredentialCache {
             final CredentialType credentialType,
             final String clientId,
             final String realm,
-            final String target
+            final String target,
+            final String authScheme
     );
 
     /**

@@ -31,6 +31,7 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
@@ -140,7 +141,8 @@ public class TokenShareUtility implements ITokenShareInternal {
         return mTokenCache.load(
                 mClientId,
                 null, // wildcard (*)
-                localAccountRecord
+                localAccountRecord,
+                new BearerAuthenticationSchemeInternal() // Auth scheme is inconsequential - only using RT
         );
     }
 

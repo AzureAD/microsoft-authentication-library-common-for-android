@@ -24,6 +24,8 @@ package com.microsoft.identity.common.exception;
 
 public class ClientException extends BaseException {
 
+    public static final String sName = ClientException.class.getName();
+
     /**
      * Indicates that a token was not found in the internal/adal/tokensharing ssostateserializer.
      */
@@ -79,7 +81,7 @@ public class ClientException extends BaseException {
     public static final String UNSUPPORTED_ENCODING = "unsupported_encoding";
 
     /**
-     * The algorithm used to generate pkce challenge is not supported.
+     * The designated crypto alg is not supported.
      */
     public static final String NO_SUCH_ALGORITHM = "no_such_algorithm";
 
@@ -144,6 +146,63 @@ public class ClientException extends BaseException {
     public static final String DUPLICATE_COMMAND = "duplicate_command";
 
     /**
+     * Emitted when the KeyStore generates a certificate that does not match the designated key size.
+     * Due to a bug in some versions of Android, keySizes may not be exactly as specified
+     * To generate a 2048-bit key, two primes of length 1024 are multiplied -- this product
+     * may be 2047 in length in some cases which causes Nimbus to crash. To avoid this,
+     * check the keysize prior to returning the generated KeyPair.
+     */
+    public static final String BAD_KEY_SIZE = "keystore_produced_invalid_cert";
+
+    /**
+     * Emitted when the requested crypto provider is unavailable in the device environment.
+     */
+    public static final String ANDROID_KEYSTORE_UNAVAILABLE = "android_keystore_unavailable";
+
+    /**
+     * Emitted when the KeyStore fails to initialize due to unsupported arguments.
+     */
+    public static final String INVALID_ALG = "keystore_initialization_failed";
+
+    /**
+     * Emitted when the target KeyStore has not been initialized (loaded).
+     */
+    public static final String KEYSTORE_NOT_INITIALIZED = "keystore_not_initialized";
+
+    /**
+     * Emitted when the Protection Params provided to the KeyStore are invalid or insufficient.
+     */
+    public static final String INVALID_PROTECTION_PARAMS = "protection_params_invalid";
+
+    /**
+     * Emitted when the target certificate's thumbprint cannot be computed due to lack of support for
+     * SHA-256.
+     */
+    public static final String THUMBPRINT_COMPUTATION_FAILURE = "failed_to_compute_thumbprint_with_sha256";
+
+    /**
+     * Emitted when the Android subsystem emits errors thrown while constructing new JSON objects.
+     */
+    public static final String JSON_CONSTRUCTION_FAILED = "json_construction_failed";
+
+    /**
+     * The current thread of execution was interrupted.
+     */
+    public static final String INTERRUPTED_OPERATION = "operation_interrupted";
+
+    /**
+     * Emitted when an error is encountered during signing.
+     */
+    public static final String JWT_SIGNING_FAILURE = "failed_to_sign_jwt";
+
+    /**
+     * Emitted if the STS returns an unexpected/incorrect token_type.
+     * <p>
+     * Example: Client requests a PoP token, but a Bearer token is returned.
+     */
+    public static final String AUTH_SCHEME_MISMATCH = "auth_scheme_mismatch";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String
@@ -171,5 +230,10 @@ public class ClientException extends BaseException {
      */
     public ClientException(final String errorCode, final String errorMessage, final Throwable throwable) {
         super(errorCode, errorMessage, throwable);
+    }
+
+    @Override
+    public String getExceptionName() {
+        return sName;
     }
 }

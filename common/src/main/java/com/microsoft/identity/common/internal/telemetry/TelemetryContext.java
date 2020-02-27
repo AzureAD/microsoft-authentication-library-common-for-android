@@ -38,7 +38,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.*;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.App;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Device;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Os;
 
 /**
  * TelemetryContext is a dictionary of information about the state of the device.

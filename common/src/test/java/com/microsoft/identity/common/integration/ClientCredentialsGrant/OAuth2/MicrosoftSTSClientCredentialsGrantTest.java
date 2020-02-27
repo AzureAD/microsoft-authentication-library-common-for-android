@@ -31,6 +31,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
@@ -60,18 +61,18 @@ public class MicrosoftSTSClientCredentialsGrantTest {
     private final static String MSSTS_CLIENT_ASSERTION_AUDIENCE = "https://login.microsoftonline.com/microsoft.com/oauth2/v2.0/token";
 
     @Test
-    public void test_ClientCredentials() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
-
-        CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
+    public void test_ClientCredentials() throws CertificateException, UnrecoverableKeyException,
+            NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
+        final CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
                 .clientCertificateMetadata(new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
                 .keyStoreConfiguration(new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null))
                 .build();
 
-        String audience = MSSTS_CLIENT_ASSERTION_AUDIENCE;
+        final String audience = MSSTS_CLIENT_ASSERTION_AUDIENCE;
 
-        MicrosoftClientAssertion assertion = new MicrosoftClientAssertion(audience, credential);
+        final MicrosoftClientAssertion assertion = new MicrosoftClientAssertion(audience, credential);
 
-        TokenRequest tr = new MicrosoftStsTokenRequest();
+        final TokenRequest tr = new MicrosoftStsTokenRequest();
 
         tr.setClientAssertionType(assertion.getClientAssertionType());
         tr.setClientAssertion(assertion.getClientAssertion());
@@ -79,13 +80,17 @@ public class MicrosoftSTSClientCredentialsGrantTest {
         tr.setScope(SCOPE);
         tr.setGrantType(GRANT_TYPE);
 
-        OAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(new MicrosoftStsOAuth2Configuration());
+        final OAuth2StrategyParameters options = new OAuth2StrategyParameters();
+        final OAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(
+                new MicrosoftStsOAuth2Configuration(),
+                options
+        );
 
         try {
             final TokenResult tokenResult = strategy.requestToken(tr);
 
             assertEquals(true, tokenResult.getSuccess());
-        } catch (ClientException exception) {
+        } catch (final ClientException exception) {
             fail("Unexpected exception.");
         }
 

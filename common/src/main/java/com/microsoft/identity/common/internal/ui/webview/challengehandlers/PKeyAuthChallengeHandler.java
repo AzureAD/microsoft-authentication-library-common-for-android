@@ -23,8 +23,9 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
 import android.content.Intent;
-import androidx.annotation.NonNull;
 import android.webkit.WebView;
+
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;

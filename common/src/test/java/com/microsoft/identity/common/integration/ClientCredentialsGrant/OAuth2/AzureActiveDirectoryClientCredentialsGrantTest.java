@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.integration.ClientCredentialsGrant.OAuth2;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
 import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfiguration;
@@ -31,6 +32,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 import org.junit.Test;
@@ -61,16 +63,16 @@ public class AzureActiveDirectoryClientCredentialsGrantTest {
     @Test
     public void test_ClientCredentials() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
 
-        CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
+        final CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
                 .clientCertificateMetadata(new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
                 .keyStoreConfiguration(new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null))
                 .build();
 
-        String audience = AAD_CLIENT_ASSERTION_AUDIENCE;
+        final String audience = AAD_CLIENT_ASSERTION_AUDIENCE;
 
-        MicrosoftClientAssertion assertion = new MicrosoftClientAssertion(audience, credential);
+        final MicrosoftClientAssertion assertion = new MicrosoftClientAssertion(audience, credential);
 
-        AzureActiveDirectoryTokenRequest tr = new AzureActiveDirectoryTokenRequest();
+        final AzureActiveDirectoryTokenRequest tr = new AzureActiveDirectoryTokenRequest();
 
         tr.setClientAssertionType(assertion.getClientAssertionType());
         tr.setClientAssertion(assertion.getClientAssertion());
@@ -78,13 +80,17 @@ public class AzureActiveDirectoryClientCredentialsGrantTest {
         tr.setResourceId(RESOURCE);
         tr.setGrantType(GRANT_TYPE);
 
-        OAuth2Strategy strategy = new AzureActiveDirectoryOAuth2Strategy(new AzureActiveDirectoryOAuth2Configuration());
+        final OAuth2StrategyParameters options = new OAuth2StrategyParameters();
+        final OAuth2Strategy strategy = new AzureActiveDirectoryOAuth2Strategy(
+                new AzureActiveDirectoryOAuth2Configuration(),
+                options
+        );
 
         try {
-            TokenResult tokenResult = strategy.requestToken(tr);
+            final TokenResult tokenResult = strategy.requestToken(tr);
 
             assertEquals(true, tokenResult.getSuccess());
-        } catch (ClientException exception) {
+        } catch (final ClientException exception) {
             fail("Unexpected exception.");
         }
     }

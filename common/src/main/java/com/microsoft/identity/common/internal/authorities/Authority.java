@@ -23,15 +23,17 @@
 package com.microsoft.identity.common.internal.authorities;
 
 import android.net.Uri;
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.text.TextUtils;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -45,6 +47,7 @@ public abstract class Authority {
 
     private static final String ADFS_PATH_SEGMENT = "adfs";
     private static final String B2C_PATH_SEGMENT = "tfp";
+    public static final String B2C = "B2C";
 
     protected boolean mKnownToMicrosoft = false;
     protected boolean mKnownToDeveloper = false;
@@ -80,7 +83,6 @@ public abstract class Authority {
      *
      * @param authorityUrl
      * @return
-     * @throws MalformedURLException
      */
     public static Authority getAuthorityFromAuthorityUrl(String authorityUrl) {
         final String methodName = ":getAuthorityFromAuthorityUrl";
@@ -105,7 +107,7 @@ public abstract class Authority {
             final Authority configuredAuthority = getEquivalentConfiguredAuthority(authorityUrl);
             final String authorityTypeStr = configuredAuthority.mAuthorityTypeString;
 
-            if ("B2C".equalsIgnoreCase(authorityTypeStr)) {
+            if (B2C.equalsIgnoreCase(authorityTypeStr)) {
                 authority = new AzureActiveDirectoryB2CAuthority(authorityUrl);
             } else {
                 authority = createAadAuthority(authorityUri, pathSegments);
@@ -190,7 +192,7 @@ public abstract class Authority {
         return new AzureActiveDirectoryAuthority(audience);
     }
 
-    public abstract OAuth2Strategy createOAuth2Strategy();
+    public abstract OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) throws ClientException;
 
     /**
      * Indicates whether the authority is known to Microsoft or not.  Microsoft can recognize authorities that exist within public clouds.  Microsoft does

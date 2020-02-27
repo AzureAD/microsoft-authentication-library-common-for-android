@@ -26,7 +26,10 @@ import android.accounts.Account;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.exception.ArgumentException;
+import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
 
@@ -121,11 +124,11 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
         this.mExtraQueryStringParameters = mExtraQueryStringParameters;
     }
 
-    public int getSleepTimeBeforePrtAcquisition(){
+    public int getSleepTimeBeforePrtAcquisition() {
         return mSleepTimeBeforePrtAcquisition;
     }
 
-    public void setSleepTimeBeforePrtAcquisition(final int sleepTimeBeforePrtAcquisition){
+    public void setSleepTimeBeforePrtAcquisition(final int sleepTimeBeforePrtAcquisition) {
         mSleepTimeBeforePrtAcquisition = sleepTimeBeforePrtAcquisition;
     }
 
@@ -137,12 +140,13 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
         this.mBrokerVersion = brokerVersion;
     }
 
-    public BrokerAcquireTokenSilentOperationParameters(){
+    public BrokerAcquireTokenSilentOperationParameters() {
 
     }
 
     /**
      * Constructor to create BrokerAcquireTokenSilentOperationParameters from BrokerAcquireTokenOperationParameters
+     *
      * @param acquireTokenOperationParameters
      */
 
@@ -154,8 +158,8 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
     // token needs to be called to get token using PRT.
     // There won't be any homeaccountId or Account information here and hence should not be used for
     // Non joined silent case.
-    public BrokerAcquireTokenSilentOperationParameters(final BrokerAcquireTokenOperationParameters
-                                                               acquireTokenOperationParameters){
+    public BrokerAcquireTokenSilentOperationParameters(@NonNull final BrokerAcquireTokenOperationParameters
+                                                               acquireTokenOperationParameters) {
         setAppContext(acquireTokenOperationParameters.getAppContext());
         setTokenCache(acquireTokenOperationParameters.getTokenCache());
         setScopes(acquireTokenOperationParameters.getScopes());
@@ -171,6 +175,11 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
         setSdkType(acquireTokenOperationParameters.getSdkType());
         setExtraQueryStringParameters(
                 acquireTokenOperationParameters.getExtraQueryStringParameters()
+        );
+        setAuthenticationScheme(
+                null != acquireTokenOperationParameters.getAuthenticationScheme()
+                        ? acquireTokenOperationParameters.getAuthenticationScheme()
+                        : new BearerAuthenticationSchemeInternal() // If null, assume Bearer for back-compat
         );
     }
 
@@ -212,8 +221,8 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
                     "mCallerPackageName", "Caller package name is not set"
             );
         }
-        if(SdkType.MSAL == getSdkType() &&
-                !BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAppContext(), getCallerPackageName())){
+        if (SdkType.MSAL == getSdkType() &&
+                !BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAppContext(), getCallerPackageName())) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                     "mRedirectUri", "The redirect URI doesn't match the uri" +

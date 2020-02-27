@@ -25,8 +25,12 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -57,6 +61,7 @@ public abstract class OAuth2Strategy
                 GenericAuthorizationRequestBuilder extends AuthorizationRequest.Builder,
                 GenericAuthorizationStrategy extends AuthorizationStrategy,
                 GenericOAuth2Configuration extends OAuth2Configuration,
+                GenericOAuth2StrategyParameters extends OAuth2StrategyParameters,
                 GenericAuthorizationResponse extends AuthorizationResponse,
                 GenericRefreshToken extends RefreshToken,
                 GenericTokenRequest extends TokenRequest,
@@ -69,6 +74,7 @@ public abstract class OAuth2Strategy
     protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
     protected final GenericOAuth2Configuration mConfig;
+    protected final GenericOAuth2StrategyParameters mStrategyParameters;
     protected String mTokenEndpoint;
     protected String mAuthorizationEndpoint;
     private Uri mIssuer;
@@ -78,8 +84,10 @@ public abstract class OAuth2Strategy
      *
      * @param config generic OAuth2 configuration
      */
-    public OAuth2Strategy(GenericOAuth2Configuration config) {
+    public OAuth2Strategy(GenericOAuth2Configuration config,
+                          GenericOAuth2StrategyParameters strategyParameters) {
         mConfig = config;
+        mStrategyParameters = strategyParameters;
     }
 
     /**
@@ -121,7 +129,15 @@ public abstract class OAuth2Strategy
         validateTokenRequest(request);
 
         final HttpResponse response = performTokenRequest(request);
-        return getTokenResultFromHttpResponse(response);
+        final GenericTokenResult result = getTokenResultFromHttpResponse(response);
+
+        if (result.getSuccess()) {
+            validateTokenResponse(
+                    request,
+                    (GenericTokenResponse) result.getSuccessResponse()
+            );
+        }
+        return result;
     }
 
     protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException, ClientException {
@@ -230,14 +246,17 @@ public abstract class OAuth2Strategy
      *
      * @return TokenRequest.
      */
-    public abstract GenericTokenRequest createTokenRequest(GenericAuthorizationRequest request, GenericAuthorizationResponse response);
+    public abstract GenericTokenRequest createTokenRequest(GenericAuthorizationRequest request,
+                                                           GenericAuthorizationResponse response,
+                                                           AbstractAuthenticationScheme authScheme)
+            throws ClientException;
 
     /**
      * Abstract method for creating the refresh token request.
      *
      * @return TokenRequest.
      */
-    public abstract GenericTokenRequest createRefreshTokenRequest();
+    public abstract GenericTokenRequest createRefreshTokenRequest(AbstractAuthenticationScheme authScheme) throws ClientException;
 
     /**
      * Abstract method for validating the authorization request.  In the case of AAD this is the method
@@ -260,10 +279,26 @@ public abstract class OAuth2Strategy
      *
      * @param response Http response.
      */
-    protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response);
+    protected abstract GenericTokenResult getTokenResultFromHttpResponse(HttpResponse response) throws ClientException;
 
     // TODO
 //    protected abstract void validateAuthorizationResponse(GenericAuthorizationResponse response);
 
-//    protected abstract void validateTokenResponse(GenericTokenResponse response);
+    protected abstract void validateTokenResponse(GenericTokenRequest request, GenericTokenResponse response) throws ClientException;
+
+    /**
+     * Validate the result yielded from the cache prior to returning it to the caller.
+     *
+     * @param cacheRecord The {@link ICacheRecord} to validate.
+     * @return True if the CacheRecord checks out. False otherwise.
+     */
+    public boolean validateCachedResult(@NonNull final AbstractAuthenticationScheme authScheme,
+                                        @NonNull final ICacheRecord cacheRecord) {
+        // TODO Perform validations on the CacheRecord prior to returning result...
+
+        // TODO Ideally, we would check the expiry, completeness of record, etc here...
+        // TODO This requires refactoring the controllers to relocate logic to here.
+        // TODO Broker looks to need a bit extra refactoring as its less integrated with the strategy model
+        return true;
+    }
 }

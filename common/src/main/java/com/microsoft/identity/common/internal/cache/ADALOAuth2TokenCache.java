@@ -27,6 +27,9 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.microsoft.identity.common.BaseAccount;
@@ -36,6 +39,7 @@ import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
@@ -196,14 +200,18 @@ public class ADALOAuth2TokenCache
     public ICacheRecord load(
             final String clientId,
             final String target,
-            final AccountRecord account) {
+            final AccountRecord account,
+            final AbstractAuthenticationScheme scheme) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
     }
 
     @Override
-    public List<ICacheRecord> loadWithAggregatedAccountData(String clientId, String target, AccountRecord account) {
+    public List<ICacheRecord> loadWithAggregatedAccountData(final String clientId,
+                                                            final String target,
+                                                            final AccountRecord account,
+                                                            final AbstractAuthenticationScheme scheme) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );
@@ -299,6 +307,15 @@ public class ADALOAuth2TokenCache
 
     @Override
     protected Set<String> getAllClientIds() {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public AccountRecord getAccountByHomeAccountId(@Nullable final String environment,
+                                                   @NonNull final String clientId,
+                                                   @NonNull final String homeAccountId) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );

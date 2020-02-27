@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.browser;
 
 import android.content.ComponentName;
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.browser.customtabs.CustomTabsCallback;

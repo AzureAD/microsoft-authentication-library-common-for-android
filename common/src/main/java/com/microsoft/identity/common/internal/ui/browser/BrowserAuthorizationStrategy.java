@@ -26,6 +26,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -111,7 +112,9 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
                 requestUrl.toString(),
                 mAuthorizationRequest.getRedirectUri(),
                 mAuthorizationRequest.getRequestHeaders(),
-                AuthorizationAgent.BROWSER);
+                AuthorizationAgent.BROWSER,
+                true,
+                true);
         // singleTask launchMode is required for the authorization redirect is from an external browser
         // in the browser authorization flow
         // For broker request we need to clear all activities in the task and bring Authorization Activity to the

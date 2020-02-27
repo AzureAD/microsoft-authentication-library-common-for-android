@@ -24,14 +24,9 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
 
-import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
-import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
-
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 public class InteractiveTokenCommand extends TokenCommand {
     private static final String TAG = InteractiveTokenCommand.class.getSimpleName();

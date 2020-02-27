@@ -24,11 +24,7 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
 
-import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
-
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 public interface TokenOperation {
     AcquireTokenResult execute() throws Exception;
