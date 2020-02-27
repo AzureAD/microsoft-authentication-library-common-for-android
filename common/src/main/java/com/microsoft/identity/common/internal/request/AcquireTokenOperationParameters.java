@@ -50,6 +50,12 @@ public class AcquireTokenOperationParameters extends OperationParameters {
     private String mLoginHint;
 
     @Expose()
+    private boolean webViewZoomControlsEnabled;
+
+    @Expose()
+    private boolean webViewZoomEnabled;
+
+    @Expose()
     private List<Pair<String, String>> mExtraQueryStringParameters;
 
     @Expose()
@@ -135,6 +141,22 @@ public class AcquireTokenOperationParameters extends OperationParameters {
 
     public void setBrokerBrowserSupportEnabled(boolean brokerBrowserSupportEnabled) {
         this.mBrokerBrowserSupportEnabled = brokerBrowserSupportEnabled;
+    }
+
+    public void setWebViewZoomControlsEnabled(boolean webViewZoomControlsEnabled) {
+        this.webViewZoomControlsEnabled = webViewZoomControlsEnabled;
+    }
+
+    public void setWebViewZoomEnabled(boolean webViewZoomEnabled) {
+        this.webViewZoomEnabled = webViewZoomEnabled;
+    }
+
+    public boolean isWebViewZoomEnabled() {
+        return webViewZoomEnabled;
+    }
+
+    public boolean isWebViewZoomControlsEnabled() {
+        return webViewZoomControlsEnabled;
     }
 
     /**

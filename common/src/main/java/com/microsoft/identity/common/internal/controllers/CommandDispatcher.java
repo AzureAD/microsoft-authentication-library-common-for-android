@@ -43,6 +43,7 @@ import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
+import com.microsoft.identity.common.internal.request.BrokerAcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -268,10 +269,13 @@ public class CommandDispatcher {
         synchronized (sLock) {
             final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(command.getParameters().getAppContext());
 
-            // Send a broadcast to cancel if any active auth request is present.
-            localBroadcastManager.sendBroadcast(
-                    new Intent(CANCEL_INTERACTIVE_REQUEST)
-            );
+            // only send broadcast to cancel if within broker
+            if (command.getParameters() instanceof BrokerAcquireTokenOperationParameters) {
+                // Send a broadcast to cancel if any active auth request is present.
+                localBroadcastManager.sendBroadcast(
+                        new Intent(CANCEL_INTERACTIVE_REQUEST)
+                );
+            }
 
             sInteractiveExecutor.execute(new Runnable() {
                 @Override

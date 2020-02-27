@@ -1231,6 +1231,8 @@ public final class AuthenticationConstants {
 
         public static final String REQUEST_HEADERS = "com.microsoft.identity.request.headers";
 
+        public static final String POST_PAGE_LOADED_URL = "com.microsoft.identity.post.page.loaded.url";
+
         public static final String AUTHORIZATION_AGENT = "com.microsoft.identity.client.authorization.agent";
 
         public static final String REQUEST_ID = "com.microsoft.identity.request.id";
@@ -1242,6 +1244,10 @@ public final class AuthenticationConstants {
         public static final String REQUEST_CODE = "com.microsoft.identity.client.request.code";
 
         public static final String REQUEST_CANCELLED_BY_USER = "com.microsoft.identity.client.request.cancelled.by.user";
+
+        public static final String WEB_VIEW_ZOOM_CONTROLS_ENABLED = "com.microsoft.identity.web.view.zoom.controls.enabled";
+
+        public static final String WEB_VIEW_ZOOM_ENABLED = "com.microsoft.identity.web.view.zoom.enabled";
     }
 
     public static final class AuthorizationIntentAction {
