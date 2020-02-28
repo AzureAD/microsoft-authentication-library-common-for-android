@@ -1,3 +1,7 @@
+Version 2.0.2
+- Fix for MSAL #920, 924, 935, 940
+    * Crash due to error receiving CANCEL broadcast
+
 Version 2.0.1
 ------------
 - Adds support for AT/PoP
