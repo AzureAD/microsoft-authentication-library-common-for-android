@@ -192,7 +192,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                     final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
                     matches = matches && targetsIntersect(target, refreshToken.getTarget(), true);
                 } else {
-                    Logger.warn(TAG, "Query specified target-match, but no target to match.");
+                    Logger.verbose(TAG, "Query specified target-match, but no target to match.");
                 }
             }
 
