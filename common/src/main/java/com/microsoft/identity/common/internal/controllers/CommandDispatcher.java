@@ -83,6 +83,10 @@ public class CommandDispatcher {
             @Override
             public void run() {
                 final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
+
+                // set correlation id on parameters as it may not already be set
+                command.getParameters().setCorrelationId(correlationId);
+
                 EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                 CommandResult commandResult = null;
@@ -283,6 +287,10 @@ public class CommandDispatcher {
                     final String correlationId = initializeDiagnosticContext(
                             command.getParameters().getCorrelationId()
                     );
+
+                    // set correlation id on parameters as it may not already be set
+                    command.getParameters().setCorrelationId(correlationId);
+
                     EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                     if (command.getParameters() instanceof AcquireTokenOperationParameters) {
