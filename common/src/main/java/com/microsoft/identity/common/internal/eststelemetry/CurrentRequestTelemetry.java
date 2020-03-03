@@ -1,7 +1,5 @@
 package com.microsoft.identity.common.internal.eststelemetry;
 
-import com.google.gson.annotations.SerializedName;
-
 public class CurrentRequestTelemetry extends RequestTelemetry {
 
     private String mApiId;

@@ -114,4 +114,9 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public boolean isEligibleForTelemetry() {
+        return true;
+    }
+
 }

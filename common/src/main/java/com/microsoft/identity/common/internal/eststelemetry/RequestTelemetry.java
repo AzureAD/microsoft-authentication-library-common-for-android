@@ -131,15 +131,15 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
         return sb.toString();
     }
 
-    String getHeaderStringForFields(Collection fields) {
+    String getHeaderStringForCollection(Collection fields) {
         if (fields == null) {
             return "";
         }
 
-        return getHeaderStringForFields(fields.toArray());
+        return getHeaderStringForArray(fields.toArray());
     }
 
-    private String getHeaderStringForFields(Object[] fields) {
+    private String getHeaderStringForArray(Object[] fields) {
         if (fields == null) {
             return "";
         }
@@ -173,9 +173,5 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
         return mSchemaVersion + "|" + this.getHeaderStringForFields() + "|" + getPlatformTelemetryHeaderString();
     }
 
-    void putInCommonTelemetry(final String key, final String value) {
-        if (this instanceof CurrentRequestTelemetry) {
-            ((CurrentRequestTelemetry) this).putInCommonTelemetry(key, value);
-        }
-    }
+    abstract void putInCommonTelemetry(final String key, final String value);
 }

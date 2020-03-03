@@ -93,6 +93,20 @@ public class EstsTelemetry {
         }
     }
 
+    public void createEntry(@Nullable final String correlationId) {
+        if (mTelemetryMap == null || correlationId == null || correlationId.equals("UNSET")) {
+            return;
+        }
+
+        if (mTelemetryMap.containsKey(correlationId)) {
+            // we have already created a telemetry object for this correlation id - returning
+            return;
+        }
+
+        CurrentRequestTelemetry currentRequestTelemetry = new CurrentRequestTelemetry();
+        mTelemetryMap.put(correlationId, currentRequestTelemetry);
+    }
+
     /**
      * Emit multiple telemetry fields by passing a map of telemetry fields.
      * The fields will be saved in {@link RequestTelemetry} object associated to the current request.
@@ -121,6 +135,7 @@ public class EstsTelemetry {
         emit(correlationId, key, value);
     }
 
+    // emit should not happen if an entry for this correlation id not available
     private void emit(final String correlationId, final String key, final String value) {
         // ests telemetry will be disabled if cache is not initialized
         // this should never happen in the case of MSAL
@@ -129,6 +144,8 @@ public class EstsTelemetry {
         }
 
         RequestTelemetry currentTelemetryInstance = getCurrentTelemetryInstance(correlationId);
+
+        // well that's what we do - but the above obj is actually never null
         if (currentTelemetryInstance != null) {
             currentTelemetryInstance.putTelemetry(key, value);
         }

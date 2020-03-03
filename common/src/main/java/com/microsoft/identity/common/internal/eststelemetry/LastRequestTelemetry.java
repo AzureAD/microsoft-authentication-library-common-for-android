@@ -27,7 +27,7 @@ public class LastRequestTelemetry extends RequestTelemetry {
 
     @Override
     public String getHeaderStringForFields() {
-        return mSilentSuccessfulCount + "|" + getHeaderStringForFields(mFailedRequestsMetadata) + "|" + getHeaderStringForFields(mErrors);
+        return mSilentSuccessfulCount + "|" + getHeaderStringForCollection(mFailedRequestsMetadata) + "|" + getHeaderStringForCollection(mErrors);
     }
 
     public void incrementSilentSuccessCount() {
@@ -57,6 +57,7 @@ public class LastRequestTelemetry extends RequestTelemetry {
     }
 
     void putInCommonTelemetry(final String key, final String value) {
+        // emit not applicable to last request
         return;
     }
 }
