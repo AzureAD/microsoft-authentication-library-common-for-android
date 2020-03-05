@@ -82,7 +82,12 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        sCallingActivityClass = this.getActivity().getClass();
+        if (this.getActivity() != null && this.getActivity().getClass() != null) {
+            sCallingActivityClass = this.getActivity().getClass();
+        } else {
+            Logger.warn(TAG, "sCallingActivityClass was NULL. Using direct reference to Authorization Activity.");
+            sCallingActivityClass = AuthorizationActivity.class;
+        }
     }
 
     @Override
