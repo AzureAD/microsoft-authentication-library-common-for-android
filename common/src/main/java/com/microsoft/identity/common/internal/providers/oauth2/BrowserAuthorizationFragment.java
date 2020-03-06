@@ -34,7 +34,7 @@ import static com.microsoft.identity.common.internal.providers.oauth2.Authorizat
 
 /**
  * Authorization fragment with customTabs or browsers.
- * */
+ */
 public class BrowserAuthorizationFragment extends AuthorizationFragment {
 
     private static final String TAG = BrowserAuthorizationFragment.class.getSimpleName();
@@ -93,7 +93,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     }
 
     @Override
-    void extractState(final Bundle state){
+    void extractState(@NonNull final Bundle state) {
         super.extractState(state);
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mBrowserFlowStarted = state.getBoolean(BROWSER_FLOW_STARTED, false);
