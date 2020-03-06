@@ -87,6 +87,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     @Override
     void extractState(final Bundle state) {
+        if (state == null) {
+            Logger.warn(TAG, "No stored state. Unable to handle response");
+            finish();
+            return;
+        }
+
         super.extractState(state);
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mPkeyAuthStatus = state.getBoolean(PKEYAUTH_STATUS, false);

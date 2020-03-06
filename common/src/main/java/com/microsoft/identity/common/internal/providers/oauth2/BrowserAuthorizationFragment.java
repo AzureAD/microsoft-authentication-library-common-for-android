@@ -94,6 +94,12 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
 
     @Override
     void extractState(final Bundle state){
+        if (state == null) {
+            Logger.warn(TAG, "No stored state. Unable to handle response");
+            finish();
+            return;
+        }
+
         super.extractState(state);
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mBrowserFlowStarted = state.getBoolean(BROWSER_FLOW_STARTED, false);
