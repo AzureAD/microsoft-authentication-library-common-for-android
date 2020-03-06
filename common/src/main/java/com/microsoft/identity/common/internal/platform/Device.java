@@ -83,7 +83,7 @@ public final class Device {
         /**
          * The String representing the sdk platform version.
          */
-        public static final String PRODUCT_VERSION = "1.4.0";
+        public static final String PRODUCT_VERSION = "1.4.0-tm";
 
         /**
          * The String representing the sdk version.
