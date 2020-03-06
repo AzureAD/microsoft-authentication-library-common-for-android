@@ -29,14 +29,14 @@ import java.util.HashMap;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
 /**
  * Authorization fragment with embedded webview.
- * */
+ */
 public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private static final String TAG = WebViewAuthorizationFragment.class.getSimpleName();
@@ -86,13 +86,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     }
 
     @Override
-    void extractState(final Bundle state) {
-        if (state == null) {
-            Logger.warn(TAG, "No stored state. Unable to handle response");
-            finish();
-            return;
-        }
-
+    void extractState(@NonNull final Bundle state) {
         super.extractState(state);
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mPkeyAuthStatus = state.getBoolean(PKEYAUTH_STATUS, false);
@@ -147,7 +141,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     /**
      * NOTE: Fragment-only mode will not support this, as we don't own the activity.
-     *       This must be invoked by AuthorizationActivity.onBackPressed().
+     * This must be invoked by AuthorizationActivity.onBackPressed().
      */
     @Override
     public boolean onBackPressed() {
