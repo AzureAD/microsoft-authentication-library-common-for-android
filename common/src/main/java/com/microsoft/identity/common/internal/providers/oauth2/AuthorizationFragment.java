@@ -49,9 +49,9 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 
 /**
  * This base classes
- *  - handles how AuthorizationFragments communicates with the outside world.
- *  - handles basic lifecycle operations.
- * */
+ * - handles how AuthorizationFragments communicates with the outside world.
+ * - handles basic lifecycle operations.
+ */
 public abstract class AuthorizationFragment extends Fragment {
 
     private static final String TAG = AuthorizationFragment.class.getSimpleName();
@@ -90,6 +90,12 @@ public abstract class AuthorizationFragment extends Fragment {
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(mCancelRequestReceiver,
                 new IntentFilter(CANCEL_INTERACTIVE_REQUEST));
 
+        if (savedInstanceState == null && mInstanceState == null) {
+            Logger.warn(TAG, "No stored state. Unable to handle response");
+            finish();
+            return;
+        }
+
         if (savedInstanceState == null) {
             Logger.verbose(TAG + methodName, "Extract state from the intent bundle.");
             extractState(mInstanceState);
@@ -115,13 +121,7 @@ public abstract class AuthorizationFragment extends Fragment {
         }
     }
 
-    void extractState(final Bundle state) {
-        if (state == null) {
-            Logger.warn(TAG, "No stored state. Unable to handle response");
-            finish();
-            return;
-        }
-
+    void extractState(@NonNull final Bundle state) {
         setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
     }
 
@@ -195,7 +195,7 @@ public abstract class AuthorizationFragment extends Fragment {
         final Intent resultIntent = new Intent();
         resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-        if (isCancelledByUser){
+        if (isCancelledByUser) {
             Logger.info(TAG, "Received Authorization flow cancelled by the user");
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
         } else {
