@@ -95,7 +95,7 @@ public abstract class BaseController {
 
     public static String getDelimitedDefaultScopeString() {
         // using StringBuilder as String.join() requires at least API level 26
-        StringBuilder stringBuilder = new StringBuilder(DEFAULT_SCOPES.size() * 2);
+        StringBuilder stringBuilder = new StringBuilder();
 
         for (String scope : DEFAULT_SCOPES) {
             stringBuilder.append(scope);
