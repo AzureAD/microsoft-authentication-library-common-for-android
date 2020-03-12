@@ -156,7 +156,7 @@ public class TokenCacheItemMigrationAdapter {
         final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
         final String refreshToken = cacheRecord.getRefreshToken().getSecret();
-        final String scopes = cacheRecord.getRefreshToken().getTarget();
+        final String scopes = DEFAULT_SCOPES;
 
         // Create a correlation_id for the request
         final UUID correlationId = UUID.randomUUID();
