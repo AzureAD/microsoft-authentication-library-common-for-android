@@ -99,7 +99,7 @@ public abstract class BaseController {
 
         for (String scope : DEFAULT_SCOPES) {
             stringBuilder.append(scope);
-            stringBuilder.append(" ");
+            stringBuilder.append(' ');
         }
 
         return stringBuilder.toString().trim();
