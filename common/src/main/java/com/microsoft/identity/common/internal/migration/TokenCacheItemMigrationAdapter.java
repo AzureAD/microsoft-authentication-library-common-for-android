@@ -36,6 +36,7 @@ import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.ITokenCacheItem;
+import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -71,7 +72,6 @@ public class TokenCacheItemMigrationAdapter {
 
     private static final String TAG = TokenCacheItemMigrationAdapter.class.getSimpleName();
 
-    private static final String DEFAULT_SCOPES = "openid profile offline_access";
     private static final String COMMON = "/common";
 
     /**
@@ -156,7 +156,7 @@ public class TokenCacheItemMigrationAdapter {
         final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
         final String refreshToken = cacheRecord.getRefreshToken().getSecret();
-        final String scopes = cacheRecord.getRefreshToken().getTarget();
+        final String scopes = BaseController.getDelimitedDefaultScopeString();
 
         // Create a correlation_id for the request
         final UUID correlationId = UUID.randomUUID();
@@ -278,7 +278,7 @@ public class TokenCacheItemMigrationAdapter {
                 final String scopes;
 
                 if (TextUtils.isEmpty(targetCacheItemToRenew.getResource())) {
-                    scopes = DEFAULT_SCOPES;
+                    scopes = BaseController.getDelimitedDefaultScopeString();
                 } else {
                     scopes = getScopesForTokenRequest(
                             targetCacheItemToRenew.getResource()
@@ -568,7 +568,7 @@ public class TokenCacheItemMigrationAdapter {
         String scopes = getScopeFromResource(v1Resource);
 
         // Add the default scopes, as they will not be present
-        scopes += " " + DEFAULT_SCOPES;
+        scopes += " " + BaseController.getDelimitedDefaultScopeString();
 
         return scopes;
     }
