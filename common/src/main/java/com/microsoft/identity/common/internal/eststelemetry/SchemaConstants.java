@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.eststelemetry;
 
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
-import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.Arrays;
 
@@ -81,11 +80,11 @@ public class SchemaConstants {
 
     };
 
-    private static boolean isCurrentPlatformField(final String key) {
+    static boolean isCurrentPlatformField(final String key) {
         return Arrays.asList(currentRequestPlatformFields).contains(key);
     }
 
-    private static boolean isLastPlatformField(final String key) {
+    static boolean isLastPlatformField(final String key) {
         return Arrays.asList(lastRequestPlatformFields).contains(key);
     }
 
@@ -96,21 +95,5 @@ public class SchemaConstants {
 
     static String[] getLastRequestPlatformFields() {
         return lastRequestPlatformFields;
-    }
-
-    /**
-     * Get a list of platform specific telemetry fields. These are specific to the Android platform.
-     * The platform has complete control over what platform fields they want to track as part of
-     * telemetry sent in each header to ests.
-     *
-     * @param isCurrent denotes if to get common fields for current or last request
-     * @return A string array that contains the common fields based on the value of isCurrent parameter
-     */
-    static String[] getPlatformFields(final boolean isCurrent) {
-        return isCurrent ? getCurrentRequestPlatformFields() : getLastRequestPlatformFields();
-    }
-
-    static boolean isPlatformField(final String key, final boolean isCurrent) {
-        return isCurrent ? isCurrentPlatformField(key) : isLastPlatformField(key);
     }
 }

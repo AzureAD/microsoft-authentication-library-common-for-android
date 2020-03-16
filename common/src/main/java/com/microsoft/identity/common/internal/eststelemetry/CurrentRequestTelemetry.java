@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.eststelemetry;
 
 import androidx.annotation.Nullable;
 
-// Current Telemetry won't be saved to the cache
 public class CurrentRequestTelemetry extends RequestTelemetry implements ICurrentTelemetry {
 
     private String mApiId;

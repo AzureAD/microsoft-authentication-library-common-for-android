@@ -29,8 +29,8 @@ public interface ICurrentTelemetry {
     /**
      * Capture telemetry for current request
      *
-     * @param key
-     * @param value
+     * @param key The key supplied for telemetry
+     * @param value The value for the supplied key
      */
     void put(@Nullable final String key, @Nullable final String value);
 }

@@ -85,6 +85,12 @@ public class EstsTelemetry {
         }
     }
 
+    /**
+     * Creates an entry for a Current Telemetry object for the passed in command based on whether
+     * the command is eligible for telemetry. Saves the telemetry object to telemetry map.
+     *
+     * @param command The command for which to capture telemetry
+     */
     public void initTelemetryForCommand(@NonNull final BaseCommand command) {
         setupLastRequestTelemetryCache(command.getParameters().getAppContext());
         final String correlationId = command.getParameters().getCorrelationId();
@@ -125,11 +131,12 @@ public class EstsTelemetry {
      */
     public void emit(final String key, final String value) {
         final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
-        emit(correlationId, key, value);
+        final String compliantValueString = TelemetryUtils.getSchemaCompliantString(value);
+        emit(correlationId, key, compliantValueString);
     }
 
     private void emit(final String correlationId, final String key, final String value) {
-        CurrentRequestTelemetry currentTelemetryInstance = getCurrentTelemetryInstance(correlationId);
+        final CurrentRequestTelemetry currentTelemetryInstance = getCurrentTelemetryInstance(correlationId);
         if (currentTelemetryInstance != null) {
             currentTelemetryInstance.put(key, value);
         }
@@ -227,8 +234,11 @@ public class EstsTelemetry {
             return;
         }
 
+        // load the last request object from cache
         LastRequestTelemetry lastRequestTelemetry = loadLastRequestTelemetryFromCache();
 
+        // We did not have a last request object in cache, let's create a new one and derive
+        // fields from current request where applicable
         if (lastRequestTelemetry == null) {
             lastRequestTelemetry = new LastRequestTelemetry(currentTelemetry.getSchemaVersion());
             lastRequestTelemetry = (LastRequestTelemetry) lastRequestTelemetry.derive(currentTelemetry);
@@ -237,11 +247,13 @@ public class EstsTelemetry {
         final String errorCode = getErrorFromCommandResult(commandResult);
 
         if (isTelemetryLoggedByServer(command, commandResult)) {
+            // headers have been logged by sts - we don't need to hold on to this data - let's reset
             lastRequestTelemetry.wipeFailedRequestData();
             lastRequestTelemetry.resetSilentSuccessCount();
         }
 
         if (errorCode != null) {
+            // we have an error, let's append it to the list
             lastRequestTelemetry.appendFailedRequestWithError(
                     currentTelemetry.getApiId(),
                     correlationId,
@@ -252,13 +264,16 @@ public class EstsTelemetry {
 
             final Boolean isTokenReturnedFromCache = localAuthenticationResult.isServicedFromCache();
             if (isTokenReturnedFromCache != null && isTokenReturnedFromCache) {
+                // we returned a token from cache, let's increment the silent success count
                 lastRequestTelemetry.incrementSilentSuccessCount();
             }
         } // else leave everything as is
 
+        // we're done processing telemetry for this command, let's remove it from the map
         mTelemetryMap.remove(correlationId);
 
         if (mLastRequestTelemetryCache != null) {
+            // save the (updated) telemetry object back to telemetry cache
             mLastRequestTelemetryCache.saveRequestTelemetryToCache(lastRequestTelemetry);
         } else {
             Logger.warn(
@@ -290,26 +305,25 @@ public class EstsTelemetry {
         if (commandResult.getStatus() == CommandResult.ResultStatus.ERROR) {
             BaseException baseException = (BaseException) commandResult.getResult();
             if (!(baseException instanceof ServiceException)) {
-                // Telemetry not logged by server
+                // Telemetry not logged by server as the exception is a local exception
+                // (request did not reach token endpoint)
                 return false;
             } else {
                 final ServiceException serviceException = (ServiceException) baseException;
                 final int statusCode = serviceException.getHttpStatusCode();
-                if (
-                        statusCode == ServiceException.DEFAULT_STATUS_CODE ||
-                                statusCode == 429 ||
-                                statusCode >= 500
-                ) {
-                    // For these status codes, headers aren't logged by sts
-                    return false;
-                }
+                // for these status codes, headers aren't logged by ests
+                return !(statusCode == ServiceException.DEFAULT_STATUS_CODE ||
+                        statusCode == 429 ||
+                        statusCode >= 500);
             }
         } else if (commandResult.getStatus() == CommandResult.ResultStatus.CANCEL) {
+            // we did not go to token endpoint
             return false;
         } else if (commandResult.getStatus() == CommandResult.ResultStatus.COMPLETED) {
             if (commandResult.getResult() instanceof ILocalAuthenticationResult) {
                 final ILocalAuthenticationResult localAuthenticationResult = (ILocalAuthenticationResult) commandResult.getResult();
                 if (localAuthenticationResult.isServicedFromCache()) {
+                    // we did not go to token endpoint
                     return false;
                 }
             } else {
@@ -318,10 +332,11 @@ public class EstsTelemetry {
             }
         }
 
+        // if we get here that means we went to token endpoint and headers were logged by sts
         return true;
     }
 
-    String getCurrentTelemetryHeaderString() {
+    private String getCurrentTelemetryHeaderString() {
         final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
         if (mTelemetryMap == null || correlationId == null) {
             return null;
@@ -336,7 +351,7 @@ public class EstsTelemetry {
         return currentTelemetry.getCompleteHeaderString();
     }
 
-    String getLastTelemetryHeaderString() {
+    private String getLastTelemetryHeaderString() {
         if (mLastRequestTelemetryCache == null) {
             return null;
         }

@@ -52,11 +52,11 @@ public class LastRequestTelemetry extends RequestTelemetry {
         return mSilentSuccessfulCount + "|" + getHeaderStringForFields(failedRequests) + "|" + getHeaderStringForFields(mErrors);
     }
 
-    public void incrementSilentSuccessCount() {
+    void incrementSilentSuccessCount() {
         mSilentSuccessfulCount++;
     }
 
-    public void resetSilentSuccessCount() {
+    void resetSilentSuccessCount() {
         mSilentSuccessfulCount = 0;
     }
 
@@ -68,12 +68,12 @@ public class LastRequestTelemetry extends RequestTelemetry {
         failedRequests.add(new FailedRequest(apiId, correlationId));
     }
 
-    public void appendFailedRequestWithError(final String apiId, final String correlationId, final String errorCode) {
+    void appendFailedRequestWithError(final String apiId, final String correlationId, final String errorCode) {
         appendFailedRequest(apiId, correlationId);
         appendError(errorCode);
     }
 
-    public void wipeFailedRequestData() {
+    void wipeFailedRequestData() {
         failedRequests.clear();
         mErrors.clear();
     }

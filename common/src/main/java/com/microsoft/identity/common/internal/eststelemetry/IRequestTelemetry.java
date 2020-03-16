@@ -23,9 +23,26 @@
 package com.microsoft.identity.common.internal.eststelemetry;
 
 public interface IRequestTelemetry {
+
+    /**
+     * Get partial header string pertaining to fields specific to this telemetry object
+     *
+     * @return Header string component for direct member fields
+     */
     String getHeaderStringForFields();
 
+    /**
+     * Get a complete header string for all fields belonging to the schema for this telemetry object
+     *
+     * @return Complete header string for this telemetry object
+     */
     String getCompleteHeaderString();
 
+    /**
+     * Returning a telemetry object that contains data included in the provided telemetry object
+     *
+     * @param requestTelemetry supplied telemetry object
+     * @return telemetry object
+     */
     RequestTelemetry derive(RequestTelemetry requestTelemetry);
 }

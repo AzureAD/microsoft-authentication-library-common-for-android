@@ -30,7 +30,6 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -52,9 +51,9 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
 
     private boolean isPlatformTelemetryField(final String key) {
         if (this instanceof CurrentRequestTelemetry) {
-            return SchemaConstants.isPlatformField(key, true);
+            return SchemaConstants.isCurrentPlatformField(key);
         } else if (this instanceof LastRequestTelemetry) {
-            return SchemaConstants.isPlatformField(key, false);
+            return SchemaConstants.isLastPlatformField(key);
         } else {
             return false;
         }
@@ -66,16 +65,8 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
         }
     }
 
-    final void clearPlatformTelemetry() {
-        mPlatformTelemetry.clear();
-    }
-
-    public String getSchemaVersion() {
+    String getSchemaVersion() {
         return mSchemaVersion;
-    }
-
-    public Map<String, String> getPlatformTelemetry() {
-        return Collections.unmodifiableMap(mPlatformTelemetry);
     }
 
     @Override
@@ -94,7 +85,7 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
         return mSchemaVersion + "|" + this.getHeaderStringForFields() + "|" + getPlatformTelemetryHeaderString();
     }
 
-    String getPlatformTelemetryHeaderString() {
+    private String getPlatformTelemetryHeaderString() {
         final String[] platformFields;
 
         if (this instanceof CurrentRequestTelemetry) {
@@ -117,6 +108,7 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
      * @return a telemetry header string composed from provided telemetry fields and values
      */
     @NonNull
+    // This only being used to compute the platform telemetry header string
     String getHeaderStringForFields(@Nullable final String[] fields, @Nullable final Map<String, String> telemetry) {
         if (fields == null || telemetry == null) {
             return "";
@@ -166,7 +158,7 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
     @Override
     public RequestTelemetry derive(@NonNull final RequestTelemetry requestTelemetry) {
         // grab whatever platform fields we can from current request
-        for (final Map.Entry<String, String> entry : this.getPlatformTelemetry().entrySet()) {
+        for (final Map.Entry<String, String> entry : mPlatformTelemetry.entrySet()) {
             this.putInPlatformTelemetry(entry.getKey(), entry.getValue());
         }
 
