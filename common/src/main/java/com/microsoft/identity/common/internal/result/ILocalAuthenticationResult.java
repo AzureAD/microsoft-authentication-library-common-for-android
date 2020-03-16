@@ -125,4 +125,6 @@ public interface ILocalAuthenticationResult {
     String getFamilyId();
 
     List<ICacheRecord> getCacheRecordWithTenantProfileData();
+
+    Boolean isServicedFromCache();
 }

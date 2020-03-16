@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.eststelemetry;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 public class TelemetryUtils {
 
@@ -55,6 +57,26 @@ public class TelemetryUtils {
             return tokenResult.getErrorResponse().getError();
         } else {
             return null;
+        }
+    }
+
+    static boolean getBooleanFromSchemaString(final String val) {
+        return val.equals(SchemaConstants.Value.TRUE);
+    }
+
+    static String getSchemaCompliantStringFromBoolean(final boolean val) {
+        return val ? SchemaConstants.Value.TRUE : SchemaConstants.Value.FALSE;
+    }
+
+    static String getSchemaCompliantString(final String s) {
+        if (StringUtil.isEmpty(s)) {
+            return SchemaConstants.Value.EMPTY;
+        } else if (s.equals(TelemetryEventStrings.Value.TRUE)) {
+            return SchemaConstants.Value.TRUE;
+        } else if (s.equals(TelemetryEventStrings.Value.FALSE)) {
+            return SchemaConstants.Value.FALSE;
+        } else {
+            return s;
         }
     }
 

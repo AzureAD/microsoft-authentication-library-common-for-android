@@ -265,7 +265,8 @@ public abstract class BaseController {
             final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
                     finalizeCacheRecordForResult(savedRecord, parameters.getAuthenticationScheme()),
                     savedRecords,
-                    SdkType.MSAL
+                    SdkType.MSAL,
+                    false
             );
 
             // Set the client telemetry...

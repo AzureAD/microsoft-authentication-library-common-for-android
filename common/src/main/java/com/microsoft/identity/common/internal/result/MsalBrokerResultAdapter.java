@@ -161,7 +161,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
                 tenantProfileCacheRecords.get(0),
                 tenantProfileCacheRecords,
-                SdkType.MSAL
+                SdkType.MSAL,
+                null // setting null for now - needs to be sent over the wire
         );
 
         return authenticationResult;

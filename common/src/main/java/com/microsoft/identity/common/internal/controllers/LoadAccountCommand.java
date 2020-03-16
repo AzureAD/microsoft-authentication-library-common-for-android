@@ -73,4 +73,9 @@ public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
     public int getCommandNameHashCode() {
         return TAG.hashCode();
     }
+
+    @Override
+    public boolean isEligibleForEstsTelemetry() {
+        return true;
+    }
 }

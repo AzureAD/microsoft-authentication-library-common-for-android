@@ -20,37 +20,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.eststelemetry;
+package com.microsoft.identity.internal.testutils;
+
+import com.microsoft.identity.common.internal.net.HttpResponse;
 
 /**
- * This is a "cache of one" i.e. there will always be only one RequestTelemetry object saved
- * in the cache at any given time
+ * Class to set a mock http response at runtime.
  */
-public interface IRequestTelemetryCache {
+public class MockHttpResponse {
 
-    /**
-     * Save telemetry associated to the {@link RequestTelemetry} object to the cache
-     *
-     * @param requestTelemetry
-     */
-    void saveRequestTelemetryToCache(final RequestTelemetry requestTelemetry);
-
-    /**
-     * Get the telemetry from the cache
-     *
-     * @return a {@link RequestTelemetry} object
-     */
-    RequestTelemetry getRequestTelemetryFromCache();
-
-    String getTelemetrySchemaVersionFromCache();
-
-    String getTelemetryHeaderStringFromCache();
+    private static HttpResponse sHttpResponse;
 
 
-    /**
-     * Clear the contents of the cache.
-     */
-    void clearRequestTelemetry();
+    public static HttpResponse getHttpResponse() {
+        return sHttpResponse;
+    }
 
-
+    public static void setHttpResponse(final HttpResponse httpResponse) {
+        sHttpResponse = httpResponse;
+    }
 }
