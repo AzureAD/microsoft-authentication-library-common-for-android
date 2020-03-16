@@ -302,8 +302,6 @@ public class CommandDispatcher {
                         }
                     };
 
-                    AcquireTokenResult result = null;
-                    BaseException baseException = null;
                     CommandResult commandResult;
                     Handler handler = new Handler(Looper.getMainLooper());
 
