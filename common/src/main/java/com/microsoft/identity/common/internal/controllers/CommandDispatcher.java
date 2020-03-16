@@ -113,11 +113,11 @@ public class CommandDispatcher {
                     );
                 }
 
-                //Return the result via the callback
-                returnCommandResult(command, commandResult, handler);
-
                 Telemetry.getInstance().flush(correlationId);
                 EstsTelemetry.getInstance().flush(command, commandResult);
+
+                //Return the result via the callback
+                returnCommandResult(command, commandResult, handler);
             }
         });
     }
@@ -315,13 +315,12 @@ public class CommandDispatcher {
 
                     //Try executing request
                     commandResult = executeCommand(command);
-                    returnCommandResult(command, commandResult, handler);
                     sCommand = null;
                     localBroadcastManager.unregisterReceiver(resultReceiver);
 
-
                     EstsTelemetry.getInstance().flush(command, commandResult);
                     Telemetry.getInstance().flush(correlationId);
+                    returnCommandResult(command, commandResult, handler);
                 }
             });
         }
