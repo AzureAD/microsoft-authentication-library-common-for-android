@@ -147,10 +147,12 @@ public class ExceptionAdapter {
      * @param oAuthError
      * @return boolean
      * */
+    @SuppressWarnings("deprecation")
     private static boolean shouldBeConvertedToUiRequiredException(final String oAuthError){
         // Invalid_grant doesn't necessarily requires UI protocol-wise.
         // We simplify our logic because this layer is also used by MSAL.
 
+        //Interaction required has been deprecated... hence suppressing warning.
         return oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT) ||
                 oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED);
 
