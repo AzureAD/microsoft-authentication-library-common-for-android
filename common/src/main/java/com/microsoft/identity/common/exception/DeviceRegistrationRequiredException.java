@@ -29,6 +29,7 @@ package com.microsoft.identity.common.exception;
 final public class DeviceRegistrationRequiredException extends BaseException {
 
     public static final String sName =  DeviceRegistrationRequiredException.class.getName();
+    private static final long serialVersionUID = 5804977362169696152L;
 
     // The username for which device needs registration
     private String mUsername;

@@ -28,6 +28,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAutho
  * Azure Active Directory B2C Authorization Request.
  */
 public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthorizationRequest<AzureActiveDirectoryB2CAuthorizationRequest> {
+    private static final long serialVersionUID = -3380061616328869269L;
     private String mPrompt;
 
     private AzureActiveDirectoryB2CAuthorizationRequest(final Builder builder) {

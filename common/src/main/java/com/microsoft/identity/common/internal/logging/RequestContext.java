@@ -29,6 +29,7 @@ import java.util.HashMap;
 // TODO I'm not wedded to this name, but the concept may work for tracking correlationIds
 public class RequestContext extends HashMap<String, String> implements IRequestContext {
 
+    private static final long serialVersionUID = -1128593786133166935L;
     private final Gson mGson = new Gson();
 
     @Override

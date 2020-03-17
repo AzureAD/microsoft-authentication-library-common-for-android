@@ -25,6 +25,7 @@ package com.microsoft.identity.common.exception;
 public class ClientException extends BaseException {
 
     public static final String sName = ClientException.class.getName();
+    private static final long serialVersionUID = -2318746536590284648L;
 
     /**
      * Indicates that a token was not found in the internal/adal/tokensharing ssostateserializer.
@@ -201,6 +202,7 @@ public class ClientException extends BaseException {
      * Example: Client requests a PoP token, but a Bearer token is returned.
      */
     public static final String AUTH_SCHEME_MISMATCH = "auth_scheme_mismatch";
+
 
     /**
      * Constructor of ClientException.

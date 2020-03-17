@@ -35,6 +35,8 @@ import java.io.Serializable;
  */
 public class BrokerRequest implements Serializable {
 
+    private static final long serialVersionUID = 542024304389420837L;
+
     private class SerializedNames {
         final static String AUTHORITY = "authority";
         final static String SCOPE = "scopes";

@@ -26,6 +26,7 @@ package com.microsoft.identity.common.exception;
 public class IntuneAppProtectionPolicyRequiredException extends ServiceException {
 
     public static final String sName = IntuneAppProtectionPolicyRequiredException.class.getName();
+    private static final long serialVersionUID = -620109887467926354L;
 
     private String mAccountUpn;
     private String mAccountUserId;
