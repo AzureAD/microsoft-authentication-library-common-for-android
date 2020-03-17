@@ -1,11 +1,37 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.view.Surface;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -14,14 +40,15 @@ import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
+import com.microsoft.identity.common.internal.ui.DualScreenUtil;
 
 import java.util.HashMap;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
@@ -75,6 +102,8 @@ public final class AuthorizationActivity extends FragmentActivity {
                 .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                 .replace(R.id.authorization_activity_content, mFragment)
                 .commit();
+
+        adjustLayout();
     }
 
     @Override
@@ -82,5 +111,50 @@ public final class AuthorizationActivity extends FragmentActivity {
         if (!mFragment.onBackPressed()){
             super.onBackPressed();
         }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        adjustLayout();
+    }
+
+    private void adjustLayout(){
+        int rotation = DualScreenUtil.getRotation(this);
+        boolean isAppSpanned = DualScreenUtil.isAppSpanned(this);
+        boolean isHorizontal = rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180;
+
+        final ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.connect(R.id.authorization_activity_content, ConstraintSet.LEFT, R.id.authorization_activity_layout, ConstraintSet.LEFT, 0);
+        constraintSet.connect(R.id.authorization_activity_content, ConstraintSet.RIGHT, R.id.authorization_activity_layout, ConstraintSet.RIGHT, 0);
+        constraintSet.connect(R.id.authorization_activity_content, ConstraintSet.TOP, R.id.authorization_activity_layout, ConstraintSet.TOP, 0);
+        constraintSet.connect(R.id.authorization_activity_content, ConstraintSet.BOTTOM, R.id.authorization_activity_layout, ConstraintSet.BOTTOM, 0);
+
+        constraintSet.connect(R.id.authorization_activity_empty_view, ConstraintSet.LEFT, R.id.authorization_activity_layout, ConstraintSet.LEFT, 0);
+        constraintSet.connect(R.id.authorization_activity_empty_view, ConstraintSet.RIGHT, R.id.authorization_activity_layout, ConstraintSet.RIGHT, 0);
+        constraintSet.connect(R.id.authorization_activity_empty_view, ConstraintSet.TOP, R.id.authorization_activity_layout, ConstraintSet.TOP, 0);
+        constraintSet.connect(R.id.authorization_activity_empty_view, ConstraintSet.BOTTOM, R.id.authorization_activity_layout, ConstraintSet.BOTTOM, 0);
+
+        if (isAppSpanned){
+            if (isHorizontal) {
+                // WebView is on the right.
+                constraintSet.connect(R.id.authorization_activity_content, ConstraintSet.LEFT, R.id.vertical_guideline, ConstraintSet.RIGHT, 0);
+
+                // Empty view is on the left.
+                constraintSet.connect(R.id.authorization_activity_empty_view, ConstraintSet.RIGHT, R.id.vertical_guideline, ConstraintSet.LEFT, 0);
+            } else {
+                // WebView is on the top.
+                constraintSet.connect(R.id.authorization_activity_content, ConstraintSet.BOTTOM, R.id.horizontal_guideline, ConstraintSet.TOP, 0);
+
+                // Empty view is in the bottom.
+                constraintSet.connect(R.id.authorization_activity_empty_view, ConstraintSet.TOP, R.id.horizontal_guideline, ConstraintSet.BOTTOM, 0);
+            }
+        } else {
+            // Shrink empty view. If constraint is not set, then its size will be (0,0).
+            constraintSet.clear(R.id.authorization_activity_empty_view);
+        }
+
+        final ConstraintLayout constraintLayout =  findViewById(R.id.authorization_activity_layout);
+        constraintLayout.setConstraintSet(constraintSet);
     }
 }
