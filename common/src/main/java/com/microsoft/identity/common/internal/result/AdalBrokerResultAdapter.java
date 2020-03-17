@@ -257,6 +257,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     /**
      * Helper method to set Service Exception to Bundle
      */
+    @SuppressWarnings("deprecation")
     private void setServiceExceptionPropertiesToBundle(@NonNull final Bundle resultBundle,
                                                        @NonNull final ServiceException serviceException) {
 
@@ -293,6 +294,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
             );
         }
 
+        //INTERACTION_REQUIRED is marked as deprecated
         if (serviceException.getErrorCode().equalsIgnoreCase(
                 AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT) ||
                 serviceException.getErrorCode().equalsIgnoreCase(
