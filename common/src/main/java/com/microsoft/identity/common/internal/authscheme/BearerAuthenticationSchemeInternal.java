@@ -32,6 +32,7 @@ public class BearerAuthenticationSchemeInternal
         implements ITokenAuthenticationSchemeInternal {
 
     public static final String SCHEME_BEARER = "Bearer";
+    private static final long serialVersionUID = 823164758655077118L;
 
     /**
      * Constructs a new BearerAuthenticationSchemeInternal.

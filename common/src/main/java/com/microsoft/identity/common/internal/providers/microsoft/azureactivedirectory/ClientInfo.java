@@ -44,6 +44,7 @@ public class ClientInfo implements Serializable {
 
     private static final String UNIQUE_IDENTIFIER = "uid";
     private static final String UNIQUE_TENANT_IDENTIFIER = "utid";
+    private static final long serialVersionUID = 3326461566190095403L;
 
     /**
      * Unique identifier for a user in the current tenant.

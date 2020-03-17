@@ -31,6 +31,8 @@ import com.google.gson.annotations.SerializedName;
  */
 public abstract class AbstractAuthenticationScheme implements INameable {
 
+    private static final long serialVersionUID = -2437270903389813253L;
+
     public static class SerializedNames {
         public static final String NAME = "name";
     }

@@ -25,6 +25,7 @@ package com.microsoft.identity.common.exception;
 public class ArgumentException extends BaseException {
 
     public static final String sName =  ArgumentException.class.getName();
+    private static final long serialVersionUID = -6399451133831073876L;
 
     public final static String ACQUIRE_TOKEN_OPERATION_NAME = "acquireToken";
     public final static String ACQUIRE_TOKEN_SILENT_OPERATION_NAME = "acquireTokenSilent";
@@ -36,6 +37,7 @@ public class ArgumentException extends BaseException {
     public final static String AUTHENTICATION_SCHEME_ARGUMENT_NAME = "authentication_scheme";
 
     public final static String ILLEGAL_ARGUMENT_ERROR_CODE = "illegal_argument_exception";
+
 
     private String mOperationName;
     private String mArgumentName;

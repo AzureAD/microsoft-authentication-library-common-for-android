@@ -29,6 +29,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 public class BaseException extends Exception {
 
     public static final String sName =  BaseException.class.getName();
+    private static final long serialVersionUID = -5166242728507796770L;
 
     @Nullable
     private String mSpeRing;

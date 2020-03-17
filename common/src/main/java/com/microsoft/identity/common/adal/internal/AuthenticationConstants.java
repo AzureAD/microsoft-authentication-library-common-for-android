@@ -1279,7 +1279,7 @@ public final class AuthenticationConstants {
 
         /**
          * The refresh token used to redeem access token is invalid and auth code request is needed.
-         * @deprecated This is deprecated in V2, but is kept here due to this bug https://identitydivision.visualstudio.com/Engineering/_workitems/edit/597793.
+         * This is deprecated in V2, but is kept here due to this bug https://identitydivision.visualstudio.com/Engineering/_workitems/edit/597793.
          */
         public static final String INTERACTION_REQUIRED = "interaction_required";
     }

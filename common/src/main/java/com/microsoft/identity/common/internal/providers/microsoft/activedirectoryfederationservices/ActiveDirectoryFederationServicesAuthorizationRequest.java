@@ -28,6 +28,8 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAutho
  * Active Directory Federation Services Authorization Request.
  */
 public class ActiveDirectoryFederationServicesAuthorizationRequest extends MicrosoftAuthorizationRequest<ActiveDirectoryFederationServicesAuthorizationRequest> {
+    private static final long serialVersionUID = -3028954460087575031L;
+
     private ActiveDirectoryFederationServicesAuthorizationRequest(final Builder builder) {
         super(builder);
     }
