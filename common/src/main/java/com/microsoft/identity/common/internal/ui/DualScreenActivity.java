@@ -118,6 +118,9 @@ public class DualScreenActivity extends FragmentActivity {
         dualScreenLayout.setConstraintSet(constraintSet);
     }
 
+    /**
+     * Returns true if the app is being spanned across two screens.
+     */
     public boolean isAppSpanned(final Activity activity) {
         if (!isDualScreenDevice(activity)) {
             return false;
@@ -135,6 +138,11 @@ public class DualScreenActivity extends FragmentActivity {
         return false;
     }
 
+    /**
+     * Get the device's rotation.
+     *
+     * @return Surface.ROTATION_0, Surface.ROTATION_90, Surface.ROTATION_180 or Surface.ROTATION_270
+     */
     public int getRotation(Activity activity) {
         WindowManager wm = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
         int rotation = 0;
@@ -144,6 +152,9 @@ public class DualScreenActivity extends FragmentActivity {
         return rotation;
     }
 
+    /**
+     * Returns true if this device supports dual screen mode.
+     */
     private boolean isDualScreenDevice(final Context context) {
         final String feature = "com.microsoft.device.display.displaymask";
         final PackageManager pm = context.getPackageManager();
@@ -155,7 +166,12 @@ public class DualScreenActivity extends FragmentActivity {
         }
     }
 
-    // Represents the area of the display that is not functional for displaying content.
+    /**
+     * Returns the area of the display that is not functional for displaying content.
+     *
+     * @param Context
+     * @param rotation Surface.ROTATION_0, Surface.ROTATION_90, Surface.ROTATION_180 or Surface.ROTATION_270
+     */
     private Rect getHinge(final Context context,
                           int rotation) {
         // Hinge's coordinates of its 4 edges in different mode
@@ -169,6 +185,9 @@ public class DualScreenActivity extends FragmentActivity {
         return boundings.get(0);
     }
 
+    /**
+     * Returns the area of the displaying window.
+     */
     private Rect getWindowRect(final Activity activity) {
         Rect windowRect = new Rect();
         activity.getWindowManager().getDefaultDisplay().getRectSize(windowRect);
