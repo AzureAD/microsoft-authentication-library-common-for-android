@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 public class CliTelemInfo implements Serializable {
 
     private static final String TAG = CliTelemInfo.class.getSimpleName();
+    private static final long serialVersionUID = -7200606162774338466L;
 
     private String mVersion;
     private String mServerErrorCode;

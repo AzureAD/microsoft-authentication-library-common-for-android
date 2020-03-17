@@ -47,6 +47,7 @@ public final class Device {
     private Device() {
     }
 
+    @SuppressWarnings("deprecation")
     public static Map<String, String> getPlatformIdParameters() {
         final Map<String, String> platformParameters = new HashMap<>();
 
@@ -54,6 +55,7 @@ public final class Device {
         platformParameters.put(PlatformIdParameters.VERSION, PlatformIdParameters.PRODUCT_VERSION);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            //CPU_ABI has been deprecated
             platformParameters.put(PlatformIdParameters.CPU_PLATFORM, Build.CPU_ABI);
         } else {
             final String[] supportedABIs = Build.SUPPORTED_ABIS;
