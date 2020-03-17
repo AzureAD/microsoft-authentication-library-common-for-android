@@ -26,12 +26,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.view.Surface;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -94,16 +91,15 @@ public final class AuthorizationActivity extends FragmentActivity {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.authorization_activity);
+        setContentView(R.layout.dual_screen_layout);
+        DualScreenUtil.adjustLayoutForDualScreenActivity(this);
 
         mFragment = getAuthorizationFragmentFromStartIntent(getIntent());
         getSupportFragmentManager()
                 .beginTransaction()
                 .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                .replace(R.id.authorization_activity_content, mFragment)
+                .replace(R.id.dual_screen_content, mFragment)
                 .commit();
-
-        adjustLayout();
     }
 
     @Override
@@ -116,45 +112,7 @@ public final class AuthorizationActivity extends FragmentActivity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        adjustLayout();
+        DualScreenUtil.adjustLayoutForDualScreenActivity(this);
     }
 
-    private void adjustLayout(){
-        int rotation = DualScreenUtil.getRotation(this);
-        boolean isAppSpanned = DualScreenUtil.isAppSpanned(this);
-        boolean isHorizontal = rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180;
-
-        final ConstraintSet constraintSet = new ConstraintSet();
-        constraintSet.connect(R.id.authorization_activity_content, ConstraintSet.LEFT, R.id.authorization_activity_layout, ConstraintSet.LEFT, 0);
-        constraintSet.connect(R.id.authorization_activity_content, ConstraintSet.RIGHT, R.id.authorization_activity_layout, ConstraintSet.RIGHT, 0);
-        constraintSet.connect(R.id.authorization_activity_content, ConstraintSet.TOP, R.id.authorization_activity_layout, ConstraintSet.TOP, 0);
-        constraintSet.connect(R.id.authorization_activity_content, ConstraintSet.BOTTOM, R.id.authorization_activity_layout, ConstraintSet.BOTTOM, 0);
-
-        constraintSet.connect(R.id.authorization_activity_empty_view, ConstraintSet.LEFT, R.id.authorization_activity_layout, ConstraintSet.LEFT, 0);
-        constraintSet.connect(R.id.authorization_activity_empty_view, ConstraintSet.RIGHT, R.id.authorization_activity_layout, ConstraintSet.RIGHT, 0);
-        constraintSet.connect(R.id.authorization_activity_empty_view, ConstraintSet.TOP, R.id.authorization_activity_layout, ConstraintSet.TOP, 0);
-        constraintSet.connect(R.id.authorization_activity_empty_view, ConstraintSet.BOTTOM, R.id.authorization_activity_layout, ConstraintSet.BOTTOM, 0);
-
-        if (isAppSpanned){
-            if (isHorizontal) {
-                // WebView is on the right.
-                constraintSet.connect(R.id.authorization_activity_content, ConstraintSet.LEFT, R.id.vertical_guideline, ConstraintSet.RIGHT, 0);
-
-                // Empty view is on the left.
-                constraintSet.connect(R.id.authorization_activity_empty_view, ConstraintSet.RIGHT, R.id.vertical_guideline, ConstraintSet.LEFT, 0);
-            } else {
-                // WebView is on the top.
-                constraintSet.connect(R.id.authorization_activity_content, ConstraintSet.BOTTOM, R.id.horizontal_guideline, ConstraintSet.TOP, 0);
-
-                // Empty view is in the bottom.
-                constraintSet.connect(R.id.authorization_activity_empty_view, ConstraintSet.TOP, R.id.horizontal_guideline, ConstraintSet.BOTTOM, 0);
-            }
-        } else {
-            // Shrink empty view. If constraint is not set, then its size will be (0,0).
-            constraintSet.clear(R.id.authorization_activity_empty_view);
-        }
-
-        final ConstraintLayout constraintLayout =  findViewById(R.id.authorization_activity_layout);
-        constraintLayout.setConstraintSet(constraintSet);
-    }
 }

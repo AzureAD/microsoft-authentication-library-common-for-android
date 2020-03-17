@@ -26,16 +26,68 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.view.Surface;
 import android.view.WindowManager;
 
+import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
+
 import com.microsoft.device.display.DisplayMask;
+import com.microsoft.identity.common.R;
 
 import java.util.List;
 
 // Adapt from https://github.com/microsoft/surface-duo-sdk-samples/blob/master/utils/src/main/java/com/microsoft/device/display/samples/utils/ScreenHelper.java
 public class DualScreenUtil {
 
-    public static boolean isAppSpanned(final Activity activity) {
+    // Given a dual screen activity (an activity which uses R.layout.dual_screen_layout),
+    // readjust its child layouts so that it's displayed on both single-screen and dual-screen device correct .
+    public static void adjustLayoutForDualScreenActivity(@NonNull final Activity dualScreenActivity) {
+        final ConstraintLayout dualScreenLayout = dualScreenActivity.findViewById(R.id.dual_screen_layout);
+        if (dualScreenLayout == null) {
+            throw new IllegalArgumentException("This is not a dual screen activity. " +
+                    "Dual screen activity must use R.layout.dual_screen_layout.");
+        }
+
+        int rotation = getRotation(dualScreenActivity);
+        boolean isAppSpanned = isAppSpanned(dualScreenActivity);
+        boolean isHorizontal = rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180;
+
+        final ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.dual_screen_layout, ConstraintSet.LEFT, 0);
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.TOP, R.id.dual_screen_layout, ConstraintSet.TOP, 0);
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.dual_screen_layout, ConstraintSet.BOTTOM, 0);
+
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.dual_screen_layout, ConstraintSet.LEFT, 0);
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.RIGHT, R.id.dual_screen_layout, ConstraintSet.RIGHT, 0);
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.TOP, R.id.dual_screen_layout, ConstraintSet.TOP, 0);
+        constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.dual_screen_layout, ConstraintSet.BOTTOM, 0);
+
+        if (isAppSpanned) {
+            if (isHorizontal) {
+                // WebView is on the right.
+                constraintSet.connect(R.id.dual_screen_content, ConstraintSet.LEFT, R.id.vertical_guideline, ConstraintSet.RIGHT, 0);
+
+                // Empty view is on the left.
+                constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.RIGHT, R.id.vertical_guideline, ConstraintSet.LEFT, 0);
+            } else {
+                // WebView is on the top.
+                constraintSet.connect(R.id.dual_screen_content, ConstraintSet.BOTTOM, R.id.horizontal_guideline, ConstraintSet.TOP, 0);
+
+                // Empty view is in the bottom.
+                constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.horizontal_guideline, ConstraintSet.BOTTOM, 0);
+            }
+        } else {
+            // Shrink empty view. If constraint is not set, then its size will be (0,0).
+            constraintSet.clear(R.id.dual_screen_empty_view);
+        }
+
+        dualScreenLayout.setConstraintSet(constraintSet);
+    }
+
+    private static boolean isAppSpanned(final Activity activity) {
         if (!isDualScreenDevice(activity)) {
             return false;
         }
@@ -82,7 +134,7 @@ public class DualScreenUtil {
         return windowRect;
     }
 
-    public static int getRotation(Activity activity) {
+    private static int getRotation(Activity activity) {
         WindowManager wm = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
         int rotation = 0;
         if (wm != null) {
@@ -90,5 +142,4 @@ public class DualScreenUtil {
         }
         return rotation;
     }
-
 }
