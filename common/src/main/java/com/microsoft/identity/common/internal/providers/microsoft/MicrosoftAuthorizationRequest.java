@@ -114,6 +114,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     /**
      * Constructor of MicrosoftAuthorizationRequest.
      */
+    @SuppressWarnings("deprecation")
     protected MicrosoftAuthorizationRequest(final Builder builder) {
         super(builder);
         mAuthority = builder.mAuthority;
@@ -140,7 +141,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mDiagnosticOS = String.valueOf(Build.VERSION.SDK_INT);
         mDiagnosticDM = android.os.Build.MODEL;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            mDiagnosticCPU = Build.CPU_ABI;
+            mDiagnosticCPU = Build.CPU_ABI;  //CPU_ABI has been deprecated
         } else {
             final String[] supportedABIs = Build.SUPPORTED_ABIS;
             if (supportedABIs != null && supportedABIs.length > 0) {

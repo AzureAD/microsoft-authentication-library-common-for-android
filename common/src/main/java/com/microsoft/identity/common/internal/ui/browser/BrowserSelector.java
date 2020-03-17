@@ -107,6 +107,7 @@ public class BrowserSelector {
             }
 
             try {
+                @SuppressWarnings("deprecation")
                 PackageInfo packageInfo = pm.getPackageInfo(
                         info.activityInfo.packageName,
                         PackageManager.GET_SIGNATURES);

@@ -71,7 +71,7 @@ public class MicrosoftClientAssertion extends ClientAssertion {
 
     }
 
-
+    @SuppressWarnings("deprecation")
     private SignedJWT createSignedJwt(String clientId, String audience, CertificateCredential credential)
             throws NoSuchAlgorithmException, CertificateEncodingException {
 
@@ -93,6 +93,7 @@ public class MicrosoftClientAssertion extends ClientAssertion {
             List<Base64> certs = new ArrayList<Base64>();
             certs.add(Base64.encode(credential.getPublicCertificate().getEncoded()));
             builder.x509CertChain(certs);
+            //x509CertThumbprint has been deprecated.  We have to keep using this since this is the only thing that AAD accepts.
             builder.x509CertThumbprint(createSHA1ThumbPrint(credential.getPublicCertificate()));
 
             jwt = new SignedJWT(builder.build(), claimsSet);
