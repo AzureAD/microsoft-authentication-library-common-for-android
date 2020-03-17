@@ -28,7 +28,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
-import android.security.KeyPairGeneratorSpec;
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
@@ -742,10 +741,11 @@ public class StorageHelper implements IStorageHelper {
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @SuppressWarnings("deprecation")
     private AlgorithmParameterSpec getKeyPairGeneratorSpec(final Context context, final Date start, final Date end) {
         final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s", KEY_STORE_CERT_ALIAS,
                 getPackageName());
-        return new KeyPairGeneratorSpec.Builder(context)
+        return new android.security.KeyPairGeneratorSpec.Builder(context)
                 .setAlias(KEY_STORE_CERT_ALIAS)
                 .setSubject(new X500Principal(certInfo))
                 .setSerialNumber(BigInteger.ONE)

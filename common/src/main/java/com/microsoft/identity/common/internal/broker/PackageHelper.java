@@ -65,10 +65,13 @@ public class PackageHelper {
      * @return signature for package
      */
     @SuppressLint("PackageManagerGetSignatures")
+    @SuppressWarnings("deprecation")
     public String getCurrentSignatureForPackage(final String packageName) {
         try {
+            //GET_SIGNATURES is deprecated
             PackageInfo info = mPackageManager.getPackageInfo(packageName,
                     PackageManager.GET_SIGNATURES);
+            //.signatures is deprecated
             if (info != null && info.signatures != null && info.signatures.length > 0) {
                 Signature signature = info.signatures[0];
                 MessageDigest md = MessageDigest.getInstance("SHA");

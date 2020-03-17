@@ -155,9 +155,12 @@ public class BrokerValidator {
     }
 
     @SuppressLint("PackageManagerGetSignatures")
+    @SuppressWarnings("deprecation")
     private List<X509Certificate> readCertDataForBrokerApp(final String brokerPackageName)
             throws NameNotFoundException, ClientException, IOException,
             GeneralSecurityException {
+
+        //GET_SIGNATURES has been deprecated
         final PackageInfo packageInfo = mContext.getPackageManager().getPackageInfo(brokerPackageName,
                 PackageManager.GET_SIGNATURES);
         if (packageInfo == null) {
@@ -165,6 +168,7 @@ public class BrokerValidator {
                     "No broker package existed.");
         }
 
+        //.signatures has been deprecated
         if (packageInfo.signatures == null || packageInfo.signatures.length == 0) {
             throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED,
                     "No signature associated with the broker package.");

@@ -27,7 +27,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.webkit.CookieManager;
-import android.webkit.CookieSyncManager;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
@@ -70,13 +69,14 @@ public class WebViewUtil {
      * Clear all cookies from embedded webview.
      * This is a blocking call and so should not be called on UI thread.
      */
+    @SuppressWarnings("deprecation")
     public static void removeCookiesFromWebView(final Context context) {
         final CookieManager cookieManager = getCookieManager(context);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             cookieManager.removeAllCookies(null);
             cookieManager.flush();
         } else {
-            final CookieSyncManager syncManager = CookieSyncManager.createInstance(context);
+            final android.webkit.CookieSyncManager syncManager = android.webkit.CookieSyncManager.createInstance(context);
             cookieManager.removeAllCookie();
             syncManager.sync();
         }
@@ -86,13 +86,14 @@ public class WebViewUtil {
      * Clear session cookies from embedded webview.
      * This is a blocking call and so should not be called on UI thread.
      */
+    @SuppressWarnings("deprecation")
     public static void removeSessionCookiesFromWebView(final Context context) {
         final CookieManager cookieManager = getCookieManager(context);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             cookieManager.removeAllCookies(null);
             cookieManager.flush();
         } else {
-            final CookieSyncManager syncManager = CookieSyncManager.createInstance(context);
+            final android.webkit.CookieSyncManager syncManager = android.webkit.CookieSyncManager.createInstance(context);
             cookieManager.removeSessionCookie();
             syncManager.sync();
         }

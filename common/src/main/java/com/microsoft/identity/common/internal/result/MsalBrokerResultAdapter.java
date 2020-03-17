@@ -263,10 +263,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      *
      * @return BaseException
      */
+    @SuppressWarnings("deprecation")
     private BaseException getBaseExceptionFromErrorCodes(@NonNull final BrokerResult brokerResult) {
         final String errorCode = brokerResult.getErrorCode();
         final BaseException baseException;
 
+        //INTERACTION_REQUIRED is marked as deprecated
         if (AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
                 AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode) ||
                 ErrorStrings.INVALID_BROKER_REFRESH_TOKEN.equalsIgnoreCase(errorCode) ||

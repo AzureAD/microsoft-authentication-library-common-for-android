@@ -32,6 +32,7 @@ public abstract class TokenAuthenticationScheme
         implements ITokenAuthenticationSchemeInternal {
 
     public static final String SCHEME_DELIMITER = " ";
+    private static final long serialVersionUID = 8007073391895830795L;
 
     TokenAuthenticationScheme(@NonNull final String name) {
         super(name);
