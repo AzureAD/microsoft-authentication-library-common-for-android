@@ -262,8 +262,7 @@ public class EstsTelemetry {
             final ILocalAuthenticationResult localAuthenticationResult =
                     (ILocalAuthenticationResult) commandResult.getResult();
 
-            final Boolean isTokenReturnedFromCache = localAuthenticationResult.isServicedFromCache();
-            if (isTokenReturnedFromCache != null && isTokenReturnedFromCache) {
+            if (localAuthenticationResult.isServicedFromCache()) {
                 // we returned a token from cache, let's increment the silent success count
                 lastRequestTelemetry.incrementSilentSuccessCount();
             }

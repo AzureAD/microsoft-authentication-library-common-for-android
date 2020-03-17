@@ -53,14 +53,14 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private String mSpeRing;
     private String mRefreshTokenAge;
     private List<ICacheRecord> mCompleteResultFromCache;
-    private Boolean mServicedFromCache;
+    private boolean mServicedFromCache;
 
     private static final String TAG = LocalAuthenticationResult.class.getName();
 
     public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
                                      @NonNull final List<ICacheRecord> completeResultFromCache,
                                      @NonNull final SdkType sdkType,
-                                     @Nullable final Boolean isServicedFromCache) {
+                                     @Nullable final boolean isServicedFromCache) {
         this(lastAuthorized, sdkType);
         mCompleteResultFromCache = completeResultFromCache;
         mServicedFromCache = isServicedFromCache;
@@ -210,7 +210,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     }
 
     @Override
-    public Boolean isServicedFromCache() {
+    public boolean isServicedFromCache() {
         return mServicedFromCache;
     }
 }

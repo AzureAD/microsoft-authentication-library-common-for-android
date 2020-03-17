@@ -126,5 +126,5 @@ public interface ILocalAuthenticationResult {
 
     List<ICacheRecord> getCacheRecordWithTenantProfileData();
 
-    Boolean isServicedFromCache();
+    boolean isServicedFromCache();
 }
