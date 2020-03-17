@@ -29,7 +29,6 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.microsoft.identity.common.R;
@@ -37,7 +36,7 @@ import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
-import com.microsoft.identity.common.internal.ui.DualScreenUtil;
+import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 
 import java.util.HashMap;
 
@@ -49,7 +48,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
-public final class AuthorizationActivity extends FragmentActivity {
+public final class AuthorizationActivity extends DualScreenActivity {
 
     private AuthorizationFragment mFragment;
 
@@ -91,15 +90,8 @@ public final class AuthorizationActivity extends FragmentActivity {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.dual_screen_layout);
-        DualScreenUtil.adjustLayoutForDualScreenActivity(this);
-
         mFragment = getAuthorizationFragmentFromStartIntent(getIntent());
-        getSupportFragmentManager()
-                .beginTransaction()
-                .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                .replace(R.id.dual_screen_content, mFragment)
-                .commit();
+        setFragment(mFragment);
     }
 
     @Override
@@ -108,11 +100,4 @@ public final class AuthorizationActivity extends FragmentActivity {
             super.onBackPressed();
         }
     }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        DualScreenUtil.adjustLayoutForDualScreenActivity(this);
-    }
-
 }
