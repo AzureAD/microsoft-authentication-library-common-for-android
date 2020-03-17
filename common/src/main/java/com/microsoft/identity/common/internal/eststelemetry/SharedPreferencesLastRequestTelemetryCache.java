@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -37,6 +39,7 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
     private final static String LAST_TELEMETRY_OBJECT_CACHE_KEY = "last_telemetry_object";
     private final static String LAST_TELEMETRY_HEADER_STRING_CACHE_KEY = "last_telemetry_header_string";
     private final static String LAST_TELEMETRY_SCHEMA_VERSION_CACHE_KEY = "last_telemetry_schema_version";
+    private final static String LAST_TELEMETRY_INDEX_SENT_CACHE_KEY = "last_telemetry_index_sent";
 
     private final static String TAG = SharedPreferencesLastRequestTelemetryCache.class.getSimpleName();
 
@@ -145,6 +148,25 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
         final String json = mGson.toJson(outboundObject);
 
         return json;
+    }
+
+    /**
+     * Save the index for the failed request array.
+     * @param index
+     */
+    void saveLastTelemetryIndexSentInHeaderToCache(int index) {
+        final String cacheKey = LAST_TELEMETRY_INDEX_SENT_CACHE_KEY;
+        final String cacheValue = String.valueOf(index);
+        saveToTelemetryCache(cacheKey, cacheValue);
+    }
+
+    int getLastTelemetryIndexSentInHeaderFromCache() {
+        final String indexString = mSharedPreferencesFileManager.getString(LAST_TELEMETRY_INDEX_SENT_CACHE_KEY);
+        if (TextUtils.isEmpty(indexString)) {
+            return 0;
+        } else {
+            return Integer.parseInt(indexString);
+        }
     }
 
 }

@@ -26,42 +26,50 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LastRequestTelemetry extends RequestTelemetry {
 
     @SerializedName("silent_successful_count")
-    private int mSilentSuccessfulCount;
+    private int silentSuccessfulCount;
 
     @SerializedName("failed_requests")
-    private Queue<FailedRequest> failedRequests;
+    private List<FailedRequest> failedRequests;
 
     @SerializedName("errors")
-    private Queue<String> mErrors;
+    private List<String> errors;
 
     LastRequestTelemetry(@NonNull String schemaVersion) {
         super(schemaVersion);
-        mSilentSuccessfulCount = 0;
-        failedRequests = new ConcurrentLinkedQueue<>();
-        mErrors = new ConcurrentLinkedQueue<>();
+        silentSuccessfulCount = 0;
+        failedRequests = new ArrayList<>();
+        errors = new ArrayList<>();
+    }
+
+    List<FailedRequest> getFailedRequests() {
+        return failedRequests;
+    }
+
+    List<String> getErrors() {
+        return errors;
     }
 
     @Override
     public String getHeaderStringForFields() {
-        return mSilentSuccessfulCount + "|" + getHeaderStringForFields(failedRequests) + "|" + getHeaderStringForFields(mErrors);
+        return silentSuccessfulCount + "|" + getHeaderStringForFields(failedRequests) + "|" + getHeaderStringForFields(errors);
     }
 
     void incrementSilentSuccessCount() {
-        mSilentSuccessfulCount++;
+        silentSuccessfulCount++;
     }
 
     void resetSilentSuccessCount() {
-        mSilentSuccessfulCount = 0;
+        silentSuccessfulCount = 0;
     }
 
     private void appendError(final String errorCode) {
-        mErrors.add(errorCode);
+        errors.add(errorCode);
     }
 
     private void appendFailedRequest(final String apiId, final String correlationId) {
@@ -73,8 +81,38 @@ public class LastRequestTelemetry extends RequestTelemetry {
         appendError(errorCode);
     }
 
-    void wipeFailedRequestData() {
-        failedRequests.clear();
-        mErrors.clear();
+    private void appendFailedRequest(final FailedRequest failedRequest) {
+        failedRequests.add(failedRequest);
+    }
+
+    void appendFailedRequestWithError(final FailedRequest failedRequest, final String errorCode) {
+        appendFailedRequest(failedRequest);
+        appendError(errorCode);
+    }
+
+    private void wipeFailedRequestForSubList(int index) {
+        failedRequests = failedRequests.subList(index, failedRequests.size());
+    }
+
+    private void wipeErrorForSubList(int index) {
+        errors = errors.subList(index, errors.size());
+    }
+
+    void wipeFailedRequestAndErrorForSubList(int index) {
+        if (index < 0 || index > failedRequests.size() || index > errors.size()) {
+            return;
+        }
+
+        wipeFailedRequestForSubList(index);
+        wipeErrorForSubList(index);
+    }
+
+    @Override
+    public RequestTelemetry derive(@NonNull final RequestTelemetry requestTelemetry) {
+        if (requestTelemetry instanceof LastRequestTelemetry) {
+            this.silentSuccessfulCount = ((LastRequestTelemetry) requestTelemetry).silentSuccessfulCount;
+        }
+
+        return super.derive(requestTelemetry);
     }
 }
