@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.media.MediaDrm;
 import android.os.Build;
 import android.webkit.CookieManager;
 import android.webkit.WebView;
@@ -77,7 +76,6 @@ public class WebViewUtil {
             cookieManager.removeAllCookies(null);
             cookieManager.flush();
         } else {
-            @SuppressWarnings("deprecation")
             final android.webkit.CookieSyncManager syncManager = android.webkit.CookieSyncManager.createInstance(context);
             cookieManager.removeAllCookie();
             syncManager.sync();
@@ -95,7 +93,6 @@ public class WebViewUtil {
             cookieManager.removeAllCookies(null);
             cookieManager.flush();
         } else {
-            @SuppressWarnings("deprecation")
             final android.webkit.CookieSyncManager syncManager = android.webkit.CookieSyncManager.createInstance(context);
             cookieManager.removeSessionCookie();
             syncManager.sync();
