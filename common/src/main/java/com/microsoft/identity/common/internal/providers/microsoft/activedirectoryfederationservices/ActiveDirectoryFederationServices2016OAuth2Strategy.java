@@ -47,7 +47,19 @@ import java.util.concurrent.Future;
  * For information on ADFS 2016 oAuth and OIDC support
  * see <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-scenarios-for-developers'>https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-scenarios-for-developers</a>
  */
-public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2Strategy {
+public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2Strategy<AccessToken,
+        BaseAccount,
+        AuthorizationRequest<?>,
+        AuthorizationRequest.Builder,
+        AuthorizationStrategy,
+        OAuth2Configuration,
+        OAuth2StrategyParameters,
+        AuthorizationResponse,
+        RefreshToken,
+        TokenRequest,
+        TokenResponse,
+        TokenResult,
+        AuthorizationResult> {
     /**
      * Constructor of ActiveDirectoryFederationServices2016OAuth2Strategy.
      *

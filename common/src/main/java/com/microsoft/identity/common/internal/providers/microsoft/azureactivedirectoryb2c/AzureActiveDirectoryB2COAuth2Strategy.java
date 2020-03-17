@@ -48,7 +48,19 @@ import java.util.concurrent.Future;
  * see <a href='https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-oauth-code'>
  * https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-oauth-code</a>
  */
-public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
+public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy<AccessToken,
+        BaseAccount,
+        AuthorizationRequest<?>,
+        AuthorizationRequest.Builder,
+        AuthorizationStrategy,
+        OAuth2Configuration,
+        OAuth2StrategyParameters,
+        AuthorizationResponse,
+        RefreshToken,
+        TokenRequest,
+        TokenResponse,
+        TokenResult,
+        AuthorizationResult> {
     /**
      * Constructor of AzureActiveDirectoryB2COAuth2Strategy.
      *

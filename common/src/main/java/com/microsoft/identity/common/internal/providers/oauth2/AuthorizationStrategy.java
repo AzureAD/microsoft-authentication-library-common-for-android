@@ -31,6 +31,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.io.UnsupportedEncodingException;
@@ -42,8 +43,20 @@ import java.util.concurrent.Future;
  * and/or authentication information (OIDC)
  * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
  */
-public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
-        GenericAuthorizationRequest extends AuthorizationRequest> {
+public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy<AccessToken,
+        BaseAccount,
+        AuthorizationRequest<?>,
+        AuthorizationRequest.Builder<?>,
+        AuthorizationStrategy<?,?>,
+        OAuth2Configuration,
+        OAuth2StrategyParameters,
+        AuthorizationResponse,
+        RefreshToken,
+        TokenRequest,
+        TokenResponse,
+        TokenResult,
+        AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+        GenericAuthorizationRequest extends AuthorizationRequest<?>> {
     private WeakReference<Context> mReferencedApplicationContext;
     private WeakReference<Activity> mReferencedActivity;
     private WeakReference<Fragment> mReferencedFragment;
@@ -87,7 +100,7 @@ public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2
     /**
      * Perform the authorization request.
      */
-    public abstract Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
+    public abstract Future<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
                                                                      GenericOAuth2Strategy oAuth2Strategy)
             throws ClientException, UnsupportedEncodingException;
 

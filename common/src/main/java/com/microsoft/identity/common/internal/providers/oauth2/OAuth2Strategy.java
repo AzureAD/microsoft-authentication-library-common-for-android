@@ -57,9 +57,9 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 public abstract class OAuth2Strategy
         <GenericAccessToken extends AccessToken,
                 GenericAccount extends BaseAccount,
-                GenericAuthorizationRequest extends AuthorizationRequest,
-                GenericAuthorizationRequestBuilder extends AuthorizationRequest.Builder,
-                GenericAuthorizationStrategy extends AuthorizationStrategy,
+                GenericAuthorizationRequest extends AuthorizationRequest<?>,
+                GenericAuthorizationRequestBuilder extends AuthorizationRequest.Builder<?>,
+                GenericAuthorizationStrategy extends AuthorizationStrategy<?,?>,
                 GenericOAuth2Configuration extends OAuth2Configuration,
                 GenericOAuth2StrategyParameters extends OAuth2StrategyParameters,
                 GenericAuthorizationResponse extends AuthorizationResponse,
@@ -67,7 +67,7 @@ public abstract class OAuth2Strategy
                 GenericTokenRequest extends TokenRequest,
                 GenericTokenResponse extends TokenResponse,
                 GenericTokenResult extends TokenResult,
-                GenericAuthorizationResult extends AuthorizationResult> {
+                GenericAuthorizationResult extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> {
 
     private static final String TAG = OAuth2Strategy.class.getSimpleName();
 
@@ -97,11 +97,11 @@ public abstract class OAuth2Strategy
      * @param authorizationStrategy generic authorization strategy.
      * @return GenericAuthorizationResponse
      */
-    public Future<AuthorizationResult> requestAuthorization(
+    public Future<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> requestAuthorization(
             final GenericAuthorizationRequest request,
             final GenericAuthorizationStrategy authorizationStrategy) {
         validateAuthorizationRequest(request);
-        Future<AuthorizationResult> future = null;
+        Future<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> future = null;
         try {
             future = authorizationStrategy.requestAuthorization(request, this);
         } catch (final UnsupportedEncodingException | ClientException exc) {
@@ -111,7 +111,7 @@ public abstract class OAuth2Strategy
         return future;
     }
 
-    public abstract AuthorizationResultFactory getAuthorizationResultFactory();
+    public abstract AuthorizationResultFactory<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory();
 
     /**
      * @param request generic token request.

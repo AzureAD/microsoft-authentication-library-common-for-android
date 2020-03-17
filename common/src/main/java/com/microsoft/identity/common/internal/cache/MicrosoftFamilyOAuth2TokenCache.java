@@ -38,9 +38,19 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,8 +58,20 @@ import java.util.List;
 import static com.microsoft.identity.common.internal.cache.AbstractAccountCredentialCache.targetsIntersect;
 
 public class MicrosoftFamilyOAuth2TokenCache
-        <GenericOAuth2Strategy extends OAuth2Strategy,
-                GenericAuthorizationRequest extends AuthorizationRequest,
+        <GenericOAuth2Strategy extends OAuth2Strategy<AccessToken,
+                BaseAccount,
+                AuthorizationRequest<?>,
+                AuthorizationRequest.Builder<?>,
+                AuthorizationStrategy<?,?>,
+                OAuth2Configuration,
+                OAuth2StrategyParameters,
+                AuthorizationResponse,
+                RefreshToken,
+                TokenRequest,
+                TokenResponse,
+                TokenResult,
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                GenericAuthorizationRequest extends AuthorizationRequest<?>,
                 GenericTokenResponse extends TokenResponse,
                 GenericAccount extends BaseAccount,
                 GenericRefreshToken extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken>

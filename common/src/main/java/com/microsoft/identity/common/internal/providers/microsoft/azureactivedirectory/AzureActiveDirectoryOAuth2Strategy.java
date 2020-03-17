@@ -33,6 +33,9 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
@@ -66,7 +69,7 @@ public class AzureActiveDirectoryOAuth2Strategy
         AzureActiveDirectoryAccount,
         AzureActiveDirectoryAuthorizationRequest,
         AzureActiveDirectoryAuthorizationRequest.Builder,
-        AuthorizationStrategy,
+        AuthorizationStrategy<?,?>,
         AzureActiveDirectoryOAuth2Configuration,
         OAuth2StrategyParameters,
         AzureActiveDirectoryAuthorizationResponse,
@@ -74,7 +77,7 @@ public class AzureActiveDirectoryOAuth2Strategy
         AzureActiveDirectoryTokenRequest,
         AzureActiveDirectoryTokenResponse,
         TokenResult,
-        AuthorizationResult> {
+        AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> {
 
     private static final String TAG = AzureActiveDirectoryOAuth2Strategy.class.getSimpleName();
 
@@ -95,7 +98,7 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public AuthorizationResultFactory getAuthorizationResultFactory() {
+    public AuthorizationResultFactory<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory() {
         throw new UnsupportedOperationException();
     }
 

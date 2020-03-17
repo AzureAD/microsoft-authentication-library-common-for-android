@@ -27,6 +27,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
@@ -42,7 +43,19 @@ import java.util.Set;
  * Class for managing the tokens saved locally on a device.
  */
 public abstract class OAuth2TokenCache
-        <T extends OAuth2Strategy, U extends AuthorizationRequest, V extends TokenResponse> {
+        <T extends OAuth2Strategy<AccessToken,
+                BaseAccount,
+                AuthorizationRequest<?>,
+                AuthorizationRequest.Builder<?>,
+                AuthorizationStrategy<?,?>,
+                OAuth2Configuration,
+                OAuth2StrategyParameters,
+                AuthorizationResponse,
+                RefreshToken,
+                TokenRequest,
+                TokenResponse,
+                TokenResult,
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>, U extends AuthorizationRequest<?>, V extends TokenResponse> {
 
     private final Context mContext;
 

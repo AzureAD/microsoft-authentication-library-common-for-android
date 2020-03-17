@@ -28,6 +28,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ServiceException;
@@ -43,7 +44,20 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccou
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
+import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.PlainHeader;
 import com.nimbusds.jwt.JWT;
@@ -88,12 +102,44 @@ public class TokenShareUtility implements ITokenShareInternal {
     private final String mClientId;
     private final String mRedirectUri;
     private final String mDefaultAuthority;
-    private final MsalOAuth2TokenCache mTokenCache;
+    private final MsalOAuth2TokenCache<OAuth2Strategy<AccessToken,
+            BaseAccount,
+            AuthorizationRequest<?>,
+            AuthorizationRequest.Builder<?>,
+            AuthorizationStrategy<?,?>,
+            OAuth2Configuration,
+            OAuth2StrategyParameters,
+            AuthorizationResponse,
+            RefreshToken,
+            TokenRequest,
+            TokenResponse,
+            TokenResult,
+            AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+            AuthorizationRequest<?>,
+            TokenResponse,
+            BaseAccount,
+            RefreshToken> mTokenCache;
 
     public TokenShareUtility(@NonNull final String clientId,
                              @NonNull final String redirectUri,
                              @NonNull final String defaultAuthority,
-                             @NonNull final MsalOAuth2TokenCache cache) {
+                             @NonNull final MsalOAuth2TokenCache<OAuth2Strategy<AccessToken,
+                                                                  BaseAccount,
+                                                                  AuthorizationRequest<?>,
+                                                                  AuthorizationRequest.Builder<?>,
+                                                                  AuthorizationStrategy<?,?>,
+                                                                  OAuth2Configuration,
+                                                                  OAuth2StrategyParameters,
+                                                                  AuthorizationResponse,
+                                                                  RefreshToken,
+                                                                  TokenRequest,
+                                                                  TokenResponse,
+                                                                  TokenResult,
+                                                                  AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                                                                 AuthorizationRequest<?>,
+                                                                 TokenResponse,
+                                                                 BaseAccount,
+                                                                 RefreshToken> cache) {
         mClientId = clientId;
         mRedirectUri = redirectUri;
         mDefaultAuthority = defaultAuthority;

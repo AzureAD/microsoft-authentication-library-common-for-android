@@ -50,7 +50,19 @@ import java.util.concurrent.Future;
  * see <a href='https://msdn.microsoft.com/en-us/library/dn633593.aspx'>https://msdn.microsoft.com/en-us/library/dn633593.aspx</a>
  * see <a href='https://blogs.technet.microsoft.com/maheshu/2015/04/28/oauth-2-0-support-in-adfs-on-windows-server-2012-r2/'>https://blogs.technet.microsoft.com/maheshu/2015/04/28/oauth-2-0-support-in-adfs-on-windows-server-2012-r2/</a>
  */
-public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth2Strategy {
+public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth2Strategy<AccessToken,
+        BaseAccount,
+        AuthorizationRequest<?>,
+        AuthorizationRequest.Builder,
+        AuthorizationStrategy,
+        OAuth2Configuration,
+        OAuth2StrategyParameters,
+        AuthorizationResponse,
+        RefreshToken,
+        TokenRequest,
+        TokenResponse,
+        TokenResult,
+        AuthorizationResult> {
     /**
      * Constructor of ActiveDirectoryFederationServices2012R2OAuth2Strategy.
      *

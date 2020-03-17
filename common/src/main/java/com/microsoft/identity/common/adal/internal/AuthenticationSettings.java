@@ -203,6 +203,7 @@ public enum AuthenticationSettings {
      *
      * @param clazz class for workplace join
      */
+    @SuppressWarnings("rawtypes")
     public void setDeviceCertificateProxyClass(Class clazz) {
         if (IDeviceCertificate.class.isAssignableFrom(clazz)) {
             mClazzDeviceCertProxy = clazz;

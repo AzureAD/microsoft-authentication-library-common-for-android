@@ -65,7 +65,7 @@ import java.util.Set;
  */
 public class ADALOAuth2TokenCache
         extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
-        implements IShareSingleSignOnState {
+        implements IShareSingleSignOnState<BaseAccount, RefreshToken> {
     private ISharedPreferencesFileManager mISharedPreferencesFileManager;
 
     static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported.";
