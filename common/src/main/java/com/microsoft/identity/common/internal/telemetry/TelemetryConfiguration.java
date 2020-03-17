@@ -28,6 +28,8 @@ import java.io.Serializable;
 
 public class TelemetryConfiguration implements Serializable {
 
+    private static final long serialVersionUID = 4048693049821792485L;
+
     /**
      * Field names used for serialization by Gson.
      */

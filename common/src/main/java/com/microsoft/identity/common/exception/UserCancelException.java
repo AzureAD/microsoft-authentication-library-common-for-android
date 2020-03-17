@@ -29,6 +29,7 @@ package com.microsoft.identity.common.exception;
 final public class UserCancelException extends BaseException {
 
     public static final String sName =  UserCancelException.class.getName();
+    private static final long serialVersionUID = 5184560527352649832L;
 
     public UserCancelException() {
         super();

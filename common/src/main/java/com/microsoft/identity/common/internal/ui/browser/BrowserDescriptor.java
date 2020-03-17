@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.Set;
 
 public class BrowserDescriptor implements Serializable {
+    private static final long serialVersionUID = 3745812401643512530L;
     @SerializedName("browser_package_name")
     private String mPackageName;
 

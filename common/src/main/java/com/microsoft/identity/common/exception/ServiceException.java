@@ -36,6 +36,7 @@ import java.util.List;
 public class ServiceException extends BaseException {
 
     public static final String sName =  ServiceException.class.getName();
+    private static final long serialVersionUID = 5139563940871615046L;
 
     public static final String OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD =
             "failed_to_load_openid_configuration";
