@@ -49,18 +49,19 @@ public class DualScreenActivity extends FragmentActivity {
 
     @Override
     public void setContentView(int layoutResID) {
+        initializeContentView();
+
+        final RelativeLayout contentLayout = findViewById(com.microsoft.identity.common.R.id.dual_screen_content);
+        LayoutInflater.from(this).inflate(layoutResID, contentLayout);
+    }
+
+    private void initializeContentView(){
         super.setContentView(R.layout.dual_screen_layout);
-
-        if (layoutResID != -1) {
-            final RelativeLayout contentLayout = findViewById(com.microsoft.identity.common.R.id.dual_screen_content);
-            LayoutInflater.from(this).inflate(layoutResID, contentLayout);
-        }
-
         adjustLayoutForDualScreenActivity();
     }
 
     public void setFragment(@NonNull final Fragment fragment) {
-        setContentView(-1);
+        initializeContentView();
         getSupportFragmentManager()
                 .beginTransaction()
                 .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
