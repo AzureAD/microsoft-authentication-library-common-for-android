@@ -101,6 +101,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void onReceivedError(final WebView view,
                                 final int errorCode,
                                 final String description,

@@ -679,6 +679,7 @@ public enum ADALError {
         // order.
         if (context != null) {
             Configuration conf = context.getResources().getConfiguration();
+            @SuppressWarnings("deprecation")
             Resources resources = new Resources(context.getAssets(), context.getResources()
                     .getDisplayMetrics(), conf);
             return resources.getString(resources.getIdentifier(this.name(), "string",

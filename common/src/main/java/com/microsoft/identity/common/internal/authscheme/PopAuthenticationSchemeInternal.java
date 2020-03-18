@@ -42,6 +42,8 @@ public class PopAuthenticationSchemeInternal
         extends TokenAuthenticationScheme
         implements IPoPAuthenticationSchemeParams {
 
+    private static final long serialVersionUID = 788393037295696358L;
+
     public static final class SerializedNames {
         public static final String HTTP_METHOD = "http_method";
         public static final String URL = "url";

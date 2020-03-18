@@ -30,6 +30,7 @@ package com.microsoft.identity.common.exception;
 public final class UiRequiredException extends ServiceException {
 
     public static final String sName = UiRequiredException.class.getName();
+    private static final long serialVersionUID = 3039442374738287255L;
 
     public UiRequiredException(final String errorCode, final String errorMessage) {
         super(errorCode, errorMessage, null);
