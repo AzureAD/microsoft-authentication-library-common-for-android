@@ -37,6 +37,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
@@ -58,8 +59,8 @@ import java.util.concurrent.Future;
 public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy<AccessToken,
         BaseAccount,
         AuthorizationRequest<?>,
-        AuthorizationRequest.Builder,
-        AuthorizationStrategy,
+        AuthorizationRequest.Builder<?>,
+        AuthorizationStrategy<?,?>,
         OAuth2Configuration,
         OAuth2StrategyParameters,
         AuthorizationResponse,
@@ -67,12 +68,12 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         TokenRequest,
         TokenResponse,
         TokenResult,
-        AuthorizationResult>,
-        GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
+        AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+        GenericAuthorizationRequest extends AuthorizationRequest<?>> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
     private final static String TAG = BrowserAuthorizationStrategy.class.getSimpleName();
 
     private CustomTabsManager mCustomTabManager;
-    private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
+    private ResultFuture<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> mAuthorizationResultFuture;
     private List<BrowserDescriptor> mBrowserSafeList;
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
@@ -92,7 +93,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     }
 
     @Override
-    public Future<AuthorizationResult> requestAuthorization(
+    public Future<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> requestAuthorization(
             GenericAuthorizationRequest authorizationRequest,
             GenericOAuth2Strategy oAuth2Strategy)
             throws ClientException, UnsupportedEncodingException {
@@ -162,7 +163,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == AuthenticationConstants.UIRequest.BROWSER_FLOW) {
             dispose();
-            final AuthorizationResult result = mOAuth2Strategy
+            final AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> result = mOAuth2Strategy
                     .getAuthorizationResultFactory().createAuthorizationResult(
                             resultCode,
                             data,
