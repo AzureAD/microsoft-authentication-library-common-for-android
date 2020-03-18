@@ -91,6 +91,8 @@ public class DualScreenActivity extends FragmentActivity {
         constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.dual_screen_layout, ConstraintSet.TOP, 0);
         constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.BOTTOM, R.id.dual_screen_layout, ConstraintSet.BOTTOM, 0);
 
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
         if (isAppSpanned) {
             if (isHorizontal) {
                 int duoHingeWidth = getHinge(this, rotation).width() / 2;
@@ -108,6 +110,10 @@ public class DualScreenActivity extends FragmentActivity {
 
                 // Empty view is in the bottom.
                 constraintSet.connect(R.id.dual_screen_empty_view, ConstraintSet.TOP, R.id.horizontal_guideline, ConstraintSet.BOTTOM, 0);
+
+                // In spanned vertical mode, keyboard will always be on the lower screen.
+                // This means we do not need to shrink the webview.
+                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
             }
         } else {
             // Shrink empty view. If constraint is not set, then its size will be (0,0).
