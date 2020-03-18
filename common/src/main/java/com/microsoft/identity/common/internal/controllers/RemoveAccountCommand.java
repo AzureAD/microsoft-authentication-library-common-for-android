@@ -37,7 +37,7 @@ public class RemoveAccountCommand extends BaseCommand<Boolean> {
 
     public RemoveAccountCommand(@NonNull final OperationParameters parameters,
                                 @NonNull final List<BaseController> controllers,
-                                @NonNull final CommandCallback callback) {
+                                @NonNull final CommandCallback<?,?> callback) {
         super(parameters, controllers, callback);
     }
 

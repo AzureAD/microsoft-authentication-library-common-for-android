@@ -33,7 +33,7 @@ public class InteractiveTokenCommand extends TokenCommand {
 
     public InteractiveTokenCommand(AcquireTokenOperationParameters parameters,
                                    BaseController controller,
-                                   CommandCallback callback) {
+                                   CommandCallback<?,?> callback) {
 
         super(parameters, controller, callback);
     }

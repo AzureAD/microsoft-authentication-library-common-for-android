@@ -48,7 +48,7 @@ public interface IAccountCredentialAdapter
         <T extends OAuth2Strategy<AccessToken,
                 BaseAccount,
                 AuthorizationRequest<?>,
-                AuthorizationRequest.Builder,
+                AuthorizationRequest.Builder<?>,
                 AuthorizationStrategy<?,?>,
                 OAuth2Configuration,
                 OAuth2StrategyParameters,
@@ -58,7 +58,7 @@ public interface IAccountCredentialAdapter
                 TokenResponse,
                 TokenResult,
                 AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
-                U extends AuthorizationRequest,
+                U extends AuthorizationRequest<?>,
                 V extends TokenResponse,
                 W extends BaseAccount,
                 X extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> {

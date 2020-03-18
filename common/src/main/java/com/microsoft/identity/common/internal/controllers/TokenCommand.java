@@ -42,13 +42,13 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
 
     public TokenCommand(@NonNull final OperationParameters parameters,
                         @NonNull final BaseController controller,
-                        @NonNull final CommandCallback callback) {
+                        @NonNull final CommandCallback<?,?> callback) {
         super(parameters, controller, callback);
     }
 
     public TokenCommand(@NonNull final OperationParameters parameters,
                         @NonNull final List<BaseController> controllers,
-                        @NonNull final CommandCallback callback) {
+                        @NonNull final CommandCallback<?,?> callback) {
         super(parameters, controllers, callback);
     }
 

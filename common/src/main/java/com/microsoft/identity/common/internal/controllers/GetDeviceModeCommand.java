@@ -35,7 +35,7 @@ public class GetDeviceModeCommand extends BaseCommand<Boolean> {
 
     public GetDeviceModeCommand(@NonNull final OperationParameters parameters,
                                 @NonNull final BaseController controller,
-                                @NonNull final CommandCallback callback) {
+                                @NonNull final CommandCallback<?,?> callback) {
         super(parameters, controller, callback);
     }
 

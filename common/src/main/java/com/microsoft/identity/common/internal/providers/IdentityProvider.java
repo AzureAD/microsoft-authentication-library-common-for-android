@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers;
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
@@ -39,8 +40,8 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 public abstract class IdentityProvider<T extends OAuth2Strategy<AccessToken,
         BaseAccount,
         AuthorizationRequest<?>,
-        AuthorizationRequest.Builder,
-        AuthorizationStrategy,
+        AuthorizationRequest.Builder<?>,
+        AuthorizationStrategy<?,?>,
         OAuth2Configuration,
         OAuth2StrategyParameters,
         AuthorizationResponse,
@@ -48,7 +49,7 @@ public abstract class IdentityProvider<T extends OAuth2Strategy<AccessToken,
         TokenRequest,
         TokenResponse,
         TokenResult,
-        AuthorizationResult>, U extends OAuth2Configuration> {
+        AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>, U extends OAuth2Configuration> {
     /**
      * Create OAuth2 strategy.
      *

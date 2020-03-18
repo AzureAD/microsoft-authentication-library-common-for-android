@@ -37,6 +37,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
@@ -56,7 +57,7 @@ public class ExceptionAdapter {
     @Nullable
     public static BaseException exceptionFromAcquireTokenResult(final AcquireTokenResult result) {
         final String methodName = ":exceptionFromAcquireTokenResult";
-        final AuthorizationResult authorizationResult = result.getAuthorizationResult();
+        final AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> authorizationResult = result.getAuthorizationResult();
 
         if (null != authorizationResult) {
             final AuthorizationErrorResponse authorizationErrorResponse = authorizationResult.getAuthorizationErrorResponse();

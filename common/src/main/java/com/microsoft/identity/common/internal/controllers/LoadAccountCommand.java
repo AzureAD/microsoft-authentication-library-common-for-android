@@ -39,13 +39,13 @@ public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
 
     public LoadAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final BaseController controller,
-                              @NonNull final CommandCallback callback) {
+                              @NonNull final CommandCallback<?,?> callback) {
         super(parameters, controller, callback);
     }
 
     public LoadAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final List<BaseController> controllers,
-                              @NonNull final CommandCallback callback) {
+                              @NonNull final CommandCallback<?,?> callback) {
         super(parameters, controllers, callback);
     }
 

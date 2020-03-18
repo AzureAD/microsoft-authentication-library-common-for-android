@@ -27,6 +27,7 @@ import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationS
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
@@ -51,8 +52,8 @@ import java.util.concurrent.Future;
 public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy<AccessToken,
         BaseAccount,
         AuthorizationRequest<?>,
-        AuthorizationRequest.Builder,
-        AuthorizationStrategy,
+        AuthorizationRequest.Builder<?>,
+        AuthorizationStrategy<?,?>,
         OAuth2Configuration,
         OAuth2StrategyParameters,
         AuthorizationResponse,
@@ -60,7 +61,7 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy<Access
         TokenRequest,
         TokenResponse,
         TokenResult,
-        AuthorizationResult> {
+        AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> {
     /**
      * Constructor of AzureActiveDirectoryB2COAuth2Strategy.
      *
@@ -71,17 +72,17 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy<Access
     }
 
     @Override
-    public Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy) {
+    public Future<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> requestAuthorization(AuthorizationRequest<?> request, AuthorizationStrategy<?,?> authorizationStrategy) {
         return super.requestAuthorization(request, authorizationStrategy);
     }
 
     @Override
-    public AuthorizationResultFactory getAuthorizationResultFactory() {
+    public AuthorizationResultFactory<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public String getIssuerCacheIdentifier(AuthorizationRequest request) {
+    public String getIssuerCacheIdentifier(AuthorizationRequest<?> request) {
         return null;
     }
 
@@ -101,17 +102,17 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy<Access
     }
 
     @Override
-    public AuthorizationRequest.Builder createAuthorizationRequestBuilder() {
+    public AuthorizationRequest.Builder<?> createAuthorizationRequestBuilder() {
         return new AzureActiveDirectoryB2CAuthorizationRequest.Builder();
     }
 
     @Override
-    public AuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccountRecord account) {
+    public AuthorizationRequest.Builder<?> createAuthorizationRequestBuilder(IAccountRecord account) {
         return createAuthorizationRequestBuilder();
     }
 
     @Override
-    public TokenRequest createTokenRequest(AuthorizationRequest request,
+    public TokenRequest createTokenRequest(AuthorizationRequest<?> request,
                                            AuthorizationResponse response,
                                            AbstractAuthenticationScheme authScheme) {
         return null;
@@ -124,7 +125,7 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy<Access
     }
 
     @Override
-    protected void validateAuthorizationRequest(AuthorizationRequest request) {
+    protected void validateAuthorizationRequest(AuthorizationRequest<?> request) {
     }
 
     @Override

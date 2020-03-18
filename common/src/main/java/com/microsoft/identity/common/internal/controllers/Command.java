@@ -22,6 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-public interface Command<T> {
+public interface Command<T extends Object> {
     T execute() throws Exception;
 }

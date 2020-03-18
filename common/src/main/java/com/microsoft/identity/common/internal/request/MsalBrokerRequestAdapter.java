@@ -449,7 +449,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      */
     public static List<BrowserDescriptor> getBrowserSafeListForBroker() {
         List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
-        final HashSet<String> signatureHashes = new HashSet();
+        final HashSet<String> signatureHashes = new HashSet<>();
         signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
         final BrowserDescriptor chrome = new BrowserDescriptor(
                 "com.android.chrome",

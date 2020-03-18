@@ -23,10 +23,12 @@
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
@@ -50,8 +52,8 @@ import java.util.concurrent.Future;
 public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2Strategy<AccessToken,
         BaseAccount,
         AuthorizationRequest<?>,
-        AuthorizationRequest.Builder,
-        AuthorizationStrategy,
+        AuthorizationRequest.Builder<?>,
+        AuthorizationStrategy<?,?>,
         OAuth2Configuration,
         OAuth2StrategyParameters,
         AuthorizationResponse,
@@ -59,7 +61,7 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
         TokenRequest,
         TokenResponse,
         TokenResult,
-        AuthorizationResult> {
+        AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> {
     /**
      * Constructor of ActiveDirectoryFederationServices2016OAuth2Strategy.
      *
@@ -71,17 +73,17 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
     }
 
     @Override
-    public Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy) {
+    public Future<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> requestAuthorization(AuthorizationRequest<?> request, AuthorizationStrategy<?, ?> authorizationStrategy) {
         return super.requestAuthorization(request, authorizationStrategy);
     }
 
     @Override
-    public AuthorizationResultFactory getAuthorizationResultFactory() {
+    public AuthorizationResultFactory<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public String getIssuerCacheIdentifier(AuthorizationRequest request) {
+    public String getIssuerCacheIdentifier(AuthorizationRequest<?> request) {
         return null;
     }
 
@@ -101,17 +103,17 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
     }
 
     @Override
-    public AuthorizationRequest.Builder createAuthorizationRequestBuilder() {
+    public AuthorizationRequest.Builder<?> createAuthorizationRequestBuilder() {
         return null;
     }
 
     @Override
-    public AuthorizationRequest.Builder createAuthorizationRequestBuilder(IAccountRecord account) {
+    public AuthorizationRequest.Builder<?> createAuthorizationRequestBuilder(IAccountRecord account) {
         return null;
     }
 
     @Override
-    public TokenRequest createTokenRequest(AuthorizationRequest request,
+    public TokenRequest createTokenRequest(AuthorizationRequest<?> request,
                                            AuthorizationResponse response,
                                            AbstractAuthenticationScheme authScheme) {
         return null;
@@ -123,7 +125,7 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
     }
 
     @Override
-    protected void validateAuthorizationRequest(AuthorizationRequest request) {
+    protected void validateAuthorizationRequest(AuthorizationRequest<?> request) {
     }
 
     @Override

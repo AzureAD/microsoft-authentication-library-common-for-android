@@ -36,6 +36,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
@@ -59,8 +60,8 @@ import java.util.concurrent.Future;
 public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy<AccessToken,
         BaseAccount,
         AuthorizationRequest<?>,
-        AuthorizationRequest.Builder,
-        AuthorizationStrategy,
+        AuthorizationRequest.Builder<?>,
+        AuthorizationStrategy<?,?>,
         OAuth2Configuration,
         OAuth2StrategyParameters,
         AuthorizationResponse,
@@ -68,11 +69,11 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         TokenRequest,
         TokenResponse,
         TokenResult,
-        AuthorizationResult>,
-        GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
+        AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+        GenericAuthorizationRequest extends AuthorizationRequest<?>> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
 
     private static final String TAG = EmbeddedWebViewAuthorizationStrategy.class.getSimpleName();
-    private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
+    private ResultFuture<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> mAuthorizationResultFuture;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
 
@@ -92,7 +93,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      * The activity result is set in Authorization.setResult() and passed to the onActivityResult() of the calling activity.
      */
     @Override
-    public Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
+    public Future<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
                                                             GenericOAuth2Strategy oAuth2Strategy) throws UnsupportedEncodingException {
         mAuthorizationResultFuture = new ResultFuture<>();
         mOAuth2Strategy = oAuth2Strategy;
@@ -117,7 +118,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == AuthenticationConstants.UIRequest.BROWSER_FLOW) {
             if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
-                final AuthorizationResult result = mOAuth2Strategy
+                final AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> result = mOAuth2Strategy
                         .getAuthorizationResultFactory()
                         .createAuthorizationResult(
                                 resultCode,

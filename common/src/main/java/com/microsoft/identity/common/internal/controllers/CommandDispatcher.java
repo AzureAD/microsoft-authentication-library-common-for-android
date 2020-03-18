@@ -72,7 +72,7 @@ public class CommandDispatcher {
      *
      * @param command
      */
-    public static void submitSilent(@NonNull final BaseCommand command) {
+    public static void submitSilent(@NonNull final BaseCommand<?> command) {
         final String methodName = ":submitSilent";
         Logger.verbose(
                 TAG + methodName,
@@ -138,7 +138,7 @@ public class CommandDispatcher {
      * @param command
      * @return
      */
-    private static CommandResult executeCommand(BaseCommand command) {
+    private static CommandResult executeCommand(BaseCommand<?> command) {
 
         Object result = null;
         BaseException baseException = null;
@@ -179,7 +179,7 @@ public class CommandDispatcher {
      * @param result
      * @param handler
      */
-    private static void returnCommandResult(final BaseCommand command, final CommandResult result, Handler handler) {
+    private static void returnCommandResult(final BaseCommand<?> command, final CommandResult result, Handler handler) {
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -206,7 +206,7 @@ public class CommandDispatcher {
      * @param command
      * @param commandResult
      */
-    private static void cacheCommandResult(BaseCommand command, CommandResult commandResult) {
+    private static void cacheCommandResult(BaseCommand<?> command, CommandResult commandResult) {
         if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
             sCommandResultCache.put(command, commandResult);
         }

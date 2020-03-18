@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -42,7 +44,7 @@ public class TelemetryUtils {
         }
     }
 
-    private static String getErrorFromAuthorizationResult(final AuthorizationResult authorizationResult) {
+    private static String getErrorFromAuthorizationResult(final AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> authorizationResult) {
         if (authorizationResult != null && authorizationResult.getErrorResponse() != null) {
             return authorizationResult.getErrorResponse().getError();
         } else {

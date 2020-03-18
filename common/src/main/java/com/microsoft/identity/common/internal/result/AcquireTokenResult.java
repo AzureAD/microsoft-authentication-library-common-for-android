@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
@@ -29,7 +31,7 @@ public class AcquireTokenResult {
 
     private ILocalAuthenticationResult mLocalAuthenticationResult;
     private TokenResult mTokenResult;
-    private AuthorizationResult mAuthorizationResult;
+    private AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> mAuthorizationResult;
     private Boolean mSucceeded = false;
 
     public void setLocalAuthenticationResult(ILocalAuthenticationResult result) {
@@ -49,11 +51,11 @@ public class AcquireTokenResult {
         this.mTokenResult = tokenResult;
     }
 
-    public AuthorizationResult getAuthorizationResult() {
+    public AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> getAuthorizationResult() {
         return mAuthorizationResult;
     }
 
-    public void setAuthorizationResult(AuthorizationResult authorizationResult) {
+    public void setAuthorizationResult(AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> authorizationResult) {
         this.mAuthorizationResult = authorizationResult;
     }
 

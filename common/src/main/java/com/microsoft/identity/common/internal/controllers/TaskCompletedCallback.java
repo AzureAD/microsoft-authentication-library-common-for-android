@@ -23,6 +23,6 @@
 
 package com.microsoft.identity.common.internal.controllers;
 
-public interface TaskCompletedCallback<T> {
+public interface TaskCompletedCallback<T extends Object> {
     void onTaskCompleted(T t);
 }

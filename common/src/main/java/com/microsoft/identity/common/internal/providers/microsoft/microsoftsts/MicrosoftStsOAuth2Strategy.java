@@ -50,6 +50,9 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftToken
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
@@ -88,7 +91,7 @@ public class MicrosoftStsOAuth2Strategy
                 MicrosoftStsAccount,
                 MicrosoftStsAuthorizationRequest,
                 MicrosoftStsAuthorizationRequest.Builder,
-                AuthorizationStrategy,
+                AuthorizationStrategy<?,?>,
                 MicrosoftStsOAuth2Configuration,
                 OAuth2StrategyParameters,
                 MicrosoftStsAuthorizationResponse,
@@ -96,7 +99,7 @@ public class MicrosoftStsOAuth2Strategy
                 MicrosoftStsTokenRequest,
                 MicrosoftStsTokenResponse,
                 TokenResult,
-                AuthorizationResult> {
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> {
 
     private static final String TAG = MicrosoftStsOAuth2Strategy.class.getSimpleName();
 
@@ -113,8 +116,8 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public AuthorizationResultFactory getAuthorizationResultFactory() {
-        return new MicrosoftStsAuthorizationResultFactory();
+    public AuthorizationResultFactory<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory() {
+        return (AuthorizationResultFactory)(new MicrosoftStsAuthorizationResultFactory());
     }
 
     @Override
@@ -604,7 +607,7 @@ public class MicrosoftStsOAuth2Strategy
         return mTokenEndpoint;
     }
 
-    private String getCloudSpecificTokenEndpoint(MicrosoftAuthorizationRequest request,
+    private String getCloudSpecificTokenEndpoint(MicrosoftAuthorizationRequest<?> request,
                                                  MicrosoftAuthorizationResponse response) {
         final String methodName = ":getCloudSpecificTokenEndpoint";
         String tokenEndpoint;

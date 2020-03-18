@@ -28,12 +28,26 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.Expose;
+import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 
 import java.util.Arrays;
@@ -45,7 +59,21 @@ public class OperationParameters {
     private static final String TAG = OperationParameters.class.getSimpleName();
 
     private transient Context mAppContext;
-    private transient OAuth2TokenCache mTokenCache;
+    private transient OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                BaseAccount,
+                AuthorizationRequest<?>,
+                AuthorizationRequest.Builder<?>,
+                AuthorizationStrategy<?,?>,
+                OAuth2Configuration,
+                OAuth2StrategyParameters,
+                AuthorizationResponse,
+                RefreshToken,
+                TokenRequest,
+                TokenResponse,
+                TokenResult,
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                AuthorizationRequest<?>,
+                TokenResponse> mTokenCache;
     private transient boolean mIsSharedDevice;
     protected transient List<BrowserDescriptor> mBrowserSafeList;
 
@@ -146,11 +174,39 @@ public class OperationParameters {
         this.redirectUri = redirectUri;
     }
 
-    public void setTokenCache(@NonNull final OAuth2TokenCache cache) {
+    public void setTokenCache(@NonNull final OAuth2TokenCache<OAuth2Strategy<AccessToken,
+            BaseAccount,
+            AuthorizationRequest<?>,
+            AuthorizationRequest.Builder<?>,
+            AuthorizationStrategy<?,?>,
+            OAuth2Configuration,
+            OAuth2StrategyParameters,
+            AuthorizationResponse,
+            RefreshToken,
+            TokenRequest,
+            TokenResponse,
+            TokenResult,
+            AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+            AuthorizationRequest<?>,
+            TokenResponse> cache) {
         this.mTokenCache = cache;
     }
 
-    public OAuth2TokenCache getTokenCache() {
+    public OAuth2TokenCache<OAuth2Strategy<AccessToken,
+            BaseAccount,
+            AuthorizationRequest<?>,
+            AuthorizationRequest.Builder<?>,
+            AuthorizationStrategy<?,?>,
+            OAuth2Configuration,
+            OAuth2StrategyParameters,
+            AuthorizationResponse,
+            RefreshToken,
+            TokenRequest,
+            TokenResponse,
+            TokenResult,
+            AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+            AuthorizationRequest<?>,
+            TokenResponse> getTokenCache() {
         return mTokenCache;
     }
 

@@ -33,7 +33,7 @@ public class CommandResultCache {
     private final static int DEFAULT_ITEM_COUNT = 250;
 
     //Cache items allowed is still TBD... for now using default value of 250
-    private LruCache<BaseCommand, CommandResultCacheItem> mCache;
+    private LruCache<BaseCommand<?>, CommandResultCacheItem> mCache;
 
     public CommandResultCache(){
         mCache = new LruCache<>(DEFAULT_ITEM_COUNT);
@@ -43,7 +43,7 @@ public class CommandResultCache {
         mCache = new LruCache<>(maxItemCount);
     }
 
-    public CommandResult get(BaseCommand key){
+    public CommandResult get(BaseCommand<?> key){
         synchronized (mCache) {
             CommandResultCacheItem item = mCache.get(key);
             if (item != null) {
@@ -59,7 +59,7 @@ public class CommandResultCache {
         }
     }
 
-    public void put(BaseCommand key, CommandResult value){
+    public void put(BaseCommand<?> key, CommandResult value){
 
         CommandResultCacheItem cacheItem = new CommandResultCacheItem(value);
         //NOTE: If an existing item using this key already in the cache it will be replaced

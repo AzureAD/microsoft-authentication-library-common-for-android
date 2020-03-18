@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
@@ -86,8 +87,8 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
     public OAuth2Strategy<AccessToken,
             BaseAccount,
             AuthorizationRequest<?>,
-            AuthorizationRequest.Builder,
-            AuthorizationStrategy,
+            AuthorizationRequest.Builder<?>,
+            AuthorizationStrategy<?,?>,
             OAuth2Configuration,
             OAuth2StrategyParameters,
             AuthorizationResponse,
@@ -95,7 +96,7 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
             TokenRequest,
             TokenResponse,
             TokenResult,
-            AuthorizationResult> createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters)
+            AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters)
             throws ClientException {
         MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
         return new MicrosoftStsOAuth2Strategy(config, parameters);

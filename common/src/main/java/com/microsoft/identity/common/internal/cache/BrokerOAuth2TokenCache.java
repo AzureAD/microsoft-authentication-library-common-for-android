@@ -44,6 +44,9 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -176,7 +179,12 @@ public class BrokerOAuth2TokenCache
          * @param bindingProcessUid The process UID of the current binding-app.
          * @return
          */
-        MsalOAuth2TokenCache getTokenCache(final Context context, final int bindingProcessUid);
+        MsalOAuth2TokenCache<
+                MicrosoftStsOAuth2Strategy,
+                MicrosoftStsAuthorizationRequest,
+                MicrosoftStsTokenResponse,
+                MicrosoftAccount,
+        MicrosoftRefreshToken> getTokenCache(final Context context, final int bindingProcessUid);
 
     }
 
@@ -191,7 +199,23 @@ public class BrokerOAuth2TokenCache
                                   final int callingProcessUid,
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
                                   @NonNull ProcessUidCacheFactory delegate,
-                                  @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache) {
+                                  @NonNull final MicrosoftFamilyOAuth2TokenCache<OAuth2Strategy<AccessToken,
+                                              BaseAccount,
+                                              AuthorizationRequest<?>,
+                                              AuthorizationRequest.Builder<?>,
+                                              AuthorizationStrategy<?,?>,
+                                              OAuth2Configuration,
+                                              OAuth2StrategyParameters,
+                                              AuthorizationResponse,
+                                              RefreshToken,
+                                              TokenRequest,
+                                              TokenResponse,
+                                              TokenResult,
+                                              AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                                                AuthorizationRequest<?>,
+                                                TokenResponse,
+                                                BaseAccount,
+                                                com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> fociCache) {
         super(context);
 
         Logger.verbose(
@@ -241,7 +265,23 @@ public class BrokerOAuth2TokenCache
             );
         } else {
             // Save to the processUid cache... or create a new one
-            MsalOAuth2TokenCache targetCache = getTokenCacheForClient(
+            MsalOAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse,
+                    BaseAccount,
+                    com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> targetCache = getTokenCacheForClient(
                     idTokenRecord.getClientId(),
                     idTokenRecord.getEnvironment(),
                     mCallingProcessUid
@@ -296,7 +336,23 @@ public class BrokerOAuth2TokenCache
             final String environment = cacheRecord.getAccessToken().getEnvironment();
 
             // Now get the cache we just saved to....
-            final MsalOAuth2TokenCache cache = getTokenCacheForClient(
+            final MsalOAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse,
+                    BaseAccount,
+                    com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> cache = getTokenCacheForClient(
                     clientId,
                     environment,
                     mCallingProcessUid
@@ -335,7 +391,21 @@ public class BrokerOAuth2TokenCache
                         + "]"
         );
 
-        OAuth2TokenCache targetCache;
+        OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                BaseAccount,
+                AuthorizationRequest<?>,
+                AuthorizationRequest.Builder<?>,
+                AuthorizationStrategy<?,?>,
+                OAuth2Configuration,
+                OAuth2StrategyParameters,
+                AuthorizationResponse,
+                RefreshToken,
+                TokenRequest,
+                TokenResponse,
+                TokenResult,
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                AuthorizationRequest<?>,
+                TokenResponse> targetCache;
 
         if (isFoci) {
             targetCache = mFociCache;
@@ -386,7 +456,21 @@ public class BrokerOAuth2TokenCache
 
             final boolean isFoci = !StringExtensions.isNullOrBlank(response.getFamilyId());
 
-            OAuth2TokenCache targetCache;
+            OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse> targetCache;
 
             Logger.info(
                     TAG + methodName,
@@ -523,7 +607,21 @@ public class BrokerOAuth2TokenCache
             );
         }
 
-        final OAuth2TokenCache targetCache = getTokenCacheForClient(
+        final OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                BaseAccount,
+                AuthorizationRequest<?>,
+                AuthorizationRequest.Builder<?>,
+                AuthorizationStrategy<?,?>,
+                OAuth2Configuration,
+                OAuth2StrategyParameters,
+                AuthorizationResponse,
+                RefreshToken,
+                TokenRequest,
+                TokenResponse,
+                TokenResult,
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                AuthorizationRequest<?>,
+                TokenResponse> targetCache = getTokenCacheForClient(
                 clientId,
                 account.getEnvironment(),
                 mCallingProcessUid
@@ -619,7 +717,21 @@ public class BrokerOAuth2TokenCache
                 );
             }
 
-            final OAuth2TokenCache targetCache = getTokenCacheForClient(
+            final OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse> targetCache = getTokenCacheForClient(
                     clientId,
                     account.getEnvironment(),
                     mCallingProcessUid
@@ -686,7 +798,21 @@ public class BrokerOAuth2TokenCache
     public boolean removeCredential(@NonNull final Credential credential) {
         final String methodName = ":removeCredential";
 
-        final OAuth2TokenCache targetCache = getTokenCacheForClient(
+        final OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                BaseAccount,
+                AuthorizationRequest<?>,
+                AuthorizationRequest.Builder<?>,
+                AuthorizationStrategy<?,?>,
+                OAuth2Configuration,
+                OAuth2StrategyParameters,
+                AuthorizationResponse,
+                RefreshToken,
+                TokenRequest,
+                TokenResponse,
+                TokenResult,
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                AuthorizationRequest<?>,
+                TokenResponse> targetCache = getTokenCacheForClient(
                 credential.getClientId(),
                 credential.getEnvironment(),
                 mCallingProcessUid
@@ -721,7 +847,21 @@ public class BrokerOAuth2TokenCache
                                     @Nullable final String realm) {
         final String methodName = ":getAccount";
 
-        OAuth2TokenCache targetCache = null;
+        OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                BaseAccount,
+                AuthorizationRequest<?>,
+                AuthorizationRequest.Builder<?>,
+                AuthorizationStrategy<?,?>,
+                OAuth2Configuration,
+                OAuth2StrategyParameters,
+                AuthorizationResponse,
+                RefreshToken,
+                TokenRequest,
+                TokenResponse,
+                TokenResult,
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                AuthorizationRequest<?>,
+                TokenResponse> targetCache = null;
 
         AccountRecord result = null;
 
@@ -750,11 +890,39 @@ public class BrokerOAuth2TokenCache
         } else {
             // We need to check all of the caches that match the supplied client id
             // If none match, return null...
-            final List<OAuth2TokenCache> clientIdTokenCaches = getTokenCachesForClientId(
+            final List<OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse>> clientIdTokenCaches = getTokenCachesForClientId(
                     clientId
             );
 
-            final Iterator<OAuth2TokenCache> cacheIterator = clientIdTokenCaches.iterator();
+            final Iterator<OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse>> cacheIterator = clientIdTokenCaches.iterator();
 
             while (null == result && cacheIterator.hasNext()) {
                 result = cacheIterator
@@ -779,7 +947,21 @@ public class BrokerOAuth2TokenCache
         final String methodName = ":getAccountsWithAggregatedAccountData";
 
         final List<ICacheRecord> result;
-        OAuth2TokenCache targetCache;
+        OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                BaseAccount,
+                AuthorizationRequest<?>,
+                AuthorizationRequest.Builder<?>,
+                AuthorizationStrategy<?,?>,
+                OAuth2Configuration,
+                OAuth2StrategyParameters,
+                AuthorizationResponse,
+                RefreshToken,
+                TokenRequest,
+                TokenResponse,
+                TokenResult,
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                AuthorizationRequest<?>,
+                TokenResponse> targetCache;
 
         if (null != environment) {
             targetCache = getTokenCacheForClient(
@@ -805,12 +987,40 @@ public class BrokerOAuth2TokenCache
         } else {
             // If no environment was specified, return all of the accounts across all of the envs...
             // Callers should really specify an environment...
-            final List<OAuth2TokenCache> caches = getTokenCachesForClientId(clientId);
+            final List<OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse>> caches = getTokenCachesForClientId(clientId);
 
             // Declare a new List to which we will add all of our results...
             result = new ArrayList<>();
 
-            for (final OAuth2TokenCache cache : caches) {
+            for (final OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse> cache : caches) {
                 result.addAll(
                         cache.getAccountsWithAggregatedAccountData(
                                 environment,
@@ -824,9 +1034,37 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
-    private List<OAuth2TokenCache> getTokenCachesForClientId(@NonNull final String clientId) {
+    private List<OAuth2TokenCache<OAuth2Strategy<AccessToken,
+            BaseAccount,
+            AuthorizationRequest<?>,
+            AuthorizationRequest.Builder<?>,
+            AuthorizationStrategy<?,?>,
+            OAuth2Configuration,
+            OAuth2StrategyParameters,
+            AuthorizationResponse,
+            RefreshToken,
+            TokenRequest,
+            TokenResponse,
+            TokenResult,
+            AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+            AuthorizationRequest<?>,
+            TokenResponse>> getTokenCachesForClientId(@NonNull final String clientId) {
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
-        final List<OAuth2TokenCache> result = new ArrayList<>();
+        final List<OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                BaseAccount,
+                AuthorizationRequest<?>,
+                AuthorizationRequest.Builder<?>,
+                AuthorizationStrategy<?,?>,
+                OAuth2Configuration,
+                OAuth2StrategyParameters,
+                AuthorizationResponse,
+                RefreshToken,
+                TokenRequest,
+                TokenResponse,
+                TokenResult,
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                AuthorizationRequest<?>,
+                TokenResponse>> result = new ArrayList<>();
         boolean containsFoci = false;
 
         for (final BrokerApplicationMetadata metadata : allMetadata) {
@@ -837,7 +1075,21 @@ public class BrokerOAuth2TokenCache
                     containsFoci = true;
                 } else {
                     // App is not foci, see if we can find its real cache...
-                    final OAuth2TokenCache candidateCache = getTokenCacheForClient(
+                    final OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                            BaseAccount,
+                            AuthorizationRequest<?>,
+                            AuthorizationRequest.Builder<?>,
+                            AuthorizationStrategy<?,?>,
+                            OAuth2Configuration,
+                            OAuth2StrategyParameters,
+                            AuthorizationResponse,
+                            RefreshToken,
+                            TokenRequest,
+                            TokenResponse,
+                            TokenResult,
+                            AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                            AuthorizationRequest<?>,
+                            TokenResponse> candidateCache = getTokenCacheForClient(
                             metadata.getClientId(),
                             metadata.getEnvironment(),
                             mCallingProcessUid
@@ -866,7 +1118,21 @@ public class BrokerOAuth2TokenCache
         );
 
         if (null != environment) {
-            OAuth2TokenCache targetCache = getTokenCacheForClient(
+            OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse> targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
                     mCallingProcessUid
@@ -895,8 +1161,36 @@ public class BrokerOAuth2TokenCache
         } else {
             AccountRecord result = null;
 
-            final List<OAuth2TokenCache> cachesToInspect = getTokenCachesForClientId(clientId);
-            final Iterator<OAuth2TokenCache> cacheIterator = cachesToInspect.iterator();
+            final List<OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse>> cachesToInspect = getTokenCachesForClientId(clientId);
+            final Iterator<OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse>> cacheIterator = cachesToInspect.iterator();
 
             while (null == result && cacheIterator.hasNext()) {
                 result = cacheIterator
@@ -920,7 +1214,21 @@ public class BrokerOAuth2TokenCache
             @NonNull final String localAccountId) {
         final String methodName = ":getAccountWithAggregatedAccountDataByLocalAccountId";
         if (null != environment) {
-            OAuth2TokenCache targetCache = getTokenCacheForClient(
+            OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse> targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
                     mCallingProcessUid
@@ -949,8 +1257,36 @@ public class BrokerOAuth2TokenCache
         } else {
             ICacheRecord result = null;
 
-            final List<OAuth2TokenCache> cachesToInspect = getTokenCachesForClientId(clientId);
-            final Iterator<OAuth2TokenCache> cacheIterator = cachesToInspect.iterator();
+            final List<OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse>> cachesToInspect = getTokenCachesForClientId(clientId);
+            final Iterator<OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse>> cacheIterator = cachesToInspect.iterator();
 
             while (null == result && cacheIterator.hasNext()) {
                 result = cacheIterator
@@ -974,7 +1310,21 @@ public class BrokerOAuth2TokenCache
         final List<AccountRecord> result = new ArrayList<>();
 
         if (null != environment) {
-            OAuth2TokenCache targetCache = getTokenCacheForClient(
+            OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse> targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
                     mCallingProcessUid
@@ -989,9 +1339,37 @@ public class BrokerOAuth2TokenCache
                 );
             }
         } else {
-            final List<OAuth2TokenCache> cachesToInspect = getTokenCachesForClientId(clientId);
+            final List<OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse>> cachesToInspect = getTokenCachesForClientId(clientId);
 
-            for (final OAuth2TokenCache cache : cachesToInspect) {
+            for (final OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse> cache : cachesToInspect) {
                 result.addAll(
                         cache.getAccounts(
                                 environment,
@@ -1014,7 +1392,21 @@ public class BrokerOAuth2TokenCache
     @Override
     public List<AccountRecord> getAllTenantAccountsForAccountByClientId(@NonNull final String clientId,
                                                                         @NonNull final AccountRecord accountRecord) {
-        final OAuth2TokenCache cache = getTokenCacheForClient(
+        final OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                BaseAccount,
+                AuthorizationRequest<?>,
+                AuthorizationRequest.Builder<?>,
+                AuthorizationStrategy<?,?>,
+                OAuth2Configuration,
+                OAuth2StrategyParameters,
+                AuthorizationResponse,
+                RefreshToken,
+                TokenRequest,
+                TokenResponse,
+                TokenResult,
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                AuthorizationRequest<?>,
+                TokenResponse> cache = getTokenCacheForClient(
                 clientId,
                 accountRecord.getEnvironment(),
                 mCallingProcessUid
@@ -1032,7 +1424,21 @@ public class BrokerOAuth2TokenCache
         final String methodName = ":getAccountsWithAggregatedAccountData";
 
         final List<ICacheRecord> result;
-        OAuth2TokenCache targetCache;
+        OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                BaseAccount,
+                AuthorizationRequest<?>,
+                AuthorizationRequest.Builder<?>,
+                AuthorizationStrategy<?,?>,
+                OAuth2Configuration,
+                OAuth2StrategyParameters,
+                AuthorizationResponse,
+                RefreshToken,
+                TokenRequest,
+                TokenResponse,
+                TokenResult,
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                AuthorizationRequest<?>,
+                TokenResponse> targetCache;
 
         if (null != environment) {
             targetCache = getTokenCacheForClient(
@@ -1054,12 +1460,40 @@ public class BrokerOAuth2TokenCache
         } else {
             // If no environment was specified, return all of the accounts across all of the envs...
             // Callers should really specify an environment...
-            final List<OAuth2TokenCache> caches = getTokenCachesForClientId(clientId);
+            final List<OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse>> caches = getTokenCachesForClientId(clientId);
 
             // Declare a new List to which we will add all of our results...
             result = new ArrayList<>();
 
-            for (final OAuth2TokenCache cache : caches) {
+            for (final OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse> cache : caches) {
                 result.addAll(cache.getAccountsWithAggregatedAccountData(environment, clientId));
             }
         }
@@ -1081,7 +1515,21 @@ public class BrokerOAuth2TokenCache
                     "Aggregating IdTokens across ClientIds is not supported - do you have a feature request?"
             );
         } else {
-            final OAuth2TokenCache cache = getTokenCacheForClient(
+            final OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse> cache = getTokenCacheForClient(
                     clientId,
                     accountEnv,
                     mCallingProcessUid
@@ -1110,7 +1558,21 @@ public class BrokerOAuth2TokenCache
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
 
         for (final BrokerApplicationMetadata metadata : allMetadata) {
-            final OAuth2TokenCache candidateCache = getTokenCacheForClient(
+            final OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse> candidateCache = getTokenCacheForClient(
                     metadata.getClientId(),
                     metadata.getEnvironment(),
                     metadata.getUid() // Supports v1 broker back-compat which yields all accounts
@@ -1385,7 +1847,21 @@ public class BrokerOAuth2TokenCache
         final List<AccountDeletionRecord> deletionRecordList = new ArrayList<>();
 
         for (final BrokerApplicationMetadata metadata : allMetadata) {
-            final OAuth2TokenCache candidateCache = getTokenCacheForClient(
+            final OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse> candidateCache = getTokenCacheForClient(
                     metadata.getClientId(),
                     metadata.getEnvironment(),
                     deviceWide
@@ -1440,7 +1916,21 @@ public class BrokerOAuth2TokenCache
         );
 
         if (null != environment) {
-            OAuth2TokenCache targetCache = getTokenCacheForClient(
+            OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse> targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
                     mCallingProcessUid
@@ -1469,8 +1959,36 @@ public class BrokerOAuth2TokenCache
         } else {
             AccountRecord result = null;
 
-            final List<OAuth2TokenCache> cachesToInspect = getTokenCachesForClientId(clientId);
-            final Iterator<OAuth2TokenCache> cacheIterator = cachesToInspect.iterator();
+            final List<OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse>> cachesToInspect = getTokenCachesForClientId(clientId);
+            final Iterator<OAuth2TokenCache<OAuth2Strategy<AccessToken,
+                    BaseAccount,
+                    AuthorizationRequest<?>,
+                    AuthorizationRequest.Builder<?>,
+                    AuthorizationStrategy<?,?>,
+                    OAuth2Configuration,
+                    OAuth2StrategyParameters,
+                    AuthorizationResponse,
+                    RefreshToken,
+                    TokenRequest,
+                    TokenResponse,
+                    TokenResult,
+                    AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>,
+                    TokenResponse>> cacheIterator = cachesToInspect.iterator();
 
             while (null == result && cacheIterator.hasNext()) {
                 result = cacheIterator
@@ -1486,7 +2004,23 @@ public class BrokerOAuth2TokenCache
         }
     }
 
-    private MsalOAuth2TokenCache initializeProcessUidCache(@NonNull final Context context,
+    private MsalOAuth2TokenCache<OAuth2Strategy<AccessToken,
+            BaseAccount,
+            AuthorizationRequest<?>,
+            AuthorizationRequest.Builder<?>,
+            AuthorizationStrategy<?,?>,
+            OAuth2Configuration,
+            OAuth2StrategyParameters,
+            AuthorizationResponse,
+            RefreshToken,
+            TokenRequest,
+            TokenResponse,
+            TokenResult,
+            AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+            AuthorizationRequest<?>,
+            TokenResponse,
+            BaseAccount,
+            com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> initializeProcessUidCache(@NonNull final Context context,
                                                            final int bindingProcessUid) {
         final String methodName = ":initializeProcessUidCache";
 
@@ -1516,7 +2050,23 @@ public class BrokerOAuth2TokenCache
         return getTokenCache(context, sharedPreferencesFileManager, false);
     }
 
-    private static MicrosoftFamilyOAuth2TokenCache initializeFociCache(@NonNull final Context context) {
+    private static MicrosoftFamilyOAuth2TokenCache<OAuth2Strategy<AccessToken,
+            BaseAccount,
+            AuthorizationRequest<?>,
+            AuthorizationRequest.Builder<?>,
+            AuthorizationStrategy<?,?>,
+            OAuth2Configuration,
+            OAuth2StrategyParameters,
+            AuthorizationResponse,
+            RefreshToken,
+            TokenRequest,
+            TokenResponse,
+            TokenResult,
+            AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+            AuthorizationRequest<?>,
+            TokenResponse,
+            BaseAccount,
+            com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> initializeFociCache(@NonNull final Context context) {
         final String methodName = ":initializeFociCache";
         Logger.verbose(
                 TAG + methodName,
@@ -1533,8 +2083,23 @@ public class BrokerOAuth2TokenCache
         return getTokenCache(context, sharedPreferencesFileManager, true);
     }
 
-    @SuppressWarnings(UNCHECKED)
-    private static <T extends MsalOAuth2TokenCache> T getTokenCache(@NonNull final Context context,
+    private static <T extends MsalOAuth2TokenCache<OAuth2Strategy<AccessToken,
+            BaseAccount,
+            AuthorizationRequest<?>,
+            AuthorizationRequest.Builder<?>,
+            AuthorizationStrategy<?,?>,
+            OAuth2Configuration,
+            OAuth2StrategyParameters,
+            AuthorizationResponse,
+            RefreshToken,
+            TokenRequest,
+            TokenResponse,
+            TokenResult,
+            AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+            AuthorizationRequest<?>,
+            TokenResponse,
+            BaseAccount,
+            com.microsoft.identity.common.internal.providers.oauth2.RefreshToken>> T getTokenCache(@NonNull final Context context,
                                                                     @NonNull final ISharedPreferencesFileManager spfm,
                                                                     boolean isFoci) {
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
@@ -1572,7 +2137,23 @@ public class BrokerOAuth2TokenCache
      * cache was found.
      */
     @Nullable
-    private MsalOAuth2TokenCache getTokenCacheForClient(@NonNull final String clientId,
+    private MsalOAuth2TokenCache<OAuth2Strategy<AccessToken,
+            BaseAccount,
+            AuthorizationRequest<?>,
+            AuthorizationRequest.Builder<?>,
+            AuthorizationStrategy<?,?>,
+            OAuth2Configuration,
+            OAuth2StrategyParameters,
+            AuthorizationResponse,
+            RefreshToken,
+            TokenRequest,
+            TokenResponse,
+            TokenResult,
+            AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+            AuthorizationRequest<?>,
+            TokenResponse,
+            BaseAccount,
+            com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> getTokenCacheForClient(@NonNull final String clientId,
                                                         @NonNull final String environment,
                                                         final int callingProcessUid) {
         final String methodName = ":getTokenCacheForClient";
@@ -1583,7 +2164,23 @@ public class BrokerOAuth2TokenCache
                 callingProcessUid
         );
 
-        MsalOAuth2TokenCache targetCache = null;
+        MsalOAuth2TokenCache<OAuth2Strategy<AccessToken,
+                BaseAccount,
+                AuthorizationRequest<?>,
+                AuthorizationRequest.Builder<?>,
+                AuthorizationStrategy<?,?>,
+                OAuth2Configuration,
+                OAuth2StrategyParameters,
+                AuthorizationResponse,
+                RefreshToken,
+                TokenRequest,
+                TokenResponse,
+                TokenResult,
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                AuthorizationRequest<?>,
+                TokenResponse,
+                BaseAccount,
+                com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> targetCache = null;
 
         if (null != metadata) {
             final boolean isFoci = null != metadata.getFoci();
@@ -1626,7 +2223,23 @@ public class BrokerOAuth2TokenCache
 
         final boolean isFrt = refreshToken.getIsFamilyRefreshToken();
 
-        MsalOAuth2TokenCache targetCache;
+        MsalOAuth2TokenCache<OAuth2Strategy<AccessToken,
+                BaseAccount,
+                AuthorizationRequest<?>,
+                AuthorizationRequest.Builder<?>,
+                AuthorizationStrategy<?,?>,
+                OAuth2Configuration,
+                OAuth2StrategyParameters,
+                AuthorizationResponse,
+                RefreshToken,
+                TokenRequest,
+                TokenResponse,
+                TokenResult,
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                AuthorizationRequest<?>,
+                TokenResponse,
+                BaseAccount,
+                com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> targetCache;
 
         final int uid = Integer.valueOf(uidStr);
 
