@@ -34,7 +34,7 @@ import static com.microsoft.identity.common.internal.providers.oauth2.Authorizat
 
 /**
  * Authorization fragment with customTabs or browsers.
- * */
+ */
 public class BrowserAuthorizationFragment extends AuthorizationFragment {
 
     private static final String TAG = BrowserAuthorizationFragment.class.getSimpleName();
@@ -69,8 +69,20 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
      * @param context     the package context for the app.
      * @param responseUri the response URI, which carries the parameters describing the response.
      */
+    @Nullable
     public static Intent createCustomTabResponseIntent(final Context context,
                                                        final String responseUri) {
+        if (sCallingActivityClass == null) {
+            // can't create intent for response if no activity available, this can happen if the app
+            // was closed either by the user or the OS.
+            // An example would be in the case of using browser without custom tabs, and closing
+            // the app after the interactive request started in the browser. After closing, the user
+            // returns to the browser and completes authorization and when the OS redirects here,
+            // the calling activity class is NULL as the app was closed and memory was wiped.
+            Logger.warn(TAG, "Calling activity class is NULL. Unable to create intent for response.");
+            return null;
+        }
+
         // We cannot pass this as part of a new intent, because we might not have any control over the calling activity.
         sCustomTabResponseUri = responseUri;
 
@@ -93,7 +105,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     }
 
     @Override
-    void extractState(final Bundle state){
+    void extractState(@NonNull final Bundle state) {
         super.extractState(state);
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mBrowserFlowStarted = state.getBoolean(BROWSER_FLOW_STARTED, false);

@@ -93,6 +93,18 @@ public abstract class BaseController {
         DEFAULT_SCOPES.add(AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE);
     }
 
+    public static String getDelimitedDefaultScopeString() {
+        // using StringBuilder as String.join() requires at least API level 26
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (String scope : DEFAULT_SCOPES) {
+            stringBuilder.append(scope);
+            stringBuilder.append(' ');
+        }
+
+        return stringBuilder.toString().trim();
+    }
+
     public abstract AcquireTokenResult acquireToken(final AcquireTokenOperationParameters request)
             throws Exception;
 
