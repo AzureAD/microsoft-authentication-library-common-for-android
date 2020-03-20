@@ -168,6 +168,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
             } else {
                 cancelAuthorization(true);
             }
+            sCustomTabResponseUri = null;
         }
     }
 
