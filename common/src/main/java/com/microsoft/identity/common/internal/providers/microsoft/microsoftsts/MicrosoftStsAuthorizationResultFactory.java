@@ -123,7 +123,12 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                         );
                 break;
 
-
+            case AuthenticationConstants.UIResponse.BROWSER_CODE_MDM:
+                Logger.info(TAG, "MDM required. Launching Intune MDM link on browser.");
+                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
+                        MicrosoftAuthorizationErrorResponse.DEVICE_NEEDS_TO_BE_MANAGED,
+                        MicrosoftAuthorizationErrorResponse.DEVICE_NEEDS_TO_BE_MANAGED);
+                break;
 
             default:
                 result = createAuthorizationResultWithErrorResponse(

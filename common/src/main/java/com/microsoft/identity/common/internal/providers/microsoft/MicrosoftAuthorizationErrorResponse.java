@@ -96,6 +96,11 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
     public static final String DEVICE_REGISTRATION_NEEDED = "Device needs to be registered to access the resource";
 
     /**
+     * Error string to indicate that the device needs to be managed
+     */
+    public static final String DEVICE_NEEDS_TO_BE_MANAGED = "Device needs to be managed to access the resource";
+
+    /**
      * Set when the account needs to be workplace joined to access the resource.
      */
     private String mUserName;
