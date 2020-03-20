@@ -470,6 +470,7 @@ class DevicePopManager implements IDevicePopManager {
 
             final SignedJWT signedJWT = new SignedJWT(
                     new JWSHeader.Builder(JWSAlgorithm.RS256)
+                            .keyID(getAsymmetricKeyThumbprint())
                             .build(),
                     claimsSet
             );
