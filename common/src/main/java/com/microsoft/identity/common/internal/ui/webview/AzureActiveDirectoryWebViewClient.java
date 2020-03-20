@@ -224,16 +224,21 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
             // If CP is installed, redirect to CP.
             if (!getActivity().getPackageName().equalsIgnoreCase(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME) &&
-                    packageHelper.isPackageInstalledAndEnabled(applicationContext, AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+                    packageHelper.isPackageInstalledAndEnabled(
+                            applicationContext,
+                            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)) {
                 try {
                     Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
                     final Intent intent = new Intent();
-                    intent.setComponent(new ComponentName(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
+                    intent.setComponent(new ComponentName(
+                            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
                             AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     getActivity().startActivity(intent);
 
-                    getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_MDM, new Intent());
+                    getCompletionCallback().onChallengeResponseReceived(
+                            AuthenticationConstants.UIResponse.BROWSER_CODE_MDM,
+                            new Intent());
                     return true;
                 } catch (final Exception ex) {
                     Logger.warn(TAG + methodName, "Failed to launch Company Portal, falling back to browser.");
@@ -241,13 +246,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
 
             // Otherwise, strip out BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER and launch in Browser.
-            openLinkInBrowser(url.replace(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, ""));
-            getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_MDM, new Intent());
+            openLinkInBrowser(url.replace(
+                    AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
+                    ""));
+            getCompletionCallback().onChallengeResponseReceived(
+                    AuthenticationConstants.UIResponse.BROWSER_CODE_MDM,
+                    new Intent());
             return true;
         }
 
         openLinkInBrowser(url);
-        getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, new Intent());
+        getCompletionCallback().onChallengeResponseReceived(
+                AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL,
+                new Intent());
         return true;
     }
 
