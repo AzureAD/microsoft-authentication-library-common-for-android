@@ -223,10 +223,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final Context applicationContext = getActivity().getApplicationContext();
 
             // If CP is installed, redirect to CP.
-            if (!getActivity().getPackageName().equalsIgnoreCase(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME) &&
-                    packageHelper.isPackageInstalledAndEnabled(
-                            applicationContext,
-                            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+            if (!packageHelper.isPackageInstalledAndEnabled(
+                    applicationContext,
+                    AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)) {
                 try {
                     Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
                     final Intent intent = new Intent();
