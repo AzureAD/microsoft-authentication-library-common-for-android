@@ -42,6 +42,7 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -84,7 +85,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     @Override
     public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final AcquireTokenOperationParameters parameters) {
-
         Logger.info(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
 
         final BrokerRequest brokerRequest = new BrokerRequest.Builder()
@@ -143,13 +143,19 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     @NonNull
-    private static AbstractAuthenticationScheme getAuthenticationScheme(@NonNull final BrokerRequest request) {
+    private static AbstractAuthenticationScheme getAuthenticationScheme(
+            @NonNull final Context context,
+            @NonNull final BrokerRequest request) {
         final AbstractAuthenticationScheme requestScheme = request.getAuthenticationScheme();
 
         if (null == requestScheme) {
             // Default assumes the scheme is Bearer
             return new BearerAuthenticationSchemeInternal();
         } else {
+            if (requestScheme instanceof PopAuthenticationSchemeInternal) {
+                ((PopAuthenticationSchemeInternal) requestScheme).setContext(context);
+            }
+
             return requestScheme;
         }
     }
@@ -170,7 +176,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 BrokerRequest.class
         );
 
-        parameters.setAuthenticationScheme(getAuthenticationScheme(brokerRequest));
+        parameters.setAuthenticationScheme(getAuthenticationScheme(callingActivity, brokerRequest));
 
         parameters.setActivity(callingActivity);
 
@@ -266,7 +272,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final BrokerAcquireTokenSilentOperationParameters parameters =
                 new BrokerAcquireTokenSilentOperationParameters();
 
-        parameters.setAuthenticationScheme(getAuthenticationScheme(brokerRequest));
+        parameters.setAuthenticationScheme(
+                getAuthenticationScheme(context, brokerRequest)
+        );
 
         parameters.setAppContext(context);
 

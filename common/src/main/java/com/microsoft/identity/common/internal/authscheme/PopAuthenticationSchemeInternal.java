@@ -105,6 +105,10 @@ public class PopAuthenticationSchemeInternal
                 );
     }
 
+    public void setContext(Context context) {
+        mContext = context;
+    }
+
     @Override
     public String getHttpMethod() {
         return mHttpMethod;
