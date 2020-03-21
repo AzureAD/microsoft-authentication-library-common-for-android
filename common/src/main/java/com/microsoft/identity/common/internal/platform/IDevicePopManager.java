@@ -100,6 +100,7 @@ public interface IDevicePopManager {
      * @return The signed PoP access token.
      */
     String mintSignedAccessToken(String httpMethod,
+                                 long timestamp,
                                  URL requestUrl,
                                  String accessToken,
                                  String nonce

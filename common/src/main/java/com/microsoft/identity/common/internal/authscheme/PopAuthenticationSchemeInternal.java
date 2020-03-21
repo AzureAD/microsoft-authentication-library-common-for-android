@@ -22,12 +22,16 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.platform.Device;
+import com.microsoft.identity.common.internal.util.ClockSkewManager;
+import com.microsoft.identity.common.internal.util.IClockSkewManager;
 
 import java.net.URL;
 
@@ -55,6 +59,8 @@ public class PopAuthenticationSchemeInternal
      */
     public static final String SCHEME_POP = "PoP";
 
+    private transient Context mContext;
+
     @SerializedName(HTTP_METHOD)
     private String mHttpMethod;
 
@@ -71,10 +77,12 @@ public class PopAuthenticationSchemeInternal
         super(SCHEME_POP);
     }
 
-    PopAuthenticationSchemeInternal(@NonNull final String httpMethod,
+    PopAuthenticationSchemeInternal(@NonNull Context context,
+                                    @NonNull final String httpMethod,
                                     @NonNull final URL url,
                                     @Nullable final String nonce) {
         super(SCHEME_POP);
+        mContext = context;
         mHttpMethod = httpMethod;
         mUrl = url;
         mNonce = nonce;
@@ -82,10 +90,15 @@ public class PopAuthenticationSchemeInternal
 
     @Override
     public String getAccessTokenForScheme(@NonNull final String accessToken) throws ClientException {
+        // Use the provided context to get the skew
+        final IClockSkewManager clockSkewManager = new ClockSkewManager(mContext);
+        final long timestampMillis = clockSkewManager.getAdjustedReferenceTime().getTime();
+
         return Device
                 .getDevicePoPManagerInstance()
                 .mintSignedAccessToken(
                         getHttpMethod(),
+                        timestampMillis / 1000L,
                         getUrl(),
                         accessToken,
                         getNonce()

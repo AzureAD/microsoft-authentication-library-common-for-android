@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
+import android.content.Context;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -39,7 +42,8 @@ public class AuthenticationSchemeFactory {
      * @param nameable The nameable public scheme representation.
      * @return The internal scheme representation.
      */
-    public static AbstractAuthenticationScheme createScheme(@Nullable final INameable nameable) {
+    public static AbstractAuthenticationScheme createScheme(@NonNull final Context context,
+                                                            @Nullable final INameable nameable) {
         if (null == nameable) {
             // If null, choose Bearer for backcompat
             return new BearerAuthenticationSchemeInternal();
@@ -64,6 +68,7 @@ public class AuthenticationSchemeFactory {
                     final IPoPAuthenticationSchemeParams params = (IPoPAuthenticationSchemeParams) nameable;
 
                     return new PopAuthenticationSchemeInternal(
+                            context,
                             params.getHttpMethod(),
                             params.getUrl(),
                             params.getNonce()
