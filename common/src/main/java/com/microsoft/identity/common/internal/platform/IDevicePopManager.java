@@ -94,6 +94,7 @@ public interface IDevicePopManager {
      * Api to create the signed PoP access token.
      *
      * @param httpMethod  The HTTP method that will be used with this outbound request.
+     * @param timestamp   Seconds since January 1st, 1970 (UTC).
      * @param requestUrl  The recipient URL of the outbound request.
      * @param accessToken The access_token from which to derive the signed JWT.
      * @param nonce       Arbitrary value used for replay protection by middleware.
