@@ -90,6 +90,8 @@ public class PopAuthenticationSchemeInternal
 
     @Override
     public String getAccessTokenForScheme(@NonNull final String accessToken) throws ClientException {
+        final long ONE_SECOND_MILLIS = 1000L;
+
         // Use the provided context to get the skew
         final IClockSkewManager clockSkewManager = new ClockSkewManager(mContext);
         final long timestampMillis = clockSkewManager.getAdjustedReferenceTime().getTime();
@@ -98,7 +100,7 @@ public class PopAuthenticationSchemeInternal
                 .getDevicePoPManagerInstance()
                 .mintSignedAccessToken(
                         getHttpMethod(),
-                        timestampMillis / 1000L,
+                        timestampMillis / ONE_SECOND_MILLIS,
                         getUrl(),
                         accessToken,
                         getNonce()
