@@ -107,7 +107,7 @@ public class PopAuthenticationSchemeInternal
                 );
     }
 
-    public void setContext(Context context) {
+    public void setContext(@NonNull final Context context) {
         mContext = context;
     }
 
