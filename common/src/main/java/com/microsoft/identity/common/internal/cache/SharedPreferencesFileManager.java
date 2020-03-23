@@ -167,7 +167,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     public long getLong(final String key) {
         final String result = getString(key);
 
-        if (null != result) {
+        if (!TextUtils.isEmpty(result)) {
             return Long.parseLong(result);
         }
 
