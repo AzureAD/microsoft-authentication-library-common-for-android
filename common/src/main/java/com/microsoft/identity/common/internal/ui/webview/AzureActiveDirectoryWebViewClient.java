@@ -244,10 +244,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 }
             }
 
-            // Otherwise, strip out BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER and launch in Browser.
-            openLinkInBrowser(url.replace(
-                    AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
-                    ""));
+            // Otherwise, launch in Browser.
+            openLinkInBrowser(url);
             getCompletionCallback().onChallengeResponseReceived(
                     AuthenticationConstants.UIResponse.BROWSER_CODE_MDM,
                     new Intent());
