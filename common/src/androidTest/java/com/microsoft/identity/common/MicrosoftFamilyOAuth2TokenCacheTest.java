@@ -63,18 +63,13 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
 
     private static final AbstractAuthenticationScheme BEARER_SCHEME = new BearerAuthenticationSchemeInternal();
 
-    private MicrosoftFamilyOAuth2TokenCache<
-            MicrosoftStsOAuth2Strategy,
-            MicrosoftStsAuthorizationRequest,
-            MicrosoftStsTokenResponse,
-            MicrosoftAccount,
-            MicrosoftRefreshToken> mOauth2TokenCache;
+    private MicrosoftFamilyOAuth2TokenCache mOauth2TokenCache;
 
     @Before
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        mOauth2TokenCache = new MicrosoftFamilyOAuth2TokenCache<>(
+        mOauth2TokenCache = new MicrosoftFamilyOAuth2TokenCache(
                 InstrumentationRegistry.getTargetContext(),
                 accountCredentialCache,
                 mockCredentialAdapter

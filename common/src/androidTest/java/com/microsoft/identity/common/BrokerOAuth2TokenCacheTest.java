@@ -314,7 +314,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                                                              final IAccountCredentialCache cache,
                                                              boolean isFoci) {
         return (T) (isFoci ?
-                new MicrosoftFamilyOAuth2TokenCache<>(
+                new MicrosoftFamilyOAuth2TokenCache(
                         context,
                         cache,
                         mMockCredentialAdapter
