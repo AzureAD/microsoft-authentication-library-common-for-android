@@ -28,6 +28,7 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -615,7 +616,7 @@ public enum ADALError {
     DRS_DISCOVERY_FAILED_UNKNOWN_HOST("DRS discovery failed: unknown host"),
 
     /**
-     *  Broker is not installed. The process is kicked off to to install broker but ADAL cannot wait for it to finish.
+     * Broker is not installed. The process is kicked off to to install broker but ADAL cannot wait for it to finish.
      */
     BROKER_APP_INSTALLATION_STARTED("Broker app installation started"),
 
@@ -647,7 +648,12 @@ public enum ADALError {
     /**
      * Common core to ADAL mapping failed
      */
-    MAPPING_FAILURE("Common core returned an exception code that ADAL cannot parse");
+    MAPPING_FAILURE("Common core returned an exception code that ADAL cannot parse"),
+
+    /**
+     * Device is required to be managed.
+     */
+    MDM_REQUIRED("Device needs to be managed to access the resource");
 
     private String mDescription;
 
@@ -688,7 +694,7 @@ public enum ADALError {
         return mDescription;
     }
 
-    private static final Map<String, ADALError> exceptionMap = new HashMap<String,ADALError>();
+    private static final Map<String, ADALError> exceptionMap = new HashMap<String, ADALError>();
 
     static {
         exceptionMap.put(ErrorStrings.ANDROIDKEYSTORE_FAILED, ADALError.ANDROIDKEYSTORE_FAILED);
@@ -723,5 +729,4 @@ public enum ADALError {
         exceptionMap.put(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND, ADALError.APP_PACKAGE_NAME_NOT_FOUND);
 
     }
-
 }

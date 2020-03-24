@@ -111,8 +111,8 @@ public class AzureActiveDirectoryAuthorizationResultFactoryTest {
         assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertNotNull(errorResponse);
-        assertEquals(MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED, errorResponse.getError());
-        assertEquals(MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED, errorResponse.getErrorDescription());
+        assertEquals(MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED, errorResponse.getError());
+        assertEquals(MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED_ERROR_DESCRIPTION, errorResponse.getErrorDescription());
     }
 
     @Test
