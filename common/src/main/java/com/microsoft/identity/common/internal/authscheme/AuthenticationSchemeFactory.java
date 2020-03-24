@@ -22,9 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
+import android.content.Context;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.ClockSkewManager;
+import com.microsoft.identity.common.internal.util.IClockSkewManager;
 
 /**
  * Factory class for turning public scheme types into internal representations.
@@ -39,7 +44,8 @@ public class AuthenticationSchemeFactory {
      * @param nameable The nameable public scheme representation.
      * @return The internal scheme representation.
      */
-    public static AbstractAuthenticationScheme createScheme(@Nullable final INameable nameable) {
+    public static AbstractAuthenticationScheme createScheme(@NonNull final Context context,
+                                                            @Nullable final INameable nameable) {
         if (null == nameable) {
             // If null, choose Bearer for backcompat
             return new BearerAuthenticationSchemeInternal();
@@ -62,8 +68,10 @@ public class AuthenticationSchemeFactory {
                     );
 
                     final IPoPAuthenticationSchemeParams params = (IPoPAuthenticationSchemeParams) nameable;
+                    final IClockSkewManager clockSkewManager = new ClockSkewManager(context);
 
                     return new PopAuthenticationSchemeInternal(
+                            clockSkewManager,
                             params.getHttpMethod(),
                             params.getUrl(),
                             params.getNonce()
