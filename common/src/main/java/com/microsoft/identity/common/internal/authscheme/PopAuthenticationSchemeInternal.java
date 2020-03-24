@@ -77,7 +77,7 @@ public class PopAuthenticationSchemeInternal
         super(SCHEME_POP);
     }
 
-    PopAuthenticationSchemeInternal(@NonNull Context context,
+    PopAuthenticationSchemeInternal(@NonNull final Context context,
                                     @NonNull final String httpMethod,
                                     @NonNull final URL url,
                                     @Nullable final String nonce) {
