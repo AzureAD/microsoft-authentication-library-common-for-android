@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -35,6 +37,7 @@ public class TelemetryUtils {
         return val ? SchemaConstants.Value.TRUE : SchemaConstants.Value.FALSE;
     }
 
+    @NonNull
     static String getSchemaCompliantString(final String s) {
         if (StringUtil.isEmpty(s)) {
             return SchemaConstants.Value.EMPTY;

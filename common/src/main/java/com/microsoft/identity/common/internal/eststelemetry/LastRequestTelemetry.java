@@ -22,11 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
+import android.util.Pair;
+
 import androidx.annotation.NonNull;
 
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class LastRequestTelemetry extends RequestTelemetry {
@@ -37,33 +40,29 @@ public class LastRequestTelemetry extends RequestTelemetry {
     @SerializedName("failed_requests")
     private List<FailedRequest> failedRequests;
 
-    @SerializedName("errors")
-    private List<String> errors;
-
     LastRequestTelemetry(@NonNull String schemaVersion) {
         super(schemaVersion);
         silentSuccessfulCount = 0;
         failedRequests = new ArrayList<>();
-        errors = new ArrayList<>();
     }
 
     List<FailedRequest> getFailedRequests() {
         return failedRequests;
     }
 
-    List<String> getErrors() {
-        return errors;
-    }
-
     @Override
     public String getHeaderStringForFields() {
         final StringBuilder sb = new StringBuilder();
 
+        // the first one contains the api id anc correlation id part
+        // the second one contains the error codes
+        final Pair<String, String> headerSegments = getHeaderStringForFailedRequests();
+
         sb.append(silentSuccessfulCount);
         sb.append(SchemaConstants.SEPARATOR_PIPE);
-        sb.append(getHeaderStringForFields(failedRequests));
+        sb.append(headerSegments.first);
         sb.append(SchemaConstants.SEPARATOR_PIPE);
-        sb.append(getHeaderStringForFields(errors));
+        sb.append(headerSegments.second);
 
         return sb.toString();
     }
@@ -76,43 +75,19 @@ public class LastRequestTelemetry extends RequestTelemetry {
         silentSuccessfulCount = 0;
     }
 
-    private void appendError(final String errorCode) {
-        errors.add(errorCode);
+
+    void appendFailedRequest(final String apiId, final String correlationId, final String error) {
+        failedRequests.add(new FailedRequest(apiId, correlationId, error));
     }
 
-    private void appendFailedRequest(final String apiId, final String correlationId) {
-        failedRequests.add(new FailedRequest(apiId, correlationId));
-    }
-
-    void appendFailedRequestWithError(final String apiId, final String correlationId, final String errorCode) {
-        appendFailedRequest(apiId, correlationId);
-        appendError(errorCode);
-    }
-
-    private void appendFailedRequest(final FailedRequest failedRequest) {
+    void appendFailedRequest(final FailedRequest failedRequest) {
         failedRequests.add(failedRequest);
     }
 
-    void appendFailedRequestWithError(final FailedRequest failedRequest, final String errorCode) {
-        appendFailedRequest(failedRequest);
-        appendError(errorCode);
-    }
-
-    private void wipeFailedRequestForSubList(int index) {
-        failedRequests = failedRequests.subList(index, failedRequests.size());
-    }
-
-    private void wipeErrorForSubList(int index) {
-        errors = errors.subList(index, errors.size());
-    }
-
-    void wipeFailedRequestAndErrorForSubList(int index) {
-        if (index < 0 || index > failedRequests.size() || index > errors.size()) {
-            return;
+    void wipeFailedRequestAndErrorForSubList(Collection<FailedRequest> failedRequestsToRemove) {
+        if (failedRequestsToRemove != null) {
+            failedRequests.removeAll(failedRequestsToRemove);
         }
-
-        wipeFailedRequestForSubList(index);
-        wipeErrorForSubList(index);
     }
 
     @Override
@@ -122,5 +97,32 @@ public class LastRequestTelemetry extends RequestTelemetry {
         }
 
         return super.copySharedValues(requestTelemetry);
+    }
+
+    private Pair<String, String> getHeaderStringForFailedRequests() {
+        if (failedRequests == null) {
+            return new Pair<>("", "");
+        }
+
+        final FailedRequest[] failedRequestsArray = failedRequests.toArray(new FailedRequest[0]);
+
+        if (failedRequestsArray == null) {
+            return new Pair<>("", "");
+        }
+
+        final StringBuilder apiIdCorrelationIdSegmentBuilder = new StringBuilder();
+        final StringBuilder errorSegmentBuilder = new StringBuilder();
+
+        for (int i = 0; i < failedRequestsArray.length; i++) {
+            final FailedRequest failedRequest = failedRequestsArray[i];
+            apiIdCorrelationIdSegmentBuilder.append(failedRequest.toApiIdCorrelationString());
+            errorSegmentBuilder.append(failedRequest.toErrorCodeString());
+            if (i != failedRequestsArray.length - 1) {
+                apiIdCorrelationIdSegmentBuilder.append(',');
+                errorSegmentBuilder.append(',');
+            }
+        }
+
+        return new Pair<>(apiIdCorrelationIdSegmentBuilder.toString(), errorSegmentBuilder.toString());
     }
 }

@@ -26,14 +26,32 @@ public class FailedRequest {
 
     private String mApiId;
     private String mCorrelationId;
+    private String mError;
 
-    public FailedRequest(String mApiId, String mCorrelationId) {
+    public FailedRequest(String mApiId, String mCorrelationId, String error) {
         this.mApiId = mApiId;
         this.mCorrelationId = mCorrelationId;
+        this.mError = error;
+    }
+
+    public String toApiIdCorrelationString() {
+        return mApiId + ',' + mCorrelationId;
+    }
+
+    public String toErrorCodeString() {
+        return mError;
     }
 
     @Override
-    public String toString() {
-        return mApiId + ',' + mCorrelationId;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FailedRequest that = (FailedRequest) o;
+        return mCorrelationId.equals(that.mCorrelationId);
+    }
+
+    @Override
+    public int hashCode() {
+        return mCorrelationId.hashCode();
     }
 }

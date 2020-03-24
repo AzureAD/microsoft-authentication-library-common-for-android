@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 public class CurrentRequestTelemetry extends RequestTelemetry implements ICurrentTelemetry {
 
@@ -49,7 +49,7 @@ public class CurrentRequestTelemetry extends RequestTelemetry implements ICurren
     }
 
     @Override
-    public void put(@Nullable final String key, @Nullable final String value) {
+    public void put(@NonNull final String key, @NonNull final String value) {
         switch (key) {
             case SchemaConstants.Key.API_ID:
                 mApiId = value;

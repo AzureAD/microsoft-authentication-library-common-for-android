@@ -37,11 +37,14 @@ import com.microsoft.identity.common.internal.controllers.TokenCommand;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class EstsTelemetry {
@@ -56,9 +59,11 @@ public class EstsTelemetry {
     private static volatile EstsTelemetry sEstsTelemetryInstance = null;
     private IRequestTelemetryCache mLastRequestTelemetryCache;
     private Map<String, CurrentRequestTelemetry> mTelemetryMap;
+    private Map<String, Set<FailedRequest>> mSentFailedRequests;
 
     private EstsTelemetry() {
         mTelemetryMap = new ConcurrentHashMap<>();
+        mSentFailedRequests = new ConcurrentHashMap<>();
     }
 
     /**
@@ -98,6 +103,7 @@ public class EstsTelemetry {
         if (command.isEligibleForEstsTelemetry()) {
             final CurrentRequestTelemetry currentRequestTelemetry = new CurrentRequestTelemetry();
             mTelemetryMap.put(correlationId, currentRequestTelemetry);
+            mSentFailedRequests.put(correlationId, new HashSet<FailedRequest>());
         }
     }
 
@@ -131,6 +137,10 @@ public class EstsTelemetry {
      * @param value the value associated to the telemetry field
      */
     public void emit(final String key, final String value) {
+        if (StringUtil.isEmpty(key)) {
+            return;
+        }
+
         final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
         final String compliantValueString = TelemetryUtils.getSchemaCompliantString(value);
         final CurrentRequestTelemetry currentTelemetryInstance = getCurrentTelemetryInstance(correlationId);
@@ -248,12 +258,12 @@ public class EstsTelemetry {
             // reset silent successful count as we just went to token endpoint
             lastRequestTelemetry.resetSilentSuccessCount();
 
-            // get the index for the last element of the failed request/error array so we can wipe
-            // all array elements up to this point (as that data is already in PerRequestTable)
-            // and doesn't need to be held onto or sent again
-            final int loggedIndex = getLoggedTelemetryIndex();
+            // get the failed request set for this request. This includes all failed request
+            // data that has been sent to STS in this request.
+            Set<FailedRequest> failedRequestSentSet = mSentFailedRequests.get(correlationId);
+
             // headers have been logged by sts - we don't need to hold on to this data - let's wipe
-            lastRequestTelemetry.wipeFailedRequestAndErrorForSubList(loggedIndex);
+            lastRequestTelemetry.wipeFailedRequestAndErrorForSubList(failedRequestSentSet);
         }
 
         // get the error encountered during execution of this command
@@ -261,7 +271,7 @@ public class EstsTelemetry {
 
         if (errorCode != null) {
             // we have an error, let's append it to the list
-            lastRequestTelemetry.appendFailedRequestWithError(
+            lastRequestTelemetry.appendFailedRequest(
                     currentTelemetry.getApiId(),
                     correlationId,
                     errorCode);
@@ -277,6 +287,7 @@ public class EstsTelemetry {
 
         // we're done processing telemetry for this command, let's remove it from the map
         mTelemetryMap.remove(correlationId);
+        mSentFailedRequests.remove(correlationId);
 
         if (mLastRequestTelemetryCache != null) {
             // save the (updated) telemetry object back to telemetry cache
@@ -342,11 +353,6 @@ public class EstsTelemetry {
         return true;
     }
 
-    private int getLoggedTelemetryIndex() {
-        return ((SharedPreferencesLastRequestTelemetryCache) mLastRequestTelemetryCache)
-                .getLastTelemetryIndexSentInHeaderFromCache();
-    }
-
     private String getCurrentTelemetryHeaderString() {
         final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
         if (mTelemetryMap == null || correlationId == null) {
@@ -369,14 +375,19 @@ public class EstsTelemetry {
 
         final LastRequestTelemetry lastRequestTelemetryFromCache = (LastRequestTelemetry) mLastRequestTelemetryCache.getRequestTelemetryFromCache();
 
+        final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+
         if (lastRequestTelemetryFromCache == null) {
             // we did not have anything in the telemetry cache for the last request
             // let's create a new object based on the data available from the current request object
             // and return the header string formed via that object
-            final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
             final CurrentRequestTelemetry currentRequestTelemetry = mTelemetryMap.get(correlationId);
             final LastRequestTelemetry lastRequestTelemetry = new LastRequestTelemetry(currentRequestTelemetry.getSchemaVersion());
             lastRequestTelemetry.copySharedValues(currentRequestTelemetry);
+            lastRequestTelemetry.putInPlatformTelemetry(
+                    SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT,
+                    SchemaConstants.Value.TRUE
+            );
             return lastRequestTelemetry.getCompleteHeaderString();
         }
 
@@ -387,11 +398,11 @@ public class EstsTelemetry {
         // failed request data from the object retrieved from cache
         final List<FailedRequest> originalFailedRequests = lastRequestTelemetryFromCache.getFailedRequests();
 
-        // error data from the object retrieved from cache
-        final List<String> originalErrors = lastRequestTelemetryFromCache.getErrors();
+        // get the failed request set for the failed request data that we attempt to send in header
+        // as part of this request
+        Set<FailedRequest> failedRequestSentSet = mSentFailedRequests.get(correlationId);
 
-        // the array index that marks how many elements were included in the header sent in the request
-        int indexOfFailedRequestsAndErrors = 0;
+        boolean isAllDataSentInHeader = true;
 
         for (int i = 0; i < originalFailedRequests.size(); i++) {
             // there is a limit of 8KB for the payload sent in request headers
@@ -399,20 +410,26 @@ public class EstsTelemetry {
             // check if we have enough space in the String to store another failed request/error element
             // if yes, then add it to the failed request array (for the copy)
             if (lastRequestTelemetryCopy.getCompleteHeaderString().length() < SchemaConstants.HEADER_DATA_LIMIT) {
-                lastRequestTelemetryCopy.appendFailedRequestWithError(
-                        originalFailedRequests.get(indexOfFailedRequestsAndErrors),
-                        originalErrors.get(indexOfFailedRequestsAndErrors++)
-                );
+                final FailedRequest failedRequest = originalFailedRequests.get(i);
+                lastRequestTelemetryCopy.appendFailedRequest(failedRequest);
+
+                // we have attempted to send these failed requests/errors to the server
+                if (failedRequestSentSet != null) {
+                    failedRequestSentSet.add(failedRequest);
+                }
             } else {
+                isAllDataSentInHeader = false;
                 // if there is no room for more data, then break out of this loop
                 break;
             }
         }
 
-        // tell cache where we stopped adding data to header so we can pick this up in the next
-        // network request
-        ((SharedPreferencesLastRequestTelemetryCache) mLastRequestTelemetryCache)
-                .saveLastTelemetryIndexSentInHeaderToCache(indexOfFailedRequestsAndErrors);
+        final String isAllDataSentString = TelemetryUtils.getSchemaCompliantStringFromBoolean(isAllDataSentInHeader);
+
+        lastRequestTelemetryCopy.putInPlatformTelemetry(
+                SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT,
+                isAllDataSentString
+        );
 
         // return the header string formed for the copy element
         return lastRequestTelemetryCopy.getCompleteHeaderString();

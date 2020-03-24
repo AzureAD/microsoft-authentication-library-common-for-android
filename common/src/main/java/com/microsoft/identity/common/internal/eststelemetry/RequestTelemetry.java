@@ -29,7 +29,6 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -116,7 +115,7 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
      */
     @NonNull
     // This only being used to compute the platform telemetry header string
-    String getHeaderStringForFields(@Nullable final String[] fields, @Nullable final Map<String, String> telemetry) {
+    private String getHeaderStringForFields(@Nullable final String[] fields, @Nullable final Map<String, String> telemetry) {
         if (fields == null || telemetry == null) {
             return "";
         }
@@ -128,32 +127,6 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
             final String value = telemetry.get(key);
             final String compliantValueString = TelemetryUtils.getSchemaCompliantString(value);
             sb.append(compliantValueString);
-            if (i != fields.length - 1) {
-                sb.append(',');
-            }
-        }
-
-        return sb.toString();
-    }
-
-    String getHeaderStringForFields(Collection fields) {
-        if (fields == null) {
-            return "";
-        }
-
-        return getHeaderStringForFields(fields.toArray());
-    }
-
-    private String getHeaderStringForFields(Object[] fields) {
-        if (fields == null) {
-            return "";
-        }
-
-        StringBuilder sb = new StringBuilder();
-
-        for (int i = 0; i < fields.length; i++) {
-            final String val = TelemetryUtils.getSchemaCompliantString(fields[i].toString());
-            sb.append(val);
             if (i != fields.length - 1) {
                 sb.append(',');
             }

@@ -22,15 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 public interface ICurrentTelemetry {
 
     /**
      * Capture telemetry for current request
      *
-     * @param key The key supplied for telemetry
+     * @param key   The key supplied for telemetry
      * @param value The value for the supplied key
      */
-    void put(@Nullable final String key, @Nullable final String value);
+    void put(@NonNull final String key, @NonNull final String value);
 }
