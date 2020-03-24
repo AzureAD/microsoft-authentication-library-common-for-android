@@ -57,7 +57,15 @@ public class LastRequestTelemetry extends RequestTelemetry {
 
     @Override
     public String getHeaderStringForFields() {
-        return silentSuccessfulCount + "|" + getHeaderStringForFields(failedRequests) + "|" + getHeaderStringForFields(errors);
+        final StringBuilder sb = new StringBuilder();
+
+        sb.append(silentSuccessfulCount);
+        sb.append(SchemaConstants.SEPARATOR_PIPE);
+        sb.append(getHeaderStringForFields(failedRequests));
+        sb.append(SchemaConstants.SEPARATOR_PIPE);
+        sb.append(getHeaderStringForFields(errors));
+
+        return sb.toString();
     }
 
     void incrementSilentSuccessCount() {
@@ -108,11 +116,11 @@ public class LastRequestTelemetry extends RequestTelemetry {
     }
 
     @Override
-    public RequestTelemetry derive(@NonNull final RequestTelemetry requestTelemetry) {
+    public RequestTelemetry copySharedValues(@NonNull final RequestTelemetry requestTelemetry) {
         if (requestTelemetry instanceof LastRequestTelemetry) {
             this.silentSuccessfulCount = ((LastRequestTelemetry) requestTelemetry).silentSuccessfulCount;
         }
 
-        return super.derive(requestTelemetry);
+        return super.copySharedValues(requestTelemetry);
     }
 }

@@ -95,16 +95,6 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
     }
 
     @Override
-    public String getTelemetrySchemaVersionFromCache() {
-        return mSharedPreferencesFileManager.getString(LAST_TELEMETRY_SCHEMA_VERSION_CACHE_KEY);
-    }
-
-    @Override
-    public String getTelemetryHeaderStringFromCache() {
-        return mSharedPreferencesFileManager.getString(LAST_TELEMETRY_HEADER_STRING_CACHE_KEY);
-    }
-
-    @Override
     public synchronized void saveRequestTelemetryToCache(@NonNull final RequestTelemetry requestTelemetry) {
         Logger.verbose(TAG, "Saving Last Request Telemetry to cache...");
 
@@ -135,12 +125,6 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
     }
 
-    @Override
-    public synchronized void clearRequestTelemetry() {
-        Logger.info(TAG, "Removing last request telemetry from cache...");
-        mSharedPreferencesFileManager.remove(LAST_TELEMETRY_OBJECT_CACHE_KEY);
-    }
-
     private String generateCacheValue(final RequestTelemetry requestTelemetry) {
         JsonElement outboundElement = mGson.toJsonTree(requestTelemetry);
         JsonObject outboundObject = outboundElement.getAsJsonObject();
@@ -152,6 +136,7 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
 
     /**
      * Save the index for the failed request array.
+     *
      * @param index
      */
     void saveLastTelemetryIndexSentInHeaderToCache(int index) {

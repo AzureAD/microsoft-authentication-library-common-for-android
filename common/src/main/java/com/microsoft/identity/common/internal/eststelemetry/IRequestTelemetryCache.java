@@ -41,26 +41,4 @@ public interface IRequestTelemetryCache {
      * @return a {@link RequestTelemetry} object
      */
     RequestTelemetry getRequestTelemetryFromCache();
-
-    /**
-     * Get the schema version of this telemetry object from cache
-     *
-     * @return schema version for telemetry object
-     */
-    String getTelemetrySchemaVersionFromCache();
-
-    /**
-     * Get the header string for telemetry object from cache
-     *
-     * @return header string for telemetry
-     */
-    String getTelemetryHeaderStringFromCache();
-
-
-    /**
-     * Clear the contents of the cache.
-     */
-    void clearRequestTelemetry();
-
-
 }

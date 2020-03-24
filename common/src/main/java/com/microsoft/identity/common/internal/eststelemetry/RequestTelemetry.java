@@ -82,7 +82,14 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
             return null;
         }
 
-        return mSchemaVersion + "|" + this.getHeaderStringForFields() + "|" + getPlatformTelemetryHeaderString();
+        final StringBuilder sb = new StringBuilder();
+        sb.append(mSchemaVersion);
+        sb.append(SchemaConstants.SEPARATOR_PIPE);
+        sb.append(this.getHeaderStringForFields());
+        sb.append(SchemaConstants.SEPARATOR_PIPE);
+        sb.append(getPlatformTelemetryHeaderString());
+
+        return sb.toString();
     }
 
     private String getPlatformTelemetryHeaderString() {
@@ -156,7 +163,7 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
     }
 
     @Override
-    public RequestTelemetry derive(@NonNull final RequestTelemetry requestTelemetry) {
+    public RequestTelemetry copySharedValues(@NonNull final RequestTelemetry requestTelemetry) {
         // grab whatever platform fields we can from current request
         for (final Map.Entry<String, String> entry : mPlatformTelemetry.entrySet()) {
             this.putInPlatformTelemetry(entry.getKey(), entry.getValue());

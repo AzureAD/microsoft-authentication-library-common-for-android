@@ -44,5 +44,5 @@ public interface IRequestTelemetry {
      * @param requestTelemetry supplied telemetry object
      * @return telemetry object
      */
-    RequestTelemetry derive(RequestTelemetry requestTelemetry);
+    RequestTelemetry copySharedValues(RequestTelemetry requestTelemetry);
 }

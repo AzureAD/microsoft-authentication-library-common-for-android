@@ -101,10 +101,10 @@ public class EstsTelemetry {
         }
     }
 
-    private boolean isDisabled() {
+    private boolean isCurrentTelemetryAvailable() {
         final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
         final CurrentRequestTelemetry currentRequestTelemetry = getCurrentTelemetryInstance(correlationId);
-        return currentRequestTelemetry == null;
+        return currentRequestTelemetry != null;
     }
 
     /**
@@ -133,13 +133,9 @@ public class EstsTelemetry {
     public void emit(final String key, final String value) {
         final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
         final String compliantValueString = TelemetryUtils.getSchemaCompliantString(value);
-        emit(correlationId, key, compliantValueString);
-    }
-
-    private void emit(final String correlationId, final String key, final String value) {
         final CurrentRequestTelemetry currentTelemetryInstance = getCurrentTelemetryInstance(correlationId);
         if (currentTelemetryInstance != null) {
-            currentTelemetryInstance.put(key, value);
+            currentTelemetryInstance.put(key, compliantValueString);
         }
     }
 
@@ -238,11 +234,11 @@ public class EstsTelemetry {
         // load the last request object from cache
         LastRequestTelemetry lastRequestTelemetry = loadLastRequestTelemetryFromCache();
 
-        // We did not have a last request object in cache, let's create a new one and derive
+        // We did not have a last request object in cache, let's create a new one and copySharedValues
         // fields from current request where applicable
         if (lastRequestTelemetry == null) {
             lastRequestTelemetry = new LastRequestTelemetry(currentTelemetry.getSchemaVersion());
-            lastRequestTelemetry = (LastRequestTelemetry) lastRequestTelemetry.derive(currentTelemetry);
+            lastRequestTelemetry = (LastRequestTelemetry) lastRequestTelemetry.copySharedValues(currentTelemetry);
         }
 
         if (isTelemetryLoggedByServer(command, commandResult)) {
@@ -371,28 +367,28 @@ public class EstsTelemetry {
             return null;
         }
 
-        LastRequestTelemetry lastRequestTelemetry = (LastRequestTelemetry) mLastRequestTelemetryCache.getRequestTelemetryFromCache();
+        final LastRequestTelemetry lastRequestTelemetryFromCache = (LastRequestTelemetry) mLastRequestTelemetryCache.getRequestTelemetryFromCache();
 
-        if (lastRequestTelemetry == null) {
+        if (lastRequestTelemetryFromCache == null) {
             // we did not have anything in the telemetry cache for the last request
             // let's create a new object based on the data available from the current request object
             // and return the header string formed via that object
             final String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
             final CurrentRequestTelemetry currentRequestTelemetry = mTelemetryMap.get(correlationId);
-            lastRequestTelemetry = new LastRequestTelemetry(currentRequestTelemetry.getSchemaVersion());
-            lastRequestTelemetry = (LastRequestTelemetry) lastRequestTelemetry.derive(currentRequestTelemetry);
+            final LastRequestTelemetry lastRequestTelemetry = new LastRequestTelemetry(currentRequestTelemetry.getSchemaVersion());
+            lastRequestTelemetry.copySharedValues(currentRequestTelemetry);
             return lastRequestTelemetry.getCompleteHeaderString();
         }
 
         // create a copy of the object retrieved from cache
-        LastRequestTelemetry lastRequestTelemetryCopy = new LastRequestTelemetry(lastRequestTelemetry.getSchemaVersion());
-        lastRequestTelemetryCopy = (LastRequestTelemetry) lastRequestTelemetryCopy.derive(lastRequestTelemetry);
+        final LastRequestTelemetry lastRequestTelemetryCopy = new LastRequestTelemetry(lastRequestTelemetryFromCache.getSchemaVersion());
+        lastRequestTelemetryCopy.copySharedValues(lastRequestTelemetryFromCache);
 
         // failed request data from the object retrieved from cache
-        final List<FailedRequest> originalFailedRequests = lastRequestTelemetry.getFailedRequests();
+        final List<FailedRequest> originalFailedRequests = lastRequestTelemetryFromCache.getFailedRequests();
 
         // error data from the object retrieved from cache
-        final List<String> originalErrors = lastRequestTelemetry.getErrors();
+        final List<String> originalErrors = lastRequestTelemetryFromCache.getErrors();
 
         // the array index that marks how many elements were included in the header sent in the request
         int indexOfFailedRequestsAndErrors = 0;
@@ -402,7 +398,7 @@ public class EstsTelemetry {
             // we will be maxing out at 4KB to avoid HTTP 413 errors
             // check if we have enough space in the String to store another failed request/error element
             // if yes, then add it to the failed request array (for the copy)
-            if (lastRequestTelemetryCopy.getCompleteHeaderString().length() < 3800) {
+            if (lastRequestTelemetryCopy.getCompleteHeaderString().length() < SchemaConstants.HEADER_DATA_LIMIT) {
                 lastRequestTelemetryCopy.appendFailedRequestWithError(
                         originalFailedRequests.get(indexOfFailedRequestsAndErrors),
                         originalErrors.get(indexOfFailedRequestsAndErrors++)
@@ -432,7 +428,7 @@ public class EstsTelemetry {
 
         final Map<String, String> headerMap = new HashMap<>();
 
-        if (isDisabled()) {
+        if (!isCurrentTelemetryAvailable()) {
             return headerMap;
         }
 

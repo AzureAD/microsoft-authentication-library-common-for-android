@@ -37,6 +37,11 @@ public class SchemaConstants {
     public static final String CURRENT_REQUEST_HEADER_NAME = "x-client-current-telemetry";
     public static final String LAST_REQUEST_HEADER_NAME = "x-client-last-telemetry";
 
+    public static final String SEPARATOR_PIPE = "|";
+    public static final String SEPARATOR_COMMA = ",";
+
+    public static final int HEADER_DATA_LIMIT = 3800;
+
     public static final class Key {
         public static final String API_ID = TelemetryEventStrings.Key.API_ID;
         public static final String FORCE_REFRESH = TelemetryEventStrings.Key.IS_FORCE_REFRESH;
@@ -48,6 +53,7 @@ public class SchemaConstants {
         public static final String RT_STATUS = TelemetryEventStrings.Key.RT_STATUS;
         public static final String FRT_STATUS = TelemetryEventStrings.Key.FRT_STATUS;
         public static final String MRRT_STATUS = TelemetryEventStrings.Key.MRRT_STATUS;
+        public static final String ALL_TELEMETRY_DATA_SENT = "is_all_telemetry_data_sent";
     }
 
     public static final class Value {
@@ -77,7 +83,7 @@ public class SchemaConstants {
      * Failure do so will break the schema.
      */
     private static final String[] lastRequestPlatformFields = new String[]{
-
+        Key.ALL_TELEMETRY_DATA_SENT
     };
 
     static boolean isCurrentPlatformField(final String key) {

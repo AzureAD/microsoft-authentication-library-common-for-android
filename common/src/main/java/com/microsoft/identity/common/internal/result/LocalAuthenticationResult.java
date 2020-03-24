@@ -205,10 +205,6 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     }
 
 
-    public void setServicedFromCache(Boolean servicedFromCache) {
-        this.mServicedFromCache = servicedFromCache;
-    }
-
     @Override
     public boolean isServicedFromCache() {
         return mServicedFromCache;
