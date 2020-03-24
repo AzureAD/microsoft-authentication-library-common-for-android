@@ -226,7 +226,7 @@ public class EstsTelemetry {
      * Removes the telemetry associated to the correlation id from the telemetry map,
      * and saves it to the cache (SharedPreferences) as the last request telemetry.
      */
-    public void flush(@NonNull final BaseCommand command, @NonNull final CommandResult commandResult) {
+    public synchronized void flush(@NonNull final BaseCommand command, @NonNull final CommandResult commandResult) {
         final String methodName = ":flush";
 
         final String correlationId = command.getParameters().getCorrelationId();
@@ -368,7 +368,7 @@ public class EstsTelemetry {
         return currentTelemetry.getCompleteHeaderString();
     }
 
-    private String getLastTelemetryHeaderString() {
+    private synchronized String getLastTelemetryHeaderString() {
         if (mLastRequestTelemetryCache == null) {
             return null;
         }
