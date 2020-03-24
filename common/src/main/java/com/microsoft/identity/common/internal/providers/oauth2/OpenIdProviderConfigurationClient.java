@@ -55,7 +55,7 @@ public class OpenIdProviderConfigurationClient {
     private static final Map<URL, OpenIdProviderConfiguration> sConfigCache = new HashMap<>();
 
     public interface OpenIdProviderConfigurationCallback
-            extends TaskCompletedCallbackWithError<OpenIdProviderConfiguration, Exception> {
+            extends TaskCompletedCallbackWithError {
     }
 
     private final String mIssuer;

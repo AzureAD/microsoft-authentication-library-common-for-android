@@ -122,7 +122,7 @@ public class PKeyAuthChallengeFactory {
 
     private boolean isWorkplaceJoined() {
         @SuppressWarnings("unchecked")
-        Class<IDeviceCertificate> certClass = (Class<IDeviceCertificate>) AuthenticationSettings.INSTANCE.getDeviceCertificateProxy();
+        Class<IDeviceCertificate> certClass = AuthenticationSettings.INSTANCE.getDeviceCertificateProxy();
         return certClass != null;
     }
 

@@ -32,12 +32,12 @@ import java.util.List;
 public abstract class BaseCommand<T> implements Command<T> {
     private OperationParameters mParameters;
     private List<BaseController> mControllers;
-    private CommandCallback<?,?> mCallback;
+    private CommandCallback mCallback;
     private String mPublicApiId;
 
     public BaseCommand(@NonNull final OperationParameters parameters,
                        @NonNull final BaseController controller,
-                       @NonNull final CommandCallback<?,?> callback) {
+                       @NonNull final CommandCallback callback) {
         mParameters = parameters;
         mControllers = new ArrayList<>();
         mCallback = callback;
@@ -47,7 +47,7 @@ public abstract class BaseCommand<T> implements Command<T> {
 
     public BaseCommand(@NonNull final OperationParameters parameters,
                        @NonNull final List<BaseController> controllers,
-                       @NonNull final CommandCallback<?,?> callback) {
+                       @NonNull final CommandCallback callback) {
         mParameters = parameters;
         mControllers = controllers;
         mCallback = callback;
@@ -69,11 +69,11 @@ public abstract class BaseCommand<T> implements Command<T> {
         mControllers = controllers;
     }
 
-    public CommandCallback<?,?> getCallback() {
+    public CommandCallback getCallback() {
         return mCallback;
     }
 
-    public void setCallback(CommandCallback<?,?> callback) {
+    public void setCallback(CommandCallback callback) {
         this.mCallback = callback;
     }
 

@@ -97,7 +97,7 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
                 pKeyAuthChallenge.getVersion());
 
         // If not device cert exists, alias or private key will not exist on the device
-        Class<IDeviceCertificate> certClazz = (Class<IDeviceCertificate>) AuthenticationSettings.INSTANCE
+        Class<IDeviceCertificate> certClazz = AuthenticationSettings.INSTANCE
                 .getDeviceCertificateProxy();
         if (certClazz != null) {
             IDeviceCertificate deviceCertProxy = getWPJAPIInstance(certClazz);

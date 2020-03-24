@@ -384,6 +384,7 @@ public abstract class BaseController {
         }
 
         if (result instanceof AuthorizationResult) {
+            @SuppressWarnings("unchecked")
             AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> authResult = (AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>) result;
 
             if (authResult.getAuthorizationStatus() != null) {

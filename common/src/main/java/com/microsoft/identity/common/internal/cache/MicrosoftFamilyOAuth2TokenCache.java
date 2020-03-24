@@ -38,6 +38,11 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -57,25 +62,13 @@ import java.util.List;
 
 import static com.microsoft.identity.common.internal.cache.AbstractAccountCredentialCache.targetsIntersect;
 
+
 public class MicrosoftFamilyOAuth2TokenCache
-        <GenericOAuth2Strategy extends OAuth2Strategy<AccessToken,
-                BaseAccount,
-                AuthorizationRequest<?>,
-                AuthorizationRequest.Builder<?>,
-                AuthorizationStrategy<?,?>,
-                OAuth2Configuration,
-                OAuth2StrategyParameters,
-                AuthorizationResponse,
-                RefreshToken,
-                TokenRequest,
-                TokenResponse,
-                TokenResult,
-                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
-                GenericAuthorizationRequest extends AuthorizationRequest<?>,
-                GenericTokenResponse extends TokenResponse,
-                GenericAccount extends BaseAccount,
-                GenericRefreshToken extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken>
-        extends MsalOAuth2TokenCache<GenericOAuth2Strategy, GenericAuthorizationRequest, GenericTokenResponse, GenericAccount, GenericRefreshToken> {
+        extends MsalOAuth2TokenCache<MicrosoftStsOAuth2Strategy,
+        MicrosoftStsAuthorizationRequest,
+        MicrosoftStsTokenResponse,
+        MicrosoftAccount,
+        MicrosoftRefreshToken> {
 
     private static final String TAG = MicrosoftFamilyOAuth2TokenCache.class.getSimpleName();
 
@@ -87,11 +80,11 @@ public class MicrosoftFamilyOAuth2TokenCache
     public MicrosoftFamilyOAuth2TokenCache(final Context context,
                                            final IAccountCredentialCache accountCredentialCache,
                                            final IAccountCredentialAdapter<
-                                                   GenericOAuth2Strategy,
-                                                   GenericAuthorizationRequest,
-                                                   GenericTokenResponse,
-                                                   GenericAccount,
-                                                   GenericRefreshToken> accountCredentialAdapter) {
+                                                   MicrosoftStsOAuth2Strategy,
+                                                   MicrosoftStsAuthorizationRequest,
+                                                   MicrosoftStsTokenResponse,
+                                                   MicrosoftAccount,
+                                                   MicrosoftRefreshToken> accountCredentialAdapter) {
         super(context, accountCredentialCache, accountCredentialAdapter);
     }
 

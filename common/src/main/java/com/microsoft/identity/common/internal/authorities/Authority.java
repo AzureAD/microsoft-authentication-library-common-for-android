@@ -204,19 +204,19 @@ public abstract class Authority {
         return new AzureActiveDirectoryAuthority(audience);
     }
 
-    public abstract OAuth2Strategy<AccessToken,
-            BaseAccount,
-            AuthorizationRequest<?>,
-            AuthorizationRequest.Builder<?>,
-            AuthorizationStrategy<?,?>,
-            OAuth2Configuration,
-            OAuth2StrategyParameters,
-            AuthorizationResponse,
-            RefreshToken,
-            TokenRequest,
-            TokenResponse,
-            TokenResult,
-            AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) throws ClientException;
+    public abstract OAuth2Strategy<? extends AccessToken,
+            ? extends BaseAccount,
+            ? extends AuthorizationRequest<?>,
+            ? extends AuthorizationRequest.Builder<?>,
+            ? extends AuthorizationStrategy<?,?>,
+            ? extends OAuth2Configuration,
+            ? extends OAuth2StrategyParameters,
+            ? extends AuthorizationResponse,
+            ? extends RefreshToken,
+            ? extends TokenRequest,
+            ? extends TokenResponse,
+            ? extends TokenResult,
+            ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) throws ClientException;
 
     /**
      * Indicates whether the authority is known to Microsoft or not.  Microsoft can recognize authorities that exist within public clouds.  Microsoft does

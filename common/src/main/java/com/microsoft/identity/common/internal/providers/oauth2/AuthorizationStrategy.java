@@ -43,19 +43,19 @@ import java.util.concurrent.Future;
  * and/or authentication information (OIDC)
  * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
  */
-public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy<AccessToken,
-        BaseAccount,
-        AuthorizationRequest<?>,
-        AuthorizationRequest.Builder<?>,
-        AuthorizationStrategy<?,?>,
-        OAuth2Configuration,
-        OAuth2StrategyParameters,
-        AuthorizationResponse,
-        RefreshToken,
-        TokenRequest,
-        TokenResponse,
-        TokenResult,
-        AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy<? extends AccessToken,
+        ? extends BaseAccount,
+        ? extends AuthorizationRequest<?>,
+        ? extends AuthorizationRequest.Builder<?>,
+        ? extends AuthorizationStrategy<?,?>,
+        ? extends OAuth2Configuration,
+        ? extends OAuth2StrategyParameters,
+        ? extends AuthorizationResponse,
+        ? extends RefreshToken,
+        ? extends TokenRequest,
+        ? extends TokenResponse,
+        ? extends TokenResult,
+        ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
         GenericAuthorizationRequest extends AuthorizationRequest<?>> {
     private WeakReference<Context> mReferencedApplicationContext;
     private WeakReference<Activity> mReferencedActivity;
@@ -100,8 +100,20 @@ public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2
     /**
      * Perform the authorization request.
      */
-    public abstract Future<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
-                                                                     GenericOAuth2Strategy oAuth2Strategy)
+    public abstract Future<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> requestAuthorization(AuthorizationRequest<?> authorizationRequest,
+                                                                     OAuth2Strategy<? extends AccessToken,
+                                                                                ? extends BaseAccount,
+                                                                                ? extends AuthorizationRequest<?>,
+                                                                                ? extends AuthorizationRequest.Builder<?>,
+                                                                                ? extends AuthorizationStrategy<?,?>,
+                                                                                ? extends OAuth2Configuration,
+                                                                                ? extends OAuth2StrategyParameters,
+                                                                                ? extends AuthorizationResponse,
+                                                                                ? extends RefreshToken,
+                                                                                ? extends TokenRequest,
+                                                                                ? extends TokenResponse,
+                                                                                ? extends TokenResult,
+                                                                                ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> oAuth2Strategy)
             throws ClientException, UnsupportedEncodingException;
 
     public abstract void completeAuthorization(int requestCode, int resultCode, final Intent data);

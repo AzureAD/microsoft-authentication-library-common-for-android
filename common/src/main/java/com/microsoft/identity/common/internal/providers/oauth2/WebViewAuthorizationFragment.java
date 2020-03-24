@@ -202,6 +202,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     /**
      * Extracts request headers from the given bundle object.
      */
+    @SuppressWarnings("unchecked") // We put this value and it's a hashmap of strings
     private HashMap<String, String> getRequestHeaders(final Bundle state) {
         try {
             return (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);

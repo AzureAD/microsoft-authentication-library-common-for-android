@@ -175,6 +175,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
     @Override
     public final Map<String, String> getAll() {
+        @SuppressWarnings("unchecked")
         final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
 
         if (null != mStorageHelper) {

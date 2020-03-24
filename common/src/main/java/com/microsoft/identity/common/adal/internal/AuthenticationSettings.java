@@ -55,7 +55,7 @@ public enum AuthenticationSettings {
 
     private String mBrokerSignature = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_SIGNATURE;
 
-    private Class<?> mClazzDeviceCertProxy;
+    private Class<IDeviceCertificate> mClazzDeviceCertProxy;
 
     private String mActivityPackageName;
 
@@ -204,7 +204,7 @@ public enum AuthenticationSettings {
      * @param clazz class for workplace join
      */
     @SuppressWarnings("rawtypes")
-    public void setDeviceCertificateProxyClass(Class clazz) {
+    public void setDeviceCertificateProxyClass(Class<IDeviceCertificate> clazz) {
         if (IDeviceCertificate.class.isAssignableFrom(clazz)) {
             mClazzDeviceCertProxy = clazz;
         } else {
@@ -218,7 +218,7 @@ public enum AuthenticationSettings {
      *
      * @return Class
      */
-    public Class<?> getDeviceCertificateProxy() {
+    public Class<IDeviceCertificate> getDeviceCertificateProxy() {
         return mClazzDeviceCertProxy;
     }
 

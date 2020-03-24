@@ -123,6 +123,7 @@ public final class ObjectMapper {
      * @param object Object
      * @return Map<String,Object>
      */
+    @SuppressWarnings("unchecked")
     public static Map<String, Object> serializeObjectHashMap(final Object object) {
         String json = ObjectMapper.serializeObjectToJsonString(object);
         return new Gson().fromJson(json, Map.class);

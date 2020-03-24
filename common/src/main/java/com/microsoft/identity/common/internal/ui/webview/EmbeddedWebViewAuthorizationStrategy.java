@@ -33,6 +33,7 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
@@ -57,20 +58,20 @@ import java.util.concurrent.Future;
 /**
  * Serve as a class to do the OAuth2 auth code grant flow with Android embedded web view.
  */
-public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy<AccessToken,
-        BaseAccount,
-        AuthorizationRequest<?>,
-        AuthorizationRequest.Builder<?>,
-        AuthorizationStrategy<?,?>,
-        OAuth2Configuration,
-        OAuth2StrategyParameters,
-        AuthorizationResponse,
-        RefreshToken,
-        TokenRequest,
-        TokenResponse,
-        TokenResult,
-        AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
-        GenericAuthorizationRequest extends AuthorizationRequest<?>> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
+public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy<? extends AccessToken,
+        ? extends BaseAccount,
+        ? extends AuthorizationRequest<?>,
+        ? extends AuthorizationRequest.Builder<?>,
+        ? extends AuthorizationStrategy<?,?>,
+        ? extends OAuth2Configuration,
+        ? extends OAuth2StrategyParameters,
+        ? extends AuthorizationResponse,
+        ? extends RefreshToken,
+        ? extends TokenRequest,
+        ? extends TokenResponse,
+        ? extends TokenResult,
+        ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+        GenericAuthorizationRequest extends AuthorizationRequest<?>> extends AuthorizationStrategy<GenericOAuth2Strategy, AuthorizationRequest<?>> {
 
     private static final String TAG = EmbeddedWebViewAuthorizationStrategy.class.getSimpleName();
     private ResultFuture<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> mAuthorizationResultFuture;
@@ -93,11 +94,10 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      * The activity result is set in Authorization.setResult() and passed to the onActivityResult() of the calling activity.
      */
     @Override
-    public Future<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
-                                                            GenericOAuth2Strategy oAuth2Strategy) throws UnsupportedEncodingException {
-        mAuthorizationResultFuture = new ResultFuture<>();
-        mOAuth2Strategy = oAuth2Strategy;
-        mAuthorizationRequest = authorizationRequest;
+    @SuppressWarnings("unchecked")
+    public Future<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> requestAuthorization(AuthorizationRequest<?> authorizationRequest, OAuth2Strategy<? extends AccessToken, ? extends BaseAccount, ? extends AuthorizationRequest<?>, ? extends AuthorizationRequest.Builder<?>, ? extends AuthorizationStrategy<?, ?>, ? extends OAuth2Configuration, ? extends OAuth2StrategyParameters, ? extends AuthorizationResponse, ? extends RefreshToken, ? extends TokenRequest, ? extends TokenResponse, ? extends TokenResult, ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> oAuth2Strategy) throws ClientException, UnsupportedEncodingException {
+        mOAuth2Strategy = (GenericOAuth2Strategy)oAuth2Strategy;
+        mAuthorizationRequest =(GenericAuthorizationRequest) authorizationRequest;
         Logger.info(TAG, "Perform the authorization request with embedded webView.");
         final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
         final Intent authIntent = AuthorizationActivity.createStartIntent(
@@ -118,14 +118,16 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == AuthenticationConstants.UIRequest.BROWSER_FLOW) {
             if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
-                final AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> result = mOAuth2Strategy
+                final AuthorizationResult<?,?> result = mOAuth2Strategy
                         .getAuthorizationResultFactory()
                         .createAuthorizationResult(
                                 resultCode,
                                 data,
                                 mAuthorizationRequest
                         );
-                mAuthorizationResultFuture.setResult(result);
+                @SuppressWarnings("unchecked")
+                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> castResult = (AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>)result;
+                mAuthorizationResultFuture.setResult(castResult);
             } else {
                 Logger.warn(TAG, "SDK Cancel triggering before request is sent out. " +
                         "Potentially due to an stale activity state, " +

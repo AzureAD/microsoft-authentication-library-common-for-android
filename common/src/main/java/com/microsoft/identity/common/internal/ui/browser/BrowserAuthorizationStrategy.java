@@ -56,19 +56,19 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.concurrent.Future;
 
-public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy<AccessToken,
-        BaseAccount,
-        AuthorizationRequest<?>,
-        AuthorizationRequest.Builder<?>,
-        AuthorizationStrategy<?,?>,
-        OAuth2Configuration,
-        OAuth2StrategyParameters,
-        AuthorizationResponse,
-        RefreshToken,
-        TokenRequest,
-        TokenResponse,
-        TokenResult,
-        AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy<? extends AccessToken,
+        ? extends BaseAccount,
+        ? extends AuthorizationRequest<?>,
+        ? extends AuthorizationRequest.Builder<?>,
+        ? extends AuthorizationStrategy<?,?>,
+        ? extends OAuth2Configuration,
+        ? extends OAuth2StrategyParameters,
+        ? extends AuthorizationResponse,
+        ? extends RefreshToken,
+        ? extends TokenRequest,
+        ? extends TokenResponse,
+        ? extends TokenResult,
+        ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
         GenericAuthorizationRequest extends AuthorizationRequest<?>> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
     private final static String TAG = BrowserAuthorizationStrategy.class.getSimpleName();
 
@@ -93,14 +93,12 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     }
 
     @Override
-    public Future<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> requestAuthorization(
-            GenericAuthorizationRequest authorizationRequest,
-            GenericOAuth2Strategy oAuth2Strategy)
-            throws ClientException, UnsupportedEncodingException {
+    @SuppressWarnings("unchecked")
+    public Future<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> requestAuthorization(AuthorizationRequest<?> authorizationRequest, OAuth2Strategy<? extends AccessToken, ? extends BaseAccount, ? extends AuthorizationRequest<?>, ? extends AuthorizationRequest.Builder<?>, ? extends AuthorizationStrategy<?, ?>, ? extends OAuth2Configuration, ? extends OAuth2StrategyParameters, ? extends AuthorizationResponse, ? extends RefreshToken, ? extends TokenRequest, ? extends TokenResponse, ? extends TokenResult, ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>> oAuth2Strategy) throws ClientException, UnsupportedEncodingException {
         final String methodName = ":requestAuthorization";
         checkNotDisposed();
-        mOAuth2Strategy = oAuth2Strategy;
-        mAuthorizationRequest = authorizationRequest;
+        mOAuth2Strategy = (GenericOAuth2Strategy)oAuth2Strategy;
+        mAuthorizationRequest = (GenericAuthorizationRequest)authorizationRequest;
         mAuthorizationResultFuture = new ResultFuture<>();
         final Browser browser = BrowserSelector.select(getApplicationContext(), mBrowserSafeList);
 
@@ -163,13 +161,15 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == AuthenticationConstants.UIRequest.BROWSER_FLOW) {
             dispose();
-            final AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> result = mOAuth2Strategy
+            final AuthorizationResult<?,?> result = mOAuth2Strategy
                     .getAuthorizationResultFactory().createAuthorizationResult(
                             resultCode,
                             data,
                             mAuthorizationRequest
                     );
-            mAuthorizationResultFuture.setResult(result);
+            @SuppressWarnings("unchecked")
+            AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> castResult = (AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>)result;
+            mAuthorizationResultFuture.setResult(castResult);
         } else {
             Logger.warnPII(TAG, "Unknown request code " + requestCode);
         }

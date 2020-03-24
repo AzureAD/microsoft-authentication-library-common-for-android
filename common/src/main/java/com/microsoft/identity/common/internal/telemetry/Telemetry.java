@@ -56,7 +56,7 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
     private static volatile Telemetry sTelemetryInstance = null;
-    private static Queue<ITelemetryObserver> mObservers;
+    private static Queue<ITelemetryObserver<?>> mObservers;
     private Queue<Map<String, String>> mTelemetryRawDataMap;
     private TelemetryConfiguration mDefaultConfiguration;
     private TelemetryContext mTelemetryContext;
@@ -114,7 +114,7 @@ public class Telemetry {
      *
      * @param observer ITelemetryObserver
      */
-    public void addObserver(final ITelemetryObserver observer) {
+    public void addObserver(final ITelemetryObserver<?> observer) {
         if (null == observer) {
             throw new IllegalArgumentException("Telemetry Observer instance cannot be null");
         }
@@ -141,7 +141,7 @@ public class Telemetry {
             return;
         }
 
-        final Iterator<ITelemetryObserver> observerIterator = mObservers.iterator();
+        final Iterator<ITelemetryObserver<?>> observerIterator = mObservers.iterator();
 
         while (observerIterator.hasNext()) {
             if (observerIterator.next().getClass() == cls) {
@@ -156,7 +156,7 @@ public class Telemetry {
      *
      * @param observer ITelemetryObserver object.
      */
-    public void removeObserver(final ITelemetryObserver observer) {
+    public void removeObserver(final ITelemetryObserver<?> observer) {
         if (null == observer || null == mObservers) {
             Logger.warn(
                     TAG,
@@ -182,12 +182,12 @@ public class Telemetry {
      *
      * @return List of ITelemetryObserver object.
      */
-    public List<ITelemetryObserver> getObservers() {
-        List observersList;
+    public List<ITelemetryObserver<?>> getObservers() {
+        List<ITelemetryObserver<?>> observersList;
         if (mObservers != null) {
-            observersList = new CopyOnWriteArrayList(mObservers);
+            observersList = new CopyOnWriteArrayList<>(mObservers);
         } else {
-            observersList = new CopyOnWriteArrayList();
+            observersList = new CopyOnWriteArrayList<>();
         }
         return Collections.unmodifiableList(observersList);
     }
@@ -252,7 +252,7 @@ public class Telemetry {
         //Add the telemetry context to the telemetry data
         finalRawMap.add(applyPiiOiiRule(mTelemetryContext.getProperties()));
 
-        for (ITelemetryObserver observer : mObservers) {
+        for (ITelemetryObserver<?> observer : mObservers) {
             if (observer instanceof ITelemetryAggregatedObserver) {
                 new TelemetryAggregationAdapter((ITelemetryAggregatedObserver) observer).process(finalRawMap);
             } else if (observer instanceof ITelemetryDefaultObserver) {

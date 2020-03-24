@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-public interface CommandCallback<T, U> extends TaskCompletedCallbackWithError<T, U> {
+public interface CommandCallback extends TaskCompletedCallbackWithError {
     void onCancel();
 }
 

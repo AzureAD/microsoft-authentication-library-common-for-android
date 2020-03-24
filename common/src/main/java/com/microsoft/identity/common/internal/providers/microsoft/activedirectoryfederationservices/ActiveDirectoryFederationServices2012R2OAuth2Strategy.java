@@ -80,7 +80,7 @@ public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth
     }
 
     @Override
-    public AuthorizationResultFactory<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory() {
+    public AuthorizationResultFactory<AuthorizationResult<? extends AuthorizationResponse, ? extends AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory() {
         throw new UnsupportedOperationException();
     }
 

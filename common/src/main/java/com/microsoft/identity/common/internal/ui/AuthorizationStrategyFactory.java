@@ -49,29 +49,56 @@ import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStr
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
 
-public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends AuthorizationStrategy<OAuth2Strategy<AccessToken,
-        BaseAccount,
-        AuthorizationRequest<?>,
-        AuthorizationRequest.Builder<?>,
-        AuthorizationStrategy<?,?>,
-        OAuth2Configuration,
-        OAuth2StrategyParameters,
-        AuthorizationResponse,
-        RefreshToken,
-        TokenRequest,
-        TokenResponse,
-        TokenResult,
-        AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>, AuthorizationRequest<?>>> {
+public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends AuthorizationStrategy<OAuth2Strategy<? extends AccessToken,
+        ? extends BaseAccount,
+        ? extends AuthorizationRequest<?>,
+        ? extends AuthorizationRequest.Builder<?>,
+        ? extends AuthorizationStrategy<?,?>,
+        ? extends OAuth2Configuration,
+        ? extends OAuth2StrategyParameters,
+        ? extends AuthorizationResponse,
+        ? extends RefreshToken,
+        ? extends TokenRequest,
+        ? extends TokenResponse,
+        ? extends TokenResult,
+        ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>, AuthorizationRequest<?>>> {
     private static final String TAG = AuthorizationStrategyFactory.class.getSimpleName();
+    private static final String UNCHECKED = "unchecked";
 
-    private static AuthorizationStrategyFactory sInstance = null;
+    private static AuthorizationStrategyFactory<AuthorizationStrategy<OAuth2Strategy<? extends AccessToken,
+            ? extends BaseAccount,
+            ? extends AuthorizationRequest<?>,
+            ? extends AuthorizationRequest.Builder<?>,
+            ? extends AuthorizationStrategy<?,?>,
+            ? extends OAuth2Configuration,
+            ? extends OAuth2StrategyParameters,
+            ? extends AuthorizationResponse,
+            ? extends RefreshToken,
+            ? extends TokenRequest,
+            ? extends TokenResponse,
+            ? extends TokenResult,
+            ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>, AuthorizationRequest<?>>> sInstance = null;
 
-    public static AuthorizationStrategyFactory getInstance() {
+    public static AuthorizationStrategyFactory<AuthorizationStrategy<OAuth2Strategy<? extends AccessToken,
+            ? extends BaseAccount,
+            ? extends AuthorizationRequest<?>,
+            ? extends AuthorizationRequest.Builder<?>,
+            ? extends AuthorizationStrategy<?,?>,
+            ? extends OAuth2Configuration,
+            ? extends OAuth2StrategyParameters,
+            ? extends AuthorizationResponse,
+            ? extends RefreshToken,
+            ? extends TokenRequest,
+            ? extends TokenResponse,
+            ? extends TokenResult,
+            ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>, AuthorizationRequest<?>>> getInstance() {
         if (sInstance == null) {
-            sInstance = new AuthorizationStrategyFactory();
+            sInstance = new AuthorizationStrategyFactory<>();
         }
         return sInstance;
     }
+
+
 
     public GenericAuthorizationStrategy getAuthorizationStrategy(@NonNull final AcquireTokenOperationParameters parameters) {
         //Valid if available browser installed. Will fallback to embedded webView if no browser available.
@@ -83,11 +110,25 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
 
         if (validatedAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
             Logger.info(TAG, "Use webView for authorization.");
-            return (GenericAuthorizationStrategy) (
-                    new EmbeddedWebViewAuthorizationStrategy(
+            @SuppressWarnings(AuthorizationStrategyFactory.UNCHECKED)
+            GenericAuthorizationStrategy strategy = (GenericAuthorizationStrategy) (new EmbeddedWebViewAuthorizationStrategy<OAuth2Strategy<? extends AccessToken,
+                    ? extends BaseAccount,
+                    ? extends AuthorizationRequest<?>,
+                    ? extends AuthorizationRequest.Builder<?>,
+                    ? extends AuthorizationStrategy<?,?>,
+                    ? extends OAuth2Configuration,
+                    ? extends OAuth2StrategyParameters,
+                    ? extends AuthorizationResponse,
+                    ? extends RefreshToken,
+                    ? extends TokenRequest,
+                    ? extends TokenResponse,
+                    ? extends TokenResult,
+                    ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>, AuthorizationRequest<?>>
+                    (
                             parameters.getAppContext(),
                             parameters.getActivity(),
                             parameters.getFragment()));
+            return strategy;
         } else if (validatedAuthorizationAgent == AuthorizationAgent.DEFAULT) {
             // When the authorization agent is set to DEFAULT,
             // Use device browser auth flow as default.
@@ -97,32 +138,78 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
             } catch (final ClientException exception) {
                 Logger.info(TAG, "No supported browser available found. Fallback to the webView authorization agent.");
                 if (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND)) {
-                    return (GenericAuthorizationStrategy) (
-                            new EmbeddedWebViewAuthorizationStrategy(
-                                    parameters.getAppContext(),
-                                    parameters.getActivity(),
-                                    parameters.getFragment()));
+                    @SuppressWarnings(AuthorizationStrategyFactory.UNCHECKED)
+                    GenericAuthorizationStrategy strategy = (GenericAuthorizationStrategy) (
+                            new EmbeddedWebViewAuthorizationStrategy<OAuth2Strategy<? extends AccessToken,
+                                    ? extends BaseAccount,
+                                    ? extends AuthorizationRequest<?>,
+                                    ? extends AuthorizationRequest.Builder<?>,
+                                    ? extends AuthorizationStrategy<?,?>,
+                                    ? extends OAuth2Configuration,
+                                    ? extends OAuth2StrategyParameters,
+                                    ? extends AuthorizationResponse,
+                                    ? extends RefreshToken,
+                                    ? extends TokenRequest,
+                                    ? extends TokenResponse,
+                                    ? extends TokenResult,
+                                    ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>, AuthorizationRequest<?>>
+
+                                    (
+                                            parameters.getAppContext(),
+                                            parameters.getActivity(),
+                                            parameters.getFragment()));
+                    return strategy;
                 }
             }
             Logger.info(TAG, "Use browser for authorization.");
-            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
+            final BrowserAuthorizationStrategy<OAuth2Strategy<? extends AccessToken,
+                    ? extends BaseAccount,
+                    ? extends AuthorizationRequest<?>,
+                    ? extends AuthorizationRequest.Builder<?>,
+                    ? extends AuthorizationStrategy<?,?>,
+                    ? extends OAuth2Configuration,
+                    ? extends OAuth2StrategyParameters,
+                    ? extends AuthorizationResponse,
+                    ? extends RefreshToken,
+                    ? extends TokenRequest,
+                    ? extends TokenResponse,
+                    ? extends TokenResult,
+                    ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>> browserAuthorizationStrategy = new BrowserAuthorizationStrategy<>(
                     parameters.getAppContext(),
                     parameters.getActivity(),
                     parameters.getFragment(),
                     isBrokerRequest
             );
             browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
-            return (GenericAuthorizationStrategy) browserAuthorizationStrategy;
+            @SuppressWarnings(AuthorizationStrategyFactory.UNCHECKED)
+            GenericAuthorizationStrategy strategy = (GenericAuthorizationStrategy) browserAuthorizationStrategy;
+            return strategy;
         } else {
             Logger.info(TAG, "Use browser for authorization.");
-            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
+            final BrowserAuthorizationStrategy<OAuth2Strategy<? extends AccessToken,
+                    ? extends BaseAccount,
+                    ? extends AuthorizationRequest<?>,
+                    ? extends AuthorizationRequest.Builder<?>,
+                    ? extends AuthorizationStrategy<?,?>,
+                    ? extends OAuth2Configuration,
+                    ? extends OAuth2StrategyParameters,
+                    ? extends AuthorizationResponse,
+                    ? extends RefreshToken,
+                    ? extends TokenRequest,
+                    ? extends TokenResponse,
+                    ? extends TokenResult,
+                    ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+                    AuthorizationRequest<?>> browserAuthorizationStrategy = new BrowserAuthorizationStrategy<>(
                     parameters.getAppContext(),
                     parameters.getActivity(),
                     parameters.getFragment(),
                     isBrokerRequest
             );
             browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
-            return (GenericAuthorizationStrategy) browserAuthorizationStrategy;
+            @SuppressWarnings(AuthorizationStrategyFactory.UNCHECKED)
+            GenericAuthorizationStrategy strategy = (GenericAuthorizationStrategy) browserAuthorizationStrategy;
+            return strategy;
         }
     }
 

@@ -111,7 +111,7 @@ public abstract class OAuth2Strategy
         return future;
     }
 
-    public abstract AuthorizationResultFactory<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory();
+    public abstract AuthorizationResultFactory<AuthorizationResult<? extends AuthorizationResponse, ? extends AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory();
 
     /**
      * @param request generic token request.
@@ -132,9 +132,11 @@ public abstract class OAuth2Strategy
         final GenericTokenResult result = getTokenResultFromHttpResponse(response);
 
         if (result.getSuccess()) {
+            @SuppressWarnings("unchecked")
+            GenericTokenResponse tokenResponse = (GenericTokenResponse)result.getSuccessResponse();
             validateTokenResponse(
                     request,
-                    (GenericTokenResponse) result.getSuccessResponse()
+                    tokenResponse
             );
         }
         return result;

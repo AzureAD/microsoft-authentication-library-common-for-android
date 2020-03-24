@@ -78,7 +78,7 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
     }
 
     @Override
-    public AuthorizationResultFactory<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory() {
+    public AuthorizationResultFactory<AuthorizationResult<? extends AuthorizationResponse, ? extends AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory() {
         throw new UnsupportedOperationException();
     }
 

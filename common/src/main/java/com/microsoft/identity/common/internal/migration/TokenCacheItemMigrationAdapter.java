@@ -40,6 +40,7 @@ import com.microsoft.identity.common.internal.cache.ITokenCacheItem;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -148,23 +149,11 @@ public class TokenCacheItemMigrationAdapter {
      *                 GenericAccount extends MicrosoftAccount,
      *                 GenericRefreshToken extends MicrosoftRefreshToken>
      */
-    public static boolean tryFociTokenWithGivenClientId(@NonNull final BrokerOAuth2TokenCache<OAuth2Strategy<AccessToken,
-                                                                BaseAccount,
-                                                                AuthorizationRequest<?>,
-                                                                AuthorizationRequest.Builder<?>,
-                                                                AuthorizationStrategy<?,?>,
-                                                                OAuth2Configuration,
-                                                                OAuth2StrategyParameters,
-                                                                AuthorizationResponse,
-                                                                RefreshToken,
-                                                                TokenRequest,
-                                                                TokenResponse,
-                                                                TokenResult,
-                                                                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
-                                                                AuthorizationRequest<?>,
-                                                                MicrosoftTokenResponse,
-                                                                MicrosoftAccount,
-                                                                MicrosoftRefreshToken> brokerOAuth2TokenCache,
+    public static boolean tryFociTokenWithGivenClientId(@NonNull final BrokerOAuth2TokenCache<MicrosoftStsOAuth2Strategy,
+                                                            MicrosoftAuthorizationRequest<?>,
+                                                            MicrosoftTokenResponse,
+                                                            MicrosoftAccount,
+                                                            MicrosoftRefreshToken> brokerOAuth2TokenCache,
                                                         @NonNull final String clientId,
                                                         @NonNull final String redirectUri,
                                                         @NonNull final ICacheRecord cacheRecord)
@@ -222,7 +211,7 @@ public class TokenCacheItemMigrationAdapter {
 
         if (tokenResult.getSuccess()) {
             // Save the token record in tha cache so that we have an entry in BrokerApplicationMetadata for this client id.
-            final MicrosoftStsAuthorizationRequest authorizationRequest = createAuthRequest(
+            final AuthorizationRequest<?> authorizationRequest = createAuthRequest(
                     strategy,
                     cacheRecord,
                     clientId,
@@ -235,7 +224,7 @@ public class TokenCacheItemMigrationAdapter {
             );
             brokerOAuth2TokenCache.save(
                     strategy,
-                    authorizationRequest,
+                    (MicrosoftAuthorizationRequest)authorizationRequest,
                     (MicrosoftTokenResponse) tokenResult.getTokenResponse()
             );
         }

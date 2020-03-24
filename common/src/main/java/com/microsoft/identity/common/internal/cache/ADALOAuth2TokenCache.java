@@ -51,6 +51,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
@@ -121,8 +122,7 @@ public class ADALOAuth2TokenCache
 
     /**
      * Method responsible for saving tokens contained in the TokenResponse to storage.
-     *
-     * @param strategy
+     *  @param strategy
      * @param request
      * @param response
      */

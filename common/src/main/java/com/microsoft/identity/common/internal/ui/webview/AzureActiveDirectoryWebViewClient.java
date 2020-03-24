@@ -92,6 +92,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @return return true means the host application handles the url, while return false means the current WebView handles the url.
      */
     @Override
+    @SuppressWarnings("deprecation")
     public boolean shouldOverrideUrlLoading(final WebView view, final String url) {
         if (StringUtil.isEmpty(url)) {
             throw new IllegalArgumentException("Redirect to empty url in web view.");

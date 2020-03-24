@@ -266,7 +266,7 @@ class DevicePopManager implements IDevicePopManager {
 
     @Override
     public void generateAsymmetricKey(@NonNull final Context context,
-                                      @NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
+                                      @NonNull final TaskCompletedCallbackWithError callback) {
         sThreadExecutor.submit(
                 new Runnable() {
                     @Override
@@ -350,16 +350,20 @@ class DevicePopManager implements IDevicePopManager {
         final String[] result = new String[1];
         final ClientException[] errorResult = new ClientException[1];
 
-        getRequestConfirmation(new TaskCompletedCallbackWithError<String, ClientException>() {
+        getRequestConfirmation(new TaskCompletedCallbackWithError() {
             @Override
-            public void onTaskCompleted(@NonNull final String reqCnf) {
-                result[0] = reqCnf;
+            public void onTaskCompleted(@NonNull final Object reqCnf) {
+                if(reqCnf instanceof String) {
+                    result[0] = (String) reqCnf;
+                }
                 latch.countDown();
             }
 
             @Override
-            public void onError(@NonNull final ClientException error) {
-                errorResult[0] = error;
+            public void onError(@NonNull final Object error) {
+                if(error instanceof ClientException) {
+                    errorResult[0] = (ClientException) error;
+                }
                 latch.countDown();
             }
         });
@@ -389,7 +393,7 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public void getRequestConfirmation(@NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
+    public void getRequestConfirmation(@NonNull final TaskCompletedCallbackWithError callback) {
         sThreadExecutor.submit(new Runnable() {
             @Override
             public void run() {

@@ -199,6 +199,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         final String methodName = "fromCacheValue";
 
         try {
+            @SuppressWarnings("unchecked")
             final T resultObject = (T) mGson.fromJson(string, t);
 
             if (!StringExtensions.isNullOrBlank(string)) {

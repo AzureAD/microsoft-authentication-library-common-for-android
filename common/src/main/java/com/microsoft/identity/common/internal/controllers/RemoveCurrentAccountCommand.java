@@ -35,7 +35,7 @@ public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
 
     public RemoveCurrentAccountCommand(@NonNull final OperationParameters parameters,
                                        @NonNull final BaseController controller,
-                                       @NonNull final CommandCallback<?,?> callback) {
+                                       @NonNull final CommandCallback callback) {
         super(parameters, controller, callback);
     }
 

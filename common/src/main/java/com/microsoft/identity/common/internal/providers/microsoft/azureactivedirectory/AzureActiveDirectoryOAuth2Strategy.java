@@ -98,7 +98,7 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public AuthorizationResultFactory<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory() {
+    public AuthorizationResultFactory<AuthorizationResult<? extends AuthorizationResponse,? extends AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory() {
         throw new UnsupportedOperationException();
     }
 

@@ -68,6 +68,7 @@ public class TelemetryContext extends Properties {
         return telemetryContext;
     }
 
+    @SuppressWarnings("deprecation")
     void addApplicationInfo(@NonNull final Context context) {
         try {
             final PackageManager packageManager = context.getPackageManager();

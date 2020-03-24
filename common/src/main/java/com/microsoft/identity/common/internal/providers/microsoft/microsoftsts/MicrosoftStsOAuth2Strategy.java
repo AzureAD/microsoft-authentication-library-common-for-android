@@ -116,8 +116,9 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     @Override
-    public AuthorizationResultFactory<AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory() {
-        return (AuthorizationResultFactory)(new MicrosoftStsAuthorizationResultFactory());
+    @SuppressWarnings("unchecked")
+    public AuthorizationResultFactory<AuthorizationResult<? extends AuthorizationResponse, ? extends AuthorizationErrorResponse>, AuthorizationRequest<?>> getAuthorizationResultFactory() {
+        return (AuthorizationResultFactory) (new MicrosoftStsAuthorizationResultFactory());
     }
 
     @Override

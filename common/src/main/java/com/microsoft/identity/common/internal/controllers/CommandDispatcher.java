@@ -36,6 +36,7 @@ import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
@@ -192,8 +193,10 @@ public class CommandDispatcher {
                         break;
                     case CANCEL:
                         command.getCallback().onCancel();
+                        break;
                     default:
-
+                        command.getCallback().onError(new ClientException(ClientException.UNKNOWN_ERROR, "Fell through returnCommandResult - Unexpected"));
+                        break;
                 }
             }
         });

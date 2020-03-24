@@ -29,7 +29,7 @@ import android.content.Intent;
  */
 
 public abstract class AuthorizationResultFactory<
-        GenericAuthorizationResult extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>,
+        GenericAuthorizationResult extends AuthorizationResult<? extends AuthorizationResponse, ? extends AuthorizationErrorResponse>,
         GenericAuthorizationRequest extends AuthorizationRequest<?>
         > {
 

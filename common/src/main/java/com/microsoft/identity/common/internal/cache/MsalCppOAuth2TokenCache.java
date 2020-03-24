@@ -63,19 +63,19 @@ import static com.microsoft.identity.common.internal.authscheme.BearerAuthentica
  * Sub class of {@link MsalCppOAuth2TokenCache} to add specific public api's required for MSAL CPP library.
  */
 public class MsalCppOAuth2TokenCache
-        <GenericOAuth2Strategy extends OAuth2Strategy<AccessToken,
-                BaseAccount,
-                AuthorizationRequest<?>,
-                AuthorizationRequest.Builder<?>,
-                AuthorizationStrategy<?,?>,
-                OAuth2Configuration,
-                OAuth2StrategyParameters,
-                AuthorizationResponse,
-                RefreshToken,
-                TokenRequest,
-                TokenResponse,
-                TokenResult,
-                AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
+        <GenericOAuth2Strategy extends OAuth2Strategy<? extends AccessToken,
+                ? extends BaseAccount,
+                ? extends AuthorizationRequest<?>,
+                ? extends AuthorizationRequest.Builder<?>,
+                ? extends AuthorizationStrategy<?,?>,
+                ? extends OAuth2Configuration,
+                ? extends OAuth2StrategyParameters,
+                ? extends AuthorizationResponse,
+                ? extends RefreshToken,
+                ? extends TokenRequest,
+                ? extends TokenResponse,
+                ? extends TokenResult,
+                ? extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
                 GenericAuthorizationRequest extends AuthorizationRequest<?>,
                 GenericTokenResponse extends TokenResponse,
                 GenericAccount extends BaseAccount,
@@ -98,23 +98,7 @@ public class MsalCppOAuth2TokenCache
      */
     private MsalCppOAuth2TokenCache(final Context context,
                                     final IAccountCredentialCache accountCredentialCache,
-                                    final IAccountCredentialAdapter<OAuth2Strategy<AccessToken,
-                                        BaseAccount,
-                                        AuthorizationRequest<?>,
-                                        AuthorizationRequest.Builder<?>,
-                                        AuthorizationStrategy<?,?>,
-                                        OAuth2Configuration,
-                                        OAuth2StrategyParameters,
-                                        AuthorizationResponse,
-                                        RefreshToken,
-                                        TokenRequest,
-                                        TokenResponse,
-                                        TokenResult,
-                                        AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse>>,
-                                        AuthorizationRequest<?>,
-                                        TokenResponse,
-                                        BaseAccount,
-                                        com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> accountCredentialAdapter) {
+                                    final IAccountCredentialAdapter<GenericOAuth2Strategy,GenericAuthorizationRequest, GenericTokenResponse,GenericAccount, GenericRefreshToken> accountCredentialAdapter) {
         super(context, accountCredentialCache, accountCredentialAdapter);
     }
 
@@ -126,13 +110,20 @@ public class MsalCppOAuth2TokenCache
      * @param context The Application Context
      * @return An instance of the MsalCppOAuth2TokenCache.
      */
-    public static MsalCppOAuth2TokenCache create(@NonNull final Context context) {
+    public static MsalOAuth2TokenCache<
+            MicrosoftStsOAuth2Strategy,
+            MicrosoftStsAuthorizationRequest,
+            MicrosoftStsTokenResponse,
+            MicrosoftAccount,
+            MicrosoftRefreshToken> create(@NonNull final Context context) {
+
         final MsalOAuth2TokenCache<MicrosoftStsOAuth2Strategy,
                 MicrosoftStsAuthorizationRequest,
                 MicrosoftStsTokenResponse,
                 MicrosoftAccount,
                 MicrosoftRefreshToken> msalOAuth2TokenCache = MsalOAuth2TokenCache.create(context);
-        return new MsalCppOAuth2TokenCache(
+
+        return new MsalCppOAuth2TokenCache<>(
                 context,
                 msalOAuth2TokenCache.getAccountCredentialCache(),
                 msalOAuth2TokenCache.getAccountCredentialAdapter()
