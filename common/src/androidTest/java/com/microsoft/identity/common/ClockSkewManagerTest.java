@@ -42,28 +42,28 @@ import static org.junit.Assert.assertEquals;
 @RunWith(AndroidJUnit4.class)
 public class ClockSkewManagerTest {
 
-    private Context sContext;
-    private static IClockSkewManager sClockSkewMgr;
+    private Context context;
+    private IClockSkewManager clockSkewManager;
 
     @Before
     public void setUp() {
-        sContext = InstrumentationRegistry.getTargetContext();
+        context = InstrumentationRegistry.getTargetContext();
     }
 
     @After
     public void tearDown() {
         // Reset the skew to 0
-        if (null != sClockSkewMgr) {
-            sClockSkewMgr.onTimestampReceived(0L);
+        if (null != clockSkewManager) {
+            clockSkewManager.onTimestampReceived(0L);
         }
 
         // Reset the Context
-        sContext = null;
+        context = null;
     }
 
     @Test
     public void testOnTimestampReceived() {
-        sClockSkewMgr = new ClockSkewManager(sContext) {
+        clockSkewManager = new ClockSkewManager(context) {
             @Override
             public Date getCurrentClientTime() {
                 return new Date(12345);
@@ -71,13 +71,13 @@ public class ClockSkewManagerTest {
         };
 
         final Date serverTime = new Date(67890);
-        sClockSkewMgr.onTimestampReceived(serverTime.getTime());
-        assertEquals(-55545, sClockSkewMgr.getSkewMillis());
+        clockSkewManager.onTimestampReceived(serverTime.getTime());
+        assertEquals(-55545, clockSkewManager.getSkewMillis());
     }
 
     @Test
     public void testOnTimestampReceived2() {
-        sClockSkewMgr = new ClockSkewManager(sContext) {
+        clockSkewManager = new ClockSkewManager(context) {
             @Override
             public Date getCurrentClientTime() {
                 return new Date(67890);
@@ -85,13 +85,13 @@ public class ClockSkewManagerTest {
         };
 
         final Date serverTime = new Date(12345);
-        sClockSkewMgr.onTimestampReceived(serverTime.getTime());
-        assertEquals(55545, sClockSkewMgr.getSkewMillis());
+        clockSkewManager.onTimestampReceived(serverTime.getTime());
+        assertEquals(55545, clockSkewManager.getSkewMillis());
     }
 
     @Test
     public void testGetReferenceTime() {
-        sClockSkewMgr = new ClockSkewManager(sContext) {
+        clockSkewManager = new ClockSkewManager(context) {
             @Override
             public Date getCurrentClientTime() {
                 return new Date(67890);
@@ -103,30 +103,30 @@ public class ClockSkewManagerTest {
             }
         };
 
-        assertEquals(67848L, sClockSkewMgr.getAdjustedReferenceTime().getTime());
+        assertEquals(67848L, clockSkewManager.getAdjustedReferenceTime().getTime());
     }
 
     @Test
     public void testToClientTime() {
-        sClockSkewMgr = new ClockSkewManager(sContext) {
+        clockSkewManager = new ClockSkewManager(context) {
             @Override
             public long getSkewMillis() {
                 return 42L;
             }
         };
 
-        assertEquals(67932L, sClockSkewMgr.toClientTime(67890).getTime());
+        assertEquals(67932L, clockSkewManager.toClientTime(67890).getTime());
     }
 
     @Test
     public void testToReferenceTime() {
-        sClockSkewMgr = new ClockSkewManager(sContext) {
+        clockSkewManager = new ClockSkewManager(context) {
             @Override
             public long getSkewMillis() {
                 return 42L;
             }
         };
 
-        assertEquals(67848L, sClockSkewMgr.toReferenceTime(67890).getTime());
+        assertEquals(67848L, clockSkewManager.toReferenceTime(67890).getTime());
     }
 }
