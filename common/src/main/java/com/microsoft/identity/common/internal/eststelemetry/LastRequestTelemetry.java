@@ -52,17 +52,16 @@ public class LastRequestTelemetry extends RequestTelemetry {
 
     @Override
     public String getHeaderStringForFields() {
-        final StringBuilder sb = new StringBuilder();
-
         // the first one contains the api id anc correlation id part
         // the second one contains the error codes
         final Pair<String, String> headerSegments = getHeaderStringForFailedRequests();
 
-        sb.append(silentSuccessfulCount);
-        sb.append(SchemaConstants.SEPARATOR_PIPE);
-        sb.append(headerSegments.first);
-        sb.append(SchemaConstants.SEPARATOR_PIPE);
-        sb.append(headerSegments.second);
+        final StringBuilder sb = new StringBuilder();
+        sb.append(silentSuccessfulCount)
+                .append(SchemaConstants.SEPARATOR_PIPE)
+                .append(headerSegments.first)
+                .append(SchemaConstants.SEPARATOR_PIPE)
+                .append(headerSegments.second);
 
         return sb.toString();
     }

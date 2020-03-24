@@ -82,11 +82,11 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
         }
 
         final StringBuilder sb = new StringBuilder();
-        sb.append(mSchemaVersion);
-        sb.append(SchemaConstants.SEPARATOR_PIPE);
-        sb.append(this.getHeaderStringForFields());
-        sb.append(SchemaConstants.SEPARATOR_PIPE);
-        sb.append(getPlatformTelemetryHeaderString());
+        sb.append(mSchemaVersion)
+                .append(SchemaConstants.SEPARATOR_PIPE)
+                .append(this.getHeaderStringForFields())
+                .append(SchemaConstants.SEPARATOR_PIPE)
+                .append(getPlatformTelemetryHeaderString());
 
         return sb.toString();
     }
