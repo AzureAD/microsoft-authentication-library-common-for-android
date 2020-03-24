@@ -181,7 +181,6 @@ public class BrokerAcquireTokenSilentOperationParameters extends AcquireTokenSil
                         ? acquireTokenOperationParameters.getAuthenticationScheme()
                         : new BearerAuthenticationSchemeInternal() // If null, assume Bearer for back-compat
         );
-        // TODO set the broker's context on the auth scheme...
     }
 
     @Override
