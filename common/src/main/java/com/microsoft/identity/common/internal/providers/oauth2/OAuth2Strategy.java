@@ -179,11 +179,18 @@ public abstract class OAuth2Strategy
                 TOKEN_REQUEST_CONTENT_TYPE
         );
 
-        if (null != mClockSkewManager && null != response.getDate()) {
-            mClockSkewManager.onTimestampReceived(response.getDate().getTime());
+        // Record the clock skew between *this device* and EVO...
+        if (null != response.getDate()) {
+            recordClockSkew(response.getDate().getTime());
         }
 
         return response;
+    }
+
+    private void recordClockSkew(final long referenceTimeMillis) {
+        if (null != mClockSkewManager) {
+            mClockSkewManager.onTimestampReceived(referenceTimeMillis);
+        }
     }
 
     protected final void setTokenEndpoint(final String tokenEndpoint) {
