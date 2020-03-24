@@ -215,35 +215,48 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodName = "#processWebsiteRequest";
-        final PackageHelper packageHelper = new PackageHelper(getActivity().getPackageManager());
-        final Context applicationContext = getActivity().getApplicationContext();
-        if (url.startsWith(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL)
-                && packageHelper.isPackageInstalledAndEnabled(applicationContext, AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)
-                && packageHelper.isPackageInstalledAndEnabled(applicationContext, AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME)
-                && AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE.equals(
-                packageHelper.getCurrentSignatureForPackage(AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME))) {
-            // TODO: This flow should really check if the Microsoft Intune or the Company Portal apps are installed,
-            // which is the correct client app to launch depending on the enrollment, and launch that app, to permanently skip the browser.
-            // Also it must handle 3rd party MDMs as appropriate, which will depend on the browser flow determining the authority.
-            Logger.info(TAG + methodName, "It is a device CA request on IPPhone. Company Portal is installed.");
-            try {
-                Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
-                final Intent intent = new Intent();
-                intent.setComponent(new ComponentName(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
-                        AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                getActivity().startActivity(intent);
-            } catch (final SecurityException ex) {
-                Logger.warn(TAG + methodName, "Failed to launch Company Portal, falling back to browser.");
-                openLinkInBrowser(url);
-            }
-        } else {
-            openLinkInBrowser(url);
-        }
 
         view.stopLoading();
-        Intent resultIntent = new Intent();
-        getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
+
+        if (url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER)) {
+            Logger.info(TAG + methodName, "This is a device CA request.");
+            final PackageHelper packageHelper = new PackageHelper(getActivity().getPackageManager());
+            final Context applicationContext = getActivity().getApplicationContext();
+
+            // If CP is installed, redirect to CP.
+            if (!packageHelper.isPackageInstalledAndEnabled(
+                    applicationContext,
+                    AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+                try {
+                    Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
+                    final Intent intent = new Intent();
+                    intent.setComponent(new ComponentName(
+                            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
+                            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    getActivity().startActivity(intent);
+
+                    getCompletionCallback().onChallengeResponseReceived(
+                            AuthenticationConstants.UIResponse.BROWSER_CODE_MDM,
+                            new Intent());
+                    return true;
+                } catch (final Exception ex) {
+                    Logger.warn(TAG + methodName, "Failed to launch Company Portal, falling back to browser.");
+                }
+            }
+
+            // Otherwise, launch in Browser.
+            openLinkInBrowser(url);
+            getCompletionCallback().onChallengeResponseReceived(
+                    AuthenticationConstants.UIResponse.BROWSER_CODE_MDM,
+                    new Intent());
+            return true;
+        }
+
+        openLinkInBrowser(url);
+        getCompletionCallback().onChallengeResponseReceived(
+                AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL,
+                new Intent());
         return true;
     }
 

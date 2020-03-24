@@ -41,7 +41,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
      */
     private static final long serialVersionUID = 6545759826515911472L;
 
-    private static final String AUTHORIZATION_ENDPOINT = "/oAuth2/v2.0/authorize";
+    private static final String AUTHORIZATION_ENDPOINT = "oAuth2/v2.0/authorize";
 
     /**
      * Indicates the type of user interaction that is required. The only valid values at this time are 'login', 'none', and 'consent'.
@@ -192,7 +192,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     public String getAuthorizationEndpoint() {
         final Uri authorityUri = Uri.parse(this.getAuthority().toString());
         Uri endpointUri = authorityUri.buildUpon()
-                .appendPath(AUTHORIZATION_ENDPOINT)
+                .appendEncodedPath(AUTHORIZATION_ENDPOINT)
                 .build();
         return endpointUri.toString();
 
