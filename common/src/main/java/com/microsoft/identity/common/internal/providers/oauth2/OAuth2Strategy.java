@@ -95,7 +95,7 @@ public abstract class OAuth2Strategy
         if (null != mStrategyParameters.getContext()) {
             mClockSkewManager = new ClockSkewManager(mStrategyParameters.getContext());
         } else {
-            // No valid context to persist clock skew with!
+            Logger.info(TAG, "No valid context to persist clock skew with!");
             mClockSkewManager = null;
         }
     }
