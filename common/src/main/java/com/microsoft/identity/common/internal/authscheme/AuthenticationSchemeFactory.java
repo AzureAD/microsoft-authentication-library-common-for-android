@@ -28,6 +28,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.ClockSkewManager;
+import com.microsoft.identity.common.internal.util.IClockSkewManager;
 
 /**
  * Factory class for turning public scheme types into internal representations.
@@ -66,9 +68,10 @@ public class AuthenticationSchemeFactory {
                     );
 
                     final IPoPAuthenticationSchemeParams params = (IPoPAuthenticationSchemeParams) nameable;
+                    final IClockSkewManager clockSkewManager = new ClockSkewManager(context);
 
                     return new PopAuthenticationSchemeInternal(
-                            context,
+                            clockSkewManager,
                             params.getHttpMethod(),
                             params.getUrl(),
                             params.getNonce()

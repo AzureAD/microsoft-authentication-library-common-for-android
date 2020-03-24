@@ -53,6 +53,8 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
+import com.microsoft.identity.common.internal.util.ClockSkewManager;
+import com.microsoft.identity.common.internal.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -153,7 +155,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             return new BearerAuthenticationSchemeInternal();
         } else {
             if (requestScheme instanceof PopAuthenticationSchemeInternal) {
-                ((PopAuthenticationSchemeInternal) requestScheme).setContext(context);
+                final IClockSkewManager clockSkewManager = new ClockSkewManager(context);
+                ((PopAuthenticationSchemeInternal) requestScheme).setClockSkewManager(clockSkewManager);
             }
 
             return requestScheme;
