@@ -28,6 +28,7 @@ import androidx.annotation.Nullable;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.platform.Device;
+import com.microsoft.identity.common.internal.util.IClockSkewManager;
 
 import java.net.URL;
 
@@ -55,6 +56,9 @@ public class PopAuthenticationSchemeInternal
      */
     public static final String SCHEME_POP = "PoP";
 
+    // Transient because this class maintains a reference to a Context
+    private transient IClockSkewManager mClockSkewManager;
+
     @SerializedName(HTTP_METHOD)
     private String mHttpMethod;
 
@@ -71,10 +75,12 @@ public class PopAuthenticationSchemeInternal
         super(SCHEME_POP);
     }
 
-    PopAuthenticationSchemeInternal(@NonNull final String httpMethod,
+    PopAuthenticationSchemeInternal(@NonNull final IClockSkewManager clockSkewManager,
+                                    @NonNull final String httpMethod,
                                     @NonNull final URL url,
                                     @Nullable final String nonce) {
         super(SCHEME_POP);
+        mClockSkewManager = clockSkewManager;
         mHttpMethod = httpMethod;
         mUrl = url;
         mNonce = nonce;
@@ -82,14 +88,22 @@ public class PopAuthenticationSchemeInternal
 
     @Override
     public String getAccessTokenForScheme(@NonNull final String accessToken) throws ClientException {
+        final long ONE_SECOND_MILLIS = 1000L;
+        final long timestampMillis = mClockSkewManager.getAdjustedReferenceTime().getTime();
+
         return Device
                 .getDevicePoPManagerInstance()
                 .mintSignedAccessToken(
                         getHttpMethod(),
+                        timestampMillis / ONE_SECOND_MILLIS,
                         getUrl(),
                         accessToken,
                         getNonce()
                 );
+    }
+
+    public void setClockSkewManager(@NonNull final IClockSkewManager clockSkewManager) {
+        mClockSkewManager = clockSkewManager;
     }
 
     @Override

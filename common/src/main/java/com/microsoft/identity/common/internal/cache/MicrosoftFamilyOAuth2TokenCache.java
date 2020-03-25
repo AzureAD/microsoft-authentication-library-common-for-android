@@ -121,6 +121,7 @@ public class MicrosoftFamilyOAuth2TokenCache
 
         RefreshTokenRecord rtToReturn = null;
         IdTokenRecord idTokenToReturn = null;
+        IdTokenRecord v1IdTokenToReturn = null;
         AccessTokenRecord atRecordToReturn = null;
 
         final List<Credential> allCredentials = getAccountCredentialCache().getCredentials();
@@ -148,8 +149,12 @@ public class MicrosoftFamilyOAuth2TokenCache
                         && accountRecord.getEnvironment().equals(idTokenRecord.getEnvironment())
                         && accountRecord.getHomeAccountId().equals(idTokenRecord.getHomeAccountId())
                         && accountRecord.getRealm().equals(idTokenRecord.getRealm())) {
-                    idTokenToReturn = idTokenRecord;
-                    break;
+                    if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
+                        v1IdTokenToReturn = idTokenRecord;
+                    } else {
+                        idTokenToReturn = idTokenRecord;
+                    }
+                    // Do not 'break' as there may still be more IdTokens to inspect
                 }
             }
         }
@@ -182,14 +187,8 @@ public class MicrosoftFamilyOAuth2TokenCache
         result.setAccount(accountRecord);
         result.setRefreshToken(rtToReturn);
         result.setAccessToken(atRecordToReturn);
-
-        if (null != idTokenToReturn) {
-            if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenToReturn.getCredentialType())) {
-                result.setV1IdToken(idTokenToReturn);
-            } else {
-                result.setIdToken(idTokenToReturn);
-            }
-        }
+        result.setV1IdToken(v1IdTokenToReturn);
+        result.setIdToken(idTokenToReturn);
 
         return result;
     }
