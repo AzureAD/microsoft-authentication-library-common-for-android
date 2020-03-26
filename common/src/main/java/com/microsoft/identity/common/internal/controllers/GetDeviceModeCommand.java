@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.controllers;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 
 /**
@@ -35,7 +36,7 @@ public class GetDeviceModeCommand extends BaseCommand<Boolean> {
 
     public GetDeviceModeCommand(@NonNull final OperationParameters parameters,
                                 @NonNull final BaseController controller,
-                                @NonNull final CommandCallback callback) {
+                                @NonNull final CommandCallback<Boolean, BaseException> callback) {
         super(parameters, controller, callback);
     }
 

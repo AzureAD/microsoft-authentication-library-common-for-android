@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.controllers;
 import android.content.Intent;
 
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 
 public interface TokenOperation {
     AcquireTokenResult execute() throws Exception;

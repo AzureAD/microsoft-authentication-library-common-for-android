@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.controllers;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 
 /**
@@ -35,7 +36,7 @@ public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
 
     public RemoveCurrentAccountCommand(@NonNull final OperationParameters parameters,
                                        @NonNull final BaseController controller,
-                                       @NonNull final CommandCallback callback) {
+                                       @NonNull final CommandCallback<Boolean, BaseException> callback) {
         super(parameters, controller, callback);
     }
 

@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.controllers;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 
@@ -39,13 +40,13 @@ public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
 
     public LoadAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final BaseController controller,
-                              @NonNull final CommandCallback callback) {
+                              @NonNull final CommandCallback<List<ICacheRecord>, BaseException> callback) {
         super(parameters, controller, callback);
     }
 
     public LoadAccountCommand(@NonNull final OperationParameters parameters,
                               @NonNull final List<BaseController> controllers,
-                              @NonNull final CommandCallback callback) {
+                              @NonNull final CommandCallback<List<ICacheRecord>, BaseException> callback) {
         super(parameters, controllers, callback);
     }
 

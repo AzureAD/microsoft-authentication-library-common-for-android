@@ -24,20 +24,21 @@ package com.microsoft.identity.common.internal.controllers;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class BaseCommand<T> implements Command<T> {
+public abstract class BaseCommand<T extends Object> implements Command<T> {
     private OperationParameters mParameters;
     private List<BaseController> mControllers;
-    private CommandCallback mCallback;
+    private CommandCallback<? extends Object, BaseException> mCallback;
     private String mPublicApiId;
 
     public BaseCommand(@NonNull final OperationParameters parameters,
                        @NonNull final BaseController controller,
-                       @NonNull final CommandCallback callback) {
+                       @NonNull final CommandCallback<? extends Object, BaseException> callback) {
         mParameters = parameters;
         mControllers = new ArrayList<>();
         mCallback = callback;
@@ -47,7 +48,7 @@ public abstract class BaseCommand<T> implements Command<T> {
 
     public BaseCommand(@NonNull final OperationParameters parameters,
                        @NonNull final List<BaseController> controllers,
-                       @NonNull final CommandCallback callback) {
+                       @NonNull final CommandCallback<? extends Object, BaseException> callback) {
         mParameters = parameters;
         mControllers = controllers;
         mCallback = callback;
@@ -69,11 +70,11 @@ public abstract class BaseCommand<T> implements Command<T> {
         mControllers = controllers;
     }
 
-    public CommandCallback getCallback() {
+    public CommandCallback<? extends Object, BaseException> getCallback() {
         return mCallback;
     }
 
-    public void setCallback(CommandCallback callback) {
+    public void setCallback(CommandCallback<? extends Object, BaseException> callback) {
         this.mCallback = callback;
     }
 

@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.platform;
 
 import android.content.Context;
 
+import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 
@@ -62,7 +63,7 @@ public interface IDevicePopManager {
      *
      * @param callback Async callback with thumbprint/exception info.
      */
-    void generateAsymmetricKey(Context context, TaskCompletedCallbackWithError callback);
+    void generateAsymmetricKey(Context context, TaskCompletedCallbackWithError<Object, Object> callback);
 
     /**
      * Generates asymmetric keys used by pop.
@@ -88,7 +89,7 @@ public interface IDevicePopManager {
      *
      * @return The req_cnf value.
      */
-    void getRequestConfirmation(TaskCompletedCallbackWithError callback);
+    void getRequestConfirmation(TaskCompletedCallbackWithError<String, BaseException> callback);
 
     /**
      * Api to create the signed PoP access token.

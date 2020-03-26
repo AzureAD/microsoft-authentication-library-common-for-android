@@ -181,12 +181,14 @@ public class CommandDispatcher {
      * @param handler
      */
     private static void returnCommandResult(final BaseCommand<?> command, final CommandResult result, Handler handler) {
+
         handler.post(new Runnable() {
             @Override
             public void run() {
                 switch (result.getStatus()) {
                     case ERROR:
-                        command.getCallback().onError(result.getResult());
+                        BaseException exception = (BaseException)result.getResult();
+                        command.getCallback().onError(exception);
                         break;
                     case COMPLETED:
                         command.getCallback().onTaskCompleted(result.getResult());
@@ -354,6 +356,7 @@ public class CommandDispatcher {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
+                                    //command.getCallback().onTaskCompleted(authenticationResult);
                                     command.getCallback().onTaskCompleted(authenticationResult);
                                 }
                             });

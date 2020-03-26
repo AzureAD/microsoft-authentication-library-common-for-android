@@ -28,6 +28,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -55,7 +56,7 @@ public class OpenIdProviderConfigurationClient {
     private static final Map<URL, OpenIdProviderConfiguration> sConfigCache = new HashMap<>();
 
     public interface OpenIdProviderConfigurationCallback
-            extends TaskCompletedCallbackWithError {
+            extends TaskCompletedCallbackWithError<OpenIdProviderConfiguration, BaseException> {
     }
 
     private final String mIssuer;

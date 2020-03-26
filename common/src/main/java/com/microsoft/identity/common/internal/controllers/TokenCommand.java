@@ -27,12 +27,16 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
+import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 
 import java.util.List;
 
@@ -42,13 +46,13 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
 
     public TokenCommand(@NonNull final OperationParameters parameters,
                         @NonNull final BaseController controller,
-                        @NonNull final CommandCallback callback) {
+                        @NonNull final CommandCallback<Object, BaseException> callback) {
         super(parameters, controller, callback);
     }
 
     public TokenCommand(@NonNull final OperationParameters parameters,
                         @NonNull final List<BaseController> controllers,
-                        @NonNull final CommandCallback callback) {
+                        @NonNull final CommandCallback<Object, BaseException> callback) {
         super(parameters, controllers, callback);
     }
 

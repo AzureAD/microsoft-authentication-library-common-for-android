@@ -36,6 +36,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -266,7 +267,7 @@ class DevicePopManager implements IDevicePopManager {
 
     @Override
     public void generateAsymmetricKey(@NonNull final Context context,
-                                      @NonNull final TaskCompletedCallbackWithError callback) {
+                                      @NonNull final TaskCompletedCallbackWithError<Object, Object> callback) {
         sThreadExecutor.submit(
                 new Runnable() {
                     @Override
@@ -350,20 +351,20 @@ class DevicePopManager implements IDevicePopManager {
         final String[] result = new String[1];
         final ClientException[] errorResult = new ClientException[1];
 
-        getRequestConfirmation(new TaskCompletedCallbackWithError() {
+        getRequestConfirmation(new TaskCompletedCallbackWithError<String, BaseException>() {
             @Override
-            public void onTaskCompleted(@NonNull final Object reqCnf) {
-                if(reqCnf instanceof String) {
-                    result[0] = (String) reqCnf;
-                }
+            public void onTaskCompleted(@NonNull final String reqCnf) {
+                result[0] = reqCnf;
                 latch.countDown();
             }
 
+            public <T extends Object> void onTaskCompletedHelper(T t) {
+                onTaskCompleted((String)t);
+            }
+
             @Override
-            public void onError(@NonNull final Object error) {
-                if(error instanceof ClientException) {
-                    errorResult[0] = (ClientException) error;
-                }
+            public void onError(@NonNull final BaseException error) {
+                errorResult[0] = (ClientException) error;
                 latch.countDown();
             }
         });
@@ -393,7 +394,7 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public void getRequestConfirmation(@NonNull final TaskCompletedCallbackWithError callback) {
+    public void getRequestConfirmation(@NonNull final TaskCompletedCallbackWithError<String, BaseException> callback) {
         sThreadExecutor.submit(new Runnable() {
             @Override
             public void run() {
