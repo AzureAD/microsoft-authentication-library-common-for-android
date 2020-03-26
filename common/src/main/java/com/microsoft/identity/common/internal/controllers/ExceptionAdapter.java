@@ -83,7 +83,7 @@ public class ExceptionAdapter {
 
                         return new ServiceException(
                                 authorizationErrorResponse.getError(),
-                                authorizationErrorResponse.getError() + ";" + authorizationErrorResponse.getErrorDescription(),
+                                authorizationErrorResponse.getErrorDescription(),
                                 ServiceException.DEFAULT_STATUS_CODE,
                                 null
                         );
