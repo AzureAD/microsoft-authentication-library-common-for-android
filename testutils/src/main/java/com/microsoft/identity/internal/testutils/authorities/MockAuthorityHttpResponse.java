@@ -20,25 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.eststelemetry;
+package com.microsoft.identity.internal.testutils.authorities;
 
-/**
- * This is a "cache of one" i.e. there will always be only one RequestTelemetry object saved
- * in the cache at any given time
- */
-public interface IRequestTelemetryCache {
+import androidx.annotation.NonNull;
 
-    /**
-     * Save telemetry associated to the {@link RequestTelemetry} object to the cache
-     *
-     * @param requestTelemetry
-     */
-    void saveRequestTelemetryToCache(final RequestTelemetry requestTelemetry);
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.internal.testutils.strategies.MockStrategyWithMockedHttpResponse;
 
-    /**
-     * Get the telemetry object from the cache
-     *
-     * @return a {@link RequestTelemetry} object
-     */
-    RequestTelemetry getRequestTelemetryFromCache();
+public class MockAuthorityHttpResponse extends AzureActiveDirectoryAuthority {
+
+    public MockAuthorityHttpResponse(final AzureActiveDirectoryAudience azureActiveDirectoryAudience) {
+        super(azureActiveDirectoryAudience);
+    }
+
+    @Override
+    public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) {
+        final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();
+        return new MockStrategyWithMockedHttpResponse(config);
+    }
+
 }

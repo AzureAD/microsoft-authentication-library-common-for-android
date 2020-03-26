@@ -22,23 +22,44 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
-/**
- * This is a "cache of one" i.e. there will always be only one RequestTelemetry object saved
- * in the cache at any given time
- */
-public interface IRequestTelemetryCache {
+import androidx.annotation.NonNull;
 
-    /**
-     * Save telemetry associated to the {@link RequestTelemetry} object to the cache
-     *
-     * @param requestTelemetry
-     */
-    void saveRequestTelemetryToCache(final RequestTelemetry requestTelemetry);
+public class CurrentRequestTelemetry extends RequestTelemetry implements ICurrentTelemetry {
 
-    /**
-     * Get the telemetry object from the cache
-     *
-     * @return a {@link RequestTelemetry} object
-     */
-    RequestTelemetry getRequestTelemetryFromCache();
+    private String mApiId;
+    private boolean mForceRefresh;
+
+    CurrentRequestTelemetry() {
+        super(SchemaConstants.CURRENT_SCHEMA_VERSION);
+    }
+
+    String getApiId() {
+        return mApiId;
+    }
+
+    boolean getForceRefresh() {
+        return mForceRefresh;
+    }
+
+    @Override
+    public String getHeaderStringForFields() {
+        return TelemetryUtils.getSchemaCompliantString(mApiId) + "," +
+                TelemetryUtils.getSchemaCompliantStringFromBoolean(mForceRefresh);
+
+    }
+
+    @Override
+    public void put(@NonNull final String key, @NonNull final String value) {
+        switch (key) {
+            case SchemaConstants.Key.API_ID:
+                mApiId = value;
+                break;
+            case SchemaConstants.Key.FORCE_REFRESH:
+                mForceRefresh = TelemetryUtils.getBooleanFromSchemaString(value);
+                break;
+            default:
+                putInPlatformTelemetry(key, value);
+                break;
+        }
+    }
 }

@@ -22,23 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
-/**
- * This is a "cache of one" i.e. there will always be only one RequestTelemetry object saved
- * in the cache at any given time
- */
-public interface IRequestTelemetryCache {
+import androidx.annotation.NonNull;
+
+public interface ICurrentTelemetry {
 
     /**
-     * Save telemetry associated to the {@link RequestTelemetry} object to the cache
+     * Capture telemetry for current request
      *
-     * @param requestTelemetry
+     * @param key   The key supplied for telemetry
+     * @param value The value for the supplied key
      */
-    void saveRequestTelemetryToCache(final RequestTelemetry requestTelemetry);
-
-    /**
-     * Get the telemetry object from the cache
-     *
-     * @return a {@link RequestTelemetry} object
-     */
-    RequestTelemetry getRequestTelemetryFromCache();
+    void put(@NonNull final String key, @NonNull final String value);
 }
