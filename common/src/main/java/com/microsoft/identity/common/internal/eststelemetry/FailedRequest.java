@@ -22,23 +22,41 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
-/**
- * This is a "cache of one" i.e. there will always be only one RequestTelemetry object saved
- * in the cache at any given time
- */
-public interface IRequestTelemetryCache {
+public class FailedRequest {
 
-    /**
-     * Save telemetry associated to the {@link RequestTelemetry} object to the cache
-     *
-     * @param requestTelemetry
-     */
-    void saveRequestTelemetryToCache(final RequestTelemetry requestTelemetry);
+    private String mApiId;
+    private String mCorrelationId;
+    private String mError;
 
-    /**
-     * Get the telemetry object from the cache
-     *
-     * @return a {@link RequestTelemetry} object
-     */
-    RequestTelemetry getRequestTelemetryFromCache();
+    public FailedRequest(String mApiId, String mCorrelationId, String error) {
+        this.mApiId = mApiId;
+        this.mCorrelationId = mCorrelationId;
+        this.mError = error;
+    }
+
+    public String toApiIdCorrelationString() {
+        return mApiId + ',' + mCorrelationId;
+    }
+
+    public String toErrorCodeString() {
+        return mError;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        FailedRequest that = (FailedRequest) o;
+        return mCorrelationId.equals(that.mCorrelationId);
+    }
+
+    @Override
+    public int hashCode() {
+        return mCorrelationId.hashCode();
+    }
 }

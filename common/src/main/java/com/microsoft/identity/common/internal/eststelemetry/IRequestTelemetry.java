@@ -22,23 +22,27 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
-/**
- * This is a "cache of one" i.e. there will always be only one RequestTelemetry object saved
- * in the cache at any given time
- */
-public interface IRequestTelemetryCache {
+public interface IRequestTelemetry {
 
     /**
-     * Save telemetry associated to the {@link RequestTelemetry} object to the cache
+     * Get partial header string pertaining to fields specific to this telemetry object
      *
-     * @param requestTelemetry
+     * @return Header string component for direct member fields
      */
-    void saveRequestTelemetryToCache(final RequestTelemetry requestTelemetry);
+    String getHeaderStringForFields();
 
     /**
-     * Get the telemetry object from the cache
+     * Get a complete header string for all fields belonging to the schema for this telemetry object
      *
-     * @return a {@link RequestTelemetry} object
+     * @return Complete header string for this telemetry object
      */
-    RequestTelemetry getRequestTelemetryFromCache();
+    String getCompleteHeaderString();
+
+    /**
+     * Returning a telemetry object that contains data included in the provided telemetry object
+     *
+     * @param requestTelemetry supplied telemetry object
+     * @return telemetry object
+     */
+    RequestTelemetry copySharedValues(RequestTelemetry requestTelemetry);
 }

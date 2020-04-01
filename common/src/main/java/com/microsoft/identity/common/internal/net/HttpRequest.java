@@ -40,6 +40,7 @@ import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownServiceException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -239,12 +240,18 @@ public final class HttpRequest {
             }
 
             final int statusCode = urlConnection.getResponseCode();
+            final Date date = new Date(urlConnection.getDate());
 
             final String responseBody = responseStream == null
                     ? ""
                     : convertStreamToString(responseStream);
 
-            response = new HttpResponse(statusCode, responseBody, urlConnection.getHeaderFields());
+            response = new HttpResponse(
+                    date,
+                    statusCode,
+                    responseBody,
+                    urlConnection.getHeaderFields()
+            );
         } finally {
             safeCloseStream(responseStream);
         }
