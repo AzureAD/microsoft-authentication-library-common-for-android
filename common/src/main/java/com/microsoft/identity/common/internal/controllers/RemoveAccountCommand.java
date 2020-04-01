@@ -65,9 +65,4 @@ public class RemoveAccountCommand extends BaseCommand<Boolean> {
     public int getCommandNameHashCode() {
         return TAG.hashCode();
     }
-
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return true;
-    }
 }

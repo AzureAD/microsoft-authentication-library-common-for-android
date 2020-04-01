@@ -42,7 +42,6 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -53,8 +52,6 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
-import com.microsoft.identity.common.internal.util.ClockSkewManager;
-import com.microsoft.identity.common.internal.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -87,6 +84,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     @Override
     public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final AcquireTokenOperationParameters parameters) {
+
         Logger.info(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
 
         final BrokerRequest brokerRequest = new BrokerRequest.Builder()
@@ -145,20 +143,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     @NonNull
-    private static AbstractAuthenticationScheme getAuthenticationScheme(
-            @NonNull final Context context,
-            @NonNull final BrokerRequest request) {
+    private static AbstractAuthenticationScheme getAuthenticationScheme(@NonNull final BrokerRequest request) {
         final AbstractAuthenticationScheme requestScheme = request.getAuthenticationScheme();
 
         if (null == requestScheme) {
             // Default assumes the scheme is Bearer
             return new BearerAuthenticationSchemeInternal();
         } else {
-            if (requestScheme instanceof PopAuthenticationSchemeInternal) {
-                final IClockSkewManager clockSkewManager = new ClockSkewManager(context);
-                ((PopAuthenticationSchemeInternal) requestScheme).setClockSkewManager(clockSkewManager);
-            }
-
             return requestScheme;
         }
     }
@@ -179,7 +170,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 BrokerRequest.class
         );
 
-        parameters.setAuthenticationScheme(getAuthenticationScheme(callingActivity, brokerRequest));
+        parameters.setAuthenticationScheme(getAuthenticationScheme(brokerRequest));
 
         parameters.setActivity(callingActivity);
 
@@ -275,9 +266,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final BrokerAcquireTokenSilentOperationParameters parameters =
                 new BrokerAcquireTokenSilentOperationParameters();
 
-        parameters.setAuthenticationScheme(
-                getAuthenticationScheme(context, brokerRequest)
-        );
+        parameters.setAuthenticationScheme(getAuthenticationScheme(brokerRequest));
 
         parameters.setAppContext(context);
 

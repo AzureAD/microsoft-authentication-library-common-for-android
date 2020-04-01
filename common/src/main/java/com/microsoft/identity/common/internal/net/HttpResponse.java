@@ -22,10 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +33,6 @@ public final class HttpResponse {
     private final int mStatusCode;
     private final String mResponseBody;
     private final Map<String, List<String>> mResponseHeaders;
-    private Date mDate;
 
     /**
      * Constructor for {@link HttpResponse}.
@@ -51,20 +46,6 @@ public final class HttpResponse {
         mStatusCode = statusCode;
         mResponseBody = responseBody;
         mResponseHeaders = responseHeaders;
-    }
-
-    public HttpResponse(@Nullable final Date date,
-                        final int statusCode,
-                        @NonNull final String responseBody,
-                        @NonNull final Map<String, List<String>> headerFields) {
-        mDate = date;
-        mStatusCode = statusCode;
-        mResponseBody = responseBody;
-        mResponseHeaders = headerFields;
-    }
-
-    public Date getDate() {
-        return mDate;
     }
 
     /**

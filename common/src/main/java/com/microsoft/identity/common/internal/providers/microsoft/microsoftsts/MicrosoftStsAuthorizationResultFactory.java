@@ -108,27 +108,22 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                 Logger.info(TAG, "Device needs to have broker installed, we expect the apps to call us"
                         + "back when the broker is installed");
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
-                        MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED,
-                        MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED_ERROR_DESCRIPTION);
+                        MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
+                        MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED);
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER:
                 Logger.info(TAG, "Device Registration needed, need to start WPJ");
                 result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
                         MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED,
-                        MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED_ERROR_DESCRIPTION);
+                        MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED);
                 // Set username returned from the service
                 result.getAuthorizationErrorResponse().setUserName(data.getStringExtra(
                                 AuthenticationConstants.Broker.INSTALL_UPN_KEY)
                         );
                 break;
 
-            case AuthenticationConstants.UIResponse.BROWSER_CODE_MDM:
-                Logger.info(TAG, "MDM required. Launching Intune MDM link on browser.");
-                result = createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,
-                        MicrosoftAuthorizationErrorResponse.DEVICE_NEEDS_TO_BE_MANAGED,
-                        MicrosoftAuthorizationErrorResponse.DEVICE_NEEDS_TO_BE_MANAGED_ERROR_DESCRIPTION);
-                break;
+
 
             default:
                 result = createAuthorizationResultWithErrorResponse(

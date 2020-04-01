@@ -44,16 +44,11 @@ public class MockSuccessAuthorizationResultNetworkTests extends AuthorizationRes
 
     public MockSuccessAuthorizationResultNetworkTests() {
         try {
+            // get cloud instance host name from the authority url provided by lab info
+            // and set in the mock authorization response so that we can test multiple cloud support
+            final URL authorityURL = new URL(LabConfig.getCurrentLabConfig().getAuthority());
             final HashMap<String, String> authorizationParams = new HashMap<>();
-            final LabConfig labConfig = LabConfig.getCurrentLabConfig();
-
-            if (labConfig != null) {
-                // get cloud instance host name from the authority url provided by lab info
-                // and set in the mock authorization response so that we can test multiple cloud support
-                final URL authorityURL = new URL(LabConfig.getCurrentLabConfig().getAuthority());
-                authorizationParams.put(MicrosoftAuthorizationResponse.CLOUD_INSTANCE_HOST_NAME, authorityURL.getHost());
-            }
-
+            authorizationParams.put(MicrosoftAuthorizationResponse.CLOUD_INSTANCE_HOST_NAME, authorityURL.getHost());
             MicrosoftStsAuthorizationResponse response = new MicrosoftStsAuthorizationResponse("", "", authorizationParams);
             this.setAuthorizationResponse(response);
             // assume that we have auth code and auth request was successful

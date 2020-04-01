@@ -40,8 +40,6 @@ import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
-import com.microsoft.identity.common.internal.util.ClockSkewManager;
-import com.microsoft.identity.common.internal.util.IClockSkewManager;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -77,7 +75,6 @@ public abstract class OAuth2Strategy
 
     protected final GenericOAuth2Configuration mConfig;
     protected final GenericOAuth2StrategyParameters mStrategyParameters;
-    protected final IClockSkewManager mClockSkewManager;
     protected String mTokenEndpoint;
     protected String mAuthorizationEndpoint;
     private Uri mIssuer;
@@ -91,13 +88,6 @@ public abstract class OAuth2Strategy
                           GenericOAuth2StrategyParameters strategyParameters) {
         mConfig = config;
         mStrategyParameters = strategyParameters;
-
-        if (null != mStrategyParameters.getContext()) {
-            mClockSkewManager = new ClockSkewManager(mStrategyParameters.getContext());
-        } else {
-            Logger.info(TAG, "No valid context to persist clock skew with!");
-            mClockSkewManager = null;
-        }
     }
 
     /**
@@ -172,25 +162,12 @@ public abstract class OAuth2Strategy
         headers.putAll(Device.getPlatformIdParameters());
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
-        final HttpResponse response = HttpRequest.sendPost(
+        return HttpRequest.sendPost(
                 new URL(mTokenEndpoint),
                 headers,
                 requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
                 TOKEN_REQUEST_CONTENT_TYPE
         );
-
-        // Record the clock skew between *this device* and EVO...
-        if (null != response.getDate()) {
-            recordClockSkew(response.getDate().getTime());
-        }
-
-        return response;
-    }
-
-    private void recordClockSkew(final long referenceTimeMillis) {
-        if (null != mClockSkewManager) {
-            mClockSkewManager.onTimestampReceived(referenceTimeMillis);
-        }
     }
 
     protected final void setTokenEndpoint(final String tokenEndpoint) {

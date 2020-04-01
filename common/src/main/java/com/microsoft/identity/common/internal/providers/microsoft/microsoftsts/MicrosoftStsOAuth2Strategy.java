@@ -475,6 +475,7 @@ public class MicrosoftStsOAuth2Strategy
                     authority.toString()
             );
             headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
+            headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
             final HttpResponse pkeyAuthResponse = HttpRequest.sendPost(
                     authority,

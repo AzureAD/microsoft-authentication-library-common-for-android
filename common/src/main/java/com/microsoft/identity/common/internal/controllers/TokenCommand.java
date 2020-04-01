@@ -100,7 +100,7 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
     }
 
     @Override
-    public boolean isEligibleForCaching() {
+    public boolean isEligibleForCaching(){
         return false;
     }
 
@@ -112,11 +112,6 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
     @Override
     public void notify(int requestCode, int resultCode, Intent data) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return true;
     }
 
 }

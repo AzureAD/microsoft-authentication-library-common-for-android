@@ -45,22 +45,6 @@ public interface ISharedPreferencesFileManager {
     String getString(String key);
 
     /**
-     * Persists a long value to the {@link SharedPreferences} file.
-     *
-     * @param key   The name (key) of the long to save.
-     * @param value The actual value to persist.
-     */
-    void putLong(String key, long value);
-
-    /**
-     * Retrieves a long value previously stored.
-     *
-     * @param key The name (key) of the long to retrieve.
-     * @return The persisted value or 0 if one cannot be found.
-     */
-    long getLong(String key);
-
-    /**
      * Returns the name of {@link SharedPreferences} file in use.
      *
      * @return The name of the file.

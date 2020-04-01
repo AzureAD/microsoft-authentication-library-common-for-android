@@ -45,6 +45,7 @@ import com.microsoft.identity.common.internal.request.AcquireTokenOperationParam
 import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
 import com.microsoft.identity.common.internal.request.BrokerAcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
 import java.util.UUID;
@@ -86,8 +87,6 @@ public class CommandDispatcher {
                 // set correlation id on parameters as it may not already be set
                 command.getParameters().setCorrelationId(correlationId);
 
-                EstsTelemetry.getInstance().initTelemetryForCommand(command);
-
                 EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                 CommandResult commandResult = null;
@@ -113,11 +112,16 @@ public class CommandDispatcher {
                     );
                 }
 
-                Telemetry.getInstance().flush(correlationId);
-                EstsTelemetry.getInstance().flush(command, commandResult);
-
                 //Return the result via the callback
                 returnCommandResult(command, commandResult, handler);
+
+                Telemetry.getInstance().flush(correlationId);
+
+                if (commandResult.getResult() instanceof BaseException) {
+                    EstsTelemetry.getInstance().flush(correlationId, (BaseException) commandResult.getResult());
+                } else {
+                    EstsTelemetry.getInstance().flush(correlationId);
+                }
             }
         });
     }
@@ -287,8 +291,6 @@ public class CommandDispatcher {
                     // set correlation id on parameters as it may not already be set
                     command.getParameters().setCorrelationId(correlationId);
 
-                    EstsTelemetry.getInstance().initTelemetryForCommand(command);
-
                     EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                     if (command.getParameters() instanceof AcquireTokenOperationParameters) {
@@ -302,23 +304,81 @@ public class CommandDispatcher {
                         }
                     };
 
-                    CommandResult commandResult;
+                    AcquireTokenResult result = null;
+                    BaseException baseException = null;
+
+                    try {
+                        localBroadcastManager.registerReceiver(
+                                resultReceiver,
+                                new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
+
+                        sCommand = command;
+
+                        //Try executing request
+                        result = command.execute();
+                    } catch (Exception e) {
+                        //Capture any resulting exception and map to MsalException type
+                        Logger.errorPII(
+                                TAG + methodName,
+                                "Interactive request failed with Exception",
+                                e
+                        );
+                        if (e instanceof BaseException) {
+                            baseException = (BaseException) e;
+                        } else {
+                            baseException = ExceptionAdapter.baseExceptionFromException(e);
+                        }
+                    } finally {
+                        sCommand = null;
+                        localBroadcastManager.unregisterReceiver(resultReceiver);
+                    }
+
                     Handler handler = new Handler(Looper.getMainLooper());
 
-                    localBroadcastManager.registerReceiver(
-                            resultReceiver,
-                            new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
+                    if (baseException != null) {
+                        //Post On Error
+                        final BaseException finalException = baseException;
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                command.getCallback().onError(finalException);
+                            }
+                        });
+                    } else {
+                        if (null != result && result.getSucceeded()) {
+                            //Post Success
+                            final ILocalAuthenticationResult authenticationResult = result.getLocalAuthenticationResult();
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    command.getCallback().onTaskCompleted(authenticationResult);
+                                }
+                            });
+                        } else {
+                            //Get MsalException from Authorization and/or Token Error Response
+                            baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
+                            final BaseException finalException = baseException;
+                            if (finalException instanceof UserCancelException) {
+                                //Post Cancel
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        command.getCallback().onCancel();
+                                    }
+                                });
+                            } else {
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        command.getCallback().onError(finalException);
+                                    }
+                                });
+                            }
+                        }
+                    }
 
-                    sCommand = command;
-
-                    //Try executing request
-                    commandResult = executeCommand(command);
-                    sCommand = null;
-                    localBroadcastManager.unregisterReceiver(resultReceiver);
-
-                    EstsTelemetry.getInstance().flush(command, commandResult);
+                    EstsTelemetry.getInstance().flush(correlationId, baseException);
                     Telemetry.getInstance().flush(correlationId);
-                    returnCommandResult(command, commandResult, handler);
                 }
             });
         }

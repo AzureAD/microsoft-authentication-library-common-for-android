@@ -22,25 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.logging.Logger;
 
-public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelemetryCache {
+import java.util.Map;
 
-    private final static String LAST_TELEMETRY_OBJECT_CACHE_KEY = "last_telemetry_object";
-    private final static String LAST_TELEMETRY_HEADER_STRING_CACHE_KEY = "last_telemetry_header_string";
-    private final static String LAST_TELEMETRY_SCHEMA_VERSION_CACHE_KEY = "last_telemetry_schema_version";
+public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelemetryCache {
 
     private final static String TAG = SharedPreferencesLastRequestTelemetryCache.class.getSimpleName();
 
-    private final Gson mGson;
 
     // SharedPreferences used to store request telemetry data
     private final ISharedPreferencesFileManager mSharedPreferencesFileManager;
@@ -54,7 +49,6 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
             @NonNull final ISharedPreferencesFileManager sharedPreferencesFileManager) {
         Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileManager = sharedPreferencesFileManager;
-        mGson = new Gson();
     }
 
     ISharedPreferencesFileManager getSharedPreferencesFileManager() {
@@ -66,68 +60,58 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
     public synchronized RequestTelemetry getRequestTelemetryFromCache() {
         final String methodName = ":getRequestTelemetryFromCache";
 
-        final String cacheValue = mSharedPreferencesFileManager.getString(LAST_TELEMETRY_OBJECT_CACHE_KEY);
+        final Map<String, String> data = mSharedPreferencesFileManager.getAll();
 
-        if (cacheValue == null) {
-            Logger.info(TAG + methodName, "There is no last request telemetry saved in " +
-                    "the cache. Returning NULL");
+        if (data == null || data.isEmpty()) {
+            Logger.verbose(TAG + methodName,
+                    "Last Request telemetry not found in cache. "
+            );
 
             return null;
         }
 
-        try {
-            LastRequestTelemetry lastRequestTelemetry = mGson.fromJson(cacheValue, LastRequestTelemetry.class);
+        final String schemaVersion = data.get(Schema.SCHEMA_VERSION_KEY);
+        final RequestTelemetry lastRequestTelemetry = new RequestTelemetry(schemaVersion, false);
 
-            if (lastRequestTelemetry == null) {
-                Logger.warn(TAG + methodName,
-                        "Last Request Telemetry deserialization failed");
-            }
+        final String[] lastCommonFields = Schema.getCommonFields(false);
+        final String[] lastPlatformFields = Schema.getPlatformFields(false);
 
-            return lastRequestTelemetry;
-        } catch (JsonSyntaxException e) {
-            Logger.error(TAG + methodName,
-                    "Last Request Telemetry deserialization failed", e);
-            return null;
+        for (String key : lastCommonFields) {
+            lastRequestTelemetry.putTelemetry(key, data.get(key));
         }
+
+        for (String key : lastPlatformFields) {
+            lastRequestTelemetry.putTelemetry(key, data.get(key));
+        }
+
+        return lastRequestTelemetry;
     }
 
     @Override
     public synchronized void saveRequestTelemetryToCache(@NonNull final RequestTelemetry requestTelemetry) {
-        Logger.verbose(TAG, "Saving Last Request Telemetry to cache...");
+        Logger.verbose(TAG, "Saving Request Telemetry to cache...");
 
-        saveRequestTelemetryObjectToCache(requestTelemetry);
-        saveTelemetryHeaderStringToCache(requestTelemetry);
-        saveTelemetrySchemaVersionToCache(requestTelemetry);
+        mSharedPreferencesFileManager.putString(Schema.SCHEMA_VERSION_KEY, Schema.CURRENT_SCHEMA_VERSION);
+        saveTelemetryDataToCache(requestTelemetry.getCommonTelemetry());
+        saveTelemetryDataToCache(requestTelemetry.getPlatformTelemetry());
     }
 
-    private void saveRequestTelemetryObjectToCache(@NonNull final RequestTelemetry requestTelemetry) {
-        final String cacheKey = LAST_TELEMETRY_OBJECT_CACHE_KEY;
-        final String cacheValue = generateCacheValue(requestTelemetry);
-        saveToTelemetryCache(cacheKey, cacheValue);
+    private synchronized void saveTelemetryDataToCache(@NonNull final Map<String, String> data) {
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            final String cacheKey = entry.getKey();
+            final String cacheValue = entry.getValue();
+            if (!TextUtils.isEmpty(cacheKey) && !TextUtils.isEmpty(cacheValue)) {
+                mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
+            }
+        }
     }
 
-    private void saveTelemetryHeaderStringToCache(@NonNull final RequestTelemetry requestTelemetry) {
-        final String cacheKey = LAST_TELEMETRY_HEADER_STRING_CACHE_KEY;
-        final String cacheValue = requestTelemetry.getCompleteHeaderString();
-        saveToTelemetryCache(cacheKey, cacheValue);
+    @Override
+    public synchronized void clearAll() {
+        Logger.info(TAG, "Clearing all SharedPreferences entries...");
+        mSharedPreferencesFileManager.clear();
+        Logger.info(TAG, "SharedPreferences cleared.");
     }
 
-    private void saveTelemetrySchemaVersionToCache(@NonNull final RequestTelemetry requestTelemetry) {
-        final String cacheKey = LAST_TELEMETRY_SCHEMA_VERSION_CACHE_KEY;
-        final String cacheValue = requestTelemetry.getSchemaVersion();
-        saveToTelemetryCache(cacheKey, cacheValue);
-    }
 
-    private void saveToTelemetryCache(@NonNull final String cacheKey, @NonNull final String cacheValue) {
-        mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
-    }
-
-    private String generateCacheValue(final RequestTelemetry requestTelemetry) {
-        JsonElement outboundElement = mGson.toJsonTree(requestTelemetry);
-        JsonObject outboundObject = outboundElement.getAsJsonObject();
-
-        final String json = mGson.toJson(outboundObject);
-
-        return json;
-    }
 }

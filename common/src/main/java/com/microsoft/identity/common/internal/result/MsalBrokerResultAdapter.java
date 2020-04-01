@@ -89,7 +89,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .speRing(authenticationResult.getSpeRing())
                 .refreshTokenAge(authenticationResult.getRefreshTokenAge())
                 .success(true)
-                .servicedFromCache(authenticationResult.isServicedFromCache())
                 .build();
 
         final Bundle resultBundle = new Bundle();
@@ -162,8 +161,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
                 tenantProfileCacheRecords.get(0),
                 tenantProfileCacheRecords,
-                SdkType.MSAL,
-                brokerResult.isServicedFromCache()
+                SdkType.MSAL
         );
 
         return authenticationResult;

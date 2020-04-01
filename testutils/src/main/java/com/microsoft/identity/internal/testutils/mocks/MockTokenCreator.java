@@ -24,7 +24,6 @@ package com.microsoft.identity.internal.testutils.mocks;
 
 import android.util.Base64;
 
-import com.microsoft.identity.internal.testutils.TestConstants;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -49,15 +48,15 @@ public class MockTokenCreator {
     private static final String VERSION_CLAIM = "ver";
 
     private static final String AUDIENCE = "audience-for-testing";
-    private static final String TENANT_ID = TestConstants.Authorities.AAD_MOCK_HTTP_RESPONSE_AUTHORITY_TENANT;
+    private static final String TENANT_ID = "61137f02-8854-4e46-8813-664098dc9f91";
     private static final String OBJECT_ID = "99a1340e-0f35-4ac1-94ac-0837718f0b1f";
     private static final String PREFERRED_USERNAME = "test@test.onmicrosoft.com";
-    private static final String ISSUER =  "https://test.authority/" + TENANT_ID + "/v2.0";
+    private static final String ISSUER =  "https://test.authority/61137f02-8854-4e46-8813-664098dc9f91/v2.0";
     private static final String SUBJECT = "TestSubject";
     private static final String VERSION = "2.0";
     private static final String NAME = "test";
     private static final String UID = "99a1340e-0f35-4ac1-94ac-0837718f0b1f";
-    private static final String UTID = TENANT_ID;
+    private static final String UTID = "61137f02-8854-4e46-8813-664098dc9f91";
     private static final String ENCODING_UTF8 = "UTF-8";
 
     private static String createMockToken(final String issuer,

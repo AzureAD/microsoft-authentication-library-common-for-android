@@ -22,31 +22,39 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.eststelemetry;
 
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 public class TelemetryUtils {
 
-    static boolean getBooleanFromSchemaString(final String val) {
-        return val.equals(SchemaConstants.Value.TRUE);
-    }
+    static String errorFromAcquireTokenResult(final AcquireTokenResult acquireTokenResult) {
+        if (acquireTokenResult == null) {
+            return "unknown_error";
+        }
 
-    static String getSchemaCompliantStringFromBoolean(final boolean val) {
-        return val ? SchemaConstants.Value.TRUE : SchemaConstants.Value.FALSE;
-    }
+        final String errorFromAuthorization = getErrorFromAuthorizationResult(acquireTokenResult.getAuthorizationResult());
 
-    @NonNull
-    static String getSchemaCompliantString(final String s) {
-        if (StringUtil.isEmpty(s)) {
-            return SchemaConstants.Value.EMPTY;
-        } else if (s.equals(TelemetryEventStrings.Value.TRUE)) {
-            return SchemaConstants.Value.TRUE;
-        } else if (s.equals(TelemetryEventStrings.Value.FALSE)) {
-            return SchemaConstants.Value.FALSE;
+        if (errorFromAuthorization != null) {
+            return errorFromAuthorization;
         } else {
-            return s;
+            return getErrorFromTokenResult(acquireTokenResult.getTokenResult());
+        }
+    }
+
+    private static String getErrorFromAuthorizationResult(final AuthorizationResult authorizationResult) {
+        if (authorizationResult != null && authorizationResult.getErrorResponse() != null) {
+            return authorizationResult.getErrorResponse().getError();
+        } else {
+            return null;
+        }
+    }
+
+    private static String getErrorFromTokenResult(final TokenResult tokenResult) {
+        if (tokenResult != null && tokenResult.getErrorResponse() != null) {
+            return tokenResult.getErrorResponse().getError();
+        } else {
+            return null;
         }
     }
 

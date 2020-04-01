@@ -443,7 +443,6 @@ class DevicePopManager implements IDevicePopManager {
 
     @Override
     public String mintSignedAccessToken(@NonNull final String httpMethod,
-                                        final long timestamp,
                                         @NonNull final URL requestUrl,
                                         @NonNull final String accessToken,
                                         @Nullable final String nonce) throws ClientException {
@@ -453,7 +452,7 @@ class DevicePopManager implements IDevicePopManager {
         try {
             final JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder();
             claimsBuilder.claim(SignedHttpRequestJwtClaims.ACCESS_TOKEN, accessToken);
-            claimsBuilder.claim(SignedHttpRequestJwtClaims.TIMESTAMP, timestamp);
+            claimsBuilder.claim(SignedHttpRequestJwtClaims.TIMESTAMP, System.currentTimeMillis() / 1000L);
             claimsBuilder.claim(SignedHttpRequestJwtClaims.HTTP_METHOD, httpMethod);
             claimsBuilder.claim(SignedHttpRequestJwtClaims.HTTP_HOST, requestUrl.getHost());
             claimsBuilder.claim(SignedHttpRequestJwtClaims.HTTP_PATH, requestUrl.getPath());
@@ -471,7 +470,6 @@ class DevicePopManager implements IDevicePopManager {
 
             final SignedJWT signedJWT = new SignedJWT(
                     new JWSHeader.Builder(JWSAlgorithm.RS256)
-                            .keyID(getAsymmetricKeyThumbprint())
                             .build(),
                     claimsSet
             );
