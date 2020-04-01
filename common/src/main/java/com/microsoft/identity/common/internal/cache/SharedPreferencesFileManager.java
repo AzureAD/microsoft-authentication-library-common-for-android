@@ -158,6 +158,22 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         return restoredValue;
     }
 
+    @Override
+    public void putLong(final String key, final long value) {
+        putString(key, String.valueOf(value));
+    }
+
+    @Override
+    public long getLong(final String key) {
+        final String result = getString(key);
+
+        if (!TextUtils.isEmpty(result)) {
+            return Long.parseLong(result);
+        }
+
+        return 0;
+    }
+
     private void logWarningAndRemoveKey(String key) {
         Logger.warn(
                 TAG,

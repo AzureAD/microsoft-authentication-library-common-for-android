@@ -38,14 +38,14 @@ public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
     private static final String TAG = GetCurrentAccountCommand.class.getSimpleName();
 
     public GetCurrentAccountCommand(@NonNull final OperationParameters parameters,
-                              @NonNull final BaseController controller,
-                              @NonNull final CommandCallback callback) {
+                                    @NonNull final BaseController controller,
+                                    @NonNull final CommandCallback callback) {
         super(parameters, controller, callback);
     }
 
     public GetCurrentAccountCommand(@NonNull final OperationParameters parameters,
-                              @NonNull final List<BaseController> controllers,
-                              @NonNull final CommandCallback callback) {
+                                    @NonNull final List<BaseController> controllers,
+                                    @NonNull final CommandCallback callback) {
         super(parameters, controllers, callback);
     }
 
@@ -70,7 +70,14 @@ public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
     }
 
     @Override
+    public boolean isEligibleForEstsTelemetry() {
+        return true;
+    }
+
+    @Override
     public int getCommandNameHashCode() {
         return TAG.hashCode();
     }
+
+
 }

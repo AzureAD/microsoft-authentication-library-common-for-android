@@ -176,6 +176,11 @@ public final class AuthenticationConstants {
          * launched a new interactive auth request
          */
         public static final int BROWSER_CODE_SDK_CANCEL = 2008;
+
+        /**
+         * MDM Flow is triggered.
+         */
+        public static final int BROWSER_CODE_MDM = 2009;
     }
 
     /**
@@ -1016,14 +1021,14 @@ public final class AuthenticationConstants {
         public static final String BROWSER_EXT_INSTALL_PREFIX = "msauth://";
 
         /**
-         * Prefix in the redirect to open external browser to finish the CA auth.
+         * A query param indicating that this is an intune device CA link.
          */
-        public static final String BROWSER_DEVICE_CA_URL = "browser://go.microsoft.com/fwlink/?LinkId=396941";
+        public static final String BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "&ismdmurl=1";
 
         /**
          * Activity name to launch company portal.
          */
-        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = "com.microsoft.windowsintune.companyportal.views.SplashActivity";
+        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
 
         /**
          * Redirect URI parameter key to get link to install broker

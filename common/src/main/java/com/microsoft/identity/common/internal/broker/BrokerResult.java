@@ -57,6 +57,7 @@ public class BrokerResult implements Serializable {
         static final String CACHED_AT = "cached_at";
         static final String REFRESH_TOKEN_AGE = "refresh_token_age";
         static final String SUCCESS = "success";
+        static final String SERVICED_FROM_CACHE = "serviced_from_cache";
 
         // Error constants
         /**
@@ -233,6 +234,9 @@ public class BrokerResult implements Serializable {
     @SerializedName(SerializedNames.SUCCESS)
     private boolean mSuccess;
 
+    @SerializedName(SerializedNames.SERVICED_FROM_CACHE)
+    private boolean mServicedFromCache;
+
     // Exception parameters
 
     /**
@@ -329,6 +333,7 @@ public class BrokerResult implements Serializable {
         mRefreshTokenAge = builder.mRefreshTokenAge;
         mSuccess = builder.mSuccess;
         mTenantProfileData = builder.mTenantProfileData;
+        mServicedFromCache = builder.mServicedFromCache;
 
         mErrorCode = builder.mErrorCode;
         mErrorMessage = builder.mErrorMessage;
@@ -389,6 +394,8 @@ public class BrokerResult implements Serializable {
     public boolean isSuccess() {
         return mSuccess;
     }
+
+    public boolean isServicedFromCache() { return mServicedFromCache; }
 
     public String getRefreshTokenAge() {
         return mRefreshTokenAge;
@@ -489,6 +496,7 @@ public class BrokerResult implements Serializable {
         private boolean mSuccess;
         private String mNegotiatedBrokerProtocolVersion;
         private List<ICacheRecord> mTenantProfileData;
+        private boolean mServicedFromCache;
 
         // Exception parameters
         private String mErrorCode;
@@ -599,6 +607,11 @@ public class BrokerResult implements Serializable {
 
         public Builder success(boolean success) {
             this.mSuccess = success;
+            return this;
+        }
+
+        public Builder servicedFromCache(boolean servicedFromCache) {
+            this.mServicedFromCache = servicedFromCache;
             return this;
         }
 
