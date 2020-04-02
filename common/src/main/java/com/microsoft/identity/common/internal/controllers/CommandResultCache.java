@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.util.LruCache;
 
+import com.microsoft.identity.common.internal.commands.BaseCommand;
+
 /**
  * Name: CommandResultCache
  * Responsibilities: Caching results of commands on behalf of the command dispatcher

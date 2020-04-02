@@ -41,6 +41,10 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
+import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
@@ -61,40 +65,29 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
     private static final String TAG = AdalBrokerResultAdapter.class.getName();
 
     @Override
-    public BrokerRequest brokerRequestFromAcquireTokenParameters(AcquireTokenOperationParameters parameters) {
+    public BrokerRequest brokerRequestFromAcquireTokenParameters(InteractiveTokenCommandParameters parameters) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public BrokerRequest brokerRequestFromSilentOperationParameters(AcquireTokenSilentOperationParameters parameters) {
+    public BrokerRequest brokerRequestFromSilentOperationParameters(SilentTokenCommandParameters parameters) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public BrokerAcquireTokenOperationParameters brokerInteractiveParametersFromActivity(@NonNull final Activity callingActivity) {
+    public BrokerInteractiveTokenCommandParameters brokerInteractiveParametersFromActivity(@NonNull final Activity callingActivity) {
 
         final String methodName = "brokerInteractiveParametersFromActivity";
         Logger.verbose(
                 TAG + methodName,
                 "Constructing BrokerAcquireTokenOperationParameters from activity "
         );
-        final BrokerAcquireTokenOperationParameters parameters =
-                new BrokerAcquireTokenOperationParameters();
 
         final Intent intent = callingActivity.getIntent();
 
-        parameters.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
-
-        parameters.setActivity(callingActivity);
-
-        parameters.setAppContext(callingActivity.getApplicationContext());
-
-        parameters.setSdkType(SdkType.ADAL);
-
-        int callingAppUid = intent.getIntExtra(
+        final int callingAppUid = intent.getIntExtra(
                 AuthenticationConstants.Broker.CALLER_INFO_UID, 0
         );
-        parameters.setCallerUId(callingAppUid);
 
         // There are two constants that need to be checked for the presence of the caller pkg name:
         // 1. CALLER_INFO_PACKAGE
@@ -106,42 +99,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         // is used.
         final boolean callerPackageNameProvided = packageNameWasProvidedInBundle(intent.getExtras());
 
-        parameters.setCallerPackageName(
-                getPackageNameFromBundle(
-                        intent.getExtras(),
-                        callingActivity.getApplicationContext()
-                )
-        );
-        parameters.setCallerAppVersion(intent.getStringExtra(
-                AuthenticationConstants.AAD.APP_VERSION)
-        );
-
-        final List<Pair<String, String>> extraQP = getExtraQueryParamAsList(
-                intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_EXTRA_QUERY_PARAM)
-        );
-
-        final AzureActiveDirectoryAuthority authority = getRequestAuthorityWithExtraQP(
-                intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_AUTHORITY),
-                extraQP
-        );
-        // V1 endpoint always add an organizational account if the tenant id is common.
-        // We need to explicitly add tenant id as organizations if we want similar behavior from V2 endpoint
-
-        if (authority.getAudience().getTenantId().equalsIgnoreCase(AzureActiveDirectoryAudience.ALL)) {
-            authority.getAudience().setTenantId(AzureActiveDirectoryAudience.ORGANIZATIONS);
-        }
-        parameters.setAuthority(authority);
-
-        parameters.setExtraQueryStringParameters(extraQP);
-
-        String resource = intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_RESOURCE);
-        Set<String> scopes = new HashSet<>();
-        scopes.add(TokenCacheItemMigrationAdapter.getScopeFromResource(resource));
-        parameters.setScopes(scopes);
-
-        parameters.setClientId(intent.getStringExtra(
-                AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY)
-        );
+        String redirectUri;
 
         // If the caller package name was provided, compute their redirect
         if (callerPackageNameProvided) {
@@ -152,21 +110,38 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
             // forcing customers to use non-encoded values in order to pass validation check inside of
             // ADAL.NET. In order to not regress this experience, the redirect URI must now be computed
             // meaning that the ACCOUNT_REDIRECT parameter is basically ignored.
-            parameters.setRedirectUri(
-                    BrokerValidator.getBrokerRedirectUri(
-                            callingActivity,
-                            parameters.getCallerPackageName()
+            redirectUri = BrokerValidator.getBrokerRedirectUri(
+                    callingActivity,
+                    getPackageNameFromBundle(
+                            intent.getExtras(),
+                            callingActivity.getApplicationContext()
                     )
+
             );
         } else {
             // The caller's package name was not provided, so we cannot compute the redirect for them.
             // In this case, use the provided value...
-            parameters.setRedirectUri(
-                    intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_REDIRECT)
-            );
+            redirectUri = intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_REDIRECT);
         }
 
-        parameters.setLoginHint(intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_NAME));
+        final List<Pair<String, String>> extraQP = getExtraQueryParamAsList(
+                intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_EXTRA_QUERY_PARAM)
+        );
+
+        final AzureActiveDirectoryAuthority authority = getRequestAuthorityWithExtraQP(
+                intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_AUTHORITY),
+                extraQP
+        );
+
+        // V1 endpoint always add an organizational account if the tenant id is common.
+        // We need to explicitly add tenant id as organizations if we want similar behavior from V2 endpoint
+        if (authority.getAudience().getTenantId().equalsIgnoreCase(AzureActiveDirectoryAudience.ALL)) {
+            authority.getAudience().setTenantId(AzureActiveDirectoryAudience.ORGANIZATIONS);
+        }
+
+        final String resource = intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_RESOURCE);
+        final Set<String> scopes = new HashSet<>();
+        scopes.add(TokenCacheItemMigrationAdapter.getScopeFromResource(resource));
 
         String correlationIdString = intent.getStringExtra(
                 AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID
@@ -176,47 +151,65 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
             UUID correlationId = UUID.randomUUID();
             correlationIdString = correlationId.toString();
         }
-        parameters.setCorrelationId(correlationIdString);
 
-        parameters.setClaimsRequest(intent.getStringExtra(
-                AuthenticationConstants.Broker.ACCOUNT_CLAIMS)
-        );
-
-        parameters.setOpenIdConnectPromptParameter(
-                OpenIdConnectPromptParameter._fromPromptBehavior(
+        final BrokerInteractiveTokenCommandParameters commandParameters = BrokerInteractiveTokenCommandParameters
+                .builder()
+                .authenticationScheme(new BearerAuthenticationSchemeInternal())
+                .activity(callingActivity)
+                .androidApplicationContext(callingActivity.getApplicationContext())
+                .sdkType(SdkType.ADAL)
+                .callerUid(callingAppUid)
+                .callerPackageName(getPackageNameFromBundle(
+                        intent.getExtras(), callingActivity.getApplicationContext()
+                )).callerAppVersion(intent.getStringExtra(AuthenticationConstants.AAD.APP_VERSION))
+                .extraQueryStringParameters(extraQP)
+                .authority(authority)
+                .scopes(scopes)
+                .clientId(AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY)
+                .redirectUri(redirectUri)
+                .loginHint(intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_NAME))
+                .correlationId(correlationIdString)
+                .claimsRequestJson(intent.getStringExtra(
+                        AuthenticationConstants.Broker.ACCOUNT_CLAIMS)
+                ).prompt(OpenIdConnectPromptParameter._fromPromptBehavior(
                         intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_PROMPT)
-                )
-        );
+                )).authorizationAgent(AuthorizationAgent.WEBVIEW)
+                .build();
 
-        parameters.setAuthorizationAgent(AuthorizationAgent.WEBVIEW);
-
-        return parameters;
+        return commandParameters;
     }
 
     @Override
-    public BrokerAcquireTokenSilentOperationParameters brokerSilentParametersFromBundle(Bundle bundle,
-                                                                                        Context context,
-                                                                                        Account account) {
+    public BrokerSilentTokenCommandParameters brokerSilentParametersFromBundle(Bundle bundle,
+                                                                               Context context,
+                                                                               Account account) {
         final String methodName = ":brokerSilentParametersFromBundle";
         Logger.verbose(
                 TAG + methodName,
                 "Constructing BrokerAcquireTokenOperationParameters from activity "
         );
-        final BrokerAcquireTokenSilentOperationParameters parameters =
-                new BrokerAcquireTokenSilentOperationParameters();
 
-        parameters.setAuthenticationScheme(new BearerAuthenticationSchemeInternal());
-
-        parameters.setAppContext(context);
-
-        parameters.setAccountManagerAccount(account);
-
-        parameters.setSdkType(SdkType.ADAL);
-
-        int callingAppUid = bundle.getInt(
+        final int callingAppUid = bundle.getInt(
                 AuthenticationConstants.Broker.CALLER_INFO_UID
         );
-        parameters.setCallerUId(callingAppUid);
+
+        final Authority authority = Authority.getAuthorityFromAuthorityUrl(
+                bundle.getString(AuthenticationConstants.Broker.ACCOUNT_AUTHORITY));
+
+        String correlationIdString = bundle.getString(
+                AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID
+        );
+        if (TextUtils.isEmpty(correlationIdString)) {
+            Logger.info(TAG, "Correlation id not set by Adal, creating a new one");
+            UUID correlationId = UUID.randomUUID();
+            correlationIdString = correlationId.toString();
+        }
+
+        final String resource = bundle.getString(
+                AuthenticationConstants.Broker.ACCOUNT_RESOURCE
+        );
+        final Set<String> scopes = new HashSet<>();
+        scopes.add(TokenCacheItemMigrationAdapter.getScopeFromResource(resource));
 
         // There are two constants that need to be checked for the presence of the caller pkg name:
         // 1. CALLER_INFO_PACKAGE
@@ -229,69 +222,41 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final boolean callerPackageNameProvided = packageNameWasProvidedInBundle(bundle);
 
         final String packageName = getPackageNameFromBundle(bundle, context);
-        parameters.setCallerPackageName(packageName);
-
-        parameters.setCallerAppVersion(
-                bundle.getString(AuthenticationConstants.AAD.APP_VERSION)
-        );
-
-        final Authority authority = Authority.getAuthorityFromAuthorityUrl(
-                bundle.getString(AuthenticationConstants.Broker.ACCOUNT_AUTHORITY));
-        parameters.setAuthority(authority);
-
-        String correlationIdString = bundle.getString(
-                AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID
-        );
-        if (TextUtils.isEmpty(correlationIdString)) {
-            Logger.info(TAG, "Correlation id not set by Adal, creating a new one");
-            UUID correlationId = UUID.randomUUID();
-            correlationIdString = correlationId.toString();
-        }
-        parameters.setCorrelationId(correlationIdString);
-
-        String resource = bundle.getString(
-                AuthenticationConstants.Broker.ACCOUNT_RESOURCE
-        );
-        Set<String> scopes = new HashSet<>();
-        scopes.add(TokenCacheItemMigrationAdapter.getScopeFromResource(resource));
-        parameters.setScopes(scopes);
-
-        final String clientId = bundle.getString(
-                AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY
-        );
-        parameters.setClientId(clientId);
-
-        parameters.setLocalAccountId(
-                bundle.getString(
-                        AuthenticationConstants.Broker.ACCOUNT_USERINFO_USERID
-                )
-        );
 
         String redirectUri = bundle.getString(AuthenticationConstants.Broker.ACCOUNT_REDIRECT);
         // Adal might not pass in the redirect uri, in that case calculate from broker validator
         if (callerPackageNameProvided || TextUtils.isEmpty(redirectUri)) {
             redirectUri = BrokerValidator.getBrokerRedirectUri(context, packageName);
         }
-        parameters.setRedirectUri(redirectUri);
-
-        parameters.setForceRefresh(Boolean.parseBoolean(
-                bundle.getString(AuthenticationConstants.Broker.BROKER_FORCE_REFRESH))
-        );
-
-        parameters.setClaimsRequest(
-                bundle.getString(AuthenticationConstants.Broker.ACCOUNT_CLAIMS)
-        );
-
-        parameters.setLoginHint(
-                bundle.getString(AuthenticationConstants.Broker.ACCOUNT_NAME)
-        );
 
         final List<Pair<String, String>> extraQP = getExtraQueryParamAsList(
                 bundle.getString(AuthenticationConstants.Broker.ACCOUNT_EXTRA_QUERY_PARAM)
         );
-        parameters.setExtraQueryStringParameters(extraQP);
 
-        return parameters;
+        final BrokerSilentTokenCommandParameters commandParameters = BrokerSilentTokenCommandParameters
+                .builder()
+                .authenticationScheme(new BearerAuthenticationSchemeInternal())
+                .androidApplicationContext(context)
+                .accountManagerAccount(account)
+                .sdkType(SdkType.ADAL)
+                .callerUid(callingAppUid)
+                .callerPackageName(packageName)
+                .callerAppVersion(bundle.getString(AuthenticationConstants.AAD.APP_VERSION))
+                .authority(authority)
+                .correlationId(correlationIdString)
+                .scopes(scopes)
+                .clientId(bundle.getString(AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY))
+                .localAccountId(bundle.getString(
+                        AuthenticationConstants.Broker.ACCOUNT_USERINFO_USERID
+                )).redirectUri(redirectUri)
+                .forceRefresh(Boolean.parseBoolean(
+                        bundle.getString(AuthenticationConstants.Broker.BROKER_FORCE_REFRESH))
+                ).claimsRequestJson(bundle.getString(AuthenticationConstants.Broker.ACCOUNT_CLAIMS))
+                .loginHint(bundle.getString(AuthenticationConstants.Broker.ACCOUNT_NAME))
+                .extraQueryStringParameters(extraQP)
+                .build();
+
+        return commandParameters;
     }
 
     private boolean packageNameWasProvidedInBundle(@Nullable final Bundle bundle) {

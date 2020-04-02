@@ -38,12 +38,14 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.internal.commands.BaseCommand;
+import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
+import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
-import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
-import com.microsoft.identity.common.internal.request.BrokerAcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
@@ -94,9 +96,9 @@ public class CommandDispatcher {
                 Handler handler = new Handler(Looper.getMainLooper());
 
                 //Log operation parameters
-                if (command.getParameters() instanceof AcquireTokenSilentOperationParameters) {
-                    logSilentRequestParams(methodName, (AcquireTokenSilentOperationParameters) command.getParameters());
-                    EstsTelemetry.getInstance().emitForceRefresh(command.getParameters().getForceRefresh());
+                if (command.getParameters() instanceof SilentTokenCommandParameters) {
+                    logSilentRequestParams(methodName, (SilentTokenCommandParameters) command.getParameters());
+                    EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
                 }
 
                 //Check cache to see if the same command completed in the last 30 seconds
@@ -267,10 +269,10 @@ public class CommandDispatcher {
                 "Beginning interactive request"
         );
         synchronized (sLock) {
-            final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(command.getParameters().getAppContext());
+            final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(command.getParameters().getAndroidApplicationContext());
 
             // only send broadcast to cancel if within broker
-            if (command.getParameters() instanceof BrokerAcquireTokenOperationParameters) {
+            if (command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
                 // Send a broadcast to cancel if any active auth request is present.
                 localBroadcastManager.sendBroadcast(
                         new Intent(CANCEL_INTERACTIVE_REQUEST)
@@ -291,8 +293,8 @@ public class CommandDispatcher {
 
                     EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
-                    if (command.getParameters() instanceof AcquireTokenOperationParameters) {
-                        logInteractiveRequestParameters(methodName, (AcquireTokenOperationParameters) command.getParameters());
+                    if (command.getParameters() instanceof InteractiveTokenCommandParameters) {
+                        logInteractiveRequestParameters(methodName, (InteractiveTokenCommandParameters) command.getParameters());
                     }
 
                     final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
@@ -325,7 +327,7 @@ public class CommandDispatcher {
     }
 
     private static void logInteractiveRequestParameters(final String methodName,
-                                                        final AcquireTokenOperationParameters params) {
+                                                        final InteractiveTokenCommandParameters params) {
         Logger.info(
                 TAG + methodName,
                 "Requested "
@@ -400,7 +402,7 @@ public class CommandDispatcher {
     }
 
     private static void logSilentRequestParams(final String methodName,
-                                               final AcquireTokenSilentOperationParameters parameters) {
+                                               final SilentTokenCommandParameters parameters) {
         Logger.infoPII(
                 TAG + methodName,
                 "ClientId: [" + parameters.getClientId() + "]"
@@ -430,7 +432,7 @@ public class CommandDispatcher {
 
         Logger.info(
                 TAG + methodName,
-                "Force refresh? [" + parameters.getForceRefresh() + "]"
+                "Force refresh? [" + parameters.isForceRefresh() + "]"
         );
     }
 

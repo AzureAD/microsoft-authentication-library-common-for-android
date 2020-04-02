@@ -20,40 +20,41 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.internal.controllers.BaseController;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Command class to call controllers to load accounts and return the account list to
+ * Command class to call controllers to remove the account and return the result to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
-    private static final String TAG = GetCurrentAccountCommand.class.getSimpleName();
+public class RemoveAccountCommand extends BaseCommand<Boolean> {
+    private static final String TAG = RemoveAccountCommand.class.getSimpleName();
 
-    public GetCurrentAccountCommand(@NonNull final OperationParameters parameters,
-                                    @NonNull final BaseController controller,
-                                    @NonNull final CommandCallback callback) {
-        super(parameters, controller, callback);
+    public RemoveAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
+                                @NonNull BaseController controller,
+                                @NonNull CommandCallback callback,
+                                @NonNull String publicApiId) {
+        super(parameters, controller, callback, publicApiId);
     }
 
-    public GetCurrentAccountCommand(@NonNull final OperationParameters parameters,
-                                    @NonNull final List<BaseController> controllers,
-                                    @NonNull final CommandCallback callback) {
-        super(parameters, controllers, callback);
+    public RemoveAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
+                                @NonNull List<BaseController> controllers,
+                                @NonNull CommandCallback callback,
+                                @NonNull String publicApiId) {
+        super(parameters, controllers, callback, publicApiId);
     }
 
     @Override
-    public List<ICacheRecord> execute() throws Exception {
+    public Boolean execute() throws Exception {
         final String methodName = ":execute";
 
-        List<ICacheRecord> result = new ArrayList<>();
+        boolean result = false;
 
         for (int ii = 0; ii < getControllers().size(); ii++) {
             final BaseController controller = getControllers().get(ii);
@@ -63,7 +64,7 @@ public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
                             + controller.getClass().getSimpleName()
             );
 
-            result.addAll(controller.getCurrentAccount(getParameters()));
+            result = controller.removeAccount((RemoveAccountCommandParameters) getParameters());
         }
 
         return result;
@@ -73,11 +74,4 @@ public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
     public boolean isEligibleForEstsTelemetry() {
         return true;
     }
-
-    @Override
-    public int getCommandNameHashCode() {
-        return TAG.hashCode();
-    }
-
-
 }

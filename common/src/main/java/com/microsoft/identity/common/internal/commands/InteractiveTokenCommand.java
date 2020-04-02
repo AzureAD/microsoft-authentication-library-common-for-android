@@ -20,28 +20,40 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.internal.commands;
 
 import android.content.Intent;
 
+import androidx.annotation.NonNull;
+
+import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+
+import java.util.List;
 
 public class InteractiveTokenCommand extends TokenCommand {
     private static final String TAG = InteractiveTokenCommand.class.getSimpleName();
 
-    public InteractiveTokenCommand(AcquireTokenOperationParameters parameters,
-                                   BaseController controller,
-                                   CommandCallback callback) {
+    public InteractiveTokenCommand(@NonNull final InteractiveTokenCommandParameters parameters,
+                                   @NonNull final BaseController controller,
+                                   @NonNull final CommandCallback callback,
+                                   @NonNull final String publicApiId) {
+        super(parameters, controller, callback, publicApiId);
+    }
 
-        super(parameters, controller, callback);
+    public InteractiveTokenCommand(@NonNull InteractiveTokenCommandParameters parameters,
+                                   @NonNull List<BaseController> controllers,
+                                   @NonNull CommandCallback callback,
+                                   @NonNull final String publicApiId) {
+        super(parameters, controllers, callback, publicApiId);
     }
 
     @Override
     public AcquireTokenResult execute() throws Exception {
         final String methodName = ":execute";
-        if (getParameters() instanceof AcquireTokenOperationParameters) {
+        if (getParameters() instanceof InteractiveTokenCommandParameters) {
             Logger.info(
                     TAG + methodName,
                     "Executing interactive token command..."
@@ -49,7 +61,7 @@ public class InteractiveTokenCommand extends TokenCommand {
 
             return getDefaultController()
                     .acquireToken(
-                            (AcquireTokenOperationParameters) getParameters()
+                            (InteractiveTokenCommandParameters) getParameters()
                     );
         } else {
             throw new IllegalArgumentException("Invalid operation parameters");
@@ -62,7 +74,12 @@ public class InteractiveTokenCommand extends TokenCommand {
     }
 
     @Override
-    public int getCommandNameHashCode() {
-        return TAG.hashCode();
+    public boolean isEligibleForEstsTelemetry() {
+        return true;
+    }
+
+    @Override
+    public boolean isEligibleForCaching() {
+        return false;
     }
 }

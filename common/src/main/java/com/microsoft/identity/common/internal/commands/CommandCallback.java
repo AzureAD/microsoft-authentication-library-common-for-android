@@ -20,37 +20,11 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.internal.commands;
 
-import androidx.annotation.NonNull;
+import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 
-import com.microsoft.identity.common.internal.request.OperationParameters;
-
-/**
- * Command class to call controllers to remove the account and return the result to
- * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
- */
-public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
-    private static final String TAG = RemoveCurrentAccountCommand.class.getSimpleName();
-
-    public RemoveCurrentAccountCommand(@NonNull final OperationParameters parameters,
-                                       @NonNull final BaseController controller,
-                                       @NonNull final CommandCallback callback) {
-        super(parameters, controller, callback);
-    }
-
-    @Override
-    public Boolean execute() throws Exception {
-        return getDefaultController().removeCurrentAccount(getParameters());
-    }
-
-    @Override
-    public int getCommandNameHashCode() {
-        return TAG.hashCode();
-    }
-
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return true;
-    }
+public interface CommandCallback<T, U> extends TaskCompletedCallbackWithError<T, U> {
+    void onCancel();
 }
+

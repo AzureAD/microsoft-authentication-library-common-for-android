@@ -20,12 +20,13 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.internal.controllers.BaseController;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,16 +38,18 @@ import java.util.List;
 public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
     private static final String TAG = LoadAccountCommand.class.getSimpleName();
 
-    public LoadAccountCommand(@NonNull final OperationParameters parameters,
-                              @NonNull final BaseController controller,
-                              @NonNull final CommandCallback callback) {
-        super(parameters, controller, callback);
+    public LoadAccountCommand(@NonNull CommandParameters parameters,
+                              @NonNull BaseController controller,
+                              @NonNull CommandCallback callback,
+                              @NonNull String publicApiId) {
+        super(parameters, controller, callback, publicApiId);
     }
 
-    public LoadAccountCommand(@NonNull final OperationParameters parameters,
-                              @NonNull final List<BaseController> controllers,
-                              @NonNull final CommandCallback callback) {
-        super(parameters, controllers, callback);
+    public LoadAccountCommand(@NonNull CommandParameters parameters,
+                              @NonNull List<BaseController> controllers,
+                              @NonNull CommandCallback callback,
+                              @NonNull String publicApiId) {
+        super(parameters, controllers, callback, publicApiId);
     }
 
     @Override
@@ -67,11 +70,6 @@ public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
         }
 
         return result;
-    }
-
-    @Override
-    public int getCommandNameHashCode() {
-        return TAG.hashCode();
     }
 
     @Override

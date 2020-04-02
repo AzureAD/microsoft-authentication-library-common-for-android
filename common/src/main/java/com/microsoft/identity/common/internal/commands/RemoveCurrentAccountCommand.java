@@ -20,37 +20,42 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.internal.controllers.BaseController;
+
+import java.util.List;
 
 /**
  * Command class to call controllers to remove the account and return the result to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class GetDeviceModeCommand extends BaseCommand<Boolean> {
-    private static final String TAG = GetDeviceModeCommand.class.getSimpleName();
+public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
 
-    public GetDeviceModeCommand(@NonNull final OperationParameters parameters,
-                                @NonNull final BaseController controller,
-                                @NonNull final CommandCallback callback) {
-        super(parameters, controller, callback);
+    public RemoveCurrentAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
+                                       @NonNull BaseController controller,
+                                       @NonNull CommandCallback callback,
+                                       @NonNull String publicApiId) {
+        super(parameters, controller, callback, publicApiId);
+    }
+
+    public RemoveCurrentAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
+                                       @NonNull List<BaseController> controllers,
+                                       @NonNull CommandCallback callback,
+                                       @NonNull String publicApiId) {
+        super(parameters, controllers, callback, publicApiId);
     }
 
     @Override
     public Boolean execute() throws Exception {
-        return getDefaultController().getDeviceMode(getParameters());
-    }
-
-    @Override
-    public int getCommandNameHashCode() {
-        return TAG.hashCode();
+        return getDefaultController().removeCurrentAccount((RemoveAccountCommandParameters) getParameters());
     }
 
     @Override
     public boolean isEligibleForEstsTelemetry() {
-        return false;
+        return true;
     }
 }
