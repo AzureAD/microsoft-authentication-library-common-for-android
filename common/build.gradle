@@ -78,7 +78,7 @@ android {
 }
 
 dependencies {
-    implementation files('libs/com.microsoft.device.display.displaymask.jar')
+    implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
