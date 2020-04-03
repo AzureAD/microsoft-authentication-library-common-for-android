@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands.parameters;
 
-import com.microsoft.identity.common.internal.request.BrokerAcquireTokenOperationParameters;
+import com.microsoft.identity.common.internal.request.BrokerRequestType;
 
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -37,7 +37,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     private String brokerVersion;
 
     private boolean shouldResolveInterrupt;
-    private BrokerAcquireTokenOperationParameters.RequestType requestType;
+    private BrokerRequestType requestType;
 
     /**
      * Helper method to identify if the request originated from Broker itself or from client libraries.
@@ -45,7 +45,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
      * @return : true if request is the request is originated from Broker, false otherwise
      */
     public boolean isRequestFromBroker() {
-        return requestType == BrokerAcquireTokenOperationParameters.RequestType.BROKER_RT_REQUEST ||
-                requestType == BrokerAcquireTokenOperationParameters.RequestType.RESOLVE_INTERRUPT;
+        return requestType == BrokerRequestType.BROKER_RT_REQUEST ||
+                requestType == BrokerRequestType.RESOLVE_INTERRUPT;
     }
 }
