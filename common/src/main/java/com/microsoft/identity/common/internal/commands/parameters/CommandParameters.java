@@ -2,6 +2,7 @@ package com.microsoft.identity.common.internal.commands.parameters;
 
 import android.content.Context;
 
+import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.request.SdkType;
 
@@ -16,23 +17,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 public class CommandParameters {
 
-    @Setter
-    @EqualsAndHashCode.Exclude
-    private String correlationId;
-
-    @EqualsAndHashCode.Exclude
-    private String applicationName;
-
-    @EqualsAndHashCode.Exclude
-    private String applicationVersion;
-
-    private String requiredBrokerProtocolVersion;
-
-    @Builder.Default
-    private SdkType sdkType = SdkType.MSAL;
-
-    private String sdkVersion;
-
     @EqualsAndHashCode.Exclude
     private Context androidApplicationContext;
 
@@ -42,9 +26,34 @@ public class CommandParameters {
     @EqualsAndHashCode.Exclude
     private boolean isSharedDevice;
 
+    @EqualsAndHashCode.Exclude
+    @Expose()
+    private String applicationName;
+
+    @EqualsAndHashCode.Exclude
+    @Expose()
+    private String applicationVersion;
+
+    @Expose()
+    private String requiredBrokerProtocolVersion;
+
+    @Builder.Default
+    @Expose()
+    private SdkType sdkType = SdkType.MSAL;
+
+    @Expose()
+    private String sdkVersion;
+
+    @Expose()
     private String clientId;
 
+    @Expose()
     private String redirectUri;
+
+    @Setter
+    @EqualsAndHashCode.Exclude
+    @Expose()
+    private String correlationId;
 
 //    CommandParameters(String correlationId, String applicationName, String applicationVersion, String requiredBrokerProtocolVersion, SdkType sdkType, String sdkVersion, Context androidApplicationContext, OAuth2TokenCache oAuth2TokenCache, boolean isSharedDevice, String clientId, String redirectUri) {
 //        this.correlationId = correlationId;

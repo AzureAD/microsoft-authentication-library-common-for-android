@@ -2,6 +2,7 @@ package com.microsoft.identity.common.internal.commands.parameters;
 
 import android.util.Pair;
 
+import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
@@ -24,20 +25,22 @@ public class TokenCommandParameters extends CommandParameters {
 
     private static final String TAG = TokenCommandParameters.class.getSimpleName();
 
-    private Set<String> scopes;
-
-    @NonNull
-    private Authority authority;
-
-    private String claimsRequestJson;
-
     private List<Pair<String, String>> extraQueryStringParameters;
 
-    //    @Singular("extraScopeToConsent")
     private List<String> extraScopesToConsent;
 
     private IAccountRecord account;
 
+    @Expose()
+    private Set<String> scopes;
+
+    @Expose()
+    private Authority authority;
+
+    @Expose()
+    private String claimsRequestJson;
+
+    @Expose()
     private AbstractAuthenticationScheme authenticationScheme;
 
 //    TokenCommandParameters(String correlationId, String applicationName, String applicationVersion, String requiredBrokerProtocolVersion, SdkType sdkType, String sdkVersion, Context androidApplicationContext, OAuth2TokenCache oAuth2TokenCache, boolean isSharedDevice, String clientId, String redirectUri, @NonNull Set<String> scopes, Authority authority, String claimsRequestJson, List<Pair<String, String>> extraQueryStringParameters, List<String> extraScopesToConsent, IAccountRecord account, AbstractAuthenticationScheme authenticationScheme) {
