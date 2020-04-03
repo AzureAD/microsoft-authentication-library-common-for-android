@@ -85,7 +85,7 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
-    implementation 'org.projectlombok:lombok:1.18.12'
+    compileOnly 'org.projectlombok:lombok:1.18.12'
     annotationProcessor 'org.projectlombok:lombok:1.18.12'
 
     // Test dependencies
