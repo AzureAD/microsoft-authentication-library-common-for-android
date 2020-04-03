@@ -52,7 +52,6 @@ android {
         disable 'GradleOverrides'
         disable 'OldTargetApi'
         disable 'RtlHardcoded'
-        disable 'InvalidPackage'
     }
 
     testOptions {
