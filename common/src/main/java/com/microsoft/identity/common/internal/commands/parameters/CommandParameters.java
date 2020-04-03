@@ -8,7 +8,6 @@ import com.microsoft.identity.common.internal.request.SdkType;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
@@ -22,7 +21,6 @@ public class CommandParameters {
     private String correlationId;
 
     @EqualsAndHashCode.Exclude
-    @NonNull
     private String applicationName;
 
     @EqualsAndHashCode.Exclude
@@ -36,20 +34,16 @@ public class CommandParameters {
     private String sdkVersion;
 
     @EqualsAndHashCode.Exclude
-    @NonNull
     private Context androidApplicationContext;
 
     @EqualsAndHashCode.Exclude
-    @NonNull
     private OAuth2TokenCache oAuth2TokenCache;
 
     @EqualsAndHashCode.Exclude
     private boolean isSharedDevice;
 
-    @NonNull
     private String clientId;
 
-    @NonNull
     private String redirectUri;
 
 //    CommandParameters(String correlationId, String applicationName, String applicationVersion, String requiredBrokerProtocolVersion, SdkType sdkType, String sdkVersion, Context androidApplicationContext, OAuth2TokenCache oAuth2TokenCache, boolean isSharedDevice, String clientId, String redirectUri) {
