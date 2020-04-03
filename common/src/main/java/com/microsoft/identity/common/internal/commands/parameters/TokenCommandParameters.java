@@ -15,7 +15,6 @@ import java.util.Set;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 @Getter
@@ -42,17 +41,6 @@ public class TokenCommandParameters extends CommandParameters {
 
     @Expose()
     private AbstractAuthenticationScheme authenticationScheme;
-
-//    TokenCommandParameters(String correlationId, String applicationName, String applicationVersion, String requiredBrokerProtocolVersion, SdkType sdkType, String sdkVersion, Context androidApplicationContext, OAuth2TokenCache oAuth2TokenCache, boolean isSharedDevice, String clientId, String redirectUri, @NonNull Set<String> scopes, Authority authority, String claimsRequestJson, List<Pair<String, String>> extraQueryStringParameters, List<String> extraScopesToConsent, IAccountRecord account, AbstractAuthenticationScheme authenticationScheme) {
-//        super(correlationId, applicationName, applicationVersion, requiredBrokerProtocolVersion, sdkType, sdkVersion, androidApplicationContext, oAuth2TokenCache, isSharedDevice, clientId, redirectUri);
-//        this.scopes = Collections.unmodifiableSet(scopes);
-//        this.authority = authority;
-//        this.claimsRequestJson = claimsRequestJson;
-//        this.extraQueryStringParameters = Collections.unmodifiableList(extraQueryStringParameters);
-//        this.extraScopesToConsent = Collections.unmodifiableList(extraScopesToConsent);
-//        this.account = account;
-//        this.authenticationScheme = authenticationScheme;
-//    }
 
     public void validate() throws ArgumentException {
         final String methodName = ":validate";

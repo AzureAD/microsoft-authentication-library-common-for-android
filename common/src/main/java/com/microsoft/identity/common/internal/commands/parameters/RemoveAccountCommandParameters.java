@@ -16,9 +16,4 @@ public class RemoveAccountCommandParameters extends CommandParameters {
 
     private IAccountRecord account;
     private List<BrowserDescriptor> browserSafeList;
-
-//    public RemoveAccountCommandParameters(String correlationId, String applicationName, String applicationVersion, String requiredBrokerProtocolVersion, SdkType sdkType, String sdkVersion, Context androidApplicationContext, OAuth2TokenCache oAuth2TokenCache, boolean isSharedDevice, String clientId, String redirectUri, IAccountRecord account) {
-//        super(correlationId, applicationName, applicationVersion, requiredBrokerProtocolVersion, sdkType, sdkVersion, androidApplicationContext, oAuth2TokenCache, isSharedDevice, clientId, redirectUri);
-//        this.account = account;
-//    }
 }

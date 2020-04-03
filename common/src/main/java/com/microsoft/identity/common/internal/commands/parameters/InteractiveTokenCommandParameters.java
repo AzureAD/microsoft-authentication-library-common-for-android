@@ -46,19 +46,4 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
 
     @Expose()
     private boolean isWebViewZoomControlsEnabled;
-
-//    @Builder(builderMethodName = "interactiveTokenCommandParametersBuilder")
-//    InteractiveTokenCommandParameters(String correlationId, String applicationName, String applicationVersion, String requiredBrokerProtocolVersion, SdkType sdkType, String sdkVersion, Context androidApplicationContext, OAuth2TokenCache oAuth2TokenCache, boolean isSharedDevice, String clientId, String redirectUri, @NonNull Set<String> scopes, Authority authority, String claimsRequestJson, List<Pair<String, String>> extraQueryStringParameters, List<String> extraScopesToConsent, IAccountRecord account, AbstractAuthenticationScheme authenticationScheme, Activity activity, Fragment fragment, String loginHint, OpenIdConnectPromptParameter prompt, HashMap<String, String> requestHeaders, AuthorizationAgent authorizationAgent, boolean brokerBrowserSupportEnabled, boolean isWebViewZoomEnabled, boolean isWebViewZoomControlsEnabled, List<BrowserDescriptor> browserSafeList) {
-//        super(correlationId, applicationName, applicationVersion, requiredBrokerProtocolVersion, sdkType, sdkVersion, androidApplicationContext, oAuth2TokenCache, isSharedDevice, clientId, redirectUri, scopes, authority, claimsRequestJson, extraQueryStringParameters, extraScopesToConsent, account, authenticationScheme);
-//        this.activity = activity;
-//        this.fragment = fragment;
-//        this.loginHint = loginHint;
-//        this.prompt = prompt;
-//        this.requestHeaders = requestHeaders;
-//        this.authorizationAgent = authorizationAgent;
-//        this.brokerBrowserSupportEnabled = brokerBrowserSupportEnabled;
-//        this.isWebViewZoomEnabled = isWebViewZoomEnabled;
-//        this.isWebViewZoomControlsEnabled = isWebViewZoomControlsEnabled;
-//        this.browserSafeList = browserSafeList;
-//    }
 }

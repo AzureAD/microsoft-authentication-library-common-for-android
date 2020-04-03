@@ -54,18 +54,4 @@ public class CommandParameters {
     @EqualsAndHashCode.Exclude
     @Expose()
     private String correlationId;
-
-//    CommandParameters(String correlationId, String applicationName, String applicationVersion, String requiredBrokerProtocolVersion, SdkType sdkType, String sdkVersion, Context androidApplicationContext, OAuth2TokenCache oAuth2TokenCache, boolean isSharedDevice, String clientId, String redirectUri) {
-//        this.correlationId = correlationId;
-//        this.applicationName = applicationName;
-//        this.applicationVersion = applicationVersion;
-//        this.requiredBrokerProtocolVersion = requiredBrokerProtocolVersion;
-//        this.sdkType = sdkType;
-//        this.sdkVersion = sdkVersion;
-//        this.androidApplicationContext = androidApplicationContext;
-//        this.oAuth2TokenCache = oAuth2TokenCache;
-//        this.isSharedDevice = isSharedDevice;
-//        this.clientId = clientId;
-//        this.redirectUri = redirectUri;
-//    }
 }
