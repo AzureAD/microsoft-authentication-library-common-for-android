@@ -18,13 +18,13 @@ import lombok.experimental.SuperBuilder;
 public class CommandParameters {
 
     @EqualsAndHashCode.Exclude
-    private Context androidApplicationContext;
+    private transient Context androidApplicationContext;
 
     @EqualsAndHashCode.Exclude
-    private OAuth2TokenCache oAuth2TokenCache;
+    private transient OAuth2TokenCache oAuth2TokenCache;
 
     @EqualsAndHashCode.Exclude
-    private boolean isSharedDevice;
+    private transient boolean isSharedDevice;
 
     @EqualsAndHashCode.Exclude
     @Expose()
