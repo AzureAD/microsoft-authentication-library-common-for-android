@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.commands.parameters;
 
 import android.app.Activity;
+import android.util.Pair;
 
 import androidx.fragment.app.Fragment;
 
@@ -31,6 +32,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectProm
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -68,4 +70,16 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
 
     @Expose()
     private boolean isWebViewZoomControlsEnabled;
+
+    private List<Pair<String, String>> extraQueryStringParameters;
+
+    private List<String> extraScopesToConsent;
+
+    public List<Pair<String, String>> getExtraQueryStringParameters() {
+        return this.extraQueryStringParameters == null ? null : new ArrayList<>(this.extraQueryStringParameters);
+    }
+
+    public List<String> getExtraScopesToConsent() {
+        return this.extraScopesToConsent == null ? null : new ArrayList<>(this.extraScopesToConsent);
+    }
 }
