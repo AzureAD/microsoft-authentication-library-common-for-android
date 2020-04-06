@@ -31,7 +31,9 @@ import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationS
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -63,6 +65,19 @@ public class TokenCommandParameters extends CommandParameters {
 
     @Expose()
     private AbstractAuthenticationScheme authenticationScheme;
+
+    public List<Pair<String, String>> getExtraQueryStringParameters() {
+        return this.extraQueryStringParameters == null ? null : new ArrayList<>(this.extraQueryStringParameters);
+    }
+
+    public List<String> getExtraScopesToConsent() {
+        return this.extraScopesToConsent == null ? null : new ArrayList<>(this.extraScopesToConsent);
+    }
+
+    public Set<String> getScopes() {
+        return this.scopes == null ? null : new HashSet<>(this.scopes);
+    }
+
 
     public void validate() throws ArgumentException {
         final String methodName = ":validate";

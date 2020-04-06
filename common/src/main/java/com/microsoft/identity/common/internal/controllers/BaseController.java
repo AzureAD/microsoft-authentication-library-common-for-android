@@ -155,6 +155,8 @@ public abstract class BaseController {
                 .setRedirectUri(parameters.getRedirectUri())
                 .setCorrelationId(correlationId);
 
+        final Set<String> scopes = parameters.getScopes();
+
         if (parameters instanceof InteractiveTokenCommandParameters) {
             InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters) parameters;
             // Set the multipleCloudAware and slice fields.
@@ -171,7 +173,7 @@ public abstract class BaseController {
             }
 
             if (interactiveTokenCommandParameters.getExtraScopesToConsent() != null) {
-                parameters.getScopes().addAll(interactiveTokenCommandParameters.getExtraScopesToConsent());
+                scopes.addAll(interactiveTokenCommandParameters.getExtraScopesToConsent());
             }
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
@@ -198,7 +200,7 @@ public abstract class BaseController {
             }
         }
 
-        builder.setScope(TextUtils.join(" ", parameters.getScopes()));
+        builder.setScope(TextUtils.join(" ", scopes));
 
         return builder;
     }
@@ -458,11 +460,12 @@ public abstract class BaseController {
         return null == idTokenRecord;
     }
 
-    protected void addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
+    protected Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
         final Set<String> requestScopes = commandParameters.getScopes();
         requestScopes.addAll(DEFAULT_SCOPES);
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
+        return requestScopes;
     }
 
     /**
