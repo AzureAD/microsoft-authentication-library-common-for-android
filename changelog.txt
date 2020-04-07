@@ -1,4 +1,4 @@
-Version 2.0.4
+Version 2.0.5
 ------------
 - Adds support for multiple IdToken lookups in a single call when dual stacking with FoCi (common#871)
 - Implements Client Clock Skew Mitigation for AT/PoP.
