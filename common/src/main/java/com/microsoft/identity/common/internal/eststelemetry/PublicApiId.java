@@ -59,6 +59,8 @@ public final class PublicApiId {
     // SingleAccountPublicClientApplication;
     //==============================================================================================
     public static final String SINGLE_ACCOUNT_PCA_SIGN_IN = "123";
+    public static final String SINGLE_ACCOUNT_PCA_SIGN_IN_WITH_PROMPT = "130";
+    public static final String SINGLE_ACCOUNT_PCA_EXISTING_SIGN_IN_WITH_PROMPT = "131";
     public static final String SINGLE_ACCOUNT_PCA_ACQUIRE_TOKEN_WITH_PARAMETERS = "124";
     public static final String SINGLE_ACCOUNT_PCA_ACQUIRE_TOKEN_WITH_ACTIVITY_SCOPES_CALLBACK = "125";
 
