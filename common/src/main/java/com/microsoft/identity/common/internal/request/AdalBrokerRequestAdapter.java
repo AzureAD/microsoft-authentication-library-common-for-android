@@ -229,10 +229,6 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
             redirectUri = BrokerValidator.getBrokerRedirectUri(context, packageName);
         }
 
-        final List<Pair<String, String>> extraQP = getExtraQueryParamAsList(
-                bundle.getString(AuthenticationConstants.Broker.ACCOUNT_EXTRA_QUERY_PARAM)
-        );
-
         final BrokerSilentTokenCommandParameters commandParameters = BrokerSilentTokenCommandParameters
                 .builder()
                 .authenticationScheme(new BearerAuthenticationSchemeInternal())
@@ -253,7 +249,6 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         bundle.getString(AuthenticationConstants.Broker.BROKER_FORCE_REFRESH))
                 ).claimsRequestJson(bundle.getString(AuthenticationConstants.Broker.ACCOUNT_CLAIMS))
                 .loginHint(bundle.getString(AuthenticationConstants.Broker.ACCOUNT_NAME))
-                .extraQueryStringParameters(extraQP)
                 .build();
 
         return commandParameters;

@@ -288,8 +288,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             correlationIdString = correlationId.toString();
         }
 
-        final BrokerSilentTokenCommandParameters.BrokerSilentTokenCommandParametersBuilder
-                commandParametersBuilder = BrokerSilentTokenCommandParameters
+        final BrokerSilentTokenCommandParameters commandParameters = BrokerSilentTokenCommandParameters
                 .builder()
                 .authenticationScheme(getAuthenticationScheme(context, brokerRequest))
                 .androidApplicationContext(context)
@@ -307,13 +306,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .claimsRequestJson(brokerRequest.getClaims())
                 .loginHint(brokerRequest.getUserName())
                 .homeAccountId(brokerRequest.getHomeAccountId())
-                .localAccountId(brokerRequest.getLocalAccountId());
-
-        if (!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
-            commandParametersBuilder.extraQueryStringParameters(
-                    QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter())
-            );
-        }
+                .localAccountId(brokerRequest.getLocalAccountId())
+                .build();
 
 
         // Set Global environment variable for instance discovery if present
@@ -323,7 +317,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             );
         }
 
-        return commandParametersBuilder.build();
+        return commandParameters;
     }
 
     /**
