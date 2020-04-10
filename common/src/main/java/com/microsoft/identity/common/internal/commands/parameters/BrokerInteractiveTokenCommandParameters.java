@@ -24,11 +24,13 @@ package com.microsoft.identity.common.internal.commands.parameters;
 
 import com.microsoft.identity.common.internal.request.BrokerRequestType;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
 @Getter
 @SuperBuilder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true)
 public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters {
 
     private String callerPackageName;

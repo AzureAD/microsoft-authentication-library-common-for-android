@@ -32,6 +32,9 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
+
+@EqualsAndHashCode(callSuper = true)
 public abstract class TokenCommand extends BaseCommand<AcquireTokenResult> {
 
     public TokenCommand(@NonNull TokenCommandParameters parameters, @NonNull BaseController controller, @NonNull CommandCallback callback, @NonNull String publicApiId) {

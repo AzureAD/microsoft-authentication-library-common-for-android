@@ -29,10 +29,13 @@ import com.microsoft.identity.common.internal.controllers.BaseController;
 
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * Command class to call controllers to remove the account and return the result to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
+@EqualsAndHashCode(callSuper = true)
 public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
 
     public RemoveCurrentAccountCommand(@NonNull RemoveAccountCommandParameters parameters,

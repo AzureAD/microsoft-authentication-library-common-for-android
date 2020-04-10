@@ -33,6 +33,9 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
+
+@EqualsAndHashCode(callSuper = true)
 public class InteractiveTokenCommand extends TokenCommand {
     private static final String TAG = InteractiveTokenCommand.class.getSimpleName();
 
@@ -80,6 +83,6 @@ public class InteractiveTokenCommand extends TokenCommand {
 
     @Override
     public boolean isEligibleForCaching() {
-        return false;
+        return true;
     }
 }

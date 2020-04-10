@@ -36,6 +36,9 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
+
+@EqualsAndHashCode(callSuper = true)
 public class SilentTokenCommand extends TokenCommand {
 
     private static final String TAG = SilentTokenCommand.class.getSimpleName();
@@ -97,7 +100,7 @@ public class SilentTokenCommand extends TokenCommand {
 
     @Override
     public boolean isEligibleForCaching() {
-        return false;
+        return true;
     }
 
     @Override

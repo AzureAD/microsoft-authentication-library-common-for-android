@@ -48,11 +48,9 @@ public class CommandParameters {
     @EqualsAndHashCode.Exclude
     private transient boolean isSharedDevice;
 
-    @EqualsAndHashCode.Exclude
     @Expose()
     private String applicationName;
 
-    @EqualsAndHashCode.Exclude
     @Expose()
     private String applicationVersion;
 

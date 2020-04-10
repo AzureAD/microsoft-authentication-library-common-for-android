@@ -31,10 +31,13 @@ import com.microsoft.identity.common.internal.controllers.BaseController;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * Command class to call controllers to load accounts and return the account list to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
+@EqualsAndHashCode(callSuper = true)
 public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
     private static final String TAG = LoadAccountCommand.class.getSimpleName();
 

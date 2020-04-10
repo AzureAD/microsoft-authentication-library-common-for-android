@@ -24,11 +24,13 @@ package com.microsoft.identity.common.internal.commands.parameters;
 
 import android.accounts.Account;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
 @Getter
 @SuperBuilder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true)
 public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParameters {
 
     private String callerPackageName;
