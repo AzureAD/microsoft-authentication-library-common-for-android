@@ -66,8 +66,9 @@ public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
 
+    private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
     private static final ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
-    private static final ExecutorService sSilentExecutor = Executors.newCachedThreadPool();
+    private static final ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
