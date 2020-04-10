@@ -36,6 +36,7 @@ import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
@@ -49,6 +50,9 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -67,6 +71,7 @@ public class CommandDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
+    private static final Set<BaseCommand> sExecutingCommands = Collections.synchronizedSet(new HashSet<BaseCommand>());
 
     /**
      * submitSilent - Run a command using the silent thread pool
@@ -79,6 +84,17 @@ public class CommandDispatcher {
                 TAG + methodName,
                 "Beginning execution of silent command."
         );
+
+        if (sExecutingCommands.contains(command)) {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    command.getCallback().onError(new ClientException(ClientException.DUPLICATE_COMMAND, "The same command was already received and is being processed."));
+                }
+            });
+        } else if (command.isEligibleForCaching()) {
+            sExecutingCommands.add(command);
+        }
 
         sSilentExecutor.execute(new Runnable() {
             @Override
@@ -117,6 +133,8 @@ public class CommandDispatcher {
 
                 Telemetry.getInstance().flush(correlationId);
                 EstsTelemetry.getInstance().flush(command, commandResult);
+
+                sExecutingCommands.remove(command);
 
                 //Return the result via the callback
                 returnCommandResult(command, commandResult, handler);
