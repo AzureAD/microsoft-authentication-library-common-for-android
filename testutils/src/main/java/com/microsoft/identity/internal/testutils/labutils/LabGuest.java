@@ -7,14 +7,12 @@ import java.util.List;
  */
 public class LabGuest {
     private String homeUpn;
-    private String upn;
     private String homeLabName;
     private String homeTenantId;
-    private List<GuestLabTenant> guestLabTenants;
+    private List<String> guestLabTenants;
 
-    public LabGuest(String homeUpn, String upn, String homeLabName, String homeTenantId, List<GuestLabTenant> guestLabTenants) {
+    public LabGuest(String homeUpn, String homeLabName, String homeTenantId, List<String> guestLabTenants) {
         this.homeUpn = homeUpn;
-        this.upn = upn;
         this.homeLabName = homeLabName;
         this.homeTenantId = homeTenantId;
         this.guestLabTenants = guestLabTenants;
@@ -22,10 +20,6 @@ public class LabGuest {
 
     public String getHomeUpn() {
         return homeUpn;
-    }
-
-    public String getUpn() {
-        return upn;
     }
 
     public String getHomeLabName() {
@@ -36,25 +30,7 @@ public class LabGuest {
         return homeTenantId;
     }
 
-    public List<GuestLabTenant> getGuestLabTenants() {
+    public List<String> getGuestLabTenants() {
         return guestLabTenants;
-    }
-
-    public static class GuestLabTenant {
-        private String labName;
-        private String tenantId;
-
-        GuestLabTenant(String labName, String tenantId) {
-            this.labName = labName;
-            this.tenantId = tenantId;
-        }
-
-        public String getLabName() {
-            return labName;
-        }
-
-        public String getTenantId() {
-            return tenantId;
-        }
     }
 }
