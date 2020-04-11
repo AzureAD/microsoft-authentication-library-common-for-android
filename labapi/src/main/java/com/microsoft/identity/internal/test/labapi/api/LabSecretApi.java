@@ -31,14 +31,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LabUserSecretApi {
+public class LabSecretApi {
     private ApiClient apiClient;
 
-    public LabUserSecretApi() {
+    public LabSecretApi() {
         this(Configuration.getDefaultApiClient());
     }
 
-    public LabUserSecretApi(ApiClient apiClient) {
+    public LabSecretApi(ApiClient apiClient) {
         this.apiClient = apiClient;
     }
 
@@ -53,19 +53,17 @@ public class LabUserSecretApi {
     /**
      * Build call for getLabUserSecret
      *
-     * @param secret                  Enter the Lab Name as the Secret Param (optional)
+     * @param secret                  Enter the Secret Name as the Param. e.g. &#39;msidlab1&#39; or &#39;b2csecret&#39; (optional)
      * @param progressListener        Progress listener
      * @param progressRequestListener Progress request listener
      * @return Call to execute
      * @throws ApiException If fail to serialize the request body object
-     * @deprecated
      */
-    @Deprecated
     public com.squareup.okhttp.Call getLabUserSecretCall(String secret, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
         Object localVarPostBody = null;
 
         // create path and map variables
-        String localVarPath = "/api/LabUserSecret";
+        String localVarPath = "/api/LabSecret";
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
@@ -103,7 +101,6 @@ public class LabUserSecretApi {
         return apiClient.buildCall(localVarPath, "GET", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, progressRequestListener);
     }
 
-    @Deprecated
     @SuppressWarnings("rawtypes")
     private com.squareup.okhttp.Call getLabUserSecretValidateBeforeCall(String secret, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
 
@@ -114,30 +111,26 @@ public class LabUserSecretApi {
     }
 
     /**
-     * Use LabSecret EndPoint Instead of this. This will be deprecated end of March 2020  You need to provide the secret in Query String.
+     * Gets the Lab Secret from Identity Labs Secret (msidlabs) KeyVault.   You need to provide the secret in Query String.
      * If not found it will return the KeyVault providers generic error message &#39;not found&#39;
      *
-     * @param secret Enter the Lab Name as the Secret Param (optional)
+     * @param secret Enter the Secret Name as the Param. e.g. &#39;msidlab1&#39; or &#39;b2csecret&#39; (optional)
      * @return SecretResponse
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @deprecated
      */
-    @Deprecated
     public SecretResponse getLabUserSecret(String secret) throws ApiException {
         ApiResponse<SecretResponse> resp = getLabUserSecretWithHttpInfo(secret);
         return resp.getData();
     }
 
     /**
-     * Use LabSecret EndPoint Instead of this. This will be deprecated end of March 2020  You need to provide the secret in Query String.
+     * Gets the Lab Secret from Identity Labs Secret (msidlabs) KeyVault.   You need to provide the secret in Query String.
      * If not found it will return the KeyVault providers generic error message &#39;not found&#39;
      *
-     * @param secret Enter the Lab Name as the Secret Param (optional)
+     * @param secret Enter the Secret Name as the Param. e.g. &#39;msidlab1&#39; or &#39;b2csecret&#39; (optional)
      * @return ApiResponse&lt;SecretResponse&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @deprecated
      */
-    @Deprecated
     public ApiResponse<SecretResponse> getLabUserSecretWithHttpInfo(String secret) throws ApiException {
         com.squareup.okhttp.Call call = getLabUserSecretValidateBeforeCall(secret, null, null);
         Type localVarReturnType = new TypeToken<SecretResponse>() {
@@ -146,16 +139,14 @@ public class LabUserSecretApi {
     }
 
     /**
-     * Use LabSecret EndPoint Instead of this. This will be deprecated end of March 2020  You need to provide the secret in Query String. (asynchronously)
+     * Gets the Lab Secret from Identity Labs Secret (msidlabs) KeyVault.   You need to provide the secret in Query String. (asynchronously)
      * If not found it will return the KeyVault providers generic error message &#39;not found&#39;
      *
-     * @param secret   Enter the Lab Name as the Secret Param (optional)
+     * @param secret   Enter the Secret Name as the Param. e.g. &#39;msidlab1&#39; or &#39;b2csecret&#39; (optional)
      * @param callback The callback to be executed when the API call finishes
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object
-     * @deprecated
      */
-    @Deprecated
     public com.squareup.okhttp.Call getLabUserSecretAsync(String secret, final ApiCallback<SecretResponse> callback) throws ApiException {
 
         ProgressResponseBody.ProgressListener progressListener = null;

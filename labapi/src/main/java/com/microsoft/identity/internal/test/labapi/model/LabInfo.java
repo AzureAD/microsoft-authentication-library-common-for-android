@@ -22,7 +22,7 @@ import io.swagger.annotations.ApiModelProperty;
 /**
  * LabInfo
  */
-@javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaClientCodegen", date = "2019-10-29T14:56:43.172-07:00")
+@javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaClientCodegen", date = "2020-04-07T02:41:56.083Z")
 public class LabInfo {
   @SerializedName("labName")
   private String labName = null;
@@ -263,10 +263,10 @@ public class LabInfo {
     return this;
   }
 
-  /**
-   * Get authority
-   * @return authority
-   **/
+   /**
+   * Get adfsEndpoint
+   * @return adfsEndpoint
+  **/
   @ApiModelProperty(value = "")
   public String getAdfsEndpoint() {
     return adfsEndpoint;
@@ -296,12 +296,13 @@ public class LabInfo {
         Objects.equals(this.defaultLab, labInfo.defaultLab) &&
         Objects.equals(this.azureEnvironment, labInfo.azureEnvironment) &&
         Objects.equals(this.credentialVaultKeyName, labInfo.credentialVaultKeyName) &&
-        Objects.equals(this.authority, labInfo.authority);
+        Objects.equals(this.authority, labInfo.authority) &&
+        Objects.equals(this.adfsEndpoint, labInfo.adfsEndpoint);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(labName, domain, region, id, active, tenantId, federationProvider, defaultLab, azureEnvironment, credentialVaultKeyName, authority);
+    return Objects.hash(labName, domain, region, id, active, tenantId, federationProvider, defaultLab, azureEnvironment, credentialVaultKeyName, authority, adfsEndpoint);
   }
 
 
@@ -321,6 +322,7 @@ public class LabInfo {
     sb.append("    azureEnvironment: ").append(toIndentedString(azureEnvironment)).append("\n");
     sb.append("    credentialVaultKeyName: ").append(toIndentedString(credentialVaultKeyName)).append("\n");
     sb.append("    authority: ").append(toIndentedString(authority)).append("\n");
+    sb.append("    adfsEndpoint: ").append(toIndentedString(adfsEndpoint)).append("\n");
     sb.append("}");
     return sb.toString();
   }

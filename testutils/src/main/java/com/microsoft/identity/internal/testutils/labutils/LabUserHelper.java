@@ -46,6 +46,7 @@ public class LabUserHelper {
         try {
             configInfos = api.getConfig(
                     query.userType,
+                    query.userRole,
                     query.mfa,
                     query.protectionPolicy,
                     query.homeDomain,
@@ -53,6 +54,8 @@ public class LabUserHelper {
                     query.b2cProvider,
                     query.federationProvider,
                     query.azureEnvironment,
+                    query.appType,
+                    query.publicClient,
                     query.signInAudience,
                     query.guestHomedIn);
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {

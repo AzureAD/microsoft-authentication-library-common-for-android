@@ -24,6 +24,7 @@ package com.microsoft.identity.internal.testutils.labutils;
 
 public class LabUserQuery {
     public String userType;
+    public String userRole;
     public String mfa;
     public String protectionPolicy;
     public String homeDomain;
@@ -31,6 +32,8 @@ public class LabUserQuery {
     public String b2cProvider;
     public String federationProvider;
     public String azureEnvironment;
+    public String appType;
+    public String publicClient;
     public String signInAudience;
     public String guestHomedIn;
 
@@ -45,6 +48,7 @@ public class LabUserQuery {
         LabUserQuery query = (LabUserQuery) obj;
 
         return computeEquals(query.userType, this.userType) &&
+                computeEquals(query.userRole, this.userRole) &&
                 computeEquals(query.mfa, this.mfa) &&
                 computeEquals(query.protectionPolicy, this.protectionPolicy) &&
                 computeEquals(query.homeDomain, this.homeDomain) &&
@@ -52,6 +56,8 @@ public class LabUserQuery {
                 computeEquals(query.b2cProvider, this.b2cProvider) &&
                 computeEquals(query.federationProvider, this.federationProvider) &&
                 computeEquals(query.azureEnvironment, this.azureEnvironment) &&
+                computeEquals(query.appType, this.appType) &&
+                computeEquals(query.publicClient, this.publicClient) &&
                 computeEquals(query.signInAudience, this.signInAudience) &&
                 computeEquals(query.guestHomedIn, this.guestHomedIn);
     }
@@ -67,7 +73,10 @@ public class LabUserQuery {
                 computeHashCode(federationProvider, 17) +
                 computeHashCode(azureEnvironment, 19) +
                 computeHashCode(signInAudience, 23) +
-                computeHashCode(guestHomedIn, 29);
+                computeHashCode(guestHomedIn, 29) +
+                computeHashCode(userRole, 31) +
+                computeHashCode(appType, 37) +
+                computeHashCode(publicClient, 41);
 
     }
 
