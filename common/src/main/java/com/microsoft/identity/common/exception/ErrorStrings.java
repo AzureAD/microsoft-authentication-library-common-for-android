@@ -355,7 +355,9 @@ public final class ErrorStrings {
      * AccountMode in configuration is set to multiple. However, the device is marked as shared (which requires single account mode).
      */
     public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ON_SHARED_DEVICE_ERROR_CODE = "multiple_account_pca_init_fail_on_shared_device";
-    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ON_SHARED_DEVICE_ERROR_MESSAGE = "AccountMode in configuration is set to multiple. However, the device is marked as shared (which requires single account mode).";
+    public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ON_SHARED_DEVICE_ERROR_MESSAGE =
+            "This application is not supported in the shared device mode. " +
+            "Please contact application developer to update the app.";
 
     /**
      * Multiple account PublicClientApplication could not be created for unknown reasons
@@ -395,5 +397,14 @@ public final class ErrorStrings {
     public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_CODE =
             "registered_shared_device_deleted_on_server";
     public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_MESSAGE =
-            "This device has been unregistered. Please return the device to your administrator.";
+            "This device configuration was changed on the server. " +
+                    "Please return the device to your administrator to restart the registration of this device.";
+
+    /**
+     * Home tenant of the BRT acccount doesn't match with WPJ account's tenant.
+     */
+    public static final String BRT_TENANT_MISMATCH_ERROR_MESSAGE =
+            "Requested account is from a different organization. " +
+                    "Please make sure to use your organizational account. " +
+                    "If that doesn’t help, please return the device to your administrator.";
 }

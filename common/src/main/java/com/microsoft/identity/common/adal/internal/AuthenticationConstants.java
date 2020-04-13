@@ -1360,5 +1360,11 @@ public final class AuthenticationConstants {
         public static final String KEY_DISTRIBUTION_END = "key_distribution_v2_end";
 
         public static final String KEY_CREATED = "key_created_v2";
+
+        public static final String SHARED_DEVICE_REGISTERED = "shared_device_registered";
+
+        public static final String USER_SIGNED_INTO_SHARED_DEVICE = "user_signed_into_shared_device";
+
+        public static final String USER_SIGNED_OUT_FROM_SHARED_DEVICE = "user_signed_out_from_shared_device";
     }
 }

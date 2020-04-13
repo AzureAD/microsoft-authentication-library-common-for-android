@@ -1,8 +1,26 @@
+Version 2.0.6
+------------
+- Use fixed thread pool for silent requests
+- Add API ID Constants for MSAL Single Account PCA overloads
+- Add event strings for FLW telemetry
+
+Version 2.0.5
+------------
+- Adds support for multiple IdToken lookups in a single call when dual stacking with FoCi (common#871)
+- Implements Client Clock Skew Mitigation for AT/PoP.
+- ESTS telemetry V2.
+- Fix for msal#963
+    * onCancel callback not called when Browser is used.
+- Returns MDM_REQUIRED when the user clicks on an MDM link in the webview.
+- Adds dual screen support.
+
 Version 2.0.3
+------------
 - Fix to use default scopes on request to determine foci app
 - Fix fragment state issue (#838), (#839)
 
 Version 2.0.2
+------------
 - Fix for MSAL #920, 924, 935, 940
     * Crash due to error receiving CANCEL broadcast
 
