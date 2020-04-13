@@ -1,4 +1,5 @@
 Version 2.0.6
+------------
 - Use fixed thread pool for silent requests
 - Add API ID Constants for MSAL Single Account PCA overloads
 - Add event strings for FLW telemetry
