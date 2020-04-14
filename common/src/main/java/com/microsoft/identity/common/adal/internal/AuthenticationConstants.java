@@ -1070,6 +1070,9 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_REQUEST_V2 = "broker_request_v2";
 
+
+        public static final String BROKER_REQUEST_V2_COMPRESSED = "broker_request_v2_compressed";
+
         /**
          * String to return Msal V2 response.
          */
