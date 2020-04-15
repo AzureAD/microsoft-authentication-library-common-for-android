@@ -173,8 +173,12 @@ public class CommandDispatcher {
         }
 
         if (baseException != null) {
-            //Post On Error
-            commandResult = new CommandResult(CommandResult.ResultStatus.ERROR, baseException);
+            if (baseException instanceof UserCancelException) {
+                commandResult = new CommandResult(CommandResult.ResultStatus.CANCEL, null);
+            } else {
+                //Post On Error
+                commandResult = new CommandResult(CommandResult.ResultStatus.ERROR, baseException);
+            }
         } else {
             if (result != null && result instanceof AcquireTokenResult) {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
