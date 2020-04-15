@@ -1149,6 +1149,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_ACCOUNTS = "broker_accounts";
 
         /**
+         * String to return account list as compressed json.
+         */
+        public static final String BROKER_ACCOUNTS_COMPRESSED = "broker_accounts_compressed";
+
+        /**
          * String to return current account from broker (only available in shared device mode)
          */
         public static final String BROKER_CURRENT_ACCOUNT = "broker_current_account";

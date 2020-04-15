@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
 import static com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter.sRequestAdapterGsonInstance;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
@@ -195,6 +196,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         );
         try {
             byte[] compressedBytes = compressString(brokerResultString);
+            Logger.info(TAG, "Broker Result, raw payload size:"
+                    + brokerResultString.getBytes().length + " ,compressed bytes " + compressedBytes.length
+            );
             resultBundle.putByteArray(
                     AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED,
                     compressedBytes
@@ -486,14 +490,38 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final Bundle resultBundle = new Bundle();
 
         if (cacheRecords != null) {
-            resultBundle.putString(BROKER_ACCOUNTS, JsonExtensions.getJsonStringFromICacheRecordList(cacheRecords));
+            final String jsonString = JsonExtensions.getJsonStringFromICacheRecordList(cacheRecords);
+            try {
+                byte[] bytes = GzipUtil.compressString(jsonString);
+                Logger.info(TAG, "Get accounts, raw payload size :"
+                        + jsonString.getBytes().length + " compressed size " + bytes.length
+                );
+                resultBundle.putByteArray(BROKER_ACCOUNTS_COMPRESSED, bytes);
+            } catch (IOException e) {
+                Logger.error(TAG, " Failed to compress account list to bytes, sending as jsonString", e);
+                resultBundle.putString(BROKER_ACCOUNTS, jsonString);
+            }
+
         }
 
         return resultBundle;
     }
 
     public List<ICacheRecord> getAccountsFromResultBundle(@NonNull final Bundle bundle) throws BaseException {
-        final String accountJson = bundle.getString(BROKER_ACCOUNTS);
+
+        String accountJson;
+        if(bundle.containsKey(BROKER_ACCOUNTS_COMPRESSED)){
+            try {
+                accountJson = GzipUtil.decompressBytesToString(
+                        bundle.getByteArray(BROKER_ACCOUNTS_COMPRESSED)
+                );
+            } catch (IOException e) {
+                Logger.error(TAG, " Failed to decompress account list to bytes", e);
+                throw  new BaseException(ErrorStrings.UNKNOWN_ERROR, " Failed to decompress account list to bytes");
+            }
+        }else {
+            accountJson =  bundle.getString(BROKER_ACCOUNTS);
+        }
 
         if (accountJson == null) {
             throw new MsalBrokerResultAdapter().getBaseExceptionFromBundle(bundle);
