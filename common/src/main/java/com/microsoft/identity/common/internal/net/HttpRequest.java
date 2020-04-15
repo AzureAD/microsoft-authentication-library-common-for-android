@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -42,6 +44,8 @@ import java.net.URL;
 import java.net.UnknownServiceException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -69,6 +73,19 @@ public final class HttpRequest {
     static final String REQUEST_METHOD_TRACE = "TRACE";
     static final String REQUEST_METHOD_OPTIONS = "OPTIONS";
     static final String REQUEST_METHOD_PATCH = "PATCH";
+
+    private static final Set<String> HTTP_METHODS = new HashSet<>();
+
+    static {
+        HTTP_METHODS.add(REQUEST_METHOD_GET);
+        HTTP_METHODS.add(REQUEST_METHOD_POST);
+        HTTP_METHODS.add(REQUEST_METHOD_HEAD);
+        HTTP_METHODS.add(REQUEST_METHOD_PUT);
+        HTTP_METHODS.add(REQUEST_METHOD_DELETE);
+        HTTP_METHODS.add(REQUEST_METHOD_TRACE);
+        HTTP_METHODS.add(REQUEST_METHOD_OPTIONS);
+        HTTP_METHODS.add(REQUEST_METHOD_PATCH);
+    }
 
     /**
      * Value of read timeout in milliseconds.
@@ -353,6 +370,56 @@ public final class HttpRequest {
 
         recordHttpTelemetryEventEnd(response);
 
+        return response;
+    }
+
+    public static HttpResponse sendWithMethod(@NonNull final String httpMethod,
+                                              @NonNull final URL requestUrl,
+                                              @NonNull final Map<String, String> requestHeaders,
+                                              @Nullable final byte[] requestContent,
+                                              @Nullable final String requestContentType)
+            throws IOException {
+        // Validate the HTTP method...
+        if (TextUtils.isEmpty(httpMethod)) {
+            throw new IllegalArgumentException("HTTP method cannot be null or blank");
+        }
+
+        String normalizedHttpMethod = httpMethod.toUpperCase(Locale.US);
+
+        if (!HTTP_METHODS.contains(normalizedHttpMethod)) {
+            throw new IllegalArgumentException("Unknown or unsupported HTTP method: " + httpMethod);
+        }
+
+        // Log Telemetry event start
+        recordHttpTelemetryEventStart(
+                normalizedHttpMethod,
+                requestUrl,
+                requestHeaders.get(CLIENT_REQUEST_ID)
+        );
+
+        // Apply special backcompat behaviors for PATCH, if reqd
+        if (REQUEST_METHOD_PATCH.equals(normalizedHttpMethod)) {
+            // Because HttpURLConnection predates RFC-5789, we need to fallback on POST w/ a backcompat
+            // workaround. See: https://stackoverflow.com/a/32503192/741827
+            normalizedHttpMethod = REQUEST_METHOD_POST;
+            requestHeaders.put("X-HTTP-Method-Override", "PATCH");
+        }
+
+        // Place request
+        final HttpRequest httpRequest = new HttpRequest(
+                requestUrl,
+                requestHeaders,
+                normalizedHttpMethod, // HttpURLConnection doesn't natively support PATCH
+                requestContent,
+                requestContentType
+        );
+
+        final HttpResponse response = httpRequest.send();
+
+        // Log Telemetry event end
+        recordHttpTelemetryEventEnd(response);
+
+        // Return the result
         return response;
     }
 
