@@ -44,16 +44,19 @@ import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.SdkType;
+import com.microsoft.identity.common.internal.util.GzipUtil;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import org.json.JSONException;
 
+import java.io.IOException;
 import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
 import static com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter.sRequestAdapterGsonInstance;
+import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
@@ -92,11 +95,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .servicedFromCache(authenticationResult.isServicedFromCache())
                 .build();
 
-        final Bundle resultBundle = new Bundle();
-        resultBundle.putString(
-                AuthenticationConstants.Broker.BROKER_RESULT_V2,
-                sRequestAdapterGsonInstance.toJson(brokerResult, BrokerResult.class)
-        );
+        final Bundle resultBundle = bundleFromBrokerResult(brokerResult);
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true);
 
         return resultBundle;
@@ -135,11 +134,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     .tenantId(((IntuneAppProtectionPolicyRequiredException) exception).getTenantId());
         }
 
-        final Bundle resultBundle = new Bundle();
-        resultBundle.putString(
-                AuthenticationConstants.Broker.BROKER_RESULT_V2,
-                sRequestAdapterGsonInstance.toJson(builder.build(), BrokerResult.class)
-        );
+        final Bundle resultBundle = bundleFromBrokerResult(builder.build());
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, false);
 
         return resultBundle;
@@ -147,9 +142,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     @Override
     public ILocalAuthenticationResult authenticationResultFromBundle(@NonNull final Bundle resultBundle) {
-        final BrokerResult brokerResult = JsonExtensions.getBrokerResultFromJsonString(
-                resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2)
-        );
+        final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
 
         if (brokerResult == null) {
             Logger.error(TAG, "Broker Result not returned from Broker, ", null);
@@ -173,9 +166,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public BaseException getBaseExceptionFromBundle(@NonNull final Bundle resultBundle) {
         Logger.info(TAG, "Constructing exception from result bundle");
 
-        final BrokerResult brokerResult = JsonExtensions.getBrokerResultFromJsonString(
-                resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2)
-        );
+        final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
 
         if (brokerResult == null) {
             Logger.error(TAG, "Broker Result not returned from Broker", null);
@@ -194,6 +185,50 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             return getBaseExceptionFromErrorCodes(brokerResult);
         }
 
+    }
+
+    public Bundle bundleFromBrokerResult(final BrokerResult brokerResult){
+        final Bundle resultBundle = new Bundle();
+        final String brokerResultString = sRequestAdapterGsonInstance.toJson(
+                brokerResult,
+                BrokerResult.class
+        );
+        try {
+            byte[] compressedBytes = compressString(brokerResultString);
+            resultBundle.putByteArray(
+                    AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED,
+                    compressedBytes
+            );
+        }catch (IOException e){
+            Logger.error(TAG, "Failed to compress Broker Result, sending as jsonString ", e);
+            resultBundle.putString(
+                    AuthenticationConstants.Broker.BROKER_RESULT_V2,
+                    brokerResultString
+            );
+        }
+        return resultBundle;
+    }
+
+    public BrokerResult brokerResultFromBundle(final Bundle resultBundle){
+        BrokerResult brokerResult = null;
+        if(resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED)){
+            byte[] compressedBytes = resultBundle.getByteArray(
+                    AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED
+            );
+            try {
+                final String brokerResultString = GzipUtil.decompressBytesToString(compressedBytes);
+                brokerResult = JsonExtensions.getBrokerResultFromJsonString(brokerResultString);
+            } catch (IOException e) {
+                // We should never hit this ideally unless the string/bytes are malformed for some unknown reason
+                // TODO : Should we throw exception here or leave it to calling method as they already check for null?
+               Logger.error(TAG,"Failed to decompress broker result :", e);
+            }
+        }else {
+            brokerResult = JsonExtensions.getBrokerResultFromJsonString(
+                    resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2)
+            );
+        }
+        return brokerResult;
     }
 
     private BaseException getBaseExceptionFromExceptionType(@NonNull final String exceptionType,

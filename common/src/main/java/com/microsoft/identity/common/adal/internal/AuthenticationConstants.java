@@ -1071,12 +1071,20 @@ public final class AuthenticationConstants {
         public static final String BROKER_REQUEST_V2 = "broker_request_v2";
 
 
+        /**
+         * String to send MSAL V2 Request params as gzip compressed byte array.
+         */
         public static final String BROKER_REQUEST_V2_COMPRESSED = "broker_request_v2_compressed";
 
         /**
          * String to return Msal V2 response.
          */
         public static final String BROKER_RESULT_V2 = "broker_result_v2";
+
+        /**
+         * String to return MSA: V2 response as gzip compressed byte array.
+         */
+        public static final String BROKER_RESULT_V2_COMPRESSED = "broker_result_v2_compressed";
 
         /**
          * Represents the broker device mode boolean (true = shared device mode).

@@ -75,6 +75,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEFAULT_BROWSER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
+import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
+import static com.microsoft.identity.common.internal.util.GzipUtil.decompressBytesToString;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
@@ -506,37 +508,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         } else {
             return false;
         }
-    }
-
-    private byte[] compressString(final String inputString) throws IOException {
-        byte[] bytes = inputString.getBytes("UTF-8");
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
-        gzipOutputStream.write(bytes, 0, bytes.length);
-        gzipOutputStream.flush();
-        gzipOutputStream.close();
-        byte[] result = byteArrayOutputStream.toByteArray();
-        byteArrayOutputStream.close();
-        return result;
-    }
-
-    private String decompressBytesToString(final byte[] compressedBytes) throws IOException {
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressedBytes);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        GZIPInputStream is = new GZIPInputStream(byteArrayInputStream);
-        byte[] tempBuffer = new byte[256];
-        while (true) {
-            int bytesRead = is.read(tempBuffer);
-            if (bytesRead < 0) {
-                break;
-            }
-            byteArrayOutputStream.write(tempBuffer, 0, bytesRead);
-        }
-        is.close();
-
-        byte[] deCompressedBytes = byteArrayOutputStream.toByteArray();
-        byteArrayInputStream.close();
-        return new String(deCompressedBytes, 0, deCompressedBytes.length, "UTF-8");
     }
 
     /**
