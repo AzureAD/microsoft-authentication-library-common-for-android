@@ -26,6 +26,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
@@ -213,6 +214,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return resultBundle;
     }
 
+    @Nullable
     public BrokerResult brokerResultFromBundle(final Bundle resultBundle){
         BrokerResult brokerResult = null;
         if(resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED)){
@@ -223,8 +225,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 final String brokerResultString = GzipUtil.decompressBytesToString(compressedBytes);
                 brokerResult = JsonExtensions.getBrokerResultFromJsonString(brokerResultString);
             } catch (IOException e) {
-                // We should never hit this ideally unless the string/bytes are malformed for some unknown reason
-                // TODO : Should we throw exception here or leave it to calling method as they already check for null?
+                // We should never hit this ideally unless the string/bytes are malformed for some unknown reason.
+                // The caller should handle the null broker result
                Logger.error(TAG,"Failed to decompress broker result :", e);
             }
         }else {

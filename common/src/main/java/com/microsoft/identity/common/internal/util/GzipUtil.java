@@ -52,16 +52,16 @@ public class GzipUtil {
     public static String decompressBytesToString(final byte[] compressedBytes) throws IOException {
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressedBytes);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        GZIPInputStream is = new GZIPInputStream(byteArrayInputStream);
+        GZIPInputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream);
         byte[] tempBuffer = new byte[256];
         while (true) {
-            int bytesRead = is.read(tempBuffer);
+            int bytesRead = gzipInputStream.read(tempBuffer);
             if (bytesRead < 0) {
                 break;
             }
             byteArrayOutputStream.write(tempBuffer, 0, bytesRead);
         }
-        is.close();
+        gzipInputStream.close();
 
         byte[] deCompressedBytes = byteArrayOutputStream.toByteArray();
         byteArrayInputStream.close();

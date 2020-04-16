@@ -183,6 +183,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final BrokerRequest brokerRequest = brokerRequestFromBundle(intent.getExtras());
 
+        if(brokerRequest == null){
+            Logger.error(TAG, "Broker Result is null, returning empty parameters, " +
+                            "validation is expected to fail",
+                    null)
+            ;
+            return parameters;
+        }
+
         parameters.setAuthenticationScheme(getAuthenticationScheme(callingActivity, brokerRequest));
 
         parameters.setActivity(callingActivity);
@@ -276,6 +284,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final BrokerAcquireTokenSilentOperationParameters parameters =
                 new BrokerAcquireTokenSilentOperationParameters();
 
+        if(brokerRequest == null){
+            Logger.error(TAG, "Broker Result is null, returning empty parameters, " +
+                    "validation is expected to fail",
+                    null)
+            ;
+            return parameters;
+        }
+
         parameters.setAuthenticationScheme(
                 getAuthenticationScheme(context, brokerRequest)
         );
@@ -350,6 +366,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return parameters;
     }
 
+    @Nullable
     public BrokerRequest brokerRequestFromBundle(@NonNull final Bundle requestBundle){
         BrokerRequest brokerRequest = null;
 
@@ -362,8 +379,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         deCompressedString, BrokerRequest.class
                 );
             } catch (final IOException e) {
-                // TODO : what to do here ?
-                Logger.error(TAG, "Decompression of Broker Request failed, unable to continue with Broker Request", e);
+                // We would ideally never run into this case as compression would always work as expected.
+                // The caller should handle the null value of broker request.
+                Logger.error(TAG, "Decompression of Broker Request failed," +
+                        " unable to continue with Broker Request", e
+                );
             }
 
         }else{
@@ -416,7 +436,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForAcquireTokenInteractive(final AcquireTokenOperationParameters parameters){
+    public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final AcquireTokenOperationParameters parameters){
         final BrokerRequest brokerRequest = brokerRequestFromAcquireTokenParameters(parameters);
         final Bundle requestBundle = new Bundle();
 
