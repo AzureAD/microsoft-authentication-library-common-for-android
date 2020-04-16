@@ -24,7 +24,7 @@ package com.microsoft.identity.internal.testutils.labutils;
 
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.LabApi;
-import com.microsoft.identity.internal.test.labapi.api.LabUserSecretApi;
+import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.model.LabInfo;
 import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 
@@ -47,7 +47,7 @@ public class LabHelper {
 
     public static String getPasswordForLab(final String labName) {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
-        LabUserSecretApi labUserSecretApi = new LabUserSecretApi();
+        LabSecretApi labUserSecretApi = new LabSecretApi();
         SecretResponse secretResponse;
 
         try {
