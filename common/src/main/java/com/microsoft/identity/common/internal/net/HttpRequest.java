@@ -174,25 +174,13 @@ public final class HttpRequest {
                                         @Nullable final byte[] requestContent,
                                         @Nullable final String requestContentType)
             throws IOException {
-        recordHttpTelemetryEventStart(
+        return sendWithMethod(
                 REQUEST_METHOD_POST,
-                requestUrl,
-                requestHeaders.get(CLIENT_REQUEST_ID)
-        );
-
-        final HttpRequest httpRequest = new HttpRequest(
                 requestUrl,
                 requestHeaders,
-                REQUEST_METHOD_POST,
                 requestContent,
                 requestContentType
         );
-
-        final HttpResponse response = httpRequest.send();
-
-        recordHttpTelemetryEventEnd(response);
-
-        return response;
     }
 
     /**
@@ -206,45 +194,25 @@ public final class HttpRequest {
     public static HttpResponse sendGet(@NonNull final URL requestUrl,
                                        @NonNull final Map<String, String> requestHeaders)
             throws IOException {
-        recordHttpTelemetryEventStart(
+        return sendWithMethod(
                 REQUEST_METHOD_GET,
                 requestUrl,
-                requestHeaders.get(CLIENT_REQUEST_ID)
-        );
-
-        final HttpRequest httpRequest = new HttpRequest(
-                requestUrl,
                 requestHeaders,
-                REQUEST_METHOD_GET
+                null,
+                null
         );
-
-        final HttpResponse response = httpRequest.send();
-
-        recordHttpTelemetryEventEnd(response);
-
-        return response;
     }
 
     public static HttpResponse sendHead(@NonNull final URL requestUrl,
                                         @NonNull final Map<String, String> requestHeaders)
             throws IOException {
-        recordHttpTelemetryEventStart(
+        return sendWithMethod(
                 REQUEST_METHOD_HEAD,
                 requestUrl,
-                requestHeaders.get(CLIENT_REQUEST_ID)
-        );
-
-        final HttpRequest httpRequest = new HttpRequest(
-                requestUrl,
                 requestHeaders,
-                REQUEST_METHOD_HEAD
+                null,
+                null
         );
-
-        final HttpResponse response = httpRequest.send();
-
-        recordHttpTelemetryEventEnd(response);
-
-        return response;
     }
 
     public static HttpResponse sendPut(@NonNull final URL requestUrl,
@@ -252,25 +220,13 @@ public final class HttpRequest {
                                        @Nullable final byte[] requestContent,
                                        @Nullable final String requestContentType)
             throws IOException {
-        recordHttpTelemetryEventStart(
+        return sendWithMethod(
                 REQUEST_METHOD_PUT,
-                requestUrl,
-                requestHeaders.get(CLIENT_REQUEST_ID)
-        );
-
-        final HttpRequest httpRequest = new HttpRequest(
                 requestUrl,
                 requestHeaders,
-                REQUEST_METHOD_PUT,
                 requestContent,
                 requestContentType
         );
-
-        final HttpResponse response = httpRequest.send();
-
-        recordHttpTelemetryEventEnd(response);
-
-        return response;
     }
 
     public static HttpResponse sendDelete(@NonNull final URL requestUrl,
@@ -278,69 +234,37 @@ public final class HttpRequest {
                                           @Nullable final byte[] requestContent,
                                           @Nullable final String requestContentType)
             throws IOException {
-        recordHttpTelemetryEventStart(
+        return sendWithMethod(
                 REQUEST_METHOD_DELETE,
-                requestUrl,
-                requestHeaders.get(CLIENT_REQUEST_ID)
-        );
-
-        final HttpRequest httpRequest = new HttpRequest(
                 requestUrl,
                 requestHeaders,
-                REQUEST_METHOD_DELETE,
                 requestContent,
                 requestContentType
         );
-
-        final HttpResponse response = httpRequest.send();
-
-        recordHttpTelemetryEventEnd(response);
-
-        return response;
     }
 
     public static HttpResponse sendTrace(@NonNull final URL requestUrl,
                                          @NonNull final Map<String, String> requestHeaders)
             throws IOException {
-        recordHttpTelemetryEventStart(
+        return sendWithMethod(
                 REQUEST_METHOD_TRACE,
                 requestUrl,
-                requestHeaders.get(CLIENT_REQUEST_ID)
-        );
-
-        final HttpRequest httpRequest = new HttpRequest(
-                requestUrl,
                 requestHeaders,
-                REQUEST_METHOD_TRACE
+                null,
+                null
         );
-
-        final HttpResponse response = httpRequest.send();
-
-        recordHttpTelemetryEventEnd(response);
-
-        return response;
     }
 
     public static HttpResponse sendOptions(@NonNull final URL requestUrl,
                                            @NonNull final Map<String, String> requestHeaders)
             throws IOException {
-        recordHttpTelemetryEventStart(
+        return sendWithMethod(
                 REQUEST_METHOD_OPTIONS,
                 requestUrl,
-                requestHeaders.get(CLIENT_REQUEST_ID)
-        );
-
-        final HttpRequest httpRequest = new HttpRequest(
-                requestUrl,
                 requestHeaders,
-                REQUEST_METHOD_OPTIONS
+                null,
+                null
         );
-
-        final HttpResponse response = httpRequest.send();
-
-        recordHttpTelemetryEventEnd(response);
-
-        return response;
     }
 
     public static HttpResponse sendPatch(@NonNull final URL requestUrl,
@@ -348,29 +272,13 @@ public final class HttpRequest {
                                          @Nullable final byte[] requestContent,
                                          @Nullable final String requestContentType)
             throws IOException {
-        recordHttpTelemetryEventStart(
+        return sendWithMethod(
                 REQUEST_METHOD_PATCH,
                 requestUrl,
-                requestHeaders.get(CLIENT_REQUEST_ID)
-        );
-
-        // Because HttpURLConnection predates RFC-5789, we need to fallback on POST w/ a backcompat
-        // workaround. See: https://stackoverflow.com/a/32503192/741827
-        requestHeaders.put("X-HTTP-Method-Override", "PATCH");
-
-        final HttpRequest httpRequest = new HttpRequest(
-                requestUrl,
                 requestHeaders,
-                REQUEST_METHOD_POST, // HttpURLConnection doesn't natively support PATCH
                 requestContent,
                 requestContentType
         );
-
-        final HttpResponse response = httpRequest.send();
-
-        recordHttpTelemetryEventEnd(response);
-
-        return response;
     }
 
     public static HttpResponse sendWithMethod(@NonNull final String httpMethod,
