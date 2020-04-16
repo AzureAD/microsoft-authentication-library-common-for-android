@@ -53,7 +53,7 @@ public class AppApi {
     /**
      * Build call for getApp
      *
-     * @param appid                   Provide the Application ID to query Lab App Info (required)
+     * @param appid                   Provide the Application ID (GUID format) to query Lab App Info (required)
      * @param progressListener        Progress listener
      * @param progressRequestListener Progress request listener
      * @return Call to execute
@@ -117,7 +117,7 @@ public class AppApi {
     /**
      * Gets App Info based on App ID
      *
-     * @param appid Provide the Application ID to query Lab App Info (required)
+     * @param appid Provide the Application ID (GUID format) to query Lab App Info (required)
      * @return List&lt;AppInfo&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
@@ -129,7 +129,7 @@ public class AppApi {
     /**
      * Gets App Info based on App ID
      *
-     * @param appid Provide the Application ID to query Lab App Info (required)
+     * @param appid Provide the Application ID (GUID format) to query Lab App Info (required)
      * @return ApiResponse&lt;List&lt;AppInfo&gt;&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
@@ -143,7 +143,7 @@ public class AppApi {
     /**
      * Gets App Info based on App ID (asynchronously)
      *
-     * @param appid    Provide the Application ID to query Lab App Info (required)
+     * @param appid    Provide the Application ID (GUID format) to query Lab App Info (required)
      * @param callback The callback to be executed when the API call finishes
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object
@@ -179,14 +179,17 @@ public class AppApi {
     /**
      * Build call for getAppByParam
      *
+     * @param apptype                 Allowed Values :  \&quot;cloud\&quot;, \&quot;onprem\&quot; (optional, default to cloud)
      * @param azureenvironment        Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment\&quot; (optional, default to azurecloud)
      * @param signinaudience          Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
+     * @param isadminconsented        Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
+     * @param publicclient            Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
      * @param progressListener        Progress listener
      * @param progressRequestListener Progress request listener
      * @return Call to execute
      * @throws ApiException If fail to serialize the request body object
      */
-    public com.squareup.okhttp.Call getAppByParamCall(String azureenvironment, String signinaudience, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+    public com.squareup.okhttp.Call getAppByParamCall(String apptype, String azureenvironment, String signinaudience, String isadminconsented, String publicclient, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
         Object localVarPostBody = null;
 
         // create path and map variables
@@ -194,10 +197,16 @@ public class AppApi {
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
+        if (apptype != null)
+            localVarQueryParams.addAll(apiClient.parameterToPair("apptype", apptype));
         if (azureenvironment != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("azureenvironment", azureenvironment));
         if (signinaudience != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("signinaudience", signinaudience));
+        if (isadminconsented != null)
+            localVarQueryParams.addAll(apiClient.parameterToPair("isadminconsented", isadminconsented));
+        if (publicclient != null)
+            localVarQueryParams.addAll(apiClient.parameterToPair("publicclient", publicclient));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
@@ -231,10 +240,10 @@ public class AppApi {
     }
 
     @SuppressWarnings("rawtypes")
-    private com.squareup.okhttp.Call getAppByParamValidateBeforeCall(String azureenvironment, String signinaudience, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+    private com.squareup.okhttp.Call getAppByParamValidateBeforeCall(String apptype, String azureenvironment, String signinaudience, String isadminconsented, String publicclient, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
 
 
-        com.squareup.okhttp.Call call = getAppByParamCall(azureenvironment, signinaudience, progressListener, progressRequestListener);
+        com.squareup.okhttp.Call call = getAppByParamCall(apptype, azureenvironment, signinaudience, isadminconsented, publicclient, progressListener, progressRequestListener);
         return call;
 
     }
@@ -242,26 +251,32 @@ public class AppApi {
     /**
      * Gets App Info based on Azure Environment or Sign-in Audience
      *
+     * @param apptype          Allowed Values :  \&quot;cloud\&quot;, \&quot;onprem\&quot; (optional, default to cloud)
      * @param azureenvironment Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment\&quot; (optional, default to azurecloud)
      * @param signinaudience   Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
+     * @param isadminconsented Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
+     * @param publicclient     Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
      * @return List&lt;AppInfo&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public List<AppInfo> getAppByParam(String azureenvironment, String signinaudience) throws ApiException {
-        ApiResponse<List<AppInfo>> resp = getAppByParamWithHttpInfo(azureenvironment, signinaudience);
+    public List<AppInfo> getAppByParam(String apptype, String azureenvironment, String signinaudience, String isadminconsented, String publicclient) throws ApiException {
+        ApiResponse<List<AppInfo>> resp = getAppByParamWithHttpInfo(apptype, azureenvironment, signinaudience, isadminconsented, publicclient);
         return resp.getData();
     }
 
     /**
      * Gets App Info based on Azure Environment or Sign-in Audience
      *
+     * @param apptype          Allowed Values :  \&quot;cloud\&quot;, \&quot;onprem\&quot; (optional, default to cloud)
      * @param azureenvironment Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment\&quot; (optional, default to azurecloud)
      * @param signinaudience   Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
+     * @param isadminconsented Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
+     * @param publicclient     Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
      * @return ApiResponse&lt;List&lt;AppInfo&gt;&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public ApiResponse<List<AppInfo>> getAppByParamWithHttpInfo(String azureenvironment, String signinaudience) throws ApiException {
-        com.squareup.okhttp.Call call = getAppByParamValidateBeforeCall(azureenvironment, signinaudience, null, null);
+    public ApiResponse<List<AppInfo>> getAppByParamWithHttpInfo(String apptype, String azureenvironment, String signinaudience, String isadminconsented, String publicclient) throws ApiException {
+        com.squareup.okhttp.Call call = getAppByParamValidateBeforeCall(apptype, azureenvironment, signinaudience, isadminconsented, publicclient, null, null);
         Type localVarReturnType = new TypeToken<List<AppInfo>>() {
         }.getType();
         return apiClient.execute(call, localVarReturnType);
@@ -270,13 +285,16 @@ public class AppApi {
     /**
      * Gets App Info based on Azure Environment or Sign-in Audience (asynchronously)
      *
+     * @param apptype          Allowed Values :  \&quot;cloud\&quot;, \&quot;onprem\&quot; (optional, default to cloud)
      * @param azureenvironment Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment\&quot; (optional, default to azurecloud)
      * @param signinaudience   Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
+     * @param isadminconsented Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
+     * @param publicclient     Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
      * @param callback         The callback to be executed when the API call finishes
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object
      */
-    public com.squareup.okhttp.Call getAppByParamAsync(String azureenvironment, String signinaudience, final ApiCallback<List<AppInfo>> callback) throws ApiException {
+    public com.squareup.okhttp.Call getAppByParamAsync(String apptype, String azureenvironment, String signinaudience, String isadminconsented, String publicclient, final ApiCallback<List<AppInfo>> callback) throws ApiException {
 
         ProgressResponseBody.ProgressListener progressListener = null;
         ProgressRequestBody.ProgressRequestListener progressRequestListener = null;
@@ -297,7 +315,7 @@ public class AppApi {
             };
         }
 
-        com.squareup.okhttp.Call call = getAppByParamValidateBeforeCall(azureenvironment, signinaudience, progressListener, progressRequestListener);
+        com.squareup.okhttp.Call call = getAppByParamValidateBeforeCall(apptype, azureenvironment, signinaudience, isadminconsented, publicclient, progressListener, progressRequestListener);
         Type localVarReturnType = new TypeToken<List<AppInfo>>() {
         }.getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
