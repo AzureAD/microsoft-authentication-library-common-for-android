@@ -236,9 +236,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 && brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())
                 && isCallingPackageIntune(brokerRequest.getApplicationName())) { // TODO : Remove this whenever we enable System Browser support in Broker for apps.
             Logger.info(TAG, "Setting Authorization Agent to Browser for Intune app");
-            commandParametersBuilder.authorizationAgent(AuthorizationAgent.BROWSER);
-            commandParametersBuilder.brokerBrowserSupportEnabled(true);
-            commandParametersBuilder.browserSafeList(getBrowserSafeListForBroker());
+            commandParametersBuilder
+                    .authorizationAgent(AuthorizationAgent.BROWSER)
+                    .brokerBrowserSupportEnabled(true)
+                    .browserSafeList(getBrowserSafeListForBroker());
         } else {
             commandParametersBuilder.authorizationAgent(AuthorizationAgent.WEBVIEW);
         }

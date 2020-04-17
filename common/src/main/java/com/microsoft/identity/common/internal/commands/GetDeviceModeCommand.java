@@ -38,11 +38,17 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class GetDeviceModeCommand extends BaseCommand<Boolean> {
 
-    public GetDeviceModeCommand(@NonNull CommandParameters parameters, @NonNull BaseController controller, @NonNull CommandCallback callback, @NonNull String publicApiId) {
+    public GetDeviceModeCommand(@NonNull CommandParameters parameters,
+                                @NonNull BaseController controller,
+                                @NonNull CommandCallback callback,
+                                @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
-    public GetDeviceModeCommand(@NonNull CommandParameters parameters, @NonNull List<BaseController> controllers, @NonNull CommandCallback callback, @NonNull String publicApiId) {
+    public GetDeviceModeCommand(@NonNull CommandParameters parameters,
+                                @NonNull List<BaseController> controllers,
+                                @NonNull CommandCallback callback,
+                                @NonNull String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
 

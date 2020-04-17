@@ -28,6 +28,7 @@ public interface Command<T> {
     T execute() throws Exception;
 
     boolean isEligibleForEstsTelemetry();
+
     BaseController getDefaultController();
 
     boolean isEligibleForCaching();

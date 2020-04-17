@@ -43,11 +43,17 @@ public class SilentTokenCommand extends TokenCommand {
 
     private static final String TAG = SilentTokenCommand.class.getSimpleName();
 
-    public SilentTokenCommand(@NonNull SilentTokenCommandParameters parameters, @NonNull BaseController controller, @NonNull CommandCallback callback, @NonNull String publicApiId) {
+    public SilentTokenCommand(@NonNull SilentTokenCommandParameters parameters,
+                              @NonNull BaseController controller,
+                              @NonNull CommandCallback callback,
+                              @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
-    public SilentTokenCommand(@NonNull SilentTokenCommandParameters parameters, @NonNull List<BaseController> controllers, @NonNull CommandCallback callback, @NonNull String publicApiId) {
+    public SilentTokenCommand(@NonNull SilentTokenCommandParameters parameters,
+                              @NonNull List<BaseController> controllers,
+                              @NonNull CommandCallback callback,
+                              @NonNull String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
 

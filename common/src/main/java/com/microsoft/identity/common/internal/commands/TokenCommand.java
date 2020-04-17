@@ -37,11 +37,17 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public abstract class TokenCommand extends BaseCommand<AcquireTokenResult> {
 
-    public TokenCommand(@NonNull TokenCommandParameters parameters, @NonNull BaseController controller, @NonNull CommandCallback callback, @NonNull String publicApiId) {
+    public TokenCommand(@NonNull TokenCommandParameters parameters,
+                        @NonNull BaseController controller,
+                        @NonNull CommandCallback callback,
+                        @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
-    public TokenCommand(@NonNull TokenCommandParameters parameters, @NonNull List<BaseController> controllers, @NonNull CommandCallback callback, @NonNull String publicApiId) {
+    public TokenCommand(@NonNull TokenCommandParameters parameters,
+                        @NonNull List<BaseController> controllers,
+                        @NonNull CommandCallback callback,
+                        @NonNull String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
 
