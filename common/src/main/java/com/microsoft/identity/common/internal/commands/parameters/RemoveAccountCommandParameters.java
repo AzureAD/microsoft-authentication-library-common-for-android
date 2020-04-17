@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.commands.parameters;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.EqualsAndHashCode;
@@ -38,4 +39,8 @@ public class RemoveAccountCommandParameters extends CommandParameters {
 
     private IAccountRecord account;
     private List<BrowserDescriptor> browserSafeList;
+
+    public List<BrowserDescriptor> getBrowserSafeList() {
+        return this.browserSafeList == null ? null : new ArrayList<>(this.browserSafeList);
+    }
 }

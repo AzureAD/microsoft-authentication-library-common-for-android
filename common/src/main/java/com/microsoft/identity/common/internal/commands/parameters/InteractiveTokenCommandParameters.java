@@ -82,4 +82,8 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
     public List<String> getExtraScopesToConsent() {
         return this.extraScopesToConsent == null ? null : new ArrayList<>(this.extraScopesToConsent);
     }
+
+    public List<BrowserDescriptor> getBrowserSafeList() {
+        return this.browserSafeList == null ? null : new ArrayList<>(this.browserSafeList);
+    }
 }
