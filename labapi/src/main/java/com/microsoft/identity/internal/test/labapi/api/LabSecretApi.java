@@ -31,14 +31,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LabUserSecretApi {
+public class LabSecretApi {
     private ApiClient apiClient;
 
-    public LabUserSecretApi() {
+    public LabSecretApi() {
         this(Configuration.getDefaultApiClient());
     }
 
-    public LabUserSecretApi(ApiClient apiClient) {
+    public LabSecretApi(ApiClient apiClient) {
         this.apiClient = apiClient;
     }
 
@@ -53,7 +53,7 @@ public class LabUserSecretApi {
     /**
      * Build call for getLabUserSecret
      *
-     * @param secret                  Enter the Lab Name as the Secret Param (optional)
+     * @param secret                  Enter the Secret Name as the Param. e.g. &#39;msidlab1&#39; or &#39;b2csecret&#39; (optional)
      * @param progressListener        Progress listener
      * @param progressRequestListener Progress request listener
      * @return Call to execute
@@ -63,7 +63,7 @@ public class LabUserSecretApi {
         Object localVarPostBody = null;
 
         // create path and map variables
-        String localVarPath = "/api/LabUserSecret";
+        String localVarPath = "/api/LabSecret";
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
@@ -111,10 +111,10 @@ public class LabUserSecretApi {
     }
 
     /**
-     * Gets the Lab User Secret from Identity Labs User Secret KeyVault.   You need to provide the secret in Query String.
+     * Gets the Lab Secret from Identity Labs Secret (msidlabs) KeyVault.   You need to provide the secret in Query String.
      * If not found it will return the KeyVault providers generic error message &#39;not found&#39;
      *
-     * @param secret Enter the Lab Name as the Secret Param (optional)
+     * @param secret Enter the Secret Name as the Param. e.g. &#39;msidlab1&#39; or &#39;b2csecret&#39; (optional)
      * @return SecretResponse
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
@@ -124,10 +124,10 @@ public class LabUserSecretApi {
     }
 
     /**
-     * Gets the Lab User Secret from Identity Labs User Secret KeyVault.   You need to provide the secret in Query String.
+     * Gets the Lab Secret from Identity Labs Secret (msidlabs) KeyVault.   You need to provide the secret in Query String.
      * If not found it will return the KeyVault providers generic error message &#39;not found&#39;
      *
-     * @param secret Enter the Lab Name as the Secret Param (optional)
+     * @param secret Enter the Secret Name as the Param. e.g. &#39;msidlab1&#39; or &#39;b2csecret&#39; (optional)
      * @return ApiResponse&lt;SecretResponse&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
@@ -139,10 +139,10 @@ public class LabUserSecretApi {
     }
 
     /**
-     * Gets the Lab User Secret from Identity Labs User Secret KeyVault.   You need to provide the secret in Query String. (asynchronously)
+     * Gets the Lab Secret from Identity Labs Secret (msidlabs) KeyVault.   You need to provide the secret in Query String. (asynchronously)
      * If not found it will return the KeyVault providers generic error message &#39;not found&#39;
      *
-     * @param secret   Enter the Lab Name as the Secret Param (optional)
+     * @param secret   Enter the Secret Name as the Param. e.g. &#39;msidlab1&#39; or &#39;b2csecret&#39; (optional)
      * @param callback The callback to be executed when the API call finishes
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object

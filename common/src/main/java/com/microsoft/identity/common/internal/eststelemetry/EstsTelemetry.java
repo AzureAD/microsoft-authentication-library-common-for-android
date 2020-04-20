@@ -31,9 +31,9 @@ import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.controllers.BaseCommand;
+import com.microsoft.identity.common.internal.commands.BaseCommand;
+import com.microsoft.identity.common.internal.commands.TokenCommand;
 import com.microsoft.identity.common.internal.controllers.CommandResult;
-import com.microsoft.identity.common.internal.controllers.TokenCommand;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
@@ -98,7 +98,7 @@ public class EstsTelemetry {
      * @param command The command for which to capture telemetry
      */
     public void initTelemetryForCommand(@NonNull final BaseCommand command) {
-        setupLastRequestTelemetryCache(command.getParameters().getAppContext());
+        setupLastRequestTelemetryCache(command.getParameters().getAndroidApplicationContext());
         final String correlationId = command.getParameters().getCorrelationId();
         if (command.isEligibleForEstsTelemetry()) {
             final CurrentRequestTelemetry currentRequestTelemetry = new CurrentRequestTelemetry();

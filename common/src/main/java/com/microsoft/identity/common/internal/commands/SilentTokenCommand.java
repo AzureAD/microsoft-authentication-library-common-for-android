@@ -20,7 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.internal.commands;
 
 import android.content.Intent;
 
@@ -30,26 +30,31 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.UiRequiredException;
-import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
-import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 import java.util.List;
 
-public class TokenCommand extends BaseCommand<AcquireTokenResult> implements TokenOperation {
+import lombok.EqualsAndHashCode;
 
-    private static final String TAG = TokenCommand.class.getSimpleName();
+@EqualsAndHashCode(callSuper = true)
+public class SilentTokenCommand extends TokenCommand {
 
-    public TokenCommand(@NonNull final OperationParameters parameters,
-                        @NonNull final BaseController controller,
-                        @NonNull final CommandCallback callback) {
-        super(parameters, controller, callback);
+    private static final String TAG = SilentTokenCommand.class.getSimpleName();
+
+    public SilentTokenCommand(@NonNull SilentTokenCommandParameters parameters,
+                              @NonNull BaseController controller,
+                              @NonNull CommandCallback callback,
+                              @NonNull String publicApiId) {
+        super(parameters, controller, callback, publicApiId);
     }
 
-    public TokenCommand(@NonNull final OperationParameters parameters,
-                        @NonNull final List<BaseController> controllers,
-                        @NonNull final CommandCallback callback) {
-        super(parameters, controllers, callback);
+    public SilentTokenCommand(@NonNull SilentTokenCommandParameters parameters,
+                              @NonNull List<BaseController> controllers,
+                              @NonNull CommandCallback callback,
+                              @NonNull String publicApiId) {
+        super(parameters, controllers, callback, publicApiId);
     }
 
     @Override
@@ -68,7 +73,7 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
                 );
 
                 result = controller.acquireTokenSilent(
-                        (AcquireTokenSilentOperationParameters) getParameters()
+                        (SilentTokenCommandParameters) getParameters()
                 );
 
                 if (result.getSucceeded()) {
@@ -101,12 +106,7 @@ public class TokenCommand extends BaseCommand<AcquireTokenResult> implements Tok
 
     @Override
     public boolean isEligibleForCaching() {
-        return false;
-    }
-
-    @Override
-    public int getCommandNameHashCode() {
-        return TAG.hashCode();
+        return true;
     }
 
     @Override

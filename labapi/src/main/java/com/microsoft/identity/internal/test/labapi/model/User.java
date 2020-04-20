@@ -20,10 +20,16 @@ import java.util.Objects;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
- * UserInfo
+ * User
  */
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaClientCodegen", date = "2020-04-07T02:41:56.083Z")
-public class UserInfo {
+public class User {
+    @SerializedName("appId")
+    private String appId = null;
+
+    @SerializedName("credentialVaultKeyName")
+    private String credentialVaultKeyName = null;
+
     @SerializedName("objectId")
     private String objectId = null;
 
@@ -87,7 +93,45 @@ public class UserInfo {
     @SerializedName("lastUpdatedDate")
     private String lastUpdatedDate = null;
 
-    public UserInfo objectId(String objectId) {
+    public User appId(String appId) {
+        this.appId = appId;
+        return this;
+    }
+
+    /**
+     * Get appId
+     *
+     * @return appId
+     **/
+    @ApiModelProperty(value = "")
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
+    }
+
+    public User credentialVaultKeyName(String credentialVaultKeyName) {
+        this.credentialVaultKeyName = credentialVaultKeyName;
+        return this;
+    }
+
+    /**
+     * Get credentialVaultKeyName
+     *
+     * @return credentialVaultKeyName
+     **/
+    @ApiModelProperty(value = "")
+    public String getCredentialVaultKeyName() {
+        return credentialVaultKeyName;
+    }
+
+    public void setCredentialVaultKeyName(String credentialVaultKeyName) {
+        this.credentialVaultKeyName = credentialVaultKeyName;
+    }
+
+    public User objectId(String objectId) {
         this.objectId = objectId;
         return this;
     }
@@ -106,7 +150,7 @@ public class UserInfo {
         this.objectId = objectId;
     }
 
-    public UserInfo homeObjectId(String homeObjectId) {
+    public User homeObjectId(String homeObjectId) {
         this.homeObjectId = homeObjectId;
         return this;
     }
@@ -125,7 +169,7 @@ public class UserInfo {
         this.homeObjectId = homeObjectId;
     }
 
-    public UserInfo userType(String userType) {
+    public User userType(String userType) {
         this.userType = userType;
         return this;
     }
@@ -144,7 +188,7 @@ public class UserInfo {
         this.userType = userType;
     }
 
-    public UserInfo userRole(String userRole) {
+    public User userRole(String userRole) {
         this.userRole = userRole;
         return this;
     }
@@ -163,7 +207,7 @@ public class UserInfo {
         this.userRole = userRole;
     }
 
-    public UserInfo displayName(String displayName) {
+    public User displayName(String displayName) {
         this.displayName = displayName;
         return this;
     }
@@ -182,7 +226,7 @@ public class UserInfo {
         this.displayName = displayName;
     }
 
-    public UserInfo givenName(String givenName) {
+    public User givenName(String givenName) {
         this.givenName = givenName;
         return this;
     }
@@ -201,7 +245,7 @@ public class UserInfo {
         this.givenName = givenName;
     }
 
-    public UserInfo surName(String surName) {
+    public User surName(String surName) {
         this.surName = surName;
         return this;
     }
@@ -220,7 +264,7 @@ public class UserInfo {
         this.surName = surName;
     }
 
-    public UserInfo licenses(String licenses) {
+    public User licenses(String licenses) {
         this.licenses = licenses;
         return this;
     }
@@ -239,7 +283,7 @@ public class UserInfo {
         this.licenses = licenses;
     }
 
-    public UserInfo domainAccount(String domainAccount) {
+    public User domainAccount(String domainAccount) {
         this.domainAccount = domainAccount;
         return this;
     }
@@ -258,7 +302,7 @@ public class UserInfo {
         this.domainAccount = domainAccount;
     }
 
-    public UserInfo upn(String upn) {
+    public User upn(String upn) {
         this.upn = upn;
         return this;
     }
@@ -277,7 +321,7 @@ public class UserInfo {
         this.upn = upn;
     }
 
-    public UserInfo mfa(String mfa) {
+    public User mfa(String mfa) {
         this.mfa = mfa;
         return this;
     }
@@ -296,7 +340,7 @@ public class UserInfo {
         this.mfa = mfa;
     }
 
-    public UserInfo protectionPolicy(String protectionPolicy) {
+    public User protectionPolicy(String protectionPolicy) {
         this.protectionPolicy = protectionPolicy;
         return this;
     }
@@ -315,7 +359,7 @@ public class UserInfo {
         this.protectionPolicy = protectionPolicy;
     }
 
-    public UserInfo homeDomain(String homeDomain) {
+    public User homeDomain(String homeDomain) {
         this.homeDomain = homeDomain;
         return this;
     }
@@ -334,7 +378,7 @@ public class UserInfo {
         this.homeDomain = homeDomain;
     }
 
-    public UserInfo tenantID(String tenantID) {
+    public User tenantID(String tenantID) {
         this.tenantID = tenantID;
         return this;
     }
@@ -353,7 +397,7 @@ public class UserInfo {
         this.tenantID = tenantID;
     }
 
-    public UserInfo homeTenantID(String homeTenantID) {
+    public User homeTenantID(String homeTenantID) {
         this.homeTenantID = homeTenantID;
         return this;
     }
@@ -372,7 +416,7 @@ public class UserInfo {
         this.homeTenantID = homeTenantID;
     }
 
-    public UserInfo homeUPN(String homeUPN) {
+    public User homeUPN(String homeUPN) {
         this.homeUPN = homeUPN;
         return this;
     }
@@ -391,7 +435,7 @@ public class UserInfo {
         this.homeUPN = homeUPN;
     }
 
-    public UserInfo b2cProvider(String b2cProvider) {
+    public User b2cProvider(String b2cProvider) {
         this.b2cProvider = b2cProvider;
         return this;
     }
@@ -410,7 +454,7 @@ public class UserInfo {
         this.b2cProvider = b2cProvider;
     }
 
-    public UserInfo guestHomedIn(String guestHomedIn) {
+    public User guestHomedIn(String guestHomedIn) {
         this.guestHomedIn = guestHomedIn;
         return this;
     }
@@ -429,7 +473,7 @@ public class UserInfo {
         this.guestHomedIn = guestHomedIn;
     }
 
-    public UserInfo labName(String labName) {
+    public User labName(String labName) {
         this.labName = labName;
         return this;
     }
@@ -448,7 +492,7 @@ public class UserInfo {
         this.labName = labName;
     }
 
-    public UserInfo lastUpdatedBy(String lastUpdatedBy) {
+    public User lastUpdatedBy(String lastUpdatedBy) {
         this.lastUpdatedBy = lastUpdatedBy;
         return this;
     }
@@ -467,7 +511,7 @@ public class UserInfo {
         this.lastUpdatedBy = lastUpdatedBy;
     }
 
-    public UserInfo lastUpdatedDate(String lastUpdatedDate) {
+    public User lastUpdatedDate(String lastUpdatedDate) {
         this.lastUpdatedDate = lastUpdatedDate;
         return this;
     }
@@ -495,41 +539,45 @@ public class UserInfo {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        UserInfo userInfo = (UserInfo) o;
-        return Objects.equals(this.objectId, userInfo.objectId) &&
-                Objects.equals(this.homeObjectId, userInfo.homeObjectId) &&
-                Objects.equals(this.userType, userInfo.userType) &&
-                Objects.equals(this.userRole, userInfo.userRole) &&
-                Objects.equals(this.displayName, userInfo.displayName) &&
-                Objects.equals(this.givenName, userInfo.givenName) &&
-                Objects.equals(this.surName, userInfo.surName) &&
-                Objects.equals(this.licenses, userInfo.licenses) &&
-                Objects.equals(this.domainAccount, userInfo.domainAccount) &&
-                Objects.equals(this.upn, userInfo.upn) &&
-                Objects.equals(this.mfa, userInfo.mfa) &&
-                Objects.equals(this.protectionPolicy, userInfo.protectionPolicy) &&
-                Objects.equals(this.homeDomain, userInfo.homeDomain) &&
-                Objects.equals(this.tenantID, userInfo.tenantID) &&
-                Objects.equals(this.homeTenantID, userInfo.homeTenantID) &&
-                Objects.equals(this.homeUPN, userInfo.homeUPN) &&
-                Objects.equals(this.b2cProvider, userInfo.b2cProvider) &&
-                Objects.equals(this.guestHomedIn, userInfo.guestHomedIn) &&
-                Objects.equals(this.labName, userInfo.labName) &&
-                Objects.equals(this.lastUpdatedBy, userInfo.lastUpdatedBy) &&
-                Objects.equals(this.lastUpdatedDate, userInfo.lastUpdatedDate);
+        User user = (User) o;
+        return Objects.equals(this.appId, user.appId) &&
+                Objects.equals(this.credentialVaultKeyName, user.credentialVaultKeyName) &&
+                Objects.equals(this.objectId, user.objectId) &&
+                Objects.equals(this.homeObjectId, user.homeObjectId) &&
+                Objects.equals(this.userType, user.userType) &&
+                Objects.equals(this.userRole, user.userRole) &&
+                Objects.equals(this.displayName, user.displayName) &&
+                Objects.equals(this.givenName, user.givenName) &&
+                Objects.equals(this.surName, user.surName) &&
+                Objects.equals(this.licenses, user.licenses) &&
+                Objects.equals(this.domainAccount, user.domainAccount) &&
+                Objects.equals(this.upn, user.upn) &&
+                Objects.equals(this.mfa, user.mfa) &&
+                Objects.equals(this.protectionPolicy, user.protectionPolicy) &&
+                Objects.equals(this.homeDomain, user.homeDomain) &&
+                Objects.equals(this.tenantID, user.tenantID) &&
+                Objects.equals(this.homeTenantID, user.homeTenantID) &&
+                Objects.equals(this.homeUPN, user.homeUPN) &&
+                Objects.equals(this.b2cProvider, user.b2cProvider) &&
+                Objects.equals(this.guestHomedIn, user.guestHomedIn) &&
+                Objects.equals(this.labName, user.labName) &&
+                Objects.equals(this.lastUpdatedBy, user.lastUpdatedBy) &&
+                Objects.equals(this.lastUpdatedDate, user.lastUpdatedDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectId, homeObjectId, userType, userRole, displayName, givenName, surName, licenses, domainAccount, upn, mfa, protectionPolicy, homeDomain, tenantID, homeTenantID, homeUPN, b2cProvider, guestHomedIn, labName, lastUpdatedBy, lastUpdatedDate);
+        return Objects.hash(appId, credentialVaultKeyName, objectId, homeObjectId, userType, userRole, displayName, givenName, surName, licenses, domainAccount, upn, mfa, protectionPolicy, homeDomain, tenantID, homeTenantID, homeUPN, b2cProvider, guestHomedIn, labName, lastUpdatedBy, lastUpdatedDate);
     }
 
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("class UserInfo {\n");
+        sb.append("class User {\n");
 
+        sb.append("    appId: ").append(toIndentedString(appId)).append("\n");
+        sb.append("    credentialVaultKeyName: ").append(toIndentedString(credentialVaultKeyName)).append("\n");
         sb.append("    objectId: ").append(toIndentedString(objectId)).append("\n");
         sb.append("    homeObjectId: ").append(toIndentedString(homeObjectId)).append("\n");
         sb.append("    userType: ").append(toIndentedString(userType)).append("\n");
