@@ -108,7 +108,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                                 : null
                 ).prompt(parameters.getPrompt().name())
                 .claims(parameters.getClaimsRequestJson())
-                .forceRefresh(false)
+                .forceRefresh(parameters.isForceRefresh())
                 .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())

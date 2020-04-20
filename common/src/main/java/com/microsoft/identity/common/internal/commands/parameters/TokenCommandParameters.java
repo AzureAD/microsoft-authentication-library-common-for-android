@@ -58,6 +58,9 @@ public class TokenCommandParameters extends CommandParameters {
     @Expose()
     private AbstractAuthenticationScheme authenticationScheme;
 
+    @Expose()
+    private boolean forceRefresh;
+
     public Set<String> getScopes() {
         return this.scopes == null ? null : new HashSet<>(this.scopes);
     }

@@ -44,9 +44,6 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
 
     private static final Object sLock = new Object();
 
-    @Expose()
-    private boolean forceRefresh;
-
     @Override
     public void validate() throws ArgumentException {
         super.validate();
