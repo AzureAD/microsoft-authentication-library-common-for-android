@@ -40,9 +40,16 @@ import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationS
 import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
+import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -60,11 +67,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectProm
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
-import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
-import com.microsoft.identity.common.internal.request.BrokerAcquireTokenOperationParameters;
-import com.microsoft.identity.common.internal.request.BrokerAcquireTokenSilentOperationParameters;
-import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
@@ -106,7 +108,7 @@ public abstract class BaseController {
         return stringBuilder.toString().trim();
     }
 
-    public abstract AcquireTokenResult acquireToken(final AcquireTokenOperationParameters request)
+    public abstract AcquireTokenResult acquireToken(final InteractiveTokenCommandParameters request)
             throws Exception;
 
     public abstract void completeAcquireToken(
@@ -115,29 +117,32 @@ public abstract class BaseController {
             final Intent data
     );
 
-    public abstract AcquireTokenResult acquireTokenSilent(final AcquireTokenSilentOperationParameters request)
+    public abstract AcquireTokenResult acquireTokenSilent(
+            final SilentTokenCommandParameters parameters)
             throws Exception;
 
-    public abstract List<ICacheRecord> getAccounts(final OperationParameters parameters)
+    public abstract List<ICacheRecord> getAccounts(
+            final CommandParameters parameters)
             throws Exception;
 
-    public abstract boolean removeAccount(final OperationParameters parameters)
+    public abstract boolean removeAccount(
+            final RemoveAccountCommandParameters parameters)
             throws Exception;
 
-    public abstract boolean getDeviceMode(final OperationParameters parameters)
+    public abstract boolean getDeviceMode(final CommandParameters parameters)
             throws Exception;
 
-    public abstract List<ICacheRecord> getCurrentAccount(final OperationParameters parameters)
+    public abstract List<ICacheRecord> getCurrentAccount(final CommandParameters parameters)
             throws Exception;
 
-    public abstract boolean removeCurrentAccount(final OperationParameters parameters)
+    public abstract boolean removeCurrentAccount(final RemoveAccountCommandParameters parameters)
             throws Exception;
 
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
      */
     protected final AuthorizationRequest.Builder initializeAuthorizationRequestBuilder(@NonNull final AuthorizationRequest.Builder builder,
-                                                                                       @NonNull final OperationParameters parameters) {
+                                                                                       @NonNull final TokenCommandParameters parameters) {
         UUID correlationId = null;
 
         try {
@@ -150,11 +155,13 @@ public abstract class BaseController {
                 .setRedirectUri(parameters.getRedirectUri())
                 .setCorrelationId(correlationId);
 
-        if (parameters instanceof AcquireTokenOperationParameters) {
-            AcquireTokenOperationParameters acquireTokenOperationParameters = (AcquireTokenOperationParameters) parameters;
+        final Set<String> scopes = parameters.getScopes();
+
+        if (parameters instanceof InteractiveTokenCommandParameters) {
+            InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters) parameters;
             // Set the multipleCloudAware and slice fields.
-            if (acquireTokenOperationParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
-                final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) acquireTokenOperationParameters.getAuthority();
+            if (interactiveTokenCommandParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
+                final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) interactiveTokenCommandParameters.getAuthority();
                 ((MicrosoftAuthorizationRequest.Builder) builder)
                         .setAuthority(requestAuthority.getAuthorityURL())
                         .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
@@ -165,41 +172,41 @@ public abstract class BaseController {
                 ((MicrosoftStsAuthorizationRequest.Builder) builder).setTokenScope(TextUtils.join(" ", parameters.getScopes()));
             }
 
-            if (acquireTokenOperationParameters.getExtraScopesToConsent() != null) {
-                parameters.getScopes().addAll(acquireTokenOperationParameters.getExtraScopesToConsent());
+            if (interactiveTokenCommandParameters.getExtraScopesToConsent() != null) {
+                scopes.addAll(interactiveTokenCommandParameters.getExtraScopesToConsent());
             }
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
             builder.setLoginHint(
-                    acquireTokenOperationParameters.getLoginHint()
+                    interactiveTokenCommandParameters.getLoginHint()
             ).setExtraQueryParams(
-                    acquireTokenOperationParameters.getExtraQueryStringParameters()
+                    interactiveTokenCommandParameters.getExtraQueryStringParameters()
             ).setPrompt(
-                    acquireTokenOperationParameters.getOpenIdConnectPromptParameter().toString()
+                    interactiveTokenCommandParameters.getPrompt().toString()
             ).setClaims(
                     parameters.getClaimsRequestJson()
             ).setRequestHeaders(
-                    acquireTokenOperationParameters.getRequestHeaders()
+                    interactiveTokenCommandParameters.getRequestHeaders()
             ).setWebViewZoomEnabled(
-                    acquireTokenOperationParameters.isWebViewZoomEnabled()
+                    interactiveTokenCommandParameters.isWebViewZoomEnabled()
             ).setWebViewZoomControlsEnabled(
-                    acquireTokenOperationParameters.isWebViewZoomControlsEnabled()
+                    interactiveTokenCommandParameters.isWebViewZoomControlsEnabled()
             );
 
             // We don't want to show the SELECT_ACCOUNT page if login_hint is set.
-            if (!StringExtensions.isNullOrBlank(acquireTokenOperationParameters.getLoginHint()) &&
-                    acquireTokenOperationParameters.getOpenIdConnectPromptParameter() == OpenIdConnectPromptParameter.SELECT_ACCOUNT) {
+            if (!StringExtensions.isNullOrBlank(interactiveTokenCommandParameters.getLoginHint()) &&
+                    interactiveTokenCommandParameters.getPrompt() == OpenIdConnectPromptParameter.SELECT_ACCOUNT) {
                 builder.setPrompt(null);
             }
         }
 
-        builder.setScope(TextUtils.join(" ", parameters.getScopes()));
+        builder.setScope(TextUtils.join(" ", scopes));
 
         return builder;
     }
 
     protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
-                                                           @NonNull final OperationParameters parameters) {
+                                                           @NonNull final TokenCommandParameters parameters) {
         final AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
         initializeAuthorizationRequestBuilder(builder, parameters);
         return builder.build();
@@ -208,10 +215,10 @@ public abstract class BaseController {
     protected TokenResult performTokenRequest(@NonNull final OAuth2Strategy strategy,
                                               @NonNull final AuthorizationRequest request,
                                               @NonNull final AuthorizationResponse response,
-                                              @NonNull final AcquireTokenOperationParameters parameters)
+                                              @NonNull final InteractiveTokenCommandParameters parameters)
             throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
-        HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAppContext());
+        HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAndroidApplicationContext());
 
         final TokenRequest tokenRequest = strategy.createTokenRequest(
                 request,
@@ -227,7 +234,7 @@ public abstract class BaseController {
         return tokenResult;
     }
 
-    protected void renewAccessToken(@NonNull final AcquireTokenSilentOperationParameters parameters,
+    protected void renewAccessToken(@NonNull final SilentTokenCommandParameters parameters,
                                     @NonNull final AcquireTokenResult acquireTokenSilentResult,
                                     @NonNull final OAuth2TokenCache tokenCache,
                                     @NonNull final OAuth2Strategy strategy,
@@ -238,11 +245,17 @@ public abstract class BaseController {
                 TAG + methodName,
                 "Renewing access token..."
         );
-        parameters.setRefreshToken(cacheRecord.getRefreshToken());
+
+        RefreshTokenRecord refreshTokenRecord = cacheRecord.getRefreshToken();
 
         logParameters(TAG, parameters);
 
-        final TokenResult tokenResult = performSilentTokenRequest(strategy, parameters);
+        final TokenResult tokenResult = performSilentTokenRequest(
+                strategy,
+                refreshTokenRecord,
+                parameters
+        );
+
         acquireTokenSilentResult.setTokenResult(tokenResult);
 
         logResult(TAG + methodName, tokenResult);
@@ -362,7 +375,8 @@ public abstract class BaseController {
 
     protected TokenResult performSilentTokenRequest(
             @NonNull final OAuth2Strategy strategy,
-            @NonNull final AcquireTokenSilentOperationParameters parameters)
+            @NonNull final RefreshTokenRecord refreshToken,
+            @NonNull final SilentTokenCommandParameters parameters)
             throws ClientException, IOException {
         final String methodName = ":performSilentTokenRequest";
 
@@ -371,7 +385,7 @@ public abstract class BaseController {
                 "Requesting tokens..."
         );
 
-        HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAppContext());
+        HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAndroidApplicationContext());
 
         // Check that the authority is known
         final Authority.KnownAuthorityResult authorityResult =
@@ -384,7 +398,7 @@ public abstract class BaseController {
         final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(parameters.getAuthenticationScheme());
         refreshTokenRequest.setClientId(parameters.getClientId());
         refreshTokenRequest.setScope(TextUtils.join(" ", parameters.getScopes()));
-        refreshTokenRequest.setRefreshToken(parameters.getRefreshToken().getSecret());
+        refreshTokenRequest.setRefreshToken(refreshToken.getSecret());
 
         if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
@@ -396,9 +410,9 @@ public abstract class BaseController {
         }
 
         // Set Broker version to Token Request if it's a brokered request.
-        if (parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
+        if (parameters instanceof BrokerSilentTokenCommandParameters) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setBrokerVersion(
-                    ((BrokerAcquireTokenSilentOperationParameters) parameters).getBrokerVersion()
+                    ((BrokerSilentTokenCommandParameters) parameters).getBrokerVersion()
             );
         }
 
@@ -446,13 +460,12 @@ public abstract class BaseController {
         return null == idTokenRecord;
     }
 
-    protected void addDefaultScopes(@NonNull final OperationParameters operationParameters) {
-        final Set<String> requestScopes = operationParameters.getScopes();
+    protected Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
+        final Set<String> requestScopes = commandParameters.getScopes();
         requestScopes.addAll(DEFAULT_SCOPES);
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
-        operationParameters.setScopes(requestScopes);
-
+        return requestScopes;
     }
 
     /**
@@ -462,7 +475,7 @@ public abstract class BaseController {
      * @return
      */
     protected AccountRecord getCachedAccountRecord(
-            @NonNull final AcquireTokenSilentOperationParameters parameters) throws ClientException {
+            @NonNull final SilentTokenCommandParameters parameters) throws ClientException {
         if (parameters.getAccount() == null) {
             throw new ClientException(
                     ErrorStrings.NO_ACCOUNT_FOUND,
@@ -490,7 +503,7 @@ public abstract class BaseController {
             // multi-realm accounts relative to B2C, we'll conditionally use the home_account_id
             // in these cases
             targetAccount = parameters
-                    .getTokenCache()
+                    .getOAuth2TokenCache()
                     .getAccountByHomeAccountId(
                             null,
                             clientId,
@@ -498,7 +511,7 @@ public abstract class BaseController {
                     );
         } else {
             targetAccount = parameters
-                    .getTokenCache()
+                    .getOAuth2TokenCache()
                     .getAccountByLocalAccountId(
                             null,
                             clientId,

@@ -26,12 +26,13 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.request.AcquireTokenOperationParameters;
-import com.microsoft.identity.common.internal.request.AcquireTokenSilentOperationParameters;
-import com.microsoft.identity.common.internal.request.BrokerAcquireTokenOperationParameters;
-import com.microsoft.identity.common.internal.request.BrokerAcquireTokenSilentOperationParameters;
-import com.microsoft.identity.common.internal.request.OperationParameters;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.UnsupportedEncodingException;
@@ -59,18 +60,10 @@ public class ApiStartEvent extends BaseEvent {
         return this;
     }
 
-    public ApiStartEvent putProperties(@NonNull final OperationParameters parameters) {
+    public ApiStartEvent putProperties(
+            @NonNull final CommandParameters parameters) {
         if (parameters == null) {
             return this;
-        }
-
-        final Authority authority = parameters.getAuthority();
-
-        if (authority != null) {
-            if (authority.getAuthorityURL() != null) {
-                put(Key.AUTHORITY, authority.getAuthorityURL().getAuthority()); //Pii
-            }
-            put(Key.AUTHORITY_TYPE, authority.getAuthorityTypeString());
         }
 
         if (parameters.getSdkType() != null) {
@@ -79,15 +72,40 @@ public class ApiStartEvent extends BaseEvent {
 
         put(Key.SDK_VERSION, parameters.getSdkVersion());
 
-        put(Key.CLAIM_REQUEST, StringUtil.isEmpty(
-                parameters.getClaimsRequestJson()) ? Value.FALSE : Value.TRUE
-        );
-
         put(Key.REDIRECT_URI, parameters.getRedirectUri()); //Pii
         put(Key.CLIENT_ID, parameters.getClientId()); //Pii
 
-        if (parameters instanceof AcquireTokenOperationParameters) {
-            final AcquireTokenOperationParameters atOperationParameters = (AcquireTokenOperationParameters) parameters;
+        put(
+                Key.BROKER_PROTOCOL_VERSION,
+                String.valueOf(parameters.getRequiredBrokerProtocolVersion())
+        );
+
+        if (parameters instanceof TokenCommandParameters) {
+
+            final TokenCommandParameters tokenCommandParameters = (TokenCommandParameters) parameters;
+
+            final Authority authority = tokenCommandParameters.getAuthority();
+
+            if (authority != null) {
+                if (authority.getAuthorityURL() != null) {
+                    put(Key.AUTHORITY, authority.getAuthorityURL().getAuthority()); //Pii
+                }
+                put(Key.AUTHORITY_TYPE, authority.getAuthorityTypeString());
+            }
+
+            put(Key.CLAIM_REQUEST, StringUtil.isEmpty(
+                    tokenCommandParameters.getClaimsRequestJson()) ? Value.FALSE : Value.TRUE
+            );
+
+            if (tokenCommandParameters.getScopes() != null) {
+                put(Key.SCOPE_SIZE, String.valueOf(tokenCommandParameters.getScopes().size()));
+                put(Key.SCOPE, tokenCommandParameters.getScopes().toString()); //Pii
+            }
+
+        }
+
+        if (parameters instanceof InteractiveTokenCommandParameters) {
+            final InteractiveTokenCommandParameters atOperationParameters = (InteractiveTokenCommandParameters) parameters;
 
             if (atOperationParameters.getAuthorizationAgent() != null) {
                 put(
@@ -106,37 +124,31 @@ public class ApiStartEvent extends BaseEvent {
                 );
             }
 
-            if (atOperationParameters.getOpenIdConnectPromptParameter() != null) {
+            if (atOperationParameters.getPrompt() != null) {
                 put(Key.PROMPT_BEHAVIOR,
-                        atOperationParameters.getOpenIdConnectPromptParameter().toString()
+                        atOperationParameters.getPrompt().toString()
                 );
             }
         }
 
-        if (parameters instanceof AcquireTokenSilentOperationParameters) {
-            if (parameters.getAccount() != null) {
-                put(Key.USER_ID, parameters.getAccount().getHomeAccountId()); //Pii
+        if (parameters instanceof SilentTokenCommandParameters) {
+
+            final SilentTokenCommandParameters silentParameters = (SilentTokenCommandParameters) parameters;
+
+            if (silentParameters.getAccount() != null) {
+                put(Key.USER_ID, silentParameters.getAccount().getHomeAccountId()); //Pii
             }
             put(
                     Key.IS_FORCE_REFRESH,
-                    String.valueOf(parameters.getForceRefresh())
+                    String.valueOf(silentParameters.isForceRefresh())
             );
-            put(
-                    Key.BROKER_PROTOCOL_VERSION,
-                    String.valueOf(parameters.getRequiredBrokerProtocolVersion())
-            );
-
-            if (parameters.getScopes() != null) {
-                put(Key.SCOPE_SIZE, String.valueOf(parameters.getScopes().size()));
-                put(Key.SCOPE, parameters.getScopes().toString()); //Pii
-            }
         }
 
-        if (parameters instanceof BrokerAcquireTokenOperationParameters) {
+        if (parameters instanceof BrokerInteractiveTokenCommandParameters) {
             //TODO when integrate the telemetry with broker.
         }
 
-        if (parameters instanceof BrokerAcquireTokenSilentOperationParameters) {
+        if (parameters instanceof BrokerSilentTokenCommandParameters) {
             //TODO when integrate the telemetry with broker.
         }
 
