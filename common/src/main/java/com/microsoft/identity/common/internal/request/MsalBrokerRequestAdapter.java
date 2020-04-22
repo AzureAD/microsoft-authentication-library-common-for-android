@@ -60,6 +60,7 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
+import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
@@ -78,6 +79,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEFAULT_BROWSER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 import static com.microsoft.identity.common.internal.util.GzipUtil.decompressBytesToString;
 
@@ -188,7 +190,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                             "validation is expected to fail",
                     null)
             ;
-            return parameters;
+            return  BrokerInteractiveTokenCommandParameters.builder().build();
         }
 
         int callingAppUid = intent.getIntExtra(
@@ -216,6 +218,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             UUID correlationId = UUID.randomUUID();
             correlationIdString = correlationId.toString();
         }
+        final String negotiatedBrokerProtocolVersion = intent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
 
         Logger.info(TAG, "Authorization agent passed in by MSAL: " + brokerRequest.getAuthorizationAgent());
 
@@ -238,7 +241,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .claimsRequestJson(brokerRequest.getClaims())
                 .prompt(brokerRequest.getPrompt() != null ?
                         OpenIdConnectPromptParameter.valueOf(brokerRequest.getPrompt()) :
-                        OpenIdConnectPromptParameter.NONE);
+                        OpenIdConnectPromptParameter.NONE)
+                .negotiatedBrokerProtocolVersion(negotiatedBrokerProtocolVersion);
 
         if (brokerRequest.getAuthorizationAgent() != null
                 && brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())
@@ -277,7 +281,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                             "validation is expected to fail",
                     null)
             ;
-            return new BrokerSilentTokenCommandParameters();
+            return BrokerSilentTokenCommandParameters
+                    .builder().build();
         }
 
         int callingAppUid = bundle.getInt(
@@ -302,6 +307,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             correlationIdString = correlationId.toString();
         }
 
+        final String negotiatedBrokerProtocolVersion = bundle.getString(NEGOTIATED_BP_VERSION_KEY);
+
         final BrokerSilentTokenCommandParameters commandParameters = BrokerSilentTokenCommandParameters
                 .builder()
                 .authenticationScheme(getAuthenticationScheme(context, brokerRequest))
@@ -321,6 +328,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .loginHint(brokerRequest.getUserName())
                 .homeAccountId(brokerRequest.getHomeAccountId())
                 .localAccountId(brokerRequest.getLocalAccountId())
+                .negotiatedBrokerProtocolVersion(negotiatedBrokerProtocolVersion)
                 .build();
 
 
@@ -404,23 +412,34 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final InteractiveTokenCommandParameters parameters) {
+    public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final InteractiveTokenCommandParameters parameters,
+                                                             @Nullable final String negotiatedBrokerProtocolVersion) {
         final BrokerRequest brokerRequest = brokerRequestFromAcquireTokenParameters(parameters);
         final Bundle requestBundle = new Bundle();
 
-        try {
-            final String jsonRequestString = sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class);
-            byte[] compressedBytes = compressString(jsonRequestString);
-            Logger.info(TAG, "Broker Request, raw payload size:"
-                    + jsonRequestString.getBytes().length + " ,compressed bytes " + compressedBytes.length
-            );
-            requestBundle.putByteArray(
-                    AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED,
-                    compressedBytes
-            );
+        if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedBrokerProtocolVersion)) {
+            try {
+                final String jsonRequestString = sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class);
+                byte[] compressedBytes = compressString(jsonRequestString);
+                Logger.info(TAG, "Broker Request, raw payload size:"
+                        + jsonRequestString.getBytes().length + " ,compressed bytes " + compressedBytes.length
+                );
+                requestBundle.putByteArray(
+                        AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED,
+                        compressedBytes
+                );
 
-        } catch (IOException e) {
-            Logger.error(TAG, "Compression to bytes failed, sending broker request as String", e);
+            } catch (IOException e) {
+                Logger.error(TAG, "Compression to bytes failed, sending broker request as String", e);
+                requestBundle.putString(
+                        AuthenticationConstants.Broker.BROKER_REQUEST_V2,
+                        sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class)
+                );
+            }
+        } else {
+            Logger.info(TAG, "Broker protocol version: " + negotiatedBrokerProtocolVersion +
+                    " lower than compression changes, sending as string"
+            );
             requestBundle.putString(
                     AuthenticationConstants.Broker.BROKER_REQUEST_V2,
                     sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class)
@@ -430,25 +449,36 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
 
-    public Bundle getRequestBundleForAcquireTokenSilent(final SilentTokenCommandParameters parameters) {
+    public Bundle getRequestBundleForAcquireTokenSilent(@NonNull final SilentTokenCommandParameters parameters,
+                                                        @Nullable final String negotiatedBrokerProtocolVersion) {
         final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
 
         final Bundle requestBundle = new Bundle();
         final BrokerRequest brokerRequest = msalBrokerRequestAdapter.
                 brokerRequestFromSilentOperationParameters(parameters);
 
-        try {
-            final String jsonString = sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class);
-            byte[] compressedBytes = compressString(jsonString);
-            Logger.info(TAG, "Broker Result, raw payload size:"
-                    + jsonString.getBytes().length + " ,compressed bytes " + compressedBytes.length
+        if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedBrokerProtocolVersion)) {
+            try {
+                final String jsonString = sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class);
+                byte[] compressedBytes = compressString(jsonString);
+                Logger.info(TAG, "Broker Result, raw payload size:"
+                        + jsonString.getBytes().length + " ,compressed bytes " + compressedBytes.length
+                );
+                requestBundle.putByteArray(
+                        AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED,
+                        compressedBytes
+                );
+            } catch (IOException e) {
+                Logger.error(TAG, "Compression to bytes failed, sending broker request as json String", e);
+                requestBundle.putString(
+                        AuthenticationConstants.Broker.BROKER_REQUEST_V2,
+                        sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class)
+                );
+            }
+        } else {
+            Logger.info(TAG, "Broker protocol version: " + negotiatedBrokerProtocolVersion +
+                    " lower than compression changes, sending as string"
             );
-            requestBundle.putByteArray(
-                    AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED,
-                    compressedBytes
-            );
-        } catch (IOException e) {
-            Logger.error(TAG, "Compression to bytes failed, sending broker request as json String", e);
             requestBundle.putString(
                     AuthenticationConstants.Broker.BROKER_REQUEST_V2,
                     sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class)

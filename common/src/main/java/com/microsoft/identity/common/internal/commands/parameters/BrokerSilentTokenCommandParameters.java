@@ -43,4 +43,5 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     private String localAccountId;
     private int sleepTimeBeforePrtAcquisition;
     private String loginHint;
+    private String negotiatedBrokerProtocolVersion;
 }
