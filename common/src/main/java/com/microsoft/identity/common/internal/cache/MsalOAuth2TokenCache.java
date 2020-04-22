@@ -538,7 +538,7 @@ public class MsalOAuth2TokenCache
         );
 
         // Load the RefreshTokens
-        final List<Credential> refreshTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> refreshTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
                 account.getEnvironment(),
                 CredentialType.RefreshToken,
@@ -551,6 +551,36 @@ public class MsalOAuth2TokenCache
                         : target,
                 null // not applicable
         );
+
+        if (refreshTokens.isEmpty()) {
+            // If we didn't find an RT in the cache, this could be a "TSL-seed" or "dual-client stack"
+            // scenario
+            //
+            // Defining these terms:
+            // TSL-seed: another 1P TSL integrated app has put a token into our cache so we can
+            //     pick it up
+            //
+            // Dual-Client stack: two FoCI-enabled app registrations are sharing a single binary
+            //     and accordingly, can share RTs.
+            //     Examples for this might be TFL/TFW - which uses multiple client ids to enable
+            //     different scenarios depending on enterprise vs. consumer usage
+
+            // Unlike the broker, where we check if an app is FoCI prior to making a network call
+            // with an arbitrary FoCI RT we find in the cache, if we're in standalone mode and find
+            // a FoCI RT in the cache, the current app must also be FoCI (!!!)
+            //
+            // Making the assumption that the current client id can use any FoCI RT we find in the
+            // cache is strictly contingent that app developers NOT mix FoCI/non-FoCI registrations
+            // into same binary. If you do this, you'll get confusing errors that the RT used doesn't
+            // match the client app registration. This assumption means we don't need to implement
+            // "FoCI probing" and/or track FoCI app meta
+            final Credential fallbackFrt = getFamilyRefreshTokenForAccount(account);
+
+            if (null != fallbackFrt) {
+                refreshTokens = new ArrayList<>();
+                refreshTokens.add(fallbackFrt);
+            }
+        }
 
         // Load the IdTokens
         final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
@@ -582,6 +612,63 @@ public class MsalOAuth2TokenCache
         result.setV1IdToken(v1IdTokens.isEmpty() ? null : (IdTokenRecord) v1IdTokens.get(0));
 
         Telemetry.emit(new CacheEndEvent().putCacheRecordStatus(result));
+        return result;
+    }
+
+    /**
+     * Load an FRTs from the cache which may be used by this account.
+     *
+     * @param account The account for which an FRT is sought.
+     * @return A matching FRT credential, if exists. May be null.
+     */
+    @Nullable
+    private Credential getFamilyRefreshTokenForAccount(@NonNull final AccountRecord account) {
+        final String methodName = ":getFamilyRefreshTokensForAccount";
+
+        // Our eventual result - init to null, will assign if valid FRT is found
+        Credential result = null;
+
+        // Look for an arbitrary RT matching the current user.
+        // If we find one, check that it is FoCI, if it is, assume it works.
+        final List<Credential> fallbackRts = mAccountCredentialCache.getCredentialsFilteredBy(
+                account.getHomeAccountId(),
+                account.getEnvironment(),
+                CredentialType.RefreshToken,
+                null, // wildcard (*)
+                null, // wildcard (*) -- all FRTs are MRRTs by definition
+                null, // wildcard (*) -- all FRTs are MRRTs by definition
+                null // not applicable
+        );
+
+        if (!fallbackRts.isEmpty()) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Inspecting fallback RTs for a FoCI match."
+            );
+
+            // Any arbitrary RT should be OK -- if multiple clients are stacked,
+            // they're either "all FoCI" or none are.
+            for (final Credential rt : fallbackRts) {
+                if (rt instanceof RefreshTokenRecord) {
+                    final RefreshTokenRecord refreshTokenRecord = (RefreshTokenRecord) rt;
+
+                    final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
+                            refreshTokenRecord.getFamilyId()
+                    );
+
+                    if (isFamilyRefreshToken) {
+                        Logger.verbose(
+                                TAG + methodName,
+                                "Fallback RT found."
+                        );
+
+                        result = rt;
+                        break;
+                    }
+                }
+            }
+        }
+
         return result;
     }
 

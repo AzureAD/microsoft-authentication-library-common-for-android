@@ -76,7 +76,7 @@ public interface IAccountCredentialCache {
      * @param homeAccountId The homeAccountId used to match Account cache keys.
      * @param environment   The environment used to match Account cache keys.
      * @param realm         The realm used to match Account cache keys.
-     * @return A List of Accounts matching the supplied criteria.
+     * @return A mutable List of Accounts matching the supplied criteria.
      */
     List<AccountRecord> getAccountsFilteredBy(
             final String homeAccountId,
@@ -87,7 +87,7 @@ public interface IAccountCredentialCache {
     /**
      * Returns all of the Credentials saved in the cache.
      *
-     * @return The saved Credentials.
+     * @return A mutable List of saved Credentials.
      */
     List<Credential> getCredentials();
 
@@ -100,7 +100,7 @@ public interface IAccountCredentialCache {
      * @param clientId       The clientId used to match Credential cache keys.
      * @param realm          The realm used to match Credential cache keys.
      * @param target         The target used to match Credential cache keys.
-     * @return A List of Credentials matching the supplied criteria.
+     * @return A mutable List of Credentials matching the supplied criteria.
      */
     List<Credential> getCredentialsFilteredBy(
             final String homeAccountId,
