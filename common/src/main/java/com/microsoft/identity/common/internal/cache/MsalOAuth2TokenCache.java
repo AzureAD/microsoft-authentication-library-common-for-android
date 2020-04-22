@@ -569,12 +569,6 @@ public class MsalOAuth2TokenCache
             // Unlike the broker, where we check if an app is FoCI prior to making a network call
             // with an arbitrary FoCI RT we find in the cache, if we're in standalone mode and find
             // a FoCI RT in the cache, the current app must also be FoCI (!!!)
-            //
-            // Making the assumption that the current client id can use any FoCI RT we find in the
-            // cache is strictly contingent that app developers NOT mix 1P & 3P registrations into
-            // the same binary. If you do this, Bad Things will happen and you'll get confusing
-            // errors that the RT used doesn't match the client app registration. Also, this
-            // assumption means we don't need to implement "FoCI probing" and/or track FoCI app meta
 
             if (refreshTokens.isEmpty()) {
                 // Look for an arbitrary RT matching the current user.
@@ -599,8 +593,8 @@ public class MsalOAuth2TokenCache
                             "Inspecting fallback RTs for a FoCI match."
                     );
 
-                    // Any arbitrary RT should be OK -- if multiple clients are stacked, they're either
-                    // "all FoCI" or none are.
+                    // Any arbitrary RT should be OK -- if multiple clients are stacked,
+                    // they're either "all FoCI" or none are.
                     final Credential rt = fallbackRts.get(0);
 
                     if (rt instanceof RefreshTokenRecord) {
@@ -621,7 +615,7 @@ public class MsalOAuth2TokenCache
                     }
                 }
             }
-        } // TODO run this impl past team, if it flys, then write unit tests
+        }
 
         // Load the IdTokens
         final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
