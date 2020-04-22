@@ -520,7 +520,6 @@ public class MsalOAuth2TokenCache
                              @Nullable final String target,
                              @NonNull final AccountRecord account,
                              @NonNull final AbstractAuthenticationScheme authScheme) {
-        final String methodName = ":load";
         Telemetry.emit(new CacheStartEvent());
 
         final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
