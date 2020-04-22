@@ -70,6 +70,9 @@ public class CommandParameters {
     @Expose()
     private String redirectUri;
 
+    @Expose()
+    private boolean powerOptCheckEnabled;
+
     @Setter
     @EqualsAndHashCode.Exclude
     @Expose()

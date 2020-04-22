@@ -119,7 +119,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         parameters.isBrokerBrowserSupportEnabled() ?
                                 AuthorizationAgent.BROWSER.name() :
                                 AuthorizationAgent.WEBVIEW.name()
-                ).authenticationScheme(parameters.getAuthenticationScheme()).build();
+                ).authenticationScheme(parameters.getAuthenticationScheme())
+                .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                .build();
 
         return brokerRequest;
     }
@@ -146,6 +148,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .environment(AzureActiveDirectory.getEnvironment().name())
                 .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
                 .authenticationScheme(parameters.getAuthenticationScheme())
+                .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
                 .build();
 
         return brokerRequest;
@@ -230,7 +233,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .claimsRequestJson(brokerRequest.getClaims())
                 .prompt(brokerRequest.getPrompt() != null ?
                         OpenIdConnectPromptParameter.valueOf(brokerRequest.getPrompt()) :
-                        OpenIdConnectPromptParameter.NONE);
+                        OpenIdConnectPromptParameter.NONE)
+                .powerOptCheckEnabled(brokerRequest.isPowerOptCheckEnabled());
 
         if (brokerRequest.getAuthorizationAgent() != null
                 && brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())
@@ -308,6 +312,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .loginHint(brokerRequest.getUserName())
                 .homeAccountId(brokerRequest.getHomeAccountId())
                 .localAccountId(brokerRequest.getLocalAccountId())
+                .powerOptCheckEnabled(brokerRequest.isPowerOptCheckEnabled())
                 .build();
 
 

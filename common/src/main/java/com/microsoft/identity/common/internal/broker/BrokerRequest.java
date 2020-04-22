@@ -57,6 +57,7 @@ public class BrokerRequest implements Serializable {
         final static String MULTIPLE_CLOUDS_SUPPORTED = "multiple_clouds_supported";
         final static String AUTHORIZATION_AGENT = "authorization_agent";
         final static String AUTHENTICATION_SCHEME = "authentication_scheme";
+        final static String POWER_OPT_CHECK_ENABLED = "power_opt_check_enabled";
     }
 
     /**
@@ -189,6 +190,10 @@ public class BrokerRequest implements Serializable {
     @SerializedName(SerializedNames.AUTHENTICATION_SCHEME)
     private AbstractAuthenticationScheme mAuthenticationScheme;
 
+    @Nullable
+    @SerializedName(SerializedNames.POWER_OPT_CHECK_ENABLED)
+    private boolean mPowerOptCheckEnabled;
+
     private BrokerRequest(BrokerRequest.Builder builder) {
         mAuthority = builder.mAuthority;
         mScope = builder.mScope;
@@ -209,6 +214,7 @@ public class BrokerRequest implements Serializable {
         mMultipleCloudsSupported = builder.mMultipleCloudsSupported;
         mAuthorizationAgent = builder.mAuthorizationAgent;
         mAuthenticationScheme = builder.mAuthenticationScheme;
+        mPowerOptCheckEnabled = builder.mPowerOptCheckEnabled;
     }
 
     public String getAuthority() {
@@ -287,6 +293,10 @@ public class BrokerRequest implements Serializable {
         return mAuthenticationScheme;
     }
 
+    public boolean isPowerOptCheckEnabled(){
+        return mPowerOptCheckEnabled;
+    }
+
     /**
      * Builder class for Broker Request.
      */
@@ -329,6 +339,8 @@ public class BrokerRequest implements Serializable {
         private String mAuthorizationAgent;
 
         private AbstractAuthenticationScheme mAuthenticationScheme;
+
+        private boolean mPowerOptCheckEnabled;
 
         /**
          * Authority for the request
@@ -473,6 +485,11 @@ public class BrokerRequest implements Serializable {
 
         public BrokerRequest.Builder authenticationScheme(@NonNull final AbstractAuthenticationScheme authenticationScheme) {
             this.mAuthenticationScheme = authenticationScheme;
+            return this;
+        }
+
+        public BrokerRequest.Builder powerOptCheckEnabled(@NonNull final boolean powerOptCheckEnabled) {
+            this.mPowerOptCheckEnabled = powerOptCheckEnabled;
             return this;
         }
 

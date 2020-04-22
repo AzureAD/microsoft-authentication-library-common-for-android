@@ -188,21 +188,20 @@ public class HttpWebRequest {
      * @param context Context
      * @throws ClientException throw network exception
      */
-    public static void throwIfNetworkNotAvailable(final Context context) throws ClientException {
+    public static void throwIfNetworkNotAvailable(final Context context, final boolean powerOptCheckEnabled) throws ClientException {
         final DefaultConnectionService connectionService = new DefaultConnectionService(context);
+
+        if (powerOptCheckEnabled && connectionService.isNetworkDisabledFromOptimizations()) {
+            throw new ClientException(
+                    ErrorStrings.NO_NETWORK_CONNECTION_POWER_OPTIMIZATION,
+                    "Connection is not available to refresh token because power optimization is "
+                            + "enabled. And the device is in doze mode or the app is standby");
+        }
+
         if (!connectionService.isConnectionAvailable()) {
-            if (connectionService.isNetworkDisabledFromOptimizations()) {
-                final ClientException dozeModeException = new ClientException(
-                        ErrorStrings.NO_NETWORK_CONNECTION_POWER_OPTIMIZATION,
-                        "Connection is not available to refresh token because power optimization is "
-                                + "enabled. And the device is in doze mode or the app is standby");
-                throw dozeModeException;
-            } else {
-                final ClientException generalNetworkException = new ClientException(
-                        ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
-                        "Connection is not available to refresh token");
-                throw generalNetworkException;
-            }
+            throw new ClientException(
+                    ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
+                    "Connection is not available to refresh token");
         }
     }
 
