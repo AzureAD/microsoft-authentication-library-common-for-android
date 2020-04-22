@@ -26,6 +26,9 @@ import android.os.Bundle;
 
 import com.microsoft.identity.common.exception.BaseException;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 public interface IBrokerResultAdapter {
 
     /**
@@ -33,14 +36,16 @@ public interface IBrokerResultAdapter {
      * @param authenticationResult
      * @return Bundle
      */
-    Bundle bundleFromAuthenticationResult(ILocalAuthenticationResult authenticationResult);
+    Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,
+                                          @Nullable final String negotiatedBrokerProtocolVersion);
 
     /**
      * Returns an error bundle with properties from Exception.
      * @param exception
      * @return
      */
-    Bundle bundleFromBaseException(BaseException exception);
+    Bundle bundleFromBaseException(@NonNull BaseException exception,
+                                   @Nullable final String negotiatedBrokerProtocolVersion);
 
     /**
      * Returns authentication result from Broker result bundle
