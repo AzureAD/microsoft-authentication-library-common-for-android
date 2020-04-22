@@ -569,6 +569,12 @@ public class MsalOAuth2TokenCache
             // Unlike the broker, where we check if an app is FoCI prior to making a network call
             // with an arbitrary FoCI RT we find in the cache, if we're in standalone mode and find
             // a FoCI RT in the cache, the current app must also be FoCI (!!!)
+            //
+            // Making the assumption that the current client id can use any FoCI RT we find in the
+            // cache is strictly contingent that app developers NOT mix FoCI/non-FoCI registrations
+            // into same binary. If you do this, you'll get confusing errors that the RT used doesn't
+            // match the client app registration. This assumption means we don't need to implement
+            // "FoCI probing" and/or track FoCI app meta
             final Credential fallbackFrt = getFamilyRefreshTokenForAccount(account);
 
             if (null != fallbackFrt) {
