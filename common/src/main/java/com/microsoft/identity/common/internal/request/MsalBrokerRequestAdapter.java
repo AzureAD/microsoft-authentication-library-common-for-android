@@ -422,7 +422,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 final String jsonRequestString = sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class);
                 byte[] compressedBytes = compressString(jsonRequestString);
                 Logger.info(TAG, "Broker Request, raw payload size:"
-                        + jsonRequestString.getBytes().length + " ,compressed bytes " + compressedBytes.length
+                        + jsonRequestString.getBytes().length + " ,compressed bytes size: " + compressedBytes.length
                 );
                 requestBundle.putByteArray(
                         AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED,
@@ -462,7 +462,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 final String jsonString = sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class);
                 byte[] compressedBytes = compressString(jsonString);
                 Logger.info(TAG, "Broker Result, raw payload size:"
-                        + jsonString.getBytes().length + " ,compressed bytes " + compressedBytes.length
+                        + jsonString.getBytes().length + " ,compressed bytes size: " + compressedBytes.length
                 );
                 requestBundle.putByteArray(
                         AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED,

@@ -29,12 +29,15 @@ import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 public class GzipUtil {
 
     /**
      * Util method which compress the input String to bytes using gzip compression.
      */
-    public static byte[] compressString(final String inputString) throws IOException {
+    public static byte[] compressString(@NonNull final String inputString) throws IOException {
         byte[] bytes = inputString.getBytes("UTF-8");
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
@@ -49,7 +52,7 @@ public class GzipUtil {
     /**
      * Util method which converts the gzip compressed bytes to  String.
      */
-    public static String decompressBytesToString(final byte[] compressedBytes) throws IOException {
+    public static String decompressBytesToString(@NonNull final byte[] compressedBytes) throws IOException {
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressedBytes);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         GZIPInputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream);
