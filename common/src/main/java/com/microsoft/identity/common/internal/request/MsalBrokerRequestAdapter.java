@@ -442,6 +442,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     private Bundle getRequestBundleFromBrokerRequest(@NonNull BrokerRequest brokerRequest,
                                                      @Nullable String negotiatedBrokerProtocolVersion) {
         final Bundle requestBundle = new Bundle();
+
         if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedBrokerProtocolVersion)) {
             try {
                 final String jsonString = sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class);
