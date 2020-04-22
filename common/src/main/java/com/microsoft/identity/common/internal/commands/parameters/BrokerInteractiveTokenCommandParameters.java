@@ -40,6 +40,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
 
     private boolean shouldResolveInterrupt;
     private BrokerRequestType requestType;
+    private String negotiatedBrokerProtocolVersion;
 
     /**
      * Helper method to identify if the request originated from Broker itself or from client libraries.

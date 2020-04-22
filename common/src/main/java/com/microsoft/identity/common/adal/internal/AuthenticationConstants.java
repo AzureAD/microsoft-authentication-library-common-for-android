@@ -628,7 +628,7 @@ public final class AuthenticationConstants {
         /**
          * The maximum broker protocol version that common supports.
          */
-        public static final String BROKER_PROTOCOL_VERSION_CODE = "4.0";
+        public static final String BROKER_PROTOCOL_VERSION_CODE = "5.0";
 
         /**
          * The key of maximum broker protocol version that client advertised.
@@ -1070,10 +1070,21 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_REQUEST_V2 = "broker_request_v2";
 
+
+        /**
+         * String to send MSAL V2 Request params as gzip compressed byte array.
+         */
+        public static final String BROKER_REQUEST_V2_COMPRESSED = "broker_request_v2_compressed";
+
         /**
          * String to return Msal V2 response.
          */
         public static final String BROKER_RESULT_V2 = "broker_result_v2";
+
+        /**
+         * String to return MSA: V2 response as gzip compressed byte array.
+         */
+        public static final String BROKER_RESULT_V2_COMPRESSED = "broker_result_v2_compressed";
 
         /**
          * Represents the broker device mode boolean (true = shared device mode).
@@ -1136,6 +1147,11 @@ public final class AuthenticationConstants {
          * String to return account list from broker.
          */
         public static final String BROKER_ACCOUNTS = "broker_accounts";
+
+        /**
+         * String to return account list as compressed json.
+         */
+        public static final String BROKER_ACCOUNTS_COMPRESSED = "broker_accounts_compressed";
 
         /**
          * String to return current account from broker (only available in shared device mode)
