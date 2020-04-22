@@ -538,7 +538,7 @@ public class MsalOAuth2TokenCache
         );
 
         // Load the RefreshTokens
-        final List<Credential> refreshTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+        List<Credential> refreshTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
                 account.getEnvironment(),
                 CredentialType.RefreshToken,
@@ -577,6 +577,7 @@ public class MsalOAuth2TokenCache
             final Credential fallbackFrt = getFamilyRefreshTokenForAccount(account);
 
             if (null != fallbackFrt) {
+                refreshTokens = new ArrayList<>();
                 refreshTokens.add(fallbackFrt);
             }
         }
