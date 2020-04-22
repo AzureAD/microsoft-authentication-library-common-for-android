@@ -520,6 +520,7 @@ public class MsalOAuth2TokenCache
                              @Nullable final String target,
                              @NonNull final AccountRecord account,
                              @NonNull final AbstractAuthenticationScheme authScheme) {
+        final String methodName = ":load";
         Telemetry.emit(new CacheStartEvent());
 
         final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
@@ -551,6 +552,76 @@ public class MsalOAuth2TokenCache
                         : target,
                 null // not applicable
         );
+
+        {
+            // If we didn't find an RT in the cache, this could be a "TSL-seed" or "dual-client stack"
+            // scenario
+            //
+            // Defining these terms:
+            // TSL-seed: another 1P TSL integrated app has put a token into our cache so we can
+            //     pick it up
+            //
+            // Dual-Client stack: two FoCI-enabled app registrations are sharing a single binary
+            //     and accordingly, can share RTs.
+            //     Examples for this might be TFL/TFW - which uses multiple client ids to enable
+            //     different scenarios depending on enterprise vs. consumer usage
+
+            // Unlike the broker, where we check if an app is FoCI prior to making a network call
+            // with an arbitrary FoCI RT we find in the cache, if we're in standalone mode and find
+            // a FoCI RT in the cache, the current app must also be FoCI (!!!)
+            //
+            // Making the assumption that the current client id can use any FoCI RT we find in the
+            // cache is strictly contingent that app developers NOT mix 1P & 3P registrations into
+            // the same binary. If you do this, Bad Things will happen and you'll get confusing
+            // errors that the RT used doesn't match the client app registration. Also, this
+            // assumption means we don't need to implement "FoCI probing" and/or track FoCI app meta
+
+            if (refreshTokens.isEmpty()) {
+                // Look for an arbitrary RT matching the current user.
+                // If we find one, check that it is FoCI, if it is, assume it works.
+                final List<Credential> fallbackRts = mAccountCredentialCache.getCredentialsFilteredBy(
+                        account.getHomeAccountId(),
+                        account.getEnvironment(),
+                        CredentialType.RefreshToken,
+                        null, // wildcard (*)
+                        isMultiResourceCapable
+                                ? null // wildcard (*)
+                                : account.getRealm(),
+                        isMultiResourceCapable
+                                ? null // wildcard (*)
+                                : target,
+                        null // not applicable
+                );
+
+                if (!fallbackRts.isEmpty()) {
+                    Logger.verbose(
+                            TAG + methodName,
+                            "Inspecting fallback RTs for a FoCI match."
+                    );
+
+                    // Any arbitrary RT should be OK -- if multiple clients are stacked, they're either
+                    // "all FoCI" or none are.
+                    final Credential rt = fallbackRts.get(0);
+
+                    if (rt instanceof RefreshTokenRecord) {
+                        final RefreshTokenRecord refreshTokenRecord = (RefreshTokenRecord) rt;
+
+                        final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
+                                refreshTokenRecord.getFamilyId()
+                        );
+
+                        if (isFamilyRefreshToken) {
+                            Logger.verbose(
+                                    TAG + methodName,
+                                    "Fallback RT found."
+                            );
+
+                            refreshTokens.add(rt);
+                        }
+                    }
+                }
+            }
+        } // TODO run this impl past team, if it flys, then write unit tests
 
         // Load the IdTokens
         final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
