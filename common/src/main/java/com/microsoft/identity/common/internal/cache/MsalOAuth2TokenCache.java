@@ -610,7 +610,7 @@ public class MsalOAuth2TokenCache
     }
 
     /**
-     * Loads any FRTs in the cache which may be used by this account.
+     * Load an FRTs from the cache which may be used by this account.
      *
      * @param account The account for which an FRT is sought.
      * @return A matching FRT credential, if exists. May be null.
