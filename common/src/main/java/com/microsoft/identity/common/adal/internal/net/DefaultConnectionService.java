@@ -64,7 +64,7 @@ public class DefaultConnectionService implements IConnectionService {
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
         @SuppressWarnings("deprecation")
-        final boolean isConnectionAvailable = activeNetwork != null && activeNetwork.isConnectedOrConnecting() && !isNetworkDisabledFromOptimizations();
+        final boolean isConnectionAvailable = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
         Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.NETWORK_CONNECTION, String.valueOf(isConnectionAvailable)));
         return isConnectionAvailable;
     }
@@ -78,19 +78,12 @@ public class DefaultConnectionService implements IConnectionService {
     @TargetApi(Build.VERSION_CODES.M)
     public boolean isNetworkDisabledFromOptimizations() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            final UsageStatsManagerWrapper usageStatsManagerWrapper = UsageStatsManagerWrapper.getInstance();
-            if (usageStatsManagerWrapper.isAppInactive(mConnectionContext)) {
-                Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.POWER_OPTIMIZATION, String.valueOf(true)));
-                return true;
-            }
-
             final PowerManagerWrapper powerManagerWrapper = PowerManagerWrapper.getInstance();
             if (powerManagerWrapper.isDeviceIdleMode(mConnectionContext) && !powerManagerWrapper.isIgnoringBatteryOptimizations(mConnectionContext)) {
                 Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.POWER_OPTIMIZATION, String.valueOf(true)));
                 return true;
             }
         }
-
         Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.POWER_OPTIMIZATION, String.valueOf(false)));
         return false;
     }

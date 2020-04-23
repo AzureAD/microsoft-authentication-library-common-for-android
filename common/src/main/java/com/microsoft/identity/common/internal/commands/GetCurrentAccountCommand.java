@@ -20,33 +20,39 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.internal.controllers.BaseController;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.EqualsAndHashCode;
 
 /**
  * Command class to call controllers to load accounts and return the account list to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
+@EqualsAndHashCode(callSuper = true)
 public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
     private static final String TAG = GetCurrentAccountCommand.class.getSimpleName();
 
-    public GetCurrentAccountCommand(@NonNull final OperationParameters parameters,
-                                    @NonNull final BaseController controller,
-                                    @NonNull final CommandCallback callback) {
-        super(parameters, controller, callback);
+    public GetCurrentAccountCommand(@NonNull CommandParameters parameters,
+                                    @NonNull BaseController controller,
+                                    @NonNull CommandCallback callback,
+                                    @NonNull String publicApiId) {
+        super(parameters, controller, callback, publicApiId);
     }
 
-    public GetCurrentAccountCommand(@NonNull final OperationParameters parameters,
-                                    @NonNull final List<BaseController> controllers,
-                                    @NonNull final CommandCallback callback) {
-        super(parameters, controllers, callback);
+    public GetCurrentAccountCommand(@NonNull CommandParameters parameters,
+                                    @NonNull List<BaseController> controllers,
+                                    @NonNull CommandCallback callback,
+                                    @NonNull String publicApiId) {
+        super(parameters, controllers, callback, publicApiId);
     }
 
     @Override
@@ -73,11 +79,4 @@ public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
     public boolean isEligibleForEstsTelemetry() {
         return true;
     }
-
-    @Override
-    public int getCommandNameHashCode() {
-        return TAG.hashCode();
-    }
-
-
 }
