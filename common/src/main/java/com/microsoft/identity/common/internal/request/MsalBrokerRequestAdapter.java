@@ -124,7 +124,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         parameters.isBrokerBrowserSupportEnabled() ?
                                 AuthorizationAgent.BROWSER.name() :
                                 AuthorizationAgent.WEBVIEW.name()
-                ).authenticationScheme(parameters.getAuthenticationScheme()).build();
+                ).authenticationScheme(parameters.getAuthenticationScheme())
+                .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                .build();
 
         return brokerRequest;
     }
@@ -151,6 +153,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .environment(AzureActiveDirectory.getEnvironment().name())
                 .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
                 .authenticationScheme(parameters.getAuthenticationScheme())
+                .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
                 .build();
 
         return brokerRequest;
@@ -241,7 +244,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .prompt(brokerRequest.getPrompt() != null ?
                         OpenIdConnectPromptParameter.valueOf(brokerRequest.getPrompt()) :
                         OpenIdConnectPromptParameter.NONE)
-                .negotiatedBrokerProtocolVersion(negotiatedBrokerProtocolVersion);
+                .negotiatedBrokerProtocolVersion(negotiatedBrokerProtocolVersion)
+                .powerOptCheckEnabled(brokerRequest.isPowerOptCheckEnabled());
 
         if (brokerRequest.getAuthorizationAgent() != null
                 && brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())
@@ -327,6 +331,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .homeAccountId(brokerRequest.getHomeAccountId())
                 .localAccountId(brokerRequest.getLocalAccountId())
                 .negotiatedBrokerProtocolVersion(negotiatedBrokerProtocolVersion)
+                .powerOptCheckEnabled(brokerRequest.isPowerOptCheckEnabled())
                 .build();
 
 

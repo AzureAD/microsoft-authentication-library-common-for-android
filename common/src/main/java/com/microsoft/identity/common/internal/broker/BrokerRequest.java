@@ -488,7 +488,7 @@ public class BrokerRequest implements Serializable {
             return this;
         }
 
-        public BrokerRequest.Builder powerOptCheckEnabled(@NonNull final boolean powerOptCheckEnabled) {
+        public BrokerRequest.Builder powerOptCheckEnabled(final boolean powerOptCheckEnabled) {
             this.mPowerOptCheckEnabled = powerOptCheckEnabled;
             return this;
         }
