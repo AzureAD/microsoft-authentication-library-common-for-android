@@ -21,27 +21,27 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.internal.request;
+package com.microsoft.identity.common.internal.util;
 
-import android.os.Bundle;
+import android.text.TextUtils;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.logging.Logger;
+import androidx.annotation.Nullable;
 
-public class BrokerRequestAdapterFactory {
+/**
+ * Class to provide util methods to compare different features with respect to Broker Protocol version.
+ */
+public class BrokerProtocolVersionUtil {
 
-    private static final String TAG = BrokerRequestAdapterFactory.class.getName();
+    public static final String BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION = "5.0";
 
-    public static IBrokerRequestAdapter getBrokerRequestAdapter(final Bundle requestBundle) {
-        final String methodName = ":getBrokerRequestAdapter";
-        if (requestBundle != null &&
-                (requestBundle.containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2) ||
-                requestBundle.containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED))) {
-            Logger.info(TAG + methodName, "Request from MSAL, returning MsalBrokerRequestAdapter");
-            return new MsalBrokerRequestAdapter();
-        } else {
-            Logger.info(TAG + methodName, "Request from ADAL, returning AdalBrokerRequestAdapter");
-            return new AdalBrokerRequestAdapter();
+    public static boolean canCompressBrokerPayloads(@Nullable String negotiatedBrokerProtocol) {
+        if (TextUtils.isEmpty(negotiatedBrokerProtocol)) {
+            return false;
         }
+
+        return StringUtil.compareSemanticVersion(
+                negotiatedBrokerProtocol,
+                BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION) >= 0;
+
     }
 }
