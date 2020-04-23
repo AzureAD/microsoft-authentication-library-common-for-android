@@ -160,7 +160,7 @@ public final class HttpRequest {
     }
 
     /**
-     * Send post request {@link URL}, headers, post message and the request content type.
+     * Send a POST request {@link URL}, headers, post message and the request content type.
      *
      * @param requestUrl         The {@link URL} to make the http request.
      * @param requestHeaders     Headers used to send the http request.
@@ -184,7 +184,7 @@ public final class HttpRequest {
     }
 
     /**
-     * Send Get request {@link URL} and request headers.
+     * Send a GET request {@link URL} and request headers.
      *
      * @param requestUrl     The {@link URL} to make the http request.
      * @param requestHeaders Headers used to send the http request.
@@ -203,6 +203,14 @@ public final class HttpRequest {
         );
     }
 
+    /**
+     * Send a HEAD request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl     The {@link URL} to make the http request.
+     * @param requestHeaders Headers used to send the http request.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
     public static HttpResponse sendHead(@NonNull final URL requestUrl,
                                         @NonNull final Map<String, String> requestHeaders)
             throws IOException {
@@ -215,6 +223,16 @@ public final class HttpRequest {
         );
     }
 
+    /**
+     * Send a PUT request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl         The {@link URL} to make the http request.
+     * @param requestHeaders     Headers used to send the http request.
+     * @param requestContent     Optional request body, if applicable.
+     * @param requestContentType Request content type.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
     public static HttpResponse sendPut(@NonNull final URL requestUrl,
                                        @NonNull final Map<String, String> requestHeaders,
                                        @Nullable final byte[] requestContent,
@@ -229,6 +247,16 @@ public final class HttpRequest {
         );
     }
 
+    /**
+     * Send a DELETE request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl         The {@link URL} to make the http request.
+     * @param requestHeaders     Headers used to send the http request.
+     * @param requestContent     Optional request body, if applicable.
+     * @param requestContentType Request content type.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
     public static HttpResponse sendDelete(@NonNull final URL requestUrl,
                                           @NonNull final Map<String, String> requestHeaders,
                                           @Nullable final byte[] requestContent,
@@ -243,6 +271,14 @@ public final class HttpRequest {
         );
     }
 
+    /**
+     * Send a TRACE request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl     The {@link URL} to make the http request.
+     * @param requestHeaders Headers used to send the http request.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
     public static HttpResponse sendTrace(@NonNull final URL requestUrl,
                                          @NonNull final Map<String, String> requestHeaders)
             throws IOException {
@@ -255,6 +291,14 @@ public final class HttpRequest {
         );
     }
 
+    /**
+     * Send an OPTIONS request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl     The {@link URL} to make the http request.
+     * @param requestHeaders Headers used to send the http request.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
     public static HttpResponse sendOptions(@NonNull final URL requestUrl,
                                            @NonNull final Map<String, String> requestHeaders)
             throws IOException {
@@ -267,6 +311,16 @@ public final class HttpRequest {
         );
     }
 
+    /**
+     * Send a PATCH request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl         The {@link URL} to make the http request.
+     * @param requestHeaders     Headers used to send the http request.
+     * @param requestContent     Optional request body, if applicable.
+     * @param requestContentType Request content type.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
     public static HttpResponse sendPatch(@NonNull final URL requestUrl,
                                          @NonNull final Map<String, String> requestHeaders,
                                          @Nullable final byte[] requestContent,
@@ -281,6 +335,18 @@ public final class HttpRequest {
         );
     }
 
+    /**
+     * Sends an HTTP request of the specified method; applies appropriate provided arguments where
+     * applicable.
+     *
+     * @param httpMethod         One of: GET, POST, HEAD, PUT, DELETE, TRACE, OPTIONS, PATCH.
+     * @param requestUrl         The recipient {@link URL}.
+     * @param requestHeaders     Headers used to send the http request.
+     * @param requestContent     Optional request body, if applicable.
+     * @param requestContentType Optional request content type (may also be supplied via header).
+     * @return HttpResponse
+     * @throws IOException If an error is encountered while servicing this request.
+     */
     public static HttpResponse sendWithMethod(@NonNull final String httpMethod,
                                               @NonNull final URL requestUrl,
                                               @NonNull final Map<String, String> requestHeaders,
