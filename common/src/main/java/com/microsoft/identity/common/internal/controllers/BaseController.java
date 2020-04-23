@@ -218,7 +218,10 @@ public abstract class BaseController {
                                               @NonNull final InteractiveTokenCommandParameters parameters)
             throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
-        HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAndroidApplicationContext());
+        HttpWebRequest.throwIfNetworkNotAvailable(
+                parameters.getAndroidApplicationContext(),
+                parameters.isPowerOptCheckEnabled()
+        );
 
         final TokenRequest tokenRequest = strategy.createTokenRequest(
                 request,
@@ -385,7 +388,10 @@ public abstract class BaseController {
                 "Requesting tokens..."
         );
 
-        HttpWebRequest.throwIfNetworkNotAvailable(parameters.getAndroidApplicationContext());
+        HttpWebRequest.throwIfNetworkNotAvailable(
+                parameters.getAndroidApplicationContext(),
+                parameters.isPowerOptCheckEnabled()
+        );
 
         // Check that the authority is known
         final Authority.KnownAuthorityResult authorityResult =
