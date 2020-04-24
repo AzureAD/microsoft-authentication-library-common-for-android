@@ -54,7 +54,7 @@ public class ResetApi {
      * Build call for putResetInfo
      *
      * @param upn                     Enter the Lab User UPN (optional)
-     * @param operation               You need to provide the UPN and Operation(MFA/Password) in Query String. (optional)
+     * @param operation               Allowed Values : \&quot;MFA\&quot;, Password\&quot; (optional)
      * @param progressListener        Progress listener
      * @param progressRequestListener Progress request listener
      * @return Call to execute
@@ -118,7 +118,7 @@ public class ResetApi {
      * Provides generic error messages
      *
      * @param upn       Enter the Lab User UPN (optional)
-     * @param operation You need to provide the UPN and Operation(MFA/Password) in Query String. (optional)
+     * @param operation Allowed Values : \&quot;MFA\&quot;, Password\&quot; (optional)
      * @return CustomSuccessResponse
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
@@ -132,7 +132,7 @@ public class ResetApi {
      * Provides generic error messages
      *
      * @param upn       Enter the Lab User UPN (optional)
-     * @param operation You need to provide the UPN and Operation(MFA/Password) in Query String. (optional)
+     * @param operation Allowed Values : \&quot;MFA\&quot;, Password\&quot; (optional)
      * @return ApiResponse&lt;CustomSuccessResponse&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
@@ -148,7 +148,7 @@ public class ResetApi {
      * Provides generic error messages
      *
      * @param upn       Enter the Lab User UPN (optional)
-     * @param operation You need to provide the UPN and Operation(MFA/Password) in Query String. (optional)
+     * @param operation Allowed Values : \&quot;MFA\&quot;, Password\&quot; (optional)
      * @param callback  The callback to be executed when the API call finishes
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object

@@ -35,7 +35,8 @@ public class BrokerRequestAdapterFactory {
     public static IBrokerRequestAdapter getBrokerRequestAdapter(final Bundle requestBundle) {
         final String methodName = ":getBrokerRequestAdapter";
         if (requestBundle != null &&
-                requestBundle.containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2)) {
+                (requestBundle.containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2) ||
+                requestBundle.containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED))) {
             Logger.info(TAG + methodName, "Request from MSAL, returning MsalBrokerRequestAdapter");
             return new MsalBrokerRequestAdapter();
         } else {

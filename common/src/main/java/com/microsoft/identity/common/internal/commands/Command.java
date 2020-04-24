@@ -20,14 +20,16 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.internal.commands;
 
-import android.content.Intent;
+import com.microsoft.identity.common.internal.controllers.BaseController;
 
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+public interface Command<T> {
+    T execute() throws Exception;
 
-public interface TokenOperation {
-    AcquireTokenResult execute() throws Exception;
+    boolean isEligibleForEstsTelemetry();
 
-    void notify(int requestCode, int resultCode, final Intent data);
+    BaseController getDefaultController();
+
+    boolean isEligibleForCaching();
 }

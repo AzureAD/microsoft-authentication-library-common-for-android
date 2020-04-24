@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.util.LruCache;
 
+import com.microsoft.identity.common.internal.commands.BaseCommand;
+
 /**
  * Name: CommandResultCache
  * Responsibilities: Caching results of commands on behalf of the command dispatcher
@@ -35,31 +37,31 @@ public class CommandResultCache {
     //Cache items allowed is still TBD... for now using default value of 250
     private LruCache<BaseCommand, CommandResultCacheItem> mCache;
 
-    public CommandResultCache(){
+    public CommandResultCache() {
         mCache = new LruCache<>(DEFAULT_ITEM_COUNT);
     }
 
-    public CommandResultCache(int maxItemCount){
+    public CommandResultCache(int maxItemCount) {
         mCache = new LruCache<>(maxItemCount);
     }
 
-    public CommandResult get(BaseCommand key){
+    public CommandResult get(BaseCommand key) {
         synchronized (mCache) {
             CommandResultCacheItem item = mCache.get(key);
             if (item != null) {
-                if(item.isExpired()){
+                if (item.isExpired()) {
                     mCache.remove(key);
                     return null;
-                }else{
+                } else {
                     return item.getValue();
                 }
-            }else{
+            } else {
                 return null;
             }
         }
     }
 
-    public void put(BaseCommand key, CommandResult value){
+    public void put(BaseCommand key, CommandResult value) {
 
         CommandResultCacheItem cacheItem = new CommandResultCacheItem(value);
         //NOTE: If an existing item using this key already in the cache it will be replaced
@@ -68,11 +70,11 @@ public class CommandResultCache {
         //We may want to log old if we see problems here, since the the old value is the value being replace with the new item.
     }
 
-    public int getSize(){
+    public int getSize() {
         return this.mCache.size();
     }
 
-    public void clear(){
+    public void clear() {
         synchronized (mCache) {
             mCache = new LruCache<>(DEFAULT_ITEM_COUNT);
         }

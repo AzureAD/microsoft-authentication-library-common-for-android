@@ -20,10 +20,28 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
 
-public interface Command<T> {
-    T execute() throws Exception;
+package com.microsoft.identity.common.internal.util;
 
-    boolean isEligibleForEstsTelemetry();
+import android.text.TextUtils;
+
+import androidx.annotation.Nullable;
+
+/**
+ * Class to provide util methods to compare different features with respect to Broker Protocol version.
+ */
+public class BrokerProtocolVersionUtil {
+
+    public static final String BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION = "5.0";
+
+    public static boolean canCompressBrokerPayloads(@Nullable String negotiatedBrokerProtocol) {
+        if (TextUtils.isEmpty(negotiatedBrokerProtocol)) {
+            return false;
+        }
+
+        return StringUtil.compareSemanticVersion(
+                negotiatedBrokerProtocol,
+                BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION) >= 0;
+
+    }
 }

@@ -45,6 +45,13 @@ import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSch
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
+import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -53,11 +60,13 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
+import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -70,6 +79,9 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEFAULT_BROWSER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
+import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
+import static com.microsoft.identity.common.internal.util.GzipUtil.decompressBytesToString;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
@@ -86,7 +98,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     @Override
-    public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final AcquireTokenOperationParameters parameters) {
+    public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final InteractiveTokenCommandParameters parameters) {
         Logger.info(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
 
         final BrokerRequest brokerRequest = new BrokerRequest.Builder()
@@ -99,9 +111,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         parameters.getExtraQueryStringParameters() != null ?
                                 QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
                                 : null
-                ).prompt(parameters.getOpenIdConnectPromptParameter().name())
+                ).prompt(parameters.getPrompt().name())
                 .claims(parameters.getClaimsRequestJson())
-                .forceRefresh(parameters.getForceRefresh())
+                .forceRefresh(parameters.isForceRefresh())
                 .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
@@ -112,13 +124,15 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         parameters.isBrokerBrowserSupportEnabled() ?
                                 AuthorizationAgent.BROWSER.name() :
                                 AuthorizationAgent.WEBVIEW.name()
-                ).authenticationScheme(parameters.getAuthenticationScheme()).build();
+                ).authenticationScheme(parameters.getAuthenticationScheme())
+                .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                .build();
 
         return brokerRequest;
     }
 
     @Override
-    public BrokerRequest brokerRequestFromSilentOperationParameters(@NonNull final AcquireTokenSilentOperationParameters parameters) {
+    public BrokerRequest brokerRequestFromSilentOperationParameters(@NonNull final SilentTokenCommandParameters parameters) {
 
         Logger.info(TAG, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
 
@@ -131,7 +145,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .localAccountId(parameters.getAccount().getLocalAccountId())
                 .username(parameters.getAccount().getUsername())
                 .claims(parameters.getClaimsRequestJson())
-                .forceRefresh(parameters.getForceRefresh())
+                .forceRefresh(parameters.isForceRefresh())
                 .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
@@ -139,6 +153,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .environment(AzureActiveDirectory.getEnvironment().name())
                 .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
                 .authenticationScheme(parameters.getAuthenticationScheme())
+                .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
                 .build();
 
         return brokerRequest;
@@ -164,43 +179,30 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     @Override
-    public BrokerAcquireTokenOperationParameters brokerInteractiveParametersFromActivity(
+    public BrokerInteractiveTokenCommandParameters brokerInteractiveParametersFromActivity(
             @NonNull final Activity callingActivity) {
 
         Logger.info(TAG, "Constructing BrokerAcquireTokenOperationParameters from calling activity");
 
-        final BrokerAcquireTokenOperationParameters parameters =
-                new BrokerAcquireTokenOperationParameters();
-
         final Intent intent = callingActivity.getIntent();
 
-        final BrokerRequest brokerRequest = sRequestAdapterGsonInstance.fromJson(
-                intent.getStringExtra(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
-                BrokerRequest.class
-        );
+        final BrokerRequest brokerRequest = brokerRequestFromBundle(intent.getExtras());
 
-        parameters.setAuthenticationScheme(getAuthenticationScheme(callingActivity, brokerRequest));
-
-        parameters.setActivity(callingActivity);
-
-        parameters.setAppContext(callingActivity.getApplicationContext());
-
-        parameters.setSdkType(SdkType.MSAL);
+        if (brokerRequest == null) {
+            Logger.error(TAG, "Broker Result is null, returning empty parameters, " +
+                            "validation is expected to fail", null
+            );
+            return BrokerInteractiveTokenCommandParameters.builder().build();
+        }
 
         int callingAppUid = intent.getIntExtra(
                 AuthenticationConstants.Broker.CALLER_INFO_UID, 0
         );
-        parameters.setCallerUId(callingAppUid);
-
-        parameters.setCallerPackageName(brokerRequest.getApplicationName());
-
-        parameters.setCallerAppVersion(brokerRequest.getApplicationVersion());
 
         List<Pair<String, String>> extraQP = new ArrayList<>();
 
         if (!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
             extraQP = QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter());
-            parameters.setExtraQueryStringParameters(extraQP);
         }
 
         final AzureActiveDirectoryAuthority authority = AdalBrokerRequestAdapter.getRequestAuthorityWithExtraQP(
@@ -210,16 +212,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         if (authority != null) {
             authority.setMultipleCloudsSupported(brokerRequest.getMultipleCloudsSupported());
-            parameters.setAuthority(authority);
         }
-
-        parameters.setScopes(getScopesAsSet(brokerRequest.getScope()));
-
-        parameters.setClientId(brokerRequest.getClientId());
-
-        parameters.setRedirectUri(brokerRequest.getRedirect());
-
-        parameters.setLoginHint(brokerRequest.getUserName());
 
         String correlationIdString = brokerRequest.getCorrelationId();
 
@@ -227,25 +220,43 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             UUID correlationId = UUID.randomUUID();
             correlationIdString = correlationId.toString();
         }
-        parameters.setCorrelationId(correlationIdString);
+        final String negotiatedBrokerProtocolVersion = intent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
 
-        parameters.setClaimsRequest(brokerRequest.getClaims());
-
-        parameters.setOpenIdConnectPromptParameter(
-                brokerRequest.getPrompt() != null ?
-                        OpenIdConnectPromptParameter.valueOf(brokerRequest.getPrompt()) :
-                        OpenIdConnectPromptParameter.NONE
-        );
         Logger.info(TAG, "Authorization agent passed in by MSAL: " + brokerRequest.getAuthorizationAgent());
+
+        final BrokerInteractiveTokenCommandParameters.BrokerInteractiveTokenCommandParametersBuilder
+                commandParametersBuilder = BrokerInteractiveTokenCommandParameters.builder()
+                .authenticationScheme(getAuthenticationScheme(callingActivity, brokerRequest))
+                .activity(callingActivity)
+                .androidApplicationContext(callingActivity.getApplicationContext())
+                .sdkType(SdkType.MSAL)
+                .callerUid(callingAppUid)
+                .callerPackageName(brokerRequest.getApplicationName())
+                .callerAppVersion(brokerRequest.getApplicationVersion())
+                .extraQueryStringParameters(extraQP)
+                .authority(authority)
+                .scopes(getScopesAsSet(brokerRequest.getScope()))
+                .clientId(brokerRequest.getClientId())
+                .redirectUri(brokerRequest.getRedirect())
+                .loginHint(brokerRequest.getUserName())
+                .correlationId(correlationIdString)
+                .claimsRequestJson(brokerRequest.getClaims())
+                .prompt(brokerRequest.getPrompt() != null ?
+                        OpenIdConnectPromptParameter.valueOf(brokerRequest.getPrompt()) :
+                        OpenIdConnectPromptParameter.NONE)
+                .negotiatedBrokerProtocolVersion(negotiatedBrokerProtocolVersion)
+                .powerOptCheckEnabled(brokerRequest.isPowerOptCheckEnabled());
+
         if (brokerRequest.getAuthorizationAgent() != null
                 && brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())
-                && isCallingPackageIntune(parameters.getCallerPackageName())) { // TODO : Remove this whenever we enable System Browser support in Broker for apps.
+                && isCallingPackageIntune(brokerRequest.getApplicationName())) { // TODO : Remove this whenever we enable System Browser support in Broker for apps.
             Logger.info(TAG, "Setting Authorization Agent to Browser for Intune app");
-            parameters.setAuthorizationAgent(AuthorizationAgent.BROWSER);
-            parameters.setBrokerBrowserSupportEnabled(true);
-            parameters.setBrowserSafeList(getBrowserSafeListForBroker());
+            commandParametersBuilder
+                    .authorizationAgent(AuthorizationAgent.BROWSER)
+                    .brokerBrowserSupportEnabled(true)
+                    .browserSafeList(getBrowserSafeListForBroker());
         } else {
-            parameters.setAuthorizationAgent(AuthorizationAgent.WEBVIEW);
+            commandParametersBuilder.authorizationAgent(AuthorizationAgent.WEBVIEW);
         }
 
         // Set Global environment variable for instance discovery if present
@@ -255,44 +266,30 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             );
         }
 
-        return parameters;
-
+        return commandParametersBuilder.build();
     }
 
     @Override
-    public BrokerAcquireTokenSilentOperationParameters brokerSilentParametersFromBundle(
+    public BrokerSilentTokenCommandParameters brokerSilentParametersFromBundle(
             @NonNull final Bundle bundle,
             @NonNull final Context context,
             @NonNull final Account account) {
 
         Logger.info(TAG, "Constructing BrokerAcquireTokenSilentOperationParameters from result bundle");
 
-        final BrokerRequest brokerRequest = sRequestAdapterGsonInstance.fromJson(
-                bundle.getString(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
-                BrokerRequest.class
-        );
+        final BrokerRequest brokerRequest = brokerRequestFromBundle(bundle);
 
-        final BrokerAcquireTokenSilentOperationParameters parameters =
-                new BrokerAcquireTokenSilentOperationParameters();
-
-        parameters.setAuthenticationScheme(
-                getAuthenticationScheme(context, brokerRequest)
-        );
-
-        parameters.setAppContext(context);
-
-        parameters.setAccountManagerAccount(account);
-
-        parameters.setSdkType(SdkType.MSAL);
+        if (brokerRequest == null) {
+            Logger.error(TAG, "Broker Result is null, returning empty parameters, " +
+                            "validation is expected to fail", null
+            );
+            return BrokerSilentTokenCommandParameters
+                    .builder().build();
+        }
 
         int callingAppUid = bundle.getInt(
                 AuthenticationConstants.Broker.CALLER_INFO_UID
         );
-        parameters.setCallerUId(callingAppUid);
-
-        parameters.setCallerPackageName(brokerRequest.getApplicationName());
-
-        parameters.setCallerAppVersion(brokerRequest.getApplicationVersion());
 
         final Authority authority = Authority.getAuthorityFromAuthorityUrl(
                 brokerRequest.getAuthority()
@@ -304,8 +301,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             );
         }
 
-        parameters.setAuthority(authority);
-
         String correlationIdString = bundle.getString(
                 brokerRequest.getCorrelationId()
         );
@@ -313,31 +308,32 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             UUID correlationId = UUID.randomUUID();
             correlationIdString = correlationId.toString();
         }
-        parameters.setCorrelationId(correlationIdString);
 
-        parameters.setScopes(
-                getScopesAsSet(brokerRequest.getScope())
-        );
+        final String negotiatedBrokerProtocolVersion = bundle.getString(NEGOTIATED_BP_VERSION_KEY);
 
-        parameters.setRedirectUri(brokerRequest.getRedirect());
+        final BrokerSilentTokenCommandParameters commandParameters = BrokerSilentTokenCommandParameters
+                .builder()
+                .authenticationScheme(getAuthenticationScheme(context, brokerRequest))
+                .androidApplicationContext(context)
+                .accountManagerAccount(account)
+                .sdkType(SdkType.MSAL)
+                .callerUid(callingAppUid)
+                .callerPackageName(brokerRequest.getApplicationName())
+                .callerAppVersion(brokerRequest.getApplicationVersion())
+                .authority(authority)
+                .correlationId(correlationIdString)
+                .scopes(getScopesAsSet(brokerRequest.getScope()))
+                .redirectUri(brokerRequest.getRedirect())
+                .clientId(brokerRequest.getClientId())
+                .forceRefresh(brokerRequest.getForceRefresh())
+                .claimsRequestJson(brokerRequest.getClaims())
+                .loginHint(brokerRequest.getUserName())
+                .homeAccountId(brokerRequest.getHomeAccountId())
+                .localAccountId(brokerRequest.getLocalAccountId())
+                .negotiatedBrokerProtocolVersion(negotiatedBrokerProtocolVersion)
+                .powerOptCheckEnabled(brokerRequest.isPowerOptCheckEnabled())
+                .build();
 
-        parameters.setClientId(brokerRequest.getClientId());
-
-        parameters.setForceRefresh(brokerRequest.getForceRefresh());
-
-        parameters.setClaimsRequest(brokerRequest.getClaims());
-
-        parameters.setLoginHint(brokerRequest.getUserName());
-
-        parameters.setHomeAccountId(brokerRequest.getHomeAccountId());
-
-        parameters.setLocalAccountId(brokerRequest.getLocalAccountId());
-
-        if (!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
-            parameters.setExtraQueryStringParameters(
-                    QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter())
-            );
-        }
 
         // Set Global environment variable for instance discovery if present
         if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
@@ -346,7 +342,36 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             );
         }
 
-        return parameters;
+        return commandParameters;
+    }
+
+    @Nullable
+    public BrokerRequest brokerRequestFromBundle(@NonNull final Bundle requestBundle) {
+        BrokerRequest brokerRequest = null;
+
+        if (requestBundle.containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED)) {
+            try {
+                final String deCompressedString = decompressBytesToString(
+                        requestBundle.getByteArray(AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED)
+                );
+                brokerRequest = sRequestAdapterGsonInstance.fromJson(
+                        deCompressedString, BrokerRequest.class
+                );
+            } catch (final IOException e) {
+                // We would ideally never run into this case as compression would always work as expected.
+                // The caller should handle the null value of broker request.
+                Logger.error(TAG, "Decompression of Broker Request failed," +
+                        " unable to continue with Broker Request", e
+                );
+            }
+
+        } else {
+            brokerRequest = sRequestAdapterGsonInstance.fromJson(
+                    requestBundle.getString(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
+                    BrokerRequest.class
+            );
+        }
+        return brokerRequest;
     }
 
     /**
@@ -363,17 +388,17 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Helper method to get redirect uri from parameters, calculates from package signature if not available.
      */
-    private String getRedirectUri(@NonNull OperationParameters parameters) {
+    private String getRedirectUri(@NonNull TokenCommandParameters parameters) {
         if (TextUtils.isEmpty(parameters.getRedirectUri())) {
             return BrokerValidator.getBrokerRedirectUri(
-                    parameters.getAppContext(),
+                    parameters.getAndroidApplicationContext(),
                     parameters.getApplicationName()
             );
         }
         return parameters.getRedirectUri();
     }
 
-    public Bundle getRequestBundleForHello(@NonNull final OperationParameters parameters) {
+    public Bundle getRequestBundleForHello(@NonNull final CommandParameters parameters) {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(
                 AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
@@ -390,27 +415,70 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForAcquireTokenSilent(final AcquireTokenSilentOperationParameters parameters) {
+    public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final InteractiveTokenCommandParameters parameters,
+                                                             @Nullable final String negotiatedBrokerProtocolVersion) {
+        final BrokerRequest brokerRequest = brokerRequestFromAcquireTokenParameters(parameters);
+        return getRequestBundleFromBrokerRequest(
+                brokerRequest,
+                negotiatedBrokerProtocolVersion
+        );
+    }
+
+    public Bundle getRequestBundleForAcquireTokenSilent(@NonNull final SilentTokenCommandParameters parameters,
+                                                        @Nullable final String negotiatedBrokerProtocolVersion) {
         final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
 
-        final Bundle requestBundle = new Bundle();
         final BrokerRequest brokerRequest = msalBrokerRequestAdapter.
                 brokerRequestFromSilentOperationParameters(parameters);
 
-        requestBundle.putString(
-                AuthenticationConstants.Broker.BROKER_REQUEST_V2,
-                sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class)
+        final Bundle requestBundle = getRequestBundleFromBrokerRequest(
+                brokerRequest,
+                negotiatedBrokerProtocolVersion
         );
 
         requestBundle.putInt(
                 AuthenticationConstants.Broker.CALLER_INFO_UID,
-                parameters.getAppContext().getApplicationInfo().uid
+                parameters.getAndroidApplicationContext().getApplicationInfo().uid
         );
 
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForGetAccounts(@NonNull final OperationParameters parameters) {
+    private Bundle getRequestBundleFromBrokerRequest(@NonNull BrokerRequest brokerRequest,
+                                                     @Nullable String negotiatedBrokerProtocolVersion) {
+        final Bundle requestBundle = new Bundle();
+
+        if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedBrokerProtocolVersion)) {
+            try {
+                final String jsonString = sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class);
+                byte[] compressedBytes = compressString(jsonString);
+                Logger.info(TAG, "Broker Result, raw payload size:"
+                        + jsonString.getBytes().length + " ,compressed bytes size: " + compressedBytes.length
+                );
+                requestBundle.putByteArray(
+                        AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED,
+                        compressedBytes
+                );
+            } catch (IOException e) {
+                Logger.error(TAG, "Compression to bytes failed, sending broker request as json String", e);
+                requestBundle.putString(
+                        AuthenticationConstants.Broker.BROKER_REQUEST_V2,
+                        sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class)
+                );
+            }
+        } else {
+            Logger.info(TAG, "Broker protocol version: " + negotiatedBrokerProtocolVersion +
+                    " lower than compression changes, sending as string"
+            );
+            requestBundle.putString(
+                    AuthenticationConstants.Broker.BROKER_REQUEST_V2,
+                    sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class)
+            );
+        }
+        return requestBundle;
+    }
+
+    public Bundle getRequestBundleForGetAccounts(@NonNull final CommandParameters parameters) {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
         requestBundle.putString(ACCOUNT_REDIRECT, parameters.getRedirectUri());
@@ -418,7 +486,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForRemoveAccount(@NonNull final OperationParameters parameters) {
+    public Bundle getRequestBundleForRemoveAccount(@NonNull final RemoveAccountCommandParameters parameters) {
         final Bundle requestBundle = new Bundle();
         if (null != parameters.getAccount()) {
             requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
@@ -429,11 +497,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForRemoveAccountFromSharedDevice(@NonNull final OperationParameters parameters) {
+    public Bundle getRequestBundleForRemoveAccountFromSharedDevice(@NonNull final RemoveAccountCommandParameters parameters) {
         final Bundle requestBundle = new Bundle();
 
         try {
-            Browser browser = BrowserSelector.select(parameters.getAppContext(), parameters.getBrowserSafeList());
+            Browser browser = BrowserSelector.select(parameters.getAndroidApplicationContext(), parameters.getBrowserSafeList());
             requestBundle.putString(DEFAULT_BROWSER_PACKAGE_NAME, browser.getPackageName());
         } catch (ClientException e) {
             // Best effort. If none is passed to broker, then it will let the OS decide.
@@ -443,7 +511,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
-    private boolean getMultipleCloudsSupported(@NonNull final OperationParameters parameters) {
+    private boolean getMultipleCloudsSupported(@NonNull final TokenCommandParameters parameters) {
         if (parameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
             final AzureActiveDirectoryAuthority authority = (AzureActiveDirectoryAuthority) parameters.getAuthority();
             return authority.getMultipleCloudsSupported();

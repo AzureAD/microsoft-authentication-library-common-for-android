@@ -1307,4 +1307,43 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertTrue(records.isEmpty());
     }
 
+    @Test
+    public void testFrtFallback() throws ClientException {
+        // This test verifies changes in common/#893
+        // We will fallback on an FRT in the local cache for the current user if one is avail
+        final List<ICacheRecord> result = loadTestBundleIntoCacheWithAggregation(
+                defaultTestBundleV2
+        );
+
+        assertEquals(1, result.size());
+
+        final ICacheRecord entry = result.get(0);
+
+        assertNotNull(entry.getAccount());
+        assertNotNull(entry.getIdToken());
+        assertNotNull(entry.getAccessToken());
+        assertNotNull(entry.getRefreshToken());
+
+        // delete the existing RT and insert our FRT
+        accountCredentialCache.removeCredential(entry.getRefreshToken());
+
+        // Modify the existing RT to change the client_id and set a FoCI affiliation
+        final String fociRtClientId = UUID.randomUUID().toString();
+        final RefreshTokenRecord modifiedRT = entry.getRefreshToken();
+        modifiedRT.setFamilyId("1");
+        modifiedRT.setClientId(fociRtClientId);
+
+        accountCredentialCache.saveCredential(modifiedRT);
+
+        final ICacheRecord secondaryLoad = mOauth2TokenCache.load(
+                entry.getAccessToken().getClientId(),
+                TARGET,
+                entry.getAccount(),
+                BEARER_AUTHENTICATION_SCHEME
+        );
+
+        assertNotNull(secondaryLoad.getRefreshToken());
+        assertEquals(fociRtClientId, secondaryLoad.getRefreshToken().getClientId());
+    }
+
 }

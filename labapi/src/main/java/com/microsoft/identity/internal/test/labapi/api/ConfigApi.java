@@ -54,13 +54,16 @@ public class ConfigApi {
      * Build call for getConfig
      *
      * @param usertype                Allowed Values :  \&quot;cloud\&quot;, \&quot;federated\&quot;, \&quot;onprem\&quot;, \&quot;guest\&quot;, \&quot;msa\&quot;, \&quot;b2c\&quot; (optional, default to cloud)
+     * @param userrole                Allowed Values :  \&quot;none\&quot;, \&quot;clouddeviceadministrator\&quot; (optional, default to none)
      * @param mfa                     Allowed Values :  \&quot;none\&quot;, \&quot;mfaonall\&quot;, \&quot;automfaonall\&quot; (optional, default to none)
-     * @param protectionpolicy        Allowed Values :  \&quot;none\&quot;, \&quot;ca\&quot;, \&quot;cadj\&quot;, \&quot;mam\&quot;, \&quot;mdm\&quot;, \&quot;mdmca\&quot;, \&quot;mamca\&quot;, \&quot;mamspo\&quot; (optional, default to none)
+     * @param protectionpolicy        Allowed Values :  \&quot;none\&quot;, \&quot;ca\&quot;, \&quot;cadj\&quot;, \&quot;mam\&quot;, \&quot;mdm\&quot;, \&quot;mdmca\&quot;, \&quot;mamca\&quot;, \&quot;truemamca\&quot;,\&quot;mamspo\&quot; (optional, default to none)
      * @param homedomain              Allowed Values :  \&quot;none\&quot;, \&quot;msidlab2.com\&quot;, \&quot;msidlab3.com\&quot;, \&quot;msidlab4.com\&quot; (optional, default to none)
      * @param homeupn                 Allowed Values :  \&quot;none\&quot;, \&quot;gidlab@msidlab2.com\&quot;, \&quot;gidlab@msidlab3.com\&quot;, \&quot;gidlab@msidlab4.com\&quot; (optional, default to none)
      * @param b2cprovider             Allowed Values :  \&quot;none\&quot;, \&quot;amazon\&quot;, \&quot;facebook\&quot;, \&quot;google\&quot;, \&quot;local\&quot;, \&quot;microsoft\&quot;, \&quot;twitter\&quot; (optional, default to none)
-     * @param federationprovider      Allowed Values :  \&quot;na\&quot;, \&quot;adfsv2\&quot;, \&quot;adfsv3\&quot;, \&quot;adfsv4\&quot;, \&quot;adfsv2019\&quot;, \&quot;b2c\&quot;, \&quot;ping\&quot;, \&quot;shibboleth\&quot; (optional, default to ADFSV4)
-     * @param azureenvironment        Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment\&quot; (optional, default to azurecloud)
+     * @param federationprovider      Allowed Values :  \&quot;none\&quot;, \&quot;adfsv2\&quot;, \&quot;adfsv3\&quot;, \&quot;adfsv4\&quot;, \&quot;adfsv2019\&quot;, \&quot;b2c\&quot;, \&quot;ping\&quot;, \&quot;shibboleth\&quot; (optional, default to adfsv4)
+     * @param azureenvironment        Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment (optional, default to azurecloud)
+     * @param apptype                 Allowed Values :  \&quot;cloud\&quot;, \&quot;onprem\&quot; (optional, default to cloud)
+     * @param publicclient            Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
      * @param signinaudience          Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
      * @param guesthomedin            Allowed Values :  \&quot;none\&quot;, \&quot;onprem\&quot;, \&quot;hostazuread\&quot; (optional, default to none)
      * @param progressListener        Progress listener
@@ -68,7 +71,7 @@ public class ConfigApi {
      * @return Call to execute
      * @throws ApiException If fail to serialize the request body object
      */
-    public com.squareup.okhttp.Call getConfigCall(String usertype, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String signinaudience, String guesthomedin, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+    public com.squareup.okhttp.Call getConfigCall(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String apptype, String publicclient, String signinaudience, String guesthomedin, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
         Object localVarPostBody = null;
 
         // create path and map variables
@@ -78,6 +81,8 @@ public class ConfigApi {
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
         if (usertype != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("usertype", usertype));
+        if (userrole != null)
+            localVarQueryParams.addAll(apiClient.parameterToPair("userrole", userrole));
         if (mfa != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("mfa", mfa));
         if (protectionpolicy != null)
@@ -92,6 +97,10 @@ public class ConfigApi {
             localVarQueryParams.addAll(apiClient.parameterToPair("federationprovider", federationprovider));
         if (azureenvironment != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("azureenvironment", azureenvironment));
+        if (apptype != null)
+            localVarQueryParams.addAll(apiClient.parameterToPair("apptype", apptype));
+        if (publicclient != null)
+            localVarQueryParams.addAll(apiClient.parameterToPair("publicclient", publicclient));
         if (signinaudience != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("signinaudience", signinaudience));
         if (guesthomedin != null)
@@ -129,10 +138,10 @@ public class ConfigApi {
     }
 
     @SuppressWarnings("rawtypes")
-    private com.squareup.okhttp.Call getConfigValidateBeforeCall(String usertype, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String signinaudience, String guesthomedin, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+    private com.squareup.okhttp.Call getConfigValidateBeforeCall(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String apptype, String publicclient, String signinaudience, String guesthomedin, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
 
 
-        com.squareup.okhttp.Call call = getConfigCall(usertype, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, signinaudience, guesthomedin, progressListener, progressRequestListener);
+        com.squareup.okhttp.Call call = getConfigCall(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, apptype, publicclient, signinaudience, guesthomedin, progressListener, progressRequestListener);
         return call;
 
     }
@@ -141,20 +150,23 @@ public class ConfigApi {
      * Gets the Lab Configurartion (User/App/Lab) Based on Query Parameters with predefined defaults.   You can override the defaults.
      *
      * @param usertype           Allowed Values :  \&quot;cloud\&quot;, \&quot;federated\&quot;, \&quot;onprem\&quot;, \&quot;guest\&quot;, \&quot;msa\&quot;, \&quot;b2c\&quot; (optional, default to cloud)
+     * @param userrole           Allowed Values :  \&quot;none\&quot;, \&quot;clouddeviceadministrator\&quot; (optional, default to none)
      * @param mfa                Allowed Values :  \&quot;none\&quot;, \&quot;mfaonall\&quot;, \&quot;automfaonall\&quot; (optional, default to none)
-     * @param protectionpolicy   Allowed Values :  \&quot;none\&quot;, \&quot;ca\&quot;, \&quot;cadj\&quot;, \&quot;mam\&quot;, \&quot;mdm\&quot;, \&quot;mdmca\&quot;, \&quot;mamca\&quot;, \&quot;mamspo\&quot; (optional, default to none)
+     * @param protectionpolicy   Allowed Values :  \&quot;none\&quot;, \&quot;ca\&quot;, \&quot;cadj\&quot;, \&quot;mam\&quot;, \&quot;mdm\&quot;, \&quot;mdmca\&quot;, \&quot;mamca\&quot;, \&quot;truemamca\&quot;,\&quot;mamspo\&quot; (optional, default to none)
      * @param homedomain         Allowed Values :  \&quot;none\&quot;, \&quot;msidlab2.com\&quot;, \&quot;msidlab3.com\&quot;, \&quot;msidlab4.com\&quot; (optional, default to none)
      * @param homeupn            Allowed Values :  \&quot;none\&quot;, \&quot;gidlab@msidlab2.com\&quot;, \&quot;gidlab@msidlab3.com\&quot;, \&quot;gidlab@msidlab4.com\&quot; (optional, default to none)
      * @param b2cprovider        Allowed Values :  \&quot;none\&quot;, \&quot;amazon\&quot;, \&quot;facebook\&quot;, \&quot;google\&quot;, \&quot;local\&quot;, \&quot;microsoft\&quot;, \&quot;twitter\&quot; (optional, default to none)
-     * @param federationprovider Allowed Values :  \&quot;na\&quot;, \&quot;adfsv2\&quot;, \&quot;adfsv3\&quot;, \&quot;adfsv4\&quot;, \&quot;adfsv2019\&quot;, \&quot;b2c\&quot;, \&quot;ping\&quot;, \&quot;shibboleth\&quot; (optional, default to ADFSV4)
-     * @param azureenvironment   Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment\&quot; (optional, default to azurecloud)
-     * @param signinaudience          Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
-     * @param guesthomedin            Allowed Values :  \&quot;none\&quot;, \&quot;onprem\&quot;, \&quot;hostazuread\&quot; (optional, default to none)
+     * @param federationprovider Allowed Values :  \&quot;none\&quot;, \&quot;adfsv2\&quot;, \&quot;adfsv3\&quot;, \&quot;adfsv4\&quot;, \&quot;adfsv2019\&quot;, \&quot;b2c\&quot;, \&quot;ping\&quot;, \&quot;shibboleth\&quot; (optional, default to adfsv4)
+     * @param azureenvironment   Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment (optional, default to azurecloud)
+     * @param apptype            Allowed Values :  \&quot;cloud\&quot;, \&quot;onprem\&quot; (optional, default to cloud)
+     * @param publicclient       Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
+     * @param signinaudience     Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
+     * @param guesthomedin       Allowed Values :  \&quot;none\&quot;, \&quot;onprem\&quot;, \&quot;hostazuread\&quot; (optional, default to none)
      * @return List&lt;ConfigInfo&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public List<ConfigInfo> getConfig(String usertype, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String signinaudience, String guesthomedin) throws ApiException {
-        ApiResponse<List<ConfigInfo>> resp = getConfigWithHttpInfo(usertype, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, signinaudience, guesthomedin);
+    public List<ConfigInfo> getConfig(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String apptype, String publicclient, String signinaudience, String guesthomedin) throws ApiException {
+        ApiResponse<List<ConfigInfo>> resp = getConfigWithHttpInfo(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, apptype, publicclient, signinaudience, guesthomedin);
         return resp.getData();
     }
 
@@ -162,20 +174,23 @@ public class ConfigApi {
      * Gets the Lab Configurartion (User/App/Lab) Based on Query Parameters with predefined defaults.   You can override the defaults.
      *
      * @param usertype           Allowed Values :  \&quot;cloud\&quot;, \&quot;federated\&quot;, \&quot;onprem\&quot;, \&quot;guest\&quot;, \&quot;msa\&quot;, \&quot;b2c\&quot; (optional, default to cloud)
+     * @param userrole           Allowed Values :  \&quot;none\&quot;, \&quot;clouddeviceadministrator\&quot; (optional, default to none)
      * @param mfa                Allowed Values :  \&quot;none\&quot;, \&quot;mfaonall\&quot;, \&quot;automfaonall\&quot; (optional, default to none)
-     * @param protectionpolicy   Allowed Values :  \&quot;none\&quot;, \&quot;ca\&quot;, \&quot;cadj\&quot;, \&quot;mam\&quot;, \&quot;mdm\&quot;, \&quot;mdmca\&quot;, \&quot;mamca\&quot;, \&quot;mamspo\&quot; (optional, default to none)
+     * @param protectionpolicy   Allowed Values :  \&quot;none\&quot;, \&quot;ca\&quot;, \&quot;cadj\&quot;, \&quot;mam\&quot;, \&quot;mdm\&quot;, \&quot;mdmca\&quot;, \&quot;mamca\&quot;, \&quot;truemamca\&quot;,\&quot;mamspo\&quot; (optional, default to none)
      * @param homedomain         Allowed Values :  \&quot;none\&quot;, \&quot;msidlab2.com\&quot;, \&quot;msidlab3.com\&quot;, \&quot;msidlab4.com\&quot; (optional, default to none)
      * @param homeupn            Allowed Values :  \&quot;none\&quot;, \&quot;gidlab@msidlab2.com\&quot;, \&quot;gidlab@msidlab3.com\&quot;, \&quot;gidlab@msidlab4.com\&quot; (optional, default to none)
      * @param b2cprovider        Allowed Values :  \&quot;none\&quot;, \&quot;amazon\&quot;, \&quot;facebook\&quot;, \&quot;google\&quot;, \&quot;local\&quot;, \&quot;microsoft\&quot;, \&quot;twitter\&quot; (optional, default to none)
-     * @param federationprovider Allowed Values :  \&quot;na\&quot;, \&quot;adfsv2\&quot;, \&quot;adfsv3\&quot;, \&quot;adfsv4\&quot;, \&quot;adfsv2019\&quot;, \&quot;b2c\&quot;, \&quot;ping\&quot;, \&quot;shibboleth\&quot; (optional, default to ADFSV4)
-     * @param azureenvironment   Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment\&quot; (optional, default to azurecloud)
-     * @param signinaudience          Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
-     * @param guesthomedin            Allowed Values :  \&quot;none\&quot;, \&quot;onprem\&quot;, \&quot;hostazuread\&quot; (optional, default to none)
+     * @param federationprovider Allowed Values :  \&quot;none\&quot;, \&quot;adfsv2\&quot;, \&quot;adfsv3\&quot;, \&quot;adfsv4\&quot;, \&quot;adfsv2019\&quot;, \&quot;b2c\&quot;, \&quot;ping\&quot;, \&quot;shibboleth\&quot; (optional, default to adfsv4)
+     * @param azureenvironment   Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment (optional, default to azurecloud)
+     * @param apptype            Allowed Values :  \&quot;cloud\&quot;, \&quot;onprem\&quot; (optional, default to cloud)
+     * @param publicclient       Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
+     * @param signinaudience     Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
+     * @param guesthomedin       Allowed Values :  \&quot;none\&quot;, \&quot;onprem\&quot;, \&quot;hostazuread\&quot; (optional, default to none)
      * @return ApiResponse&lt;List&lt;ConfigInfo&gt;&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public ApiResponse<List<ConfigInfo>> getConfigWithHttpInfo(String usertype, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String signinaudience, String guesthomedin) throws ApiException {
-        com.squareup.okhttp.Call call = getConfigValidateBeforeCall(usertype, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, signinaudience, guesthomedin,null, null);
+    public ApiResponse<List<ConfigInfo>> getConfigWithHttpInfo(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String apptype, String publicclient, String signinaudience, String guesthomedin) throws ApiException {
+        com.squareup.okhttp.Call call = getConfigValidateBeforeCall(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, apptype, publicclient, signinaudience, guesthomedin, null, null);
         Type localVarReturnType = new TypeToken<List<ConfigInfo>>() {
         }.getType();
         return apiClient.execute(call, localVarReturnType);
@@ -185,20 +200,23 @@ public class ConfigApi {
      * Gets the Lab Configurartion (User/App/Lab) Based on Query Parameters with predefined defaults.   You can override the defaults. (asynchronously)
      *
      * @param usertype           Allowed Values :  \&quot;cloud\&quot;, \&quot;federated\&quot;, \&quot;onprem\&quot;, \&quot;guest\&quot;, \&quot;msa\&quot;, \&quot;b2c\&quot; (optional, default to cloud)
+     * @param userrole           Allowed Values :  \&quot;none\&quot;, \&quot;clouddeviceadministrator\&quot; (optional, default to none)
      * @param mfa                Allowed Values :  \&quot;none\&quot;, \&quot;mfaonall\&quot;, \&quot;automfaonall\&quot; (optional, default to none)
-     * @param protectionpolicy   Allowed Values :  \&quot;none\&quot;, \&quot;ca\&quot;, \&quot;cadj\&quot;, \&quot;mam\&quot;, \&quot;mdm\&quot;, \&quot;mdmca\&quot;, \&quot;mamca\&quot;, \&quot;mamspo\&quot; (optional, default to none)
+     * @param protectionpolicy   Allowed Values :  \&quot;none\&quot;, \&quot;ca\&quot;, \&quot;cadj\&quot;, \&quot;mam\&quot;, \&quot;mdm\&quot;, \&quot;mdmca\&quot;, \&quot;mamca\&quot;, \&quot;truemamca\&quot;,\&quot;mamspo\&quot; (optional, default to none)
      * @param homedomain         Allowed Values :  \&quot;none\&quot;, \&quot;msidlab2.com\&quot;, \&quot;msidlab3.com\&quot;, \&quot;msidlab4.com\&quot; (optional, default to none)
      * @param homeupn            Allowed Values :  \&quot;none\&quot;, \&quot;gidlab@msidlab2.com\&quot;, \&quot;gidlab@msidlab3.com\&quot;, \&quot;gidlab@msidlab4.com\&quot; (optional, default to none)
      * @param b2cprovider        Allowed Values :  \&quot;none\&quot;, \&quot;amazon\&quot;, \&quot;facebook\&quot;, \&quot;google\&quot;, \&quot;local\&quot;, \&quot;microsoft\&quot;, \&quot;twitter\&quot; (optional, default to none)
-     * @param federationprovider Allowed Values :  \&quot;na\&quot;, \&quot;adfsv2\&quot;, \&quot;adfsv3\&quot;, \&quot;adfsv4\&quot;, \&quot;adfsv2019\&quot;, \&quot;b2c\&quot;, \&quot;ping\&quot;, \&quot;shibboleth\&quot; (optional, default to ADFSV4)
-     * @param azureenvironment   Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment\&quot; (optional, default to azurecloud)
-     * @param signinaudience          Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
-     * @param guesthomedin            Allowed Values :  \&quot;none\&quot;, \&quot;onprem\&quot;, \&quot;hostazuread\&quot; (optional, default to none)
+     * @param federationprovider Allowed Values :  \&quot;none\&quot;, \&quot;adfsv2\&quot;, \&quot;adfsv3\&quot;, \&quot;adfsv4\&quot;, \&quot;adfsv2019\&quot;, \&quot;b2c\&quot;, \&quot;ping\&quot;, \&quot;shibboleth\&quot; (optional, default to adfsv4)
+     * @param azureenvironment   Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment (optional, default to azurecloud)
+     * @param apptype            Allowed Values :  \&quot;cloud\&quot;, \&quot;onprem\&quot; (optional, default to cloud)
+     * @param publicclient       Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
+     * @param signinaudience     Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
+     * @param guesthomedin       Allowed Values :  \&quot;none\&quot;, \&quot;onprem\&quot;, \&quot;hostazuread\&quot; (optional, default to none)
      * @param callback           The callback to be executed when the API call finishes
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object
      */
-    public com.squareup.okhttp.Call getConfigAsync(String usertype, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String signinaudience, String guesthomedin, final ApiCallback<List<ConfigInfo>> callback) throws ApiException {
+    public com.squareup.okhttp.Call getConfigAsync(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String apptype, String publicclient, String signinaudience, String guesthomedin, final ApiCallback<List<ConfigInfo>> callback) throws ApiException {
 
         ProgressResponseBody.ProgressListener progressListener = null;
         ProgressRequestBody.ProgressRequestListener progressRequestListener = null;
@@ -219,7 +237,7 @@ public class ConfigApi {
             };
         }
 
-        com.squareup.okhttp.Call call = getConfigValidateBeforeCall(usertype, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, signinaudience, guesthomedin, progressListener, progressRequestListener);
+        com.squareup.okhttp.Call call = getConfigValidateBeforeCall(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, apptype, publicclient, signinaudience, guesthomedin, progressListener, progressRequestListener);
         Type localVarReturnType = new TypeToken<List<ConfigInfo>>() {
         }.getType();
         apiClient.executeAsync(call, localVarReturnType, callback);

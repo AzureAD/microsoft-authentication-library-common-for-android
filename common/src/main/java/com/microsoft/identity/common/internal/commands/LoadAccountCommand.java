@@ -20,32 +20,46 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.request.OperationParameters;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.internal.controllers.BaseController;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
+
 /**
- * Command class to call controllers to remove the account and return the result to
+ * Command class to call controllers to load accounts and return the account list to
  * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
  */
-public class RemoveAccountCommand extends BaseCommand<Boolean> {
-    private static final String TAG = RemoveAccountCommand.class.getSimpleName();
+@EqualsAndHashCode(callSuper = true)
+public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {
+    private static final String TAG = LoadAccountCommand.class.getSimpleName();
 
-    public RemoveAccountCommand(@NonNull final OperationParameters parameters,
-                                @NonNull final List<BaseController> controllers,
-                                @NonNull final CommandCallback callback) {
-        super(parameters, controllers, callback);
+    public LoadAccountCommand(@NonNull CommandParameters parameters,
+                              @NonNull BaseController controller,
+                              @NonNull CommandCallback callback,
+                              @NonNull String publicApiId) {
+        super(parameters, controller, callback, publicApiId);
+    }
+
+    public LoadAccountCommand(@NonNull CommandParameters parameters,
+                              @NonNull List<BaseController> controllers,
+                              @NonNull CommandCallback callback,
+                              @NonNull String publicApiId) {
+        super(parameters, controllers, callback, publicApiId);
     }
 
     @Override
-    public Boolean execute() throws Exception {
+    public List<ICacheRecord> execute() throws Exception {
         final String methodName = ":execute";
 
-        boolean result = false;
+        List<ICacheRecord> result = new ArrayList<>();
 
         for (int ii = 0; ii < getControllers().size(); ii++) {
             final BaseController controller = getControllers().get(ii);
@@ -55,15 +69,10 @@ public class RemoveAccountCommand extends BaseCommand<Boolean> {
                             + controller.getClass().getSimpleName()
             );
 
-            result = controller.removeAccount(getParameters());
+            result.addAll(controller.getAccounts(getParameters()));
         }
 
         return result;
-    }
-
-    @Override
-    public int getCommandNameHashCode() {
-        return TAG.hashCode();
     }
 
     @Override

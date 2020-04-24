@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.ADALError;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -52,7 +53,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     private static final String TAG = AdalBrokerResultAdapter.class.getName();
 
     @Override
-    public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult) {
+    public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,
+                                                 @Nullable final String negotiatedBrokerProtocolVersion) {
 
         Logger.verbose(TAG , "Constructing success bundle from Authentication Result.");
         final Bundle resultBundle = new Bundle();
@@ -122,7 +124,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
 
     @Override
-    public Bundle bundleFromBaseException(BaseException baseException) {
+    public Bundle bundleFromBaseException(@NonNull BaseException baseException,
+                                          @Nullable final String negotiatedBrokerProtocolVersion) {
 
         Logger.verbose(TAG , "Constructing error bundle from exception.");
         final Bundle resultBundle = new Bundle();

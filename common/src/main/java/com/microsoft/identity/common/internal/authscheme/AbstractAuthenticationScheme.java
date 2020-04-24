@@ -26,9 +26,12 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.annotations.SerializedName;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * Abstract base class for AuthenticationSchemes.
  */
+@EqualsAndHashCode
 public abstract class AbstractAuthenticationScheme implements INameable {
 
     private static final long serialVersionUID = -2437270903389813253L;
