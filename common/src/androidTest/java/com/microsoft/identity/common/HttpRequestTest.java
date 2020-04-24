@@ -23,14 +23,16 @@
 
 package com.microsoft.identity.common;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.HttpUrlConnectionFactory;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
@@ -42,10 +44,10 @@ import java.util.Collections;
 
 /**
  * Tests for {@link HttpRequest}.
- *
+ * <p>
  * We need to fix setup of these tests as something is missing post moving from MSAL to common
  */
-@Ignore
+@RunWith(AndroidJUnit4.class)
 public final class HttpRequestTest {
 
     @After
