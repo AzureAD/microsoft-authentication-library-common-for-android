@@ -1,3 +1,12 @@
+Version 2.0.7
+------------
+- Added throttling
+- Added Dual Client Stack support for FoCI apps
+- Added support to compress broker payload using GZIP
+- Added flag to enable/disable power optimization check
+- Removed check for usage stat manager to determine if network is disabled
+- Project wide internal code refactoring using Lombok
+
 Version 2.0.6
 ------------
 - Use fixed thread pool for silent requests
