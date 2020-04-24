@@ -40,6 +40,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.util.Collections;
+import java.util.HashMap;
 
 import static com.microsoft.identity.common.MockUtil.getMockedConnectionWithFailureResponse;
 import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactory.addMockedConnection;
@@ -71,7 +72,7 @@ public final class HttpRequestTest {
     }
 
     /**
-     * Verify that http get succeed and no retry happens.
+     * Verify that HTTP GET succeed and no retry happens.
      */
     @Test
     public void testHttpGetSucceed() throws IOException {
@@ -100,7 +101,7 @@ public final class HttpRequestTest {
     }
 
     /**
-     * Verify that http post succeeds and no retry happens.
+     * Verify that HTTP POST succeeds and no retry happens.
      */
     @Test
     public void testHttpPostSucceed() throws IOException {
@@ -115,6 +116,192 @@ public final class HttpRequestTest {
         try {
             assertEquals(1, getMockedConnectionCountInQueue());
             final HttpResponse response = sendHttpPost();
+            verifySuccessHttpResponse(response);
+        } catch (final IOException e) {
+            fail();
+        }
+
+        assertEquals(0, getMockedConnectionCountInQueue());
+        final InOrder inOrder = Mockito.inOrder(mockedSuccessConnection);
+        // default times for verify is 1.
+        inOrder.verify(mockedSuccessConnection).getInputStream();
+        inOrder.verify(mockedSuccessConnection, Mockito.never()).getErrorStream();
+        inOrder.verify(mockedSuccessConnection).getResponseCode();
+        inOrder.verify(mockedSuccessConnection).getHeaderFields();
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    /**
+     * Verify that HTTP HEAD succeeds and no retry happens.
+     */
+    @Test
+    public void testHttpHeadSucceed() throws IOException {
+        // prepare the connection, only one connection will be made.
+        final HttpURLConnection mockedSuccessConnection =
+                MockUtil.getMockedConnectionWithSuccessResponse(
+                        getSuccessResponse()
+                );
+        mockRequestBody(mockedSuccessConnection);
+        addMockedConnection(mockedSuccessConnection);
+
+        try {
+            assertEquals(1, getMockedConnectionCountInQueue());
+            final HttpResponse response = sendHttpHead();
+            verifySuccessHttpResponse(response);
+        } catch (final IOException e) {
+            fail();
+        }
+
+        assertEquals(0, getMockedConnectionCountInQueue());
+        final InOrder inOrder = Mockito.inOrder(mockedSuccessConnection);
+        // default times for verify is 1.
+        inOrder.verify(mockedSuccessConnection).getInputStream();
+        inOrder.verify(mockedSuccessConnection, Mockito.never()).getErrorStream();
+        inOrder.verify(mockedSuccessConnection).getResponseCode();
+        inOrder.verify(mockedSuccessConnection).getHeaderFields();
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    /**
+     * Verify that HTTP PUT succeeds and no retry happens.
+     */
+    @Test
+    public void testHttpPutSucceed() throws IOException {
+        // prepare the connection, only one connection will be made.
+        final HttpURLConnection mockedSuccessConnection =
+                MockUtil.getMockedConnectionWithSuccessResponse(
+                        getSuccessResponse()
+                );
+        mockRequestBody(mockedSuccessConnection);
+        addMockedConnection(mockedSuccessConnection);
+
+        try {
+            assertEquals(1, getMockedConnectionCountInQueue());
+            final HttpResponse response = sendHttpPut();
+            verifySuccessHttpResponse(response);
+        } catch (final IOException e) {
+            fail();
+        }
+
+        assertEquals(0, getMockedConnectionCountInQueue());
+        final InOrder inOrder = Mockito.inOrder(mockedSuccessConnection);
+        // default times for verify is 1.
+        inOrder.verify(mockedSuccessConnection).getInputStream();
+        inOrder.verify(mockedSuccessConnection, Mockito.never()).getErrorStream();
+        inOrder.verify(mockedSuccessConnection).getResponseCode();
+        inOrder.verify(mockedSuccessConnection).getHeaderFields();
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    /**
+     * Verify that HTTP DELETE succeeds and no retry happens.
+     */
+    @Test
+    public void testHttpDeleteSucceed() throws IOException {
+        // prepare the connection, only one connection will be made.
+        final HttpURLConnection mockedSuccessConnection =
+                MockUtil.getMockedConnectionWithSuccessResponse(
+                        getSuccessResponse()
+                );
+        mockRequestBody(mockedSuccessConnection);
+        addMockedConnection(mockedSuccessConnection);
+
+        try {
+            assertEquals(1, getMockedConnectionCountInQueue());
+            final HttpResponse response = sendHttpDelete();
+            verifySuccessHttpResponse(response);
+        } catch (final IOException e) {
+            fail();
+        }
+
+        assertEquals(0, getMockedConnectionCountInQueue());
+        final InOrder inOrder = Mockito.inOrder(mockedSuccessConnection);
+        // default times for verify is 1.
+        inOrder.verify(mockedSuccessConnection).getInputStream();
+        inOrder.verify(mockedSuccessConnection, Mockito.never()).getErrorStream();
+        inOrder.verify(mockedSuccessConnection).getResponseCode();
+        inOrder.verify(mockedSuccessConnection).getHeaderFields();
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    /**
+     * Verify that HTTP TRACE succeeds and no retry happens.
+     */
+    @Test
+    public void testHttpTraceSucceed() throws IOException {
+        // prepare the connection, only one connection will be made.
+        final HttpURLConnection mockedSuccessConnection =
+                MockUtil.getMockedConnectionWithSuccessResponse(
+                        getSuccessResponse()
+                );
+        mockRequestBody(mockedSuccessConnection);
+        addMockedConnection(mockedSuccessConnection);
+
+        try {
+            assertEquals(1, getMockedConnectionCountInQueue());
+            final HttpResponse response = sendHttpTrace();
+            verifySuccessHttpResponse(response);
+        } catch (final IOException e) {
+            fail();
+        }
+
+        assertEquals(0, getMockedConnectionCountInQueue());
+        final InOrder inOrder = Mockito.inOrder(mockedSuccessConnection);
+        // default times for verify is 1.
+        inOrder.verify(mockedSuccessConnection).getInputStream();
+        inOrder.verify(mockedSuccessConnection, Mockito.never()).getErrorStream();
+        inOrder.verify(mockedSuccessConnection).getResponseCode();
+        inOrder.verify(mockedSuccessConnection).getHeaderFields();
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    /**
+     * Verify that HTTP OPTIONS succeeds and no retry happens.
+     */
+    @Test
+    public void testHttpOptionsSucceed() throws IOException {
+        // prepare the connection, only one connection will be made.
+        final HttpURLConnection mockedSuccessConnection =
+                MockUtil.getMockedConnectionWithSuccessResponse(
+                        getSuccessResponse()
+                );
+        mockRequestBody(mockedSuccessConnection);
+        addMockedConnection(mockedSuccessConnection);
+
+        try {
+            assertEquals(1, getMockedConnectionCountInQueue());
+            final HttpResponse response = sendHttpOptions();
+            verifySuccessHttpResponse(response);
+        } catch (final IOException e) {
+            fail();
+        }
+
+        assertEquals(0, getMockedConnectionCountInQueue());
+        final InOrder inOrder = Mockito.inOrder(mockedSuccessConnection);
+        // default times for verify is 1.
+        inOrder.verify(mockedSuccessConnection).getInputStream();
+        inOrder.verify(mockedSuccessConnection, Mockito.never()).getErrorStream();
+        inOrder.verify(mockedSuccessConnection).getResponseCode();
+        inOrder.verify(mockedSuccessConnection).getHeaderFields();
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    /**
+     * Verify that HTTP PATCH succeeds and no retry happens.
+     */
+    @Test
+    public void testHttpPatchSucceed() throws IOException {
+        // prepare the connection, only one connection will be made.
+        final HttpURLConnection mockedSuccessConnection =
+                MockUtil.getMockedConnectionWithSuccessResponse(
+                        getSuccessResponse()
+                );
+        mockRequestBody(mockedSuccessConnection);
+        addMockedConnection(mockedSuccessConnection);
+
+        try {
+            assertEquals(1, getMockedConnectionCountInQueue());
+            final HttpResponse response = sendHttpPatch();
             verifySuccessHttpResponse(response);
         } catch (final IOException e) {
             fail();
@@ -505,22 +692,104 @@ public final class HttpRequestTest {
     }
 
     /**
-     * Send http get request.
+     * Send an HTTP GET request.
      */
     private HttpResponse sendHttpGet() throws IOException {
-        return HttpRequest.sendGet(
+        return HttpRequest.sendWithMethod(
+                HttpRequest.REQUEST_METHOD_GET,
                 Util.getValidRequestUrl(),
-                Collections.<String, String>emptyMap()
+                Collections.<String, String>emptyMap(),
+                null,
+                null
         );
     }
 
     /**
-     * Send http post request.
+     * Send an HTTP POST request.
      */
     private HttpResponse sendHttpPost() throws IOException {
-        return HttpRequest.sendPost(
+        return HttpRequest.sendWithMethod(
+                HttpRequest.REQUEST_METHOD_POST,
                 Util.getValidRequestUrl(),
                 Collections.<String, String>emptyMap(),
+                "SomeRequestMessage".getBytes(),
+                "application/x-www-form-urlencoded"
+        );
+    }
+
+    /**
+     * Send an HTTP HEAD request.
+     */
+    private HttpResponse sendHttpHead() throws IOException {
+        return HttpRequest.sendWithMethod(
+                HttpRequest.REQUEST_METHOD_HEAD,
+                Util.getValidRequestUrl(),
+                Collections.<String, String>emptyMap(),
+                null,
+                null
+        );
+    }
+
+    /**
+     * Send an HTTP PUT request.
+     */
+    private HttpResponse sendHttpPut() throws IOException {
+        return HttpRequest.sendWithMethod(
+                HttpRequest.REQUEST_METHOD_PUT,
+                Util.getValidRequestUrl(),
+                Collections.<String, String>emptyMap(),
+                "SomeRequestMessage".getBytes(),
+                "application/x-www-form-urlencoded"
+        );
+    }
+
+    /**
+     * Send an HTTP DELETE request.
+     */
+    private HttpResponse sendHttpDelete() throws IOException {
+        return HttpRequest.sendWithMethod(
+                HttpRequest.REQUEST_METHOD_DELETE,
+                Util.getValidRequestUrl(),
+                Collections.<String, String>emptyMap(),
+                "SomeRequestMessage".getBytes(),
+                "application/x-www-form-urlencoded"
+        );
+    }
+
+    /**
+     * Send an HTTP TRACE request.
+     */
+    private HttpResponse sendHttpTrace() throws IOException {
+        return HttpRequest.sendWithMethod(
+                HttpRequest.REQUEST_METHOD_TRACE,
+                Util.getValidRequestUrl(),
+                Collections.<String, String>emptyMap(),
+                null,
+                null
+        );
+    }
+
+    /**
+     * Send an HTTP OPTIONS request.
+     */
+    private HttpResponse sendHttpOptions() throws IOException {
+        return HttpRequest.sendWithMethod(
+                HttpRequest.REQUEST_METHOD_OPTIONS,
+                Util.getValidRequestUrl(),
+                Collections.<String, String>emptyMap(),
+                null,
+                null
+        );
+    }
+
+    /**
+     * Send an HTTP PATCH request.
+     */
+    private HttpResponse sendHttpPatch() throws IOException {
+        return HttpRequest.sendWithMethod(
+                HttpRequest.REQUEST_METHOD_PATCH,
+                Util.getValidRequestUrl(),
+                new HashMap<String, String>(), // Map cannot be immutable; PATCH uses backcompat logic
                 "SomeRequestMessage".getBytes(),
                 "application/x-www-form-urlencoded"
         );

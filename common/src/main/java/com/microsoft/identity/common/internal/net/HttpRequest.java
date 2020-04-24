@@ -65,14 +65,14 @@ public final class HttpRequest {
     private static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
     private static final int STREAM_BUFFER_SIZE = 1024;
 
-    static final String REQUEST_METHOD_GET = "GET";
-    static final String REQUEST_METHOD_POST = "POST";
-    static final String REQUEST_METHOD_HEAD = "HEAD";
-    static final String REQUEST_METHOD_PUT = "PUT";
-    static final String REQUEST_METHOD_DELETE = "DELETE";
-    static final String REQUEST_METHOD_TRACE = "TRACE";
-    static final String REQUEST_METHOD_OPTIONS = "OPTIONS";
-    static final String REQUEST_METHOD_PATCH = "PATCH";
+    public static final String REQUEST_METHOD_GET = "GET";
+    public static final String REQUEST_METHOD_POST = "POST";
+    public static final String REQUEST_METHOD_HEAD = "HEAD";
+    public static final String REQUEST_METHOD_PUT = "PUT";
+    public static final String REQUEST_METHOD_DELETE = "DELETE";
+    public static final String REQUEST_METHOD_TRACE = "TRACE";
+    public static final String REQUEST_METHOD_OPTIONS = "OPTIONS";
+    public static final String REQUEST_METHOD_PATCH = "PATCH";
 
     private static final Set<String> HTTP_METHODS = new HashSet<>();
 
