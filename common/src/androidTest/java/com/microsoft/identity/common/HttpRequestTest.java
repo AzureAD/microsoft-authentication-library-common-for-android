@@ -517,7 +517,7 @@ public final class HttpRequestTest {
     /**
      * Send http post request.
      */
-    HttpResponse sendHttpPost() throws IOException {
+    private HttpResponse sendHttpPost() throws IOException {
         return HttpRequest.sendPost(
                 Util.getValidRequestUrl(),
                 Collections.<String, String>emptyMap(),
