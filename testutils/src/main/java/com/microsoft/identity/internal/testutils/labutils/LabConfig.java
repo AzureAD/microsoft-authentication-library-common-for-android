@@ -1,6 +1,9 @@
 package com.microsoft.identity.internal.testutils.labutils;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
+import com.microsoft.identity.internal.test.labapi.model.TempUser;
 
 public class LabConfig {
 
@@ -15,21 +18,33 @@ public class LabConfig {
     }
 
     private ConfigInfo mConfigInfo;
-
+    private TempUser mTempUser;
     private String mLabUserPassword;
 
-    public LabConfig(ConfigInfo configInfo, String labUserPassword) {
+    public LabConfig(@NonNull ConfigInfo configInfo, String labUserPassword) {
         this.mConfigInfo = configInfo;
         this.mLabUserPassword = labUserPassword;
     }
 
-    public LabConfig(ConfigInfo configInfo) {
-        this.mConfigInfo = configInfo;
-        this.mLabUserPassword = null;
+    public LabConfig(@NonNull ConfigInfo configInfo) {
+        this(configInfo, null);
+    }
+
+    public LabConfig(@NonNull TempUser tempUser, String labUserPassword) {
+        this.mTempUser = tempUser;
+        this.mLabUserPassword = labUserPassword;
+    }
+
+    public LabConfig(@NonNull TempUser tempUser) {
+        this(tempUser, null);
     }
 
     public ConfigInfo getConfigInfo() {
         return mConfigInfo;
+    }
+
+    public TempUser getTempUser() {
+        return mTempUser;
     }
 
     public String getLabUserPassword() {
@@ -41,11 +56,13 @@ public class LabConfig {
     }
 
     public String getAuthority() {
-        if (mConfigInfo == null) {
+        if (mConfigInfo != null) {
+            return mConfigInfo.getLabInfo().getAuthority();
+        } else if (mTempUser != null) {
+            return mTempUser.getAuthority();
+        } else {
             return null;
         }
-
-        return mConfigInfo.getLabInfo().getAuthority();
     }
 
     public String getAppId() {

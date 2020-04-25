@@ -24,9 +24,11 @@ package com.microsoft.identity.internal.testutils.labutils;
 
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
+import com.microsoft.identity.internal.test.labapi.api.CreateTempUserApi;
 import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.internal.test.labapi.model.LabInfo;
+import com.microsoft.identity.internal.test.labapi.model.TempUser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -124,6 +126,24 @@ public class LabUserHelper {
         LabConfig.setCurrentLabConfig(labConfig);
 
         return labConfig.getConfigInfo().getUserInfo().getUpn();
+    }
+
+    public static String loadTempUser(final String userType) {
+        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        CreateTempUserApi createTempUserApi = new CreateTempUserApi();
+
+        TempUser tempUser;
+
+        try {
+            tempUser = createTempUserApi.post(userType);
+            final String password = LabHelper.getPasswordForLab(tempUser.getLabName());
+            LabConfig labConfig = new LabConfig(tempUser, password);
+            LabConfig.setCurrentLabConfig(labConfig);
+        } catch (ApiException e) {
+            throw new RuntimeException("Error retrieving lab user", e);
+        }
+
+        return tempUser.getUpn();
     }
 
     public static String getPasswordForUser(final String username) {
