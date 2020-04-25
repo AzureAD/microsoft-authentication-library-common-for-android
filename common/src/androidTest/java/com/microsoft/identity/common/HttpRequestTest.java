@@ -52,8 +52,6 @@ import static org.junit.Assert.fail;
 
 /**
  * Tests for {@link HttpRequest}.
- * <p>
- * We need to fix setup of these tests as something is missing post moving from MSAL to common
  */
 @RunWith(AndroidJUnit4.class)
 public final class HttpRequestTest {
