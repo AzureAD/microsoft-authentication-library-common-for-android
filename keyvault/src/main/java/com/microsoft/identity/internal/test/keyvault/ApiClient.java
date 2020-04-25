@@ -93,6 +93,9 @@ public class ApiClient {
         authentications.put("oauth", oAuthAuthentication);
         // Prevent the authentications from being modified.
         authentications = Collections.unmodifiableMap(authentications);
+        List<Protocol> protocols = new ArrayList<>();
+        protocols.add(Protocol.HTTP_1_1);
+        httpClient.setProtocols(protocols);
     }
 
     /**
