@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -42,6 +44,8 @@ import java.net.URL;
 import java.net.UnknownServiceException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,8 +65,27 @@ public final class HttpRequest {
     private static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
     private static final int STREAM_BUFFER_SIZE = 1024;
 
-    static final String REQUEST_METHOD_GET = "GET";
-    static final String REQUEST_METHOD_POST = "POST";
+    public static final String REQUEST_METHOD_GET = "GET";
+    public static final String REQUEST_METHOD_POST = "POST";
+    public static final String REQUEST_METHOD_HEAD = "HEAD";
+    public static final String REQUEST_METHOD_PUT = "PUT";
+    public static final String REQUEST_METHOD_DELETE = "DELETE";
+    public static final String REQUEST_METHOD_TRACE = "TRACE";
+    public static final String REQUEST_METHOD_OPTIONS = "OPTIONS";
+    public static final String REQUEST_METHOD_PATCH = "PATCH";
+
+    private static final Set<String> HTTP_METHODS = new HashSet<>();
+
+    static {
+        HTTP_METHODS.add(REQUEST_METHOD_GET);
+        HTTP_METHODS.add(REQUEST_METHOD_POST);
+        HTTP_METHODS.add(REQUEST_METHOD_HEAD);
+        HTTP_METHODS.add(REQUEST_METHOD_PUT);
+        HTTP_METHODS.add(REQUEST_METHOD_DELETE);
+        HTTP_METHODS.add(REQUEST_METHOD_TRACE);
+        HTTP_METHODS.add(REQUEST_METHOD_OPTIONS);
+        HTTP_METHODS.add(REQUEST_METHOD_PATCH);
+    }
 
     /**
      * Value of read timeout in milliseconds.
@@ -115,8 +138,29 @@ public final class HttpRequest {
         mRequestContentType = requestContentType;
     }
 
+    private static void recordHttpTelemetryEventStart(@NonNull final String requestMethod,
+                                                      @NonNull final URL requestUrl,
+                                                      @Nullable final String requestId) {
+        Telemetry.emit(
+                new HttpStartEvent()
+                        .putMethod(requestMethod)
+                        .putPath(requestUrl)
+                        .putRequestIdHeader(requestId)
+        );
+    }
+
+    private static void recordHttpTelemetryEventEnd(@Nullable final HttpResponse response) {
+        final HttpEndEvent httpEndEvent = new HttpEndEvent();
+
+        if (null != response) {
+            httpEndEvent.putStatusCode(response.getStatusCode());
+        }
+
+        Telemetry.emit(httpEndEvent);
+    }
+
     /**
-     * Send post request {@link URL}, headers, post message and the request content type.
+     * Send a POST request {@link URL}, headers, post message and the request content type.
      *
      * @param requestUrl         The {@link URL} to make the http request.
      * @param requestHeaders     Headers used to send the http request.
@@ -125,57 +169,231 @@ public final class HttpRequest {
      * @return HttpResponse
      * @throws IOException throw if error happen during http send request.
      */
-    public static HttpResponse sendPost(final URL requestUrl, final Map<String, String> requestHeaders,
-                                        final byte[] requestContent, final String requestContentType)
+    public static HttpResponse sendPost(@NonNull final URL requestUrl,
+                                        @NonNull final Map<String, String> requestHeaders,
+                                        @Nullable final byte[] requestContent,
+                                        @Nullable final String requestContentType)
             throws IOException {
-        Telemetry.emit(
-                new HttpStartEvent()
-                        .putMethod(REQUEST_METHOD_POST)
-                        .putPath(requestUrl)
-                        .putRequestIdHeader(requestHeaders == null ? null : requestHeaders.get(CLIENT_REQUEST_ID))
+        return sendWithMethod(
+                REQUEST_METHOD_POST,
+                requestUrl,
+                requestHeaders,
+                requestContent,
+                requestContentType
         );
-
-        final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_POST,
-                requestContent, requestContentType);
-        final HttpResponse response = httpRequest.send();
-
-        final HttpEndEvent httpEndEvent = new HttpEndEvent();
-
-        if (response != null) {
-            httpEndEvent.putStatusCode(response.getStatusCode());
-        }
-
-        Telemetry.emit(httpEndEvent);
-
-        return response;
     }
 
     /**
-     * Send Get request {@link URL} and request headers.
+     * Send a GET request {@link URL} and request headers.
      *
      * @param requestUrl     The {@link URL} to make the http request.
      * @param requestHeaders Headers used to send the http request.
      * @return HttpResponse
      * @throws IOException throw if service error happen during http request.
      */
-    public static HttpResponse sendGet(final URL requestUrl, final Map<String, String> requestHeaders)
+    public static HttpResponse sendGet(@NonNull final URL requestUrl,
+                                       @NonNull final Map<String, String> requestHeaders)
             throws IOException {
-        Telemetry.emit(
-                new HttpStartEvent()
-                        .putMethod(REQUEST_METHOD_GET)
-                        .putPath(requestUrl)
-                        .putRequestIdHeader(requestHeaders == null ? null : requestHeaders.get(CLIENT_REQUEST_ID))
+        return sendWithMethod(
+                REQUEST_METHOD_GET,
+                requestUrl,
+                requestHeaders,
+                null,
+                null
+        );
+    }
+
+    /**
+     * Send a HEAD request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl     The {@link URL} to make the http request.
+     * @param requestHeaders Headers used to send the http request.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
+    public static HttpResponse sendHead(@NonNull final URL requestUrl,
+                                        @NonNull final Map<String, String> requestHeaders)
+            throws IOException {
+        return sendWithMethod(
+                REQUEST_METHOD_HEAD,
+                requestUrl,
+                requestHeaders,
+                null,
+                null
+        );
+    }
+
+    /**
+     * Send a PUT request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl         The {@link URL} to make the http request.
+     * @param requestHeaders     Headers used to send the http request.
+     * @param requestContent     Optional request body, if applicable.
+     * @param requestContentType Request content type.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
+    public static HttpResponse sendPut(@NonNull final URL requestUrl,
+                                       @NonNull final Map<String, String> requestHeaders,
+                                       @Nullable final byte[] requestContent,
+                                       @Nullable final String requestContentType)
+            throws IOException {
+        return sendWithMethod(
+                REQUEST_METHOD_PUT,
+                requestUrl,
+                requestHeaders,
+                requestContent,
+                requestContentType
+        );
+    }
+
+    /**
+     * Send a DELETE request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl         The {@link URL} to make the http request.
+     * @param requestHeaders     Headers used to send the http request.
+     * @param requestContent     Optional request body, if applicable.
+     * @param requestContentType Request content type.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
+    public static HttpResponse sendDelete(@NonNull final URL requestUrl,
+                                          @NonNull final Map<String, String> requestHeaders,
+                                          @Nullable final byte[] requestContent,
+                                          @Nullable final String requestContentType)
+            throws IOException {
+        return sendWithMethod(
+                REQUEST_METHOD_DELETE,
+                requestUrl,
+                requestHeaders,
+                requestContent,
+                requestContentType
+        );
+    }
+
+    /**
+     * Send a TRACE request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl     The {@link URL} to make the http request.
+     * @param requestHeaders Headers used to send the http request.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
+    public static HttpResponse sendTrace(@NonNull final URL requestUrl,
+                                         @NonNull final Map<String, String> requestHeaders)
+            throws IOException {
+        return sendWithMethod(
+                REQUEST_METHOD_TRACE,
+                requestUrl,
+                requestHeaders,
+                null,
+                null
+        );
+    }
+
+    /**
+     * Send an OPTIONS request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl     The {@link URL} to make the http request.
+     * @param requestHeaders Headers used to send the http request.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
+    public static HttpResponse sendOptions(@NonNull final URL requestUrl,
+                                           @NonNull final Map<String, String> requestHeaders)
+            throws IOException {
+        return sendWithMethod(
+                REQUEST_METHOD_OPTIONS,
+                requestUrl,
+                requestHeaders,
+                null,
+                null
+        );
+    }
+
+    /**
+     * Send a PATCH request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl         The {@link URL} to make the http request.
+     * @param requestHeaders     Headers used to send the http request.
+     * @param requestContent     Optional request body, if applicable.
+     * @param requestContentType Request content type.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
+    public static HttpResponse sendPatch(@NonNull final URL requestUrl,
+                                         @NonNull final Map<String, String> requestHeaders,
+                                         @Nullable final byte[] requestContent,
+                                         @Nullable final String requestContentType)
+            throws IOException {
+        return sendWithMethod(
+                REQUEST_METHOD_PATCH,
+                requestUrl,
+                requestHeaders,
+                requestContent,
+                requestContentType
+        );
+    }
+
+    /**
+     * Sends an HTTP request of the specified method; applies appropriate provided arguments where
+     * applicable.
+     *
+     * @param httpMethod         One of: GET, POST, HEAD, PUT, DELETE, TRACE, OPTIONS, PATCH.
+     * @param requestUrl         The recipient {@link URL}.
+     * @param requestHeaders     Headers used to send the http request.
+     * @param requestContent     Optional request body, if applicable.
+     * @param requestContentType Optional request content type (may also be supplied via header).
+     * @return HttpResponse
+     * @throws IOException If an error is encountered while servicing this request.
+     */
+    public static HttpResponse sendWithMethod(@NonNull final String httpMethod,
+                                              @NonNull final URL requestUrl,
+                                              @NonNull final Map<String, String> requestHeaders,
+                                              @Nullable final byte[] requestContent,
+                                              @Nullable final String requestContentType)
+            throws IOException {
+        // Validate the HTTP method...
+        if (TextUtils.isEmpty(httpMethod)) {
+            throw new IllegalArgumentException("HTTP method cannot be null or blank");
+        }
+
+        String normalizedHttpMethod = httpMethod.toUpperCase(Locale.US);
+
+        if (!HTTP_METHODS.contains(normalizedHttpMethod)) {
+            throw new IllegalArgumentException("Unknown or unsupported HTTP method: " + httpMethod);
+        }
+
+        // Log Telemetry event start
+        recordHttpTelemetryEventStart(
+                normalizedHttpMethod,
+                requestUrl,
+                requestHeaders.get(CLIENT_REQUEST_ID)
         );
 
-        final HttpRequest httpRequest = new HttpRequest(requestUrl, requestHeaders, REQUEST_METHOD_GET);
+        // Apply special backcompat behaviors for PATCH, if reqd
+        if (REQUEST_METHOD_PATCH.equals(normalizedHttpMethod)) {
+            // Because HttpURLConnection predates RFC-5789, we need to fallback on POST w/ a backcompat
+            // workaround. See: https://stackoverflow.com/a/32503192/741827
+            normalizedHttpMethod = REQUEST_METHOD_POST;
+            requestHeaders.put("X-HTTP-Method-Override", "PATCH");
+        }
+
+        // Place request
+        final HttpRequest httpRequest = new HttpRequest(
+                requestUrl,
+                requestHeaders,
+                normalizedHttpMethod, // HttpURLConnection doesn't natively support PATCH
+                requestContent,
+                requestContentType
+        );
+
         final HttpResponse response = httpRequest.send();
 
-        final HttpEndEvent httpEndEvent = new HttpEndEvent();
-        if (response != null) {
-            httpEndEvent.putStatusCode(response.getStatusCode());
-        }
-        Telemetry.emit(httpEndEvent);
+        // Log Telemetry event end
+        recordHttpTelemetryEventEnd(response);
 
+        // Return the result
         return response;
     }
 
