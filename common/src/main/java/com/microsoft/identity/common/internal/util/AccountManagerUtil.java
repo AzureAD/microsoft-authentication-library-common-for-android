@@ -34,10 +34,12 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
 
-public class AccountManagerUtil {
-    private final static String TAG = AccountManagerUtil.class.getSimpleName();
+public final class AccountManagerUtil {
+    private static final String TAG = AccountManagerUtil.class.getSimpleName();
 
     private static final String MANIFEST_PERMISSION_MANAGE_ACCOUNTS = "android.permission.MANAGE_ACCOUNTS";
+
+    private AccountManagerUtil() {}
 
     /**
      * To verify if the caller can use to AccountManager to use broker.
