@@ -165,7 +165,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .extraQueryStringParameters(extraQP)
                 .authority(authority)
                 .scopes(scopes)
-                .clientId(AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY)
+                .clientId(intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY))
                 .redirectUri(redirectUri)
                 .loginHint(intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_NAME))
                 .correlationId(correlationIdString)
