@@ -35,6 +35,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.Authority;
@@ -509,6 +510,51 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
 
         return requestBundle;
+    }
+
+
+    public String getRequestStringForHello(@NonNull CommandParameters commandParameters){
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty(
+                AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
+                AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE
+        );
+        if (!StringUtil.isEmpty(commandParameters.getRequiredBrokerProtocolVersion())) {
+            jsonObject.addProperty(
+                    AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
+                    commandParameters.getRequiredBrokerProtocolVersion()
+            );
+        }
+        return jsonObject.getAsString();
+    }
+
+    public String getRequestStringForGetAccounts(@NonNull final CommandParameters parameters) {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
+        jsonObject.addProperty(ACCOUNT_REDIRECT, parameters.getRedirectUri());
+        return jsonObject.getAsString();
+    }
+
+    public String getRequestStringForSharedDeviceSignOut(@NonNull final RemoveAccountCommandParameters parameters){
+        JsonObject jsonObject = new JsonObject();
+        try {
+            Browser browser = BrowserSelector.select(parameters.getAndroidApplicationContext(), parameters.getBrowserSafeList());
+            jsonObject.addProperty(DEFAULT_BROWSER_PACKAGE_NAME, browser.getPackageName());
+        } catch (ClientException e) {
+            // Best effort. If none is passed to broker, then it will let the OS decide.
+            Logger.error(TAG, e.getErrorCode(), e);
+        }
+        return jsonObject.getAsString();
+    }
+
+    public String getRequestStringForRemoveAccount(@NonNull final RemoveAccountCommandParameters parameters) {
+        JsonObject jsonObject = new JsonObject();
+        if (null != parameters.getAccount()) {
+            jsonObject.addProperty(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
+            jsonObject.addProperty(ENVIRONMENT, parameters.getAccount().getEnvironment());
+            jsonObject.addProperty(ACCOUNT_HOME_ACCOUNT_ID, parameters.getAccount().getHomeAccountId());
+        }
+        return jsonObject.getAsString();
     }
 
     private boolean getMultipleCloudsSupported(@NonNull final TokenCommandParameters parameters) {

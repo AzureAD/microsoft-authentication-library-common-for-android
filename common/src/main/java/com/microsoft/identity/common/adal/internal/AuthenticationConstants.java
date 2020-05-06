@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
+import android.net.Uri;
+
 import com.microsoft.identity.common.BuildConfig;
 
 /**
@@ -1240,6 +1242,61 @@ public final class AuthenticationConstants {
         public static final String GET_CURRENT_ACCOUNT = "GET_CURRENT_ACCOUNT";
 
         public static final String REMOVE_ACCOUNT_FROM_SHARED_DEVICE = "REMOVE_ACCOUNT_FROM_SHARED_DEVICE";
+    }
+
+
+    public static final class BrokerContentProvider{
+
+        public static final String CONTENT_SCHEME = "content://";
+
+        /** Paths for all broker api's **/
+        public static final String AUTHORITY = "com.microsoft.identity.broker";
+
+        public static final String HELLO_PATH = "/hello";
+
+        public static final String AUTHORIZATION_INTENT_PATH = "/getAuthorizationIntent";
+
+        public static final String ACQUIRE_TOKEN_SILENT_PATH = "/acquireTokenSilent";
+
+        public static final String GET_ACCOUNTS_PATH = "/getAccounts";
+
+        public static final String GET_CURRENT_ACCOUNT_SHARED_DEVICe_PATH = "/getCurrentAccountSharedDevice";
+
+        public static final String GET_DEVICE_MODE_PATH = "/getDeviceMode";
+
+        public static final String SIGN_OUT_FROM_SHARED_DEVICE_PATH = "/signOutFromSharedDevice";
+
+
+        /** Codes for URI **/
+        public static final int HELLO_URI_CODE = 1;
+
+        public static final int AUTHORIZATION_INTENT_CODE = 2;
+
+        public static final int ACQUIRE_TOKEN_SILENT_CODE = 3;
+
+        public static final int GET_ACCOUNTS_CODE = 4;
+
+        public static final int GET_CURRENT_ACCOUNT_SHARED_DEVICe_CODE = 5;
+
+        public static final int GET_DEVICE_MODE_CODE = 6;
+
+        public static final int SIGN_OUT_FROM_SHARED_DEVICE_CODE = 7;
+
+
+        /** URI's for Content Provider **/
+        public static final Uri HELLO_URI = Uri.parse(CONTENT_SCHEME + AUTHORITY + HELLO_PATH);
+
+        public static final Uri AUTHORIZATION_INTENT_URI = Uri.parse(CONTENT_SCHEME + AUTHORITY + AUTHORIZATION_INTENT_PATH);
+
+        public static final Uri ACQUIRE_TOKEN_SILENT_URI = Uri.parse(CONTENT_SCHEME + AUTHORITY + ACQUIRE_TOKEN_SILENT_PATH);
+
+        public static final Uri GET_ACCOUNTS_URI = Uri.parse(CONTENT_SCHEME + AUTHORITY + GET_ACCOUNTS_PATH);
+
+        public static final Uri GET_CURRENT_ACCOUNT_SHARED_DEVICe_URI = Uri.parse(CONTENT_SCHEME + AUTHORITY + GET_CURRENT_ACCOUNT_SHARED_DEVICe_PATH);
+
+        public static final Uri GET_DEVICE_MODE_URI = Uri.parse(CONTENT_SCHEME + AUTHORITY + GET_DEVICE_MODE_PATH);
+
+        public static final Uri SIGN_OUT_FROM_SHARED_DEVICE_URI = Uri.parse(CONTENT_SCHEME + AUTHORITY + SIGN_OUT_FROM_SHARED_DEVICE_PATH);
     }
 
     public static final class AuthorizationIntentKey {
