@@ -76,7 +76,7 @@ public class PopAuthenticationSchemeInternal
     }
 
     PopAuthenticationSchemeInternal(@NonNull final IClockSkewManager clockSkewManager,
-                                    @NonNull final String httpMethod,
+                                    @Nullable final String httpMethod,
                                     @NonNull final URL url,
                                     @Nullable final String nonce) {
         super(SCHEME_POP);
@@ -107,6 +107,7 @@ public class PopAuthenticationSchemeInternal
     }
 
     @Override
+    @Nullable
     public String getHttpMethod() {
         return mHttpMethod;
     }

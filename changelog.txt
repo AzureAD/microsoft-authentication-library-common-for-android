@@ -1,3 +1,17 @@
+Version 2.0.8
+------------
+- Fix to add the throwIfNetworkNotAvailable API back for ADAL back compat.
+
+Version 2.0.7
+------------
+- This version is incompatible with ADAL due a breaking API change. It's is fixed in 2.0.8.
+- Added throttling
+- Added Dual Client Stack support for FoCI apps
+- Added support to compress broker payload using GZIP
+- Added flag to enable/disable power optimization check
+- Removed check for usage stat manager to determine if network is disabled
+- Project wide internal code refactoring using Lombok
+
 Version 2.0.6
 ------------
 - Use fixed thread pool for silent requests

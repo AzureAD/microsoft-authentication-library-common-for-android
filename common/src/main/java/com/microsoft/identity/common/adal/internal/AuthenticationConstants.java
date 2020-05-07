@@ -1195,7 +1195,7 @@ public final class AuthenticationConstants {
         }
     }
 
-    public static final class OAuth2Scopes{
+    public static final class OAuth2Scopes {
 
         /**
          * Scope to get get open id connect ID token
@@ -1217,6 +1217,11 @@ public final class AuthenticationConstants {
          * Custom scope used to get PRT
          */
         public static final String AZA_SCOPE = "aza";
+
+        /**
+         * Scope to get email claim as part of the ID Token
+         */
+        public static final String EMAIL = "email";
     }
 
     /**
@@ -1275,12 +1280,12 @@ public final class AuthenticationConstants {
 
         /**
          * an intent action specifying that the current interactive action should be cancelled.
-         * */
+         */
         public static final String CANCEL_INTERACTIVE_REQUEST = "cancel_interactive_request";
 
         /**
          * an intent action specifying that the intent contains authorization results.
-         * */
+         */
         public static final String RETURN_INTERACTIVE_REQUEST_RESULT = "return_interactive_request_result";
     }
 
