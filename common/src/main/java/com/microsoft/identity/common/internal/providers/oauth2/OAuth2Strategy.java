@@ -198,8 +198,6 @@ public abstract class OAuth2Strategy
     protected final void setTokenEndpoint(final String tokenEndpoint) {
         mTokenEndpoint = tokenEndpoint;
 
-        final Uri.Builder uriBuilder = Uri.parse(mTokenEndpoint).buildUpon();
-
         if (mConfig != null && mConfig instanceof MicrosoftStsOAuth2Configuration) {
 
             final MicrosoftStsOAuth2Configuration oauth2Config =
@@ -208,6 +206,8 @@ public abstract class OAuth2Strategy
             final AzureActiveDirectorySlice slice = oauth2Config.getSlice();
 
             if (slice != null) {
+                final Uri.Builder uriBuilder = Uri.parse(mTokenEndpoint).buildUpon();
+
                 if (!TextUtils.isEmpty(slice.getSlice())) {
                     uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, slice.getSlice());
                 }
@@ -215,10 +215,10 @@ public abstract class OAuth2Strategy
                 if (!TextUtils.isEmpty(slice.getDC())) {
                     uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.DC_PARAMETER, slice.getDC());
                 }
+
+                mTokenEndpoint = uriBuilder.build().toString();
             }
         }
-
-        mTokenEndpoint = uriBuilder.build().toString();
     }
 
     public String getAuthorityFromTokenEndpoint() {
