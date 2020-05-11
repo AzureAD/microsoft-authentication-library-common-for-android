@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
+import android.accounts.AccountManager;
+import android.accounts.AuthenticatorDescription;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -227,6 +229,25 @@ public class BrokerValidator {
         }
 
         return selfSignedCert;
+    }
+
+    /**
+     * Returns the package that is currently active relative to the Work Account custom account type
+     * Note: either the company portal or the authenticator
+     *
+     * @param context
+     * @return String
+     */
+    public String getCurrentActiveBrokerPackageName(@NonNull final Context context) {
+        AuthenticatorDescription[] authenticators = AccountManager.get(context).getAuthenticatorTypes();
+        for (AuthenticatorDescription authenticator : authenticators) {
+            if (authenticator.type.equals(AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE)
+                    && verifySignature(authenticator.packageName)) {
+                return authenticator.packageName;
+            }
+        }
+
+        return null;
     }
 
 

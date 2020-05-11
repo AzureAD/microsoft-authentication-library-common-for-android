@@ -101,8 +101,11 @@ public class MicrosoftAuthClient {
      * @return Intent
      */
     public Intent getIntentForAuthService(final Context context) {
-        final String currentActiveBrokerPackageName = getCurrentActiveBrokerPackageName(context);
-        if (currentActiveBrokerPackageName == null || currentActiveBrokerPackageName.length() == 0) {
+        final String currentActiveBrokerPackageName = new BrokerValidator(context).
+                getCurrentActiveBrokerPackageName(context);
+
+        if (currentActiveBrokerPackageName == null || currentActiveBrokerPackageName.length() == 0 ||
+                !isMicrosoftAuthServiceSupported(context.getPackageManager(), currentActiveBrokerPackageName)) {
             return null;
         }
         final Intent authServiceToBind = new Intent(MICROSOFT_AUTH_SERVICE_INTENT_FILTER);
@@ -122,23 +125,4 @@ public class MicrosoftAuthClient {
         return infos != null && infos.size() > 0;
     }
 
-
-    /**
-     * Returns the package that is currently active relative to the Work Account custom account type
-     * Note: either the company portal or the authenticator
-     *
-     * @param context
-     * @return String
-     */
-    private String getCurrentActiveBrokerPackageName(@NonNull final Context context) {
-        AuthenticatorDescription[] authenticators = AccountManager.get(context).getAuthenticatorTypes();
-        for (AuthenticatorDescription authenticator : authenticators) {
-            if (authenticator.type.equals(AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE)
-                    && isMicrosoftAuthServiceSupported(context.getPackageManager(), authenticator.packageName)) {
-                return authenticator.packageName;
-            }
-        }
-
-        return null;
-    }
 }
