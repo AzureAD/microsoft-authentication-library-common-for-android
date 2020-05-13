@@ -778,7 +778,7 @@ class DevicePopManager implements IDevicePopManager {
      */
     private static RSAKey getRsaKeyForKeyPair(@NonNull final KeyPair keyPair) {
         return new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
-                .privateKey(keyPair.getPrivate())
+                //.privateKey(keyPair.getPrivate())
                 .keyUse(null)
                 .build();
     }
