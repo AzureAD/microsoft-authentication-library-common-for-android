@@ -47,7 +47,7 @@ import java.security.cert.CertificateException;
 import java.text.ParseException;
 
 @RunWith(AndroidJUnit4.class)
-public class IDevicePoPManagerTests {
+public class DevicePoPManagerTests {
 
     private Context mContext;
     private IDevicePopManager mDevicePopManager;
