@@ -1262,7 +1262,7 @@ public final class AuthenticationConstants {
 
         public static final String HELLO_PATH = "/hello";
 
-        public static final String ACQUIRE_TOKEN_INTERACTIVE_PATH = "/getAuthorizationIntent";
+        public static final String ACQUIRE_TOKEN_INTERACTIVE_PATH = "/acquireTokenInteractive";
 
         public static final String ACQUIRE_TOKEN_SILENT_PATH = "/acquireTokenSilent";
 
@@ -1280,7 +1280,7 @@ public final class AuthenticationConstants {
         /** Codes for URI **/
         public static final int HELLO_URI_CODE = 1;
 
-        public static final int AUTHORIZATION_INTENT_CODE = 2;
+        public static final int ACQUIRE_TOKEN_INTERACTIVE_CODE = 2;
 
         public static final int ACQUIRE_TOKEN_SILENT_CODE = 3;
 
