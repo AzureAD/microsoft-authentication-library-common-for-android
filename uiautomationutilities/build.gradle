@@ -24,12 +24,12 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
     implementation 'junit:junit:4.13'
-    implementation 'androidx.test.uiautomator:uiautomator:2.2.0'
-    implementation 'androidx.test:monitor:1.2.0'
-    implementation 'androidx.test:core:1.2.0'
+    implementation "androidx.test.uiautomator:uiautomator:$rootProject.ext.uiAutomatorVersion"
+    implementation "androidx.test:monitor:$rootProject.ext.androidxTestMonitorVersion"
+    implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation "com.android.support.test:runner:$rootProject.ext.androidxTestRunnerVersion"
 }
