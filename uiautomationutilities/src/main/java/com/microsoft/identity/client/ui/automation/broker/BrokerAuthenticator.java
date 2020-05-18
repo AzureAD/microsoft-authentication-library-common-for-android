@@ -6,12 +6,12 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
-import com.microsoft.identity.client.ui.automation.PromptParameter;
+import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
-import com.microsoft.identity.client.ui.automation.web.MicrosoftPromptHandler;
-import com.microsoft.identity.client.ui.automation.web.PromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.interaction.MicrosoftPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 
 import org.junit.Assert;
 

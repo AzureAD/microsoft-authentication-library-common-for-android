@@ -1,4 +1,4 @@
-package com.microsoft.identity.client.ui.automation.web;
+package com.microsoft.identity.client.ui.automation.interaction;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;

@@ -1,7 +1,4 @@
-package com.microsoft.identity.client.ui.automation.web;
-
-import com.microsoft.identity.client.ui.automation.PromptParameter;
-import com.microsoft.identity.client.ui.automation.UiResponse;
+package com.microsoft.identity.client.ui.automation.interaction;
 
 public class MicrosoftPromptHandler extends AbstractPromptHandler {
 

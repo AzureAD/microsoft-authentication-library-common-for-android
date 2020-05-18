@@ -27,17 +27,17 @@ public class BrokerCompanyPortal extends App implements ITestBroker {
 
     @Override
     public void performDeviceRegistration(String username, String password) {
-
+        //TODO implement device registration for CP
     }
 
     @Override
     public void performSharedDeviceRegistration(String username, String password) {
-
+        //TODO implement shared device registration for CP
     }
 
     @Override
     public void handleFirstRun() {
-
+        //TODO handle first run for CP
     }
 
     @Override

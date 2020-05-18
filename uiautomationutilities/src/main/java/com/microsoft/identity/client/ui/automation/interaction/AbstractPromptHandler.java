@@ -1,4 +1,4 @@
-package com.microsoft.identity.client.ui.automation.web;
+package com.microsoft.identity.client.ui.automation.interaction;
 
 import androidx.annotation.NonNull;
 

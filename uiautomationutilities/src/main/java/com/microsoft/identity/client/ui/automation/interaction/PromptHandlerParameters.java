@@ -1,7 +1,5 @@
-package com.microsoft.identity.client.ui.automation.web;
+package com.microsoft.identity.client.ui.automation.interaction;
 
-import com.microsoft.identity.client.ui.automation.PromptParameter;
-import com.microsoft.identity.client.ui.automation.UiResponse;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 
 import lombok.Builder;
