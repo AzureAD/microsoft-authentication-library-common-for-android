@@ -452,21 +452,43 @@ class DevicePopManager implements IDevicePopManager {
 
         try {
             final JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder();
-            claimsBuilder.claim(SignedHttpRequestJwtClaims.ACCESS_TOKEN, accessToken);
-            claimsBuilder.claim(SignedHttpRequestJwtClaims.TIMESTAMP, timestamp);
-            claimsBuilder.claim(SignedHttpRequestJwtClaims.HTTP_HOST, requestUrl.getHost());
-            claimsBuilder.claim(SignedHttpRequestJwtClaims.CNF, getDevicePopJwkMinifiedJson());
+            claimsBuilder.claim(
+                    SignedHttpRequestJwtClaims.ACCESS_TOKEN,
+                    accessToken
+            );
+            claimsBuilder.claim(
+                    SignedHttpRequestJwtClaims.TIMESTAMP,
+                    timestamp
+            );
+            claimsBuilder.claim(
+                    SignedHttpRequestJwtClaims.HTTP_HOST,
+                    // Use Authority to include port number, if supplied
+                    requestUrl.getAuthority()
+            );
+            claimsBuilder.claim(
+                    SignedHttpRequestJwtClaims.CNF,
+                    getDevicePopJwkMinifiedJson()
+            );
 
             if (!TextUtils.isEmpty(requestUrl.getPath())) {
-                claimsBuilder.claim(SignedHttpRequestJwtClaims.HTTP_PATH, requestUrl.getPath());
+                claimsBuilder.claim(
+                        SignedHttpRequestJwtClaims.HTTP_PATH,
+                        requestUrl.getPath()
+                );
             }
 
             if (!TextUtils.isEmpty(httpMethod)) {
-                claimsBuilder.claim(SignedHttpRequestJwtClaims.HTTP_METHOD, httpMethod);
+                claimsBuilder.claim(
+                        SignedHttpRequestJwtClaims.HTTP_METHOD,
+                        httpMethod
+                );
             }
 
             if (!TextUtils.isEmpty(nonce)) {
-                claimsBuilder.claim(SignedHttpRequestJwtClaims.NONCE, nonce);
+                claimsBuilder.claim(
+                        SignedHttpRequestJwtClaims.NONCE,
+                        nonce
+                );
             }
 
             final JWTClaimsSet claimsSet = claimsBuilder.build();
@@ -756,7 +778,6 @@ class DevicePopManager implements IDevicePopManager {
      */
     private static RSAKey getRsaKeyForKeyPair(@NonNull final KeyPair keyPair) {
         return new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
-                .privateKey(keyPair.getPrivate())
                 .keyUse(null)
                 .build();
     }
