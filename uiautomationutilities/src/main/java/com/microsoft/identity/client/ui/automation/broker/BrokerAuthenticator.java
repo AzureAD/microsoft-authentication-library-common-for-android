@@ -6,12 +6,12 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
-import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.app.App;
-import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
-import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.client.ui.automation.interaction.MicrosoftPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
+import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
@@ -57,6 +57,7 @@ public class BrokerAuthenticator extends App implements ITestBroker {
                 .descriptionContains("Shared Device Mode")
                 .className("android.widget.ImageView");
 
+        //confirm that we are in Shared Device Mode inside Authenticator
         UiObject sharedDeviceConfirmation = mDevice.findObject(sharedDeviceConfirmationSelector);
         sharedDeviceConfirmation.waitForExists(TIMEOUT);
         Assert.assertTrue(sharedDeviceConfirmation.exists());
@@ -122,6 +123,7 @@ public class BrokerAuthenticator extends App implements ITestBroker {
                 AUTHENTICATOR_APP_PACKAGE_NAME, "frx_slide_skip_button"
         );
         UiAutomatorUtils.handleButtonClick("android:id/button1");
+        // the skip button is actually rendered 3 times in the swipe/slide view
         UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
         UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
         UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
@@ -131,6 +133,7 @@ public class BrokerAuthenticator extends App implements ITestBroker {
     public void handleAccountPicker(final String username) {
         UiDevice device = UiDevice.getInstance(getInstrumentation());
 
+        // find the object associated to this username in account picker
         UiObject accountSelected = device.findObject(new UiSelector().resourceId(
                 getResourceId(AUTHENTICATOR_APP_PACKAGE_NAME, "account_chooser_listView")
         ).childSelector(new UiSelector().textContains(

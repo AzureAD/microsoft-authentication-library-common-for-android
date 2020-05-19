@@ -16,6 +16,11 @@ public class CommonUtils {
 
     public final static long TIMEOUT = 1000 * 60;
 
+    /**
+     * Launch (open) the supplied package on the device
+     *
+     * @param packageName the package name to launch
+     */
     public static void launchApp(final String packageName) {
         final Context context = ApplicationProvider.getApplicationContext();
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);  //sets the intent to start your app
@@ -23,42 +28,41 @@ public class CommonUtils {
         context.startActivity(intent);
     }
 
+    /**
+     * Remove the supplied package name from the device
+     *
+     * @param packageName the packahe name to remove
+     */
     public static void removeApp(final String packageName) {
         UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
         try {
-            String output = mDevice.executeShellCommand("pm uninstall " + packageName);
+            mDevice.executeShellCommand("pm uninstall " + packageName);
         } catch (IOException e) {
             Assert.fail(e.getMessage());
         }
     }
 
+    /**
+     * Clear the contents of the storage associated to the given package name
+     *
+     * @param packageName the package name to clear
+     */
     public static void clearApp(final String packageName) {
         UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
         try {
-            String output = mDevice.executeShellCommand("pm clear " + packageName);
+            mDevice.executeShellCommand("pm clear " + packageName);
         } catch (IOException e) {
             Assert.fail(e.getMessage());
         }
     }
 
-    public static void disableFirstRun(final String packageName) {
-        UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
-        try {
-            String output = mDevice.executeShellCommand("\'echo \"chrome --disable-fre --no-default-browser-check --no-first-run\" > /data/local/tmp/chrome-command-line\'");
-        } catch (IOException e) {
-            Assert.fail(e.getMessage());
-        }
-    }
-
-    public static void installApp(final String packageName) {
-        UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
-        try {
-            String output = mDevice.executeShellCommand("pm clear " + packageName);
-        } catch (IOException e) {
-            Assert.fail(e.getMessage());
-        }
-    }
-
+    /**
+     * Get the complete resource id by combining the package name and the actual resource id
+     *
+     * @param appPackageName     the package name for the app
+     * @param internalResourceId the resource id for the element
+     * @return
+     */
     public static String getResourceId(final String appPackageName, final String internalResourceId) {
         return appPackageName + ":id/" + internalResourceId;
     }

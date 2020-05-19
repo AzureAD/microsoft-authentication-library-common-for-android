@@ -44,6 +44,7 @@ public class BrokerCompanyPortal extends App implements ITestBroker {
     public void handleAccountPicker(final String username) {
         UiDevice device = UiDevice.getInstance(getInstrumentation());
 
+        // find the object associated to this username in account picker
         UiObject accountSelected = device.findObject(new UiSelector().resourceId(
                 getResourceId(COMPANY_PORTAL_APP_PACKAGE_NAME, "account_chooser_listView")
         ).childSelector(new UiSelector().textContains(

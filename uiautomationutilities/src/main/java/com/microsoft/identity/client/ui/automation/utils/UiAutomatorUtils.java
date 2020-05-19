@@ -14,6 +14,12 @@ import static org.junit.Assert.fail;
 
 public class UiAutomatorUtils {
 
+    /**
+     * Obtain an instance of the UiObject for a given resource id
+     *
+     * @param resourceId the resource id of the element to obtain
+     * @return the UiObject associated to the supplied resource id
+     */
     public static UiObject obtainUiObjectWithResourceId(final String resourceId) {
         final UiDevice mDevice =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
@@ -25,6 +31,12 @@ public class UiAutomatorUtils {
         return uiObject;
     }
 
+    /**
+     * Obtain an instance of the UiObject for the given text
+     *
+     * @param text the text of the element to obtain
+     * @return the UiObject associated to the supplied text
+     */
     public static UiObject obtainUiObjectWithText(final String text) {
         final UiDevice mDevice =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
@@ -36,6 +48,13 @@ public class UiAutomatorUtils {
         return uiObject;
     }
 
+    /**
+     * Obtain a child element inside a scrollable view by specifying resource id and text
+     *
+     * @param scrollableResourceId the resource id of the parent scroll view
+     * @param childText            the text on the child view
+     * @return the UiObject associated to the desired child element
+     */
     public static UiObject obtainChildInScrollable(final String scrollableResourceId, final String childText) {
         final UiSelector scrollSelector = new UiSelector().resourceId(scrollableResourceId);
 
@@ -59,6 +78,12 @@ public class UiAutomatorUtils {
         return null;
     }
 
+    /**
+     * Fills the supplied text into the input element associated to the supplied resource id
+     *
+     * @param resourceId the resource id of the input element
+     * @param inputText  the text to enter
+     */
     public static void handleInput(final String resourceId, final String inputText) {
         final UiObject inputField = obtainUiObjectWithResourceId(resourceId);
 
@@ -70,6 +95,11 @@ public class UiAutomatorUtils {
         }
     }
 
+    /**
+     * Clicks the button element associated to the supplied resource id
+     *
+     * @param resourceId the resource id of the button to click
+     */
     public static void handleButtonClick(final String resourceId) {
         final UiObject button = obtainUiObjectWithResourceId(resourceId);
 

@@ -11,6 +11,8 @@ public class MicrosoftPromptHandler extends AbstractPromptHandler {
     }
 
     public void handlePrompt(final String username, final String password) {
+        // if login hint was not provided, then we need to handle either account picker or email
+        // field. If it was provided, then we expect to go straight to password field.
         if (!parameters.isLoginHintProvided()) {
             if (parameters.getBroker() != null && parameters.isExpectingNonZeroAccountsInBroker()) {
                 parameters.getBroker().handleAccountPicker(username);

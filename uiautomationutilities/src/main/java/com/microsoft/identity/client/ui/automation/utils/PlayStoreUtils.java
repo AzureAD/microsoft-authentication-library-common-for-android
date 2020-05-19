@@ -76,23 +76,6 @@ public class PlayStoreUtils {
         }
     }
 
-    private static void selectGooglePlayAppFromPackageNameOld(final String appName) {
-        UiDevice device = UiDevice.getInstance(getInstrumentation());
-
-        // we will just take the first app in the list
-        UiObject appIconInSearchResult = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "bucket_items")
-        ).index(0).childSelector(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "play_card")
-        )));
-        try {
-            appIconInSearchResult.waitForExists(TIMEOUT);
-            appIconInSearchResult.click();
-        } catch (UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
-        }
-    }
-
     private static void selectGooglePlayAppFromPackageName(final String appName) {
         UiDevice device = UiDevice.getInstance(getInstrumentation());
 
@@ -127,16 +110,11 @@ public class PlayStoreUtils {
         openButton.waitForExists(1000 * 300); // wait at least 5 mins for installation
     }
 
-    public UiObject findInstallBar() {
-        UiDevice device = UiDevice.getInstance(getInstrumentation());
-        UiObject installBar = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "install_bar")
-        ));
-
-        installBar.waitForExists(TIMEOUT);
-        return installBar;
-    }
-
+    /**
+     * Download and install an app from Play Store
+     *
+     * @param searchHint the name of package name for the app to install
+     */
     public static void installApp(final String searchHint) {
         searchAppOnGooglePlay(searchHint);
         if (isStringPackageName(searchHint)) {
