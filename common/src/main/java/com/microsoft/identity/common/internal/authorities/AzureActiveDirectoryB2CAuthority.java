@@ -68,6 +68,19 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
         MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
         config.setMultipleCloudsSupported(false);
         config.setAuthorityUrl(this.getAuthorityURL());
+
+        if (mSlice != null) {
+            Logger.info(
+                    TAG + methodName,
+                    "Setting slice parameters..."
+            );
+            com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice slice =
+                    new com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice();
+            slice.setSlice(mSlice.getSlice());
+            slice.setDataCenter(mSlice.getDC());
+            config.setSlice(slice);
+        }
+
         return config;
     }
 
