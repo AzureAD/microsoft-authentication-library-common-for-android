@@ -10,7 +10,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -31,5 +31,5 @@ dependencies {
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    androidTestImplementation "com.android.support.test:runner:$rootProject.ext.androidxTestRunnerVersion"
+    androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"
 }
