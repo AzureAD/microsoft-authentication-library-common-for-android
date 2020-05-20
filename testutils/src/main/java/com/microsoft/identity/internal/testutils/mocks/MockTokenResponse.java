@@ -33,7 +33,7 @@ public class MockTokenResponse {
     public static MicrosoftStsTokenResponse getMockSuccessTokenResponse() {
         String mockAccessToken = "aaaa.BBBB.123";
         String mockRefreshToken = "abcDeFGhijkl";
-        String mockIdToken = MockTokenCreator.createMockIdTokenWithIssuer(TestConstants.Authorities.AAD_MOCK_AUTHORITY_TENANT);
+        String mockIdToken = MockTokenCreator.createMockIdTokenWithTenantId(TestConstants.Authorities.AAD_MOCK_AUTHORITY_TENANT);
         String mockClientInfo = MockTokenCreator.createMockRawClientInfo();
 
         MicrosoftStsTokenResponse tokenResponse = new MicrosoftStsTokenResponse();
