@@ -48,7 +48,7 @@ public class MockTokenCreator {
     private static final String TENANT_ID_CLAIM = "tid";
     private static final String VERSION_CLAIM = "ver";
 
-    // default values
+    // mock token constants values
     private static final String AUDIENCE = "audience-for-testing";
     private static final String TENANT_ID = TestConstants.Authorities.AAD_MOCK_HTTP_RESPONSE_AUTHORITY_TENANT;
     private static final String OBJECT_ID = "99a1340e-0f35-4ac1-94ac-0837718f0b1f";
@@ -59,6 +59,8 @@ public class MockTokenCreator {
     private static final String UID = "99a1340e-0f35-4ac1-94ac-0837718f0b1f";
     private static final String UTID = TENANT_ID;
     private static final String ENCODING_UTF8 = "UTF-8";
+    private static final String ISSUER_PREFIX = "https://test.authority/";
+    private static final String ISSUER_SUFFIX = "/v2.0";
 
     private static String createMockToken(final String issuer,
                                           final String subject,
@@ -141,7 +143,7 @@ public class MockTokenCreator {
     }
 
     public static String createMockIdTokenWithExpAndTenantId(long exp, final String tenantId) {
-        final String issuer = "https://test.authority/" + tenantId + "/v2.0";
+        final String issuer = ISSUER_PREFIX + tenantId + ISSUER_SUFFIX;
         return createMockIdToken(
                 issuer,
                 SUBJECT,
