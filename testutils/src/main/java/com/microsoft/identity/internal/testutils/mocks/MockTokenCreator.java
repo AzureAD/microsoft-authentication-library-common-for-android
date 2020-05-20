@@ -52,7 +52,7 @@ public class MockTokenCreator {
     private static final String TENANT_ID = TestConstants.Authorities.AAD_MOCK_HTTP_RESPONSE_AUTHORITY_TENANT;
     private static final String OBJECT_ID = "99a1340e-0f35-4ac1-94ac-0837718f0b1f";
     private static final String PREFERRED_USERNAME = "test@test.onmicrosoft.com";
-    private static final String ISSUER =  "https://test.authority/" + TENANT_ID + "/v2.0";
+    private static final String ISSUER = "https://test.authority/" + TENANT_ID + "/v2.0";
     private static final String SUBJECT = "TestSubject";
     private static final String VERSION = "2.0";
     private static final String NAME = "test";
@@ -132,10 +132,15 @@ public class MockTokenCreator {
 
     public static String createMockIdToken() {
         long exp = getExpirationTimeAfterSpecifiedTime(3600);
-        return createMockIdTokenWithExp(exp);
+        return createMockIdTokenWithExpAndIssuer(exp, TENANT_ID);
     }
 
-    public static String createMockIdTokenWithExp(long exp) {
+    public static String createMockIdTokenWithIssuer(final String tenantId) {
+        long exp = getExpirationTimeAfterSpecifiedTime(3600);
+        return createMockIdTokenWithExpAndIssuer(exp, tenantId);
+    }
+
+    public static String createMockIdTokenWithExpAndIssuer(long exp, final String tenantId) {
         return createMockIdToken(
                 ISSUER,
                 SUBJECT,
@@ -143,7 +148,7 @@ public class MockTokenCreator {
                 NAME,
                 PREFERRED_USERNAME,
                 OBJECT_ID,
-                TENANT_ID,
+                tenantId,
                 VERSION,
                 new Date(),
                 new Date(),
