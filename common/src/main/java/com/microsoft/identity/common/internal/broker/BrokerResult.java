@@ -234,6 +234,9 @@ public class BrokerResult implements Serializable {
     @SerializedName(SerializedNames.SUCCESS)
     private boolean mSuccess;
 
+    /**
+     * boolean to indicate if the result was returned from cache
+     */
     @SerializedName(SerializedNames.SERVICED_FROM_CACHE)
     private boolean mServicedFromCache;
 
