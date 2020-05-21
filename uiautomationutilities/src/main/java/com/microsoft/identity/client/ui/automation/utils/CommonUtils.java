@@ -89,7 +89,7 @@ public class CommonUtils {
         return appPackageName + ":id/" + internalResourceId;
     }
 
-    static boolean isStringPackageName(final String hint) {
+    public static boolean isStringPackageName(final String hint) {
         return hint.contains("."); // best guess
     }
 }

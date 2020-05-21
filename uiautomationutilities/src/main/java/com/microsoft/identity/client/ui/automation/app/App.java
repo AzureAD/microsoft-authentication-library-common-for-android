@@ -22,8 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.app;
 
+import android.text.TextUtils;
+
+import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
+import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
+import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
-import com.microsoft.identity.client.ui.automation.utils.PlayStoreUtils;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -31,23 +35,44 @@ import lombok.Setter;
 @Getter
 public abstract class App implements IApp {
 
+    @Setter
+    private IAppInstaller appInstaller;
+
     private String packageName;
 
     @Setter
     private String appName;
 
+    protected String localApkFileName = null;
+
     public App(String packageName) {
         this.packageName = packageName;
+        this.appInstaller = new PlayStore();
     }
 
     public App(String packageName, String appName) {
+        this(packageName);
+        this.appName = appName;
+    }
+
+    public App(String packageName, IAppInstaller appInstaller) {
+        this.appInstaller = appInstaller;
+        this.packageName = packageName;
+    }
+
+    public App(String packageName, String appName, IAppInstaller appInstaller) {
+        this.appInstaller = appInstaller;
         this.packageName = packageName;
         this.appName = appName;
     }
 
     @Override
     public void install() {
-        PlayStoreUtils.installApp(appName != null ? appName : packageName);
+        if (appInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localApkFileName)) {
+            appInstaller.installApp(localApkFileName);
+        } else {
+            appInstaller.installApp(appName != null ? appName : packageName);
+        }
     }
 
     @Override

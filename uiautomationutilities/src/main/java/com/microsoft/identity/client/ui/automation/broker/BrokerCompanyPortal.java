@@ -42,9 +42,11 @@ public class BrokerCompanyPortal extends App implements ITestBroker {
 
     public final static String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
     public final static String COMPANY_PORTAL_APP_NAME = "Intune Company Portal";
+    public final static String COMPANY_PORTAL_APK = "CompanyPortal.apk";
 
     public BrokerCompanyPortal() {
         super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME);
+        localApkFileName = COMPANY_PORTAL_APK;
     }
 
     @Override
