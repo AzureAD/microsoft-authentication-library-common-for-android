@@ -24,19 +24,13 @@ package com.microsoft.identity.client.ui.automation.utils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.uiautomator.UiDevice;
-
-import org.junit.Assert;
-
-import java.io.IOException;
-
-import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
 public class CommonUtils {
 
-    public final static long TIMEOUT = 1000 * 60;
+    public final static long TIMEOUT = 1000 * 30;
 
     /**
      * Launch (open) the supplied package on the device
@@ -51,31 +45,29 @@ public class CommonUtils {
     }
 
     /**
-     * Remove the supplied package name from the device
+     * Grant (allow) a permission for a given package
      *
-     * @param packageName the packahe name to remove
+     * @param packageName the package to which the permission should be granted
+     * @param permission  the permission that should be granted
      */
-    public static void removeApp(final String packageName) {
-        UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
-        try {
-            mDevice.executeShellCommand("pm uninstall " + packageName);
-        } catch (IOException e) {
-            Assert.fail(e.getMessage());
-        }
+    public static void grantPackagePermission(final String packageName, final String permission) {
+        UiAutomatorUtils.handleButtonClick("com.android.packageinstaller:id/permission_allow_button");
     }
 
     /**
-     * Clear the contents of the storage associated to the given package name
+     * Check if the supplied permission has already been granted for given package.
      *
-     * @param packageName the package name to clear
+     * @param packageName the package for which to check if permission was granted
+     * @param permission  the permission which to check for
+     * @return a boolean indicating whether permission was already granted or not
      */
-    public static void clearApp(final String packageName) {
-        UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
-        try {
-            mDevice.executeShellCommand("pm clear " + packageName);
-        } catch (IOException e) {
-            Assert.fail(e.getMessage());
-        }
+    public static boolean hasPermission(final String packageName, final String permission) {
+        final Context context = ApplicationProvider.getApplicationContext();
+        final PackageManager packageManager = context.getPackageManager();
+        return PackageManager.PERMISSION_GRANTED == packageManager.checkPermission(
+                permission,
+                packageName
+        );
     }
 
     /**

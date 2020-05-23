@@ -48,4 +48,8 @@ public interface IApp {
      * Handle the first run experience for this app on first time launch
      */
     void handleFirstRun();
+
+    boolean hasPermission(String permission);
+
+    void grantPermission(String permission);
 }

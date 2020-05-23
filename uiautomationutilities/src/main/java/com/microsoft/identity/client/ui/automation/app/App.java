@@ -27,6 +27,7 @@ import android.text.TextUtils;
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
+import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 
 import lombok.Getter;
@@ -68,6 +69,8 @@ public abstract class App implements IApp {
 
     @Override
     public void install() {
+        //TODO: make it build time configurable to specify the installer that should be used.
+        // Ideally we can specify different installers on app basis
         if (appInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localApkFileName)) {
             appInstaller.installApp(localApkFileName);
         } else {
@@ -82,11 +85,23 @@ public abstract class App implements IApp {
 
     @Override
     public void clear() {
-        CommonUtils.clearApp(packageName);
+        AdbShellUtils.clearPackage(packageName);
     }
 
     @Override
     public void uninstall() {
-        CommonUtils.removeApp(packageName);
+        AdbShellUtils.removePackage(packageName);
+    }
+
+    @Override
+    public boolean hasPermission(final String permission) {
+        return CommonUtils.hasPermission(packageName, permission);
+    }
+
+    @Override
+    public void grantPermission(final String permission) {
+        if (!hasPermission(permission)) {
+            CommonUtils.grantPackagePermission(packageName, permission);
+        }
     }
 }
