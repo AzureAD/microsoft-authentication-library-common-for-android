@@ -5,7 +5,10 @@ import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchem
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
-class NoRetryPolicy implements RetryPolicy<HttpResponse> {
+/**
+ * A retry policy that, by default, does nothing.
+ */
+public class NoRetryPolicy implements RetryPolicy<HttpResponse> {
     @Override
     public HttpResponse attempt(Callable<HttpResponse> response) throws IOException {
         try {

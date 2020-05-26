@@ -10,15 +10,42 @@ import java.util.concurrent.Callable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
+/**
+ * A retry policy that implements exponential backoff based around functions that operate on the
+ * HttpResponse object and any Exception that might be thrown from that method.  By default, without
+ * any setup, this class will not retry at all.  Any response is acceptable, and no exceptions are
+ * retryable.
+ */
 @AllArgsConstructor
 @Builder
 public class StatusCodeAndExceptionRetry implements RetryPolicy<HttpResponse> {
-    private Function<Exception, Boolean> isRetryableException;
-    private Function<HttpResponse, Boolean> isRetryable;
-    private Function<HttpResponse, Boolean> isAcceptable;
+    @Builder.Default
+    private Function<Exception, Boolean> isRetryableException = new Function<Exception, Boolean>() {
+        @Override
+        public Boolean apply(Exception input) {
+            return Boolean.FALSE;
+        }
+    };
+    @Builder.Default
+    private Function<HttpResponse, Boolean> isRetryable = new Function<HttpResponse, Boolean>() {
+        @Override
+        public Boolean apply(HttpResponse input) {
+            return Boolean.FALSE;
+        }
+    };
+    @Builder.Default
+    private Function<HttpResponse, Boolean> isAcceptable = new Function<HttpResponse, Boolean>() {
+
+        public Boolean apply(HttpResponse input) {
+            return Boolean.TRUE;
+        }
+    };
+    @Builder.Default
     private int number = 1;
+    @Builder.Default
     private int initialDelay = 1000;
-    private int extensionFactor;
+    @Builder.Default
+    private int extensionFactor = 2;
     @Override
     public HttpResponse attempt(Callable<HttpResponse> responseSupplier) throws IOException {
         int attemptNumber = number;

@@ -43,9 +43,13 @@ import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactor
 @AllArgsConstructor
 @Builder
 public class HttpClient {
+    @Builder.Default
     private RetryPolicy<HttpResponse> retryPolicy = new NoRetryPolicy();
+    @Builder.Default
     private int connectTimeoutMs = 1000;
+    @Builder.Default
     private int readTimeoutMs = 1000;
+    @Builder.Default
     private int streamBufferSize = 1024;
 
     public enum HttpMethod {
@@ -62,8 +66,6 @@ public class HttpClient {
                 throw new IllegalArgumentException("HTTP method cannot be null or blank");
             }
 
-            String normalizedHttpMethod = httpMethod.toUpperCase(Locale.US);
-
             HttpMethod method = validMethods.get(httpMethod);
             if (method != null) {
                 return method;
@@ -74,6 +76,7 @@ public class HttpClient {
     }
 
     private static final Map<String, HttpMethod> validMethods;
+
     static {
         validMethods = new LinkedHashMap<>(HttpMethod.values().length);
         for (HttpMethod method: HttpMethod.values()) {
@@ -120,7 +123,7 @@ public class HttpClient {
      * @return HttpResponse      The response for this request.
      * @throws IOException If an error is encountered while servicing this request.
      */
-    protected HttpResponse method(@NonNull final String httpMethod,
+    HttpResponse method(@NonNull final String httpMethod,
                                       @NonNull final URL requestUrl,
                                       @NonNull final Map<String, String> requestHeaders,
                                       @Nullable final byte[] requestContent) throws IOException {
