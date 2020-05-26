@@ -26,6 +26,8 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.arch.core.util.Function;
+import androidx.core.util.Consumer;
 
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.HttpEndEvent;
@@ -42,12 +44,15 @@ import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownServiceException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import lombok.SneakyThrows;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
 import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactory.createHttpURLConnection;
@@ -64,6 +69,31 @@ public final class HttpRequest {
      */
     private static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
     private static final int STREAM_BUFFER_SIZE = 1024;
+    private static final HttpClient DEFAULT_HTTP_CLIENT = HttpClient.builder()
+            .connectTimeoutMs(RETRY_TIME_WAITING_PERIOD_MSEC)
+            .readTimeoutMs(RETRY_TIME_WAITING_PERIOD_MSEC)
+            .streamBufferSize(STREAM_BUFFER_SIZE)
+            .retryPolicy(new StatusCodeAndExceptionRetry.StatusCodeAndExceptionRetryBuilder()
+                          .number(1)
+                    .extensionFactor(2)
+                    .isAcceptable(new Function<HttpResponse, Boolean>() {
+                        public Boolean apply(HttpResponse response) {
+                            return response != null && response.getStatusCode() < 400;
+                        }
+                    })
+                    .initialDelay(RETRY_TIME_WAITING_PERIOD_MSEC)
+                    .isRetryable(new Function<HttpResponse, Boolean>() {
+                        public Boolean apply(HttpResponse response) {
+                            return response != null && HttpRequest.isRetryableError(response.getStatusCode());
+                        }
+                    })
+                    .isRetryableException(new Function<Exception, Boolean>() {
+                        public Boolean apply(Exception e) {
+                            return e instanceof SocketTimeoutException;
+                        }
+                    })
+                    .build())
+            .build();
 
     public static final String REQUEST_METHOD_GET = "GET";
     public static final String REQUEST_METHOD_POST = "POST";
@@ -74,7 +104,7 @@ public final class HttpRequest {
     public static final String REQUEST_METHOD_OPTIONS = "OPTIONS";
     public static final String REQUEST_METHOD_PATCH = "PATCH";
 
-    private static final Set<String> HTTP_METHODS = new HashSet<>();
+    private static final Set<String> HTTP_METHODS = new LinkedHashSet<>();
 
     static {
         HTTP_METHODS.add(REQUEST_METHOD_GET);
@@ -100,6 +130,27 @@ public final class HttpRequest {
     // class variables
     private final URL mRequestUrl;
     private final byte[] mRequestContent;
+
+    URL getRequestUrl() {
+        return mRequestUrl;
+    }
+
+    byte[] getRequestContent() {
+        return mRequestContent;
+    }
+
+    String getRequestContentType() {
+        return mRequestContentType;
+    }
+
+    String getRequestMethod() {
+        return mRequestMethod;
+    }
+
+    Map<String, String> getmRequestHeaders() {
+        return Collections.unmodifiableMap(mRequestHeaders);
+    }
+
     private final String mRequestContentType;
     private final String mRequestMethod;
     private final Map<String, String> mRequestHeaders = new HashMap<>();
@@ -125,11 +176,11 @@ public final class HttpRequest {
      * @param requestContent     Post message sent in the post request.
      * @param requestContentType Request content type.
      */
-    private HttpRequest(@NonNull final URL requestUrl,
-                        @NonNull final Map<String, String> requestHeaders,
-                        @NonNull final String requestMethod,
-                        @Nullable final byte[] requestContent,
-                        @Nullable final String requestContentType) {
+    HttpRequest(@NonNull final URL requestUrl,
+                @NonNull final Map<String, String> requestHeaders,
+                @NonNull final String requestMethod,
+                @Nullable final byte[] requestContent,
+                @Nullable final String requestContentType) {
         mRequestUrl = requestUrl;
         mRequestHeaders.put(HOST, requestUrl.getAuthority());
         mRequestHeaders.putAll(requestHeaders);
@@ -160,6 +211,29 @@ public final class HttpRequest {
     }
 
     /**
+     * Send a POST request {@link URL}, headers, and post message.  The request content type
+     * will be taken from the appropriate header field.
+     *
+     * @param requestUrl         The {@link URL} to make the http request.
+     * @param requestHeaders     Headers used to send the http request.
+     * @param requestContent     Post message sent in the post request.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
+    @Deprecated
+    public static HttpResponse sendPostWithoutRetries(@NonNull final URL requestUrl,
+                                        @NonNull final Map<String, String> requestHeaders,
+                                        @Nullable final byte[] requestContent)
+            throws IOException {
+        return sendWithMethod_v2(
+                REQUEST_METHOD_POST,
+                requestUrl,
+                requestHeaders,
+                requestContent
+        );
+    }
+
+    /**
      * Send a POST request {@link URL}, headers, post message and the request content type.
      *
      * @param requestUrl         The {@link URL} to make the http request.
@@ -169,6 +243,7 @@ public final class HttpRequest {
      * @return HttpResponse
      * @throws IOException throw if error happen during http send request.
      */
+    @Deprecated
     public static HttpResponse sendPost(@NonNull final URL requestUrl,
                                         @NonNull final Map<String, String> requestHeaders,
                                         @Nullable final byte[] requestContent,
@@ -191,6 +266,27 @@ public final class HttpRequest {
      * @return HttpResponse
      * @throws IOException throw if service error happen during http request.
      */
+    @Deprecated
+    public static HttpResponse sendGetWithoutRetries(@NonNull final URL requestUrl,
+                                       @NonNull final Map<String, String> requestHeaders)
+            throws IOException {
+        return sendWithMethod_v2(
+                REQUEST_METHOD_GET,
+                requestUrl,
+                requestHeaders,
+                null
+        );
+    }
+
+    /**
+     * Send a GET request {@link URL} and request headers.
+     *
+     * @param requestUrl     The {@link URL} to make the http request.
+     * @param requestHeaders Headers used to send the http request.
+     * @return HttpResponse
+     * @throws IOException throw if service error happen during http request.
+     */
+    @Deprecated
     public static HttpResponse sendGet(@NonNull final URL requestUrl,
                                        @NonNull final Map<String, String> requestHeaders)
             throws IOException {
@@ -211,6 +307,26 @@ public final class HttpRequest {
      * @return HttpResponse
      * @throws IOException throw if error happen during http send request.
      */
+    public static HttpResponse sendHeadWithoutRetries(@NonNull final URL requestUrl,
+                                        @NonNull final Map<String, String> requestHeaders)
+            throws IOException {
+        return sendWithMethod_v2(
+                REQUEST_METHOD_HEAD,
+                requestUrl,
+                requestHeaders,
+                null
+        );
+    }
+
+    /**
+     * Send a HEAD request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl     The {@link URL} to make the http request.
+     * @param requestHeaders Headers used to send the http request.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
+    @Deprecated
     public static HttpResponse sendHead(@NonNull final URL requestUrl,
                                         @NonNull final Map<String, String> requestHeaders)
             throws IOException {
@@ -224,6 +340,28 @@ public final class HttpRequest {
     }
 
     /**
+     * Send a PUT request {@link URL}, headers, and post message.  The content type will
+     * be taken from the appropriate header field.
+     *
+     * @param requestUrl         The {@link URL} to make the http request.
+     * @param requestHeaders     Headers used to send the http request.
+     * @param requestContent     Optional request body, if applicable.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
+    public static HttpResponse sendPutWithoutRetries(@NonNull final URL requestUrl,
+                                       @NonNull final Map<String, String> requestHeaders,
+                                       @Nullable final byte[] requestContent)
+            throws IOException {
+        return sendWithMethod_v2(
+                REQUEST_METHOD_PUT,
+                requestUrl,
+                requestHeaders,
+                requestContent
+        );
+    }
+
+    /**
      * Send a PUT request {@link URL}, headers, post message and the request content type.
      *
      * @param requestUrl         The {@link URL} to make the http request.
@@ -233,6 +371,7 @@ public final class HttpRequest {
      * @return HttpResponse
      * @throws IOException throw if error happen during http send request.
      */
+    @Deprecated
     public static HttpResponse sendPut(@NonNull final URL requestUrl,
                                        @NonNull final Map<String, String> requestHeaders,
                                        @Nullable final byte[] requestContent,
@@ -253,10 +392,32 @@ public final class HttpRequest {
      * @param requestUrl         The {@link URL} to make the http request.
      * @param requestHeaders     Headers used to send the http request.
      * @param requestContent     Optional request body, if applicable.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
+    public static HttpResponse sendDeleteWithoutRetries(@NonNull final URL requestUrl,
+                                          @NonNull final Map<String, String> requestHeaders,
+                                          @Nullable final byte[] requestContent)
+            throws IOException {
+        return sendWithMethod_v2(
+                REQUEST_METHOD_DELETE,
+                requestUrl,
+                requestHeaders,
+                requestContent
+        );
+    }
+
+    /**
+     * Send a DELETE request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl         The {@link URL} to make the http request.
+     * @param requestHeaders     Headers used to send the http request.
+     * @param requestContent     Optional request body, if applicable.
      * @param requestContentType Request content type.
      * @return HttpResponse
      * @throws IOException throw if error happen during http send request.
      */
+    @Deprecated
     public static HttpResponse sendDelete(@NonNull final URL requestUrl,
                                           @NonNull final Map<String, String> requestHeaders,
                                           @Nullable final byte[] requestContent,
@@ -279,6 +440,26 @@ public final class HttpRequest {
      * @return HttpResponse
      * @throws IOException throw if error happen during http send request.
      */
+    public static HttpResponse sendTraceWithoutRetries(@NonNull final URL requestUrl,
+                                         @NonNull final Map<String, String> requestHeaders)
+            throws IOException {
+        return sendWithMethod_v2(
+                REQUEST_METHOD_TRACE,
+                requestUrl,
+                requestHeaders,
+                null
+        );
+    }
+
+    /**
+     * Send a TRACE request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl     The {@link URL} to make the http request.
+     * @param requestHeaders Headers used to send the http request.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
+    @Deprecated
     public static HttpResponse sendTrace(@NonNull final URL requestUrl,
                                          @NonNull final Map<String, String> requestHeaders)
             throws IOException {
@@ -299,6 +480,26 @@ public final class HttpRequest {
      * @return HttpResponse
      * @throws IOException throw if error happen during http send request.
      */
+    public static HttpResponse sendOptionsWithoutRetries(@NonNull final URL requestUrl,
+                                           @NonNull final Map<String, String> requestHeaders)
+            throws IOException {
+        return sendWithMethod_v2(
+                REQUEST_METHOD_OPTIONS,
+                requestUrl,
+                requestHeaders,
+                null
+        );
+    }
+
+    /**
+     * Send an OPTIONS request {@link URL}, headers, post message and the request content type.
+     *
+     * @param requestUrl     The {@link URL} to make the http request.
+     * @param requestHeaders Headers used to send the http request.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
+    @Deprecated
     public static HttpResponse sendOptions(@NonNull final URL requestUrl,
                                            @NonNull final Map<String, String> requestHeaders)
             throws IOException {
@@ -321,6 +522,7 @@ public final class HttpRequest {
      * @return HttpResponse
      * @throws IOException throw if error happen during http send request.
      */
+    @Deprecated
     public static HttpResponse sendPatch(@NonNull final URL requestUrl,
                                          @NonNull final Map<String, String> requestHeaders,
                                          @Nullable final byte[] requestContent,
@@ -336,6 +538,28 @@ public final class HttpRequest {
     }
 
     /**
+     * Send a PATCH request {@link URL}, headers, post message.  The content type will be taken
+     * from the request headers.
+     *
+     * @param requestUrl         The {@link URL} to make the http request.
+     * @param requestHeaders     Headers used to send the http request.
+     * @param requestContent     Optional request body, if applicable.
+     * @return HttpResponse
+     * @throws IOException throw if error happen during http send request.
+     */
+    public static HttpResponse sendPatchWithouRetries(@NonNull final URL requestUrl,
+                                                      @NonNull final Map<String, String> requestHeaders,
+                                                      @Nullable final byte[] requestContent)
+            throws IOException {
+        return sendWithMethod_v2(
+                REQUEST_METHOD_PATCH,
+                requestUrl,
+                requestHeaders,
+                requestContent
+        );
+    }
+
+    /**
      * Sends an HTTP request of the specified method; applies appropriate provided arguments where
      * applicable.
      *
@@ -347,13 +571,96 @@ public final class HttpRequest {
      * @return HttpResponse
      * @throws IOException If an error is encountered while servicing this request.
      */
+    @Deprecated
     public static HttpResponse sendWithMethod(@NonNull final String httpMethod,
                                               @NonNull final URL requestUrl,
                                               @NonNull final Map<String, String> requestHeaders,
                                               @Nullable final byte[] requestContent,
                                               @Nullable final String requestContentType)
             throws IOException {
+        return getHttpResponseInternal(httpMethod, requestUrl, requestHeaders, requestContent, requestContentType, new Function<HttpRequest, HttpResponse>() {
+            @SneakyThrows
+            @Override
+            public HttpResponse apply(HttpRequest input) {
+                return input.sendWithRetryAndExceptionMasking(new Consumer<HttpResponse>(){
+                    @Override
+                    public void accept(HttpResponse httpResponse) {
+                        recordHttpTelemetryEventEnd(httpResponse);
+                    }
+                });
+            }
+        });
+    }
+    /**
+     * Sends an HTTP request of the specified method; applies appropriate provided arguments where
+     * applicable.
+     *
+     * @param httpMethod         One of: GET, POST, HEAD, PUT, DELETE, TRACE, OPTIONS, PATCH.
+     * @param requestUrl         The recipient {@link URL}.
+     * @param requestHeaders     Headers used to send the http request.
+     * @param requestContent     Optional request body, if applicable.
+     * @return HttpResponse
+     * @throws IOException If an error is encountered while servicing this request.
+     */
+    public static HttpResponse sendWithMethod_v2(@NonNull final String httpMethod,
+                                                 @NonNull final URL requestUrl,
+                                                 @NonNull final Map<String, String> requestHeaders,
+                                                 @Nullable final byte[] requestContent)
+            throws IOException {
+        return getHttpResponseInternal(httpMethod, requestUrl, requestHeaders, requestContent, null,
+                new Function<HttpRequest, HttpResponse>() {
+            @SneakyThrows
+            @Override
+            public HttpResponse apply(HttpRequest input) {
+                return input.send(new Consumer<HttpResponse>(){
+                    @Override
+                    public void accept(HttpResponse httpResponse) {
+                        recordHttpTelemetryEventEnd(httpResponse);
+                    }
+                });
+            }
+        });
+    }
+
+    private static HttpResponse getHttpResponseInternal(@NonNull String httpMethod, @NonNull URL requestUrl, @NonNull Map<String, String> requestHeaders, @Nullable byte[] requestContent, @Nullable String requestContentType,
+                                                        Function<HttpRequest, HttpResponse> producer) throws IOException {
         // Validate the HTTP method...
+        String normalizedHttpMethod = validateAndNormalizeMethod(httpMethod);
+
+        // Log Telemetry event start
+        recordHttpTelemetryEventStart(
+                normalizedHttpMethod,
+                requestUrl,
+                requestHeaders.get(CLIENT_REQUEST_ID)
+        );
+        final HttpRequest httpRequest = constructHttpRequest(normalizedHttpMethod, requestUrl, requestHeaders, requestContent, requestContentType);
+
+        return producer.apply(httpRequest);
+    }
+
+    private static HttpRequest constructHttpRequest(@NonNull String httpMethod, @NonNull URL requestUrl, @NonNull Map<String, String> requestHeaders, @Nullable byte[] requestContent, @Nullable String requestContentType) {
+
+        // Apply special backcompat behaviors for PATCH, if reqd
+        if (REQUEST_METHOD_PATCH.equals(httpMethod)) {
+            // Because HttpURLConnection predates RFC-5789, we need to fallback on POST w/ a backcompat
+            // workaround. See: https://stackoverflow.com/a/32503192/741827
+            httpMethod = REQUEST_METHOD_POST;
+            // This map may be immutable.
+            requestHeaders = new HashMap<>(requestHeaders);
+            requestHeaders.put("X-HTTP-Method-Override", httpMethod);
+        }
+
+        // Construct request
+        return new HttpRequest(
+                requestUrl,
+                requestHeaders,
+                httpMethod, // HttpURLConnection doesn't natively support PATCH
+                requestContent,
+                requestContentType
+        );
+    }
+
+    private static String validateAndNormalizeMethod(@NonNull final String httpMethod) {
         if (TextUtils.isEmpty(httpMethod)) {
             throw new IllegalArgumentException("HTTP method cannot be null or blank");
         }
@@ -363,45 +670,15 @@ public final class HttpRequest {
         if (!HTTP_METHODS.contains(normalizedHttpMethod)) {
             throw new IllegalArgumentException("Unknown or unsupported HTTP method: " + httpMethod);
         }
-
-        // Log Telemetry event start
-        recordHttpTelemetryEventStart(
-                normalizedHttpMethod,
-                requestUrl,
-                requestHeaders.get(CLIENT_REQUEST_ID)
-        );
-
-        // Apply special backcompat behaviors for PATCH, if reqd
-        if (REQUEST_METHOD_PATCH.equals(normalizedHttpMethod)) {
-            // Because HttpURLConnection predates RFC-5789, we need to fallback on POST w/ a backcompat
-            // workaround. See: https://stackoverflow.com/a/32503192/741827
-            normalizedHttpMethod = REQUEST_METHOD_POST;
-            requestHeaders.put("X-HTTP-Method-Override", "PATCH");
-        }
-
-        // Place request
-        final HttpRequest httpRequest = new HttpRequest(
-                requestUrl,
-                requestHeaders,
-                normalizedHttpMethod, // HttpURLConnection doesn't natively support PATCH
-                requestContent,
-                requestContentType
-        );
-
-        final HttpResponse response = httpRequest.send();
-
-        // Log Telemetry event end
-        recordHttpTelemetryEventEnd(response);
-
-        // Return the result
-        return response;
+        return normalizedHttpMethod;
     }
 
     /**
      * Send http request.
      */
-    private HttpResponse send() throws IOException {
-        final HttpResponse response = sendWithRetry();
+    @Deprecated
+    private HttpResponse sendWithRetryAndExceptionMasking(Consumer<HttpResponse> completionCallback) throws IOException {
+        final HttpResponse response = sendWithRetry(completionCallback);
 
         if (response != null && isRetryableError(response.getStatusCode())) {
             throw new UnknownServiceException("Retry failed again with 500/503/504");
@@ -411,32 +688,40 @@ public final class HttpRequest {
     }
 
     /**
+     * Send http request.
+     */
+    private HttpResponse send(Consumer<HttpResponse> completionCallback) throws IOException {
+        return executeHttpSend(false, completionCallback);
+    }
+
+    /**
      * Execute the send request, and retry if needed. Retry happens on all the endpoint when
      * receiving {@link SocketTimeoutException} or retryable error 500/503/504.
      */
-    private HttpResponse sendWithRetry() throws IOException {
+    @Deprecated
+    private HttpResponse sendWithRetry(Consumer<HttpResponse> completionCallback) throws IOException {
         final HttpResponse httpResponse;
 
         try {
-            httpResponse = executeHttpSend();
+            httpResponse = executeHttpSend(true, completionCallback);
         } catch (final SocketTimeoutException socketTimeoutException) {
             // In android, network timeout is thrown as the SocketTimeOutException, we need to
             // catch this and perform retry. If retry also fails with timeout, the
             // socketTimeoutException will be bubbled up
             waitBeforeRetry();
-            return executeHttpSend();
+            return executeHttpSend(true, completionCallback);
         }
 
         if (isRetryableError(httpResponse.getStatusCode())) {
             // retry if we get 500/503/504
             waitBeforeRetry();
-            return executeHttpSend();
+            return executeHttpSend(true, completionCallback);
         }
 
         return httpResponse;
     }
 
-    private HttpResponse executeHttpSend() throws IOException {
+    private HttpResponse executeHttpSend(boolean maskException, Consumer<HttpResponse> completionCallback) throws IOException {
         final HttpURLConnection urlConnection = setupConnection();
         urlConnection.setRequestMethod(mRequestMethod);
         urlConnection.setUseCaches(true);
@@ -444,17 +729,21 @@ public final class HttpRequest {
 
         InputStream responseStream = null;
 
-        final HttpResponse response;
+        HttpResponse response = null;
         try {
-            try {
+            if (maskException) {
+                try {
+                    responseStream = urlConnection.getInputStream();
+                } catch (final SocketTimeoutException socketTimeoutException) {
+                    // SocketTimeoutExcetion is thrown when connection timeout happens. For connection
+                    // timeout, we want to retry once. Throw the exception to the upper layer, and the
+                    // upper layer will handle the rety.
+                    throw socketTimeoutException;
+                } catch (final IOException ioException) {
+                    responseStream = urlConnection.getErrorStream();
+                }
+            } else {
                 responseStream = urlConnection.getInputStream();
-            } catch (final SocketTimeoutException socketTimeoutException) {
-                // SocketTimeoutExcetion is thrown when connection timeout happens. For connection
-                // timeout, we want to retry once. Throw the exception to the upper layer, and the
-                // upper layer will handle the rety.
-                throw socketTimeoutException;
-            } catch (final IOException ioException) {
-                responseStream = urlConnection.getErrorStream();
             }
 
             final int statusCode = urlConnection.getResponseCode();
@@ -471,6 +760,7 @@ public final class HttpRequest {
                     urlConnection.getHeaderFields()
             );
         } finally {
+            completionCallback.accept(response);
             safeCloseStream(responseStream);
         }
 
@@ -583,6 +873,8 @@ public final class HttpRequest {
             Thread.sleep(RETRY_TIME_WAITING_PERIOD_MSEC);
         } catch (final InterruptedException interrupted) {
             //Fail the have the thread waiting for 1 second before doing the retry
+            //Restore thread interrupted status.
+            Thread.currentThread().interrupt();
         }
     }
 }
