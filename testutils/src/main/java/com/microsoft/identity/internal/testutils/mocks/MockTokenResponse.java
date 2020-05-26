@@ -23,6 +23,7 @@
 package com.microsoft.identity.internal.testutils.mocks;
 
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.internal.testutils.TestConstants;
 
 public class MockTokenResponse {
 
@@ -32,7 +33,7 @@ public class MockTokenResponse {
     public static MicrosoftStsTokenResponse getMockSuccessTokenResponse() {
         String mockAccessToken = "aaaa.BBBB.123";
         String mockRefreshToken = "abcDeFGhijkl";
-        String mockIdToken = MockTokenCreator.createMockIdToken();
+        String mockIdToken = MockTokenCreator.createMockIdTokenWithTenantId(TestConstants.Authorities.AAD_MOCK_AUTHORITY_TENANT);
         String mockClientInfo = MockTokenCreator.createMockRawClientInfo();
 
         MicrosoftStsTokenResponse tokenResponse = new MicrosoftStsTokenResponse();

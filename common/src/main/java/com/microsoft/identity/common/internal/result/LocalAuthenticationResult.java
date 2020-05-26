@@ -60,7 +60,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     public LocalAuthenticationResult(@NonNull final ICacheRecord lastAuthorized,
                                      @NonNull final List<ICacheRecord> completeResultFromCache,
                                      @NonNull final SdkType sdkType,
-                                     @Nullable final boolean isServicedFromCache) {
+                                     final boolean isServicedFromCache) {
         this(lastAuthorized, sdkType);
         mCompleteResultFromCache = completeResultFromCache;
         mServicedFromCache = isServicedFromCache;
