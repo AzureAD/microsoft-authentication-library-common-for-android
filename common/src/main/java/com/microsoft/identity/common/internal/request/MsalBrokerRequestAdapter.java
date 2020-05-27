@@ -512,13 +512,19 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
 
-    public String getRequestStringForHello(@NonNull CommandParameters commandParameters) {
+    /**
+     * Util method to send requests as a json string to BrokerContentProvider's hello
+     */
+    public String getRequestStringForHello(@NonNull final CommandParameters commandParameters) {
         final BrokerHelloRequest request = new BrokerHelloRequest();
         request.setClientAdvertisedMaximumKey(AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);
         request.setClientConfiguredMinimumKey( commandParameters.getRequiredBrokerProtocolVersion());
         return new Gson().toJson(request, BrokerHelloRequest.class);
     }
 
+    /**
+     * Util method to send requests as a json string to BrokerContentProvider's getAccounts
+     */
     public String getRequestStringForGetAccounts(@NonNull final CommandParameters parameters) {
         final BrokerGetAccountRequest request = new BrokerGetAccountRequest();
         request.setClientId(parameters.getClientId());
@@ -526,10 +532,16 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return new Gson().toJson(request, BrokerGetAccountRequest.class);
     }
 
+    /**
+     * Util method to send requests as a json string to BrokerContentProvider's sharedDeviceSignout
+     */
     public String getRequestStringForSharedDeviceSignOut(@NonNull final RemoveAccountCommandParameters parameters){
         final BrokerSharedDeviceSignOutRequest request = new BrokerSharedDeviceSignOutRequest();
         try {
-            Browser browser = BrowserSelector.select(parameters.getAndroidApplicationContext(), parameters.getBrowserSafeList());
+            Browser browser = BrowserSelector.select(
+                    parameters.getAndroidApplicationContext(),
+                    parameters.getBrowserSafeList()
+            );
             request.setBrowserPackageName(browser.getPackageName());
         } catch (ClientException e) {
             // Best effort. If none is passed to broker, then it will let the OS decide.
@@ -538,6 +550,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return new Gson().toJson(request, BrokerSharedDeviceSignOutRequest.class);
     }
 
+    /**
+     * Util method to send requests as a json string to BrokerContentProvider's removeAccount
+     */
     public String getRequestStringForRemoveAccount(@NonNull final RemoveAccountCommandParameters parameters) {
         final BrokerRemoveAccountRequest request = new BrokerRemoveAccountRequest();
         request.setClientId(parameters.getClientId());
