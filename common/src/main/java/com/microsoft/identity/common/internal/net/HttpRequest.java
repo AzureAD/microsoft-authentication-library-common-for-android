@@ -47,6 +47,7 @@ import java.net.UnknownServiceException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -578,19 +579,17 @@ public final class HttpRequest {
                                               @Nullable final byte[] requestContent,
                                               @Nullable final String requestContentType)
             throws IOException {
-        return getHttpResponseInternal(httpMethod, requestUrl, requestHeaders, requestContent, requestContentType, new Function<HttpRequest, HttpResponse>() {
-            @SneakyThrows
-            @Override
-            public HttpResponse apply(HttpRequest input) {
-                return input.sendWithRetryAndExceptionMasking(new Consumer<HttpResponse>(){
-                    @Override
-                    public void accept(HttpResponse httpResponse) {
-                        recordHttpTelemetryEventEnd(httpResponse);
-                    }
-                });
+        if (requestContentType != null) {
+            return DEFAULT_HTTP_CLIENT.method(httpMethod, requestUrl, requestHeaders, requestContent);
+        } else {
+            Map<String, String> headerMap = new LinkedHashMap<>(requestHeaders);
+            if (requestContentType != null) {
+                headerMap.put(HttpConstants.HeaderField.CONTENT_TYPE, requestContentType);
             }
-        });
+            return DEFAULT_HTTP_CLIENT.method(httpMethod, requestUrl, requestHeaders, requestContent);
+        }
     }
+
     /**
      * Sends an HTTP request of the specified method; applies appropriate provided arguments where
      * applicable.
@@ -676,49 +675,8 @@ public final class HttpRequest {
     /**
      * Send http request.
      */
-    @Deprecated
-    private HttpResponse sendWithRetryAndExceptionMasking(Consumer<HttpResponse> completionCallback) throws IOException {
-        final HttpResponse response = sendWithRetry(completionCallback);
-
-        if (response != null && isRetryableError(response.getStatusCode())) {
-            throw new UnknownServiceException("Retry failed again with 500/503/504");
-        }
-
-        return response;
-    }
-
-    /**
-     * Send http request.
-     */
     private HttpResponse send(Consumer<HttpResponse> completionCallback) throws IOException {
         return executeHttpSend(false, completionCallback);
-    }
-
-    /**
-     * Execute the send request, and retry if needed. Retry happens on all the endpoint when
-     * receiving {@link SocketTimeoutException} or retryable error 500/503/504.
-     */
-    @Deprecated
-    private HttpResponse sendWithRetry(Consumer<HttpResponse> completionCallback) throws IOException {
-        final HttpResponse httpResponse;
-
-        try {
-            httpResponse = executeHttpSend(true, completionCallback);
-        } catch (final SocketTimeoutException socketTimeoutException) {
-            // In android, network timeout is thrown as the SocketTimeOutException, we need to
-            // catch this and perform retry. If retry also fails with timeout, the
-            // socketTimeoutException will be bubbled up
-            waitBeforeRetry();
-            return executeHttpSend(true, completionCallback);
-        }
-
-        if (isRetryableError(httpResponse.getStatusCode())) {
-            // retry if we get 500/503/504
-            waitBeforeRetry();
-            return executeHttpSend(true, completionCallback);
-        }
-
-        return httpResponse;
     }
 
     private HttpResponse executeHttpSend(boolean maskException, Consumer<HttpResponse> completionCallback) throws IOException {
@@ -862,19 +820,5 @@ public final class HttpRequest {
         return statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR
                 || statusCode == HttpURLConnection.HTTP_GATEWAY_TIMEOUT
                 || statusCode == HttpURLConnection.HTTP_UNAVAILABLE;
-    }
-
-    /**
-     * Having the thread wait for 1 second before doing the retry to avoid hitting server
-     * immediately.
-     */
-    private void waitBeforeRetry() {
-        try {
-            Thread.sleep(RETRY_TIME_WAITING_PERIOD_MSEC);
-        } catch (final InterruptedException interrupted) {
-            //Fail the have the thread waiting for 1 second before doing the retry
-            //Restore thread interrupted status.
-            Thread.currentThread().interrupt();
-        }
     }
 }

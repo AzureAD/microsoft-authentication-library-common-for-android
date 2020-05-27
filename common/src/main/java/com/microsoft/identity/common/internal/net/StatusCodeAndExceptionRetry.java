@@ -53,7 +53,8 @@ public class StatusCodeAndExceptionRetry implements RetryPolicy<HttpResponse> {
         do {
             try {
                 HttpResponse response = responseSupplier.call();
-                if (attemptNumber > 0 && (isAcceptable.apply(response) || !isRetryable.apply(response))) {
+                //If there are no retries left, or the response is acceptable, or it is not retryable.
+                if (attemptNumber <= 0 || isAcceptable.apply(response) || !isRetryable.apply(response)) {
                     return response;
                 }
             } catch (final Exception e) {
