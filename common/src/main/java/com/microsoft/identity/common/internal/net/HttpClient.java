@@ -1,3 +1,25 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
 import android.text.TextUtils;
@@ -11,6 +33,9 @@ import com.microsoft.identity.common.internal.telemetry.events.HttpEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.HttpStartEvent;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import net.jcip.annotations.Immutable;
+import net.jcip.annotations.ThreadSafe;
+
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -20,16 +45,14 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,15 +65,32 @@ import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactor
  */
 @AllArgsConstructor
 @Builder
+@ThreadSafe
+@Immutable
 public class HttpClient {
     @Builder.Default
-    private RetryPolicy<HttpResponse> retryPolicy = new NoRetryPolicy();
+    private final RetryPolicy<HttpResponse> retryPolicy = new NoRetryPolicy();
     @Builder.Default
-    private int connectTimeoutMs = 1000;
+    private final int connectTimeoutMs = 1000;
     @Builder.Default
-    private int readTimeoutMs = 1000;
+    private final int readTimeoutMs = 1000;
     @Builder.Default
-    private int streamBufferSize = 1024;
+    private final int streamBufferSize = 1024;
+
+    private static transient AtomicReference<HttpClient> defaultReference = new AtomicReference<>(null);
+
+    /**
+     * Obtain a static default instance of the HTTP Client class.
+     * @return a default-configured HttpClient.
+     */
+    public static HttpClient getDefaultInstance() {
+        HttpClient reference = defaultReference.get();
+        if (reference == null) {
+            defaultReference.compareAndSet(null, HttpClient.builder().build());
+            reference = defaultReference.get();
+        }
+        return reference;
+    }
 
     public enum HttpMethod {
         GET,
@@ -61,6 +101,16 @@ public class HttpClient {
         PATCH,
         DELETE,
         TRACE;
+
+        private static final Map<String, HttpMethod> validMethods;
+
+        static {
+            validMethods = new LinkedHashMap<>(HttpMethod.values().length);
+            for (HttpMethod method: HttpMethod.values()) {
+                validMethods.put(method.name(), method);
+            }
+        }
+
         public static HttpMethod validateAndNormalizeMethod(@NonNull final String httpMethod) {
             if (TextUtils.isEmpty(httpMethod)) {
                 throw new IllegalArgumentException("HTTP method cannot be null or blank");
@@ -73,15 +123,6 @@ public class HttpClient {
             throw new IllegalArgumentException("Unknown or unsupported HTTP method: " + httpMethod);
         }
 
-    }
-
-    private static final Map<String, HttpMethod> validMethods;
-
-    static {
-        validMethods = new LinkedHashMap<>(HttpMethod.values().length);
-        for (HttpMethod method: HttpMethod.values()) {
-            validMethods.put(method.name(), method);
-        }
     }
 
     /**
@@ -123,7 +164,7 @@ public class HttpClient {
      * @return HttpResponse      The response for this request.
      * @throws IOException If an error is encountered while servicing this request.
      */
-    HttpResponse method(@NonNull final String httpMethod,
+    public HttpResponse method(@NonNull final String httpMethod,
                                       @NonNull final URL requestUrl,
                                       @NonNull final Map<String, String> requestHeaders,
                                       @Nullable final byte[] requestContent) throws IOException {
@@ -180,6 +221,7 @@ public class HttpClient {
                 null
         );
     }
+
     public HttpResponse put(@NonNull final URL requestUrl,
                             @NonNull final Map<String, String> requestHeaders,
                             @Nullable final byte[] requestContent) throws IOException {
@@ -193,9 +235,8 @@ public class HttpClient {
     }
 
     public HttpResponse options(@NonNull final URL requestUrl,
-                             @NonNull final Map<String, String> requestHeaders,
-                             @Nullable final byte[] requestContent) throws IOException {
-        return method(HttpMethod.OPTIONS.name(), requestUrl, requestHeaders, requestContent);
+                             @NonNull final Map<String, String> requestHeaders) throws IOException {
+        return method(HttpMethod.OPTIONS.name(), requestUrl, requestHeaders, null);
     }
 
     public HttpResponse post(@NonNull final URL requestUrl,
