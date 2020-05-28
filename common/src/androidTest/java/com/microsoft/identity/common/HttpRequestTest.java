@@ -25,7 +25,7 @@ package com.microsoft.identity.common;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.microsoft.identity.common.internal.net.HttpClient;
+import com.microsoft.identity.common.internal.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.HttpUrlConnectionFactory;
@@ -934,33 +934,33 @@ public final class HttpRequestTest {
                 return HttpRequest.sendGet(url, headers);
             }
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
-                return HttpClient.getDefaultInstance().get(url, headers);
+                return UrlConnectionHttpClient.getDefaultInstance().get(url, headers);
             }},
         HEAD { boolean canHaveNoBody() { return true; } boolean canHaveBody() { return false; }
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
                 return HttpRequest.sendHead(url, headers);
             }
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
-                return HttpClient.getDefaultInstance().head(url, headers);
+                return UrlConnectionHttpClient.getDefaultInstance().head(url, headers);
             }},
         PUT { boolean canHaveNoBody() { return false; }
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
                 return HttpRequest.sendPut(url, headers, body, contentType);
             }
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
-                return HttpClient.getDefaultInstance().put(url, headers, body);
+                return UrlConnectionHttpClient.getDefaultInstance().put(url, headers, body);
             }},
         POST { HttpResponse specific(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
             return HttpRequest.sendPost(url, headers, body, contentType);
         }
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
-                return HttpClient.getDefaultInstance().post(url, headers, body);
+                return UrlConnectionHttpClient.getDefaultInstance().post(url, headers, body);
             }},
         OPTIONS { HttpResponse specific(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
             return HttpRequest.sendOptions(url, headers);
         }
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
-                return HttpClient.getDefaultInstance().options(url, headers);
+                return UrlConnectionHttpClient.getDefaultInstance().options(url, headers);
             }},
         TRACE { boolean canHaveBody() { return false; }
             boolean canHaveNoBody() { return true; }
@@ -968,19 +968,19 @@ public final class HttpRequestTest {
                 return HttpRequest.sendTrace(url, headers);
             }
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
-                return HttpClient.getDefaultInstance().trace(url, headers);
+                return UrlConnectionHttpClient.getDefaultInstance().trace(url, headers);
             }},
         PATCH{ HttpResponse specific(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
                 return HttpRequest.sendPatch(url, headers, body, contentType);
             }
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
-                return HttpClient.getDefaultInstance().patch(url, headers, body);
+                return UrlConnectionHttpClient.getDefaultInstance().patch(url, headers, body);
             }},
         DELETE{ HttpResponse specific(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
                 return HttpRequest.sendDelete(url, headers, body, contentType);
             }
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception {
-                return HttpClient.getDefaultInstance().delete(url, headers, body);
+                return UrlConnectionHttpClient.getDefaultInstance().delete(url, headers, body);
             }};
 
         abstract HttpResponse specific(URL url, Map<String, String> headers, byte[] body, String contentType) throws Exception;
@@ -1023,7 +1023,7 @@ public final class HttpRequestTest {
 
     private static HttpResponse sendWithMethodNoRetry(HttpTestMethod method)  throws Exception {
         URL validRequestUrl = Util.getValidRequestUrl();
-        return HttpClient.getDefaultInstance().method(
+        return UrlConnectionHttpClient.getDefaultInstance().method(
                 method.name(),
                 validRequestUrl,
                 method.canHaveBody() ? Collections.singletonMap("Content-Type", "application/x-www-form-urlencoded") : Collections.<String, String>emptyMap(),

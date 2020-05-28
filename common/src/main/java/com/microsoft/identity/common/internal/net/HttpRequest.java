@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
-import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.arch.core.util.Function;
@@ -37,11 +35,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
 
 /**
  * Internal class for handling http request.
@@ -55,7 +50,7 @@ public final class HttpRequest {
      */
     private static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
     private static final int STREAM_BUFFER_SIZE = 1024;
-    private static final HttpClient DEFAULT_HTTP_CLIENT = HttpClient.builder()
+    private static final HttpClient DEFAULT_HTTP_CLIENT = UrlConnectionHttpClient.builder()
             .connectTimeoutMs(RETRY_TIME_WAITING_PERIOD_MSEC)
             .readTimeoutMs(RETRY_TIME_WAITING_PERIOD_MSEC)
             .streamBufferSize(STREAM_BUFFER_SIZE)
