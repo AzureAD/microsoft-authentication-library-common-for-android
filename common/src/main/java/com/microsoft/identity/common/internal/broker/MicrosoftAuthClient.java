@@ -23,20 +23,18 @@
 
 package com.microsoft.identity.common.internal.broker;
 
-import android.accounts.AccountManager;
-import android.accounts.AuthenticatorDescription;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.text.TextUtils;
 
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * Client that wraps the code necessary to bind to the MicrosoftAuthService (Android Bound Service)
@@ -104,7 +102,7 @@ public class MicrosoftAuthClient {
         final String currentActiveBrokerPackageName = new BrokerValidator(context).
                 getCurrentActiveBrokerPackageName(context);
 
-        if (currentActiveBrokerPackageName == null || currentActiveBrokerPackageName.length() == 0 ||
+        if (TextUtils.isEmpty(currentActiveBrokerPackageName) ||
                 !isMicrosoftAuthServiceSupported(context.getPackageManager(), currentActiveBrokerPackageName)) {
             return null;
         }

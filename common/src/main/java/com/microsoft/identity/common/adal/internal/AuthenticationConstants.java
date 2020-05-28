@@ -1275,7 +1275,7 @@ public final class AuthenticationConstants {
 
         public static final String REMOVE_ACCOUNTS_PATH = "/removeAccounts";
 
-        public static final String GET_CURRENT_ACCOUNT_SHARED_DEVICe_PATH = "/getCurrentAccountSharedDevice";
+        public static final String GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH = "/getCurrentAccountSharedDevice";
 
         public static final String GET_DEVICE_MODE_PATH = "/getDeviceMode";
 
@@ -1293,7 +1293,7 @@ public final class AuthenticationConstants {
 
         public static final int REMOVE_ACCOUNTS_CODE = 5;
 
-        public static final int GET_CURRENT_ACCOUNT_SHARED_DEVICe_CODE = 6;
+        public static final int GET_CURRENT_ACCOUNT_SHARED_DEVICE_CODE = 6;
 
         public static final int GET_DEVICE_MODE_CODE = 7;
 
