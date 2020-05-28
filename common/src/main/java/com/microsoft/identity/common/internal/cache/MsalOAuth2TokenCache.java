@@ -24,9 +24,6 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
@@ -59,6 +56,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
@@ -670,6 +670,27 @@ public class MsalOAuth2TokenCache
         }
 
         return result;
+    }
+
+    /**
+     * Load  FRTs from the cache for an account matching the homeAccountId
+     * @param homeAccountId : homeAccountId for which FRT is sought
+     * @return an FRT if available else null.
+     */
+    @Nullable
+    public RefreshTokenRecord getFamilyRefreshTokenForHomeAccountId(@NonNull final String homeAccountId) {
+        final List<AccountRecord> accountRecords = mAccountCredentialCache.getAccounts();
+
+        for (AccountRecord accountRecord : accountRecords) {
+            if (accountRecord.getHomeAccountId().equals(homeAccountId)) {
+                final Credential rt = getFamilyRefreshTokenForAccount(accountRecord);
+
+                if (rt instanceof RefreshTokenRecord) {
+                    return (RefreshTokenRecord) rt;
+                }
+            }
+        }
+        return null;
     }
 
     @Override
