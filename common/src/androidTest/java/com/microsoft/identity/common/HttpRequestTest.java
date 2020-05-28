@@ -827,6 +827,40 @@ public final class HttpRequestTest {
         inOrder.verifyNoMoreInteractions();
     }
 
+    /**
+     * Verify that initial http post fails with {@link SocketTimeoutException}, when we're not
+     * running in legacy retry mode the socket timeout exception propagates to the caller.
+     */
+    @Test(expected = SocketTimeoutException.class)
+    public void testHttpPostFailedWithSocketTimeoutNoRetriesDoesNotRetry() throws Exception {
+        // The first connection fails with retryable SocketTimeout, the retry connection fails with 400.
+        final HttpURLConnection firstConnection = MockUtil.getMockedConnectionWithSocketTimeout();
+        mockRequestBody(firstConnection);
+
+        final HttpURLConnection secondConnection = MockUtil.getMockedConnectionWithSocketTimeout();
+        mockRequestBody(secondConnection);
+
+        addMockedConnection(firstConnection);
+        addMockedConnection(secondConnection);
+
+        try {
+            assertEquals(2, getMockedConnectionCountInQueue());
+            final HttpResponse response = sendWithMethodNoRetry(HttpTestMethod.POST);
+        } catch (final IOException e) {
+            if (! (e instanceof SocketTimeoutException)) {
+                fail();
+            }
+            throw e;
+        } finally {
+            assertEquals(1, getMockedConnectionCountInQueue());
+            final InOrder inOrder = Mockito.inOrder(firstConnection, secondConnection);
+            inOrder.verify(firstConnection).getInputStream();
+            inOrder.verify(firstConnection, Mockito.never()).getErrorStream();
+            inOrder.verify(firstConnection, Mockito.never()).getResponseCode();
+            inOrder.verifyNoMoreInteractions();
+        }
+    }
+
     private void verifySuccessHttpResponse(final HttpResponse httpResponse) {
         assertNotNull(httpResponse);
         assertEquals(httpResponse.getStatusCode(), HttpURLConnection.HTTP_OK);

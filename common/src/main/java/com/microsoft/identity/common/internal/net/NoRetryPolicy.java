@@ -28,6 +28,8 @@ import net.jcip.annotations.ThreadSafe;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
+import lombok.SneakyThrows;
+
 /**
  * A retry policy that, by default, does nothing.
  */
@@ -35,14 +37,8 @@ import java.util.concurrent.Callable;
 @Immutable
 public class NoRetryPolicy implements RetryPolicy<HttpResponse> {
     @Override
+    @SneakyThrows
     public HttpResponse attempt(Callable<HttpResponse> supplier) throws IOException {
-        try {
-            return supplier.call();
-        } catch (Exception e) {
-            if (e instanceof IOException) {
-                throw (IOException) e;
-            }
-            throw new RuntimeException(e);
-        }
+        return supplier.call();
     }
 }
