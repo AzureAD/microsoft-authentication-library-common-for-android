@@ -1127,7 +1127,7 @@ public class MsalOAuth2TokenCache
         for (final Credential credential : appCredentials) {
             if (accountHomeId.equals(credential.getHomeAccountId())
                     && accountEnvironment.equals(credential.getEnvironment())) {
-                Logger.info(
+                Logger.verbose(
                         TAG + methodName,
                         "Credentials located for account."
                 );

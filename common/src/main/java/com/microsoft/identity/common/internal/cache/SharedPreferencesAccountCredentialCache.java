@@ -245,7 +245,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 allAccounts
         );
 
-        Logger.info(TAG, "Found [" + matchingAccounts.size() + "] matching Accounts...");
+        Logger.verbose(TAG, "Found [" + matchingAccounts.size() + "] matching Accounts...");
 
         return matchingAccounts;
     }
@@ -314,7 +314,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 allCredentials
         );
 
-        Logger.info(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
+        Logger.verbose(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
 
         return matchingCredentials;
     }
