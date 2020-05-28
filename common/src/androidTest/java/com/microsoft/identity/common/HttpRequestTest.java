@@ -41,6 +41,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.UnknownServiceException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
@@ -426,6 +427,66 @@ public final class HttpRequestTest {
         inOrder.verify(secondConnection).getHeaderFields();
 
         inOrder.verifyNoMoreInteractions();
+    }
+
+    @Test(expected = UnknownServiceException.class)
+    public void testPostFailsWithTwoErrors500() throws Exception {
+        testHttpMethodFailedWithStatusCodeRetryFails(HttpTestMethod.POST, 500);
+    }
+
+    /**
+     * Verify the correct response is returned if first network call fails with internal error,
+     * and retry succeeds.
+     */
+    private void testHttpMethodFailedWithStatusCodeRetryFails(HttpTestMethod method, int code) throws Exception {
+        // Set up three connections, all with the specified code. all failures.
+            final HttpURLConnection firstConnection =
+                    getMockedConnectionWithFailureResponse(
+                            code,
+                            getErrorResponse()
+                    );
+            mockRequestBody(firstConnection);
+
+            final HttpURLConnection secondConnection =
+                    getMockedConnectionWithFailureResponse(
+                            code,
+                            getErrorResponse()
+                    );
+            mockRequestBody(secondConnection);
+
+            final HttpURLConnection thirdConnection =
+                    getMockedConnectionWithFailureResponse(
+                            code,
+                            getErrorResponse()
+                    );
+            mockRequestBody(thirdConnection);
+            addMockedConnection(firstConnection);
+            addMockedConnection(secondConnection);
+            addMockedConnection(thirdConnection);
+
+            assertEquals(3, getMockedConnectionCountInQueue());
+        try {
+            final HttpResponse response = sendWithMethod(method);
+            fail();
+        } finally {
+
+            assertEquals(1, getMockedConnectionCountInQueue());
+
+            final InOrder inOrder = Mockito.inOrder(firstConnection, secondConnection);
+            inOrder.verify(firstConnection).getInputStream();
+            inOrder.verify(firstConnection).getErrorStream();
+            inOrder.verify(firstConnection).getResponseCode();
+            inOrder.verify(firstConnection).getDate();
+            inOrder.verify(firstConnection).getHeaderFields();
+            inOrder.verify(secondConnection).getInputStream();
+            inOrder.verify(secondConnection).getErrorStream();
+            inOrder.verify(secondConnection).getResponseCode();
+            inOrder.verify(secondConnection).getDate();
+            inOrder.verify(secondConnection).getHeaderFields();
+
+
+            inOrder.verifyNoMoreInteractions();
+        }
     }
 
     /**

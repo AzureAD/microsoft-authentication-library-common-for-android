@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.UnknownServiceException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -367,15 +368,18 @@ public final class HttpRequest {
                                               @Nullable final byte[] requestContent,
                                               @Nullable final String requestContentType)
             throws IOException {
+        Map<String, String> headerMap = requestHeaders;
         if (requestContentType != null) {
-            return DEFAULT_HTTP_CLIENT.method(httpMethod, requestUrl, requestHeaders, requestContent);
-        } else {
-            Map<String, String> headerMap = new LinkedHashMap<>(requestHeaders);
+            headerMap = new LinkedHashMap<>(headerMap);
             if (requestContentType != null) {
                 headerMap.put(HttpConstants.HeaderField.CONTENT_TYPE, requestContentType);
             }
-            return DEFAULT_HTTP_CLIENT.method(httpMethod, requestUrl, requestHeaders, requestContent);
         }
+        HttpResponse response = DEFAULT_HTTP_CLIENT.method(httpMethod, requestUrl, headerMap, requestContent);
+        if (response != null && isRetryableError(response.getStatusCode())) {
+            throw new UnknownServiceException("Retry failed again with 500/503/504");
+        }
+        return response;
     }
 
     /**
