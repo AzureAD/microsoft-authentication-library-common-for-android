@@ -77,6 +77,8 @@ import androidx.annotation.Nullable;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEFAULT_BROWSER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
@@ -415,6 +417,28 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
+    public Intent getRequestIntentForAcquireTokenInteractive(@NonNull final Bundle resultBundle,
+                                                             @NonNull final InteractiveTokenCommandParameters parameters,
+                                                             @Nullable final String negotiatedBrokerProtocolVersion) {
+        final Bundle requestBundle = getRequestBundleForAcquireTokenInteractive(
+                parameters,
+                negotiatedBrokerProtocolVersion
+        );
+        Intent interactiveRequestIntent = new Intent();
+        interactiveRequestIntent.putExtras(requestBundle);
+        interactiveRequestIntent.putExtras(resultBundle);
+        interactiveRequestIntent.setPackage(resultBundle.getString(BROKER_PACKAGE_NAME));
+        interactiveRequestIntent.setClassName(
+                resultBundle.getString(BROKER_PACKAGE_NAME, ""),
+                resultBundle.getString(BROKER_ACTIVITY_NAME, "")
+        );
+        interactiveRequestIntent.putExtra(
+                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
+                negotiatedBrokerProtocolVersion
+        );
+        return interactiveRequestIntent;
+    }
+
     public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final InteractiveTokenCommandParameters parameters,
                                                              @Nullable final String negotiatedBrokerProtocolVersion) {
         final BrokerRequest brokerRequest = brokerRequestFromAcquireTokenParameters(parameters);
@@ -475,29 +499,44 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                     sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class)
             );
         }
+        requestBundle.putString(
+                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
+                negotiatedBrokerProtocolVersion
+        );
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForGetAccounts(@NonNull final CommandParameters parameters) {
+    public Bundle getRequestBundleForGetAccounts(@NonNull final CommandParameters parameters,
+                                                 @Nullable final String negotiatedBrokerProtocolVersion) {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
         requestBundle.putString(ACCOUNT_REDIRECT, parameters.getRedirectUri());
+        requestBundle.putString(
+                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
+                negotiatedBrokerProtocolVersion
+        );
         //Disable the environment and tenantID. Just return all accounts belong to this clientID.
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForRemoveAccount(@NonNull final RemoveAccountCommandParameters parameters) {
+    public Bundle getRequestBundleForRemoveAccount(@NonNull final RemoveAccountCommandParameters parameters,
+                                                   @Nullable final String negotiatedBrokerProtocolVersion) {
         final Bundle requestBundle = new Bundle();
         if (null != parameters.getAccount()) {
             requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
             requestBundle.putString(ENVIRONMENT, parameters.getAccount().getEnvironment());
             requestBundle.putString(ACCOUNT_HOME_ACCOUNT_ID, parameters.getAccount().getHomeAccountId());
         }
+        requestBundle.putString(
+                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
+                negotiatedBrokerProtocolVersion
+        );
 
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForRemoveAccountFromSharedDevice(@NonNull final RemoveAccountCommandParameters parameters) {
+    public Bundle getRequestBundleForRemoveAccountFromSharedDevice(@NonNull final RemoveAccountCommandParameters parameters,
+                                                                   @Nullable final String negotiatedBrokerProtocolVersion) {
         final Bundle requestBundle = new Bundle();
 
         try {
@@ -507,58 +546,12 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             // Best effort. If none is passed to broker, then it will let the OS decide.
             Logger.error(TAG, e.getErrorCode(), e);
         }
+        requestBundle.putString(
+                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
+                negotiatedBrokerProtocolVersion
+        );
 
         return requestBundle;
-    }
-
-
-    /**
-     * Util method to send requests as a json string to BrokerContentProvider's hello
-     */
-    public String getRequestStringForHello(@NonNull final CommandParameters commandParameters) {
-        final BrokerHelloRequest request = new BrokerHelloRequest();
-        request.setClientAdvertisedMaximumKey(AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE);
-        request.setClientConfiguredMinimumKey( commandParameters.getRequiredBrokerProtocolVersion());
-        return new Gson().toJson(request, BrokerHelloRequest.class);
-    }
-
-    /**
-     * Util method to send requests as a json string to BrokerContentProvider's getAccounts
-     */
-    public String getRequestStringForGetAccounts(@NonNull final CommandParameters parameters) {
-        final BrokerGetAccountRequest request = new BrokerGetAccountRequest();
-        request.setClientId(parameters.getClientId());
-        request.setRedirect(parameters.getRedirectUri());
-        return new Gson().toJson(request, BrokerGetAccountRequest.class);
-    }
-
-    /**
-     * Util method to send requests as a json string to BrokerContentProvider's sharedDeviceSignout
-     */
-    public String getRequestStringForSharedDeviceSignOut(@NonNull final RemoveAccountCommandParameters parameters){
-        final BrokerSharedDeviceSignOutRequest request = new BrokerSharedDeviceSignOutRequest();
-        try {
-            Browser browser = BrowserSelector.select(
-                    parameters.getAndroidApplicationContext(),
-                    parameters.getBrowserSafeList()
-            );
-            request.setBrowserPackageName(browser.getPackageName());
-        } catch (ClientException e) {
-            // Best effort. If none is passed to broker, then it will let the OS decide.
-            Logger.error(TAG, e.getErrorCode(), e);
-        }
-        return new Gson().toJson(request, BrokerSharedDeviceSignOutRequest.class);
-    }
-
-    /**
-     * Util method to send requests as a json string to BrokerContentProvider's removeAccount
-     */
-    public String getRequestStringForRemoveAccount(@NonNull final RemoveAccountCommandParameters parameters) {
-        final BrokerRemoveAccountRequest request = new BrokerRemoveAccountRequest();
-        request.setClientId(parameters.getClientId());
-        request.setEnvironment(parameters.getAccount().getEnvironment());
-        request.setHomeAccountId(parameters.getAccount().getHomeAccountId());
-        return new Gson().toJson(request, BrokerRemoveAccountRequest.class);
     }
 
     private boolean getMultipleCloudsSupported(@NonNull final TokenCommandParameters parameters) {
