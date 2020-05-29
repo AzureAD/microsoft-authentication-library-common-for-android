@@ -165,7 +165,10 @@ public class UrlConnectionHttpClient implements HttpClient {
         });
     }
 
-    private static HttpRequest constructHttpRequest(@NonNull HttpMethod httpMethod, @NonNull URL requestUrl, @NonNull Map<String, String> requestHeaders, @Nullable byte[] requestContent) {
+    private static HttpRequest constructHttpRequest(@NonNull HttpMethod httpMethod,
+                                                    @NonNull URL requestUrl,
+                                                    @NonNull Map<String, String> requestHeaders,
+                                                    @Nullable byte[] requestContent) {
 
         // Apply special backcompat behaviors for PATCH, if reqd
         if (HttpMethod.PATCH == httpMethod) {
