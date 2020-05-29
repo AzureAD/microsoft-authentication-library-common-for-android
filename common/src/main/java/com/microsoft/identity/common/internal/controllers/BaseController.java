@@ -527,40 +527,38 @@ public abstract class BaseController {
                     );
         }
 
-        if (null == targetAccount) {
+        if (null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) {
             // check for FOCI tokens, if available make a request to service to see if the client id is FOCI and save the tokens
-            if (parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) {
-                final RefreshTokenRecord refreshTokenRecord = ((MsalOAuth2TokenCache) parameters
-                        .getOAuth2TokenCache())
-                        .getFamilyRefreshTokenForHomeAccountId(homeAccountId);
+            final RefreshTokenRecord refreshTokenRecord = ((MsalOAuth2TokenCache) parameters
+                    .getOAuth2TokenCache())
+                    .getFamilyRefreshTokenForHomeAccountId(homeAccountId);
 
-                if (refreshTokenRecord != null) {
-                    try {
-                        TokenCacheItemMigrationAdapter.tryFociTokenWithGivenClientId(
-                                parameters.getOAuth2TokenCache(),
-                                parameters.getClientId(),
-                                parameters.getRedirectUri(),
-                                refreshTokenRecord,
-                                parameters.getAccount()
-                        );
+            if (refreshTokenRecord != null) {
+                try {
+                    TokenCacheItemMigrationAdapter.tryFociTokenWithGivenClientId(
+                            parameters.getOAuth2TokenCache(),
+                            parameters.getClientId(),
+                            parameters.getRedirectUri(),
+                            refreshTokenRecord,
+                            parameters.getAccount()
+                    );
 
-                        // Try to look for account again in the cache
-                        targetAccount = parameters
-                                .getOAuth2TokenCache()
-                                .getAccountByLocalAccountId(
-                                        null,
-                                        clientId,
-                                        localAccountId
-                                );
-                    } catch (IOException e) {
-                        Logger.warn(TAG,
-                                "Error while attempting to validate client: "
-                                        + clientId + " is part of family " + e.getMessage()
-                        );
-                    }
-                } else {
-                    Logger.info(TAG, "No Foci tokens found for homeAccountId " + homeAccountId);
+                    // Try to look for account again in the cache
+                    targetAccount = parameters
+                            .getOAuth2TokenCache()
+                            .getAccountByLocalAccountId(
+                                    null,
+                                    clientId,
+                                    localAccountId
+                            );
+                } catch (IOException e) {
+                    Logger.warn(TAG,
+                            "Error while attempting to validate client: "
+                                    + clientId + " is part of family " + e.getMessage()
+                    );
                 }
+            } else {
+                Logger.info(TAG, "No Foci tokens found for homeAccountId " + homeAccountId);
             }
         }
 
