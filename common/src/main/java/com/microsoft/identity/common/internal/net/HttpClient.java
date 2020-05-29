@@ -32,45 +32,132 @@ import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * An interface providing access to resources backed by web requests.  This provides access to only
+ * the verbs enumerated by HttpMethod.
+ */
 public interface HttpClient {
+    /**
+     * Execute an arbitrary method by name.  This will fail with an IllegalArgumentException unless
+     * httpMethod is one of { PUT, GET, HEAD, POST, PATCH, DELETE, OPTIONS, or TRACE }.
+     * @param httpMethod the string of the http method to use.  Must be one of { PUT, GET,
+     *                   HEAD, POST, PATCH, DELETE, OPTIONS, or TRACE }, case insensitive.
+     * @param requestUrl the URL of the resource to operate on.
+     * @param requestHeaders the headers for the request.
+     * @param requestContent the body content of the request, if applicable.  May be null.
+     * @return an HttpResponse with the result of the call.
+     * @throws IOException if there was a communication problem.
+     */
     HttpResponse method(@NonNull String httpMethod,
                         @NonNull URL requestUrl,
                         @NonNull Map<String, String> requestHeaders,
                         @Nullable byte[] requestContent) throws IOException;
 
+    /**
+     * Execute an arbitrary method.
+     * @param httpMethod the HttpMethod to use for the call.
+     * @param requestUrl the URL of the resource to operate on.
+     * @param requestHeaders the headers for the request.
+     * @param requestContent the body content of the request, if applicable.  May be null.
+     * @return an HttpResponse with the result of the call.
+     * @throws IOException if there was a communication problem.
+     */
     HttpResponse method(@NonNull HttpMethod httpMethod,
                         @NonNull URL requestUrl,
                         @NonNull Map<String, String> requestHeaders,
                         @Nullable byte[] requestContent) throws IOException;
 
+    /**
+     * Execute an HTTP PUT request.
+     * @param requestUrl the URL of the resource to operate on.
+     * @param requestHeaders the headers for the request.
+     * @param requestContent the body content of the request, if applicable.  May be null.
+     * @return an HttpResponse with the result of the call.
+     * @throws IOException if there was a communication problem.
+     */
     HttpResponse put(@NonNull URL requestUrl,
                      @NonNull Map<String, String> requestHeaders,
                      @Nullable byte[] requestContent) throws IOException;
 
+    /**
+     * Execute an HTTP PATCH request.
+     * @param requestUrl the URL of the resource to operate on.
+     * @param requestHeaders the headers for the request.
+     * @param requestContent the body content of the request, if applicable.  May be null.
+     * @return an HttpResponse with the result of the call.
+     * @throws IOException if there was a communication problem.
+     */
     HttpResponse patch(@NonNull URL requestUrl,
                        @NonNull Map<String, String> requestHeaders,
                        @Nullable byte[] requestContent) throws IOException;
 
+    /**
+     * Execute an HTTP OPTIONS request.
+     * @param requestUrl the URL of the resource to operate on.
+     * @param requestHeaders the headers for the request.
+     * @return an HttpResponse with the result of the call.
+     * @throws IOException if there was a communication problem.
+     */
     HttpResponse options(@NonNull URL requestUrl,
                          @NonNull Map<String, String> requestHeaders) throws IOException;
 
+    /**
+     * Execute an HTTP POST request.
+     * @param requestUrl the URL of the resource to operate on.
+     * @param requestHeaders the headers for the request.
+     * @param requestContent the body content of the request, if applicable.  May be null.
+     * @return an HttpResponse with the result of the call.
+     * @throws IOException if there was a communication problem.
+     */
     HttpResponse post(@NonNull URL requestUrl,
                       @NonNull Map<String, String> requestHeaders,
                       @Nullable byte[] requestContent) throws IOException;
 
+    /**
+     * Execute an HTTP PATCH request.
+     * @param requestUrl the URL of the resource to operate on.
+     * @param requestHeaders the headers for the request.
+     * @param requestContent the body content of the request, if applicable.  May be null.
+     * @return an HttpResponse with the result of the call.
+     * @throws IOException if there was a communication problem.
+     */
     HttpResponse delete(@NonNull URL requestUrl,
                         @NonNull Map<String, String> requestHeaders,
                         @Nullable byte[] requestContent) throws IOException;
 
+    /**
+     * Execute an HTTP GET request.
+     * @param requestUrl the URL of the resource to operate on.
+     * @param requestHeaders the headers for the request.
+     * @return an HttpResponse with the result of the call.
+     * @throws IOException if there was a communication problem.
+     */
     HttpResponse get(@NonNull URL requestUrl,
                      @NonNull Map<String, String> requestHeaders) throws IOException;
 
+    /**
+     * Execute an HTTP HEAD request.
+     * @param requestUrl the URL of the resource to operate on.
+     * @param requestHeaders the headers for the request.
+     * @return an HttpResponse with the result of the call.
+     * @throws IOException if there was a communication problem.
+     */
     HttpResponse head(@NonNull URL requestUrl,
                       @NonNull Map<String, String> requestHeaders) throws IOException;
 
+    /**
+     * Execute an HTTP TRACE request.
+     * @param requestUrl the URL of the resource to operate on.
+     * @param requestHeaders the headers for the request.
+     * @return an HttpResponse with the result of the call.
+     * @throws IOException if there was a communication problem.
+     */
     HttpResponse trace(@NonNull URL requestUrl,
                        @NonNull Map<String, String> requestHeaders) throws IOException;
 
+    /**
+     * An enumeration of the HTTP verbs supported by this client interface.
+     */
     enum HttpMethod {
         GET,
         HEAD,
