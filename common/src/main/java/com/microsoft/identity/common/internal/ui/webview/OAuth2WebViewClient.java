@@ -157,10 +157,8 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         mPageLoadedCallback.onPageLoaded();
 
         //Supports UI Automation... informing that the webview resource is now idle
-        if(mExpectedPage != null) {
-            if (url.startsWith(mExpectedPage.mExpectedPageUrlStartsWith)) {
-                mExpectedPage.mCallback.onPageLoaded();
-            }
+        if(mExpectedPage != null && url.startsWith(mExpectedPage.mExpectedPageUrlStartsWith)) {
+            mExpectedPage.mCallback.onPageLoaded();
         }
 
         // Once web view is fully loaded,set to visible
