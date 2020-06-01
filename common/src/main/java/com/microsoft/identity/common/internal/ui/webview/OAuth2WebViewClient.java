@@ -34,6 +34,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -51,6 +52,9 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     private final IAuthorizationCompletionCallback mCompletionCallback;
     private final OnPageLoadedCallback mPageLoadedCallback;
     private final Activity mActivity;
+
+    @VisibleForTesting
+    public static ExpectedPage mExpectedPage = null;
 
     /**
      * @return context
@@ -151,6 +155,11 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                                final String url) {
         super.onPageFinished(view, url);
         mPageLoadedCallback.onPageLoaded();
+
+        //Supports UI Automation... informing that the webview resource is now idle
+        if(mExpectedPage != null && url.startsWith(mExpectedPage.mExpectedPageUrlStartsWith)) {
+            mExpectedPage.mCallback.onPageLoaded();
+        }
 
         // Once web view is fully loaded,set to visible
         view.setVisibility(View.VISIBLE);
