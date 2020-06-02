@@ -30,6 +30,8 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
+import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.ITokenCacheItem;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
@@ -121,6 +123,29 @@ public class TokenCacheItemMigrationAdapter {
         }
 
         return result;
+    }
+
+
+    /**
+     * Testing whether the given client ID can use the cached foci to refresh token.
+     *
+     * @param clientId    String of the given client id.
+     * @param redirectUri redirect url string of the given client id.
+     * @param cacheRecord Foci cache record.
+     * @return true if the given client id can use the cached foci token. False, otherwise.
+     * @throws ClientException
+     * @throws IOException
+     */
+    public static boolean tryFociTokenWithGivenClientId(@NonNull final BrokerOAuth2TokenCache brokerOAuth2TokenCache,
+                                                        @NonNull final String clientId,
+                                                        @NonNull final String redirectUri,
+                                                        @NonNull final ICacheRecord cacheRecord) throws IOException, ClientException {
+        return tryFociTokenWithGivenClientId(
+                brokerOAuth2TokenCache,
+                clientId, redirectUri,
+                cacheRecord.getRefreshToken(),
+                cacheRecord.getAccount()
+        );
     }
 
     /**
