@@ -154,7 +154,7 @@ public class TokenCacheItemMigrationAdapter {
      * @param clientId    String of the given client id.
      * @param redirectUri redirect url string of the given client id.
      * @param accountRecord account record of request
-     * @param refreshTokenRecord : refresh token record of FOCI account
+     * @param refreshTokenRecord refresh token record of FOCI account
      * @return true if the given client id can use the cached foci token. False, otherwise.
      * @throws ClientException
      * @throws IOException

@@ -622,11 +622,11 @@ public class MsalOAuth2TokenCache
      * @return A matching FRT credential, if exists. May be null.
      */
     @Nullable
-    private Credential getFamilyRefreshTokenForAccount(@NonNull final AccountRecord account) {
+    private RefreshTokenRecord getFamilyRefreshTokenForAccount(@NonNull final AccountRecord account) {
         final String methodName = ":getFamilyRefreshTokensForAccount";
 
         // Our eventual result - init to null, will assign if valid FRT is found
-        Credential result = null;
+        RefreshTokenRecord result = null;
 
         // Look for an arbitrary RT matching the current user.
         // If we find one, check that it is FoCI, if it is, assume it works.
@@ -662,7 +662,7 @@ public class MsalOAuth2TokenCache
                                 "Fallback RT found."
                         );
 
-                        result = rt;
+                        result = refreshTokenRecord;
                         break;
                     }
                 }
@@ -673,7 +673,7 @@ public class MsalOAuth2TokenCache
     }
 
     /**
-     * Load  FRTs from the cache for an account matching the homeAccountId
+     * Load FRTs from the cache for an account matching the homeAccountId
      * @param homeAccountId : homeAccountId for which FRT is sought
      * @return an FRT if available else null.
      */
@@ -683,11 +683,7 @@ public class MsalOAuth2TokenCache
 
         for (AccountRecord accountRecord : accountRecords) {
             if (accountRecord.getHomeAccountId().equals(homeAccountId)) {
-                final Credential rt = getFamilyRefreshTokenForAccount(accountRecord);
-
-                if (rt instanceof RefreshTokenRecord) {
-                    return (RefreshTokenRecord) rt;
-                }
+                return getFamilyRefreshTokenForAccount(accountRecord);
             }
         }
         return null;

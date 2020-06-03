@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
@@ -528,38 +529,10 @@ public abstract class BaseController {
         }
 
         if (null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) {
-            // check for FOCI tokens, if available make a request to service to see if the client id is FOCI and save the tokens
-            final RefreshTokenRecord refreshTokenRecord = ((MsalOAuth2TokenCache) parameters
-                    .getOAuth2TokenCache())
-                    .getFamilyRefreshTokenForHomeAccountId(homeAccountId);
-
-            if (refreshTokenRecord != null) {
-                try {
-                    TokenCacheItemMigrationAdapter.tryFociTokenWithGivenClientId(
-                            parameters.getOAuth2TokenCache(),
-                            parameters.getClientId(),
-                            parameters.getRedirectUri(),
-                            refreshTokenRecord,
-                            parameters.getAccount()
-                    );
-
-                    // Try to look for account again in the cache
-                    targetAccount = parameters
-                            .getOAuth2TokenCache()
-                            .getAccountByLocalAccountId(
-                                    null,
-                                    clientId,
-                                    localAccountId
-                            );
-                } catch (IOException e) {
-                    Logger.warn(TAG,
-                            "Error while attempting to validate client: "
-                                    + clientId + " is part of family " + e.getMessage()
-                    );
-                }
-            } else {
-                Logger.info(TAG, "No Foci tokens found for homeAccountId " + homeAccountId);
-            }
+            targetAccount = getAccountWithFRTIfAvailable(
+                    parameters,
+                    (MsalOAuth2TokenCache)parameters.getOAuth2TokenCache()
+            );
         }
 
         if (null == targetAccount) {
@@ -587,6 +560,48 @@ public abstract class BaseController {
         }
 
         return targetAccount;
+    }
+
+    @Nullable
+    private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
+                                                       @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache){
+
+        final String homeAccountId = parameters.getAccount().getHomeAccountId();
+        final String clientId = parameters.getClientId();
+
+        // check for FOCI tokens for the homeAccountId
+        final RefreshTokenRecord refreshTokenRecord = msalOAuth2TokenCache
+                .getFamilyRefreshTokenForHomeAccountId(homeAccountId);
+
+        if (refreshTokenRecord != null) {
+            try {
+                // foci token is available, make a request to service to see if the client id is FOCI and save the tokens
+                TokenCacheItemMigrationAdapter.tryFociTokenWithGivenClientId(
+                        parameters.getOAuth2TokenCache(),
+                        clientId,
+                        parameters.getRedirectUri(),
+                        refreshTokenRecord,
+                        parameters.getAccount()
+                );
+
+                // Try to look for account again in the cache
+                return parameters
+                        .getOAuth2TokenCache()
+                        .getAccountByLocalAccountId(
+                                null,
+                                clientId,
+                                parameters.getAccount().getLocalAccountId()
+                        );
+            } catch (IOException | ClientException e) {
+                Logger.warn(TAG,
+                        "Error while attempting to validate client: "
+                                + clientId + " is part of family " + e.getMessage()
+                );
+            }
+        } else {
+            Logger.info(TAG, "No Foci tokens found for homeAccountId " + homeAccountId);
+        }
+        return null;
     }
 
     /**
