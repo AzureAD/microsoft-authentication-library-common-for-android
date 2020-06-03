@@ -1345,5 +1345,113 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertNotNull(secondaryLoad.getRefreshToken());
         assertEquals(fociRtClientId, secondaryLoad.getRefreshToken().getClientId());
     }
+    @Test
+    public void testGetFamilyRefreshTokenForHomeAccountIdValidCase(){
+        // Save an Account into the cache
+        final AccountRecord account = new AccountRecord();
+        account.setHomeAccountId(HOME_ACCOUNT_ID);
+        account.setEnvironment(ENVIRONMENT);
+        account.setRealm(REALM);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
+        account.setUsername(USERNAME);
+        account.setAuthorityType(AUTHORITY_TYPE);
+        accountCredentialCache.saveAccount(account);
 
+        // Save an AccessToken into the cache
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm("Foo");
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(SECRET);
+        accountCredentialCache.saveCredential(accessToken);
+
+        // Save a Family RefreshToken into the cache
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setFamilyId("1");
+        refreshToken.setSecret(SECRET);
+        refreshToken.setTarget(TARGET);
+        accountCredentialCache.saveCredential(refreshToken);
+
+        final IdTokenRecord id = new IdTokenRecord();
+        id.setHomeAccountId(HOME_ACCOUNT_ID);
+        id.setEnvironment(ENVIRONMENT);
+        id.setRealm(REALM2);
+        id.setCredentialType(CredentialType.IdToken.name());
+        id.setClientId(CLIENT_ID);
+        id.setSecret(MOCK_ID_TOKEN_WITH_CLAIMS);
+        id.setAuthority("https://sts.windows.net/0287f963-2d72-4363-9e3a-5705c5b0f031/");
+        accountCredentialCache.saveCredential(id);
+
+        final RefreshTokenRecord refreshTokenRecord = mOauth2TokenCache.
+                getFamilyRefreshTokenForHomeAccountId(HOME_ACCOUNT_ID);
+        assertNotNull(refreshTokenRecord);
+        assertEquals(refreshTokenRecord.getSecret(), SECRET);
+    }
+
+    @Test
+    public void testGetFamilyRefreshTokenForHomeAccountIdNullCase(){
+        final RefreshTokenRecord refreshTokenRecord = mOauth2TokenCache.
+                getFamilyRefreshTokenForHomeAccountId(HOME_ACCOUNT_ID);
+        assertNull(refreshTokenRecord);
+    }
+
+    @Test
+    public void testGetFamilyRefreshTokenForHomeAccountIdNoAccountWithHomeAccountId(){
+        // Save an Account into the cache
+        final AccountRecord account = new AccountRecord();
+        account.setHomeAccountId(HOME_ACCOUNT_ID);
+        account.setEnvironment(ENVIRONMENT);
+        account.setRealm(REALM);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
+        account.setUsername(USERNAME);
+        account.setAuthorityType(AUTHORITY_TYPE);
+        accountCredentialCache.saveAccount(account);
+
+        // Save an AccessToken into the cache
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm("Foo");
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(SECRET);
+        accountCredentialCache.saveCredential(accessToken);
+
+        // Save a Family RefreshToken into the cache
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setFamilyId("1");
+        refreshToken.setSecret(SECRET);
+        refreshToken.setTarget(TARGET);
+        accountCredentialCache.saveCredential(refreshToken);
+
+        final IdTokenRecord id = new IdTokenRecord();
+        id.setHomeAccountId(HOME_ACCOUNT_ID);
+        id.setEnvironment(ENVIRONMENT);
+        id.setRealm(REALM2);
+        id.setCredentialType(CredentialType.IdToken.name());
+        id.setClientId(CLIENT_ID);
+        id.setSecret(MOCK_ID_TOKEN_WITH_CLAIMS);
+        id.setAuthority("https://sts.windows.net/0287f963-2d72-4363-9e3a-5705c5b0f031/");
+        accountCredentialCache.saveCredential(id);
+
+        final RefreshTokenRecord refreshTokenRecord = mOauth2TokenCache.
+                getFamilyRefreshTokenForHomeAccountId("26685724-1f8e-4b97-a0ca-1863e33b9fb1"); // different home account id
+        assertNull(refreshTokenRecord);
+    }
 }
