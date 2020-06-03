@@ -531,7 +531,7 @@ public abstract class BaseController {
         if (null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) {
             targetAccount = getAccountWithFRTIfAvailable(
                     parameters,
-                    (MsalOAuth2TokenCache)parameters.getOAuth2TokenCache()
+                    (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache()
             );
         }
 

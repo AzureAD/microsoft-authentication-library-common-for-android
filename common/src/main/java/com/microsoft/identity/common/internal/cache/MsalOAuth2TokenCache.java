@@ -679,9 +679,8 @@ public class MsalOAuth2TokenCache
      */
     @Nullable
     public RefreshTokenRecord getFamilyRefreshTokenForHomeAccountId(@NonNull final String homeAccountId) {
-        final List<AccountRecord> accountRecords = mAccountCredentialCache.getAccounts();
 
-        for (AccountRecord accountRecord : accountRecords) {
+        for (AccountRecord accountRecord : mAccountCredentialCache.getAccounts()) {
             if (accountRecord.getHomeAccountId().equals(homeAccountId)) {
                 return getFamilyRefreshTokenForAccount(accountRecord);
             }
