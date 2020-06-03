@@ -27,16 +27,31 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+/**
+ * Utility class to marshall and unmarshall Parcelable types.
+ */
 public class ParcelableUtil {
 
-    public static byte[] marshall(@NonNull final Parcelable parceable) {
+    /**
+     * Util method to transform a Parcelable to byte[].
+     *
+     * @param parcelable : Parceable type as an input
+     * @return : byte[]
+     */
+    public static byte[] marshall(@NonNull final Parcelable parcelable) {
         final Parcel parcel = Parcel.obtain();
-        parceable.writeToParcel(parcel, 0);
+        parcelable.writeToParcel(parcel, 0);
         final byte[] bytes = parcel.marshall();
         parcel.recycle();
         return bytes;
     }
 
+    /**
+     * Util method to transform a byte[] to Parcel.
+     *
+     * @param bytes : input as byte[]
+     * @return : Parcel
+     */
     public static Parcel unmarshall(byte[] bytes) {
         final Parcel parcel = Parcel.obtain();
         parcel.unmarshall(bytes, 0, bytes.length);
@@ -44,7 +59,14 @@ public class ParcelableUtil {
         return parcel;
     }
 
-    public static <T> T unmarshall(byte[] bytes, Parcelable.Creator<T> creator) {
+    /**
+     * Util method to transform a bytes to Parcelable type T.
+     *
+     * @param bytes : input as bytes
+     * @param creator<T> : Creator of Parcelable Type T to which bytes need to be transformed
+     * @return : T
+     */
+    public static <T> T unmarshall(byte[] bytes, @NonNull final Parcelable.Creator<T> creator) {
         final Parcel parcel = unmarshall(bytes);
         T result = creator.createFromParcel(parcel);
         parcel.recycle();

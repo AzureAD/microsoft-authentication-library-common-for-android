@@ -100,7 +100,7 @@ public class MicrosoftAuthClient {
      */
     public Intent getIntentForAuthService(final Context context) {
         final String currentActiveBrokerPackageName = new BrokerValidator(context).
-                getCurrentActiveBrokerPackageName(context);
+                getCurrentActiveBrokerPackageName();
 
         if (TextUtils.isEmpty(currentActiveBrokerPackageName) ||
                 !isMicrosoftAuthServiceSupported(context.getPackageManager(), currentActiveBrokerPackageName)) {

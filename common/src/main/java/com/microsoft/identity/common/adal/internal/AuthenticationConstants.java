@@ -1260,43 +1260,102 @@ public final class AuthenticationConstants {
 
     public static final class BrokerContentProvider{
 
+        private BrokerContentProvider(){
+
+        }
+
+        /**
+         *  URI Scheme constant to invoke content provider.
+         */
         public static final String CONTENT_SCHEME = "content://";
 
-        /** Paths for all broker api's **/
+        /**
+         * URI Authority constant for content provider.
+         *
+         * This is will be pre-fixed by com.azure.authenticator or com.microsoft.windowsintune.companyportal
+         * depending on which ever is the active broker.
+         */
         public static final String AUTHORITY = "microsoft.identity.broker";
 
+        /**
+         * URI Path constant for Broker hello request using ContentProvider.
+         */
         public static final String HELLO_PATH = "/hello";
 
+        /**
+         * URI Path constant for Broker acquireTokenInteractive request using ContentProvider.
+         */
         public static final String ACQUIRE_TOKEN_INTERACTIVE_PATH = "/acquireTokenInteractive";
 
+        /**
+         * URI Path constant for Broker acquireTokenSilent request using ContentProvider.
+         */
         public static final String ACQUIRE_TOKEN_SILENT_PATH = "/acquireTokenSilent";
 
+        /**
+         * URI Path constant for Broker getAccounts request using ContentProvider.
+         */
         public static final String GET_ACCOUNTS_PATH = "/getAccounts";
 
+        /**
+         * URI Path constant for Broker removeAccounts request using ContentProvider.
+         */
         public static final String REMOVE_ACCOUNTS_PATH = "/removeAccounts";
 
+        /**
+         * URI Path constant for Broker getCurrentAccountSharedDevice request using ContentProvider.
+         */
         public static final String GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH = "/getCurrentAccountSharedDevice";
 
+        /**
+         * URI Path constant for Broker getDeviceMode request using ContentProvider.
+         */
         public static final String GET_DEVICE_MODE_PATH = "/getDeviceMode";
 
+        /**
+         * URI Path constant for Broker signOutFromSharedDevice request using ContentProvider.
+         */
         public static final String SIGN_OUT_FROM_SHARED_DEVICE_PATH = "/signOutFromSharedDevice";
 
 
-        /** Codes for URI **/
+        /**
+         * BrokerContentProvider URI code constant for hello request.
+         */
         public static final int HELLO_URI_CODE = 1;
 
+        /**
+         * BrokerContentProvider URI code constant for acquireTokenInteractive request.
+         */
         public static final int ACQUIRE_TOKEN_INTERACTIVE_CODE = 2;
 
+        /**
+         * BrokerContentProvider URI code constant for acquireTokenSilent request.
+         */
         public static final int ACQUIRE_TOKEN_SILENT_CODE = 3;
 
+        /**
+         * BrokerContentProvider URI code constant for getAccounts request.
+         */
         public static final int GET_ACCOUNTS_CODE = 4;
 
+        /**
+         * BrokerContentProvider URI code constant for removeAccounts request.
+         */
         public static final int REMOVE_ACCOUNTS_CODE = 5;
 
+        /**
+         * BrokerContentProvider URI code constant for getCurrentAccountSharedDevice request.
+         */
         public static final int GET_CURRENT_ACCOUNT_SHARED_DEVICE_CODE = 6;
 
+        /**
+         * BrokerContentProvider URI code constant for getDeviceMode request.
+         */
         public static final int GET_DEVICE_MODE_CODE = 7;
 
+        /**
+         * BrokerContentProvider URI code constant for signOutFromSharedDevice request.
+         */
         public static final int SIGN_OUT_FROM_SHARED_DEVICE_CODE = 8;
 
     }

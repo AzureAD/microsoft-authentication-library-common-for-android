@@ -235,19 +235,17 @@ public class BrokerValidator {
      * Returns the package that is currently active relative to the Work Account custom account type
      * Note: either the company portal or the authenticator
      *
-     * @param context : current active broker package name, null if no broker is available
-     * @return String
+     * @return String : current active broker package name, null if no broker is available
      */
     @Nullable
-    public String getCurrentActiveBrokerPackageName(@NonNull final Context context) {
-        AuthenticatorDescription[] authenticators = AccountManager.get(context).getAuthenticatorTypes();
+    public String getCurrentActiveBrokerPackageName() {
+        AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
         for (AuthenticatorDescription authenticator : authenticators) {
             if (authenticator.type.equals(AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE)
                     && verifySignature(authenticator.packageName)) {
                 return authenticator.packageName;
             }
         }
-
         return null;
     }
 
