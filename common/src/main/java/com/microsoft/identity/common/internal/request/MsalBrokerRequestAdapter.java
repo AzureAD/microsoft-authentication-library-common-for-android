@@ -403,8 +403,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Method to construct a request bundle for broker hello request.
      *
-     * @param parameters : input parameters.
-     * @return : request bundle to perform hello.
+     * @param parameters input parameters.
+     * @return request bundle to perform hello.
      */
     public Bundle getRequestBundleForHello(@NonNull final CommandParameters parameters) {
         final Bundle requestBundle = new Bundle();
@@ -427,10 +427,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * Method to construct a request intent for broker acquireTokenInteractive request.
      * Only used in case of BrokerContentProvider
      *
-     * @param resultBundle : result Bundle returned by broker.
-     * @param parameters : input parameters
-     * @param negotiatedBrokerProtocolVersion :  protocol version returned by broker hello.
-     * @return : request Intent
+     * @param resultBundle result Bundle returned by broker.
+     * @param parameters input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Intent
      */
     public Intent getRequestIntentForAcquireTokenInteractive(@NonNull final Bundle resultBundle,
                                                              @NonNull final InteractiveTokenCommandParameters parameters,
@@ -457,9 +457,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Method to construct a request bundle for broker acquireTokenInteractive request.
      *
-     * @param parameters : input parameters
-     * @param negotiatedBrokerProtocolVersion :  protocol version returned by broker hello.
-     * @return : request Bundle
+     * @param parameters input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Bundle
      */
     public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final InteractiveTokenCommandParameters parameters,
                                                              @Nullable final String negotiatedBrokerProtocolVersion) {
@@ -473,9 +473,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Method to construct a request bundle for broker acquireTokenSilent request.
      *
-     * @param parameters : input parameters
-     * @param negotiatedBrokerProtocolVersion :  protocol version returned by broker hello.
-     * @return : request Bundle
+     * @param parameters input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Bundle
      */
     public Bundle getRequestBundleForAcquireTokenSilent(@NonNull final SilentTokenCommandParameters parameters,
                                                         @Nullable final String negotiatedBrokerProtocolVersion) {
@@ -538,9 +538,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Method to construct a request bundle for broker getAccounts request.
      *
-     * @param parameters : input parameters
-     * @param negotiatedBrokerProtocolVersion :  protocol version returned by broker hello.
-     * @return : request Bundle
+     * @param parameters input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Bundle
      */
     public Bundle getRequestBundleForGetAccounts(@NonNull final CommandParameters parameters,
                                                  @Nullable final String negotiatedBrokerProtocolVersion) {
@@ -558,9 +558,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Method to construct a request bundle for broker removeAccount request.
      *
-     * @param parameters : input parameters
-     * @param negotiatedBrokerProtocolVersion :  protocol version returned by broker hello.
-     * @return : request Bundle
+     * @param parameters input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Bundle
      */
     public Bundle getRequestBundleForRemoveAccount(@NonNull final RemoveAccountCommandParameters parameters,
                                                    @Nullable final String negotiatedBrokerProtocolVersion) {
@@ -581,9 +581,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Method to construct a request bundle for broker removeAccount request.
      *
-     * @param parameters : input parameters
-     * @param negotiatedBrokerProtocolVersion :  protocol version returned by broker hello.
-     * @return : request Bundle
+     * @param parameters input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Bundle
      */
     public Bundle getRequestBundleForRemoveAccountFromSharedDevice(@NonNull final RemoveAccountCommandParameters parameters,
                                                                    @Nullable final String negotiatedBrokerProtocolVersion) {

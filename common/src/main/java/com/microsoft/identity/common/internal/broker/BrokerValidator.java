@@ -235,7 +235,7 @@ public class BrokerValidator {
      * Returns the package that is currently active relative to the Work Account custom account type
      * Note: either the company portal or the authenticator
      *
-     * @return String : current active broker package name, null if no broker is available
+     * @return String current active broker package name, null if no broker is available
      */
     @Nullable
     public String getCurrentActiveBrokerPackageName() {
@@ -263,7 +263,7 @@ public class BrokerValidator {
      *
      * @param context
      * @param packageName
-     * @return String : Broker Redirect Uri
+     * @return String Broker Redirect Uri
      */
     public static String getBrokerRedirectUri(final Context context, final String packageName) {
         final PackageHelper info = new PackageHelper(context.getPackageManager());
