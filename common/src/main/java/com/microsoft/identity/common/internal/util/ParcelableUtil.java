@@ -30,12 +30,16 @@ import androidx.annotation.NonNull;
 /**
  * Utility class to marshall and unmarshall Parcelable types.
  */
-public class ParcelableUtil {
+public final class ParcelableUtil {
+
+    private ParcelableUtil(){
+
+    }
 
     /**
      * Util method to transform a Parcelable to byte[].
      *
-     * @param parcelable : Parceable type as an input
+     * @param parcelable : Parcelable type as an input
      * @return : byte[]
      */
     public static byte[] marshall(@NonNull final Parcelable parcelable) {
