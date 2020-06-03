@@ -28,6 +28,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
+import java.util.Date;
 
 /**
  * Util class for mocking.
@@ -68,6 +69,7 @@ public final class MockUtil {
         final HttpURLConnection mockedConnection = Mockito.mock(HttpURLConnection.class);
         Mockito.doNothing().when(mockedConnection).setConnectTimeout(Mockito.anyInt());
         Mockito.doNothing().when(mockedConnection).setDoInput(Mockito.anyBoolean());
+        Mockito.doReturn(System.currentTimeMillis()/1000).when(mockedConnection).getDate();
         return mockedConnection;
     }
 }
