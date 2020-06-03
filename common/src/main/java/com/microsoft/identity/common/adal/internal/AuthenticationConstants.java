@@ -24,16 +24,14 @@ package com.microsoft.identity.common.adal.internal;
 
 import com.microsoft.identity.common.BuildConfig;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * {@link AuthenticationConstants} contains all the constant value the SDK is using.
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class AuthenticationConstants {
-    /**
-     * Private constructor to prevent an utility class from being initiated.
-     */
-    private AuthenticationConstants() {
-    }
-
     /**
      * ADAL package name.
      */
@@ -62,6 +60,7 @@ public final class AuthenticationConstants {
     /**
      * Holding all the constant value involved in the webview.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class Browser {
 
         /**
@@ -133,6 +132,7 @@ public final class AuthenticationConstants {
     /**
      * Represents the response code.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class UIResponse {
 
         /**
@@ -186,6 +186,7 @@ public final class AuthenticationConstants {
     /**
      * Represents the request code.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class UIRequest {
 
         /**
@@ -207,6 +208,7 @@ public final class AuthenticationConstants {
     /**
      * Represents the constant value of oauth2 params.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class OAuth2 {
 
         /**
@@ -452,6 +454,7 @@ public final class AuthenticationConstants {
     /**
      * Represents the constants value for Active Directory.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class AAD {
 
         /**
@@ -573,6 +576,7 @@ public final class AuthenticationConstants {
     /**
      * Represents the constants for broker.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class Broker {
 
         /**
@@ -624,6 +628,16 @@ public final class AuthenticationConstants {
          * String of broker version.
          */
         public static final String BROKER_VERSION = "broker.version";
+
+        /**
+         * String of broker package name.
+         */
+        public static final String BROKER_PACKAGE_NAME = "broker.package.name";
+
+        /**
+         * String of broker AccountChooserActivity name.
+         */
+        public static final String BROKER_ACTIVITY_NAME = "broker.activity.name";
 
         /**
          * The maximum broker protocol version that common supports.
@@ -1195,6 +1209,7 @@ public final class AuthenticationConstants {
         }
     }
 
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class OAuth2Scopes {
 
         /**
@@ -1228,6 +1243,7 @@ public final class AuthenticationConstants {
      * Represents Broker operations that should be invoked by Authenticator.java (MSAL-Broker AccountManager flow).
      * See MicrosoftAuthServiceOperation for more info.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class BrokerAccountManagerOperation {
 
         public static final String HELLO = "HELLO";
@@ -1245,6 +1261,105 @@ public final class AuthenticationConstants {
         public static final String GET_CURRENT_ACCOUNT = "GET_CURRENT_ACCOUNT";
 
         public static final String REMOVE_ACCOUNT_FROM_SHARED_DEVICE = "REMOVE_ACCOUNT_FROM_SHARED_DEVICE";
+    }
+
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static final class BrokerContentProvider{
+        /**
+         *  URI Scheme constant to invoke content provider.
+         */
+        public static final String CONTENT_SCHEME = "content://";
+
+        /**
+         * URI Authority constant for content provider.
+         *
+         * This is will be pre-fixed by com.azure.authenticator or com.microsoft.windowsintune.companyportal
+         * depending on which ever is the active broker.
+         */
+        public static final String AUTHORITY = "microsoft.identity.broker";
+
+        /**
+         * URI Path constant for Broker hello request using ContentProvider.
+         */
+        public static final String HELLO_PATH = "/hello";
+
+        /**
+         * URI Path constant for Broker acquireTokenInteractive request using ContentProvider.
+         */
+        public static final String ACQUIRE_TOKEN_INTERACTIVE_PATH = "/acquireTokenInteractive";
+
+        /**
+         * URI Path constant for Broker acquireTokenSilent request using ContentProvider.
+         */
+        public static final String ACQUIRE_TOKEN_SILENT_PATH = "/acquireTokenSilent";
+
+        /**
+         * URI Path constant for Broker getAccounts request using ContentProvider.
+         */
+        public static final String GET_ACCOUNTS_PATH = "/getAccounts";
+
+        /**
+         * URI Path constant for Broker removeAccounts request using ContentProvider.
+         */
+        public static final String REMOVE_ACCOUNTS_PATH = "/removeAccounts";
+
+        /**
+         * URI Path constant for Broker getCurrentAccountSharedDevice request using ContentProvider.
+         */
+        public static final String GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH = "/getCurrentAccountSharedDevice";
+
+        /**
+         * URI Path constant for Broker getDeviceMode request using ContentProvider.
+         */
+        public static final String GET_DEVICE_MODE_PATH = "/getDeviceMode";
+
+        /**
+         * URI Path constant for Broker signOutFromSharedDevice request using ContentProvider.
+         */
+        public static final String SIGN_OUT_FROM_SHARED_DEVICE_PATH = "/signOutFromSharedDevice";
+
+
+        /**
+         * BrokerContentProvider URI code constant for hello request.
+         */
+        public static final int HELLO_URI_CODE = 1;
+
+        /**
+         * BrokerContentProvider URI code constant for acquireTokenInteractive request.
+         */
+        public static final int ACQUIRE_TOKEN_INTERACTIVE_CODE = 2;
+
+        /**
+         * BrokerContentProvider URI code constant for acquireTokenSilent request.
+         */
+        public static final int ACQUIRE_TOKEN_SILENT_CODE = 3;
+
+        /**
+         * BrokerContentProvider URI code constant for getAccounts request.
+         */
+        public static final int GET_ACCOUNTS_CODE = 4;
+
+        /**
+         * BrokerContentProvider URI code constant for removeAccounts request.
+         */
+        public static final int REMOVE_ACCOUNTS_CODE = 5;
+
+        /**
+         * BrokerContentProvider URI code constant for getCurrentAccountSharedDevice request.
+         */
+        public static final int GET_CURRENT_ACCOUNT_SHARED_DEVICE_CODE = 6;
+
+        /**
+         * BrokerContentProvider URI code constant for getDeviceMode request.
+         */
+        public static final int GET_DEVICE_MODE_CODE = 7;
+
+        /**
+         * BrokerContentProvider URI code constant for signOutFromSharedDevice request.
+         */
+        public static final int SIGN_OUT_FROM_SHARED_DEVICE_CODE = 8;
+
     }
 
     public static final class AuthorizationIntentKey {
