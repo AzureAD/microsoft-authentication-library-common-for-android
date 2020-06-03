@@ -26,15 +26,14 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 /**
  * Utility class to marshall and unmarshall Parcelable types.
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ParcelableUtil {
-
-    private ParcelableUtil(){
-
-    }
 
     /**
      * Util method to transform a Parcelable to byte[].

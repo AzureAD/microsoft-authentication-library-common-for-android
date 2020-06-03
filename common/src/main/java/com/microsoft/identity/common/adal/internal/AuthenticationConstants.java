@@ -24,16 +24,14 @@ package com.microsoft.identity.common.adal.internal;
 
 import com.microsoft.identity.common.BuildConfig;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * {@link AuthenticationConstants} contains all the constant value the SDK is using.
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class AuthenticationConstants {
-    /**
-     * Private constructor to prevent an utility class from being initiated.
-     */
-    private AuthenticationConstants() {
-    }
-
     /**
      * ADAL package name.
      */
@@ -62,6 +60,7 @@ public final class AuthenticationConstants {
     /**
      * Holding all the constant value involved in the webview.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class Browser {
 
         /**
@@ -133,6 +132,7 @@ public final class AuthenticationConstants {
     /**
      * Represents the response code.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class UIResponse {
 
         /**
@@ -186,6 +186,7 @@ public final class AuthenticationConstants {
     /**
      * Represents the request code.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class UIRequest {
 
         /**
@@ -207,6 +208,7 @@ public final class AuthenticationConstants {
     /**
      * Represents the constant value of oauth2 params.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class OAuth2 {
 
         /**
@@ -452,6 +454,7 @@ public final class AuthenticationConstants {
     /**
      * Represents the constants value for Active Directory.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class AAD {
 
         /**
@@ -573,6 +576,7 @@ public final class AuthenticationConstants {
     /**
      * Represents the constants for broker.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class Broker {
 
         /**
@@ -1205,6 +1209,7 @@ public final class AuthenticationConstants {
         }
     }
 
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class OAuth2Scopes {
 
         /**
@@ -1238,6 +1243,7 @@ public final class AuthenticationConstants {
      * Represents Broker operations that should be invoked by Authenticator.java (MSAL-Broker AccountManager flow).
      * See MicrosoftAuthServiceOperation for more info.
      */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class BrokerAccountManagerOperation {
 
         public static final String HELLO = "HELLO";
@@ -1258,12 +1264,8 @@ public final class AuthenticationConstants {
     }
 
 
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class BrokerContentProvider{
-
-        private BrokerContentProvider(){
-
-        }
-
         /**
          *  URI Scheme constant to invoke content provider.
          */
