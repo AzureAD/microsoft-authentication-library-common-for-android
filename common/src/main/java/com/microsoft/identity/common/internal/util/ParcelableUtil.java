@@ -52,7 +52,7 @@ public class ParcelableUtil {
      * @param bytes : input as byte[]
      * @return : Parcel
      */
-    public static Parcel unmarshall(byte[] bytes) {
+    public static Parcel unmarshall(@NonNull byte[] bytes) {
         final Parcel parcel = Parcel.obtain();
         parcel.unmarshall(bytes, 0, bytes.length);
         parcel.setDataPosition(0);
@@ -66,7 +66,7 @@ public class ParcelableUtil {
      * @param creator<T> : Creator of Parcelable Type T to which bytes need to be transformed
      * @return : T
      */
-    public static <T> T unmarshall(byte[] bytes, @NonNull final Parcelable.Creator<T> creator) {
+    public static <T> T unmarshall(@NonNull byte[] bytes, @NonNull final Parcelable.Creator<T> creator) {
         final Parcel parcel = unmarshall(bytes);
         T result = creator.createFromParcel(parcel);
         parcel.recycle();
