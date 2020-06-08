@@ -1,3 +1,11 @@
+Version 2.0.9
+------------
+- Add constant for email scope (fix ad-accounts#1291)
+- Move canUseAccountManagerOperation() to common.
+- Support null 'm' & 'p' claims in SHRs (#899)
+- Resolves naming issue around power optimization flag (#907)
+- Changing log level of few logs to reduce noise in broker
+
 Version 2.0.8
 ------------
 - Fix to add the throwIfNetworkNotAvailable API back for ADAL back compat.
