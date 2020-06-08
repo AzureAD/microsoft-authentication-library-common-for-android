@@ -1,1 +1,1 @@
-include ':common', ':keyvault', ':labapi', ':testutils'
+include ':common', ':keyvault', ':labapi', ':testutils', ':uiautomationutilities'
