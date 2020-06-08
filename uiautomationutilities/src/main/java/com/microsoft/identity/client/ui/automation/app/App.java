@@ -24,6 +24,8 @@ package com.microsoft.identity.client.ui.automation.app;
 
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
@@ -33,6 +35,10 @@ import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * This class represents an app during a UI Test. We can interact with this app during the test by
+ * performing specific operation on/with it.
+ */
 @Getter
 public abstract class App implements IApp {
 
@@ -46,22 +52,24 @@ public abstract class App implements IApp {
 
     protected String localApkFileName = null;
 
-    public App(String packageName) {
+    public App(@NonNull final String packageName) {
         this.packageName = packageName;
         this.appInstaller = new PlayStore();
     }
 
-    public App(String packageName, String appName) {
+    public App(@NonNull final String packageName, @NonNull final String appName) {
         this(packageName);
         this.appName = appName;
     }
 
-    public App(String packageName, IAppInstaller appInstaller) {
+    public App(@NonNull final String packageName, @NonNull final IAppInstaller appInstaller) {
         this.appInstaller = appInstaller;
         this.packageName = packageName;
     }
 
-    public App(String packageName, String appName, IAppInstaller appInstaller) {
+    public App(@NonNull final String packageName,
+               @NonNull final String appName,
+               @NonNull final IAppInstaller appInstaller) {
         this.appInstaller = appInstaller;
         this.packageName = packageName;
         this.appName = appName;
@@ -94,14 +102,14 @@ public abstract class App implements IApp {
     }
 
     @Override
-    public boolean hasPermission(final String permission) {
+    public boolean hasPermission(@NonNull final String permission) {
         return CommonUtils.hasPermission(packageName, permission);
     }
 
     @Override
-    public void grantPermission(final String permission) {
+    public void grantPermission(@NonNull final String permission) {
         if (!hasPermission(permission)) {
-            CommonUtils.grantPackagePermission(packageName, permission);
+            CommonUtils.grantPackagePermission();
         }
     }
 }

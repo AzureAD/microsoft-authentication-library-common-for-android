@@ -25,6 +25,7 @@ package com.microsoft.identity.client.ui.automation.broker;
 import android.Manifest;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -33,7 +34,7 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
-import com.microsoft.identity.client.ui.automation.interaction.MicrosoftPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
@@ -44,7 +45,7 @@ import org.junit.Assert;
 import lombok.Getter;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.TIMEOUT;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
 
 @Getter
@@ -60,17 +61,22 @@ public class BrokerAuthenticator extends App implements ITestBroker {
     }
 
     @Override
-    public void performDeviceRegistration(String username, String password) {
+    public void performDeviceRegistration(@NonNull final String username,
+                                          @NonNull final String password) {
         performDeviceRegistrationHelper(
                 username,
                 password,
                 "com.azure.authenticator:id/manage_device_registration_email_input",
                 "com.azure.authenticator:id/manage_device_registration_register_button"
         );
+
+        //TODO Assert for successful completion of device registration (similar to what we do below
+        // for shared device registration)
     }
 
     @Override
-    public void performSharedDeviceRegistration(String username, String password) {
+    public void performSharedDeviceRegistration(@NonNull final String username,
+                                                @NonNull final String password) {
         performDeviceRegistrationHelper(
                 username,
                 password,
@@ -81,20 +87,20 @@ public class BrokerAuthenticator extends App implements ITestBroker {
         final UiDevice mDevice =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        UiSelector sharedDeviceConfirmationSelector = new UiSelector()
+        final UiSelector sharedDeviceConfirmationSelector = new UiSelector()
                 .descriptionContains("Shared Device Mode")
                 .className("android.widget.ImageView");
 
         //confirm that we are in Shared Device Mode inside Authenticator
-        UiObject sharedDeviceConfirmation = mDevice.findObject(sharedDeviceConfirmationSelector);
-        sharedDeviceConfirmation.waitForExists(TIMEOUT);
+        final UiObject sharedDeviceConfirmation = mDevice.findObject(sharedDeviceConfirmationSelector);
+        sharedDeviceConfirmation.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         Assert.assertTrue(sharedDeviceConfirmation.exists());
     }
 
-    private void performDeviceRegistrationHelper(final String username,
-                                                 final String password,
-                                                 final String emailInputResourceId,
-                                                 final String registerBtnResourceId) {
+    private void performDeviceRegistrationHelper(@NonNull final String username,
+                                                 @NonNull final String password,
+                                                 @NonNull final String emailInputResourceId,
+                                                 @NonNull final String registerBtnResourceId) {
         launch(); // launch Authenticator app
         handleFirstRun(); // handle first run experience
 
@@ -118,10 +124,11 @@ public class BrokerAuthenticator extends App implements ITestBroker {
             deviceRegistration.click();
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                // grant the GET ACCOUNTS permission if needed
                 grantPermission(Manifest.permission.GET_ACCOUNTS);
             }
         } catch (UiObjectNotFoundException e) {
-            e.printStackTrace();
+            Assert.fail(e.getMessage());
         }
 
         // enter email
@@ -143,10 +150,10 @@ public class BrokerAuthenticator extends App implements ITestBroker {
                 .loginHintProvided(true)
                 .build();
 
-        final MicrosoftPromptHandler microsoftPromptHandler = new MicrosoftPromptHandler(promptHandlerParameters);
+        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
 
         // handle AAD login page
-        microsoftPromptHandler.handlePrompt(username, password);
+        aadPromptHandler.handlePrompt(username, password);
     }
 
     @Override
@@ -162,18 +169,18 @@ public class BrokerAuthenticator extends App implements ITestBroker {
     }
 
     @Override
-    public void handleAccountPicker(final String username) {
-        UiDevice device = UiDevice.getInstance(getInstrumentation());
+    public void handleAccountPicker(@NonNull final String username) {
+        final UiDevice device = UiDevice.getInstance(getInstrumentation());
 
         // find the object associated to this username in account picker
-        UiObject accountSelected = device.findObject(new UiSelector().resourceId(
+        final UiObject accountSelected = device.findObject(new UiSelector().resourceId(
                 getResourceId(AUTHENTICATOR_APP_PACKAGE_NAME, "account_chooser_listView")
         ).childSelector(new UiSelector().textContains(
                 username
         )));
 
         try {
-            accountSelected.waitForExists(TIMEOUT);
+            accountSelected.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             accountSelected.click();
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());

@@ -22,17 +22,15 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.interaction;
 
-public class MicrosoftPromptHandler extends AbstractPromptHandler {
+import androidx.annotation.NonNull;
 
-    public MicrosoftPromptHandler(
-            final PromptHandlerParameters parameters) {
-        super(
-                new MicrosoftLoginComponentHandler(),
-                parameters
-        );
+public class AadPromptHandler extends AbstractPromptHandler {
+
+    public AadPromptHandler(@NonNull final PromptHandlerParameters parameters) {
+        super(new AadLoginComponentHandler(), parameters);
     }
 
-    public void handlePrompt(final String username, final String password) {
+    public void handlePrompt(@NonNull final String username, @NonNull final String password) {
         // if login hint was not provided, then we need to handle either account picker or email
         // field. If it was provided, then we expect to go straight to password field.
         if (!parameters.isLoginHintProvided()) {

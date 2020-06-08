@@ -1,5 +1,6 @@
 package com.microsoft.identity.client.ui.automation.utils;
 
+import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiDevice;
 
 import org.junit.Assert;
@@ -8,10 +9,14 @@ import java.io.IOException;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
+/**
+ * This class contains utility methods that can be used to interact with the ADB Shell from within
+ * code during the execution of a UI Test.
+ */
 public class AdbShellUtils {
 
-    private static void executeShellCommand(final String command) {
-        UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
+    private static void executeShellCommand(@NonNull final String command) {
+        final UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
         try {
             mDevice.executeShellCommand(command);
         } catch (IOException e) {
@@ -24,7 +29,7 @@ public class AdbShellUtils {
      *
      * @param packageName the package name to remove
      */
-    public static void removePackage(final String packageName) {
+    public static void removePackage(@NonNull final String packageName) {
         executeShellCommand("pm uninstall " + packageName);
     }
 
@@ -33,7 +38,7 @@ public class AdbShellUtils {
      *
      * @param packageName the package name to clear
      */
-    public static void clearPackage(final String packageName) {
+    public static void clearPackage(@NonNull final String packageName) {
         executeShellCommand("pm clear " + packageName);
     }
 }

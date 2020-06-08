@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.interaction;
 
+import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -32,19 +33,19 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.TIMEOUT;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static org.junit.Assert.fail;
 
-public class MicrosoftLoginComponentHandler implements ILoginComponentHandler {
+public class AadLoginComponentHandler implements ILoginComponentHandler {
 
     @Override
-    public void handleEmailField(final String username) {
+    public void handleEmailField(@NonNull final String username) {
         UiAutomatorUtils.handleInput("i0116", username);
         handleNextButton();
     }
 
     @Override
-    public void handlePasswordField(final String password) {
+    public void handlePasswordField(@NonNull final String password) {
         UiAutomatorUtils.handleInput("i0118", password);
         handleNextButton();
     }
@@ -60,22 +61,22 @@ public class MicrosoftLoginComponentHandler implements ILoginComponentHandler {
     }
 
     @Override
-    public void handleAccountPicker(final String username) {
+    public void handleAccountPicker(@NonNull final String username) {
         final UiDevice uiDevice =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // Confirm On Account Picker
-        UiObject accountPicker = UiAutomatorUtils.obtainUiObjectWithResourceId("tilesHolder");
+        final UiObject accountPicker = UiAutomatorUtils.obtainUiObjectWithResourceId("tilesHolder");
 
-        if (!accountPicker.waitForExists(TIMEOUT)) {
+        if (!accountPicker.waitForExists(FIND_UI_ELEMENT_TIMEOUT)) {
             fail("Account picker screen did not show up");
         }
 
-        UiObject account = uiDevice.findObject(new UiSelector()
+        final UiObject account = uiDevice.findObject(new UiSelector()
                 .text("Sign in with " + username + " work or school account.")
         );
 
-        account.waitForExists(TIMEOUT);
+        account.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
         try {
             account.click();
@@ -91,7 +92,7 @@ public class MicrosoftLoginComponentHandler implements ILoginComponentHandler {
     @Override
     public void confirmConsentPageReceived() {
         final UiObject consentScreen = getConsentScreen();
-        Assert.assertTrue(consentScreen.waitForExists(TIMEOUT));
+        Assert.assertTrue(consentScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT));
     }
 
     @Override
@@ -108,9 +109,9 @@ public class MicrosoftLoginComponentHandler implements ILoginComponentHandler {
     @Override
     public void handleSpeedBump() {
         // Confirm On Speed Bump Screen
-        UiObject speedBump = UiAutomatorUtils.obtainUiObjectWithResourceId("appConfirmTitle");
+        final UiObject speedBump = UiAutomatorUtils.obtainUiObjectWithResourceId("appConfirmTitle");
 
-        if (!speedBump.waitForExists(TIMEOUT)) {
+        if (!speedBump.waitForExists(FIND_UI_ELEMENT_TIMEOUT)) {
             fail("Speed Bump screen did not show up");
         }
 

@@ -24,6 +24,10 @@ package com.microsoft.identity.client.ui.automation.broker;
 
 import com.microsoft.identity.client.ui.automation.app.IApp;
 
+/**
+ * An interface for an Android broker being used during a UI Test. We can perform operations such as
+ * device registration with this broker during the test.
+ */
 public interface ITestBroker extends IApp {
 
     /**

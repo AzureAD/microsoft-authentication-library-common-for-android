@@ -26,31 +26,36 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
+
+import java.util.concurrent.TimeUnit;
 
 public class CommonUtils {
 
-    public final static long TIMEOUT = 1000 * 30;
+    public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
     /**
      * Launch (open) the supplied package on the device
      *
      * @param packageName the package name to launch
      */
-    public static void launchApp(final String packageName) {
+    public static void launchApp(@NonNull final String packageName) {
         final Context context = ApplicationProvider.getApplicationContext();
-        Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);  //sets the intent to start your app
+        final Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);  //sets the intent to start your app
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);  //clear out any previous task, i.e., make sure it starts on the initial screen
         context.startActivity(intent);
     }
 
     /**
-     * Grant (allow) a permission for a given package
-     *
-     * @param packageName the package to which the permission should be granted
-     * @param permission  the permission that should be granted
+     * Grant (allow) the requested permission for the current package i.e the app that is currently
+     * open on the device and requesting a permission.
+     * <p>
+     * When any app requests a permission on Android, it shows an Android system dialog on the UI,
+     * this dialog looks the same regardless of the app or the permission being requested. This API
+     * just responds to that by accepting that permission.
      */
-    public static void grantPackagePermission(final String packageName, final String permission) {
+    public static void grantPackagePermission() {
         UiAutomatorUtils.handleButtonClick("com.android.packageinstaller:id/permission_allow_button");
     }
 
@@ -61,7 +66,7 @@ public class CommonUtils {
      * @param permission  the permission which to check for
      * @return a boolean indicating whether permission was already granted or not
      */
-    public static boolean hasPermission(final String packageName, final String permission) {
+    public static boolean hasPermission(@NonNull final String packageName, @NonNull final String permission) {
         final Context context = ApplicationProvider.getApplicationContext();
         final PackageManager packageManager = context.getPackageManager();
         return PackageManager.PERMISSION_GRANTED == packageManager.checkPermission(
@@ -77,11 +82,17 @@ public class CommonUtils {
      * @param internalResourceId the resource id for the element
      * @return
      */
-    public static String getResourceId(final String appPackageName, final String internalResourceId) {
+    public static String getResourceId(@NonNull final String appPackageName, @NonNull final String internalResourceId) {
         return appPackageName + ":id/" + internalResourceId;
     }
 
-    public static boolean isStringPackageName(final String hint) {
+    /**
+     * Checks if the supplied String could be a valid Android package name
+     *
+     * @param hint the String for which to check if it is a package name
+     * @return a boolean indicating whether the supplied String is a valid Android package name
+     */
+    public static boolean isStringPackageName(@NonNull final String hint) {
         return hint.contains("."); // best guess
     }
 }

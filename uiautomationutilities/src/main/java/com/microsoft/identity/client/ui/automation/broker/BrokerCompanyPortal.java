@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
+import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
@@ -34,7 +35,7 @@ import org.junit.Assert;
 import lombok.Getter;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.TIMEOUT;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
 
 @Getter
@@ -50,33 +51,38 @@ public class BrokerCompanyPortal extends App implements ITestBroker {
     }
 
     @Override
-    public void performDeviceRegistration(String username, String password) {
+    public void performDeviceRegistration(@NonNull final String username,
+                                          @NonNull final String password) {
         //TODO implement device registration for CP
+        throw new UnsupportedOperationException("Unimplemented!");
     }
 
     @Override
-    public void performSharedDeviceRegistration(String username, String password) {
+    public void performSharedDeviceRegistration(@NonNull final String username,
+                                                @NonNull final String password) {
         //TODO implement shared device registration for CP
+        throw new UnsupportedOperationException("Unimplemented!");
     }
 
     @Override
     public void handleFirstRun() {
         //TODO handle first run for CP
+        throw new UnsupportedOperationException("Unimplemented!");
     }
 
     @Override
-    public void handleAccountPicker(final String username) {
-        UiDevice device = UiDevice.getInstance(getInstrumentation());
+    public void handleAccountPicker(@NonNull final String username) {
+        final UiDevice device = UiDevice.getInstance(getInstrumentation());
 
         // find the object associated to this username in account picker
-        UiObject accountSelected = device.findObject(new UiSelector().resourceId(
+        final UiObject accountSelected = device.findObject(new UiSelector().resourceId(
                 getResourceId(COMPANY_PORTAL_APP_PACKAGE_NAME, "account_chooser_listView")
         ).childSelector(new UiSelector().textContains(
                 username
         )));
 
         try {
-            accountSelected.waitForExists(TIMEOUT);
+            accountSelected.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             accountSelected.click();
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());

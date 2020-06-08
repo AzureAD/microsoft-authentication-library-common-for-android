@@ -28,8 +28,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 
-@Builder
-@Getter
 /**
  * A set of values that can be used to denote the behaviour we expect to observe during an oauth
  * authorization request. These values can then be supplied to a {@link AbstractPromptHandler} and
@@ -37,10 +35,12 @@ import lombok.NonNull;
  * The test should fail if the actual behaviour observed deviates from what is denoted as expected
  * via these parameters.
  */
+@Builder
+@Getter
 public class PromptHandlerParameters {
 
-    @NonNull
     // the prompt behaviour we expect
+    @NonNull
     private PromptParameter prompt;
 
     // whether session is expected or not (via presence of a cookie)
@@ -61,12 +61,12 @@ public class PromptHandlerParameters {
     // whether we are expecting at least one account in the browser/webview cookie
     private boolean expectingNonZeroAccountsInCookie;
 
-    @Builder.Default
     // The way in which we want to respond to consent page for this request
+    @Builder.Default
     private UiResponse consentPageResponse = UiResponse.ACCEPT;
 
-    @Builder.Default
     // The way in which we want to respond to speed bump page for this request
+    @Builder.Default
     private UiResponse speedBumpResponse = UiResponse.ACCEPT;
 
     // The broker that should be being used for this request

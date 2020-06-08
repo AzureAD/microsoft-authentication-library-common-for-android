@@ -22,6 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.interaction;
 
+/**
+ * An interface containing methods that facilitate interacting with login components such as email
+ * and password fields during a UI Test
+ */
 public interface ILoginComponentHandler {
 
     /**

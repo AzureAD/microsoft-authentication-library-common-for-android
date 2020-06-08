@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.app;
 
+/**
+ * An interface for an Android app on which we can perform specific operations during a UI test.
+ */
 public interface IApp {
 
     /**
@@ -49,7 +52,18 @@ public interface IApp {
      */
     void handleFirstRun();
 
+    /**
+     * Checks if this app has already been granted the supplied Android system permission
+     *
+     * @param permission the permission for which to check if it has been granted
+     * @return a boolean indicating whether the permission has been granted or not
+     */
     boolean hasPermission(String permission);
 
+    /**
+     * Grant (allow) the requested Android system permission for this app
+     *
+     * @param permission the permission that should be granted
+     */
     void grantPermission(String permission);
 }

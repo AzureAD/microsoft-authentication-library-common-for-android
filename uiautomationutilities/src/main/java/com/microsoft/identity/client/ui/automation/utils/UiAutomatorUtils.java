@@ -24,6 +24,7 @@ package com.microsoft.identity.client.ui.automation.utils;
 
 import android.view.accessibility.AccessibilityWindowInfo;
 
+import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -31,9 +32,12 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.TIMEOUT;
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static org.junit.Assert.fail;
 
+/**
+ * This class contains utility methods for leveraging UI Automator to interact with UI elements
+ */
 public class UiAutomatorUtils {
 
     /**
@@ -42,14 +46,14 @@ public class UiAutomatorUtils {
      * @param resourceId the resource id of the element to obtain
      * @return the UiObject associated to the supplied resource id
      */
-    public static UiObject obtainUiObjectWithResourceId(final String resourceId) {
+    public static UiObject obtainUiObjectWithResourceId(@NonNull final String resourceId) {
         final UiDevice mDevice =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        UiObject uiObject = mDevice.findObject(new UiSelector()
+        final UiObject uiObject = mDevice.findObject(new UiSelector()
                 .resourceId(resourceId));
 
-        uiObject.waitForExists(TIMEOUT);
+        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         return uiObject;
     }
 
@@ -59,14 +63,14 @@ public class UiAutomatorUtils {
      * @param text the text of the element to obtain
      * @return the UiObject associated to the supplied text
      */
-    public static UiObject obtainUiObjectWithText(final String text) {
+    public static UiObject obtainUiObjectWithText(@NonNull final String text) {
         final UiDevice mDevice =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        UiObject uiObject = mDevice.findObject(new UiSelector()
+        final UiObject uiObject = mDevice.findObject(new UiSelector()
                 .textContains(text));
 
-        uiObject.waitForExists(TIMEOUT);
+        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         return uiObject;
     }
 
@@ -77,7 +81,8 @@ public class UiAutomatorUtils {
      * @param childText            the text on the child view
      * @return the UiObject associated to the desired child element
      */
-    public static UiObject obtainChildInScrollable(final String scrollableResourceId, final String childText) {
+    public static UiObject obtainChildInScrollable(@NonNull final String scrollableResourceId,
+                                                   @NonNull final String childText) {
         final UiSelector scrollSelector = new UiSelector().resourceId(scrollableResourceId);
 
         final UiScrollable recyclerView = new UiScrollable(scrollSelector);
@@ -91,7 +96,7 @@ public class UiAutomatorUtils {
                     childText
             );
 
-            child.waitForExists(TIMEOUT);
+            child.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             return child;
         } catch (UiObjectNotFoundException e) {
             fail(e.getMessage());
@@ -106,7 +111,8 @@ public class UiAutomatorUtils {
      * @param resourceId the resource id of the input element
      * @param inputText  the text to enter
      */
-    public static void handleInput(final String resourceId, final String inputText) {
+    public static void handleInput(@NonNull final String resourceId,
+                                   @NonNull final String inputText) {
         final UiObject inputField = obtainUiObjectWithResourceId(resourceId);
 
         try {
@@ -122,7 +128,7 @@ public class UiAutomatorUtils {
      *
      * @param resourceId the resource id of the button to click
      */
-    public static void handleButtonClick(final String resourceId) {
+    public static void handleButtonClick(@NonNull final String resourceId) {
         final UiObject button = obtainUiObjectWithResourceId(resourceId);
 
         try {
