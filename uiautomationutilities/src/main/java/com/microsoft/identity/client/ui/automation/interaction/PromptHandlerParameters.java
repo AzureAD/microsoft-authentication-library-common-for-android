@@ -41,34 +41,34 @@ public class PromptHandlerParameters {
 
     // the prompt behaviour we expect
     @NonNull
-    private PromptParameter prompt;
+    private final PromptParameter prompt;
 
     // whether session is expected or not (via presence of a cookie)
-    private boolean sessionExpected;
+    private final boolean sessionExpected;
 
     // whether login hint was supplied or not to the interactive request
-    private boolean loginHintProvided;
+    private final boolean loginHintProvided;
 
     // whether we expect to receive consent page or not
-    private boolean consentPageExpected;
+    private final boolean consentPageExpected;
 
     // whether we expect to receive speed bump or not
-    private boolean speedBumpExpected;
+    private final boolean speedBumpExpected;
 
     // whether we are expecting at least one account in broker
-    private boolean expectingNonZeroAccountsInBroker;
+    private final boolean expectingNonZeroAccountsInBroker;
 
     // whether we are expecting at least one account in the browser/webview cookie
-    private boolean expectingNonZeroAccountsInCookie;
+    private final boolean expectingNonZeroAccountsInCookie;
 
     // The way in which we want to respond to consent page for this request
     @Builder.Default
-    private UiResponse consentPageResponse = UiResponse.ACCEPT;
+    private final UiResponse consentPageResponse = UiResponse.ACCEPT;
 
     // The way in which we want to respond to speed bump page for this request
     @Builder.Default
-    private UiResponse speedBumpResponse = UiResponse.ACCEPT;
+    private final UiResponse speedBumpResponse = UiResponse.ACCEPT;
 
     // The broker that should be being used for this request
-    private ITestBroker broker;
+    private final ITestBroker broker;
 }
