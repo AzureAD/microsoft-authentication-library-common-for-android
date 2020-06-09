@@ -223,7 +223,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final Context applicationContext = getActivity().getApplicationContext();
 
             // If CP is installed, redirect to CP.
-            if (!packageHelper.isPackageInstalledAndEnabled(
+            // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
+            //       CP is currently working on this.
+            //       Until that comes, we'll only handle this in ipphone.
+            if (packageHelper.isPackageInstalledAndEnabled(
+                    applicationContext,
+                    AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME) &&
+                AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE.equals(
+                        packageHelper.getCurrentSignatureForPackage(AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME)) &&
+                packageHelper.isPackageInstalledAndEnabled(
                     applicationContext,
                     AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)) {
                 try {
