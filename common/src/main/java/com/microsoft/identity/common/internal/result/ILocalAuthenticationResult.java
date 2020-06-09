@@ -124,7 +124,27 @@ public interface ILocalAuthenticationResult {
     @Nullable
     String getFamilyId();
 
+    /**
+     * Gets a list of credentials and accounts from cache. This list will include both root accounts
+     * as well as guest accounts aka tenant profiles.
+     *
+     * @return a list of {@link ICacheRecord} objects
+     */
     List<ICacheRecord> getCacheRecordWithTenantProfileData();
 
+    /**
+     * Gets whether the result of token request was returned from cache or not
+     *
+     * @return a boolean indicating if the request was serviced from cache
+     */
     boolean isServicedFromCache();
+
+    /**
+     * Gets the correlation id used during this request. Could be null in non-MSAL scenarios. This
+     * should never be null in the case of MSAL.
+     *
+     * @return a String representing a correlation id
+     */
+    @Nullable
+    String getCorrelationId();
 }

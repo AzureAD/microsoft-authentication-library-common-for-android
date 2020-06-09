@@ -54,6 +54,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     private String mRefreshTokenAge;
     private List<ICacheRecord> mCompleteResultFromCache;
     private boolean mServicedFromCache;
+    private String mCorrelationId;
 
     private static final String TAG = LocalAuthenticationResult.class.getName();
 
@@ -208,5 +209,15 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
     @Override
     public boolean isServicedFromCache() {
         return mServicedFromCache;
+    }
+
+    public void setCorrelationId(@NonNull final String correlationId) {
+        mCorrelationId = correlationId;
+    }
+
+    @Nullable
+    @Override
+    public String getCorrelationId() {
+        return mCorrelationId;
     }
 }

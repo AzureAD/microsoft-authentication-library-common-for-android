@@ -48,6 +48,7 @@ import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
 import java.util.Collections;
@@ -130,6 +131,14 @@ public class CommandDispatcher {
                             TAG + methodName,
                             "Silent command result returned from cache."
                     );
+                }
+
+                // set correlation id on Local Authentication Result
+                if (commandResult.getResult() != null &&
+                        commandResult.getResult() instanceof LocalAuthenticationResult) {
+                    final LocalAuthenticationResult localAuthenticationResult =
+                            (LocalAuthenticationResult) commandResult.getResult();
+                    localAuthenticationResult.setCorrelationId(correlationId);
                 }
 
                 Telemetry.getInstance().flush(correlationId);
@@ -340,6 +349,14 @@ public class CommandDispatcher {
                     commandResult = executeCommand(command);
                     sCommand = null;
                     localBroadcastManager.unregisterReceiver(resultReceiver);
+
+                    // set correlation id on Local Authentication Result
+                    if (commandResult.getResult() != null &&
+                            commandResult.getResult() instanceof LocalAuthenticationResult) {
+                        final LocalAuthenticationResult localAuthenticationResult =
+                                (LocalAuthenticationResult) commandResult.getResult();
+                        localAuthenticationResult.setCorrelationId(correlationId);
+                    }
 
                     EstsTelemetry.getInstance().flush(command, commandResult);
                     Telemetry.getInstance().flush(correlationId);
