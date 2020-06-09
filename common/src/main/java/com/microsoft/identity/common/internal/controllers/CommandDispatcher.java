@@ -134,12 +134,7 @@ public class CommandDispatcher {
                 }
 
                 // set correlation id on Local Authentication Result
-                if (commandResult.getResult() != null &&
-                        commandResult.getResult() instanceof LocalAuthenticationResult) {
-                    final LocalAuthenticationResult localAuthenticationResult =
-                            (LocalAuthenticationResult) commandResult.getResult();
-                    localAuthenticationResult.setCorrelationId(correlationId);
-                }
+                setCorrelationIdOnResult(commandResult, correlationId);
 
                 Telemetry.getInstance().flush(correlationId);
                 EstsTelemetry.getInstance().flush(command, commandResult);
@@ -351,12 +346,7 @@ public class CommandDispatcher {
                     localBroadcastManager.unregisterReceiver(resultReceiver);
 
                     // set correlation id on Local Authentication Result
-                    if (commandResult.getResult() != null &&
-                            commandResult.getResult() instanceof LocalAuthenticationResult) {
-                        final LocalAuthenticationResult localAuthenticationResult =
-                                (LocalAuthenticationResult) commandResult.getResult();
-                        localAuthenticationResult.setCorrelationId(correlationId);
-                    }
+                    setCorrelationIdOnResult(commandResult, correlationId);
 
                     EstsTelemetry.getInstance().flush(command, commandResult);
                     Telemetry.getInstance().flush(correlationId);
@@ -510,6 +500,17 @@ public class CommandDispatcher {
 
     public static int getCachedResultCount() {
         return sCommandResultCache.getSize();
+    }
+
+    private static void setCorrelationIdOnResult(@NonNull final CommandResult commandResult,
+                                                 @NonNull final String correlationId) {
+        // set correlation id on Local Authentication Result
+        if (commandResult.getResult() != null &&
+                commandResult.getResult() instanceof LocalAuthenticationResult) {
+            final LocalAuthenticationResult localAuthenticationResult =
+                    (LocalAuthenticationResult) commandResult.getResult();
+            localAuthenticationResult.setCorrelationId(correlationId);
+        }
     }
 
 }
