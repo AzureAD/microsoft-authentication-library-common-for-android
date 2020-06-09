@@ -57,6 +57,9 @@ import java.util.Locale;
 import java.util.Map;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_FINAL_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SUB_ERROR_UI_CANCEL;
 
 /**
@@ -226,19 +229,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
             //       CP is currently working on this.
             //       Until that comes, we'll only handle this in ipphone.
-            if (packageHelper.isPackageInstalledAndEnabled(
-                    applicationContext,
-                    AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME) &&
-                AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE.equals(
-                        packageHelper.getCurrentSignatureForPackage(AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME)) &&
-                packageHelper.isPackageInstalledAndEnabled(
-                    applicationContext,
-                    AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+            if (packageHelper.isPackageInstalledAndEnabled(applicationContext, IPPHONE_APP_PACKAGE_NAME) &&
+                IPPHONE_APP_SIGNATURE.equals(packageHelper.getCurrentSignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
+                packageHelper.isPackageInstalledAndEnabled(applicationContext, COMPANY_PORTAL_APP_PACKAGE_NAME)) {
                 try {
                     Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
                     final Intent intent = new Intent();
                     intent.setComponent(new ComponentName(
-                            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
+                            COMPANY_PORTAL_APP_PACKAGE_NAME,
                             AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     getActivity().startActivity(intent);
