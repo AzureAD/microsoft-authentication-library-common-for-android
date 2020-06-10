@@ -109,6 +109,9 @@ public class MsalCppOAuth2TokenCache
             }
         }
         if (accountRecord != null && refreshTokenRecord != null) {
+            // MSAL C++ writes credentials first and then the account.
+            // For a new account, this will not be true as the accountRecord will be null.
+            // For existing accounts, we would remove the old refresh token if present.
             removeRefreshTokenIfNeeded(accountRecord, refreshTokenRecord);
         }
 
