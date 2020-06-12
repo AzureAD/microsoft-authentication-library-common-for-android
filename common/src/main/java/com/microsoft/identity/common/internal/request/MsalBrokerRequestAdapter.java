@@ -128,6 +128,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                                 AuthorizationAgent.WEBVIEW.name()
                 ).authenticationScheme(parameters.getAuthenticationScheme())
                 .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                .oidcScopes(TextUtils.join(" ", parameters.getOidcScopes()))
                 .build();
 
         return brokerRequest;
@@ -156,6 +157,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
                 .authenticationScheme(parameters.getAuthenticationScheme())
                 .powerOptCheckEnabled(parameters.isPowerOptCheckEnabled())
+                .oidcScopes(TextUtils.join(" ", parameters.getOidcScopes()))
                 .build();
 
         return brokerRequest;
@@ -247,7 +249,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         OpenIdConnectPromptParameter.valueOf(brokerRequest.getPrompt()) :
                         OpenIdConnectPromptParameter.NONE)
                 .negotiatedBrokerProtocolVersion(negotiatedBrokerProtocolVersion)
-                .powerOptCheckEnabled(brokerRequest.isPowerOptCheckEnabled());
+                .powerOptCheckEnabled(brokerRequest.isPowerOptCheckEnabled())
+                .oidcScopes(getScopesAsSet(brokerRequest.getOidcScopes()));
 
         if (brokerRequest.getAuthorizationAgent() != null
                 && brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())
@@ -334,6 +337,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .localAccountId(brokerRequest.getLocalAccountId())
                 .negotiatedBrokerProtocolVersion(negotiatedBrokerProtocolVersion)
                 .powerOptCheckEnabled(brokerRequest.isPowerOptCheckEnabled())
+                .oidcScopes(getScopesAsSet(brokerRequest.getOidcScopes()))
                 .build();
 
 

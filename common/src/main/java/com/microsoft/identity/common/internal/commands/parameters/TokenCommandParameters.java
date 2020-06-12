@@ -61,6 +61,9 @@ public class TokenCommandParameters extends CommandParameters {
     @Expose()
     private boolean forceRefresh;
 
+    @Expose()
+    private Set<String> oidcScopes;
+
     public Set<String> getScopes() {
         return this.scopes == null ? null : new HashSet<>(this.scopes);
     }

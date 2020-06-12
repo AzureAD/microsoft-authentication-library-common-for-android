@@ -58,6 +58,7 @@ public class BrokerRequest implements Serializable {
         final static String AUTHORIZATION_AGENT = "authorization_agent";
         final static String AUTHENTICATION_SCHEME = "authentication_scheme";
         final static String POWER_OPT_CHECK_ENABLED = "power_opt_check_enabled";
+        final static String OIDC_SCOPES = "oidc_scopes";
     }
 
     /**
@@ -182,17 +183,34 @@ public class BrokerRequest implements Serializable {
     @SerializedName(SerializedNames.MULTIPLE_CLOUDS_SUPPORTED)
     private boolean mMultipleCloudsSupported;
 
+    /**
+     * Authorization agent for Auth request.
+     */
     @NonNull
     @SerializedName(SerializedNames.AUTHORIZATION_AGENT)
     private String mAuthorizationAgent;
 
+    /**
+     * Authentication scheme for the token request,
+     */
     @Nullable
     @SerializedName(SerializedNames.AUTHENTICATION_SCHEME)
     private AbstractAuthenticationScheme mAuthenticationScheme;
 
+    /**
+     * Boolean to indicate if power optimization check is enabled
+     */
     @Nullable
     @SerializedName(SerializedNames.POWER_OPT_CHECK_ENABLED)
     private boolean mPowerOptCheckEnabled;
+
+
+    /**
+     * Open Id Connect scopes requested by the application.
+     */
+    @NonNull
+    @SerializedName(SerializedNames.OIDC_SCOPES)
+    private String mOidcScopes;
 
     private BrokerRequest(BrokerRequest.Builder builder) {
         mAuthority = builder.mAuthority;
@@ -215,6 +233,7 @@ public class BrokerRequest implements Serializable {
         mAuthorizationAgent = builder.mAuthorizationAgent;
         mAuthenticationScheme = builder.mAuthenticationScheme;
         mPowerOptCheckEnabled = builder.mPowerOptCheckEnabled;
+        mOidcScopes = builder.mOidcScopes;
     }
 
     public String getAuthority() {
@@ -297,6 +316,10 @@ public class BrokerRequest implements Serializable {
         return mPowerOptCheckEnabled;
     }
 
+    public String getOidcScopes(){
+        return mOidcScopes;
+    }
+
     /**
      * Builder class for Broker Request.
      */
@@ -341,6 +364,8 @@ public class BrokerRequest implements Serializable {
         private AbstractAuthenticationScheme mAuthenticationScheme;
 
         private boolean mPowerOptCheckEnabled;
+
+        private String mOidcScopes;
 
         /**
          * Authority for the request
@@ -492,6 +517,14 @@ public class BrokerRequest implements Serializable {
             this.mPowerOptCheckEnabled = powerOptCheckEnabled;
             return this;
         }
+
+        public BrokerRequest.Builder oidcScopes(final String oidcScopes) {
+            this.mOidcScopes = oidcScopes;
+            return this;
+        }
+
+
+
 
         /**
          * Builds and returns a BrokerRequest

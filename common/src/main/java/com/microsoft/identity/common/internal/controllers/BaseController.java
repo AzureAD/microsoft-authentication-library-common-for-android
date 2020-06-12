@@ -471,6 +471,10 @@ public abstract class BaseController {
 
     protected Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
         final Set<String> requestScopes = commandParameters.getScopes();
+
+        if (commandParameters.getOidcScopes() != null && !commandParameters.getOidcScopes().isEmpty()) {
+            requestScopes.addAll(commandParameters.getOidcScopes());
+        }
         requestScopes.addAll(DEFAULT_SCOPES);
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
