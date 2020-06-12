@@ -1,3 +1,11 @@
+Version 2.0.10
+-----------
+- Fix a null pointer for getFragmentManager.
+- FOCI support for local MSAL.
+- Proguard consumer rules addition.
+- Roboelectric version update.
+- HttpRequest changes for MSAL CPP.
+
 Version 2.0.9
 ------------
 - Add constant for email scope (fix ad-accounts#1291)
