@@ -469,7 +469,7 @@ public abstract class BaseController {
         return null == idTokenRecord;
     }
 
-    protected Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
+    protected Set<String> addDefaultAndOidcScopes(@NonNull final TokenCommandParameters commandParameters) {
         final Set<String> requestScopes = commandParameters.getScopes();
 
         if (commandParameters.getOidcScopes() != null && !commandParameters.getOidcScopes().isEmpty()) {
