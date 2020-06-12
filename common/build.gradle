@@ -15,6 +15,17 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
 
+    def sliceParameter = "" // will be blank unless specified by developer
+    def dcParameter = "" // will be blank unless specified by developer
+
+    if (project.hasProperty("slice")) {
+        sliceParameter = slice
+    }
+
+    if (project.hasProperty("dc")) {
+        dcParameter = dc
+    }
+
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
@@ -23,6 +34,8 @@ android {
         project.archivesBaseName = "common"
         project.version = android.defaultConfig.versionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "SLICE", "\"$sliceParameter\"")
+        buildConfigField("String", "DC", "\"$dcParameter\"")
     }
 
     buildTypes {
@@ -39,6 +52,7 @@ android {
             debuggable false
             testCoverageEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            consumerProguardFiles 'consumer-rules.pro'
         }
     }
 

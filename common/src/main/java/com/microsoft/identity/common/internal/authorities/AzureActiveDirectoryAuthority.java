@@ -31,7 +31,6 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -48,14 +47,10 @@ public class AzureActiveDirectoryAuthority extends Authority {
     @SerializedName("audience")
     public AzureActiveDirectoryAudience mAudience;
 
-    @SerializedName("slice")
-    public AzureActiveDirectorySlice mSlice;
-
     @SerializedName("flight_parameters")
     public Map<String, String> mFlightParameters;
 
     public boolean mMultipleCloudsSupported = false;
-
 
     private AzureActiveDirectoryCloud mAzureActiveDirectoryCloud;
 
@@ -91,10 +86,6 @@ public class AzureActiveDirectoryAuthority extends Authority {
         mAuthorityTypeString = "AAD";
         mMultipleCloudsSupported = false;
         getAzureActiveDirectoryCloud();
-    }
-
-    public AzureActiveDirectorySlice getSlice() {
-        return this.mSlice;
     }
 
     public Map<String, String> getFlightParameters() {

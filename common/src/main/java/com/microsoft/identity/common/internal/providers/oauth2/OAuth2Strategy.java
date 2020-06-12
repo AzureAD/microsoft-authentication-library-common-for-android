@@ -40,6 +40,8 @@ import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
 
@@ -195,6 +197,28 @@ public abstract class OAuth2Strategy
 
     protected final void setTokenEndpoint(final String tokenEndpoint) {
         mTokenEndpoint = tokenEndpoint;
+
+        if (mConfig != null && mConfig instanceof MicrosoftStsOAuth2Configuration) {
+
+            final MicrosoftStsOAuth2Configuration oauth2Config =
+                    (MicrosoftStsOAuth2Configuration) mConfig;
+
+            final AzureActiveDirectorySlice slice = oauth2Config.getSlice();
+
+            if (slice != null) {
+                final Uri.Builder uriBuilder = Uri.parse(mTokenEndpoint).buildUpon();
+
+                if (!TextUtils.isEmpty(slice.getSlice())) {
+                    uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, slice.getSlice());
+                }
+
+                if (!TextUtils.isEmpty(slice.getDC())) {
+                    uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.DC_PARAMETER, slice.getDC());
+                }
+
+                mTokenEndpoint = uriBuilder.build().toString();
+            }
+        }
     }
 
     public String getAuthorityFromTokenEndpoint() {

@@ -48,17 +48,19 @@ public class MockTokenCreator {
     private static final String TENANT_ID_CLAIM = "tid";
     private static final String VERSION_CLAIM = "ver";
 
+    // mock token constants values
     private static final String AUDIENCE = "audience-for-testing";
     private static final String TENANT_ID = TestConstants.Authorities.AAD_MOCK_HTTP_RESPONSE_AUTHORITY_TENANT;
     private static final String OBJECT_ID = "99a1340e-0f35-4ac1-94ac-0837718f0b1f";
     private static final String PREFERRED_USERNAME = "test@test.onmicrosoft.com";
-    private static final String ISSUER =  "https://test.authority/" + TENANT_ID + "/v2.0";
     private static final String SUBJECT = "TestSubject";
     private static final String VERSION = "2.0";
     private static final String NAME = "test";
     private static final String UID = "99a1340e-0f35-4ac1-94ac-0837718f0b1f";
     private static final String UTID = TENANT_ID;
     private static final String ENCODING_UTF8 = "UTF-8";
+    private static final String ISSUER_PREFIX = "https://test.authority/";
+    private static final String ISSUER_SUFFIX = "/v2.0";
 
     private static String createMockToken(final String issuer,
                                           final String subject,
@@ -132,18 +134,24 @@ public class MockTokenCreator {
 
     public static String createMockIdToken() {
         long exp = getExpirationTimeAfterSpecifiedTime(3600);
-        return createMockIdTokenWithExp(exp);
+        return createMockIdTokenWithExpAndTenantId(exp, TENANT_ID);
     }
 
-    public static String createMockIdTokenWithExp(long exp) {
+    public static String createMockIdTokenWithTenantId(final String tenantId) {
+        long exp = getExpirationTimeAfterSpecifiedTime(3600);
+        return createMockIdTokenWithExpAndTenantId(exp, tenantId);
+    }
+
+    public static String createMockIdTokenWithExpAndTenantId(long exp, final String tenantId) {
+        final String issuer = ISSUER_PREFIX + tenantId + ISSUER_SUFFIX;
         return createMockIdToken(
-                ISSUER,
+                issuer,
                 SUBJECT,
                 AUDIENCE,
                 NAME,
                 PREFERRED_USERNAME,
                 OBJECT_ID,
-                TENANT_ID,
+                tenantId,
                 VERSION,
                 new Date(),
                 new Date(),

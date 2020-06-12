@@ -173,6 +173,7 @@ public final class TelemetryEventStrings {
         public static final String AUTHORITY_B2C = "b2c";
         public static final String ACCOUNT_MANAGER = "account_manager";
         public static final String BOUND_SERVICE = "bound_service";
+        public static final String CONTENT_PROVIDER = "content_provider";
     }
 
     public static final class Api {

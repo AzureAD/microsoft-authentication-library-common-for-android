@@ -24,9 +24,6 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
@@ -59,6 +56,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static com.microsoft.identity.common.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
@@ -622,11 +622,11 @@ public class MsalOAuth2TokenCache
      * @return A matching FRT credential, if exists. May be null.
      */
     @Nullable
-    private Credential getFamilyRefreshTokenForAccount(@NonNull final AccountRecord account) {
+    private RefreshTokenRecord getFamilyRefreshTokenForAccount(@NonNull final AccountRecord account) {
         final String methodName = ":getFamilyRefreshTokensForAccount";
 
         // Our eventual result - init to null, will assign if valid FRT is found
-        Credential result = null;
+        RefreshTokenRecord result = null;
 
         // Look for an arbitrary RT matching the current user.
         // If we find one, check that it is FoCI, if it is, assume it works.
@@ -662,7 +662,7 @@ public class MsalOAuth2TokenCache
                                 "Fallback RT found."
                         );
 
-                        result = rt;
+                        result = refreshTokenRecord;
                         break;
                     }
                 }
@@ -670,6 +670,22 @@ public class MsalOAuth2TokenCache
         }
 
         return result;
+    }
+
+    /**
+     * Load FRTs from the cache for an account matching the homeAccountId
+     * @param homeAccountId  homeAccountId for which FRT is sought
+     * @return an FRT if available else null.
+     */
+    @Nullable
+    public RefreshTokenRecord getFamilyRefreshTokenForHomeAccountId(@NonNull final String homeAccountId) {
+
+        for (AccountRecord accountRecord : mAccountCredentialCache.getAccounts()) {
+            if (accountRecord.getHomeAccountId().equals(homeAccountId)) {
+                return getFamilyRefreshTokenForAccount(accountRecord);
+            }
+        }
+        return null;
     }
 
     @Override
