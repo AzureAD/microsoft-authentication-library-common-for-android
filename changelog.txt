@@ -1,5 +1,6 @@
 Version 2.0.10
 -----------
+- Broker Content Provider changes
 - Fix a null pointer for getFragmentManager.
 - FOCI support for local MSAL.
 - Proguard consumer rules addition.
