@@ -24,6 +24,10 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -35,10 +39,8 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
+import java.util.Collections;
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 
@@ -132,8 +134,22 @@ public class MsalCppOAuth2TokenCache
      * API to clear all cache.
      * Note: This method is intended to be only used for testing purposes.
      */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public synchronized void clearCache() {
         getAccountCredentialCache().clearAll();
+    }
+
+    /**
+     * API to inspect cache contents.
+     * Note: This method is intended to be only used for testing purposes.
+     *
+     * @return A immutable List of Credentials contained in this cache.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public synchronized List<Credential> getCredentials() {
+        return Collections.unmodifiableList(
+                getAccountCredentialCache().getCredentials()
+        );
     }
 
     /**
