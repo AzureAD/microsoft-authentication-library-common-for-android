@@ -163,8 +163,20 @@ public class MsalCppOAuth2TokenCache
     public synchronized AccountDeletionRecord removeAccount(@NonNull final String homeAccountId,
                                                             @Nullable final String environment,
                                                             @NonNull final String realm) throws ClientException {
+        // TODO This API is potentially problematic for TFW/TFL...
+        // Normally on Android, apps are 'sandboxed' such that each app has their own cache
+        // and we don't have to worry about 1 app stomping on another's cache
+        //
+        // TFW/TFL however, "double stacked" their app registrations into a single binary
+        // Such that calling removeAccount() will potentially remove the Account being used by
+        // another app.
+        //
+        // This API assumes the *general* case where an app is single stacked. If special
+        // accommodations need to come later for Teams then we can reevaluate the logic here.
+
         validateNonNull(homeAccountId, "homeAccountId");
         validateNonNull(realm, "realm");
+
         final List<Credential> credentials = getAccountCredentialCache().getCredentialsFilteredBy(
                 homeAccountId,
                 environment,
@@ -176,11 +188,23 @@ public class MsalCppOAuth2TokenCache
         );
 
         if (credentials != null && !credentials.isEmpty()) {
+            // Get a client id to use for deletion
             final String clientId = credentials.get(0).getClientId();
-            return removeAccount(environment, clientId, homeAccountId, realm);
-        }
-        return new AccountDeletionRecord(null);
 
+            // Remove the account
+            return removeAccount(
+                    environment,
+                    clientId,
+                    homeAccountId,
+                    realm,
+                    CredentialType.AccessToken,
+                    CredentialType.AccessToken_With_AuthScheme,
+                    CredentialType.IdToken,
+                    CredentialType.V1IdToken
+            );
+        }
+
+        return new AccountDeletionRecord(null);
     }
 
     /**
