@@ -46,6 +46,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 import static com.microsoft.identity.common.MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS;
 import static com.microsoft.identity.common.MsalOAuth2TokenCacheTest.AccountCredentialTestBundle;
@@ -152,15 +153,31 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Ignore // Ignore this test until API behavior is decided
     @Test
     public void removeAccountTest() throws ClientException {
+        // Get the generated account
         final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
+
+        // Save it to the cache
         mCppCache.saveAccountRecord(generatedAccount);
+
+        // Call remove
         final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
                 generatedAccount.getHomeAccountId(),
                 generatedAccount.getEnvironment(),
                 generatedAccount.getRealm()
         );
+
+        // Check the receipt
         Assert.assertEquals(generatedAccount, deletionRecord.get(0));
 
+        // Try to restore it
+        final AccountRecord restoredAccount = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                generatedAccount.getRealm()
+        );
+
+        // Make sure it doesn't exist....
+        Assert.assertNull(restoredAccount);
         // TODO There's confusing behavior here...
         // In MSAL we have defined an account as "existing" if we have an RT for it
         // This API doesn't make this constraint obvious. Should we delete any matching account?

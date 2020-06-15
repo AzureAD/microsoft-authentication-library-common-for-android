@@ -189,7 +189,9 @@ public class MsalCppOAuth2TokenCache
      * @return {@link List<AccountRecord>}
      */
     public List<AccountRecord> getAllAccounts() {
-        return getAccountCredentialCache().getAccounts();
+        return Collections.unmodifiableList(
+                getAccountCredentialCache().getAccounts()
+        );
     }
 
     /**
