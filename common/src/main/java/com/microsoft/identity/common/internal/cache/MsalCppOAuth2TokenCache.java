@@ -184,7 +184,7 @@ public class MsalCppOAuth2TokenCache
     }
 
     /**
-     * Method to get all the Accounts in the cache.
+     * Gets an immutable {@link List} of {@link AccountRecord} objects.
      *
      * @return {@link List<AccountRecord>}
      */
