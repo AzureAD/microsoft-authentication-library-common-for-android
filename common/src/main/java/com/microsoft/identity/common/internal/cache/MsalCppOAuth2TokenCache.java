@@ -125,7 +125,7 @@ public class MsalCppOAuth2TokenCache
      *
      * @param accountRecord : accountRecord to be saved.
      */
-    public synchronized void saveAccountRecord(@NonNull AccountRecord accountRecord) {
+    public synchronized void saveAccountRecord(@NonNull final AccountRecord accountRecord) {
         getAccountCredentialCache().saveAccount(accountRecord);
 
     }
@@ -202,9 +202,9 @@ public class MsalCppOAuth2TokenCache
      * @throws ClientException : throws ClientException if input validation fails
      */
     @Nullable
-    public AccountRecord getAccount(@NonNull String homeAccountId,
-                                    @NonNull String environment,
-                                    @NonNull String realm) throws ClientException {
+    public AccountRecord getAccount(@NonNull final String homeAccountId,
+                                    @NonNull final String environment,
+                                    @NonNull final String realm) throws ClientException {
         final String methodName = ":getAccount";
 
         validateNonNull(homeAccountId, "homeAccountId");
@@ -223,8 +223,8 @@ public class MsalCppOAuth2TokenCache
             );
             return null;
         }
-        return accountRecords.get(0);
 
+        return accountRecords.get(0);
     }
 
 }
