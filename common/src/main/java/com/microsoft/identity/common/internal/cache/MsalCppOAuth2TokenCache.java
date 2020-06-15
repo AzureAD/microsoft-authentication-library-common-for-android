@@ -24,16 +24,11 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -41,6 +36,9 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 
@@ -93,37 +91,29 @@ public class MsalCppOAuth2TokenCache
     }
 
     /**
-     * @param accountRecord : AccountRecord associated with the input credentials.
+     * @param accountRecord : AccountRecord associated with the input credentials, can be null.
      * @param credentials   : list of Credential which can include AccessTokenRecord, IdTokenRecord and RefreshTokenRecord.
-     *                      Note : Both IdTokenRecord and RefreshTokenRecord need to be non null. AccessTokenRecord can be optional.
      * @throws ClientException : If the supplied Account or Credential are null or schema invalid.
      */
-    public synchronized void saveCredentials(@NonNull final AccountRecord accountRecord,
+    public synchronized void saveCredentials(@Nullable final AccountRecord accountRecord,
                                              @NonNull final Credential... credentials) throws ClientException {
         if (credentials == null || credentials.length == 0) {
             throw new ClientException("Credential array passed in is null or empty");
         }
 
-        AccessTokenRecord accessTokenRecord = null;
-        IdTokenRecord idTokenRecord = null;
         RefreshTokenRecord refreshTokenRecord = null;
 
         for (final Credential credential : credentials) {
-            if (credential instanceof AccessTokenRecord) {
-                accessTokenRecord = (AccessTokenRecord) credential;
-            } else if (credential instanceof IdTokenRecord) {
-                idTokenRecord = (IdTokenRecord) credential;
-            } else if (credential instanceof RefreshTokenRecord) {
+            if (credential instanceof RefreshTokenRecord) {
                 refreshTokenRecord = (RefreshTokenRecord) credential;
             }
         }
-
-        validateNonNull(accountRecord, "AccountRecord");
-        validateNonNull(refreshTokenRecord, "RefreshTokenRecord");
-        validateNonNull(idTokenRecord, "IdTokenRecord");
-        validateCacheArtifacts(accountRecord, accessTokenRecord, refreshTokenRecord, idTokenRecord);
-
-        removeRefreshTokenIfNeeded(accountRecord, refreshTokenRecord);
+        if (accountRecord != null && refreshTokenRecord != null) {
+            // MSAL C++ writes credentials first and then the account.
+            // For a new account, this will not be true as the accountRecord will be null.
+            // For existing accounts, we would remove the old refresh token if present.
+            removeRefreshTokenIfNeeded(accountRecord, refreshTokenRecord);
+        }
 
         saveCredentialsInternal(credentials);
     }
