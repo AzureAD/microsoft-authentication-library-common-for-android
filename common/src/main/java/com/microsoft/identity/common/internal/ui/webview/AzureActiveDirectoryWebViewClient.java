@@ -357,7 +357,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
 
         if (!lowerCaseUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
-            final String redactedUrl = removeQueryParameters(url);
+            final String redactedUrl = removeQueryParametersOrRedact(url);
 
             Logger.error(TAG, "The webView was redirected to an unsafe URL: " + redactedUrl, null);
             returnError(ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED, "The webView was redirected to an unsafe URL.");
@@ -365,14 +365,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return true;
         }
         Logger.infoPII(TAG,"We are declining to override loading and redirect to invalid URL: '"
-                + removeQueryParameters(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
+                + removeQueryParametersOrRedact(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
         return false;
     }
 
-    private String removeQueryParameters(@NonNull String url) {
+    private String removeQueryParametersOrRedact(@NonNull final String url) {
         try {
             return StringExtensions.removeQueryParameterFromUrl(url);
         } catch (final URISyntaxException e) {
+            Logger.errorPII(TAG, "Redirect URI has invalid syntax, unable to parse", e);
             return "redacted";
         }
     }
