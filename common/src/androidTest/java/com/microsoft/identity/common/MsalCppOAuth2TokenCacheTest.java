@@ -139,9 +139,12 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final List<AccountRecord> accounts = mCppCache.getAllAccounts();
         final AccountRecord restoredAccount = accounts.get(0);
         Assert.assertEquals(generatedAccount, restoredAccount);
+    }
 
-        // TODO this API makes no statement about the immutability of the List returned
-        // TODO results should not be mutable
+    @Test(expected = UnsupportedOperationException.class)
+    public void getAllAccountsResultImmutableTest() {
+        final List<AccountRecord> accounts = mCppCache.getAllAccounts();
+        accounts.add(mTestBundle.mGeneratedAccount);
     }
 
     @Test
