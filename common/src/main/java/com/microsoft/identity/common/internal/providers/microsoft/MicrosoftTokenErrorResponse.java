@@ -101,7 +101,6 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
     }
 
     /**
-     *
      * @return mOAuthErrorMetadata of Microsoft token error response
      */
     public String getOAuthErrorMetadata() {
@@ -109,7 +108,6 @@ public class MicrosoftTokenErrorResponse extends TokenErrorResponse {
     }
 
     /**
-     *
      * @param oAuthErrorMetadata of Microsoft token error response
      */
     public void setOAuthErrorMetadata(final String oAuthErrorMetadata) {

@@ -192,7 +192,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         if (brokerRequest == null) {
             Logger.error(TAG, "Broker Result is null, returning empty parameters, " +
-                            "validation is expected to fail", null
+                    "validation is expected to fail", null
             );
             return BrokerInteractiveTokenCommandParameters.builder().build();
         }
@@ -283,7 +283,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         if (brokerRequest == null) {
             Logger.error(TAG, "Broker Result is null, returning empty parameters, " +
-                            "validation is expected to fail", null
+                    "validation is expected to fail", null
             );
             return BrokerSilentTokenCommandParameters
                     .builder().build();
@@ -427,8 +427,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * Method to construct a request intent for broker acquireTokenInteractive request.
      * Only used in case of BrokerContentProvider
      *
-     * @param resultBundle result Bundle returned by broker.
-     * @param parameters input parameters
+     * @param resultBundle                    result Bundle returned by broker.
+     * @param parameters                      input parameters
      * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
      * @return request Intent
      */
@@ -457,7 +457,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Method to construct a request bundle for broker acquireTokenInteractive request.
      *
-     * @param parameters input parameters
+     * @param parameters                      input parameters
      * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
      * @return request Bundle
      */
@@ -473,7 +473,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Method to construct a request bundle for broker acquireTokenSilent request.
      *
-     * @param parameters input parameters
+     * @param parameters                      input parameters
      * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
      * @return request Bundle
      */
@@ -538,7 +538,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Method to construct a request bundle for broker getAccounts request.
      *
-     * @param parameters input parameters
+     * @param parameters                      input parameters
      * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
      * @return request Bundle
      */
@@ -558,7 +558,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Method to construct a request bundle for broker removeAccount request.
      *
-     * @param parameters input parameters
+     * @param parameters                      input parameters
      * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
      * @return request Bundle
      */
@@ -581,7 +581,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Method to construct a request bundle for broker removeAccount request.
      *
-     * @param parameters input parameters
+     * @param parameters                      input parameters
      * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
      * @return request Bundle
      */

@@ -45,6 +45,7 @@ public class ClientInfo implements Serializable {
     private static final String UNIQUE_IDENTIFIER = "uid";
     private static final String UNIQUE_TENANT_IDENTIFIER = "utid";
     private static final long serialVersionUID = 3326461566190095403L;
+    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     /**
      * Unique identifier for a user in the current tenant.
@@ -70,7 +71,7 @@ public class ClientInfo implements Serializable {
         }
 
         // decode the client info first
-        final String decodedClientInfo = new String(Base64.decode(rawClientInfo, Base64.URL_SAFE), Charset.forName(StringExtensions.ENCODING_UTF8));
+        final String decodedClientInfo = new String(Base64.decode(rawClientInfo, Base64.URL_SAFE), UTF8);
         final Map<String, String> clientInfoItems;
         try {
             clientInfoItems = JsonExtensions.extractJsonObjectIntoMap(decodedClientInfo);

@@ -55,7 +55,7 @@ public class DualScreenActivity extends FragmentActivity {
         LayoutInflater.from(this).inflate(layoutResID, contentLayout);
     }
 
-    private void initializeContentView(){
+    private void initializeContentView() {
         super.setContentView(R.layout.dual_screen_layout);
         adjustLayoutForDualScreenActivity();
     }
@@ -165,11 +165,7 @@ public class DualScreenActivity extends FragmentActivity {
         final String feature = "com.microsoft.device.display.displaymask";
         final PackageManager pm = context.getPackageManager();
 
-        if (pm.hasSystemFeature(feature)) {
-            return true;
-        } else {
-            return false;
-        }
+        return pm.hasSystemFeature(feature);
     }
 
     /**

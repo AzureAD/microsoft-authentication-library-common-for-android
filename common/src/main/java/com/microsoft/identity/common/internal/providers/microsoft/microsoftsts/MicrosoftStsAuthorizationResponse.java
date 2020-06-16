@@ -33,7 +33,6 @@ import java.util.HashMap;
 public class MicrosoftStsAuthorizationResponse extends MicrosoftAuthorizationResponse {
 
 
-
     /**
      * Constructor of {@link MicrosoftStsAuthorizationResponse}.
      *

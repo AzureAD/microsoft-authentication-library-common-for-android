@@ -293,7 +293,7 @@ public class BrokerRequest implements Serializable {
         return mAuthenticationScheme;
     }
 
-    public boolean isPowerOptCheckEnabled(){
+    public boolean isPowerOptCheckEnabled() {
         return mPowerOptCheckEnabled;
     }
 

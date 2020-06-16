@@ -24,21 +24,21 @@ package com.microsoft.identity.common.internal.controllers;
 
 public class CommandResult {
 
-    public enum ResultStatus { CANCEL, COMPLETED, ERROR };
+    public enum ResultStatus {CANCEL, COMPLETED, ERROR}
 
     private ResultStatus mStatus;
     private Object mResult;
 
-    public CommandResult(ResultStatus status, Object result){
+    public CommandResult(ResultStatus status, Object result) {
         mStatus = status;
         mResult = result;
     }
 
-    public ResultStatus getStatus(){
+    public ResultStatus getStatus() {
         return mStatus;
     }
 
-    public Object getResult(){
+    public Object getResult() {
         return mResult;
     }
 

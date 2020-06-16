@@ -33,6 +33,7 @@ public interface IBrokerResultAdapter {
 
     /**
      * Returns a success bundle with properties from Authenticator Result.
+     *
      * @param authenticationResult
      * @return Bundle
      */
@@ -41,6 +42,7 @@ public interface IBrokerResultAdapter {
 
     /**
      * Returns an error bundle with properties from Exception.
+     *
      * @param exception
      * @return
      */
@@ -58,6 +60,7 @@ public interface IBrokerResultAdapter {
     /**
      * Returns a BaseException from Broker result bundle.The exception
      * returned in the callback could also be sub class of {@link BaseException}
+     *
      * @param resultBundle
      * @return
      */

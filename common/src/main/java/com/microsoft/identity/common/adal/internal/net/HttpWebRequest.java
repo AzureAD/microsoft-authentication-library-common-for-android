@@ -178,6 +178,7 @@ public class HttpWebRequest {
 
         return response;
     }
+
     /**
      * Check if the network is available. If the network is unavailable, {@link ClientException}
      * will throw with error code {@link ErrorStrings#NO_NETWORK_CONNECTION_POWER_OPTIMIZATION}
@@ -185,7 +186,6 @@ public class HttpWebRequest {
      * throw with error code {@link ErrorStrings#DEVICE_NETWORK_NOT_AVAILABLE} otherwise.
      *
      * @param context Context : application context
-     *
      * @throws ClientException throw network exception
      */
     public static void throwIfNetworkNotAvailable(final Context context)

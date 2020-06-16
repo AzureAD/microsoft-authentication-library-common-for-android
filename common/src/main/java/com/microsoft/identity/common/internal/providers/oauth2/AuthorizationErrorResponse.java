@@ -27,7 +27,7 @@ import com.google.gson.annotations.Expose;
 /**
  * Class to encapsulate Authorization Result errors.
  */
-public class AuthorizationErrorResponse implements IErrorResponse{
+public class AuthorizationErrorResponse implements IErrorResponse {
 
     @Expose()
     private String mError;

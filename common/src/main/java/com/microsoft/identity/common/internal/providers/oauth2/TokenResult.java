@@ -81,7 +81,9 @@ public class TokenResult implements IResult {
         return mTokenResponse;
     }
 
-    public TokenResponse getSuccessResponse() { return mTokenResponse; }
+    public TokenResponse getSuccessResponse() {
+        return mTokenResponse;
+    }
 
     /**
      * Returns the TokenErrorResponse associated with the request.

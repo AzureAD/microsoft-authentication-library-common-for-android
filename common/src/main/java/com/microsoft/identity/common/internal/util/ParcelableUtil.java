@@ -40,7 +40,7 @@ public final class ParcelableUtil {
      * Util method to transform a Parcelable to byte[].
      *
      * @param parcelable Parcelable type as an input
-     * @return  byte[]
+     * @return byte[]
      */
     public static byte[] marshall(@NonNull final Parcelable parcelable) {
         final Parcel parcel = Parcel.obtain();
@@ -66,7 +66,7 @@ public final class ParcelableUtil {
     /**
      * Util method to transform a bytes to Parcelable type T.
      *
-     * @param bytes input as bytes
+     * @param bytes      input as bytes
      * @param creator<T> Creator of Parcelable Type T to which bytes need to be transformed
      * @return T
      */

@@ -24,7 +24,7 @@ package com.microsoft.identity.common.exception;
 
 public class ArgumentException extends BaseException {
 
-    public static final String sName =  ArgumentException.class.getName();
+    public static final String sName = ArgumentException.class.getName();
     private static final long serialVersionUID = -6399451133831073876L;
 
     public final static String ACQUIRE_TOKEN_OPERATION_NAME = "acquireToken";
@@ -67,7 +67,7 @@ public class ArgumentException extends BaseException {
     }
 
     @Override
-    public String getExceptionName(){
+    public String getExceptionName() {
         return sName;
     }
 

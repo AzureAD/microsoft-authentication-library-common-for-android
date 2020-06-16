@@ -564,7 +564,7 @@ public abstract class BaseController {
 
     @Nullable
     private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
-                                                       @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache){
+                                                       @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) {
 
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String clientId = parameters.getClientId();

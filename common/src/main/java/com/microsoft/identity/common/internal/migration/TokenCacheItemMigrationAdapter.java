@@ -151,9 +151,9 @@ public class TokenCacheItemMigrationAdapter {
     /**
      * Testing whether the given client ID can use the cached foci to refresh token.
      *
-     * @param clientId    String of the given client id.
-     * @param redirectUri redirect url string of the given client id.
-     * @param accountRecord account record of request
+     * @param clientId           String of the given client id.
+     * @param redirectUri        redirect url string of the given client id.
+     * @param accountRecord      account record of request
      * @param refreshTokenRecord refresh token record of FOCI account
      * @return true if the given client id can use the cached foci token. False, otherwise.
      * @throws ClientException
@@ -231,7 +231,7 @@ public class TokenCacheItemMigrationAdapter {
             brokerOAuth2TokenCache.save(
                     strategy,
                     authorizationRequest,
-                    (MicrosoftTokenResponse) tokenResult.getTokenResponse()
+                    tokenResult.getTokenResponse()
             );
         }
         return tokenResult.getSuccess();
@@ -645,11 +645,11 @@ public class TokenCacheItemMigrationAdapter {
     }
 
     private static MicrosoftStsAuthorizationRequest createAuthRequest(@NonNull final MicrosoftStsOAuth2Strategy strategy,
-                                                                     @NonNull final String clientId,
-                                                                     @NonNull final String redirectUri,
-                                                                     @NonNull final String scope,
-                                                                     @NonNull final IAccountRecord accountRecord,
-                                                                     @Nullable final UUID correlationId) {
+                                                                      @NonNull final String clientId,
+                                                                      @NonNull final String redirectUri,
+                                                                      @NonNull final String scope,
+                                                                      @NonNull final IAccountRecord accountRecord,
+                                                                      @Nullable final UUID correlationId) {
         final MicrosoftStsAuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(
                 accountRecord
         );

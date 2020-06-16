@@ -28,7 +28,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
 public class BaseException extends Exception {
 
-    public static final String sName =  BaseException.class.getName();
+    public static final String sName = BaseException.class.getName();
     private static final long serialVersionUID = -5166242728507796770L;
 
     @Nullable
@@ -144,13 +144,15 @@ public class BaseException extends Exception {
     }
 
     @Nullable
-    public String getCorrelationId() { return mCorrelationId; }
+    public String getCorrelationId() {
+        return mCorrelationId;
+    }
 
-    public void setCorrelationId(@Nullable final String correlationId){
+    public void setCorrelationId(@Nullable final String correlationId) {
         mCorrelationId = correlationId;
     }
 
-    public String getExceptionName(){
+    public String getExceptionName() {
         return sName;
     }
 }

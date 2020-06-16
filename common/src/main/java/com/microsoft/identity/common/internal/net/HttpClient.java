@@ -40,9 +40,10 @@ public interface HttpClient {
     /**
      * Execute an arbitrary method by name.  This will fail with an IllegalArgumentException unless
      * httpMethod is one of { PUT, GET, HEAD, POST, PATCH, DELETE, OPTIONS, or TRACE }.
-     * @param httpMethod the string of the http method to use.  Must be one of { PUT, GET,
-     *                   HEAD, POST, PATCH, DELETE, OPTIONS, or TRACE }, case insensitive.
-     * @param requestUrl the URL of the resource to operate on.
+     *
+     * @param httpMethod     the string of the http method to use.  Must be one of { PUT, GET,
+     *                       HEAD, POST, PATCH, DELETE, OPTIONS, or TRACE }, case insensitive.
+     * @param requestUrl     the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @param requestContent the body content of the request, if applicable.  May be null.
      * @return an HttpResponse with the result of the call.
@@ -55,8 +56,9 @@ public interface HttpClient {
 
     /**
      * Execute an arbitrary method.
-     * @param httpMethod the HttpMethod to use for the call.
-     * @param requestUrl the URL of the resource to operate on.
+     *
+     * @param httpMethod     the HttpMethod to use for the call.
+     * @param requestUrl     the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @param requestContent the body content of the request, if applicable.  May be null.
      * @return an HttpResponse with the result of the call.
@@ -69,7 +71,8 @@ public interface HttpClient {
 
     /**
      * Execute an HTTP PUT request.
-     * @param requestUrl the URL of the resource to operate on.
+     *
+     * @param requestUrl     the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @param requestContent the body content of the request, if applicable.  May be null.
      * @return an HttpResponse with the result of the call.
@@ -81,7 +84,8 @@ public interface HttpClient {
 
     /**
      * Execute an HTTP PATCH request.
-     * @param requestUrl the URL of the resource to operate on.
+     *
+     * @param requestUrl     the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @param requestContent the body content of the request, if applicable.  May be null.
      * @return an HttpResponse with the result of the call.
@@ -93,7 +97,8 @@ public interface HttpClient {
 
     /**
      * Execute an HTTP OPTIONS request.
-     * @param requestUrl the URL of the resource to operate on.
+     *
+     * @param requestUrl     the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
@@ -103,7 +108,8 @@ public interface HttpClient {
 
     /**
      * Execute an HTTP POST request.
-     * @param requestUrl the URL of the resource to operate on.
+     *
+     * @param requestUrl     the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @param requestContent the body content of the request, if applicable.  May be null.
      * @return an HttpResponse with the result of the call.
@@ -115,7 +121,8 @@ public interface HttpClient {
 
     /**
      * Execute an HTTP PATCH request.
-     * @param requestUrl the URL of the resource to operate on.
+     *
+     * @param requestUrl     the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @param requestContent the body content of the request, if applicable.  May be null.
      * @return an HttpResponse with the result of the call.
@@ -127,7 +134,8 @@ public interface HttpClient {
 
     /**
      * Execute an HTTP GET request.
-     * @param requestUrl the URL of the resource to operate on.
+     *
+     * @param requestUrl     the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
@@ -137,7 +145,8 @@ public interface HttpClient {
 
     /**
      * Execute an HTTP HEAD request.
-     * @param requestUrl the URL of the resource to operate on.
+     *
+     * @param requestUrl     the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
@@ -147,7 +156,8 @@ public interface HttpClient {
 
     /**
      * Execute an HTTP TRACE request.
-     * @param requestUrl the URL of the resource to operate on.
+     *
+     * @param requestUrl     the URL of the resource to operate on.
      * @param requestHeaders the headers for the request.
      * @return an HttpResponse with the result of the call.
      * @throws IOException if there was a communication problem.
@@ -172,7 +182,7 @@ public interface HttpClient {
 
         static {
             validMethods = new LinkedHashMap<>(HttpMethod.values().length);
-            for (HttpMethod method: HttpMethod.values()) {
+            for (HttpMethod method : HttpMethod.values()) {
                 validMethods.put(method.name(), method);
             }
         }

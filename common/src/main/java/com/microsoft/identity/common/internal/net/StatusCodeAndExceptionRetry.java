@@ -65,8 +65,7 @@ public class StatusCodeAndExceptionRetry implements RetryPolicy<HttpResponse> {
                 if (attemptNumber <= 0 || !isRetryableException.apply(e)) {
                     if (e instanceof IOException) {
                         throw (IOException) e;
-                    }
-                    else {
+                    } else {
                         throw new RetryFailedException(e);
                     }
                 }
@@ -77,6 +76,7 @@ public class StatusCodeAndExceptionRetry implements RetryPolicy<HttpResponse> {
 
     /**
      * Just a sleep function that allows for a return to break the loop.
+     *
      * @param cumulativeDelay How long, in milliseconds, to pause.
      * @return true if we successfully waited, false if interrupted.
      */

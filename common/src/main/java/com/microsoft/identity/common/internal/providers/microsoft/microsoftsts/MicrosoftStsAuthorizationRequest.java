@@ -147,7 +147,9 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         return mPrompt;
     }
 
-    public String getTokenScope() {return mTokenScope;}
+    public String getTokenScope() {
+        return mTokenScope;
+    }
 
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() {
@@ -180,7 +182,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         final Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
 
         for (Map.Entry<String, Object> entry : qpMap.entrySet()) {
-            if(entry.getKey() != null && entry.getValue() != null) {
+            if (entry.getKey() != null && entry.getValue() != null) {
                 uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
             }
         }

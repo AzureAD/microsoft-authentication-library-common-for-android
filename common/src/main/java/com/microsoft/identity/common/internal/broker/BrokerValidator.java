@@ -80,7 +80,7 @@ public class BrokerValidator {
     /**
      * Verifies that the installed broker package's signing certificate hash matches the known
      * release certificate hash.
-     *
+     * <p>
      * If signature hash verification fails, this will throw a Client exception containing the cause of error, which could contain a list of mismatch hashes.
      *
      * @param brokerPackageName The broker package to inspect.
@@ -125,7 +125,7 @@ public class BrokerValidator {
         final String methodName = ":verifySignature";
         try {
             return verifySignatureAndThrow(brokerPackageName) != null;
-        } catch (final ClientException e){
+        } catch (final ClientException e) {
             Logger.error(TAG + methodName, e.getErrorCode() + ": " + e.getMessage(), e);
         }
 

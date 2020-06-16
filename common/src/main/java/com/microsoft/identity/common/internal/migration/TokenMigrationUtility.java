@@ -70,7 +70,7 @@ public class TokenMigrationUtility<T extends BaseAccount, U extends RefreshToken
                                 accountTokenPair.first,
                                 accountTokenPair.second
                         );
-                        accountsAdded ++;
+                        accountsAdded++;
                     } catch (ClientException e) {
                         Logger.warn(
                                 TAG,

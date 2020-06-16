@@ -84,7 +84,7 @@ public class MicrosoftAuthClient {
      * Disconnects (unbinds) from the bound Microsoft Auth Service
      */
     public void disconnect() {
-        if(mBound) {
+        if (mBound) {
             mContext.unbindService(mMicrosoftAuthServiceConnection);
             mBound = false;
         }

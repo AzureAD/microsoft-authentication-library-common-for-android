@@ -31,8 +31,8 @@ import com.microsoft.identity.common.exception.ClientException;
 
 /**
  * Represents packageName and SignatureHash of a broker app.
- * */
-public class BrokerData{
+ */
+public class BrokerData {
     public final String packageName;
     public final String signatureHash;
 
@@ -45,7 +45,7 @@ public class BrokerData{
      * Given a broker package name, verify its signature and return a BrokerData object.
      *
      * @throws ClientException an exception containing mismatch signature hashes as its error message.
-     * */
+     */
     public static BrokerData getBrokerDataForBrokerApp(@NonNull final Context context,
                                                        @NonNull String brokerPackageName) throws ClientException {
 

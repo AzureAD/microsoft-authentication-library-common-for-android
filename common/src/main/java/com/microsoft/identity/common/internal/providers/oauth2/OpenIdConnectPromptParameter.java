@@ -63,9 +63,9 @@ public enum OpenIdConnectPromptParameter {
     }
 
 
-
     /**
      * Utility method to map Adal PromptBehavior with OpenIdConnectPromptParameter
+     *
      * @param promptBehavior
      * @return
      */

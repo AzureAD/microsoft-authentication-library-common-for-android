@@ -28,16 +28,19 @@ import androidx.annotation.NonNull;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class GzipUtil {
 
+    private static final Charset UTF8 = Charset.forName("UTF-8");
+
     /**
      * Util method which compress the input String to bytes using gzip compression.
      */
     public static byte[] compressString(@NonNull final String inputString) throws IOException {
-        byte[] bytes = inputString.getBytes("UTF-8");
+        byte[] bytes = inputString.getBytes(UTF8);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
         gzipOutputStream.write(bytes, 0, bytes.length);
@@ -67,6 +70,6 @@ public class GzipUtil {
 
         byte[] deCompressedBytes = byteArrayOutputStream.toByteArray();
         byteArrayInputStream.close();
-        return new String(deCompressedBytes, 0, deCompressedBytes.length, "UTF-8");
+        return new String(deCompressedBytes, 0, deCompressedBytes.length, UTF8);
     }
 }

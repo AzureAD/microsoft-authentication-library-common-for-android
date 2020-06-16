@@ -33,6 +33,8 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
@@ -59,6 +61,7 @@ public class JWSBuilder {
     private static final String JWS_ALGORITHM = "SHA256withRSA";
 
     private static final String TAG = "JWSBuilder";
+    public static final Charset UTF8 = Charset.forName("UTF-8");
 
     /**
      * Payload for JWS.
@@ -154,20 +157,20 @@ public class JWSBuilder {
             // http://tools.ietf.org/html/draft-ietf-jose-json-web-signature-27
             header.mCert = new String[1];
             header.mCert[0] = new String(Base64.encode(cert.getEncoded(), Base64.NO_WRAP),
-                    AuthenticationConstants.ENCODING_UTF8);
+                    UTF8);
 
             // redundant but current ADFS code base is looking for
             String headerJsonString = gson.toJson(header);
             String claimsJsonString = gson.toJson(claims);
             Logger.verbose(TAG + methodName, "Generate client certificate challenge response JWS Header. ");
             signingInput = StringExtensions.encodeBase64URLSafeString(headerJsonString
-                    .getBytes(AuthenticationConstants.ENCODING_UTF8))
+                    .getBytes(UTF8))
                     + "."
                     + StringExtensions.encodeBase64URLSafeString(claimsJsonString
-                    .getBytes(AuthenticationConstants.ENCODING_UTF8));
+                    .getBytes(UTF8));
 
             signature = sign(privateKey,
-                    signingInput.getBytes(AuthenticationConstants.ENCODING_UTF8));
+                    signingInput.getBytes(UTF8));
         } catch (UnsupportedEncodingException e) {
             throw new ClientException(ErrorStrings.UNSUPPORTED_ENCODING,
                     "Unsupported encoding", e);

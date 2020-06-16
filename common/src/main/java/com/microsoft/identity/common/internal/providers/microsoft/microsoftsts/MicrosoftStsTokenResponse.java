@@ -36,6 +36,7 @@ public class MicrosoftStsTokenResponse extends MicrosoftTokenResponse {
 
     /**
      * Gets expires not before as String ( epoch time in seconds)
+     *
      * @return
      */
     public String getExpiresNotBefore() {
@@ -44,12 +45,12 @@ public class MicrosoftStsTokenResponse extends MicrosoftTokenResponse {
 
     /**
      * Sets expires not before as String ( epoch time in seconds)
+     *
      * @param expiresNotBefore
      */
     public void setExpiresNotBefore(final String expiresNotBefore) {
         mExpiresNotBefore = expiresNotBefore;
     }
-
 
 
 }

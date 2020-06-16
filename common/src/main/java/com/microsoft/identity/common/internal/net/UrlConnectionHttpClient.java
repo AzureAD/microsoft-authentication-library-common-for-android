@@ -61,7 +61,7 @@ import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactor
  * is applied to the responses.  By default, the policy is a null policy not retrying anything.  The
  * default settings for read timeout and connection timeout are 30s, and the default setting for the
  * size of the buffer for reading objects from the http stream is 1024 bytes.
- *
+ * <p>
  * There are two ways to supply timeout values to this class, one method takes suppliers, the other
  * one integers.  If you use both of these, the suppliers method will take precendence over the method
  * using integers.
@@ -74,6 +74,7 @@ public class UrlConnectionHttpClient implements HttpClient {
     /**
      * A functional interface modeled off of java.util.function.Supplier for providing
      * values to callers.
+     *
      * @param <T> the type of value provided.
      */
     interface Supplier<T> {
@@ -85,8 +86,9 @@ public class UrlConnectionHttpClient implements HttpClient {
 
     /**
      * A utility method for creating suppliers of particular values.
+     *
      * @param value the value to supply.
-     * @param <T> the type of the value to return.
+     * @param <T>   the type of the value to return.
      * @return a new Supplier that returns the passed value.
      */
     public static <T> Supplier<T> supplierOf(final T value) {
@@ -114,6 +116,7 @@ public class UrlConnectionHttpClient implements HttpClient {
 
     /**
      * Obtain a static default instance of the HTTP Client class.
+     *
      * @return a default-configured HttpClient.
      */
     public static UrlConnectionHttpClient getDefaultInstance() {
@@ -141,6 +144,7 @@ public class UrlConnectionHttpClient implements HttpClient {
 
     /**
      * Record the end of an http event.
+     *
      * @param response
      */
     private static void recordHttpTelemetryEventEnd(@Nullable final HttpResponse response) {
@@ -157,17 +161,17 @@ public class UrlConnectionHttpClient implements HttpClient {
      * Sends an HTTP request of the specified method; applies appropriate provided arguments where
      * applicable.
      *
-     * @param httpMethod         One of: GET, POST, HEAD, PUT, DELETE, TRACE, OPTIONS, PATCH.
-     * @param requestUrl         The recipient {@link URL}.
-     * @param requestHeaders     Headers used to send the http request.
-     * @param requestContent     Optional request body, if applicable.
+     * @param httpMethod     One of: GET, POST, HEAD, PUT, DELETE, TRACE, OPTIONS, PATCH.
+     * @param requestUrl     The recipient {@link URL}.
+     * @param requestHeaders Headers used to send the http request.
+     * @param requestContent Optional request body, if applicable.
      * @return HttpResponse      The response for this request.
      * @throws IOException If an error is encountered while servicing this request.
      */
     public HttpResponse method(@NonNull final String httpMethod,
-                                      @NonNull final URL requestUrl,
-                                      @NonNull final Map<String, String> requestHeaders,
-                                      @Nullable final byte[] requestContent) throws IOException {
+                               @NonNull final URL requestUrl,
+                               @NonNull final Map<String, String> requestHeaders,
+                               @Nullable final byte[] requestContent) throws IOException {
         return method(HttpMethod.validateAndNormalizeMethod(httpMethod), requestUrl, requestHeaders, requestContent);
     }
 
@@ -175,10 +179,10 @@ public class UrlConnectionHttpClient implements HttpClient {
      * Sends an HTTP request of the specified method; applies appropriate provided arguments where
      * applicable.
      *
-     * @param httpMethod         One of: GET, POST, HEAD, PUT, DELETE, TRACE, OPTIONS, PATCH.
-     * @param requestUrl         The recipient {@link URL}.
-     * @param requestHeaders     Headers used to send the http request.
-     * @param requestContent     Optional request body, if applicable.
+     * @param httpMethod     One of: GET, POST, HEAD, PUT, DELETE, TRACE, OPTIONS, PATCH.
+     * @param requestUrl     The recipient {@link URL}.
+     * @param requestHeaders Headers used to send the http request.
+     * @param requestContent Optional request body, if applicable.
      * @return HttpResponse      The response for this request.
      * @throws IOException If an error is encountered while servicing this request.
      */

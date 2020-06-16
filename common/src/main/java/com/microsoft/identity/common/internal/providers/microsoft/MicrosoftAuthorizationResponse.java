@@ -77,14 +77,21 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
         mCorrelationId = correlationId;
     }
 
-    public String getCloudInstanceName() { return mCloudInstanceName;}
+    public String getCloudInstanceName() {
+        return mCloudInstanceName;
+    }
 
-    public String getCloudInstanceHostName() { return mCloudInstanceHostName;}
+    public String getCloudInstanceHostName() {
+        return mCloudInstanceHostName;
+    }
 
-    public String getCloudGraphHostName() { return mCloudGraphHostName;}
+    public String getCloudGraphHostName() {
+        return mCloudGraphHostName;
+    }
 
-    public String getSessionState() { return mSessionState;}
-
+    public String getSessionState() {
+        return mSessionState;
+    }
 
 
 }

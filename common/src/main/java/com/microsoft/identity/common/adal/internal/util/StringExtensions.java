@@ -37,6 +37,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -50,6 +51,8 @@ public final class StringExtensions {
      * The constant ENCODING_UTF8.
      */
     public static final String ENCODING_UTF8 = "UTF-8";
+
+    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     private static final String TAG = StringExtensions.class.getSimpleName();
 
@@ -81,9 +84,9 @@ public final class StringExtensions {
             UnsupportedEncodingException {
         if (!isNullOrBlank(msg)) {
             MessageDigest digester = MessageDigest.getInstance(TOKEN_HASH_ALGORITHM);
-            final byte[] msgInBytes = msg.getBytes(ENCODING_UTF8);
+            final byte[] msgInBytes = msg.getBytes(UTF8);
             return new String(Base64.encode(digester.digest(msgInBytes), Base64.NO_WRAP),
-                    ENCODING_UTF8);
+                    UTF8);
         }
         return msg;
     }
@@ -123,7 +126,7 @@ public final class StringExtensions {
             throws UnsupportedEncodingException {
         return new String(
                 Base64.encode(bytes, Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE),
-                ENCODING_UTF8);
+                UTF8);
     }
 
     /**
@@ -246,7 +249,7 @@ public final class StringExtensions {
      * @return String
      */
     public static String base64UrlEncodeToString(final String message) {
-        return Base64.encodeToString(message.getBytes(Charset.forName(ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
+        return Base64.encodeToString(message.getBytes(UTF8), Base64.URL_SAFE | Base64.NO_WRAP);
     }
 
     /**

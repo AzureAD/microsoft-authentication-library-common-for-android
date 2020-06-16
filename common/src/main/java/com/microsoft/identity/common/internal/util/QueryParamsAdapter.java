@@ -57,7 +57,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Pair<String, String>>> 
     public void write(final JsonWriter out, final List<Pair<String, String>> queryParams) throws IOException {
         out.beginObject();
 
-        for(final Pair<String, String> pair : queryParams){
+        for (final Pair<String, String> pair : queryParams) {
             out.name(pair.first);
             out.value(pair.second);
         }
@@ -68,7 +68,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Pair<String, String>>> 
     public List<Pair<String, String>> read(final JsonReader in) throws IOException {
         in.beginObject();
         final List<Pair<String, String>> result = new ArrayList<>();
-        while (in.hasNext()){
+        while (in.hasNext()) {
             final String key = in.nextName();
             final String value = in.nextString();
             final Pair<String, String> pair = new Pair<>(key, value);
@@ -79,12 +79,14 @@ public class QueryParamsAdapter extends TypeAdapter<List<Pair<String, String>>> 
     }
 
     public static String _toJson(final List<Pair<String, String>> extraQueryStringParameters) {
-        final Type listType = new TypeToken<List<Pair<String, String>>>(){}.getType();
+        final Type listType = new TypeToken<List<Pair<String, String>>>() {
+        }.getType();
         return mGson.toJson(extraQueryStringParameters, listType);
     }
 
     public static List<Pair<String, String>> _fromJson(final String jsonString) {
-        final Type listType = new TypeToken<List<Pair<String, String>>>(){}.getType();
+        final Type listType = new TypeToken<List<Pair<String, String>>>() {
+        }.getType();
         return mGson.fromJson(jsonString, listType);
     }
 

@@ -339,10 +339,8 @@ public class EstsTelemetry {
         } else if (commandResult.getStatus() == CommandResult.ResultStatus.COMPLETED) {
             if (commandResult.getResult() instanceof ILocalAuthenticationResult) {
                 final ILocalAuthenticationResult localAuthenticationResult = (ILocalAuthenticationResult) commandResult.getResult();
-                if (localAuthenticationResult.isServicedFromCache()) {
-                    // we did not go to token endpoint
-                    return false;
-                }
+                // we did not go to token endpoint
+                return !localAuthenticationResult.isServicedFromCache();
             } else {
                 // command probably wasn't a token command - we should never get here in that case
                 return false;

@@ -65,11 +65,19 @@ public final class HttpRequest {
     private static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
     private static final int STREAM_BUFFER_SIZE = 1024;
     private static final HttpClient DEFAULT_HTTP_CLIENT = UrlConnectionHttpClient.builder()
-            .connectTimeoutMsSupplier(new Supplier<Integer>() { public Integer get() { return CONNECT_TIMEOUT; }})
-            .readTimeoutMsSupplier(new Supplier<Integer>() { public Integer get() { return READ_TIMEOUT; }})
+            .connectTimeoutMsSupplier(new Supplier<Integer>() {
+                public Integer get() {
+                    return CONNECT_TIMEOUT;
+                }
+            })
+            .readTimeoutMsSupplier(new Supplier<Integer>() {
+                public Integer get() {
+                    return READ_TIMEOUT;
+                }
+            })
             .streamBufferSize(STREAM_BUFFER_SIZE)
             .retryPolicy(new StatusCodeAndExceptionRetry.StatusCodeAndExceptionRetryBuilder()
-                          .number(1)
+                    .number(1)
                     .extensionFactor(2)
                     .isAcceptable(new Function<HttpResponse, Boolean>() {
                         public Boolean apply(HttpResponse response) {

@@ -1265,15 +1265,15 @@ public final class AuthenticationConstants {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class BrokerContentProvider{
+    public static final class BrokerContentProvider {
         /**
-         *  URI Scheme constant to invoke content provider.
+         * URI Scheme constant to invoke content provider.
          */
         public static final String CONTENT_SCHEME = "content://";
 
         /**
          * URI Authority constant for content provider.
-         *
+         * <p>
          * This is will be pre-fixed by com.azure.authenticator or com.microsoft.windowsintune.companyportal
          * depending on which ever is the active broker.
          */

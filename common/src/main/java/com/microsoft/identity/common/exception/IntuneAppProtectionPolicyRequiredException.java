@@ -78,7 +78,7 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
     }
 
     @Override
-    public String getExceptionName(){
+    public String getExceptionName() {
         return sName;
     }
 }

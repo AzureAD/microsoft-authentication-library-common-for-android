@@ -29,6 +29,7 @@ package com.microsoft.identity.common.internal.net;
 class RetryFailedException extends RuntimeException {
     /**
      * Constructor.
+     *
      * @param e the causing exception.
      */
     public RetryFailedException(Exception e) {

@@ -131,23 +131,23 @@ public final class TelemetryEventStrings {
         public static final String REQUEST_QUERY_PARAMS = EVENT_PREFIX + "query_params";
         public static final String USER_AGENT = EVENT_PREFIX + "user_agent";
         public static final String HTTP_ERROR_DOMAIN = EVENT_PREFIX + "http_error_domain"; //msal only
-        public static final String AUTHORITY = EVENT_PREFIX +"authority";
-        public static final String GRANT_TYPE = EVENT_PREFIX +"grant_type"; //msal only
-        public static final String REQUEST_CODE = EVENT_PREFIX +"request_code"; //msal only
-        public static final String RESULT_CODE = EVENT_PREFIX +"result_code"; //msal only
-        public static final String USER_CANCEL = EVENT_PREFIX +"user_cancel";
-        public static final String UI_CANCELLED = EVENT_PREFIX +"ui_cancelled"; //msal only
-        public static final String UI_COMPLETE = EVENT_PREFIX +"ui_complete"; //msal only
+        public static final String AUTHORITY = EVENT_PREFIX + "authority";
+        public static final String GRANT_TYPE = EVENT_PREFIX + "grant_type"; //msal only
+        public static final String REQUEST_CODE = EVENT_PREFIX + "request_code"; //msal only
+        public static final String RESULT_CODE = EVENT_PREFIX + "result_code"; //msal only
+        public static final String USER_CANCEL = EVENT_PREFIX + "user_cancel";
+        public static final String UI_CANCELLED = EVENT_PREFIX + "ui_cancelled"; //msal only
+        public static final String UI_COMPLETE = EVENT_PREFIX + "ui_complete"; //msal only
         public static final String SERVER_ERROR_CODE = EVENT_PREFIX + "server_error_code";
         public static final String SERVER_SUBERROR_CODE = EVENT_PREFIX + "server_sub_error_code";
-        public static final String RT_AGE = EVENT_PREFIX +"rt_age";
-        public static final String SPE_INFO = EVENT_PREFIX +"spe_info";
-        public static final String SPE_RING = EVENT_PREFIX +"spe_ring"; //msal only
+        public static final String RT_AGE = EVENT_PREFIX + "rt_age";
+        public static final String SPE_INFO = EVENT_PREFIX + "spe_info";
+        public static final String SPE_RING = EVENT_PREFIX + "spe_ring"; //msal only
         public static final String IS_SUCCESSFUL = "_is_successful"; //sub key
-        public static final String WIPE_APP = EVENT_PREFIX +"wipe_app"; //msal only
-        public static final String WIPE_TIME = EVENT_PREFIX +"wipe_time"; //msal only
-        public static final String BROKER_ACTION = EVENT_PREFIX +"broker_action"; //msal only
-        public static final String BROKER_STRATEGY = EVENT_PREFIX +"broker_strategy";
+        public static final String WIPE_APP = EVENT_PREFIX + "wipe_app"; //msal only
+        public static final String WIPE_TIME = EVENT_PREFIX + "wipe_time"; //msal only
+        public static final String BROKER_ACTION = EVENT_PREFIX + "broker_action"; //msal only
+        public static final String BROKER_STRATEGY = EVENT_PREFIX + "broker_strategy";
         public static final String ACCOUNTS_NUMBER = EVENT_PREFIX + "accounts_number";
         public static final String IS_DEVICE_SHARED = EVENT_PREFIX + "is_device_shared";
     }
@@ -179,18 +179,18 @@ public final class TelemetryEventStrings {
     public static final class Api {
         public static final String BROKER_ACQUIRE_TOKEN_INTERACTIVE = "201";
         public static final String BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE = "202";
-        public static final String BROKER_ACQUIRE_TOKEN_SILENT= "203";
-        public static final String GET_BROKER_DEVICE_MODE= "204";
-        public static final String BROKER_GET_CURRENT_ACCOUNT= "205";
-        public static final String BROKER_GET_ACCOUNTS= "206";
-        public static final String BROKER_REMOVE_ACCOUNT= "207";
-        public static final String BROKER_REMOVE_ACCOUNT_FROM_SHARED_DEVICE= "208";
+        public static final String BROKER_ACQUIRE_TOKEN_SILENT = "203";
+        public static final String GET_BROKER_DEVICE_MODE = "204";
+        public static final String BROKER_GET_CURRENT_ACCOUNT = "205";
+        public static final String BROKER_GET_ACCOUNTS = "206";
+        public static final String BROKER_REMOVE_ACCOUNT = "207";
+        public static final String BROKER_REMOVE_ACCOUNT_FROM_SHARED_DEVICE = "208";
 
         public static final String LOCAL_ACQUIRE_TOKEN_INTERACTIVE = "101";
         public static final String LOCAL_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE = "1032";
-        public static final String LOCAL_ACQUIRE_TOKEN_SILENT= "103";
-        public static final String LOCAL_GET_ACCOUNTS= "106";
-        public static final String LOCAL_REMOVE_ACCOUNT= "107";
+        public static final String LOCAL_ACQUIRE_TOKEN_SILENT = "103";
+        public static final String LOCAL_GET_ACCOUNTS = "106";
+        public static final String LOCAL_REMOVE_ACCOUNT = "107";
     }
 }
 

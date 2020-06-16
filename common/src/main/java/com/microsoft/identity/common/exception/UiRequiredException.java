@@ -41,7 +41,7 @@ public final class UiRequiredException extends ServiceException {
     }
 
     @Override
-    public String getExceptionName(){
+    public String getExceptionName() {
         return sName;
     }
 

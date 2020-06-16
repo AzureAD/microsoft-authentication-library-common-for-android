@@ -82,11 +82,7 @@ public class BrowserDescriptor implements Serializable {
             return false;
         }
 
-        if (!StringUtil.isEmpty(mVersionUpperBound)
-                && StringUtil.compareSemanticVersion(browser.getVersion(), mVersionUpperBound) == 1) {
-            return false;
-        }
-
-        return true;
+        return StringUtil.isEmpty(mVersionUpperBound)
+                || StringUtil.compareSemanticVersion(browser.getVersion(), mVersionUpperBound) != 1;
     }
 }

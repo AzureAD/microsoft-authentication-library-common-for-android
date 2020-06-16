@@ -357,7 +357,7 @@ public final class ErrorStrings {
     public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ON_SHARED_DEVICE_ERROR_CODE = "multiple_account_pca_init_fail_on_shared_device";
     public static final String MULTIPLE_ACCOUNT_PCA_INIT_FAIL_ON_SHARED_DEVICE_ERROR_MESSAGE =
             "This application is not supported in the shared device mode. " +
-            "Please contact application developer to update the app.";
+                    "Please contact application developer to update the app.";
 
     /**
      * Multiple account PublicClientApplication could not be created for unknown reasons
@@ -393,7 +393,7 @@ public final class ErrorStrings {
     /**
      * The device is in the shared mode, and its registration was deleted by the admin.
      * This is an irrecoverable error, and the admin has to re-prep the device.
-     * */
+     */
     public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_CODE =
             "registered_shared_device_deleted_on_server";
     public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_MESSAGE =

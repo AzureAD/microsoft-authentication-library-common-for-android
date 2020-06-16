@@ -30,14 +30,16 @@ import java.util.concurrent.Callable;
  * an object of that type from it.  Implementations of this interface may examine the object
  * returned and any exceptions that result from the call and decide to execute the supplier
  * again in order to achieve a different result.
+ *
  * @param <T> the type of the object on return.
  */
 interface RetryPolicy<T> {
     /**
      * Evaluate the object returned from a callable and return the result.
+     *
      * @param supplier an object to call for a result.
      * @return the result of calling the supplier.
      * @throws IOException if an IO error occurs.
      */
-    T attempt (Callable<T> supplier) throws IOException;
+    T attempt(Callable<T> supplier) throws IOException;
 }

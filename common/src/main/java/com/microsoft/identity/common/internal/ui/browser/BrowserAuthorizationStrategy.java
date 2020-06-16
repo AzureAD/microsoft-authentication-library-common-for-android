@@ -120,9 +120,9 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         // For broker request we need to clear all activities in the task and bring Authorization Activity to the
         // top. If we do not add FLAG_ACTIVITY_CLEAR_TASK, Authorization Activity on finish can land on
         // Authenticator's or Company Portal's active activity which would be confusing to the user.
-        if(mIsRequestFromBroker) {
+        if (mIsRequestFromBroker) {
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-        }else {
+        } else {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
 

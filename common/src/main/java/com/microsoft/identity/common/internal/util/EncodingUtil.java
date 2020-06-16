@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.util;
 import android.util.Base64;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import static com.microsoft.identity.common.adal.internal.util.StringExtensions.ENCODING_UTF8;
 
@@ -32,6 +33,8 @@ import static com.microsoft.identity.common.adal.internal.util.StringExtensions.
  * Util class for encoding related tasks.
  */
 public final class EncodingUtil {
+
+    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     private EncodingUtil() {
         // Utility class.
@@ -44,7 +47,7 @@ public final class EncodingUtil {
      * @return The encoded String.
      */
     public static String base64UrlEncodeToString(final String message) {
-        return Base64.encodeToString(message.getBytes(Charset.forName(ENCODING_UTF8)), Base64.URL_SAFE | Base64.NO_WRAP);
+        return Base64.encodeToString(message.getBytes(UTF8), Base64.URL_SAFE | Base64.NO_WRAP);
     }
 
 }

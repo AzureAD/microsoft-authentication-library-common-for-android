@@ -89,7 +89,7 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
      * Error string to return if the broker is not installed.
      */
     public static final String BROKER_NEEDS_TO_BE_INSTALLED = "broker_needs_to_be_installed";
-    public static final String BROKER_NEEDS_TO_BE_INSTALLED_ERROR_DESCRIPTION= "Device needs to have broker installed";
+    public static final String BROKER_NEEDS_TO_BE_INSTALLED_ERROR_DESCRIPTION = "Device needs to have broker installed";
 
     /**
      * Error string to indicate that the device needs to be registered

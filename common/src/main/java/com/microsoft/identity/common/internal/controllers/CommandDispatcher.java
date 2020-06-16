@@ -261,10 +261,7 @@ public class CommandDispatcher {
      * @return
      */
     private static boolean eligibleToCacheException(BaseException exception) {
-        if (exception instanceof IntuneAppProtectionPolicyRequiredException) {
-            return false;
-        }
-        return true;
+        return !(exception instanceof IntuneAppProtectionPolicyRequiredException);
     }
 
 

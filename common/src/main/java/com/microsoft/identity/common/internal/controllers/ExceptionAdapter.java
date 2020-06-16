@@ -113,7 +113,7 @@ public class ExceptionAdapter {
      *
      * @param tokenResult
      * @return ServiceException, UiRequiredException
-     * */
+     */
     public static ServiceException exceptionFromTokenResult(final TokenResult tokenResult) {
         final String methodName = ":exceptionFromTokenResult";
 
@@ -126,7 +126,7 @@ public class ExceptionAdapter {
 
             outErr = getExceptionFromTokenErrorResponse(tokenResult.getErrorResponse());
             applyCliTelemInfo(tokenResult.getCliTelemInfo(), outErr);
-        }else {
+        } else {
             Logger.warn(
                     TAG + methodName,
                     "Unknown error, Token result is null [" + (tokenResult == null) + "]"
@@ -146,9 +146,9 @@ public class ExceptionAdapter {
      *
      * @param oAuthError
      * @return boolean
-     * */
+     */
     @SuppressWarnings("deprecation")
-    private static boolean shouldBeConvertedToUiRequiredException(final String oAuthError){
+    private static boolean shouldBeConvertedToUiRequiredException(final String oAuthError) {
         // Invalid_grant doesn't necessarily requires UI protocol-wise.
         // We simplify our logic because this layer is also used by MSAL.
 
@@ -164,7 +164,7 @@ public class ExceptionAdapter {
      *
      * @param errorResponse
      * @return ServiceException, UiRequiredException
-     * */
+     */
     public static ServiceException getExceptionFromTokenErrorResponse(@NonNull final TokenErrorResponse errorResponse) {
         final String methodName = ":getExceptionFromTokenErrorResponse";
 
@@ -192,8 +192,7 @@ public class ExceptionAdapter {
                             errorResponse.getResponseBody()
                     )
             );
-        }
-        catch (JSONException e) {
+        } catch (JSONException e) {
             Logger.warn(
                     TAG + methodName,
                     "Failed to deserialize error data: status, headers, response body."

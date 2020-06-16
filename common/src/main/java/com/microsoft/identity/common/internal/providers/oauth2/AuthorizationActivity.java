@@ -69,9 +69,9 @@ public final class AuthorizationActivity extends DualScreenActivity {
         return intent;
     }
 
-    public static AuthorizationFragment getAuthorizationFragmentFromStartIntent(@NonNull final Intent intent){
+    public static AuthorizationFragment getAuthorizationFragmentFromStartIntent(@NonNull final Intent intent) {
         AuthorizationFragment fragment;
-        final AuthorizationAgent authorizationAgent = (AuthorizationAgent)intent.getSerializableExtra(AUTHORIZATION_AGENT);
+        final AuthorizationAgent authorizationAgent = (AuthorizationAgent) intent.getSerializableExtra(AUTHORIZATION_AGENT);
         Telemetry.emit(new UiStartEvent().putUserAgent(authorizationAgent));
 
         if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
@@ -83,7 +83,7 @@ public final class AuthorizationActivity extends DualScreenActivity {
         fragment.setInstanceState(intent.getExtras());
         return fragment;
     }
-    
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,7 +93,7 @@ public final class AuthorizationActivity extends DualScreenActivity {
 
     @Override
     public void onBackPressed() {
-        if (!mFragment.onBackPressed()){
+        if (!mFragment.onBackPressed()) {
             super.onBackPressed();
         }
     }

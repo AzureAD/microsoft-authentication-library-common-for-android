@@ -83,7 +83,7 @@ public class SchemaConstants {
      * Failure do so will break the schema.
      */
     private static final String[] lastRequestPlatformFields = new String[]{
-        Key.ALL_TELEMETRY_DATA_SENT
+            Key.ALL_TELEMETRY_DATA_SENT
     };
 
     static boolean isCurrentPlatformField(final String key) {

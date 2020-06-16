@@ -28,7 +28,7 @@ import android.content.Context;
 /**
  * Temporary interface.
  * For injecting telemetry into common (until common's telemetry is properly wired up).
- * */
+ */
 public interface IWpjTelemetryCallback {
     void logEvent(Context context, final String operation, final Boolean isFailed, final String reason);
 }

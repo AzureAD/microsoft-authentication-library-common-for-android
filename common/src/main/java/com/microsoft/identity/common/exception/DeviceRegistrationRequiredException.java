@@ -24,11 +24,11 @@
 package com.microsoft.identity.common.exception;
 
 /**
- *  Internal exception thrown when a device needs to registered to access the required resource (MAM)
+ * Internal exception thrown when a device needs to registered to access the required resource (MAM)
  */
 final public class DeviceRegistrationRequiredException extends BaseException {
 
-    public static final String sName =  DeviceRegistrationRequiredException.class.getName();
+    public static final String sName = DeviceRegistrationRequiredException.class.getName();
     private static final long serialVersionUID = 5804977362169696152L;
 
     // The username for which device needs registration
@@ -49,7 +49,7 @@ final public class DeviceRegistrationRequiredException extends BaseException {
     }
 
     @Override
-    public String getExceptionName(){
+    public String getExceptionName() {
         return sName;
     }
 }

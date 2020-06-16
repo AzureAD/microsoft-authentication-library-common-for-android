@@ -32,25 +32,25 @@ public class CommandResultCacheItem {
     private CommandResult mValue;
     private Date mExpiresOn;
 
-    public CommandResultCacheItem(CommandResult value){
+    public CommandResultCacheItem(CommandResult value) {
         mValue = value;
         mExpiresOn = getExpiresOn();
     }
 
-    private Date getExpiresOn(){
+    private Date getExpiresOn() {
         final Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.SECOND, VALIDITY_DURATION);
         return calendar.getTime();
     }
 
-    public boolean isExpired(){
+    public boolean isExpired() {
         final Calendar calendar = Calendar.getInstance();
         final Date now = calendar.getTime();
 
         return now.after(mExpiresOn);
     }
 
-    public CommandResult getValue(){
+    public CommandResult getValue() {
         return mValue;
     }
 

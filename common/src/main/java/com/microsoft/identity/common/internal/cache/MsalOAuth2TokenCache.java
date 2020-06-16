@@ -674,7 +674,8 @@ public class MsalOAuth2TokenCache
 
     /**
      * Load FRTs from the cache for an account matching the homeAccountId
-     * @param homeAccountId  homeAccountId for which FRT is sought
+     *
+     * @param homeAccountId homeAccountId for which FRT is sought
      * @return an FRT if available else null.
      */
     @Nullable

@@ -61,7 +61,7 @@ public class ADALUserInfo {
         mPasswordExpiresOn = account.getPasswordExpiresOn();
     }
 
-    public ADALUserInfo (ILocalAuthenticationResult localAuthenticationResult){
+    public ADALUserInfo(ILocalAuthenticationResult localAuthenticationResult) {
         mUniqueId = localAuthenticationResult.getUniqueId();
         mDisplayableId = localAuthenticationResult.getAccountRecord().getUsername();
         mGivenName = localAuthenticationResult.getAccountRecord().getFirstName();
@@ -79,7 +79,7 @@ public class ADALUserInfo {
      * @param displayableId    Displayable for the userInfo.
      */
     public ADALUserInfo(String userid, String givenName, String familyName, String identityProvider,
-                    String displayableId) {
+                        String displayableId) {
         mUniqueId = userid;
         mGivenName = givenName;
         mFamilyName = familyName;

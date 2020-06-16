@@ -211,7 +211,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return self();
         }
 
-        public B setRequestHeaders(HashMap<String, String> requestHeaders){
+        public B setRequestHeaders(HashMap<String, String> requestHeaders) {
             mRequestHeaders = requestHeaders;
             return self();
         }
@@ -272,6 +272,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     public String getRedirectUri() {
         return mRedirectUri;
     }
+
     /**
      * @return mState of the authorization request.
      */

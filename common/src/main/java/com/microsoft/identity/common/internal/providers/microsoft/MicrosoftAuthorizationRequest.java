@@ -50,6 +50,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
      * String for the instance aware extra query parameter.
      */
     public static final String INSTANCE_AWARE = "instance_aware";
+    public static final Charset UTF8 = Charset.forName("UTF-8");
 
     /**
      * Required.
@@ -136,7 +137,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         //Initialize the diagnostic properties.
 
         //TODO: Need to figure out how to flow this information down
-        mLibraryVersion =  builder.mLibraryVersion;
+        mLibraryVersion = builder.mLibraryVersion;
         mLibraryName = builder.mLibraryName;
         mDiagnosticOS = String.valueOf(Build.VERSION.SDK_INT);
         mDiagnosticDM = android.os.Build.MODEL;
@@ -254,11 +255,17 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         return mDiagnosticDM;
     }
 
-    public Boolean getMultipleCloudAware() {return mMultipleCloudAware;}
+    public Boolean getMultipleCloudAware() {
+        return mMultipleCloudAware;
+    }
 
-    public String getCodeChallenge() { return mCodeChallenge;}
+    public String getCodeChallenge() {
+        return mCodeChallenge;
+    }
 
-    public String getCodeChallengeMethod() { return mCodeChallengeMethod;}
+    public String getCodeChallengeMethod() {
+        return mCodeChallengeMethod;
+    }
 
     public static String generateEncodedState() {
         final UUID stateUUID1 = UUID.randomUUID();
@@ -268,7 +275,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         String encodedState;
 
         try {
-            encodedState = Base64.encodeToString(state.getBytes("UTF-8"), Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP);
+            encodedState = Base64.encodeToString(state.getBytes(UTF8), Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP);
         } catch (Exception e) {
             throw new IllegalStateException("Error generating encoded state parameter for Authorization Request", e);
         }

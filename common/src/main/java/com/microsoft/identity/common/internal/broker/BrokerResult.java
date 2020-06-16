@@ -398,7 +398,9 @@ public class BrokerResult implements Serializable {
         return mSuccess;
     }
 
-    public boolean isServicedFromCache() { return mServicedFromCache; }
+    public boolean isServicedFromCache() {
+        return mServicedFromCache;
+    }
 
     public String getRefreshTokenAge() {
         return mRefreshTokenAge;

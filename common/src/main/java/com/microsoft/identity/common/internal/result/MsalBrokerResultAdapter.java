@@ -193,7 +193,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     public Bundle bundleFromBrokerResult(@NonNull final BrokerResult brokerResult,
-                                         @NonNull final String negotiatedBrokerProtocolVersion){
+                                         @NonNull final String negotiatedBrokerProtocolVersion) {
         final Bundle resultBundle = new Bundle();
         final String brokerResultString = sRequestAdapterGsonInstance.toJson(
                 brokerResult,
@@ -229,9 +229,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     @Nullable
-    public BrokerResult brokerResultFromBundle(final Bundle resultBundle){
+    public BrokerResult brokerResultFromBundle(final Bundle resultBundle) {
         BrokerResult brokerResult = null;
-        if(resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED)){
+        if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED)) {
             byte[] compressedBytes = resultBundle.getByteArray(
                     AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED
             );
@@ -241,9 +241,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             } catch (IOException e) {
                 // We should never hit this ideally unless the string/bytes are malformed for some unknown reason.
                 // The caller should handle the null broker result
-               Logger.error(TAG,"Failed to decompress broker result :", e);
+                Logger.error(TAG, "Failed to decompress broker result :", e);
             }
-        }else {
+        } else {
             brokerResult = JsonExtensions.getBrokerResultFromJsonString(
                     resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2)
             );
@@ -508,7 +508,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         if (cacheRecords != null) {
             final String jsonString = JsonExtensions.getJsonStringFromICacheRecordList(cacheRecords);
-            if(BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedProtocolVersion)) {
+            if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedProtocolVersion)) {
                 try {
                     byte[] bytes = GzipUtil.compressString(jsonString);
                     Logger.info(TAG, "Get accounts, raw payload size :"
@@ -519,7 +519,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     Logger.error(TAG, " Failed to compress account list to bytes, sending as jsonString", e);
                     resultBundle.putString(BROKER_ACCOUNTS, jsonString);
                 }
-            }else {
+            } else {
                 Logger.info(TAG, "Broker protocol version: " + negotiatedProtocolVersion +
                         " lower than compression changes, sending as string"
                 );
@@ -534,17 +534,17 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public List<ICacheRecord> getAccountsFromResultBundle(@NonNull final Bundle bundle) throws BaseException {
 
         String accountJson;
-        if(bundle.containsKey(BROKER_ACCOUNTS_COMPRESSED)){
+        if (bundle.containsKey(BROKER_ACCOUNTS_COMPRESSED)) {
             try {
                 accountJson = GzipUtil.decompressBytesToString(
                         bundle.getByteArray(BROKER_ACCOUNTS_COMPRESSED)
                 );
             } catch (IOException e) {
                 Logger.error(TAG, " Failed to decompress account list to bytes", e);
-                throw  new BaseException(ErrorStrings.UNKNOWN_ERROR, " Failed to decompress account list to bytes");
+                throw new BaseException(ErrorStrings.UNKNOWN_ERROR, " Failed to decompress account list to bytes");
             }
-        }else {
-            accountJson =  bundle.getString(BROKER_ACCOUNTS);
+        } else {
+            accountJson = bundle.getString(BROKER_ACCOUNTS);
         }
 
         if (accountJson == null) {

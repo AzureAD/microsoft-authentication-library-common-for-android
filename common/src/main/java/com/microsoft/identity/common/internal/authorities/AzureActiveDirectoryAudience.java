@@ -55,9 +55,9 @@ public abstract class AzureActiveDirectoryAudience {
     public static final String MSA_MEGA_TENANT_ID = "9188040d-6c67-4c5b-b112-36a304b66dad";
 
     public String getCloudUrl() {
-        if(mCloudUrl == null){
+        if (mCloudUrl == null) {
             return AzureActiveDirectory.getDefaultCloudUrl();
-        }else {
+        } else {
             return mCloudUrl;
         }
     }
@@ -72,9 +72,8 @@ public abstract class AzureActiveDirectoryAudience {
 
 
     /**
-     *
      * Must be called on a worker thread.
-     *
+     * <p>
      * Method which queries the {@link OpenIdProviderConfiguration}
      * to get tenant UUID for the authority with tenant alias.
      *
@@ -127,6 +126,7 @@ public abstract class AzureActiveDirectoryAudience {
     /**
      * Util method which returns true if the tenant alias is "common" ,
      * "organizations" or "consumers" indicating that it's the user's home tenant
+     *
      * @param tenantId
      * @return
      */
@@ -136,7 +136,7 @@ public abstract class AzureActiveDirectoryAudience {
                 || tenantId.equalsIgnoreCase(ORGANIZATIONS);
     }
 
-    private static OpenIdProviderConfiguration  loadOpenIdProviderConfigurationMetadata(
+    private static OpenIdProviderConfiguration loadOpenIdProviderConfigurationMetadata(
             @NonNull final String requestAuthority) throws ServiceException {
         final String methodName = ":loadOpenIdProviderConfigurationMetadata";
 

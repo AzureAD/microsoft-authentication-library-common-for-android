@@ -119,8 +119,8 @@ public class MicrosoftStsAuthorizationResultFactory extends AuthorizationResultF
                         MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED_ERROR_DESCRIPTION);
                 // Set username returned from the service
                 result.getAuthorizationErrorResponse().setUserName(data.getStringExtra(
-                                AuthenticationConstants.Broker.INSTALL_UPN_KEY)
-                        );
+                        AuthenticationConstants.Broker.INSTALL_UPN_KEY)
+                );
                 break;
 
             case AuthenticationConstants.UIResponse.BROWSER_CODE_MDM:

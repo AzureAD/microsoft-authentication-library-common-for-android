@@ -117,6 +117,7 @@ public class CustomTabsManager {
      * Creates a {@link androidx.browser.customtabs.CustomTabsSession custom tab session} for
      * use with a custom tab intent with optional callback. If no custom tab supporting browser
      * is available, this will return {@code null}.
+     *
      * @param callback
      * @return CustomTabsSession custom tab session
      */

@@ -25,10 +25,11 @@ package com.microsoft.identity.common.internal.ui.webview;
 import androidx.annotation.VisibleForTesting;
 
 @VisibleForTesting
-public class ExpectedPage{
+public class ExpectedPage {
     String mExpectedPageUrlStartsWith;
     OnPageLoadedCallback mCallback;
-    public ExpectedPage(String expectedUrlStartsWith, OnPageLoadedCallback callback){
+
+    public ExpectedPage(String expectedUrlStartsWith, OnPageLoadedCallback callback) {
         mExpectedPageUrlStartsWith = expectedUrlStartsWith;
         mCallback = callback;
     }
