@@ -127,6 +127,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * <li>A request to install the auth broker (starts with "msauth://")</li>
      * <li>It is a request that has the intent of starting the broker and the url starts with "browser://"</li>
      * <li>It <strong>does not</strong> begin with "https://".</li></ul>
+     *
      * @param view The WebView that is initiating the callback.
      * @param url  The string representation of the url.
      * @return false if we will not take action on the url.
@@ -243,8 +244,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             //       CP is currently working on this.
             //       Until that comes, we'll only handle this in ipphone.
             if (packageHelper.isPackageInstalledAndEnabled(applicationContext, IPPHONE_APP_PACKAGE_NAME) &&
-                IPPHONE_APP_SIGNATURE.equals(packageHelper.getCurrentSignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
-                packageHelper.isPackageInstalledAndEnabled(applicationContext, COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+                    IPPHONE_APP_SIGNATURE.equals(packageHelper.getCurrentSignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
+                    packageHelper.isPackageInstalledAndEnabled(applicationContext, COMPANY_PORTAL_APP_PACKAGE_NAME)) {
                 try {
                     Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
                     final Intent intent = new Intent();
@@ -364,7 +365,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             view.stopLoading();
             return true;
         }
-        Logger.infoPII(TAG,"We are declining to override loading and redirect to invalid URL: '"
+        Logger.infoPII(TAG, "We are declining to override loading and redirect to invalid URL: '"
                 + removeQueryParametersOrRedact(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
         return false;
     }
