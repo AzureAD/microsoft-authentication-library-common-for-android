@@ -1026,7 +1026,6 @@ public class MsalOAuth2TokenCache
         );
 
         // And any refresh tokens...
-        // TODO Why are the IdTokens being used here? I can't remember... is that a bug?
         appCredentials.addAll(
                 mAccountCredentialCache.getCredentialsFilteredBy(
                         null,
