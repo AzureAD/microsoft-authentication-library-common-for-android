@@ -339,7 +339,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean processInvalidUrl(@NonNull final WebView view, @NonNull final String url) {
-        String lowerCaseUrl = url.toLowerCase(Locale.US);
+        final String lowerCaseUrl = url.toLowerCase(Locale.US);
         if (isBrokerRequest(getActivity().getIntent())
                 && url.startsWith(AuthenticationConstants.Broker.REDIRECT_PREFIX)) {
             Logger.error(TAG, "The RedirectUri is not as expected.", null);
@@ -357,7 +357,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
 
         if (!lowerCaseUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
-            String redactedUrl = removeQueryParameters(url);
+            final String redactedUrl = removeQueryParameters(url);
 
             Logger.error(TAG, "The webView was redirected to an unsafe URL: " + redactedUrl, null);
             returnError(ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED, "The webView was redirected to an unsafe URL.");
