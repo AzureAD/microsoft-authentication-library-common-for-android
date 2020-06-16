@@ -29,12 +29,12 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.util.List;
-
-import androidx.annotation.NonNull;
 
 /**
  * Client that wraps the code necessary to bind to the MicrosoftAuthService (Android Bound Service)

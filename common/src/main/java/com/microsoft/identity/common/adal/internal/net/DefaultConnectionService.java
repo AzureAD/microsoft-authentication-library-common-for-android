@@ -29,7 +29,6 @@ import android.net.NetworkInfo;
 import android.os.Build;
 
 import com.microsoft.identity.common.adal.internal.PowerManagerWrapper;
-import com.microsoft.identity.common.adal.internal.UsageStatsManagerWrapper;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.telemetry.events.BaseEvent;
