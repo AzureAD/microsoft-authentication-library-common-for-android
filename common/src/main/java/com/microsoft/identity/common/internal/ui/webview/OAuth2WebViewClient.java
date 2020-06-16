@@ -185,10 +185,11 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
             Logger.info(TAG, "onPageStarted: Non-hierarchical loading uri.");
             Logger.infoPII(TAG, "start url: " + url);
         } else if (StringUtil.isEmpty(uri.getQueryParameter(AuthenticationConstants.OAuth2.CODE))) {
-            Logger.infoPII(TAG, "Host: " + uri.getHost() + " Path: " + uri.getPath());
+            Logger.info(TAG, "onPageStarted: URI has no code query parameter.");
+            Logger.infoPII(TAG, "Scheme:" + uri.getScheme() + " Host: " + uri.getHost() + " Path: " + uri.getPath());
         } else {
             Logger.info(TAG, "Auth code is returned for the loading url.");
-            Logger.infoPII(TAG, "Host: " + uri.getHost() + " Path: " + uri.getPath());
+            Logger.infoPII(TAG, "Scheme:" + uri.getScheme() + " Host: " + uri.getHost() + " Path: " + uri.getPath());
         }
     }
 }

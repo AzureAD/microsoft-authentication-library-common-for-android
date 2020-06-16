@@ -118,6 +118,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return handleUrl(view, requestUrl.toString());
     }
 
+    /**
+     * Interpret and take action on a redirect url.
+     * This function will return true in every case save 1.  That is, when the URL is none of:
+     * <ul><li>A urn containing an authorization challenge (starts with "urn:http-auth:PKeyAuth")</li>
+     * <li>A url that starts with the same prefix as the tenant's redirect url</li>
+     * <li>An explicit request to open the browser (starts with "browser://")</li>
+     * <li>A request to install the auth broker (starts with "msauth://")</li>
+     * <li>It is a request that has the intent of starting the broker and the url starts with "browser://"</li>
+     * <li>It <strong>does not</strong> begin with "https://".</li></ul>
+     * @param view The WebView that is initiating the callback.
+     * @param url  The string representation of the url.
+     * @return false if we will not take action on the url.
+     */
     private boolean handleUrl(final WebView view, final String url) {
         final String formattedURL = url.toLowerCase(Locale.US);
 
@@ -326,6 +339,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean processInvalidUrl(@NonNull final WebView view, @NonNull final String url) {
+        String lowerCaseUrl = url.toLowerCase(Locale.US);
         if (isBrokerRequest(getActivity().getIntent())
                 && url.startsWith(AuthenticationConstants.Broker.REDIRECT_PREFIX)) {
             Logger.error(TAG, "The RedirectUri is not as expected.", null);
@@ -337,26 +351,30 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return true;
         }
 
-        if (url.toLowerCase(Locale.US).equals("about:blank")) {
+        if ("about:blank".equals(lowerCaseUrl)) {
             Logger.verbose(TAG, "It is an blank page request");
             return true;
         }
 
-        if (!url.toLowerCase(Locale.US).startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
-            String redactedUrl = "redacted";
-            try {
-                redactedUrl = StringExtensions.removeQueryParameterFromUrl(url);
-            } catch (final URISyntaxException e) {
-                // Best effort.
-            }
+        if (!lowerCaseUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
+            String redactedUrl = removeQueryParameters(url);
 
             Logger.error(TAG, "The webView was redirected to an unsafe URL: " + redactedUrl, null);
             returnError(ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED, "The webView was redirected to an unsafe URL.");
             view.stopLoading();
             return true;
         }
-
+        Logger.infoPII(TAG,"We are declining to override loading and redirect to invalid URL: '"
+                + removeQueryParameters(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
         return false;
+    }
+
+    private String removeQueryParameters(@NonNull String url) {
+        try {
+            return StringExtensions.removeQueryParameterFromUrl(url);
+        } catch (final URISyntaxException e) {
+            return "redacted";
+        }
     }
 
     private void returnError(final String errorCode, final String errorMessage) {
