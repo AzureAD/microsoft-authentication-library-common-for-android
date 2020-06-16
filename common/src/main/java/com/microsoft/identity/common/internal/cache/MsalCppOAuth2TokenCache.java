@@ -127,7 +127,6 @@ public class MsalCppOAuth2TokenCache
      */
     public synchronized void saveAccountRecord(@NonNull final AccountRecord accountRecord) {
         getAccountCredentialCache().saveAccount(accountRecord);
-
     }
 
     /**
