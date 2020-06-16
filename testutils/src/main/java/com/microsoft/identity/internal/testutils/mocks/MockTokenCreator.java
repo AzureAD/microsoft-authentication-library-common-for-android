@@ -49,18 +49,18 @@ public class MockTokenCreator {
     private static final String VERSION_CLAIM = "ver";
 
     // mock token constants values
-    private static final String AUDIENCE = "audience-for-testing";
-    private static final String TENANT_ID = TestConstants.Authorities.AAD_MOCK_HTTP_RESPONSE_AUTHORITY_TENANT;
-    private static final String OBJECT_ID = "99a1340e-0f35-4ac1-94ac-0837718f0b1f";
-    private static final String PREFERRED_USERNAME = "test@test.onmicrosoft.com";
-    private static final String SUBJECT = "TestSubject";
-    private static final String VERSION = "2.0";
-    private static final String NAME = "test";
-    private static final String UID = "99a1340e-0f35-4ac1-94ac-0837718f0b1f";
-    private static final String UTID = TENANT_ID;
-    private static final String ENCODING_UTF8 = "UTF-8";
-    private static final String ISSUER_PREFIX = "https://test.authority/";
-    private static final String ISSUER_SUFFIX = "/v2.0";
+    public static final String MOCK_AUDIENCE_VALUE = "audience-for-testing";
+    public static final String MOCK_TENANT_ID_VALUE = TestConstants.Authorities.AAD_MOCK_HTTP_RESPONSE_AUTHORITY_TENANT;
+    public static final String MOCK_OBJECT_ID_VALUE = "99a1340e-0f35-4ac1-94ac-0837718f0b1f";
+    public static final String MOCK_PREFERRED_USERNAME_VALUE = "test@test.onmicrosoft.com";
+    public static final String MOCK_SUBJECT_VALUE = "TestSubject";
+    public static final String MOCK_VERSION_VALUE = "2.0";
+    public static final String MOCK_NAME_VALUE = "test";
+    public static final String MOCK_UID_VALUE = "99a1340e-0f35-4ac1-94ac-0837718f0b1f";
+    public static final String MOCK_UTID_VALUE = MOCK_TENANT_ID_VALUE;
+    public static final String MOCK_ENCODING_UTF8_VALUE = "UTF-8";
+    public static final String MOCK_ISSUER_PREFIX_VALUE = "https://test.authority/";
+    public static final String MOCK_ISSUER_SUFFIX_VALUE = "/v2.0";
 
     private static String createMockToken(final String issuer,
                                           final String subject,
@@ -134,7 +134,7 @@ public class MockTokenCreator {
 
     public static String createMockIdToken() {
         long exp = getExpirationTimeAfterSpecifiedTime(3600);
-        return createMockIdTokenWithExpAndTenantId(exp, TENANT_ID);
+        return createMockIdTokenWithExpAndTenantId(exp, MOCK_TENANT_ID_VALUE);
     }
 
     public static String createMockIdTokenWithTenantId(final String tenantId) {
@@ -143,16 +143,16 @@ public class MockTokenCreator {
     }
 
     public static String createMockIdTokenWithExpAndTenantId(long exp, final String tenantId) {
-        final String issuer = ISSUER_PREFIX + tenantId + ISSUER_SUFFIX;
+        final String issuer = MOCK_ISSUER_PREFIX_VALUE + tenantId + MOCK_ISSUER_SUFFIX_VALUE;
         return createMockIdToken(
                 issuer,
-                SUBJECT,
-                AUDIENCE,
-                NAME,
-                PREFERRED_USERNAME,
-                OBJECT_ID,
+                MOCK_SUBJECT_VALUE,
+                MOCK_AUDIENCE_VALUE,
+                MOCK_NAME_VALUE,
+                MOCK_PREFERRED_USERNAME_VALUE,
+                MOCK_OBJECT_ID_VALUE,
                 tenantId,
-                VERSION,
+                MOCK_VERSION_VALUE,
                 new Date(),
                 new Date(),
                 new Date(exp)
@@ -163,11 +163,11 @@ public class MockTokenCreator {
         final String claims = "{\"uid\":\"" + uid + "\",\"utid\":\"" + utid + "\"}";
 
         return new String(Base64.encode(claims.getBytes(
-                Charset.forName(ENCODING_UTF8)), Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE));
+                Charset.forName(MOCK_ENCODING_UTF8_VALUE)), Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE));
     }
 
     public static String createMockRawClientInfo() {
-        return createMockRawClientInfo(UID, UTID);
+        return createMockRawClientInfo(MOCK_UID_VALUE, MOCK_UTID_VALUE);
     }
 
     public static long getExpirationTimeAfterSpecifiedTime(long numberOfSecondsAfterCurrentTime) {
