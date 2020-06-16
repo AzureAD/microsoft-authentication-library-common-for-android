@@ -29,6 +29,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -39,6 +40,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -149,6 +151,46 @@ public class MsalCppOAuth2TokenCache
         return Collections.unmodifiableList(
                 getAccountCredentialCache().getCredentials()
         );
+    }
+
+    /**
+     * API to force remove an AccountRecord matching the supplied criteria.
+     *
+     * @param homeAccountId HomeAccountId of the Account.
+     * @param environment   The Environment of the Account.
+     * @param realm         The Realm of the Account.
+     * @return An {@link AccountDeletionRecord} containing a receipt of the removed Accounts.
+     * @throws ClientException
+     */
+    public synchronized AccountDeletionRecord forceRemoveAccount(@NonNull final String homeAccountId,
+                                                                 @Nullable final String environment,
+                                                                 @NonNull final String realm) throws ClientException {
+        validateNonNull(homeAccountId, "homeAccountId");
+        validateNonNull(realm, "realm");
+
+        final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
+
+        final List<AccountRecord> removedAccounts = new ArrayList<>();
+
+        for (final AccountRecord accountRecord : getAllAccounts()) {
+            boolean matches = accountRecord.getHomeAccountId().equals(homeAccountId)
+                    && accountRecord.getRealm().equals(realm);
+
+            if (mustMatchOnEnvironment) {
+                matches = matches && accountRecord.getEnvironment().equals(environment);
+            }
+
+            if (matches) {
+                // Delete the AccountRecord...
+                final boolean accountRemoved = getAccountCredentialCache().removeAccount(accountRecord);
+
+                if (accountRemoved) {
+                    removedAccounts.add(accountRecord);
+                }
+            }
+        }
+
+        return new AccountDeletionRecord(removedAccounts);
     }
 
     /**
