@@ -154,7 +154,7 @@ public class MsalCppOAuth2TokenCache
     }
 
     /**
-     * API to force remove an AccountRecord matching the supplied criteria.
+     * Force remove an AccountRecord matching the supplied criteria.
      *
      * @param homeAccountId HomeAccountId of the Account.
      * @param environment   The Environment of the Account.
@@ -162,6 +162,7 @@ public class MsalCppOAuth2TokenCache
      * @return An {@link AccountDeletionRecord} containing a receipt of the removed Accounts.
      * @throws ClientException
      */
+    @VisibleForTesting // private by default for production code
     public synchronized AccountDeletionRecord forceRemoveAccount(@NonNull final String homeAccountId,
                                                                  @Nullable final String environment,
                                                                  @NonNull final String realm) throws ClientException {
@@ -243,9 +244,10 @@ public class MsalCppOAuth2TokenCache
                     CredentialType.IdToken,
                     CredentialType.V1IdToken
             );
+        } else {
+            // Remove was called, but no RTs exist for the account. Force remove it.
+            return forceRemoveAccount(homeAccountId, environment, realm);
         }
-
-        return new AccountDeletionRecord(null);
     }
 
     /**

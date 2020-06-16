@@ -179,13 +179,35 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         // Make sure it doesn't exist....
         Assert.assertNull(restoredAccount);
+    }
 
-        // TODO 6/15/20
-        // I have added a new api to "force remove" an AccountRecord even if no RT exists to match it
-        // Open questions:
-        // Is the current behavior of removeAccount() where the AccountRecord is deleted only if
-        // there is a matching RT acceptable?
-        // A 'backup' API is provided to delete the AccountRecord
+    @Test
+    public void removeAccountNoRTTest() throws ClientException {
+        // Get the generated account
+        final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
+
+        // Save it to the cache
+        mCppCache.saveAccountRecord(generatedAccount);
+
+        // Call remove
+        final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                generatedAccount.getRealm()
+        );
+
+        // Check the receipt
+        Assert.assertEquals(generatedAccount, deletionRecord.get(0));
+
+        // Try to restore it
+        final AccountRecord restoredAccount = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                generatedAccount.getRealm()
+        );
+
+        // Make sure it doesn't exist....
+        Assert.assertNull(restoredAccount);
     }
 
     @Test
@@ -195,6 +217,8 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         // Save it to the cache
         mCppCache.saveAccountRecord(generatedAccount);
+
+        // Do not save any credentials for this account...
 
         final AccountDeletionRecord deletionRecord = mCppCache.forceRemoveAccount(
                 generatedAccount.getHomeAccountId(),
