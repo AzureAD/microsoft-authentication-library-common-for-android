@@ -24,7 +24,12 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -35,10 +40,9 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 
@@ -123,17 +127,71 @@ public class MsalCppOAuth2TokenCache
      *
      * @param accountRecord : accountRecord to be saved.
      */
-    public synchronized void saveAccountRecord(@NonNull AccountRecord accountRecord) {
+    public synchronized void saveAccountRecord(@NonNull final AccountRecord accountRecord) {
         getAccountCredentialCache().saveAccount(accountRecord);
-
     }
 
     /**
      * API to clear all cache.
      * Note: This method is intended to be only used for testing purposes.
      */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public synchronized void clearCache() {
         getAccountCredentialCache().clearAll();
+    }
+
+    /**
+     * API to inspect cache contents.
+     * Note: This method is intended to be only used for testing purposes.
+     *
+     * @return A immutable List of Credentials contained in this cache.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public synchronized List<Credential> getCredentials() {
+        return Collections.unmodifiableList(
+                getAccountCredentialCache().getCredentials()
+        );
+    }
+
+    /**
+     * Force remove an AccountRecord matching the supplied criteria.
+     *
+     * @param homeAccountId HomeAccountId of the Account.
+     * @param environment   The Environment of the Account.
+     * @param realm         The Realm of the Account.
+     * @return An {@link AccountDeletionRecord} containing a receipt of the removed Accounts.
+     * @throws ClientException
+     */
+    @VisibleForTesting // private by default for production code
+    public synchronized AccountDeletionRecord forceRemoveAccount(@NonNull final String homeAccountId,
+                                                                 @Nullable final String environment,
+                                                                 @NonNull final String realm) throws ClientException {
+        validateNonNull(homeAccountId, "homeAccountId");
+        validateNonNull(realm, "realm");
+
+        final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
+
+        final List<AccountRecord> removedAccounts = new ArrayList<>();
+
+        for (final AccountRecord accountRecord : getAllAccounts()) {
+            boolean matches = accountRecord.getHomeAccountId().equals(homeAccountId)
+                    && accountRecord.getRealm().equals(realm);
+
+            if (mustMatchOnEnvironment) {
+                matches = matches && accountRecord.getEnvironment().equals(environment);
+            }
+
+            if (matches) {
+                // Delete the AccountRecord...
+                final boolean accountRemoved = getAccountCredentialCache().removeAccount(accountRecord);
+
+                if (accountRemoved) {
+                    removedAccounts.add(accountRecord);
+                }
+            }
+        }
+
+        return new AccountDeletionRecord(removedAccounts);
     }
 
     /**
@@ -147,8 +205,20 @@ public class MsalCppOAuth2TokenCache
     public synchronized AccountDeletionRecord removeAccount(@NonNull final String homeAccountId,
                                                             @Nullable final String environment,
                                                             @NonNull final String realm) throws ClientException {
+        // TODO This API is potentially problematic for TFW/TFL...
+        // Normally on Android, apps are 'sandboxed' such that each app has their own cache
+        // and we don't have to worry about 1 app stomping on another's cache
+        //
+        // TFW/TFL however, "double stacked" their app registrations into a single binary
+        // Such that calling removeAccount() will potentially remove the Account being used by
+        // another app.
+        //
+        // This API assumes the *general* case where an app is single stacked. If special
+        // accommodations need to come later for Teams then we can reevaluate the logic here.
+
         validateNonNull(homeAccountId, "homeAccountId");
         validateNonNull(realm, "realm");
+
         final List<Credential> credentials = getAccountCredentialCache().getCredentialsFilteredBy(
                 homeAccountId,
                 environment,
@@ -160,20 +230,35 @@ public class MsalCppOAuth2TokenCache
         );
 
         if (credentials != null && !credentials.isEmpty()) {
+            // Get a client id to use for deletion
             final String clientId = credentials.get(0).getClientId();
-            return removeAccount(environment, clientId, homeAccountId, realm);
-        }
-        return new AccountDeletionRecord(null);
 
+            // Remove the account
+            return removeAccount(
+                    environment,
+                    clientId,
+                    homeAccountId,
+                    realm,
+                    CredentialType.AccessToken,
+                    CredentialType.AccessToken_With_AuthScheme,
+                    CredentialType.IdToken,
+                    CredentialType.V1IdToken
+            );
+        } else {
+            // Remove was called, but no RTs exist for the account. Force remove it.
+            return forceRemoveAccount(homeAccountId, environment, realm);
+        }
     }
 
     /**
-     * Method to get all the Accounts in the cache.
+     * Gets an immutable {@link List} of {@link AccountRecord} objects.
      *
      * @return {@link List<AccountRecord>}
      */
     public List<AccountRecord> getAllAccounts() {
-        return getAccountCredentialCache().getAccounts();
+        return Collections.unmodifiableList(
+                getAccountCredentialCache().getAccounts()
+        );
     }
 
     /**
@@ -186,9 +271,9 @@ public class MsalCppOAuth2TokenCache
      * @throws ClientException : throws ClientException if input validation fails
      */
     @Nullable
-    public AccountRecord getAccount(@NonNull String homeAccountId,
-                                    @NonNull String environment,
-                                    @NonNull String realm) throws ClientException {
+    public AccountRecord getAccount(@NonNull final String homeAccountId,
+                                    @NonNull final String environment,
+                                    @NonNull final String realm) throws ClientException {
         final String methodName = ":getAccount";
 
         validateNonNull(homeAccountId, "homeAccountId");
@@ -207,8 +292,8 @@ public class MsalCppOAuth2TokenCache
             );
             return null;
         }
-        return accountRecords.get(0);
 
+        return accountRecords.get(0);
     }
 
 }

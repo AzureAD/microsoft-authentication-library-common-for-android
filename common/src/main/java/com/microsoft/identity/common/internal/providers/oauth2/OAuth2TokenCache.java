@@ -33,6 +33,7 @@ import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 
 import java.util.List;
@@ -257,6 +258,23 @@ public abstract class OAuth2TokenCache
                                                         final String clientId,
                                                         final String homeAccountId,
                                                         final String realm
+    );
+
+    /**
+     * Removes the Account (and its associated Credentials) matching the supplied criteria.
+     *
+     * @param environment   The environment to which the targeted Account is associated.
+     * @param clientId      The clientId of this current app.
+     * @param homeAccountId The homeAccountId of the Account targeted for deletion.
+     * @param realm         The tenant id of the targeted Account (if applicable).
+     * @param typesToRemove The CredentialTypes to be deleted for this Account.
+     * @return The {@link AccountDeletionRecord} containing the removed AccountRecords.
+     */
+    public abstract AccountDeletionRecord removeAccount(final String environment,
+                                                        final String clientId,
+                                                        final String homeAccountId,
+                                                        final String realm,
+                                                        final CredentialType... typesToRemove
     );
 
     /**
