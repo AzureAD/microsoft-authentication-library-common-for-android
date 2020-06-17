@@ -137,6 +137,7 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final List<AccountRecord> accounts = mCppCache.getAllAccounts();
         final AccountRecord restoredAccount = accounts.get(0);
         Assert.assertEquals(generatedAccount, restoredAccount);
+        Assert.assertEquals(1, accounts.size());
     }
 
     @Test(expected = UnsupportedOperationException.class)
