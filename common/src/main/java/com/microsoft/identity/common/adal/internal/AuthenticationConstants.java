@@ -320,6 +320,11 @@ public final class AuthenticationConstants {
         public static final String SCOPE = "scope";
 
         /**
+         * Scope value used in acquiring tokens with saml assertion.
+         */
+        public static final String MSID_OAUTH2_SCOPE_OPENID_VALUE = "openid";
+
+        /**
          * String of state.
          */
         public static final String STATE = "state";
@@ -447,6 +452,16 @@ public final class AuthenticationConstants {
          * String as Query parameter key to send a V1 request to V2 endpoint
          */
         public static final String IT_VER_PARAM = "itver";
+
+        /**
+         * Saml assertion related parameters, the assertion type below should be sent as grant type
+         * when using assertion to acquire tokens.
+        */
+        public static final String ASSERTION = "assertion";
+
+        public static final String MSID_OAUTH2_SAML11_BEARER_VALUE = "urn:ietf:params:oauth:grant-type:saml1_1-bearer";
+
+        public static final String MSID_OAUTH2_SAML2_BEARER_VALUE = "urn:ietf:params:oauth:grant-type:saml2-bearer";
     }
 
     /**
