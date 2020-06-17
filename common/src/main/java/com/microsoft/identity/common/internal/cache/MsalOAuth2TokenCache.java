@@ -1268,7 +1268,7 @@ public class MsalOAuth2TokenCache
                 "IsRealmAgnostic? " + isRealmAgnostic
         );
 
-        if (null != typesToRemove) {
+        if (null != typesToRemove && typesToRemove.length > 0) {
             for (final CredentialType type : typesToRemove) {
                 // A count of the deleted creds...
                 int deletedCredentialsOfTypeCount = removeCredentialsOfTypeForAccount(
@@ -1287,6 +1287,11 @@ public class MsalOAuth2TokenCache
                                 + type
                 );
             }
+        } else {
+            com.microsoft.identity.common.internal.logging.Logger.warn(
+                    TAG + methodName,
+                    "removeAccount called, but no CredentialTypes to remove specified"
+            );
         }
 
         final List<AccountRecord> deletedAccounts = new ArrayList<>();
