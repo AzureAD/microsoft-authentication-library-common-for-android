@@ -138,6 +138,13 @@ public class UiAutomatorUtils {
         }
     }
 
+    public static void pressBack() {
+        final UiDevice mDevice =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        mDevice.pressBack();
+    }
+
     private static boolean isKeyboardOpen() {
         for (AccessibilityWindowInfo window : InstrumentationRegistry.getInstrumentation().getUiAutomation().getWindows()) {
             if (window.getType() == AccessibilityWindowInfo.TYPE_INPUT_METHOD) {

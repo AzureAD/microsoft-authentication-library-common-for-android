@@ -1,0 +1,105 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
+package com.microsoft.identity.client.ui.automation.interaction.b2c;
+
+import android.widget.EditText;
+
+import androidx.annotation.NonNull;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
+
+import com.microsoft.identity.client.ui.automation.interaction.ILoginComponentHandler;
+import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+
+import org.junit.Assert;
+
+public class GoogleLoginComponentHandler implements ILoginComponentHandler {
+
+    @Override
+    public void handleEmailField(@NonNull final String username) {
+        UiAutomatorUtils.handleInput("identifierId", username);
+        handleNextButton();
+    }
+
+    @Override
+    public void handlePasswordField(@NonNull final String password) {
+        UiAutomatorUtils.handleInput("password", password);
+        final UiObject passwordBox = UiAutomatorUtils.obtainUiObjectWithResourceId("password");
+
+        try {
+            final UiObject passwordInput = passwordBox.getChild(
+                    new UiSelector().className(EditText.class)
+            );
+
+            passwordInput.setText(password);
+        } catch (UiObjectNotFoundException e) {
+            Assert.fail(e.getMessage());
+        }
+
+        handleNextButton();
+    }
+
+    @Override
+    public void handleBackButton() {
+        UiAutomatorUtils.pressBack();
+    }
+
+    @Override
+    public void handleNextButton() {
+        final UiObject nextBtn = UiAutomatorUtils.obtainUiObjectWithText("Next");
+        try {
+            nextBtn.click();
+        } catch (UiObjectNotFoundException e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+
+    @Override
+    public void handleAccountPicker(@NonNull final String username) {
+        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
+    }
+
+    private UiObject getConsentScreen() {
+        return UiAutomatorUtils.obtainUiObjectWithResourceId("consentHeader");
+    }
+
+    @Override
+    public void confirmConsentPageReceived() {
+        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
+    }
+
+    @Override
+    public void acceptConsent() {
+        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
+    }
+
+    public void declineConsent() {
+        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
+    }
+
+    @Override
+    public void handleSpeedBump() {
+        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
+    }
+}
