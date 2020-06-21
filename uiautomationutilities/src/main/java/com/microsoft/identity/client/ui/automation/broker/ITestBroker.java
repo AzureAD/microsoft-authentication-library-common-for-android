@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.client.ui.automation.app.IApp;
 
 /**
@@ -35,7 +37,7 @@ public interface ITestBroker extends IApp {
      *
      * @param username upn for the account to select in account picker
      */
-    void handleAccountPicker(String username);
+    void handleAccountPicker(@Nullable String username);
 
     /**
      * Perform device registration with supplied username

@@ -23,12 +23,20 @@
 package com.microsoft.identity.client.ui.automation.broker;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.app.App;
+import com.microsoft.identity.client.ui.automation.installer.PlayStore;
+import com.microsoft.identity.client.ui.automation.interaction.AadPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
+import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
@@ -39,22 +47,21 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
 
 @Getter
-public class BrokerCompanyPortal extends App implements ITestBroker {
+public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBroker, IMdmAgent {
 
     public final static String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
     public final static String COMPANY_PORTAL_APP_NAME = "Intune Company Portal";
     public final static String COMPANY_PORTAL_APK = "CompanyPortal.apk";
 
     public BrokerCompanyPortal() {
-        super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME);
+        super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME, new PlayStore());
         localApkFileName = COMPANY_PORTAL_APK;
     }
 
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
-        //TODO implement device registration for CP
-        throw new UnsupportedOperationException("Unimplemented!");
+        enrollDevice(username, password); // enrolling device also performs device registration
     }
 
     @Override
@@ -66,27 +73,75 @@ public class BrokerCompanyPortal extends App implements ITestBroker {
 
     @Override
     public void handleFirstRun() {
-        //TODO handle first run for CP
-        throw new UnsupportedOperationException("Unimplemented!");
+        return; // nothing need here
     }
 
     @Override
-    public void handleAccountPicker(@NonNull final String username) {
-        final UiDevice device = UiDevice.getInstance(getInstrumentation());
+    public void enrollDevice(String username, String password) {
+        launch(); // launch CP app
 
-        // find the object associated to this username in account picker
-        final UiObject accountSelected = device.findObject(new UiSelector().resourceId(
-                getResourceId(COMPANY_PORTAL_APP_PACKAGE_NAME, "account_chooser_listView")
-        ).childSelector(new UiSelector().textContains(
-                username
-        )));
+        handleFirstRun(); // handle CP first run
 
+        // click Sign In button on CP welcome page
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/sign_in_button");
+
+        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
+                .prompt(PromptParameter.LOGIN)
+                .consentPageExpected(false)
+                .expectingNonZeroAccountsInCookie(false)
+                .sessionExpected(false)
+                .loginHintProvided(false)
+                .build();
+
+        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
+
+        // handle AAD login page
+        aadPromptHandler.handlePrompt(username, password);
+
+        // click the activate device admin btn
         try {
-            accountSelected.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-            accountSelected.click();
+            final UiObject accessSetupScreen = UiAutomatorUtils.obtainUiObjectWithText("Access Setup");
+            Assert.assertTrue(accessSetupScreen.exists());
+
+            // click on BEGIN button to start enroll
+            UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/setup_positive_button");
+
+            // click CONTINUE to ack privacy page
+            UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/ContinueButton");
+
+            // click NEXT to ack Android system permissions requirements
+            UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/bullet_list_page_forward_button");
+
+            // grant permission
+            CommonUtils.grantPackagePermission();
+
+            // Confirm on page to activate CP as device admin
+            final UiObject activeDeviceAdminPage = UiAutomatorUtils.obtainUiObjectWithText("Activate device admin");
+            Assert.assertTrue(activeDeviceAdminPage.exists());
+
+            // scroll down the recycler view to find activate device admin btn
+            final UiObject activeDeviceAdminBtn = UiAutomatorUtils.obtainChildInScrollable(
+                    "Activate this device admin app"
+            );
+
+            assert activeDeviceAdminBtn != null;
+
+            // click on activate device admin btn
+            activeDeviceAdminBtn.click();
+
+            // make sure we are on the page to complete setup
+            final UiObject setupCompletePage = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.microsoft.windowsintune.companyportal:id/setup_title"
+            );
+
+            Assert.assertTrue(setupCompletePage.exists());
+
+            // click on DONE to complete setup
+            UiAutomatorUtils.handleButtonClick(
+                    "com.microsoft.windowsintune.companyportal:id/setup_center_button"
+            );
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }
-
 }

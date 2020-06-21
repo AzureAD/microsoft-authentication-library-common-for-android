@@ -26,7 +26,7 @@ package com.microsoft.identity.client.ui.automation.interaction;
  * An interface containing methods that facilitate interacting with login components such as email
  * and password fields during a UI Test
  */
-public interface ILoginComponentHandler {
+public interface IOAuth2LoginComponentHandler {
 
     /**
      * Enters the supplied username in the email field of a login page
@@ -73,9 +73,4 @@ public interface ILoginComponentHandler {
      * Decline the consent on the oauth consent page
      */
     void declineConsent();
-
-    /**
-     * Respond to the speed bump encountered during an authorization request
-     */
-    void handleSpeedBump();
 }

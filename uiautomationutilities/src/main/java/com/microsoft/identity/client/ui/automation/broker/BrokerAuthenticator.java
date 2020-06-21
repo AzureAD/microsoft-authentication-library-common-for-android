@@ -24,8 +24,10 @@ package com.microsoft.identity.client.ui.automation.broker;
 
 import android.Manifest;
 import android.os.Build;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -49,7 +51,7 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
 
 @Getter
-public class BrokerAuthenticator extends App implements ITestBroker {
+public class BrokerAuthenticator extends AbstractTestBroker implements ITestBroker {
 
     public final static String AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
@@ -70,8 +72,16 @@ public class BrokerAuthenticator extends App implements ITestBroker {
                 "com.azure.authenticator:id/manage_device_registration_register_button"
         );
 
-        //TODO Assert for successful completion of device registration (similar to what we do below
-        // for shared device registration)
+        final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                "com.azure.authenticator:id/manage_device_registration_unregister_button"
+        );
+
+        try {
+            Assert.assertTrue(unRegisterBtn.exists());
+            Assert.assertTrue(unRegisterBtn.isClickable());
+        } catch (UiObjectNotFoundException e) {
+            Assert.fail(e.getMessage());
+        }
     }
 
     @Override
@@ -166,24 +176,5 @@ public class BrokerAuthenticator extends App implements ITestBroker {
         UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
         UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
         UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
-    }
-
-    @Override
-    public void handleAccountPicker(@NonNull final String username) {
-        final UiDevice device = UiDevice.getInstance(getInstrumentation());
-
-        // find the object associated to this username in account picker
-        final UiObject accountSelected = device.findObject(new UiSelector().resourceId(
-                getResourceId(AUTHENTICATOR_APP_PACKAGE_NAME, "account_chooser_listView")
-        ).childSelector(new UiSelector().textContains(
-                username
-        )));
-
-        try {
-            accountSelected.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-            accountSelected.click();
-        } catch (UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
-        }
     }
 }

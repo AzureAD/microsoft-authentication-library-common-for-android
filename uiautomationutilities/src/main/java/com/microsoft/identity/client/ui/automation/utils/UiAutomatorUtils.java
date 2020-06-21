@@ -23,6 +23,7 @@
 package com.microsoft.identity.client.ui.automation.utils;
 
 import android.view.accessibility.AccessibilityWindowInfo;
+import android.widget.ScrollView;
 
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -84,6 +85,35 @@ public class UiAutomatorUtils {
     public static UiObject obtainChildInScrollable(@NonNull final String scrollableResourceId,
                                                    @NonNull final String childText) {
         final UiSelector scrollSelector = new UiSelector().resourceId(scrollableResourceId);
+
+        final UiScrollable recyclerView = new UiScrollable(scrollSelector);
+
+        final UiSelector childSelector = new UiSelector()
+                .textContains(childText);
+
+        try {
+            final UiObject child = recyclerView.getChildByText(
+                    childSelector,
+                    childText
+            );
+
+            child.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+            return child;
+        } catch (UiObjectNotFoundException e) {
+            fail(e.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Obtain a child element inside a scrollable view by specifying resource id and text
+     *
+     * @param childText            the text on the child view
+     * @return the UiObject associated to the desired child element
+     */
+    public static UiObject obtainChildInScrollable(@NonNull final String childText) {
+        final UiSelector scrollSelector = new UiSelector().className(ScrollView.class);
 
         final UiScrollable recyclerView = new UiScrollable(scrollSelector);
 

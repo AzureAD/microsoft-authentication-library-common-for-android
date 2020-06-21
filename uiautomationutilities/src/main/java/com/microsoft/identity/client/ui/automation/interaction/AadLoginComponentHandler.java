@@ -36,7 +36,7 @@ import org.junit.Assert;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static org.junit.Assert.fail;
 
-public class AadLoginComponentHandler implements ILoginComponentHandler {
+public class AadLoginComponentHandler implements IAadLoginComponentHandler {
 
     @Override
     public void handleEmailField(@NonNull final String username) {
@@ -116,5 +116,23 @@ public class AadLoginComponentHandler implements ILoginComponentHandler {
         }
 
         handleNextButton();
+    }
+
+    @Override
+    public void confirmEnrollPageReceived() {
+        final UiObject enrollBtn = UiAutomatorUtils.obtainUiObjectWithText("Enroll now");
+        Assert.assertTrue(enrollBtn.exists());
+    }
+
+    @Override
+    public void acceptEnroll() {
+        confirmEnrollPageReceived();
+        handleNextButton();
+    }
+
+    @Override
+    public void declineEnroll() {
+        confirmEnrollPageReceived();
+        handleBackButton();
     }
 }

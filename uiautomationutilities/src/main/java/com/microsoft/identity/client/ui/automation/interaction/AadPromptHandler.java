@@ -56,8 +56,20 @@ public class AadPromptHandler extends AbstractPromptHandler {
             }
         }
 
+        final IAadLoginComponentHandler aadLoginComponentHandler =
+                (IAadLoginComponentHandler) loginComponentHandler;
+
         if (parameters.isSpeedBumpExpected()) {
-            loginComponentHandler.handleSpeedBump();
+            aadLoginComponentHandler.handleSpeedBump();
+        }
+
+        if (parameters.isEnrollPageExpected()) {
+            final UiResponse enrollPageResponse = parameters.getEnrollPageResponse();
+            if (enrollPageResponse == UiResponse.ACCEPT) {
+                aadLoginComponentHandler.acceptEnroll();
+            } else {
+                aadLoginComponentHandler.declineEnroll();
+            }
         }
     }
 }
