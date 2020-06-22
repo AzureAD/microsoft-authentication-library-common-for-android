@@ -30,12 +30,16 @@ import com.microsoft.identity.client.ui.automation.interaction.ILoginComponentHa
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.internal.testutils.labutils.LabConstants;
 
+/**
+ * A Prompt handler for MSIDLAB B2C SISO Policy
+ */
 public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
 
     public IdLabB2cSisoPolicyPromptHandler(@NonNull final B2CPromptHandlerParameters parameters) {
         super(getAppropriateLoginComponentHandler(parameters), parameters);
     }
 
+    @Override
     public void handlePrompt(@NonNull final String username, @NonNull final String password) {
         final B2CPromptHandlerParameters b2CPromptHandlerParameters =
                 (B2CPromptHandlerParameters) parameters;

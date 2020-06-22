@@ -29,6 +29,9 @@ import com.microsoft.identity.internal.testutils.labutils.LabConstants;
 
 import lombok.Getter;
 
+/**
+ * A class modeling a B2C Provider that is being used during a B2C UI Test
+ */
 @Getter
 public abstract class B2CProvider {
 
@@ -38,8 +41,8 @@ public abstract class B2CProvider {
     @Nullable // should be null for LOCAL B2C provider
     private String idpSelectionBtnResourceId;
 
-    @Nullable
-    private String domainHint;
+    @Nullable // should be null for LOCAL B2C provider
+    private String domainHint; // this can be used as query param to /authorize endpoint
 
     public B2CProvider(@NonNull final String providerName,
                        @Nullable final String idpSelectionBtnResourceId,
@@ -49,16 +52,18 @@ public abstract class B2CProvider {
         this.domainHint = domainHint;
     }
 
-    protected abstract boolean isExternalIdp();
+    /**
+     * Indicates if the B2C Provider is a non-local IdP
+     *
+     * @return a boolean indicating if B2C Provider is an external IdP
+     */
+    protected boolean isExternalIdp() {
+        return !(this instanceof Local);
+    }
 
     public static class Local extends B2CProvider {
         public Local() {
             super(LabConstants.B2CProvider.LOCAL, null, null);
-        }
-
-        @Override
-        protected boolean isExternalIdp() {
-            return false;
         }
     }
 
@@ -69,11 +74,6 @@ public abstract class B2CProvider {
                     "google.com"
             );
         }
-
-        @Override
-        protected boolean isExternalIdp() {
-            return true;
-        }
     }
 
     public static class Facebook extends B2CProvider {
@@ -83,11 +83,6 @@ public abstract class B2CProvider {
                     "facebook.com"
             );
         }
-
-        @Override
-        protected boolean isExternalIdp() {
-            return true;
-        }
     }
 
     public static class Microsoft extends B2CProvider {
@@ -96,11 +91,6 @@ public abstract class B2CProvider {
                     "MicrosoftAccountExchange",
                     "microsoft.com"
             );
-        }
-
-        @Override
-        protected boolean isExternalIdp() {
-            return true;
         }
     }
 }

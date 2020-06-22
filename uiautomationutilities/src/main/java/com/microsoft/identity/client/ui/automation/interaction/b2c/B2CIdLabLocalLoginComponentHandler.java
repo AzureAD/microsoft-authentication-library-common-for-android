@@ -28,6 +28,9 @@ import androidx.test.uiautomator.UiObject;
 import com.microsoft.identity.client.ui.automation.interaction.ILoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
+/**
+ * A login component handler for B2C Local IdP
+ */
 public class B2CIdLabLocalLoginComponentHandler implements ILoginComponentHandler {
 
     @Override
@@ -54,10 +57,6 @@ public class B2CIdLabLocalLoginComponentHandler implements ILoginComponentHandle
     @Override
     public void handleAccountPicker(@NonNull final String username) {
         throw new UnsupportedOperationException("Not supported for B2C Local Provider");
-    }
-
-    private UiObject getConsentScreen() {
-        return UiAutomatorUtils.obtainUiObjectWithResourceId("consentHeader");
     }
 
     @Override

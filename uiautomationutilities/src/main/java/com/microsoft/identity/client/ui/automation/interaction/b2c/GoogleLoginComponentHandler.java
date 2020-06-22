@@ -34,6 +34,9 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
+/**
+ * A login component handler for Google IdP
+ */
 public class GoogleLoginComponentHandler implements ILoginComponentHandler {
 
     @Override

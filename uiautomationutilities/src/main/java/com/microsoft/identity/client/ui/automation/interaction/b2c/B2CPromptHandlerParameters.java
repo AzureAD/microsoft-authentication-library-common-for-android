@@ -31,6 +31,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 public class B2CPromptHandlerParameters extends PromptHandlerParameters {
 
+    // the B2C Provider expected to be being used during the test
     private B2CProvider b2cProvider;
 
 }

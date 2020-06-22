@@ -138,6 +138,9 @@ public class UiAutomatorUtils {
         }
     }
 
+    /**
+     * Presses the device back button on the Android device
+     */
     public static void pressBack() {
         final UiDevice mDevice =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
