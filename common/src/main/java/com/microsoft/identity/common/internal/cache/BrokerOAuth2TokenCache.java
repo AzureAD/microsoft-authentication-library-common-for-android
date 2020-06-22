@@ -1192,6 +1192,18 @@ public class BrokerOAuth2TokenCache
     }
 
     @Override
+    public AccountDeletionRecord removeAccount(String environment,
+                                               String clientId,
+                                               String homeAccountId,
+                                               String realm,
+                                               CredentialType... typesToRemove) {
+        // This API not needed for now...
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
     public void clearAll() {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION

@@ -42,6 +42,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
@@ -293,6 +294,17 @@ public class ADALOAuth2TokenCache
                                                final String clientId,
                                                final String homeAccountId,
                                                final String realm) {
+        throw new UnsupportedOperationException(
+                ERR_UNSUPPORTED_OPERATION
+        );
+    }
+
+    @Override
+    public AccountDeletionRecord removeAccount(final String environment,
+                                               final String clientId,
+                                               final String homeAccountId,
+                                               final String realm,
+                                               final CredentialType... typesToRemove) {
         throw new UnsupportedOperationException(
                 ERR_UNSUPPORTED_OPERATION
         );

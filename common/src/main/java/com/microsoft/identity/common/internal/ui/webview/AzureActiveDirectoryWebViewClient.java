@@ -57,6 +57,9 @@ import java.util.Locale;
 import java.util.Map;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_FINAL_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SUB_ERROR_UI_CANCEL;
 
 /**
@@ -115,6 +118,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return handleUrl(view, requestUrl.toString());
     }
 
+    /**
+     * Interpret and take action on a redirect url.
+     * This function will return true in every case save 1.  That is, when the URL is none of:
+     * <ul><li>A urn containing an authorization challenge (starts with "urn:http-auth:PKeyAuth")</li>
+     * <li>A url that starts with the same prefix as the tenant's redirect url</li>
+     * <li>An explicit request to open the browser (starts with "browser://")</li>
+     * <li>A request to install the auth broker (starts with "msauth://")</li>
+     * <li>It is a request that has the intent of starting the broker and the url starts with "browser://"</li>
+     * <li>It <strong>does not</strong> begin with "https://".</li></ul>
+     *
+     * @param view The WebView that is initiating the callback.
+     * @param url  The string representation of the url.
+     * @return false if we will not take action on the url.
+     */
     private boolean handleUrl(final WebView view, final String url) {
         final String formattedURL = url.toLowerCase(Locale.US);
 
@@ -223,14 +240,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final Context applicationContext = getActivity().getApplicationContext();
 
             // If CP is installed, redirect to CP.
-            if (!packageHelper.isPackageInstalledAndEnabled(
-                    applicationContext,
-                    AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+            // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
+            //       CP is currently working on this.
+            //       Until that comes, we'll only handle this in ipphone.
+            if (packageHelper.isPackageInstalledAndEnabled(applicationContext, IPPHONE_APP_PACKAGE_NAME) &&
+                    IPPHONE_APP_SIGNATURE.equals(packageHelper.getCurrentSignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
+                    packageHelper.isPackageInstalledAndEnabled(applicationContext, COMPANY_PORTAL_APP_PACKAGE_NAME)) {
                 try {
                     Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
                     final Intent intent = new Intent();
                     intent.setComponent(new ComponentName(
-                            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME,
+                            COMPANY_PORTAL_APP_PACKAGE_NAME,
                             AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     getActivity().startActivity(intent);
@@ -320,6 +340,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private boolean processInvalidUrl(@NonNull final WebView view, @NonNull final String url) {
+        final String lowerCaseUrl = url.toLowerCase(Locale.US);
         if (isBrokerRequest(getActivity().getIntent())
                 && url.startsWith(AuthenticationConstants.Broker.REDIRECT_PREFIX)) {
             Logger.error(TAG, "The RedirectUri is not as expected.", null);
@@ -331,26 +352,31 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return true;
         }
 
-        if (url.toLowerCase(Locale.US).equals("about:blank")) {
+        if ("about:blank".equals(lowerCaseUrl)) {
             Logger.verbose(TAG, "It is an blank page request");
             return true;
         }
 
-        if (!url.toLowerCase(Locale.US).startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
-            String redactedUrl = "redacted";
-            try {
-                redactedUrl = StringExtensions.removeQueryParameterFromUrl(url);
-            } catch (final URISyntaxException e) {
-                // Best effort.
-            }
+        if (!lowerCaseUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
+            final String redactedUrl = removeQueryParametersOrRedact(url);
 
             Logger.error(TAG, "The webView was redirected to an unsafe URL: " + redactedUrl, null);
             returnError(ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED, "The webView was redirected to an unsafe URL.");
             view.stopLoading();
             return true;
         }
-
+        Logger.infoPII(TAG, "We are declining to override loading and redirect to invalid URL: '"
+                + removeQueryParametersOrRedact(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
         return false;
+    }
+
+    private String removeQueryParametersOrRedact(@NonNull final String url) {
+        try {
+            return StringExtensions.removeQueryParameterFromUrl(url);
+        } catch (final URISyntaxException e) {
+            Logger.errorPII(TAG, "Redirect URI has invalid syntax, unable to parse", e);
+            return "redacted";
+        }
     }
 
     private void returnError(final String errorCode, final String errorMessage) {

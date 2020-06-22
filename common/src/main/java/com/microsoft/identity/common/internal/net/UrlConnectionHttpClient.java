@@ -45,7 +45,6 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -58,19 +57,55 @@ import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactor
 
 /**
  * A client object for handling HTTP requests and responses.  This class accepts a RetryPolicy that
- * is applied to the responses.  By default, the policy is a null policy not retrying anything.
+ * is applied to the responses.  By default, the policy is a null policy not retrying anything.  The
+ * default settings for read timeout and connection timeout are 30s, and the default setting for the
+ * size of the buffer for reading objects from the http stream is 1024 bytes.
+ *
+ * There are two ways to supply timeout values to this class, one method takes suppliers, the other
+ * one integers.  If you use both of these, the suppliers method will take precendence over the method
+ * using integers.
  */
 @AllArgsConstructor
 @Builder
 @ThreadSafe
 @Immutable
 public class UrlConnectionHttpClient implements HttpClient {
+    /**
+     * A functional interface modeled off of java.util.function.Supplier for providing
+     * values to callers.
+     * @param <T> the type of value provided.
+     */
+    interface Supplier<T> {
+        /**
+         * @return an instance of a T.
+         */
+        T get();
+    }
+
+    /**
+     * A utility method for creating suppliers of particular values.
+     * @param value the value to supply.
+     * @param <T> the type of the value to return.
+     * @return a new Supplier that returns the passed value.
+     */
+    public static <T> Supplier<T> supplierOf(final T value) {
+        return new Supplier<T>() {
+            public T get() {
+                return value;
+            }
+        };
+    }
+
     @Builder.Default
     private final RetryPolicy<HttpResponse> retryPolicy = new NoRetryPolicy();
     @Builder.Default
-    private final int connectTimeoutMs = 1000;
+    private final int connectTimeoutMs = 30000;
     @Builder.Default
-    private final int readTimeoutMs = 1000;
+    private final int readTimeoutMs = 30000;
+    @Builder.Default
+    private final Supplier<Integer> connectTimeoutMsSupplier = null;
+    @Builder.Default
+    private final Supplier<Integer> readTimeoutMsSupplier = null;
     @Builder.Default
     private final int streamBufferSize = 1024;
 
@@ -336,13 +371,21 @@ public class UrlConnectionHttpClient implements HttpClient {
             urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
         }
 
-        urlConnection.setConnectTimeout(connectTimeoutMs);
-        urlConnection.setReadTimeout(readTimeoutMs);
+        urlConnection.setConnectTimeout(getConnectTimeoutMs());
+        urlConnection.setReadTimeout(getReadTimeoutMs());
         urlConnection.setInstanceFollowRedirects(true);
         urlConnection.setUseCaches(false);
         urlConnection.setDoInput(true);
 
         return urlConnection;
+    }
+
+    private Integer getReadTimeoutMs() {
+        return readTimeoutMsSupplier == null ? readTimeoutMs : readTimeoutMsSupplier.get();
+    }
+
+    private Integer getConnectTimeoutMs() {
+        return connectTimeoutMsSupplier == null ? connectTimeoutMs : connectTimeoutMsSupplier.get();
     }
 
     private static void setRequestBody(@NonNull final HttpURLConnection connection,
