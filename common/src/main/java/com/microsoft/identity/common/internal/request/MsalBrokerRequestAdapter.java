@@ -30,9 +30,6 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Pair;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -74,9 +71,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEFAULT_BROWSER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
@@ -398,6 +400,12 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return parameters.getRedirectUri();
     }
 
+    /**
+     * Method to construct a request bundle for broker hello request.
+     *
+     * @param parameters input parameters.
+     * @return request bundle to perform hello.
+     */
     public Bundle getRequestBundleForHello(@NonNull final CommandParameters parameters) {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(
@@ -415,6 +423,44 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
+    /**
+     * Method to construct a request intent for broker acquireTokenInteractive request.
+     * Only used in case of BrokerContentProvider
+     *
+     * @param resultBundle result Bundle returned by broker.
+     * @param parameters input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Intent
+     */
+    public Intent getRequestIntentForAcquireTokenInteractive(@NonNull final Bundle resultBundle,
+                                                             @NonNull final InteractiveTokenCommandParameters parameters,
+                                                             @Nullable final String negotiatedBrokerProtocolVersion) {
+        final Bundle requestBundle = getRequestBundleForAcquireTokenInteractive(
+                parameters,
+                negotiatedBrokerProtocolVersion
+        );
+        Intent interactiveRequestIntent = new Intent();
+        interactiveRequestIntent.putExtras(requestBundle);
+        interactiveRequestIntent.putExtras(resultBundle);
+        interactiveRequestIntent.setPackage(resultBundle.getString(BROKER_PACKAGE_NAME));
+        interactiveRequestIntent.setClassName(
+                resultBundle.getString(BROKER_PACKAGE_NAME, ""),
+                resultBundle.getString(BROKER_ACTIVITY_NAME, "")
+        );
+        interactiveRequestIntent.putExtra(
+                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
+                negotiatedBrokerProtocolVersion
+        );
+        return interactiveRequestIntent;
+    }
+
+    /**
+     * Method to construct a request bundle for broker acquireTokenInteractive request.
+     *
+     * @param parameters input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Bundle
+     */
     public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final InteractiveTokenCommandParameters parameters,
                                                              @Nullable final String negotiatedBrokerProtocolVersion) {
         final BrokerRequest brokerRequest = brokerRequestFromAcquireTokenParameters(parameters);
@@ -424,6 +470,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         );
     }
 
+    /**
+     * Method to construct a request bundle for broker acquireTokenSilent request.
+     *
+     * @param parameters input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Bundle
+     */
     public Bundle getRequestBundleForAcquireTokenSilent(@NonNull final SilentTokenCommandParameters parameters,
                                                         @Nullable final String negotiatedBrokerProtocolVersion) {
         final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
@@ -475,29 +528,65 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                     sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class)
             );
         }
+        requestBundle.putString(
+                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
+                negotiatedBrokerProtocolVersion
+        );
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForGetAccounts(@NonNull final CommandParameters parameters) {
+    /**
+     * Method to construct a request bundle for broker getAccounts request.
+     *
+     * @param parameters input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Bundle
+     */
+    public Bundle getRequestBundleForGetAccounts(@NonNull final CommandParameters parameters,
+                                                 @Nullable final String negotiatedBrokerProtocolVersion) {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
         requestBundle.putString(ACCOUNT_REDIRECT, parameters.getRedirectUri());
+        requestBundle.putString(
+                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
+                negotiatedBrokerProtocolVersion
+        );
         //Disable the environment and tenantID. Just return all accounts belong to this clientID.
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForRemoveAccount(@NonNull final RemoveAccountCommandParameters parameters) {
+    /**
+     * Method to construct a request bundle for broker removeAccount request.
+     *
+     * @param parameters input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Bundle
+     */
+    public Bundle getRequestBundleForRemoveAccount(@NonNull final RemoveAccountCommandParameters parameters,
+                                                   @Nullable final String negotiatedBrokerProtocolVersion) {
         final Bundle requestBundle = new Bundle();
         if (null != parameters.getAccount()) {
             requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
             requestBundle.putString(ENVIRONMENT, parameters.getAccount().getEnvironment());
             requestBundle.putString(ACCOUNT_HOME_ACCOUNT_ID, parameters.getAccount().getHomeAccountId());
         }
+        requestBundle.putString(
+                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
+                negotiatedBrokerProtocolVersion
+        );
 
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForRemoveAccountFromSharedDevice(@NonNull final RemoveAccountCommandParameters parameters) {
+    /**
+     * Method to construct a request bundle for broker removeAccount request.
+     *
+     * @param parameters input parameters
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @return request Bundle
+     */
+    public Bundle getRequestBundleForRemoveAccountFromSharedDevice(@NonNull final RemoveAccountCommandParameters parameters,
+                                                                   @Nullable final String negotiatedBrokerProtocolVersion) {
         final Bundle requestBundle = new Bundle();
 
         try {
@@ -507,6 +596,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             // Best effort. If none is passed to broker, then it will let the OS decide.
             Logger.error(TAG, e.getErrorCode(), e);
         }
+        requestBundle.putString(
+                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
+                negotiatedBrokerProtocolVersion
+        );
 
         return requestBundle;
     }

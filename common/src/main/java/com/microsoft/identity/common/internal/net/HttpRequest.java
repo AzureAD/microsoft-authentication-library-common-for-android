@@ -38,6 +38,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static com.microsoft.identity.common.internal.net.UrlConnectionHttpClient.Supplier;
+
 /**
  * Internal class for handling http request.
  */
@@ -46,13 +48,25 @@ public final class HttpRequest {
     private static final String HOST = "Host";
 
     /**
+     * Value of read timeout in milliseconds.
+     */
+    @Deprecated
+    public static int READ_TIMEOUT = 30000;
+
+    /**
+     * Value of connect timeout in milliseconds.
+     */
+    @Deprecated
+    public static int CONNECT_TIMEOUT = 30000;
+
+    /**
      * The waiting time before doing retry to prevent hitting the server immediately failure.
      */
     private static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
     private static final int STREAM_BUFFER_SIZE = 1024;
     private static final HttpClient DEFAULT_HTTP_CLIENT = UrlConnectionHttpClient.builder()
-            .connectTimeoutMs(RETRY_TIME_WAITING_PERIOD_MSEC)
-            .readTimeoutMs(RETRY_TIME_WAITING_PERIOD_MSEC)
+            .connectTimeoutMsSupplier(new Supplier<Integer>() { public Integer get() { return CONNECT_TIMEOUT; }})
+            .readTimeoutMsSupplier(new Supplier<Integer>() { public Integer get() { return READ_TIMEOUT; }})
             .streamBufferSize(STREAM_BUFFER_SIZE)
             .retryPolicy(new StatusCodeAndExceptionRetry.StatusCodeAndExceptionRetryBuilder()
                           .number(1)

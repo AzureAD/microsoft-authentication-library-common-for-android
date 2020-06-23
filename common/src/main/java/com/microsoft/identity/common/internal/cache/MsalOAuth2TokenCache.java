@@ -622,11 +622,11 @@ public class MsalOAuth2TokenCache
      * @return A matching FRT credential, if exists. May be null.
      */
     @Nullable
-    private Credential getFamilyRefreshTokenForAccount(@NonNull final AccountRecord account) {
+    private RefreshTokenRecord getFamilyRefreshTokenForAccount(@NonNull final AccountRecord account) {
         final String methodName = ":getFamilyRefreshTokensForAccount";
 
         // Our eventual result - init to null, will assign if valid FRT is found
-        Credential result = null;
+        RefreshTokenRecord result = null;
 
         // Look for an arbitrary RT matching the current user.
         // If we find one, check that it is FoCI, if it is, assume it works.
@@ -662,7 +662,7 @@ public class MsalOAuth2TokenCache
                                 "Fallback RT found."
                         );
 
-                        result = rt;
+                        result = refreshTokenRecord;
                         break;
                     }
                 }
@@ -670,6 +670,23 @@ public class MsalOAuth2TokenCache
         }
 
         return result;
+    }
+
+    /**
+     * Load FRTs from the cache for an account matching the homeAccountId
+     *
+     * @param homeAccountId homeAccountId for which FRT is sought
+     * @return an FRT if available else null.
+     */
+    @Nullable
+    public RefreshTokenRecord getFamilyRefreshTokenForHomeAccountId(@NonNull final String homeAccountId) {
+
+        for (AccountRecord accountRecord : mAccountCredentialCache.getAccounts()) {
+            if (accountRecord.getHomeAccountId().equals(homeAccountId)) {
+                return getFamilyRefreshTokenForAccount(accountRecord);
+            }
+        }
+        return null;
     }
 
     @Override
@@ -1008,6 +1025,19 @@ public class MsalOAuth2TokenCache
                 )
         );
 
+        // And any refresh tokens...
+        appCredentials.addAll(
+                mAccountCredentialCache.getCredentialsFilteredBy(
+                        null,
+                        environment,
+                        CredentialType.RefreshToken,
+                        clientId,
+                        null,
+                        null,
+                        null
+                )
+        );
+
         // For each Account with an associated RT, add it to the result List...
         for (final AccountRecord account : accountsForEnvironment) {
             if (accountHasCredential(account, appCredentials)) {
@@ -1159,6 +1189,42 @@ public class MsalOAuth2TokenCache
                                                @Nullable final String clientId,
                                                @Nullable final String homeAccountId,
                                                @Nullable final String realm) {
+        return removeAccount(
+                environment,
+                clientId,
+                homeAccountId,
+                realm,
+                CredentialType.AccessToken,
+                CredentialType.AccessToken_With_AuthScheme,
+                CredentialType.RefreshToken,
+                CredentialType.IdToken,
+                CredentialType.V1IdToken
+        );
+    }
+
+    /**
+     * Removes the specified Account or Accounts from the cache.
+     * <p>
+     * Note: if realm is passed as null, all tokens and AccountRecords associated to the
+     * provided homeAccountId will be deleted. If a realm is provided, then the deletion is
+     * restricted to only those AccountRecords and Credentials in that realm (tenant).
+     * <p>
+     * Environment, clientId, and home_account_id are nullable parameters. However, it should be
+     * noted that if these params are null, this method will have no effect.
+     *
+     * @param environment   The environment to which the targeted Account is associated.
+     * @param clientId      The clientId of this current app.
+     * @param homeAccountId The homeAccountId of the Account targeted for deletion.
+     * @param realm         The tenant id of the targeted Account (if applicable).
+     * @param typesToRemove The CredentialTypes to delete for the targeted Account.
+     * @return An {@link AccountDeletionRecord}, containing the deleted {@link AccountDeletionRecord}s.
+     */
+    @Override
+    public AccountDeletionRecord removeAccount(@Nullable final String environment,
+                                               @Nullable final String clientId,
+                                               @Nullable final String homeAccountId,
+                                               @Nullable final String realm,
+                                               @Nullable final CredentialType... typesToRemove) {
         final String methodName = ":removeAccount";
 
         Logger.verbosePII(
@@ -1170,6 +1236,8 @@ public class MsalOAuth2TokenCache
                         + "HomeAccountId: [" + homeAccountId + "]"
                         + "\n"
                         + "Realm: [" + realm + "]"
+                        + "\n"
+                        + "CredentialTypes to delete: [" + Arrays.toString(typesToRemove) + "]"
         );
 
         final AccountRecord targetAccount;
@@ -1200,46 +1268,31 @@ public class MsalOAuth2TokenCache
                 "IsRealmAgnostic? " + isRealmAgnostic
         );
 
-        // Remove this user's AccessToken, RefreshToken, IdToken, and Account entries
-        final int atsRemoved = removeCredentialsOfTypeForAccount(
-                environment,
-                clientId,
-                CredentialType.AccessToken,
-                targetAccount,
-                isRealmAgnostic
-        );
+        if (null != typesToRemove && typesToRemove.length > 0) {
+            for (final CredentialType type : typesToRemove) {
+                // A count of the deleted creds...
+                int deletedCredentialsOfTypeCount = removeCredentialsOfTypeForAccount(
+                        environment,
+                        clientId,
+                        type,
+                        targetAccount,
+                        isRealmAgnostic
+                );
 
-        final int atsWithAuthSchemeRemoved = removeCredentialsOfTypeForAccount(
-                environment,
-                clientId,
-                CredentialType.AccessToken_With_AuthScheme,
-                targetAccount,
-                isRealmAgnostic
-        );
-
-        final int rtsRemoved = removeCredentialsOfTypeForAccount(
-                environment,
-                clientId,
-                CredentialType.RefreshToken,
-                targetAccount,
-                isRealmAgnostic
-        );
-
-        final int idsRemoved = removeCredentialsOfTypeForAccount(
-                environment,
-                clientId,
-                CredentialType.IdToken,
-                targetAccount,
-                isRealmAgnostic
-        );
-
-        final int v1IdsRemoved = removeCredentialsOfTypeForAccount(
-                environment,
-                clientId,
-                CredentialType.V1IdToken,
-                targetAccount,
-                isRealmAgnostic
-        );
+                com.microsoft.identity.common.internal.logging.Logger.info(
+                        TAG + methodName,
+                        "Removed "
+                                + deletedCredentialsOfTypeCount
+                                + " credentials of type: "
+                                + type
+                );
+            }
+        } else {
+            com.microsoft.identity.common.internal.logging.Logger.warn(
+                    TAG + methodName,
+                    "removeAccount called, but no CredentialTypes to remove specified"
+            );
+        }
 
         final List<AccountRecord> deletedAccounts = new ArrayList<>();
 
@@ -1261,22 +1314,6 @@ public class MsalOAuth2TokenCache
             if (mAccountCredentialCache.removeAccount(targetAccount)) {
                 deletedAccounts.add(targetAccount);
             }
-        }
-
-        final String[][] logInfo = new String[][]{
-                {"Access tokens", String.valueOf(atsRemoved)},
-                {"Access tokens (with authscheme)", String.valueOf(atsWithAuthSchemeRemoved)},
-                {"Refresh tokens", String.valueOf(rtsRemoved)},
-                {"Id tokens (v1)", String.valueOf(v1IdsRemoved)},
-                {"Id tokens (v2)", String.valueOf(idsRemoved)},
-                {"Accounts", String.valueOf(deletedAccounts.size())}
-        };
-
-        for (final String[] tuple : logInfo) {
-            com.microsoft.identity.common.internal.logging.Logger.info(
-                    TAG + methodName,
-                    tuple[0] + " removed: [" + tuple[1] + "]"
-            );
         }
 
         return new AccountDeletionRecord(deletedAccounts);

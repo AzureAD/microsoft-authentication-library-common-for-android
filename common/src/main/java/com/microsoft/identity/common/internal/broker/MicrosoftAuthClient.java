@@ -23,20 +23,18 @@
 
 package com.microsoft.identity.common.internal.broker;
 
-import android.accounts.AccountManager;
-import android.accounts.AuthenticatorDescription;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.text.TextUtils;
 
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * Client that wraps the code necessary to bind to the MicrosoftAuthService (Android Bound Service)
@@ -101,8 +99,11 @@ public class MicrosoftAuthClient {
      * @return Intent
      */
     public Intent getIntentForAuthService(final Context context) {
-        final String currentActiveBrokerPackageName = getCurrentActiveBrokerPackageName(context);
-        if (currentActiveBrokerPackageName == null || currentActiveBrokerPackageName.length() == 0) {
+        final String currentActiveBrokerPackageName = new BrokerValidator(context).
+                getCurrentActiveBrokerPackageName();
+
+        if (TextUtils.isEmpty(currentActiveBrokerPackageName) ||
+                !isMicrosoftAuthServiceSupported(context.getPackageManager(), currentActiveBrokerPackageName)) {
             return null;
         }
         final Intent authServiceToBind = new Intent(MICROSOFT_AUTH_SERVICE_INTENT_FILTER);
@@ -122,23 +123,4 @@ public class MicrosoftAuthClient {
         return infos != null && infos.size() > 0;
     }
 
-
-    /**
-     * Returns the package that is currently active relative to the Work Account custom account type
-     * Note: either the company portal or the authenticator
-     *
-     * @param context
-     * @return String
-     */
-    private String getCurrentActiveBrokerPackageName(@NonNull final Context context) {
-        AuthenticatorDescription[] authenticators = AccountManager.get(context).getAuthenticatorTypes();
-        for (AuthenticatorDescription authenticator : authenticators) {
-            if (authenticator.type.equals(AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE)
-                    && isMicrosoftAuthServiceSupported(context.getPackageManager(), authenticator.packageName)) {
-                return authenticator.packageName;
-            }
-        }
-
-        return null;
-    }
 }

@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
@@ -39,6 +40,7 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
@@ -52,6 +54,7 @@ import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
@@ -499,7 +502,7 @@ public abstract class BaseController {
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String localAccountId = parameters.getAccount().getLocalAccountId();
 
-        final AccountRecord targetAccount;
+        AccountRecord targetAccount;
 
         if (isB2CAuthority) {
             // Due to differences in the B2C service API relative to AAD, all IAccounts returned by
@@ -523,6 +526,13 @@ public abstract class BaseController {
                             clientId,
                             localAccountId
                     );
+        }
+
+        if (null == targetAccount && parameters.getOAuth2TokenCache() instanceof MsalOAuth2TokenCache) {
+            targetAccount = getAccountWithFRTIfAvailable(
+                    parameters,
+                    (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache()
+            );
         }
 
         if (null == targetAccount) {
@@ -550,6 +560,48 @@ public abstract class BaseController {
         }
 
         return targetAccount;
+    }
+
+    @Nullable
+    private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
+                                                       @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache){
+
+        final String homeAccountId = parameters.getAccount().getHomeAccountId();
+        final String clientId = parameters.getClientId();
+
+        // check for FOCI tokens for the homeAccountId
+        final RefreshTokenRecord refreshTokenRecord = msalOAuth2TokenCache
+                .getFamilyRefreshTokenForHomeAccountId(homeAccountId);
+
+        if (refreshTokenRecord != null) {
+            try {
+                // foci token is available, make a request to service to see if the client id is FOCI and save the tokens
+                TokenCacheItemMigrationAdapter.tryFociTokenWithGivenClientId(
+                        parameters.getOAuth2TokenCache(),
+                        clientId,
+                        parameters.getRedirectUri(),
+                        refreshTokenRecord,
+                        parameters.getAccount()
+                );
+
+                // Try to look for account again in the cache
+                return parameters
+                        .getOAuth2TokenCache()
+                        .getAccountByLocalAccountId(
+                                null,
+                                clientId,
+                                parameters.getAccount().getLocalAccountId()
+                        );
+            } catch (IOException | ClientException e) {
+                Logger.warn(TAG,
+                        "Error while attempting to validate client: "
+                                + clientId + " is part of family " + e.getMessage()
+                );
+            }
+        } else {
+            Logger.info(TAG, "No Foci tokens found for homeAccountId " + homeAccountId);
+        }
+        return null;
     }
 
     /**
