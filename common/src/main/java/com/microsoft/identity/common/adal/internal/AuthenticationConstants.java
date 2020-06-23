@@ -320,11 +320,6 @@ public final class AuthenticationConstants {
         public static final String SCOPE = "scope";
 
         /**
-         * Scope value used in acquiring tokens with saml assertion.
-         */
-        public static final String MSID_OAUTH2_SCOPE_OPENID_VALUE = "openid";
-
-        /**
          * String of state.
          */
         public static final String STATE = "state";
