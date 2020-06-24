@@ -25,9 +25,6 @@ package com.microsoft.identity.common.internal.controllers;
 import android.content.Intent;
 import android.text.TextUtils;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -85,6 +82,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN;
 import static com.microsoft.identity.common.internal.authorities.Authority.B2C;
 
 public abstract class BaseController {
@@ -300,6 +302,16 @@ public abstract class BaseController {
 
             // Set the AuthenticationResult on the final result object
             acquireTokenSilentResult.setLocalAuthenticationResult(authenticationResult);
+        }else {
+            if (tokenResult.getErrorResponse() != null) {
+                final String errorCode = tokenResult.getErrorResponse().getError();
+                final String subErrorCode = tokenResult.getErrorResponse().getSubError();
+
+                if (errorCode.equals(INVALID_GRANT) && subErrorCode.equals(BAD_TOKEN)) {
+                    Logger.info(TAG, "Refresh token is invalid, deleting from cache");
+                    tokenCache.removeCredential(cacheRecord.getRefreshToken());
+                }
+            }
         }
     }
 
