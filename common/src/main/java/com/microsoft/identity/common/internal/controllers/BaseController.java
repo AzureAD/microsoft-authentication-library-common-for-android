@@ -312,6 +312,8 @@ public abstract class BaseController {
                     Logger.info(TAG, "Refresh token is invalid, deleting from cache");
                     tokenCache.removeCredential(cacheRecord.getRefreshToken());
                 }
+            }else {
+                Logger.warn(TAG, "Invalid state, No token success or error response on the token result");
             }
         }
     }
