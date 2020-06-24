@@ -302,10 +302,11 @@ public abstract class BaseController {
 
             // Set the AuthenticationResult on the final result object
             acquireTokenSilentResult.setLocalAuthenticationResult(authenticationResult);
-        }else {
+        } else {
             if (tokenResult.getErrorResponse() != null) {
                 final String errorCode = tokenResult.getErrorResponse().getError();
                 final String subErrorCode = tokenResult.getErrorResponse().getSubError();
+                Logger.info(TAG, "Error: " + errorCode + " Suberror: " + subErrorCode);
 
                 if (errorCode.equals(INVALID_GRANT) && subErrorCode.equals(BAD_TOKEN)) {
                     Logger.info(TAG, "Refresh token is invalid, deleting from cache");
