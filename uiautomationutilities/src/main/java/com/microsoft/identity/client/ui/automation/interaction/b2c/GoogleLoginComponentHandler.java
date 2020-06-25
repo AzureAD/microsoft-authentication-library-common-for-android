@@ -80,29 +80,25 @@ public class GoogleLoginComponentHandler implements ILoginComponentHandler {
 
     @Override
     public void handleAccountPicker(@NonNull final String username) {
-        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
-    }
-
-    private UiObject getConsentScreen() {
-        return UiAutomatorUtils.obtainUiObjectWithResourceId("consentHeader");
+        throw new UnsupportedOperationException("Not supported for B2C Google Provider");
     }
 
     @Override
     public void confirmConsentPageReceived() {
-        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
+        throw new UnsupportedOperationException("Not supported for B2C Google Provider");
     }
 
     @Override
     public void acceptConsent() {
-        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
+        throw new UnsupportedOperationException("Not supported for B2C Google Provider");
     }
 
     public void declineConsent() {
-        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
+        throw new UnsupportedOperationException("Not supported for B2C Google Provider");
     }
 
     @Override
     public void handleSpeedBump() {
-        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
+        throw new UnsupportedOperationException("Not supported for B2C Google Provider");
     }
 }

@@ -25,11 +25,8 @@ package com.microsoft.identity.client.ui.automation.interaction.b2c;
 import android.widget.Button;
 
 import androidx.annotation.NonNull;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.interaction.ILoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
@@ -59,9 +56,8 @@ public class FacebookLoginComponentHandler implements ILoginComponentHandler {
 
     @Override
     public void handleNextButton() {
-        final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        final UiObject nextBtn = device.findObject(
-                new UiSelector().className(Button.class).text("Log In")
+        final UiObject nextBtn = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
+                "Log In", Button.class
         );
 
         try {
@@ -73,29 +69,25 @@ public class FacebookLoginComponentHandler implements ILoginComponentHandler {
 
     @Override
     public void handleAccountPicker(@NonNull final String username) {
-        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
-    }
-
-    private UiObject getConsentScreen() {
-        return UiAutomatorUtils.obtainUiObjectWithResourceId("consentHeader");
+        throw new UnsupportedOperationException("Not supported for B2C Facebook Provider");
     }
 
     @Override
     public void confirmConsentPageReceived() {
-        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
+        throw new UnsupportedOperationException("Not supported for B2C Facebook Provider");
     }
 
     @Override
     public void acceptConsent() {
-        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
+        throw new UnsupportedOperationException("Not supported for B2C Facebook Provider");
     }
 
     public void declineConsent() {
-        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
+        throw new UnsupportedOperationException("Not supported for B2C Facebook Provider");
     }
 
     @Override
     public void handleSpeedBump() {
-        throw new UnsupportedOperationException("Not supported for B2C Local Provider");
+        throw new UnsupportedOperationException("Not supported for B2C Facebook Provider");
     }
 }
