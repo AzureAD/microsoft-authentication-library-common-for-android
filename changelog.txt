@@ -2,7 +2,6 @@ Version 2.0.11
 -----------
 - Changes to delete RT on bad_token suberror.
 
-
 Version 2.0.10
 -----------
 - Broker Content Provider changes
