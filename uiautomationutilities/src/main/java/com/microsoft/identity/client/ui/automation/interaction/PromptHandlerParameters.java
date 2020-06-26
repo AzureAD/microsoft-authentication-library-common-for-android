@@ -27,6 +27,7 @@ import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 
 /**
  * A set of values that can be used to denote the behaviour we expect to observe during an oauth
@@ -35,7 +36,7 @@ import lombok.NonNull;
  * The test should fail if the actual behaviour observed deviates from what is denoted as expected
  * via these parameters.
  */
-@Builder
+@SuperBuilder
 @Getter
 public class PromptHandlerParameters {
 
