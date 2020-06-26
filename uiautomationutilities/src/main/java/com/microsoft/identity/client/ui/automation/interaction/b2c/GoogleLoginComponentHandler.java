@@ -29,7 +29,6 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
-import com.microsoft.identity.client.ui.automation.interaction.ILoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -37,7 +36,12 @@ import org.junit.Assert;
 /**
  * A login component handler for Google IdP
  */
-public class GoogleLoginComponentHandler implements ILoginComponentHandler {
+public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandler {
+
+    @Override
+    protected String getHandlerName() {
+        return B2CProvider.Google.getProviderName();
+    }
 
     @Override
     public void handleEmailField(@NonNull final String username) {
@@ -76,29 +80,5 @@ public class GoogleLoginComponentHandler implements ILoginComponentHandler {
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
-    }
-
-    @Override
-    public void handleAccountPicker(@NonNull final String username) {
-        throw new UnsupportedOperationException("Not supported for B2C Google Provider");
-    }
-
-    @Override
-    public void confirmConsentPageReceived() {
-        throw new UnsupportedOperationException("Not supported for B2C Google Provider");
-    }
-
-    @Override
-    public void acceptConsent() {
-        throw new UnsupportedOperationException("Not supported for B2C Google Provider");
-    }
-
-    public void declineConsent() {
-        throw new UnsupportedOperationException("Not supported for B2C Google Provider");
-    }
-
-    @Override
-    public void handleSpeedBump() {
-        throw new UnsupportedOperationException("Not supported for B2C Google Provider");
     }
 }

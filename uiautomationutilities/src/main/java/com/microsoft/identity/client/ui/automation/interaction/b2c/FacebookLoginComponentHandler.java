@@ -28,7 +28,6 @@ import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
-import com.microsoft.identity.client.ui.automation.interaction.ILoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -36,7 +35,12 @@ import org.junit.Assert;
 /**
  * A login component handler for Facebook IdP
  */
-public class FacebookLoginComponentHandler implements ILoginComponentHandler {
+public class FacebookLoginComponentHandler extends AbstractB2CLoginComponentHandler {
+
+    @Override
+    protected String getHandlerName() {
+        return B2CProvider.Facebook.getProviderName();
+    }
 
     @Override
     public void handleEmailField(@NonNull final String username) {
@@ -65,29 +69,5 @@ public class FacebookLoginComponentHandler implements ILoginComponentHandler {
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
-    }
-
-    @Override
-    public void handleAccountPicker(@NonNull final String username) {
-        throw new UnsupportedOperationException("Not supported for B2C Facebook Provider");
-    }
-
-    @Override
-    public void confirmConsentPageReceived() {
-        throw new UnsupportedOperationException("Not supported for B2C Facebook Provider");
-    }
-
-    @Override
-    public void acceptConsent() {
-        throw new UnsupportedOperationException("Not supported for B2C Facebook Provider");
-    }
-
-    public void declineConsent() {
-        throw new UnsupportedOperationException("Not supported for B2C Facebook Provider");
-    }
-
-    @Override
-    public void handleSpeedBump() {
-        throw new UnsupportedOperationException("Not supported for B2C Facebook Provider");
     }
 }

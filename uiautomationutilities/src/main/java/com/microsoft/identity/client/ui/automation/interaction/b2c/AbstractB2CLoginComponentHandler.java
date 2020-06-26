@@ -24,36 +24,45 @@ package com.microsoft.identity.client.ui.automation.interaction.b2c;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.client.ui.automation.interaction.ILoginComponentHandler;
 
-/**
- * A login component handler for B2C Local IdP
- */
-public class B2CIdLabLocalLoginComponentHandler extends AbstractB2CLoginComponentHandler {
+public abstract class AbstractB2CLoginComponentHandler implements ILoginComponentHandler {
+
+    protected abstract String getHandlerName();
 
     @Override
-    protected String getHandlerName() {
-        return B2CProvider.Local.getProviderName();
+    public void handleAccountPicker(@NonNull final String username) {
+        throw new UnsupportedOperationException(
+                "Not supported for B2C " + getHandlerName() + " Provider"
+        );
     }
 
     @Override
-    public void handleEmailField(@NonNull final String username) {
-        UiAutomatorUtils.handleInput("logonIdentifier", username);
+    public void confirmConsentPageReceived() {
+        throw new UnsupportedOperationException(
+                "Not supported for B2C " + getHandlerName() + " Provider"
+        );
     }
 
     @Override
-    public void handlePasswordField(@NonNull final String password) {
-        UiAutomatorUtils.handleInput("password", password);
-        handleNextButton();
+    public void acceptConsent() {
+        throw new UnsupportedOperationException(
+                "Not supported for B2C " + getHandlerName() + " Provider"
+        );
     }
 
     @Override
-    public void handleBackButton() {
-        UiAutomatorUtils.pressBack();
+    public void declineConsent() {
+        throw new UnsupportedOperationException(
+                "Not supported for B2C " + getHandlerName() + " Provider"
+        );
     }
 
     @Override
-    public void handleNextButton() {
-        UiAutomatorUtils.handleButtonClick("next");
+    public void handleSpeedBump() {
+        throw new UnsupportedOperationException(
+                "Not supported for B2C " + getHandlerName() + " Provider"
+        );
     }
+
 }
