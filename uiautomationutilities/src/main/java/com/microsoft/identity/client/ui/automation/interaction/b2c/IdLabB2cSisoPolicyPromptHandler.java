@@ -46,13 +46,15 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
 
         final B2CProvider b2CProvider = b2CPromptHandlerParameters.getB2cProvider();
 
-        if (b2CProvider.isExternalIdp()) {
+        final boolean isExternalIdP = b2CProvider != B2CProvider.Local;
+
+        if (isExternalIdP) {
             assert b2CProvider.getIdpSelectionBtnResourceId() != null;
             UiAutomatorUtils.handleButtonClick(b2CProvider.getIdpSelectionBtnResourceId());
         }
 
-        if ((!b2CProvider.isExternalIdp() && !parameters.isLoginHintProvided()) ||
-                (b2CProvider.isExternalIdp() && !parameters.isSessionExpected())) {
+        if ((!isExternalIdP && !parameters.isLoginHintProvided()) ||
+                (isExternalIdP && !parameters.isSessionExpected())) {
             loginComponentHandler.handleEmailField(username);
         }
 

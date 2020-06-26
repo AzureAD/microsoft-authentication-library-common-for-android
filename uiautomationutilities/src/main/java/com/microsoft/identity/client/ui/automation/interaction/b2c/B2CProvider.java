@@ -27,70 +27,40 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.internal.testutils.labutils.LabConstants;
 
-import lombok.Getter;
+public enum B2CProvider {
 
-/**
- * A class modeling a B2C Provider that is being used during a B2C UI Test
- */
-@Getter
-public abstract class B2CProvider {
+    Google(LabConstants.B2CProvider.GOOGLE, "GoogleExchange", "google.com"),
+    Facebook(LabConstants.B2CProvider.FACEBOOK, "FacebookExchange", "facebook.com"),
+    MSA(LabConstants.B2CProvider.MICROSOFT, "MicrosoftAccountExchange", "live.com"),
+    Local(LabConstants.B2CProvider.LOCAL, null, null);
 
-    @NonNull
-    private String providerName;
+    private final String providerName;
 
     @Nullable // should be null for LOCAL B2C provider
-    private String idpSelectionBtnResourceId;
+    private final String idpSelectionBtnResourceId;
 
     @Nullable // should be null for LOCAL B2C provider
-    private String domainHint; // this can be used as query param to /authorize endpoint
+    private final String domainHint; // this can be used as query param to /authorize endpoint
 
-    public B2CProvider(@NonNull final String providerName,
-                       @Nullable final String idpSelectionBtnResourceId,
-                       @Nullable final String domainHint) {
+    B2CProvider(@NonNull final String providerName,
+                @Nullable final String idpSelectionBtnResourceId,
+                @Nullable final String domainHint) {
         this.providerName = providerName;
         this.idpSelectionBtnResourceId = idpSelectionBtnResourceId;
         this.domainHint = domainHint;
     }
 
-    /**
-     * Indicates if the B2C Provider is a non-local IdP
-     *
-     * @return a boolean indicating if B2C Provider is an external IdP
-     */
-    protected boolean isExternalIdp() {
-        return !(this instanceof Local);
+    public String getProviderName() {
+        return providerName;
     }
 
-    public static class Local extends B2CProvider {
-        public Local() {
-            super(LabConstants.B2CProvider.LOCAL, null, null);
-        }
+    @Nullable
+    public String getIdpSelectionBtnResourceId() {
+        return idpSelectionBtnResourceId;
     }
 
-    public static class Google extends B2CProvider {
-        public Google() {
-            super(LabConstants.B2CProvider.GOOGLE,
-                    "GoogleExchange",
-                    "google.com"
-            );
-        }
-    }
-
-    public static class Facebook extends B2CProvider {
-        public Facebook() {
-            super(LabConstants.B2CProvider.FACEBOOK,
-                    "FacebookExchange",
-                    "facebook.com"
-            );
-        }
-    }
-
-    public static class Microsoft extends B2CProvider {
-        public Microsoft() {
-            super(LabConstants.B2CProvider.MICROSOFT,
-                    "MicrosoftAccountExchange",
-                    "microsoft.com"
-            );
-        }
+    @Nullable
+    public String getDomainHint() {
+        return domainHint;
     }
 }
