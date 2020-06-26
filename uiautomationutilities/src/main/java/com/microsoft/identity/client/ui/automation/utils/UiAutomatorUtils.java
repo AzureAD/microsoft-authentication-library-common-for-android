@@ -75,6 +75,26 @@ public class UiAutomatorUtils {
     }
 
     /**
+     * Obtain an instance of the UiObject for the given text and class name
+     *
+     * @param text      the text of the element to obtain
+     * @param className the class name of the element to obtain
+     * @return the UiObject associated to the supplied text
+     */
+    public static UiObject obtainUiObjectWithTextAndClassType(@NonNull final String text,
+                                                              @NonNull Class className) {
+        final UiDevice mDevice =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        final UiObject uiObject = mDevice.findObject(new UiSelector()
+                .className(className)
+                .textContains(text));
+
+        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        return uiObject;
+    }
+
+    /**
      * Obtain a child element inside a scrollable view by specifying resource id and text
      *
      * @param scrollableResourceId the resource id of the parent scroll view
@@ -136,6 +156,16 @@ public class UiAutomatorUtils {
         } catch (UiObjectNotFoundException e) {
             fail(e.getMessage());
         }
+    }
+
+    /**
+     * Presses the device back button on the Android device
+     */
+    public static void pressBack() {
+        final UiDevice mDevice =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        mDevice.pressBack();
     }
 
     private static boolean isKeyboardOpen() {
