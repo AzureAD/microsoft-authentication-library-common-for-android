@@ -20,7 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction;
+package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -36,7 +36,7 @@ import org.junit.Assert;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static org.junit.Assert.fail;
 
-public class AadLoginComponentHandler implements IAadLoginComponentHandler {
+public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHandler {
 
     @Override
     public void handleEmailField(@NonNull final String username) {

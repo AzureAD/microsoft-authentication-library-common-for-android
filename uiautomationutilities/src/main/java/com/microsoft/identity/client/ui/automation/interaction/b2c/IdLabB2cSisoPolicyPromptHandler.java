@@ -24,9 +24,9 @@ package com.microsoft.identity.client.ui.automation.interaction.b2c;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.client.ui.automation.interaction.AadLoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.interaction.AbstractPromptHandler;
-import com.microsoft.identity.client.ui.automation.interaction.ILoginComponentHandler;
+import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadLoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.internal.testutils.labutils.LabConstants;
 
@@ -63,7 +63,7 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
         }
     }
 
-    protected static ILoginComponentHandler getAppropriateLoginComponentHandler(@NonNull final B2CPromptHandlerParameters parameters) {
+    protected static IOAuth2LoginComponentHandler getAppropriateLoginComponentHandler(@NonNull final B2CPromptHandlerParameters parameters) {
         switch (parameters.getB2cProvider().getProviderName()) {
             case LabConstants.B2CProvider.LOCAL:
                 return new B2CIdLabLocalLoginComponentHandler();

@@ -105,7 +105,24 @@ public class UiAutomatorUtils {
     public static UiObject obtainChildInScrollable(@NonNull final String scrollableResourceId,
                                                    @NonNull final String childText) {
         final UiSelector scrollSelector = new UiSelector().resourceId(scrollableResourceId);
+        return obtainChildInScrollable(childText, scrollSelector);
+    }
 
+    /**
+     * Obtain a child element inside a scrollable view by specifying resource id and text
+     *
+     * @param clazz     the class of the parent scroll view
+     * @param childText the text on the child view
+     * @return the UiObject associated to the desired child element
+     */
+    public static UiObject obtainChildInScrollable(@NonNull final Class clazz,
+                                                   @NonNull final String childText) {
+        final UiSelector scrollSelector = new UiSelector().className(clazz);
+        return obtainChildInScrollable(childText, scrollSelector);
+    }
+
+    private static UiObject obtainChildInScrollable(@NonNull final String childText,
+                                                    @NonNull final UiSelector scrollSelector) {
         final UiScrollable recyclerView = new UiScrollable(scrollSelector);
 
         final UiSelector childSelector = new UiSelector()
@@ -129,7 +146,7 @@ public class UiAutomatorUtils {
     /**
      * Obtain a child element inside a scrollable view by specifying resource id and text
      *
-     * @param childText            the text on the child view
+     * @param childText the text on the child view
      * @return the UiObject associated to the desired child element
      */
     public static UiObject obtainChildInScrollable(@NonNull final String childText) {

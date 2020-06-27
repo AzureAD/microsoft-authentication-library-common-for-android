@@ -24,11 +24,13 @@ package com.microsoft.identity.client.ui.automation.utils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class CommonUtils {
@@ -94,5 +96,18 @@ public class CommonUtils {
      */
     public static boolean isStringPackageName(@NonNull final String hint) {
         return hint.contains("."); // best guess
+    }
+
+    public static boolean isPackageInstalled(@NonNull final String packageName) {
+        final Context context = ApplicationProvider.getApplicationContext();
+        final PackageManager packageManager = context.getPackageManager();
+        final List<ApplicationInfo> packages = packageManager.getInstalledApplications(0);
+
+        for (final ApplicationInfo applicationInfo : packages) {
+            if (applicationInfo.packageName.equals(packageName))
+                return true;
+        }
+
+        return false;
     }
 }

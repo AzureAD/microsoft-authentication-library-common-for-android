@@ -20,16 +20,24 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction;
+package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
 import androidx.annotation.NonNull;
 
-public class AadPromptHandler extends AbstractPromptHandler {
+import com.microsoft.identity.client.ui.automation.interaction.AbstractPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
+import com.microsoft.identity.client.ui.automation.interaction.UiResponse;
 
-    public AadPromptHandler(@NonNull final PromptHandlerParameters parameters) {
-        super(new AadLoginComponentHandler(), parameters);
+public abstract class AbstractMicrosoftStsPromptHandler extends AbstractPromptHandler {
+
+    public AbstractMicrosoftStsPromptHandler(
+            @NonNull IMicrosoftStsLoginComponentHandler loginComponentHandler,
+            @NonNull PromptHandlerParameters parameters) {
+        super(loginComponentHandler, parameters);
     }
 
+    @Override
     public void handlePrompt(@NonNull final String username, @NonNull final String password) {
         // if login hint was not provided, then we need to handle either account picker or email
         // field. If it was provided, then we expect to go straight to password field.
@@ -56,8 +64,8 @@ public class AadPromptHandler extends AbstractPromptHandler {
             }
         }
 
-        final IAadLoginComponentHandler aadLoginComponentHandler =
-                (IAadLoginComponentHandler) loginComponentHandler;
+        final IMicrosoftStsLoginComponentHandler aadLoginComponentHandler =
+                (IMicrosoftStsLoginComponentHandler) loginComponentHandler;
 
         if (parameters.isSpeedBumpExpected()) {
             aadLoginComponentHandler.handleSpeedBump();

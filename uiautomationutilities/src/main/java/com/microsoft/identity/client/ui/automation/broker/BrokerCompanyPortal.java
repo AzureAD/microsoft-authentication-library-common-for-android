@@ -23,28 +23,19 @@
 package com.microsoft.identity.client.ui.automation.broker;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiSelector;
 
-import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
-import com.microsoft.identity.client.ui.automation.interaction.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
 import lombok.Getter;
-
-import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
 
 @Getter
 public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBroker, IMdmAgent {
