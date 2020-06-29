@@ -98,6 +98,12 @@ public class CommonUtils {
         return hint.contains("."); // best guess
     }
 
+    /**
+     * Checks if the specified package is installed on the device
+     *
+     * @param packageName the package name to check
+     * @return a boolean indicating if the package is installed
+     */
     public static boolean isPackageInstalled(@NonNull final String packageName) {
         final Context context = ApplicationProvider.getApplicationContext();
         final PackageManager packageManager = context.getPackageManager();

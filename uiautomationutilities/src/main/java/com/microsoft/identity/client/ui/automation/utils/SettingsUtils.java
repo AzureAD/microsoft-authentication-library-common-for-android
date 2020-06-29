@@ -32,10 +32,16 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import org.junit.Assert;
 
+/**
+ * This class contains utilities to interact with device Settings during a UI TEST
+ */
 public class SettingsUtils {
 
     final static String SETTINGS_PKG = "com.android.settings";
 
+    /**
+     * Launch the device admin settings page
+     */
     public static void launchDeviceAdminSettingsPage() {
         Intent intent = new Intent();
         intent.setComponent(new ComponentName(
@@ -50,6 +56,11 @@ public class SettingsUtils {
         Assert.assertTrue(deviceAdminPage.exists());
     }
 
+    /**
+     * Disable the specified admin app on the device via the Settings screen
+     *
+     * @param adminName the admin app to disable
+     */
     public static void disableAdmin(final String adminName) {
         launchDeviceAdminSettingsPage();
 
