@@ -67,13 +67,23 @@ public class BrokerAuthenticator extends AbstractTestBroker implements ITestBrok
                 "com.azure.authenticator:id/manage_device_registration_register_button"
         );
 
-        final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "com.azure.authenticator:id/manage_device_registration_unregister_button"
-        );
 
         try {
+            // after device registration, make sure that we see the unregister btn to confirm successful
+            // registration
+            final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.azure.authenticator:id/manage_device_registration_unregister_button"
+            );
             Assert.assertTrue(unRegisterBtn.exists());
             Assert.assertTrue(unRegisterBtn.isClickable());
+
+            // after device registration, make sure that the current registration upn matches with
+            // with what was passed in
+            final UiObject currentRegistration = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.azure.authenticator:id/manage_device_registration_current_registered_email"
+            );
+            Assert.assertTrue(currentRegistration.exists());
+            Assert.assertTrue(currentRegistration.getText().equalsIgnoreCase(username));
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }

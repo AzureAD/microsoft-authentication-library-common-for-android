@@ -52,7 +52,8 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     public void handleAccountPicker(@Nullable final String username) {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
 
-        // find the object associated to this username in account picker
+        // find the object associated to this username in account picker.
+        // if the username is not provided, then click on the "Use another account" option
         final UiObject accountSelected = device.findObject(new UiSelector().resourceId(
                 getResourceId(getPackageName(), "account_chooser_listView")
         ).childSelector(new UiSelector().textContains(

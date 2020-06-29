@@ -73,8 +73,10 @@ public class PromptHandlerParameters {
     // The broker that should be being used for this request
     private final ITestBroker broker;
 
+    // whether we expect to receive enroll page or not
     private final boolean enrollPageExpected;
 
+    // The way in which we want to respond to the enroll page for this request
     @Builder.Default
     private final UiResponse enrollPageResponse = UiResponse.ACCEPT;
 }

@@ -109,7 +109,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain a child element inside a scrollable view by specifying resource id and text
+     * Obtain a child element inside a scrollable view by specifying class and text
      *
      * @param clazz     the class of the parent scroll view
      * @param childText the text on the child view
@@ -144,7 +144,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain a child element inside a scrollable view by specifying resource id and text
+     * Obtain a child element inside a scrollable view by specifying text
      *
      * @param childText the text on the child view
      * @return the UiObject associated to the desired child element
