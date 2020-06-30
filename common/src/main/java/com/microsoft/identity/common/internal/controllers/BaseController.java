@@ -308,10 +308,14 @@ public abstract class BaseController {
                 final String subErrorCode = tokenResult.getErrorResponse().getSubError();
                 Logger.info(TAG, "Error: " + errorCode + " Suberror: " + subErrorCode);
 
-                if (errorCode.equals(INVALID_GRANT) && subErrorCode.equals(BAD_TOKEN)) {
+                if (null != errorCode && errorCode.equals(INVALID_GRANT)
+                        && null != subErrorCode && subErrorCode.equals(BAD_TOKEN)) {
                     boolean isRemoved = tokenCache.removeCredential(cacheRecord.getRefreshToken());
-                    Logger.info(TAG, "Refresh token is invalid, " +
-                            "attempting to delete the RT from cache, result:" + isRemoved
+                    Logger.info(
+                            TAG,
+                            "Refresh token is invalid, "
+                                    + "attempting to delete the RT from cache, result:"
+                                    + isRemoved
                     );
                 }
             } else {
