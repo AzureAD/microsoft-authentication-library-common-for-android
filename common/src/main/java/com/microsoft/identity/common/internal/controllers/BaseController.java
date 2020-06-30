@@ -25,6 +25,9 @@ package com.microsoft.identity.common.internal.controllers;
 import android.content.Intent;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -81,9 +84,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN;
@@ -314,7 +314,7 @@ public abstract class BaseController {
                             "attempting to delete the RT from cache, result:" + isRemoved
                     );
                 }
-            }else {
+            } else {
                 Logger.warn(TAG, "Invalid state, No token success or error response on the token result");
             }
         }
@@ -581,7 +581,7 @@ public abstract class BaseController {
 
     @Nullable
     private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
-                                                       @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache){
+                                                       @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) {
 
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String clientId = parameters.getClientId();
