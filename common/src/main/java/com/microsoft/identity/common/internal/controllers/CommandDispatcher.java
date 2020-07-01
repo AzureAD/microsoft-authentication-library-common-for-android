@@ -48,6 +48,7 @@ import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 
 import java.util.Collections;
@@ -131,6 +132,9 @@ public class CommandDispatcher {
                             "Silent command result returned from cache."
                     );
                 }
+
+                // set correlation id on Local Authentication Result
+                setCorrelationIdOnResult(commandResult, correlationId);
 
                 Telemetry.getInstance().flush(correlationId);
                 EstsTelemetry.getInstance().flush(command, commandResult);
@@ -341,6 +345,9 @@ public class CommandDispatcher {
                     sCommand = null;
                     localBroadcastManager.unregisterReceiver(resultReceiver);
 
+                    // set correlation id on Local Authentication Result
+                    setCorrelationIdOnResult(commandResult, correlationId);
+
                     EstsTelemetry.getInstance().flush(command, commandResult);
                     Telemetry.getInstance().flush(correlationId);
                     returnCommandResult(command, commandResult, handler);
@@ -493,6 +500,17 @@ public class CommandDispatcher {
 
     public static int getCachedResultCount() {
         return sCommandResultCache.getSize();
+    }
+
+    private static void setCorrelationIdOnResult(@NonNull final CommandResult commandResult,
+                                                 @NonNull final String correlationId) {
+        // set correlation id on Local Authentication Result
+        if (commandResult.getResult() != null &&
+                commandResult.getResult() instanceof LocalAuthenticationResult) {
+            final LocalAuthenticationResult localAuthenticationResult =
+                    (LocalAuthenticationResult) commandResult.getResult();
+            localAuthenticationResult.setCorrelationId(correlationId);
+        }
     }
 
 }

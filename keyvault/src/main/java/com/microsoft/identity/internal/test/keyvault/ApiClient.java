@@ -93,6 +93,14 @@ public class ApiClient {
         authentications.put("oauth", oAuthAuthentication);
         // Prevent the authentications from being modified.
         authentications = Collections.unmodifiableMap(authentications);
+
+        // the default HTTP protocol used by OkHttp (HTTP/2 protocol) does not work with KeyVault
+        // when running on an Android device/emulator.
+        // This error is encountered: stream was reset: PROTOCOL_ERROR
+        // Therefore hard coding to use the HTTP/1.1 protocol here
+        List<Protocol> protocols = new ArrayList<>();
+        protocols.add(Protocol.HTTP_1_1);
+        httpClient.setProtocols(protocols);
     }
 
     /**
