@@ -226,12 +226,12 @@ public class LabUserHelper {
         return tempUser.getUpn();
     }
 
-    public static TempUser loadTempUserForTest(final String userType) {
+    public static TempUser loadTempUserForTest(final UserType userType) {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         CreateTempUserApi createTempUserApi = new CreateTempUserApi();
 
         try {
-            return createTempUserApi.post(userType);
+            return createTempUserApi.post(userType.getValue());
         } catch (ApiException e) {
             throw new RuntimeException("Error retrieving lab user", e);
         }
