@@ -268,7 +268,7 @@ public class LabUserHelper {
         return credential;
     }
 
-    public static AppInfo getAppInfo() {
+    public static AppInfo getDefaultAppInfo() {
             return getAppInfo(UserType.CLOUD, AzureEnvironment.AZURE_CLOUD, SignInAudience.AZURE_AD_MULTIPLE_ORGS,
                     IsAdminConsented.YES, PublicClient.YES);
    }
