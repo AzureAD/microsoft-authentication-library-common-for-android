@@ -71,6 +71,82 @@ public class LabUserHelper {
         return configInfos;
     }
 
+    public enum UserType {
+        CLOUD(LabConstants.UserType.CLOUD),
+        B2C(LabConstants.UserType.B2C),
+        FEDERATED(LabConstants.UserType.FEDERATED),
+        GUEST(LabConstants.UserType.GUEST),
+        MSA(LabConstants.UserType.MSA),
+        ON_PREM(LabConstants.UserType.ON_PREM)
+        ;
+        String constant;
+        UserType(String constant) {
+            this.constant = constant;
+        }
+        String getValue() {
+            return constant;
+        }
+
+    }
+
+    public enum SignInAudience {
+        AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT(LabConstants.SignInAudience.AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT),
+        AZURE_AD_MULTIPLE_ORGS(LabConstants.SignInAudience.AZURE_AD_MULTIPLE_ORGS),
+        AZURE_AD_MY_ORG(LabConstants.SignInAudience.AZURE_AD_MY_ORG),
+        ;
+        String constant;
+        SignInAudience(String constant) {
+            this.constant = constant;
+        }
+        String getValue() {
+            return constant;
+        }
+
+    }
+
+    public enum AzureEnvironment {
+        AZURE_B2C_CLOUD(LabConstants.AzureEnvironment.AZURE_B2C_CLOUD),
+        AZURE_CHINA_CLOUD(LabConstants.AzureEnvironment.AZURE_CHINA_CLOUD),
+        AZURE_CLOUD(LabConstants.AzureEnvironment.AZURE_CLOUD),
+        AZURE_GERMANY_CLOUD(LabConstants.AzureEnvironment.AZURE_GERMANY_CLOUD),
+        AZURE_PPE(LabConstants.AzureEnvironment.AZURE_PPE),
+        AZURE_US_GOVERNMENT(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT)
+        ;
+        String constant;
+        AzureEnvironment(String constant) {
+            this.constant = constant;
+        }
+        String getValue() {
+            return constant;
+        }
+    }
+
+    public enum IsAdminConsented {
+        YES(LabConstants.IsAdminConsented.YES),
+        NO(LabConstants.IsAdminConsented.NO)
+        ;
+        String constant;
+        IsAdminConsented(String constant) {
+            this.constant = constant;
+        }
+        String getValue() {
+            return constant;
+        }
+    }
+
+    public enum PublicClient {
+        YES(LabConstants.PublicClient.YES),
+        NO(LabConstants.PublicClient.NO)
+        ;
+        String constant;
+        PublicClient(String constant) {
+            this.constant = constant;
+        }
+        String getValue() {
+            return constant;
+        }
+    }
+
     public static ConfigInfo getConfigInfo(LabUserQuery query) {
         LabConfig labConfig;
         labConfig = sLabConfigCache.get(query);
@@ -193,10 +269,17 @@ public class LabUserHelper {
     }
 
     public static AppInfo getAppInfo() {
+            return getAppInfo(UserType.CLOUD, AzureEnvironment.AZURE_CLOUD, SignInAudience.AZURE_AD_MULTIPLE_ORGS,
+                    IsAdminConsented.YES, PublicClient.YES);
+   }
+
+    public static AppInfo getAppInfo(UserType userType, AzureEnvironment azureEnvironment, SignInAudience audience,
+                                     IsAdminConsented isAdminConsented, PublicClient publicClient) {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         AppApi api = new AppApi();
         try {
-            return api.getAppByParam("cloud", "azurecloud", "azureadmultipleorgs", "yes", "yes").get(0);
+            return api.getAppByParam(userType.getValue(), azureEnvironment.getValue(), audience.getValue(),
+                    isAdminConsented.getValue(), publicClient.getValue()).get(0);
         } catch (ApiException e) {
             throw new RuntimeException(e);
         }
