@@ -22,10 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
+import androidx.core.util.Consumer;
+
 import com.microsoft.identity.internal.test.labapi.ApiException;
+import com.microsoft.identity.internal.test.labapi.api.AppApi;
 import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
 import com.microsoft.identity.internal.test.labapi.api.CreateTempUserApi;
 import com.microsoft.identity.internal.test.labapi.api.ResetApi;
+import com.microsoft.identity.internal.test.labapi.model.AppInfo;
 import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.internal.test.labapi.model.LabInfo;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
@@ -146,6 +150,19 @@ public class LabUserHelper {
         return tempUser.getUpn();
     }
 
+    public static TempUser loadTempUserForTest(final String userType, Consumer<TempUser> consumer) {
+        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        CreateTempUserApi createTempUserApi = new CreateTempUserApi();
+
+        try {
+            TempUser user = createTempUserApi.post(userType);
+            consumer.accept(user);
+            return user;
+        } catch (ApiException e) {
+            throw new RuntimeException("Error retrieving lab user", e);
+        }
+    }
+
     public static String getPasswordForUser(final String username) {
         final ConfigInfo configInfo = getConfigInfoFromUpn(username);
         return LabHelper.getPasswordForLab(configInfo.getUserInfo().getLabName());
@@ -173,6 +190,16 @@ public class LabUserHelper {
         credential.userName = configInfo.getUserInfo().getUpn();
         credential.password = labConfig.getLabUserPassword();
         return credential;
+    }
+
+    public static AppInfo getAppInfo() {
+        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        AppApi api = new AppApi();
+        try {
+            return api.getAppByParam("cloud", "azurecloud", "azureadmultipleorgs", "yes", "yes").get(0);
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void resetPassword(final String upn) {
