@@ -46,13 +46,13 @@ import lombok.Getter;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 
 @Getter
-public class BrokerAuthenticator extends AbstractTestBroker implements ITestBroker {
+public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements ITestBroker {
 
     public final static String AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
 
-    public BrokerAuthenticator() {
+    public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME, new PlayStore());
         localApkFileName = AUTHENTICATOR_APK;
     }

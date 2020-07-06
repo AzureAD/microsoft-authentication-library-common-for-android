@@ -57,6 +57,8 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
         final UiObject accountSelected = device.findObject(new UiSelector().resourceId(
                 getResourceId(getPackageName(), "account_chooser_listView")
         ).childSelector(new UiSelector().textContains(
+                // This String is pulled from
+                // R.string.broker_account_chooser_choose_another_account
                 TextUtils.isEmpty(username) ? "Use another account" : username
         )));
 
