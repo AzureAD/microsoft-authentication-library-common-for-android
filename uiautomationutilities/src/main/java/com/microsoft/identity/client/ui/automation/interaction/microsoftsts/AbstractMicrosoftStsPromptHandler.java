@@ -71,6 +71,10 @@ public abstract class AbstractMicrosoftStsPromptHandler extends AbstractPromptHa
             aadLoginComponentHandler.handleSpeedBump();
         }
 
+        if (parameters.isRegisterPageExpected()) {
+            aadLoginComponentHandler.handleRegistration();
+        }
+
         if (parameters.isEnrollPageExpected()) {
             final UiResponse enrollPageResponse = parameters.getEnrollPageResponse();
             if (enrollPageResponse == UiResponse.ACCEPT) {

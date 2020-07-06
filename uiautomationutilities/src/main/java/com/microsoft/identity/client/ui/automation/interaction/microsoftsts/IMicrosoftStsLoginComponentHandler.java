@@ -36,4 +36,6 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
     void acceptEnroll();
 
     void declineEnroll();
+
+    void handleRegistration();
 }

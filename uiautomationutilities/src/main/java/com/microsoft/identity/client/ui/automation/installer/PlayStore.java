@@ -73,11 +73,13 @@ public class PlayStore implements IAppInstaller {
         device.pressEnter();
     }
 
-    private void selectGooglePlayAppFromAppList(@NonNull final String appName) throws UiObjectNotFoundException {
+    private void selectGooglePlayAppFromAppList() throws UiObjectNotFoundException {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
+
+        // we will just take the first app in the list
         final UiObject appIconInSearchResult = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "play_card")
-        ).descriptionContains(appName));
+                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "bucket_items")
+        ));
 
         appIconInSearchResult.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         appIconInSearchResult.click();
@@ -92,30 +94,15 @@ public class PlayStore implements IAppInstaller {
         appInstallBar.click();
     }
 
-    private void selectGooglePlayAppFromAppName(@NonNull final String appName) {
+    private void selectGooglePlayAppFromAppName() {
         try {
             selectGooglePlayAppFromInstallBar();
         } catch (UiObjectNotFoundException e) {
             try {
-                selectGooglePlayAppFromAppList(appName);
+                selectGooglePlayAppFromAppList();
             } catch (UiObjectNotFoundException ex) {
-                Assert.fail(ex.getMessage());
+                ex.printStackTrace();
             }
-        }
-    }
-
-    private void selectGooglePlayAppFromPackageName(@NonNull final String appName) {
-        final UiDevice device = UiDevice.getInstance(getInstrumentation());
-
-        // we will just take the first app in the list
-        final UiObject appIconInSearchResult = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "bucket_items")
-        ).childSelector(new UiSelector().textContains(appName)));
-        try {
-            appIconInSearchResult.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-            appIconInSearchResult.click();
-        } catch (UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
         }
     }
 
@@ -142,9 +129,13 @@ public class PlayStore implements IAppInstaller {
     public void installApp(@NonNull final String searchHint) {
         searchAppOnGooglePlay(searchHint);
         if (isStringPackageName(searchHint)) {
-            selectGooglePlayAppFromPackageName(searchHint);
+            try {
+                selectGooglePlayAppFromAppList();
+            } catch (UiObjectNotFoundException e) {
+                Assert.fail(e.getMessage());
+            }
         } else {
-            selectGooglePlayAppFromAppName(searchHint);
+            selectGooglePlayAppFromAppName();
         }
         installOrOpenAppFromGooglePlay();
     }

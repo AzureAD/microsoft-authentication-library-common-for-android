@@ -112,4 +112,9 @@ public abstract class App implements IApp {
             CommonUtils.grantPackagePermission();
         }
     }
+
+    @Override
+    public void forceStop() {
+        AdbShellUtils.forceStopPackage(packageName);
+    }
 }

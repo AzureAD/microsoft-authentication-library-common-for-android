@@ -41,4 +41,8 @@ public class AdbShellUtils {
     public static void clearPackage(@NonNull final String packageName) {
         executeShellCommand("pm clear " + packageName);
     }
+
+    public static void forceStopPackage(@NonNull final String packageName) {
+        executeShellCommand("am force-stop " + packageName);
+    }
 }

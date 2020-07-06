@@ -77,4 +77,6 @@ public class PromptHandlerParameters {
 
     @Builder.Default
     private final UiResponse enrollPageResponse = UiResponse.ACCEPT;
+
+    private final boolean registerPageExpected;
 }

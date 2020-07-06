@@ -66,4 +66,6 @@ public interface IApp {
      * @param permission the permission that should be granted
      */
     void grantPermission(String permission);
+
+    void forceStop();
 }

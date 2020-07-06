@@ -135,4 +135,12 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         confirmEnrollPageReceived();
         handleBackButton();
     }
+
+    @Override
+    public void handleRegistration() {
+        final UiObject registerBtn = UiAutomatorUtils.obtainUiObjectWithText("Register");
+        Assert.assertTrue(registerBtn.exists());
+
+        handleNextButton();
+    }
 }
