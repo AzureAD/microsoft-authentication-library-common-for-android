@@ -44,7 +44,7 @@ public class AccessTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
         /**
-         * Deprecated string of access token type.
+         * <strong>Deprecated<strong> string of access token type.  Prefer @link{#TOKEN_TYPE} instead.
          */
         @Deprecated
         public static final String ACCESS_TOKEN_TYPE = "access_token_type";
