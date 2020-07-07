@@ -24,46 +24,23 @@ package com.microsoft.identity.common.internal.cache;
 
 import androidx.annotation.NonNull;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.lang.reflect.Type;
 
-import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.ACCESS_TOKEN_TYPE;
-
 public class AccessTokenRecordJsonDeserializer implements JsonDeserializer<AccessTokenRecord> {
-
-    private static final String TAG = AccessTokenRecordJsonDeserializer.class.getSimpleName();
 
     @Override
     public AccessTokenRecord deserialize(@NonNull final JsonElement json,
                                          @NonNull final Type typeOfT,
                                          @NonNull final JsonDeserializationContext context)
             throws JsonParseException {
-        final AccessTokenRecord accessTokenRecord = deserializeDefault(json, typeOfT);
-        final JsonObject jsonObject = json.getAsJsonObject();
-
-        // Pick up any renamed properties...
-        if (jsonObject.has(ACCESS_TOKEN_TYPE)) {
-            Logger.info(
-                    TAG,
-                    "Deserializing legacy format AccessTokenRecord"
-            );
-            final String accessTokenType = jsonObject.get(ACCESS_TOKEN_TYPE).getAsString();
-            accessTokenRecord.setAccessTokenType(accessTokenType);
-        }
-
-        return accessTokenRecord;
-    }
-
-    private static AccessTokenRecord deserializeDefault(@NonNull final JsonElement json,
-                                                        @NonNull final Type typeOfT) {
-        return new Gson().fromJson(json, typeOfT);
+        // TODO implement
+        // TODO new unit tests
+        return null;
     }
 }

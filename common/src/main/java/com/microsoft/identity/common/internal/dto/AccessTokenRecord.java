@@ -47,8 +47,8 @@ public class AccessTokenRecord extends Credential {
          * String of access token type.
          */
         @Deprecated
-        public static final String ACCESS_TOKEN_TYPE = "access_token_type";
 
+        public static final String ACCESS_TOKEN_TYPE = "access_token_type";
         /**
          * String of access token type.
          */
