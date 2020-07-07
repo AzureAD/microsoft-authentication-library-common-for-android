@@ -31,17 +31,23 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.AUTHORITY;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.EXTENDED_EXPIRES_ON;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.KID;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REALM;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TARGET;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
 
 public class AccessTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
+        /**
+         * String of access token type.
+         */
+        @Deprecated
+        public static final String ACCESS_TOKEN_TYPE = "access_token_type";
+
         /**
          * String of access token type.
          */
