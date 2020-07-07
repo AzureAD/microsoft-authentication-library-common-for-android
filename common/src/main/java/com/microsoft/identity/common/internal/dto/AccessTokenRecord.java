@@ -31,7 +31,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.ACCESS_TOKEN_TYPE;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.AUTHORITY;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.EXTENDED_EXPIRES_ON;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.KID;
@@ -45,7 +45,7 @@ public class AccessTokenRecord extends Credential {
         /**
          * String of access token type.
          */
-        public static final String ACCESS_TOKEN_TYPE = "access_token_type";
+        public static final String TOKEN_TYPE = "token_type";
 
         /**
          * String of authority.
@@ -86,7 +86,7 @@ public class AccessTokenRecord extends Credential {
      * utilize the access token to make a protected resource request (along with type-specific
      * attributes).
      */
-    @SerializedName(ACCESS_TOKEN_TYPE)
+    @SerializedName(TOKEN_TYPE)
     private String mAccessTokenType;
 
     /**
