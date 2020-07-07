@@ -44,11 +44,11 @@ public class AccessTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
         /**
-         * String of access token type.
+         * Deprecated string of access token type.
          */
         @Deprecated
-
         public static final String ACCESS_TOKEN_TYPE = "access_token_type";
+
         /**
          * String of access token type.
          */
