@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.cache;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -77,7 +78,12 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
      * Default constructor of CacheKeyValueDelegate.
      */
     public CacheKeyValueDelegate() {
-        mGson = new Gson();
+        mGson = new GsonBuilder()
+                .registerTypeAdapter( // Register the type adapter to handle backcompat
+                        AccessTokenRecord.class,
+                        new AccessTokenRecordJsonDeserializer()
+                )
+                .create();
         Logger.verbose(TAG, "Init: " + TAG);
     }
 
