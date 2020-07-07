@@ -55,7 +55,6 @@ public class AccessTokenRecordJsonDeserializer implements JsonDeserializer<Acces
                     TAG,
                     "Deserializing legacy format AccessTokenRecord"
             );
-
             final String accessTokenType = jsonObject.get(ACCESS_TOKEN_TYPE).getAsString();
             accessTokenRecord.setAccessTokenType(accessTokenType);
         }
