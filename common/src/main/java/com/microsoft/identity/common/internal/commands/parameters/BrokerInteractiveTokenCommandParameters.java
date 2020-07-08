@@ -48,6 +48,8 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     private BrokerRequestType requestType;
     private String negotiatedBrokerProtocolVersion;
 
+    private String enrollmentId;
+
     /**
      * Helper method to identify if the request originated from Broker itself or from client libraries.
      *
