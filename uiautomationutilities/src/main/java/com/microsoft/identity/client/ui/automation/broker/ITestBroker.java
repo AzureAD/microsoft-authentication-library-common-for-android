@@ -33,7 +33,8 @@ import com.microsoft.identity.client.ui.automation.app.IApp;
 public interface ITestBroker extends IApp {
 
     /**
-     * Handle the broker account picker. Clicks on the list item associated to the supplied upn
+     * Handle the broker account picker. Clicks on the list item associated to the supplied upn, or
+     * if the upn is not provided, then clicks on "Use another account" btn
      *
      * @param username upn for the account to select in account picker
      */

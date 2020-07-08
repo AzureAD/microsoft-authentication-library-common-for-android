@@ -46,13 +46,13 @@ import lombok.Getter;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 
 @Getter
-public class BrokerAuthenticator extends AbstractTestBroker implements ITestBroker {
+public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements ITestBroker {
 
     public final static String AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
 
-    public BrokerAuthenticator() {
+    public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME, new PlayStore());
         localApkFileName = AUTHENTICATOR_APK;
     }
@@ -67,13 +67,23 @@ public class BrokerAuthenticator extends AbstractTestBroker implements ITestBrok
                 "com.azure.authenticator:id/manage_device_registration_register_button"
         );
 
-        final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "com.azure.authenticator:id/manage_device_registration_unregister_button"
-        );
 
         try {
+            // after device registration, make sure that we see the unregister btn to confirm successful
+            // registration
+            final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.azure.authenticator:id/manage_device_registration_unregister_button"
+            );
             Assert.assertTrue(unRegisterBtn.exists());
             Assert.assertTrue(unRegisterBtn.isClickable());
+
+            // after device registration, make sure that the current registration upn matches with
+            // with what was passed in
+            final UiObject currentRegistration = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.azure.authenticator:id/manage_device_registration_current_registered_email"
+            );
+            Assert.assertTrue(currentRegistration.exists());
+            Assert.assertTrue(currentRegistration.getText().equalsIgnoreCase(username));
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }

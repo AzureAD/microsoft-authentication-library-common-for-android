@@ -31,10 +31,19 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
      */
     void handleSpeedBump();
 
+    /**
+     * Confirm that we have received the enroll page during authorize request
+     */
     void confirmEnrollPageReceived();
 
+    /**
+     * Respond to the enroll page by accepting enrollment
+     */
     void acceptEnroll();
 
+    /**
+     * Respond to the enroll page declining enrollment
+     */
     void declineEnroll();
 
     void handleRegistration();

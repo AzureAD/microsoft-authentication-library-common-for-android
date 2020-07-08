@@ -45,6 +45,9 @@ import org.junit.Assert;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
 
+/**
+ * This class contains utilities to interact with device Settings during a UI TEST
+ */
 public class SettingsUtils {
 
     final static String SETTINGS_PKG = "com.android.settings";
@@ -56,6 +59,9 @@ public class SettingsUtils {
         context.startActivity(intent);
     }
 
+    /**
+     * Launch the device admin settings page
+     */
     public static void launchDeviceAdminSettingsPage() {
         Intent intent = new Intent();
         intent.setComponent(new ComponentName(
@@ -70,6 +76,11 @@ public class SettingsUtils {
         Assert.assertTrue(deviceAdminPage.exists());
     }
 
+    /**
+     * Disable the specified admin app on the device via the Settings screen
+     *
+     * @param adminName the admin app to disable
+     */
     public static void disableAdmin(final String adminName) {
         launchDeviceAdminSettingsPage();
 

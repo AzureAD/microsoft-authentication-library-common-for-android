@@ -1,3 +1,25 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
 import android.text.TextUtils;
@@ -30,10 +52,13 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     public void handleAccountPicker(@Nullable final String username) {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
 
-        // find the object associated to this username in account picker
+        // find the object associated to this username in account picker.
+        // if the username is not provided, then click on the "Use another account" option
         final UiObject accountSelected = device.findObject(new UiSelector().resourceId(
                 getResourceId(getPackageName(), "account_chooser_listView")
         ).childSelector(new UiSelector().textContains(
+                // This String is pulled from
+                // R.string.broker_account_chooser_choose_another_account
                 TextUtils.isEmpty(username) ? "Use another account" : username
         )));
 
