@@ -59,21 +59,25 @@ public class AdalMigrationAdapterDeserializationTest {
     private Map<String, String> mDeserializationInput;
     private DeserializationValidator mValidator;
 
-    @Parameterized.Parameters
+    @Parameterized.Parameters(name = "{0}")
     public static Iterable<Object[]> testParams() {
         return Arrays.asList(
                 new Object[]{
+                        "Single Item Valid Input Test",
                         getAdalCacheItemInput(),
                         getDeserializationValidator()
                 },
                 new Object[]{
+                        "Multi-Item Input Test with Malformed JSON",
                         getMalformedCacheItemInput(),
                         getDeserializationValidator()
                 }
         );
     }
 
-    public AdalMigrationAdapterDeserializationTest(@NonNull final Map<String, String> deserializationInput,
+    @SuppressWarnings("unused")
+    public AdalMigrationAdapterDeserializationTest(@NonNull final String testName,
+                                                   @NonNull final Map<String, String> deserializationInput,
                                                    @NonNull final DeserializationValidator validator) {
         mDeserializationInput = deserializationInput;
         mValidator = validator;
