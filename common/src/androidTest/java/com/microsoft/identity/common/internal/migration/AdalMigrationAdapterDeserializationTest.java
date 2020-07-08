@@ -81,11 +81,7 @@ public class AdalMigrationAdapterDeserializationTest {
     @Before
     public void setUp() {
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        mMigrationAdapter = new AdalMigrationAdapter(
-                context,
-                null,
-                true
-        );
+        mMigrationAdapter = new AdalMigrationAdapter(context, null, true);
     }
 
     @After
