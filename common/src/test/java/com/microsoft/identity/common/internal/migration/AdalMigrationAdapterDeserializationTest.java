@@ -25,16 +25,18 @@ package com.microsoft.identity.common.internal.migration;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
-import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
+
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.robolectric.ParameterizedRobolectricTestRunner;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -42,7 +44,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(Parameterized.class)
+@RunWith(ParameterizedRobolectricTestRunner.class)
 public class AdalMigrationAdapterDeserializationTest {
 
     private static final String AUTHORITY = "https://login.microsoftonline.com/common";
@@ -59,7 +61,7 @@ public class AdalMigrationAdapterDeserializationTest {
     private Map<String, String> mDeserializationInput;
     private DeserializationValidator mValidator;
 
-    @Parameterized.Parameters(name = "{0}")
+    @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
     public static Iterable<Object[]> testParams() {
         return Arrays.asList(
                 new Object[]{
@@ -85,7 +87,7 @@ public class AdalMigrationAdapterDeserializationTest {
 
     @Before
     public void setUp() {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final Context context = ApplicationProvider.getApplicationContext();
         mMigrationAdapter = new AdalMigrationAdapter(context, null, true);
     }
 
