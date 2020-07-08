@@ -37,15 +37,22 @@ import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.Seria
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.KID;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REALM;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TARGET;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
 
 public class AccessTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
         /**
+         * <strong>Deprecated<strong> string of access token type.  Prefer @link{#TOKEN_TYPE} instead.
+         */
+        @Deprecated
+        public static final String ACCESS_TOKEN_TYPE = "access_token_type";
+
+        /**
          * String of access token type.
          */
-        public static final String ACCESS_TOKEN_TYPE = "access_token_type";
+        public static final String TOKEN_TYPE = "token_type";
 
         /**
          * String of authority.
@@ -86,7 +93,7 @@ public class AccessTokenRecord extends Credential {
      * utilize the access token to make a protected resource request (along with type-specific
      * attributes).
      */
-    @SerializedName(ACCESS_TOKEN_TYPE)
+    @SerializedName(value = TOKEN_TYPE, alternate = ACCESS_TOKEN_TYPE)
     private String mAccessTokenType;
 
     /**
