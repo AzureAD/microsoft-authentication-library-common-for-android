@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.migration;
 
 import android.content.Context;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.google.gson.Gson;
@@ -34,21 +33,50 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(AndroidJUnit4.class)
-public class AdalMigrationAdapterTest {
+@RunWith(Parameterized.class)
+public class AdalMigrationAdapterDeserializationTest {
 
     private static final String AUTHORITY = "https://login.microsoftonline.com/common";
     private static final String CLIENT_ID = "a_client_id";
     private static final String TENANT_ID = "a_tenant_id";
     public static final String CACHE_KEY = "a_cache_key";
 
+    private interface DeserializationValidator {
+        void onDeserializationFinished(Map<String, ADALTokenCacheItem> result);
+    }
+
     private AdalMigrationAdapter mMigrationAdapter;
+
+    private Map<String, String> mDeserializationInput;
+    private DeserializationValidator mValidator;
+
+    @Parameterized.Parameters
+    public static Iterable<Object[]> testParams() {
+        return Arrays.asList(
+                new Object[]{
+                        getAdalCacheItemInput(),
+                        getDeserializationValidator()
+                },
+                new Object[]{
+                        getMalformedCacheItemInput(),
+                        getDeserializationValidator()
+                }
+        );
+    }
+
+    public AdalMigrationAdapterDeserializationTest(Map<String, String> deserializationInput,
+                                                   DeserializationValidator validator) {
+        mDeserializationInput = deserializationInput;
+        mValidator = validator;
+    }
 
     @Before
     public void setUp() {
@@ -66,40 +94,43 @@ public class AdalMigrationAdapterTest {
     }
 
     @Test
-    public void testDeserialization() {
-        final Map<String, String> inputCacheItems = new HashMap<>();
-        inputCacheItems.put(CACHE_KEY, getAdalTokenCacheItemJson());
-        final Map<String, ADALTokenCacheItem> outputCacheItems =
-                mMigrationAdapter.deserialize(inputCacheItems);
-        assertEquals(1, outputCacheItems.size());
-        final ADALTokenCacheItem deserializedCacheItem = outputCacheItems.get(CACHE_KEY);
-        assertEquals(AUTHORITY, deserializedCacheItem.getAuthority());
-        assertEquals(CLIENT_ID, deserializedCacheItem.getClientId());
-        assertEquals(TENANT_ID, deserializedCacheItem.getTenantId());
+    public void executeTest() {
+        mValidator.onDeserializationFinished(
+                mMigrationAdapter.deserialize(mDeserializationInput)
+        );
     }
 
-    @Test
-    public void testDeserializationWithMalformedInput() {
-        final Map<String, String> inputCacheItems = new HashMap<>();
-        inputCacheItems.put(CACHE_KEY, getAdalTokenCacheItemJson());
+    private static DeserializationValidator getDeserializationValidator() {
+        return new DeserializationValidator() {
+            @Override
+            public void onDeserializationFinished(Map<String, ADALTokenCacheItem> result) {
+                assertEquals(1, result.size());
+                final ADALTokenCacheItem deserializedCacheItem = result.get(CACHE_KEY);
+                assertEquals(AUTHORITY, deserializedCacheItem.getAuthority());
+                assertEquals(CLIENT_ID, deserializedCacheItem.getClientId());
+                assertEquals(TENANT_ID, deserializedCacheItem.getTenantId());
+            }
+        };
+    }
 
+    private static Map<String, String> getMalformedCacheItemInput() {
+        final Map<String, String> inputCacheItems = getAdalCacheItemInput();
         // Insert malformed json
         inputCacheItems.put("another_key", "{[}");
-
-        final Map<String, ADALTokenCacheItem> outputCacheItems =
-                mMigrationAdapter.deserialize(inputCacheItems);
-        assertEquals(1, outputCacheItems.size());
-        final ADALTokenCacheItem deserializedCacheItem = outputCacheItems.get(CACHE_KEY);
-        assertEquals(AUTHORITY, deserializedCacheItem.getAuthority());
-        assertEquals(CLIENT_ID, deserializedCacheItem.getClientId());
-        assertEquals(TENANT_ID, deserializedCacheItem.getTenantId());
+        return inputCacheItems;
     }
 
-    private String getAdalTokenCacheItemJson() {
+    private static Map<String, String> getAdalCacheItemInput() {
+        final Map<String, String> inputCacheItems = new HashMap<>();
+        inputCacheItems.put(CACHE_KEY, getAdalTokenCacheItemJson());
+        return inputCacheItems;
+    }
+
+    private static String getAdalTokenCacheItemJson() {
         return new Gson().toJson(getAdalTokenCacheItem());
     }
 
-    private ADALTokenCacheItem getAdalTokenCacheItem() {
+    private static ADALTokenCacheItem getAdalTokenCacheItem() {
         final ADALTokenCacheItem cacheItem = new ADALTokenCacheItem();
         cacheItem.setAuthority(AUTHORITY);
         cacheItem.setClientId(CLIENT_ID);
