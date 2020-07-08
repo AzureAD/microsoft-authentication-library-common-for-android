@@ -39,6 +39,7 @@ public class MicrosoftTokenRequest extends TokenRequest {
     public static final String INSTANCE_AWARE = "instance_aware";
     public static final String CLIENT_APP_NAME = "x-app-name";
     public static final String CLIENT_APP_VERSION = "x-app-ver";
+    public static final String MICROSOFT_ENROLLMENT_ID = "microsoft_enrollment_id";
 
     public MicrosoftTokenRequest() {
         mClientInfoEnabled = "1";
@@ -78,6 +79,10 @@ public class MicrosoftTokenRequest extends TokenRequest {
     @Expose()
     @SerializedName(CLIENT_APP_VERSION)
     private String mClientAppVersion;
+
+    @Expose()
+    @SerializedName(MICROSOFT_ENROLLMENT_ID)
+    private String mMicrosoftEnrollmentId;
 
     private String mTokenScope;
 
@@ -166,5 +171,13 @@ public class MicrosoftTokenRequest extends TokenRequest {
 
     public void setBrokerVersion(final String brokerVersion) {
         this.mBrokerVersion = brokerVersion;
+    }
+
+    public String getMicrosoftEnrollmentId() {
+        return mMicrosoftEnrollmentId;
+    }
+
+    public void setMicrosoftEnrollmentId(String microsoftEnrollmentId) {
+        this.mMicrosoftEnrollmentId = microsoftEnrollmentId;
     }
 }

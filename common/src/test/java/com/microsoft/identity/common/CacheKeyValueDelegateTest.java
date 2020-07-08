@@ -291,6 +291,24 @@ public class CacheKeyValueDelegateTest {
         assertEquals("bar", deserializedValue.getAdditionalFields().get("foo").getAsString());
         assertEquals(numbers.toString(), deserializedValue.getAdditionalFields().get("numbers").toString());
     }
+
+    @Test
+    public void testAccessTokenTypePropertyRename() {
+        // Test to verify that "access_token_type" is correctly serialized into token_type property
+        final String authScheme = "Bearer";
+        final String jsonStr = "{\"access_token_type\": \"" + authScheme + "\"}";
+        final AccessTokenRecord record = mDelegate.fromCacheValue(jsonStr, AccessTokenRecord.class);
+        assertEquals(authScheme, record.getAccessTokenType());
+    }
+
+    @Test
+    public void testAccessTokenTypeProperty() {
+        // Test to verify that "token_type" is correctly serialized into token_type property
+        final String authScheme = "Bearer";
+        final String jsonStr = "{\"token_type\": \"" + authScheme + "\"}";
+        final AccessTokenRecord record = mDelegate.fromCacheValue(jsonStr, AccessTokenRecord.class);
+        assertEquals(authScheme, record.getAccessTokenType());
+    }
     // End AccessTokens
 
     // Accounts
