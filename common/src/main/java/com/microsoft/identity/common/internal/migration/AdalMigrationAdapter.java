@@ -33,6 +33,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -206,10 +207,17 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
 
         final Gson gson = new Gson();
         for (final Map.Entry<String, String> entry : tokenCacheItems.entrySet()) {
-            result.put(
-                    entry.getKey(),
-                    gson.fromJson(entry.getValue(), ADALTokenCacheItem.class)
-            );
+            try {
+                result.put(
+                        entry.getKey(),
+                        gson.fromJson(entry.getValue(), ADALTokenCacheItem.class)
+                );
+            } catch (final JsonSyntaxException e) {
+                Logger.warn(
+                        TAG,
+                        "Failed to deserialize ADAL cache entry. Skipping."
+                );
+            }
         }
 
         return result;
