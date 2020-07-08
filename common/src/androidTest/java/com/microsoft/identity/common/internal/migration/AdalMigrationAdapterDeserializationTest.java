@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.migration;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.google.gson.Gson;
@@ -72,8 +73,8 @@ public class AdalMigrationAdapterDeserializationTest {
         );
     }
 
-    public AdalMigrationAdapterDeserializationTest(Map<String, String> deserializationInput,
-                                                   DeserializationValidator validator) {
+    public AdalMigrationAdapterDeserializationTest(@NonNull final Map<String, String> deserializationInput,
+                                                   @NonNull final DeserializationValidator validator) {
         mDeserializationInput = deserializationInput;
         mValidator = validator;
     }
