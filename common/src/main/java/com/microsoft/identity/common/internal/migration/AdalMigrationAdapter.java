@@ -30,6 +30,7 @@ import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -202,7 +203,8 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
      * @param tokenCacheItems The credentials to inspect.
      * @return The deserialized credentials and their associated keys.
      */
-    private Map<String, ADALTokenCacheItem> deserialize(final Map<String, String> tokenCacheItems) {
+    @VisibleForTesting
+    Map<String, ADALTokenCacheItem> deserialize(final Map<String, String> tokenCacheItems) {
         final Map<String, ADALTokenCacheItem> result = new HashMap<>();
 
         final Gson gson = new Gson();
