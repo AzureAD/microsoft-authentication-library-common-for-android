@@ -27,9 +27,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
+import androidx.arch.core.util.Function;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
+import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 
 import org.mockito.Mockito;
@@ -38,19 +41,46 @@ import java.util.Map;
 
 public class TestUtils {
 
+    public static final CacheKeyValueDelegate CACHE_KEY_VALUE_DELEGATE = new CacheKeyValueDelegate();
+
+    private interface Predicate<T> {
+        boolean test(T t);
+    }
+
     private static String getCacheKeyForAccessToken(Map<String, ?> cacheValues) {
+        Predicate<String> predicate = new Predicate<String>() {
+            @Override public boolean test(String s) {
+                return isAccessToken(s);
+            }
+        };
+        return getMachingKeyOrNull(cacheValues, predicate);
+    }
+
+    private static String getCacheKeyForRefreshToken(Map<String, ?> cacheValues) {
+        Predicate<String> predicate = new Predicate<String>() {
+            @Override public boolean test(String s) {
+                return isRefreshToken(s);
+            }
+        };
+        return getMachingKeyOrNull(cacheValues, predicate);
+    }
+
+    private static String getMachingKeyOrNull(Map<String, ?> cacheValues, Predicate<String> predicate) {
         for (Map.Entry<String, ?> cacheValue : cacheValues.entrySet()) {
             final String cacheKey = cacheValue.getKey();
-            if (isAccessToken(cacheKey)) {
+            if (predicate.test(cacheKey)) {
                 return cacheKey;
             }
         }
-
         return null;
     }
 
     private static boolean isAccessToken(@NonNull final String cacheKey) {
         return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.AccessToken;
+    }
+
+    private static boolean isRefreshToken(@NonNull final String cacheKey) {
+        return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.RefreshToken;
     }
 
     public static SharedPreferences getSharedPreferences(final String sharedPrefName) {
@@ -63,6 +93,42 @@ public class TestUtils {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
         editor.commit();
+    }
+
+    public void editTokenInCache(final String sharedPrefName, Predicate<String> keyPredicate,
+                                 Function<String, String> editor) {
+        SharedPreferences sharedPreferences = getSharedPreferences(sharedPrefName);
+        final Map<String, ?> cacheValues = sharedPreferences.getAll();
+        final String keyToCorrupt = getMachingKeyOrNull(cacheValues, keyPredicate);
+        if (keyToCorrupt != null) {
+            Object value = cacheValues.get(keyToCorrupt);
+            if (value instanceof String) {
+                SharedPreferences.Editor prefEditor = sharedPreferences.edit();
+                Credential c = CACHE_KEY_VALUE_DELEGATE.fromCacheValue((String) value, Credential.class);
+                c.setSecret(editor.apply(c.getSecret()));
+                prefEditor.putString(keyToCorrupt, CACHE_KEY_VALUE_DELEGATE.generateCacheValue(c));
+                prefEditor.commit();
+            }
+        }
+
+    }
+
+    public void editAccessTokenInCache(final String sharedPrefName, Function<String, String> editor) {
+        Predicate<String> predicate = new Predicate<String>() {
+            @Override public boolean test(String s) {
+                return isAccessToken(s);
+            }
+        };
+        editTokenInCache(sharedPrefName, predicate, editor);
+    }
+
+    public void editRefreshTokenInCache(final String sharedPrefName, Function<String, String> editor) {
+        Predicate<String> predicate = new Predicate<String>() {
+            @Override public boolean test(String s) {
+                return isAccessToken(s);
+            }
+        };
+        editTokenInCache(sharedPrefName, predicate, editor);
     }
 
     public static void removeAccessTokenFromCache(final String sharedPrefName) {

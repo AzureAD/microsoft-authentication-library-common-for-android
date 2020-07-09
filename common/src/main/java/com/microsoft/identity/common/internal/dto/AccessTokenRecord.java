@@ -262,12 +262,14 @@ public class AccessTokenRecord extends Credential {
         mExpiresOn = expiresOn;
     }
 
-    private boolean isExpired(final String expires) {
+    private boolean isExpired(final String expiresEpochSeconds) {
+        //TODO: Explain why this is not just
+        // return System.currentTimeMillis() < Long.valueOf(expiresEpochSeconds) * 1000;
         // Init a Calendar for the current time/date
         final Calendar calendar = Calendar.getInstance();
         final Date validity = calendar.getTime();
         // Init a Date for the accessToken's expiry
-        long epoch = Long.valueOf(expires);
+        long epoch = Long.valueOf(expiresEpochSeconds);
         final Date expiresOn = new Date(
                 TimeUnit.SECONDS.toMillis(epoch)
         );
