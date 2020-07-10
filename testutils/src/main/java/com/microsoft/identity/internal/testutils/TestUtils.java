@@ -42,27 +42,29 @@ import java.util.Map;
 public class TestUtils {
 
     public static final CacheKeyValueDelegate CACHE_KEY_VALUE_DELEGATE = new CacheKeyValueDelegate();
+    public static final Predicate<String> IS_ACCESS_TOKEN = new Predicate<String>() {
+        @Override
+        public boolean test(String s) {
+            return isAccessToken(s);
+        }
+    };
+    public static final Predicate<String> IS_REFRESH_TOKEN = new Predicate<String>() {
+        @Override
+        public boolean test(String s) {
+            return isRefreshToken(s);
+        }
+    };
 
     private interface Predicate<T> {
         boolean test(T t);
     }
 
     private static String getCacheKeyForAccessToken(Map<String, ?> cacheValues) {
-        Predicate<String> predicate = new Predicate<String>() {
-            @Override public boolean test(String s) {
-                return isAccessToken(s);
-            }
-        };
-        return getMachingKeyOrNull(cacheValues, predicate);
+        return getMachingKeyOrNull(cacheValues, IS_ACCESS_TOKEN);
     }
 
     private static String getCacheKeyForRefreshToken(Map<String, ?> cacheValues) {
-        Predicate<String> predicate = new Predicate<String>() {
-            @Override public boolean test(String s) {
-                return isRefreshToken(s);
-            }
-        };
-        return getMachingKeyOrNull(cacheValues, predicate);
+        return getMachingKeyOrNull(cacheValues, IS_REFRESH_TOKEN);
     }
 
     private static String getMachingKeyOrNull(Map<String, ?> cacheValues, Predicate<String> predicate) {
@@ -114,21 +116,11 @@ public class TestUtils {
     }
 
     public void editAccessTokenInCache(final String sharedPrefName, Function<String, String> editor) {
-        Predicate<String> predicate = new Predicate<String>() {
-            @Override public boolean test(String s) {
-                return isAccessToken(s);
-            }
-        };
-        editTokenInCache(sharedPrefName, predicate, editor);
+        editTokenInCache(sharedPrefName, IS_ACCESS_TOKEN, editor);
     }
 
     public void editRefreshTokenInCache(final String sharedPrefName, Function<String, String> editor) {
-        Predicate<String> predicate = new Predicate<String>() {
-            @Override public boolean test(String s) {
-                return isAccessToken(s);
-            }
-        };
-        editTokenInCache(sharedPrefName, predicate, editor);
+        editTokenInCache(sharedPrefName, IS_REFRESH_TOKEN, editor);
     }
 
     public static void removeAccessTokenFromCache(final String sharedPrefName) {

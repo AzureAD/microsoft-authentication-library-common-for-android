@@ -27,10 +27,6 @@ import androidx.annotation.Nullable;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.platform.IDevicePopManager;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.ACCESS_TOKEN_TYPE;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.AUTHORITY;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.EXTENDED_EXPIRES_ON;
@@ -129,7 +125,7 @@ public class AccessTokenRecord extends Credential {
      * epoch (1970).
      */
     @SerializedName(EXPIRES_ON)
-    private String mExpiresOn;
+    private String mExpirationEpochSeconds;
 
     /**
      * Gets the kid.
@@ -250,7 +246,7 @@ public class AccessTokenRecord extends Credential {
      * @return The expires_on to get.
      */
     public String getExpiresOn() {
-        return mExpiresOn;
+        return mExpirationEpochSeconds;
     }
 
     /**
@@ -259,25 +255,11 @@ public class AccessTokenRecord extends Credential {
      * @param expiresOn The expires_on to set.
      */
     public void setExpiresOn(final String expiresOn) {
-        mExpiresOn = expiresOn;
-    }
-
-    private boolean isExpired(final String expiresEpochSeconds) {
-        //TODO: Explain why this is not just
-        // return System.currentTimeMillis() < Long.valueOf(expiresEpochSeconds) * 1000;
-        // Init a Calendar for the current time/date
-        final Calendar calendar = Calendar.getInstance();
-        final Date validity = calendar.getTime();
-        // Init a Date for the accessToken's expiry
-        long epoch = Long.valueOf(expiresEpochSeconds);
-        final Date expiresOn = new Date(
-                TimeUnit.SECONDS.toMillis(epoch)
-        );
-        return expiresOn.before(validity);
+        mExpirationEpochSeconds = expiresOn;
     }
 
     @Override
     public boolean isExpired() {
-        return isExpired(getExpiresOn());
+        return System.currentTimeMillis() > Long.parseLong(mExpirationEpochSeconds) * 1000;
     }
 }
