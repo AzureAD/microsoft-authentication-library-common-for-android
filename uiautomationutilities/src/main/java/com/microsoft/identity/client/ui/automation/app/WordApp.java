@@ -1,6 +1,7 @@
 package com.microsoft.identity.client.ui.automation.app;
 
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 
 public class WordApp extends App {
 
@@ -13,6 +14,6 @@ public class WordApp extends App {
 
     @Override
     public void handleFirstRun() {
-
+        CommonUtils.grantPackagePermission(); // grant permission to access storage
     }
 }

@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.provider.Settings;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
@@ -111,6 +112,34 @@ public class SettingsUtils {
 
     public static void launchAddAccountPage() {
         launchIntent(Settings.ACTION_ADD_ACCOUNT);
+    }
+
+    public static void launchAccountListPage() {
+        launchIntent(Settings.ACTION_SYNC_SETTINGS);
+    }
+
+    public static void removeAccount(@NonNull final String username) {
+        launchAccountListPage();
+        try {
+            final UiObject account = UiAutomatorUtils.obtainUiObjectWithText(username);
+            account.click();
+
+            final UiObject removeAccountBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
+                    "com.android.settings:id/button",
+                    "Remove account"
+            );
+
+            removeAccountBtn.click();
+
+            final UiObject removeAccountConfirmationDialogBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
+                    "android:id/button1",
+                    "Remove account"
+            );
+
+            removeAccountConfirmationDialogBtn.click();
+        } catch (UiObjectNotFoundException e) {
+            Assert.fail(e.getMessage());
+        }
     }
 
     public static void addWorkAccount(final ITestBroker expectedBroker,

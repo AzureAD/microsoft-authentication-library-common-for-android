@@ -25,7 +25,7 @@ package com.microsoft.identity.client.ui.automation.browser;
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
-public class BrowserChrome extends App {
+public class BrowserChrome extends App implements IBrowser {
 
     private static final String CHROME_PACKAGE_NAME = "com.android.chrome";
     private static final String CHROME_APP_NAME = "Google Chrome";
@@ -38,5 +38,10 @@ public class BrowserChrome extends App {
     public void handleFirstRun() {
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/terms_accept");
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/negative_button");
+    }
+
+    @Override
+    public void browse(String url) {
+        //TODO: implement browsing for Chrome
     }
 }

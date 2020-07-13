@@ -23,6 +23,8 @@
 package com.microsoft.identity.client.ui.automation.broker;
 
 import androidx.annotation.NonNull;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
@@ -35,7 +37,11 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
+import java.util.Random;
+
 import lombok.Getter;
+
+import static org.junit.Assert.fail;
 
 @Getter
 public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBroker, IMdmAgent {
@@ -134,5 +140,47 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
+    }
+
+    @Override
+    public void handleAppProtectionPolicy() {
+        final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // get access screen
+        final UiObject getAccessScreen = UiAutomatorUtils.obtainUiObjectWithText("Get Access");
+        Assert.assertTrue(getAccessScreen.exists());
+
+        // get access screen - continue
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/positive_button");
+
+        // handle PIN
+        final Random random = new Random();
+        final int randomPin = random.nextInt(10000);
+
+        final UiObject pinField = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView"
+        );
+
+        try {
+            pinField.setText(String.valueOf(randomPin));
+        } catch (UiObjectNotFoundException e) {
+            fail(e.getMessage());
+        }
+
+        device.pressEnter();
+
+        // confirm PIN
+
+        final UiObject pinConfirmField = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView"
+        );
+
+        try {
+            pinConfirmField.setText(String.valueOf(randomPin));
+        } catch (UiObjectNotFoundException e) {
+            fail(e.getMessage());
+        }
+
+        device.pressEnter();
     }
 }

@@ -33,4 +33,6 @@ public interface IMdmAgent {
      */
     void enrollDevice(final String username, final String password);
 
+    void handleAppProtectionPolicy();
+
 }
