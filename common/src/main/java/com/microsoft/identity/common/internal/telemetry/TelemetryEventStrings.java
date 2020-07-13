@@ -76,6 +76,7 @@ public final class TelemetryEventStrings {
         public static final String EVENT_TYPE = EVENT_PREFIX + "event_type";
         public static final String AUTHORITY_TYPE = EVENT_PREFIX + "authority_type";
         public static final String AUTHORITY_NAME = EVENT_PREFIX + "authority_name"; //adal
+        public static final String AUTHENTICATION_SCHEME = EVENT_PREFIX + "authentication_scheme";
         public static final String AUTHORITY_VALIDATION_STATUS = EVENT_PREFIX + "authority_validation_status";
         public static final String EXTENDED_EXPIRES_ON_SETTING = EVENT_PREFIX + "extended_expires_on_setting";
         public static final String PROMPT_BEHAVIOR = EVENT_PREFIX + "prompt_behavior";
