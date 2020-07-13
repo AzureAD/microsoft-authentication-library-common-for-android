@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
@@ -100,6 +101,12 @@ public class ApiStartEvent extends BaseEvent {
             if (tokenCommandParameters.getScopes() != null) {
                 put(Key.SCOPE_SIZE, String.valueOf(tokenCommandParameters.getScopes().size()));
                 put(Key.SCOPE, tokenCommandParameters.getScopes().toString()); //Pii
+            }
+
+            final AbstractAuthenticationScheme authScheme = tokenCommandParameters.getAuthenticationScheme();
+
+            if (null != authScheme) {
+                put(Key.AUTHENTICATION_SCHEME, authScheme.getName());
             }
 
         }
