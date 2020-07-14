@@ -38,6 +38,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
 
+    private static final String TAG = RemoveCurrentAccountCommand.class.getSimpleName();
+
     public RemoveCurrentAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
                                        @NonNull BaseController controller,
                                        @NonNull CommandCallback callback,
@@ -54,7 +56,24 @@ public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
 
     @Override
     public Boolean execute() throws Exception {
-        return getDefaultController().removeCurrentAccount((RemoveAccountCommandParameters) getParameters());
+        final String methodName = ":execute";
+
+        for (int ii = 0; ii < getControllers().size(); ii++) {
+            final BaseController controller = getControllers().get(ii);
+            com.microsoft.identity.common.internal.logging.Logger.verbose(
+                    TAG + methodName,
+                    "Executing with controller: "
+                            + controller.getClass().getSimpleName()
+            );
+
+            final boolean removed = controller.removeCurrentAccount((RemoveAccountCommandParameters) getParameters());
+
+            if (removed) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
