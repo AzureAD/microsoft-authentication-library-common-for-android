@@ -38,6 +38,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.ProcessUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -414,14 +415,16 @@ public class StorageHelper implements IStorageHelper {
         EncryptionType encryptionType = getEncryptionType(encryptedBlob);
 
         if (encryptionType == EncryptionType.USER_DEFINED) {
-            if (AuthenticationSettings.INSTANCE.getSecretKeyData() != null) {
+            if (ProcessUtil.isAuthProcess(mContext)){
+                if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+                    keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
+                    keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
+                } else if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+                    keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
+                    keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
+                }
+            } else {
                 keyTypeList.add(KeyType.ADAL_USER_DEFINED_KEY);
-            } else if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
-                keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
-                keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
-            } else if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
-                keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
-                keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
             }
         } else if (encryptionType == EncryptionType.ANDROID_KEY_STORE) {
             keyTypeList.add(KeyType.KEYSTORE_ENCRYPTED_KEY);
@@ -512,9 +515,7 @@ public class StorageHelper implements IStorageHelper {
         }
 
         // The current app runtime is the broker; load its secret key.
-        if (!sShouldEncryptWithKeyStoreKey &&
-                AuthenticationSettings.INSTANCE.getBrokerSecretKeys().containsKey(getPackageName())) {
-
+        if (!sShouldEncryptWithKeyStoreKey && ProcessUtil.isAuthProcess(mContext)) {
             // Try to read keystore key - to verify how often this is invoked before the migration is done.
             // TODO: remove this whole try-catch clause once the experiment is done.
             if (mTelemetryCallback != null) {
