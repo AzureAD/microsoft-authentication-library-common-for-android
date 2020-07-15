@@ -30,13 +30,22 @@ import androidx.annotation.NonNull;
 
 import java.util.List;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+
 public class ProcessUtil {
+
     /**
      * Returns true if the calling app is the auth process.
-     * */
-    public static boolean isAuthProcess(@NonNull final Context context) {
+     */
+    public static boolean isBrokerProcess(@NonNull final Context context) {
         final String processName = getProcessName(context);
-        return processName != null && processName.contains(":auth");
+
+        final String authAppAuthProcess = AZURE_AUTHENTICATOR_APP_PACKAGE_NAME + ":auth";
+        final String cpAuthProcess = COMPANY_PORTAL_APP_PACKAGE_NAME + ":auth";
+
+        return authAppAuthProcess.equalsIgnoreCase(processName) ||
+                cpAuthProcess.equalsIgnoreCase(processName);
     }
 
     public static String getProcessName(final Context context) {
