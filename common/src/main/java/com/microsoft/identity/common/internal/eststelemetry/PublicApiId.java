@@ -30,6 +30,7 @@ public final class PublicApiId {
     //==============================================================================================
     public static final String PCA_ACQUIRE_TOKEN_SILENT_WITH_PARAMETERS = "21";
     public static final String PCA_ACQUIRE_TOKEN_SILENT_ASYNC_WITH_PARAMETERS = "22";
+    public static final String DEVICE_CODE_FLOW_CALLBACK = "30";
 
     // SingleAccountPublicClientApplication
     //==============================================================================================
