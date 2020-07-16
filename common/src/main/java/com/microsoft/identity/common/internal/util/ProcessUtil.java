@@ -58,7 +58,7 @@ public class ProcessUtil {
      * Returns the running process name.
      */
     @Nullable
-    public static String getProcessName(@NonNull final Context context) {
+    private static String getProcessName(@NonNull final Context context) {
         final int pid = android.os.Process.myPid();
         final ActivityManager am = (ActivityManager) context.getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
         final List<ActivityManager.RunningAppProcessInfo> runningProcesses = am.getRunningAppProcesses();
