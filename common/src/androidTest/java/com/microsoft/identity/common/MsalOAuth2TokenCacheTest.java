@@ -123,6 +123,8 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     AccountCredentialTestBundle defaultTestBundleV2;
 
     IAccountCredentialCache accountCredentialCache;
+    public static final String JUNK_KEY = "9ac15f53-27ad-471a-ad57-033cdacb0ee9";
+    public static final String JUNK_VALUE = "OWFjMTVmNTMtMjdhZC00NzFhLWFkNTctMDMzY2RhY2IwZWU5";
 
     public static class AccountCredentialTestBundle {
 
@@ -295,6 +297,48 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
+    public void saveTokensWithMalformedDataInCache() throws Exception {
+        // Prepopulate the cache with unparseable, junk data
+        mSharedPreferencesFileManager.putString(JUNK_KEY, JUNK_VALUE);
+
+        mOauth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final List<AccountRecord> accounts = accountCredentialCache.getAccounts();
+        assertEquals(1, accounts.size());
+        assertEquals(defaultTestBundleV2.mGeneratedAccount, accounts.get(0));
+
+        final List<Credential> credentials = accountCredentialCache.getCredentials();
+        assertEquals(3, credentials.size());
+
+        final List<Credential> rts = new ArrayList<>();
+        final List<Credential> ats = new ArrayList<>();
+        final List<Credential> ids = new ArrayList<>();
+
+        for (final Credential credential : credentials) {
+            if (credential.getCredentialType().equalsIgnoreCase(CredentialType.AccessToken.name())) {
+                ats.add(credential);
+            } else if (credential.getCredentialType().equalsIgnoreCase(CredentialType.RefreshToken.name())) {
+                rts.add(credential);
+            } else if (credential.getCredentialType().equalsIgnoreCase(CredentialType.IdToken.name())) {
+                ids.add(credential);
+            } else {
+                fail();
+            }
+        }
+
+        assertEquals(defaultTestBundleV2.mGeneratedAccessToken, ats.get(0));
+        assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, rts.get(0));
+        assertEquals(defaultTestBundleV2.mGeneratedIdToken, ids.get(0));
+
+        // Verify that our junk data still exists
+        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.getString(JUNK_KEY));
+    }
+
+    @Test
     public void saveTokensV1Compat() throws ClientException {
         // This test asserts that if an IdToken is returned in the v1 format (broker cases),
         // it is saved property.
@@ -342,6 +386,28 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertNotNull(entry.getIdToken());
         assertNotNull(entry.getAccessToken());
         assertNotNull(entry.getRefreshToken());
+    }
+
+    @Test
+    public void saveTokensWithAggregationSingleEntryWithMalformedDataInCache() throws ClientException {
+        // Prepopulate the cache with unparseable, junk data
+        mSharedPreferencesFileManager.putString(JUNK_KEY, JUNK_VALUE);
+
+        final List<ICacheRecord> result = loadTestBundleIntoCacheWithAggregation(
+                defaultTestBundleV2
+        );
+
+        assertEquals(1, result.size());
+
+        final ICacheRecord entry = result.get(0);
+
+        assertNotNull(entry.getAccount());
+        assertNotNull(entry.getIdToken());
+        assertNotNull(entry.getAccessToken());
+        assertNotNull(entry.getRefreshToken());
+
+        // Verify that our junk data still exists
+        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.getString(JUNK_KEY));
     }
 
     @Test
@@ -1345,8 +1411,9 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertNotNull(secondaryLoad.getRefreshToken());
         assertEquals(fociRtClientId, secondaryLoad.getRefreshToken().getClientId());
     }
+
     @Test
-    public void testGetFamilyRefreshTokenForHomeAccountIdValidCase(){
+    public void testGetFamilyRefreshTokenForHomeAccountIdValidCase() {
         // Save an Account into the cache
         final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -1398,14 +1465,14 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
-    public void testGetFamilyRefreshTokenForHomeAccountIdNullCase(){
+    public void testGetFamilyRefreshTokenForHomeAccountIdNullCase() {
         final RefreshTokenRecord refreshTokenRecord = mOauth2TokenCache.
                 getFamilyRefreshTokenForHomeAccountId(HOME_ACCOUNT_ID);
         assertNull(refreshTokenRecord);
     }
 
     @Test
-    public void testGetFamilyRefreshTokenForHomeAccountIdNoAccountWithHomeAccountId(){
+    public void testGetFamilyRefreshTokenForHomeAccountIdNoAccountWithHomeAccountId() {
         // Save an Account into the cache
         final AccountRecord account = new AccountRecord();
         account.setHomeAccountId(HOME_ACCOUNT_ID);
