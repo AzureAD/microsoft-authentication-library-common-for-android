@@ -33,6 +33,9 @@ import java.util.List;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
+/**
+ * Utility class for anything relating to process.
+ */
 public class ProcessUtil {
 
     private ProcessUtil(){}
