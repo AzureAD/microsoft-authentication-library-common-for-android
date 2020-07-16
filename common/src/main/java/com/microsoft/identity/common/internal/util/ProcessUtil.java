@@ -27,6 +27,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.List;
 
@@ -56,6 +57,7 @@ public class ProcessUtil {
     /**
      * Returns the running process name.
      */
+    @Nullable
     public static String getProcessName(@NonNull final Context context) {
         final int pid = android.os.Process.myPid();
         final ActivityManager am = (ActivityManager) context.getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
