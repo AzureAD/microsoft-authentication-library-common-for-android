@@ -402,10 +402,10 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final ICacheRecord entry = result.get(0);
 
-        assertNotNull(entry.getAccount());
-        assertNotNull(entry.getIdToken());
-        assertNotNull(entry.getAccessToken());
-        assertNotNull(entry.getRefreshToken());
+        assertEquals(defaultTestBundleV2.mGeneratedAccount, entry.getAccount());
+        assertEquals(defaultTestBundleV2.mGeneratedIdToken, entry.getIdToken());
+        assertEquals(defaultTestBundleV2.mGeneratedAccessToken, entry.getAccessToken());
+        assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, entry.getRefreshToken());
 
         // Verify that our junk data still exists
         assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.getString(JUNK_KEY));
