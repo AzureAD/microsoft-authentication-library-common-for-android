@@ -422,6 +422,8 @@ public class StorageHelper implements IStorageHelper {
                 } else if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
                     keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
                     keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
+                } else {
+                    throw new IllegalStateException("Unexpected Broker package name.");
                 }
             } else {
                 keyTypeList.add(KeyType.ADAL_USER_DEFINED_KEY);
